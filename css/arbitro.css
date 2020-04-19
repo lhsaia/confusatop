@@ -1,0 +1,89 @@
+.inlineButton{
+    margin:2px;
+    padding:10px;
+    width:15px;
+    height:15px;
+    float:left;
+    background-color: navy;
+    color:white;
+    border-radius:10px;
+}
+
+td:nth-child(2){
+    text-align:center;
+}
+
+.wide{
+    min-width:120px;
+}
+
+.extrawide{
+    min-width:200px;
+}
+
+.clickable{
+    cursor:pointer;
+}
+
+.negative{
+    background-color: red !important;
+}
+
+.positive{
+    background-color: green !important;
+}
+
+.editavel{
+    background-color: lightyellow;
+    padding: 10px;
+    border: 1px solid gray;
+}
+
+select, option{
+    -webkit-appearance: none;
+}
+
+table {
+    overflow:inherit;
+}
+
+
+/* Teste de responsividade da tabela */
+
+/*
+Max width before this PARTICULAR table gets nasty
+This query will take effect for any screen smaller than 760px
+and also iPads specifically.
+*/
+@media
+only screen and (max-width: 40em)  {
+
+    .nomePais {
+        font-size:0;
+    }
+
+        /*
+	Label the data
+	*/
+	td:nth-of-type(1):before { content: "Nome Árbitro"; }
+	td:nth-of-type(2):before { content: "Nome Auxiliar 1"; }
+	td:nth-of-type(3):before { content: "Nome Auxiliar 2"; }
+	td:nth-of-type(4):before { content: "Estilo"; }
+	td:nth-of-type(5):before { content: "Nacionalidade"; }
+    td:nth-of-type(6):before { content: "Opções";}
+
+}
+
+
+    tbody tr td:last-child {
+        min-height:30px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        vertical-align:middle;
+    }
+
+    select {
+        width:100%;
+        max-width: 100%;
+    }

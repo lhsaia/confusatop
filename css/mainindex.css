@@ -1,0 +1,280 @@
+* {
+margin:0;
+padding:0;
+border:0;
+text-decoration:none;
+}
+
+
+body{
+
+font-family: 'Montserrat', sans-serif;
+color:gray;
+background-color:#1A1469;
+
+}
+
+
+a{
+  color:#1A1469 !important;
+}
+
+a:visited{
+    color:#1A1469 !important;
+}
+
+a:hover{
+    color:orange !important;
+    cursor:pointer !important;
+}
+
+.nav-item{
+    background-color: white !important;
+}
+
+nav{
+  background-color: white !important;
+}
+
+
+
+#top-bar, #bottom-bar {
+    background-color:white;
+    color:#1A1469;
+
+}
+
+#menu-bar {
+
+height:90px;
+clear:both;
+background-color:white;
+
+
+
+}
+
+#logo-text {
+ margin:5px;
+float:left;
+
+}
+
+#top-menu {
+margin:7px 20px 0 0;
+float:right;
+}
+
+.icon {
+width:25px;
+color:#1A1469;
+
+
+}
+
+.orange {
+
+color:orange;
+}
+
+.icon:hover {
+
+color:#99ebff;
+}
+
+#logo{
+
+width:80px;
+float:left;
+padding-left:70px;
+
+}
+
+h1 {
+
+font-weight:normal;
+float:left;
+position:relative;
+top:30px;
+left:20px;
+
+}
+
+#ranking-menu {
+
+border-top: 1px #CCCCCC solid;
+clear:both;
+margin:0;
+padding:0;
+float:bottom;
+
+}
+
+#formcontato table tr:nth-child(4){
+  display: none;
+}
+
+.ranking-menu-item {
+
+color:#1A1469;
+font-weight:bold;
+font-size:90%;
+float:left;
+padding:20px 0 20px 70px;
+
+}
+
+.ranking-menu-item:hover {
+
+color:#99ebff;
+
+}
+
+#ranking-container{
+
+background-color:#F0F3F7;
+clear:both;
+float:left;
+height:200%;
+width:100%;
+}
+
+h2 {
+font-weight:normal;
+font-size:230%;
+text-align:left;
+margin-bottom:20px;
+
+}
+
+h3 {
+font-weight:normal;
+font-size:140%;
+text-align:left;
+margin-bottom:20px;
+
+}
+
+hr{
+
+border-top: 2px #F0F3F7 solid;
+
+}
+
+table {
+    border-collapse: collapse;
+width:100%;
+
+}
+
+td, th {
+    text-align: center;
+    padding: 8px;
+}
+
+td:nth-child(2) {
+  text-align:left;
+}
+
+th:nth-child(2) {
+  text-align:left;
+}
+
+th {
+
+font-size:60%;
+height:10px;
+}
+
+tr:nth-child(even) {
+    background-color: #F2F2F2;
+}
+
+.quadro-principal {
+width:300px;
+height:240px;
+float:left;
+border-radius:20px;
+background-color:#FF800E;
+color:white;
+border: 3px solid #FF800E;
+margin: 30px 0 20px 50px;
+font-weight:bold;
+font-size:200%;
+text-align:center;
+
+}
+
+.quadro-principal:hover {
+
+color:rgba(0,0,0,0);
+/* border: 3px solid #FF800E; */
+
+}
+
+.clear {
+clear:both;
+}
+
+#tabela-quadros {
+float:left;
+
+}
+
+#ranking:hover{
+background-image: url(images/ranking.PNG);
+background-size: cover;
+}
+
+#usuario:hover{
+    background-image: url(images/minhaarea.PNG);
+    background-size: cover;
+    }
+
+    #mercado:hover{
+        background-image: url(images/mercado.PNG);
+        background-size: cover;
+        }
+
+#ligas:hover{
+    background-image: url(images/ligas.png);
+    background-size: cover;
+    }
+
+#live:hover{
+background-image: url(images/live.PNG);
+background-size: cover;
+}
+
+#confusopedia:hover{
+background-image: url(images/confusopedia.PNG);
+background-size: cover;
+}
+
+#portal:hover{
+background-image: url(images/portal.PNG);
+background-size: cover;
+}
+
+#vk:hover{
+background-image: url(images/vk.PNG);
+background-size: cover;
+}
+
+#pacotes:hover{
+background-image: url(images/pacotes.JPG);
+background-size: cover;
+}
+
+
+#arbitros:hover{
+    background-image: url(images/arbitros.PNG);
+    background-size: cover;
+    }
+
+.novo{
+    box-shadow: 0 0 60px rgba(81, 203, 238, 1);
+
+
+  border: 3px solid rgba(81, 203, 238, 1);
+}

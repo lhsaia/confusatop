@@ -1,0 +1,708 @@
+.uniformeGrande{
+    float:right;
+}
+
+.large{
+    width:35vw;
+    position:relative;
+}
+
+.small{
+  width:10vw;
+  position: relative;
+}
+
+
+.floatleft{
+    float:left;
+    position:absolute;
+    left:5px;
+
+}
+
+.par_pais_equipe{
+  padding: 0 50px 0px 50px;
+}
+
+#quadro_equipes_torneio{
+  padding: 10px;
+}
+
+
+select:disabled {
+  background: #F5F5F5;
+  color: #808080;
+}
+
+
+@-moz-document url-prefix() {
+
+    html{
+        padding-bottom:50px;
+    }
+}
+
+
+.posicaoCampao{
+    background-image:url(/images/posicao.png);
+    background-repeat: no-repeat;
+    background-attachment: local;
+    background-position: center;
+    background-size: contain;
+    position:absolute;
+    width:40px;
+    height:40px;
+}
+
+.posGoleiro{
+    left:calc(50% - 20px);
+    bottom:7%;
+}
+
+.posLD{
+    left:62%;
+    bottom:20%;
+}
+
+.posLE{
+    left:28%;
+    bottom:20%;
+}
+.posZagueiro{
+    left:calc(50% - 20px);
+    bottom:20%;
+}
+.posAE{
+    left:28%;
+    bottom:32.5%;
+}
+
+.posAD{
+    left:62%;
+    bottom:32.5%;
+}
+.posVolante{
+    left:calc(50% - 20px);
+    bottom:32.5%;
+}
+.posME{
+    left:28%;
+    bottom:52%;
+}
+
+.posMD{
+    left:62%;
+    bottom:52%;
+}
+.posMeia{
+    left:calc(50% - 20px);
+    bottom:45%;
+}
+.posArmador{
+    left:calc(50% - 20px);
+    bottom:60%;
+}
+.posPE{
+    left:28%;
+    bottom:72%;
+}
+
+.posPD{
+    left:62%;
+    bottom:72%;
+}
+.posAtacanteMov{
+    left:calc(50% - 20px);
+    bottom:75%;
+}
+
+.posAtacanteArea{
+    left:calc(50% - 20px);
+    bottom:82%;
+}
+
+.info_jogador{
+    width:45vw;
+}
+
+#info-desempenho-selecao{
+  width:10vw;
+  padding-top:15px;
+  display:flex;
+  flex-direction:column;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+}
+
+#info-desempenho-selecao > span{
+  text-align:center;
+}
+
+#info_posicionamento{
+    /* float:right; */
+    width:30vw;
+
+    position:relative;
+    background-image:url(/images/campaorodado.png?v=1);
+    background-repeat: no-repeat;
+    background-attachment: local;
+    background-position: center;
+    background-size: contain;
+
+}
+
+#info_geral{
+    display:flex;
+    flex-direction:row;
+    padding:0 6vw;
+}
+
+
+
+.margin-left{
+    margin-left:20px;
+}
+
+#quadro-container{
+    margin: 0 40px;
+}
+
+.titular td{
+    background-color:white;
+}
+
+.reserva td{
+    background-color:lightgray;
+    color:#A0A0A0;
+
+}
+
+fieldset{
+    border:1px gray solid;
+}
+
+label[for*=checkbox]{
+    margin:3px;
+    font-family:inherit;
+
+}
+
+.editavel{
+    background-color: lightyellow;
+    padding: 10px;
+    border: 1px solid gray;
+}
+
+.smallform{
+    width:auto !important;
+    border: 1px solid #ccc;
+    padding: 12px 20px;
+}
+
+.mostrador_range{
+    border:0 !important;
+    color:navy;
+    font-weight:bold;
+    width:auto !important;
+}
+
+.leftalign{
+text-align:start;
+
+}
+
+.paddingright{
+    padding-right:20px;
+    vertical-align:text-bottom;
+}
+
+
+.mercadoAberto{
+    background-color:palegreen;
+    color:darkgreen;
+}
+
+.mercadoFechado{
+    background-color:lightcoral;
+    color:darkred;
+}
+
+.table tr td:nth-child(2){
+    text-align:center;
+}
+
+.reserva img{
+    opacity: 0.6;
+    filter: alpha(opacity=60); /* msie */
+}
+
+.suplente td{
+
+    background-color:darkgray;
+    color:#909090;
+}
+
+.suplente img{
+    opacity: 0.2;
+    filter: alpha(opacity=20); /* msie */
+}
+
+body{
+    padding-top:40px !important;
+}
+
+.posicao{
+    font-size:70%;
+    font-weight:normal;
+}
+
+.informacao{
+    float:right;
+}
+
+.disabled{
+    color:darkgray;
+    background-color: lightgray;
+}
+
+.menor{
+    font-size:90%;
+
+}
+
+.imagemEstadio{
+    width:80px;
+    height:80px;
+    margin-bottom:10px;
+
+}
+
+#estadio{
+    position:relative;
+    float:right;
+    width:200px;
+    height:100px;
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-right:40px;
+
+}
+
+#estadio figcaption{
+    position:absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size:70%;
+    font-style:italic;
+    text-align:center;
+}
+
+.micro{
+    font-size:40%;
+    line-height:40px;
+}
+
+.mini{
+    font-size:70%;
+
+}
+
+
+#path0{
+    fill: #0e4a9d;
+}
+
+#path0:hover{
+    fill:rgba(14,74,157,0.5);
+}
+
+#path1{
+    fill:#fb7c04;
+}
+
+#path1:hover{
+    fill:rgba(251,124,4,0.5);
+
+}
+
+#path2{
+    fill:#43c7cc;
+}
+
+#path2:hover{
+    fill: rgba(67,199,204,0.5);
+
+
+}
+
+#path0:hover:after{
+    content: url(/images/feasco.png); /* no need for qoutes */
+    display: block;
+}
+
+.logo{
+    width:20vw;
+}
+
+#feasco{
+    position:fixed;
+    top:25%;
+    right:3%;
+    width:14vw;
+}
+
+#femifus{
+    position:fixed;
+    top:50%;
+    left:25%;
+}
+
+#compacta{
+    position:fixed;
+    top:30%;
+    right:35%;
+    width:13vw;
+}
+
+#quadro-container{
+    padding-top:40px;
+}
+
+
+
+#valorJogadorTransf{
+    width:100%;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='100%' width='auto'><text x='2' y='25' fill='gray' font-size='16' font-family='arial'>F$</text></svg>");
+    padding-left: 25px;
+}
+
+.clickable{
+    cursor:pointer;
+}
+
+.selecionar_liga{
+    padding:10px;
+    background-color:lightyellow;
+    border: 1px gray solid;
+}
+
+.logoliga{
+    margin: 0 10px;
+}
+
+.inlineButton{
+    margin:2px;
+    padding:10px;
+    width:15px;
+    height:15px;
+    float:left;
+    background-color: green;
+    color:white;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content: center;
+}
+.vermelho{
+    background-color:red;
+}
+.azul {
+    background-color: navy;
+}
+
+/* Style the tab */
+.tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+
+.tab .active{
+    background-color:#606060;
+}
+
+/* Style the buttons inside the tab */
+.tab a {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 0;
+    transition: 0.3s;
+    font-size: 17px;
+    color: gray;
+    width:33.33%;
+    text-align:center;
+}
+
+caption{
+    padding: 10px 0;
+    font-weight:bold;
+    font-size:110%;
+    background-color: inherit;
+
+}
+
+/* Change background color of buttons on hover */
+.tab a:hover {
+    background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab a.active {
+    background-color: #ccc;
+}
+
+#tabelaTitulares{
+    background-color:palegreen;
+    border:palegreen 2px solid;
+
+}
+
+#tabelaTitulares tr td{
+    background-color:white;
+    height:50px;
+
+}
+
+#tabelaReservas tr td{
+    background-color:white;
+    height:50px;
+
+}
+
+#tabelaSuplentes tr td{
+    background-color:white;
+    height:50px;
+
+}
+
+#tabelaReservas{
+    background-color:paleturquoise;
+    border:paleturquoise 2px solid;
+}
+
+#tabelaSuplentes{
+    background-color:lightgoldenrodyellow;
+    border:lightgoldenrodyellow 2px solid;
+}
+
+.alto{
+    height:100px;
+    margin:5px;
+}
+
+#Elenco{
+    display:flex;
+    flex-direction: row;
+}
+
+#Elenco .selected{
+    font-weight:bold;
+    text-shadow: 0 0 2px;
+
+}
+
+#tabelaTitulares .selected{
+    color:green;
+}
+
+#tabelaReservas .selected{
+    color:navy;
+}
+
+#tabelaSuplentes .selected{
+    color:goldenrod;
+}
+
+.selected span{
+    font-weight:bold;
+    color:inherit;
+    text-shadow: inherit;
+}
+
+div[id*="draggable"] {
+	height: 80px;
+	width: 130px;
+	float: left;
+	margin: 10px;
+	padding: 0;
+    list-style-type: none;
+    display:table;
+    table-layout: fixed;
+    position:relative;
+
+}
+#sortable {
+	position: relative;
+	height: 600px;
+    width: 750px;
+    min-width:750px;
+    background-image: url(/images/campo2.png?9);
+
+}
+
+[name$="Select"]{
+    width:90%;
+    margin:5 5;
+    text-align:center;
+}
+
+.Am{
+    position:absolute;
+    top:0;
+    right:0;
+}
+
+.Aa{
+    position:absolute;
+    top:0;
+    right:0;
+}
+
+.Am::after{
+    content:"Am";
+    background-color:white;
+    color:black;
+}
+
+.Aa::before{
+    content:"Aa";
+    background-color:white;
+    color:black;
+}
+
+label{
+    font-weight: bold;
+}
+
+div[id*="draggable"] p{
+    text-align:center;
+    vertical-align: middle;
+  display: table-cell;
+  font-weight:bold;
+  border: 3px solid white;
+  outline: 1px solid transparent;
+  overflow: hidden;
+  width:100%;
+}
+
+.pagination_link{
+    background-color:white;
+    color:#808080;
+    font-size:1.25rem;
+    padding:0.5rem;
+
+}
+
+.pagination_link:disabled{
+    color:lightgray;
+    cursor:default;
+}
+
+.ui-selectmenu-button{
+    margin-bottom:10px;
+}
+
+ul.ui-menu { max-height: 150px !important; }
+
+.goleiro{
+    background-color:rgba(128,0,128,0.5);
+    color:white;
+}
+
+.pos-zaga p{
+    background-color:rgba(0,0,255,0.5);
+    color:white;
+}
+
+.pos-zaga-meio p{
+    background-image: linear-gradient(to right, rgba(0,0,255,0.5) , rgba(255,140,0,0.5));
+    color:white;
+}
+
+.pos-meio p{
+    background-color:rgba(255,140,0,0.5);
+    color:white;
+}
+
+.pos-meio-ataque p{
+    background-image: linear-gradient(to right, rgba(255,140,0,0.5) ,rgba(255,0,0,0.5));
+    color:white;
+}
+
+.pos-ataque p{
+    background-color:rgba(255,0,0,0.5);
+    color:white;
+}
+
+#cobradoresCapitao{
+    background-color:palegreen;
+    width:50%;
+    border: green 10px solid;
+    padding: 10px;
+
+
+
+}
+
+.highlighted{
+    color:gray;
+    background-color:#EEEEEE;
+}
+
+.ascending{
+    color:green;
+}
+
+.descending{
+    color:red;
+}
+
+.hidden{
+    display:none;
+}
+
+input {
+    font-family:inherit;
+    color:inherit;
+}
+
+
+.minithumb{
+    height:15px;
+    padding-right:5px;
+}
+
+.smallthumb{
+    height:25px;
+}
+
+.submit-btn{
+    width:90%;
+    height:60px;
+    background-color:green;
+    color:palegreen;
+    border-radius:10px;
+    line-height: 60px;
+    font-weight: bold;
+    font-size: 150%;
+    margin-top:30px;
+}
+
+#formCapitaoCobrancas{
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    justify-content: center;
+}
+
+#Posicionamento{
+    display:flex;
+    flex-direction: row;
+}

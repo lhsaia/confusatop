@@ -1,0 +1,300 @@
+[11-Jun-2019 22:56:34 UTC] PHP Notice:  Undefined index: jogadorTime in /home/lhsaia/confusa.top/elements/import_ajax.php on line 40
+[11-Jun-2019 22:56:34 UTC] PHP Notice:  Undefined index: jogadorTime in /home/lhsaia/confusa.top/elements/import_ajax.php on line 44
+[11-Jun-2019 22:56:34 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 113
+[11-Jun-2019 22:56:34 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 140
+[11-Jun-2019 22:56:34 UTC] PHP Notice:  Undefined variable: max_file_size in /home/lhsaia/confusa.top/elements/import_ajax.php on line 143
+[11-Jun-2019 22:58:04 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 143
+[11-Jun-2019 22:58:04 UTC] PHP Notice:  Undefined variable: max_file_size in /home/lhsaia/confusa.top/elements/import_ajax.php on line 146
+[11-Jun-2019 22:58:04 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 116
+[11-Jun-2019 22:58:04 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 143
+[11-Jun-2019 22:58:04 UTC] PHP Notice:  Undefined variable: max_file_size in /home/lhsaia/confusa.top/elements/import_ajax.php on line 146
+[11-Jun-2019 23:00:12 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 143
+[11-Jun-2019 23:00:12 UTC] PHP Notice:  Undefined variable: max_file_size in /home/lhsaia/confusa.top/elements/import_ajax.php on line 146
+[11-Jun-2019 23:00:12 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 116
+[11-Jun-2019 23:00:12 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 143
+[11-Jun-2019 23:00:12 UTC] PHP Notice:  Undefined variable: max_file_size in /home/lhsaia/confusa.top/elements/import_ajax.php on line 146
+[11-Jun-2019 23:01:53 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 143
+[11-Jun-2019 23:01:53 UTC] PHP Notice:  Undefined variable: max_file_size in /home/lhsaia/confusa.top/elements/import_ajax.php on line 146
+[11-Jun-2019 23:01:53 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 116
+[11-Jun-2019 23:01:53 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 143
+[11-Jun-2019 23:01:53 UTC] PHP Notice:  Undefined variable: max_file_size in /home/lhsaia/confusa.top/elements/import_ajax.php on line 146
+[11-Jun-2019 23:04:23 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 151
+[11-Jun-2019 23:04:23 UTC] PHP Notice:  Undefined variable: max_file_size in /home/lhsaia/confusa.top/elements/import_ajax.php on line 154
+[11-Jun-2019 23:04:23 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 124
+[11-Jun-2019 23:04:23 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 151
+[11-Jun-2019 23:04:23 UTC] PHP Notice:  Undefined variable: max_file_size in /home/lhsaia/confusa.top/elements/import_ajax.php on line 154
+[11-Jun-2019 23:05:09 UTC] PHP Warning:  Creating default object from empty value in /home/lhsaia/confusa.top/arbitros/tratamento_arbitro.php on line 4
+[11-Jun-2019 23:05:09 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method stdClass::create() in /home/lhsaia/confusa.top/arbitros/tratamento_arbitro.php:27
+Stack trace:
+#0 /home/lhsaia/confusa.top/elements/import_ajax.php(137): include()
+#1 {main}
+  thrown in /home/lhsaia/confusa.top/arbitros/tratamento_arbitro.php on line 27
+[11-Jun-2019 23:15:21 UTC] PHP Warning:  simplexml_load_string(): Entity: line 1: parser error : Start tag expected, '&lt;' not found in /home/lhsaia/confusa.top/elements/import_ajax.php on line 128
+[11-Jun-2019 23:15:21 UTC] PHP Warning:  simplexml_load_string(): {&quot;eventos&quot;:[{&quot;tipoEvento&quot;:&quot;normal&quot;,&quot;tempo&quot;:1,&quot;narracao&quot;:&quot;Começa o jogo! A saíd in /home/lhsaia/confusa.top/elements/import_ajax.php on line 128
+[11-Jun-2019 23:15:21 UTC] PHP Warning:  simplexml_load_string(): ^ in /home/lhsaia/confusa.top/elements/import_ajax.php on line 128
+[11-Jun-2019 23:15:21 UTC] PHP Warning:  simplexml_load_string(): Entity: line 1: parser error : Start tag expected, '&lt;' not found in /home/lhsaia/confusa.top/elements/import_ajax.php on line 129
+[11-Jun-2019 23:15:21 UTC] PHP Warning:  simplexml_load_string(): {&quot;eventos&quot;:[{&quot;tipoEvento&quot;:&quot;normal&quot;,&quot;tempo&quot;:1,&quot;narracao&quot;:&quot;ComeÃ§a o jogo! A sa� in /home/lhsaia/confusa.top/elements/import_ajax.php on line 129
+[11-Jun-2019 23:15:21 UTC] PHP Warning:  simplexml_load_string(): ^ in /home/lhsaia/confusa.top/elements/import_ajax.php on line 129
+[11-Jun-2019 23:15:21 UTC] PHP Notice:  Trying to get property of non-object in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 4
+[11-Jun-2019 23:15:21 UTC] PHP Notice:  Trying to get property of non-object in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 5
+[11-Jun-2019 23:15:21 UTC] PHP Notice:  Trying to get property of non-object in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 5
+[11-Jun-2019 23:15:21 UTC] PHP Notice:  Trying to get property of non-object in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 5
+[11-Jun-2019 23:15:21 UTC] PHP Notice:  Trying to get property of non-object in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 6
+[11-Jun-2019 23:15:21 UTC] PHP Notice:  Trying to get property of non-object in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 6
+[11-Jun-2019 23:15:21 UTC] PHP Notice:  Trying to get property of non-object in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 6
+[11-Jun-2019 23:15:21 UTC] PHP Notice:  Trying to get property of non-object in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 7
+[11-Jun-2019 23:15:21 UTC] PHP Notice:  Trying to get property of non-object in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 7
+[11-Jun-2019 23:15:21 UTC] PHP Notice:  Trying to get property of non-object in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 8
+[11-Jun-2019 23:15:21 UTC] PHP Notice:  Trying to get property of non-object in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 8
+[11-Jun-2019 23:15:21 UTC] PHP Notice:  Trying to get property of non-object in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 13
+[11-Jun-2019 23:15:21 UTC] PHP Notice:  Trying to get property of non-object in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 14
+[11-Jun-2019 23:15:21 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function removeModifiers() in /home/lhsaia/confusa.top/objetos/paises.php:657
+Stack trace:
+#0 /home/lhsaia/confusa.top/ranking/tratamento_jogo.php(17): Pais->idPorNomeTratado('')
+#1 /home/lhsaia/confusa.top/elements/import_ajax.php(139): include('/home/lhsaia/co...')
+#2 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/paises.php on line 657
+[11-Jun-2019 23:20:55 UTC] PHP Notice:  Undefined property: stdClass::$penaltisTime1 in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 7
+[11-Jun-2019 23:20:55 UTC] PHP Notice:  Undefined property: stdClass::$penaltisTime1 in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 7
+[11-Jun-2019 23:20:55 UTC] PHP Notice:  Undefined property: stdClass::$penaltisTime2 in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 8
+[11-Jun-2019 23:20:55 UTC] PHP Notice:  Undefined property: stdClass::$penaltisTime2 in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 8
+[11-Jun-2019 23:20:55 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function removeModifiers() in /home/lhsaia/confusa.top/objetos/paises.php:657
+Stack trace:
+#0 /home/lhsaia/confusa.top/ranking/tratamento_jogo.php(17): Pais->idPorNomeTratado('Apotekija')
+#1 /home/lhsaia/confusa.top/elements/import_ajax.php(140): include('/home/lhsaia/co...')
+#2 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/paises.php on line 657
+[11-Jun-2019 23:21:54 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function removeModifiers() in /home/lhsaia/confusa.top/objetos/paises.php:657
+Stack trace:
+#0 /home/lhsaia/confusa.top/ranking/tratamento_jogo.php(17): Pais->idPorNomeTratado('Apotekija')
+#1 /home/lhsaia/confusa.top/elements/import_ajax.php(140): include('/home/lhsaia/co...')
+#2 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/paises.php on line 657
+[11-Jun-2019 23:22:58 UTC] PHP Warning:  preg_replace(): Unknown modifier 'g' in /home/lhsaia/confusa.top/objetos/paises.php on line 647
+[11-Jun-2019 23:22:58 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function removeAccents() in /home/lhsaia/confusa.top/objetos/paises.php:665
+Stack trace:
+#0 /home/lhsaia/confusa.top/ranking/tratamento_jogo.php(17): Pais->idPorNomeTratado('')
+#1 /home/lhsaia/confusa.top/elements/import_ajax.php(140): include('/home/lhsaia/co...')
+#2 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/paises.php on line 665
+[11-Jun-2019 23:23:45 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function removeAccents() in /home/lhsaia/confusa.top/objetos/paises.php:665
+Stack trace:
+#0 /home/lhsaia/confusa.top/ranking/tratamento_jogo.php(17): Pais->idPorNomeTratado('apotekija')
+#1 /home/lhsaia/confusa.top/elements/import_ajax.php(140): include('/home/lhsaia/co...')
+#2 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/paises.php on line 665
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:24:15 UTC] PHP Notice:  Undefined property: stdClass::$tipo in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 30
+[11-Jun-2019 23:29:19 UTC] PHP Catchable fatal error:  Object of class stdClass could not be converted to string in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:29:37 UTC] PHP Catchable fatal error:  Object of class stdClass could not be converted to string in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 27
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[11-Jun-2019 23:46:51 UTC] PHP Notice:  Undefined variable: tipoEvento in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 43
+[12-Jun-2019 00:54:53 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1305 FUNCTION lhsaia_confusa.LEVENSHTEIN does not exist in /home/lhsaia/confusa.top/objetos/jogador.php:2214
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(2214): PDO->prepare('SELECT nome, id...')
+#1 /home/lhsaia/confusa.top/ranking/tratamento_jogo.php(59): Jogador->idPorNomePais('George O'Harris...', '8', '19238')
+#2 /home/lhsaia/confusa.top/elements/import_ajax.php(140): include('/home/lhsaia/co...')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 2214
+[12-Jun-2019 00:59:15 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1305 FUNCTION lhsaia_confusa.levenshtein does not exist in /home/lhsaia/confusa.top/objetos/jogador.php:2214
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(2214): PDO->prepare('SELECT nome, id...')
+#1 /home/lhsaia/confusa.top/ranking/tratamento_jogo.php(59): Jogador->idPorNomePais('Napole\xC3\xA3o', '133', '19247')
+#2 /home/lhsaia/confusa.top/elements/import_ajax.php(140): include('/home/lhsaia/co...')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 2214
+[12-Jun-2019 00:59:42 UTC] PHP Fatal error:  Uncaught Error: Cannot pass parameter 2 by reference in /home/lhsaia/confusa.top/objetos/jogador.php:2216
+Stack trace:
+#0 /home/lhsaia/confusa.top/ranking/tratamento_jogo.php(59): Jogador->idPorNomePais('Napole\xC3\xA3o', '133', '19247')
+#1 /home/lhsaia/confusa.top/elements/import_ajax.php(140): include('/home/lhsaia/co...')
+#2 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 2216
+[12-Jun-2019 01:24:54 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'idJogo' in 'field list' in /home/lhsaia/confusa.top/objetos/jogos.php:571
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogos.php(571): PDO->prepare('INSERT IGNORE I...')
+#1 /home/lhsaia/confusa.top/ranking/tratamento_jogo.php(71): Jogo->importarEventos(Array, '10000')
+#2 /home/lhsaia/confusa.top/elements/import_ajax.php(140): include('/home/lhsaia/co...')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogos.php on line 571
+[12-Jun-2019 02:12:36 UTC] PHP Notice:  Undefined property: Jogo::$date in /home/lhsaia/confusa.top/objetos/jogos.php on line 595
+[12-Jun-2019 04:45:44 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '1=1' at line 1 in /home/lhsaia/confusa.top/objetos/jogos.php:571
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogos.php(571): PDO->prepare('INSERT INTO jog...')
+#1 /home/lhsaia/confusa.top/ranking/tratamento_jogo.php(75): Jogo->importarEventos(Array, '3914')
+#2 /home/lhsaia/confusa.top/elements/import_ajax.php(147): include('/home/lhsaia/co...')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogos.php on line 571
+[13-Jun-2019 21:16:43 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function pop() in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php:41
+Stack trace:
+#0 /home/lhsaia/confusa.top/elements/import_ajax.php(146): include()
+#1 {main}
+  thrown in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 41
+[13-Jun-2019 21:17:12 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function pop() in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php:41
+Stack trace:
+#0 /home/lhsaia/confusa.top/elements/import_ajax.php(146): include()
+#1 {main}
+  thrown in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 41
+[15-Jun-2019 07:41:15 UTC] PHP Notice:  Undefined property: stdClass::$time1 in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 13
+[15-Jun-2019 07:41:15 UTC] PHP Notice:  Undefined property: stdClass::$time2 in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 14
+[15-Jun-2019 07:41:29 UTC] PHP Notice:  Undefined property: stdClass::$time1 in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 13
+[15-Jun-2019 07:41:29 UTC] PHP Notice:  Undefined property: stdClass::$time2 in /home/lhsaia/confusa.top/ranking/tratamento_jogo.php on line 14
+[10-Oct-2019 18:32:01 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 132
+[10-Oct-2019 18:32:01 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 160
+[10-Oct-2019 18:32:01 UTC] PHP Notice:  Undefined variable: max_file_size in /home/lhsaia/confusa.top/elements/import_ajax.php on line 163
+[10-Oct-2019 18:32:01 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 132
+[10-Oct-2019 18:32:01 UTC] PHP Notice:  Undefined variable: correct_extension in /home/lhsaia/confusa.top/elements/import_ajax.php on line 160
+[10-Oct-2019 18:32:01 UTC] PHP Notice:  Undefined variable: max_file_size in /home/lhsaia/confusa.top/elements/import_ajax.php on line 163
+[22-Feb-2020 17:39:10 UTC] PHP Notice:  Trying to get property of non-object in /home/lhsaia/confusa.top/import/tratamento_tecnico.php on line 4
+[22-Feb-2020 22:20:42 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 2053  in /home/lhsaia/confusa.top/objetos/time.php:1305
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/time.php(1305): PDOStatement->fetchAll(2)
+#1 /home/lhsaia/confusa.top/import/tratamento_estadio.php(41): Time->adicionarEstadio('901', '1170')
+#2 /home/lhsaia/confusa.top/elements/import_ajax.php(159): include('/home/lhsaia/co...')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/time.php on line 1305
+[22-Feb-2020 22:32:33 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 2053  in /home/lhsaia/confusa.top/objetos/time.php:1305
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/time.php(1305): PDOStatement->fetchAll(2)
+#1 /home/lhsaia/confusa.top/import/tratamento_estadio.php(42): Time->adicionarEstadio('902', '1170')
+#2 /home/lhsaia/confusa.top/elements/import_ajax.php(159): include('/home/lhsaia/co...')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/time.php on line 1305

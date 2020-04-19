@@ -1,0 +1,412 @@
+[28-May-2019 05:23:04 UTC] PHP Notice:  Undefined index: clube in /home/lhsaia/confusa.top/jogadores/criar_jogador.php on line 55
+[30-May-2019 17:08:15 UTC] PHP Notice:  Undefined variable: error_msg in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 194
+[30-May-2019 17:08:15 UTC] PHP Notice:  Undefined variable: jogador in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 198
+[30-May-2019 17:08:16 UTC] PHP Notice:  Undefined variable: error_msg in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 194
+[30-May-2019 17:08:16 UTC] PHP Notice:  Undefined variable: jogador in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 198
+[30-May-2019 17:08:17 UTC] PHP Notice:  Undefined variable: error_msg in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 194
+[30-May-2019 17:08:17 UTC] PHP Notice:  Undefined variable: jogador in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 198
+[30-May-2019 17:08:18 UTC] PHP Notice:  Undefined variable: error_msg in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 194
+[30-May-2019 17:08:18 UTC] PHP Notice:  Undefined variable: jogador in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 198
+[30-May-2019 17:08:18 UTC] PHP Notice:  Undefined variable: error_msg in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 194
+[30-May-2019 17:08:18 UTC] PHP Notice:  Undefined variable: jogador in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 198
+[30-May-2019 17:08:19 UTC] PHP Notice:  Undefined variable: error_msg in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 194
+[30-May-2019 17:08:19 UTC] PHP Notice:  Undefined variable: jogador in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 198
+[13-Jun-2019 17:07:00 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1982
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1982): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1924): Jogador->geranomes('36', '36', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('1', '424', '36', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1982
+[13-Jun-2019 17:07:39 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1982
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1982): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1924): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('1', '424', '37', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1982
+[13-Jun-2019 17:22:09 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1982
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1982): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1924): Jogador->geranomes('37', '37', false, '1')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('1', '424', '37', '5', 18, 36, 30, 90, 60, 27, '0', '0', '1')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1982
+[13-Jun-2019 17:22:23 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1982
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1982): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1924): Jogador->geranomes('38', '38', false, '1')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('1', '424', '38', '13', 18, 36, 30, 90, 60, 27, '0', '0', '1')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1982
+[13-Jun-2019 17:22:24 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1982
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1982): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1924): Jogador->geranomes('37', '37', false, '1')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('1', '424', '37', '13', 18, 36, 30, 90, 60, 27, '0', '0', '1')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1982
+[13-Jun-2019 17:22:31 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1982
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1982): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1924): Jogador->geranomes('37', '37', false, '1')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('1', '424', '37', '5', 18, 36, 30, 90, 60, 27, '0', '0', '1')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1982
+[13-Jun-2019 17:22:59 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1982
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1982): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1924): Jogador->geranomes('36', '36', false, '1')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('1', '424', '36', '13', 18, 36, 30, 90, 60, 27, '0', '0', '1')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1982
+[18-Jun-2019 00:15:58 UTC] PHP Notice:  Undefined index: clube in /home/lhsaia/confusa.top/jogadores/criar_jogador.php on line 55
+[18-Jun-2019 00:16:41 UTC] PHP Notice:  Undefined index: clube in /home/lhsaia/confusa.top/jogadores/criar_jogador.php on line 55
+[18-Jun-2019 00:17:07 UTC] PHP Notice:  Undefined index: clube in /home/lhsaia/confusa.top/jogadores/criar_jogador.php on line 55
+[18-Jun-2019 00:18:31 UTC] PHP Notice:  Undefined index: clube in /home/lhsaia/confusa.top/jogadores/criar_jogador.php on line 55
+[18-Jun-2019 00:19:04 UTC] PHP Notice:  Undefined index: clube in /home/lhsaia/confusa.top/jogadores/criar_jogador.php on line 55
+[18-Jun-2019 00:19:37 UTC] PHP Notice:  Undefined index: clube in /home/lhsaia/confusa.top/jogadores/criar_jogador.php on line 55
+[18-Jun-2019 00:20:14 UTC] PHP Notice:  Undefined index: clube in /home/lhsaia/confusa.top/jogadores/criar_jogador.php on line 55
+[18-Jun-2019 00:21:08 UTC] PHP Notice:  Undefined index: clube in /home/lhsaia/confusa.top/jogadores/criar_jogador.php on line 55
+[26-Jun-2019 14:41:06 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1982
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1982): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1924): Jogador->geranomes('36', '36', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('11', '424', '36', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1982
+[26-Jun-2019 14:41:09 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1982
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1982): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1924): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('11', '424', '37', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1982
+[26-Jun-2019 14:48:01 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1982
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1982): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1924): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('11', '424', '37', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1982
+[26-Jun-2019 14:48:12 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1982
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1982): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1924): Jogador->geranomes('36', '36', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('11', '424', '36', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1982
+[26-Jun-2019 14:48:14 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1982
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1982): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1924): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('11', '424', '37', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1982
+[26-Jun-2019 22:22:35 UTC] PHP Warning:  Missing argument 3 for Jogador::enviarEmailProposta(), called in /home/lhsaia/confusa.top/jogadores/fazer_proposta.php on line 69 and defined in /home/lhsaia/confusa.top/objetos/jogador.php on line 2268
+[26-Jun-2019 22:22:35 UTC] PHP Warning:  Missing argument 4 for Jogador::enviarEmailProposta(), called in /home/lhsaia/confusa.top/jogadores/fazer_proposta.php on line 69 and defined in /home/lhsaia/confusa.top/objetos/jogador.php on line 2268
+[26-Jun-2019 22:22:35 UTC] PHP Notice:  Undefined index: email in /home/lhsaia/confusa.top/objetos/jogador.php on line 2287
+[26-Jun-2019 22:23:11 UTC] PHP Warning:  Missing argument 3 for Jogador::enviarEmailProposta(), called in /home/lhsaia/confusa.top/jogadores/fazer_proposta.php on line 69 and defined in /home/lhsaia/confusa.top/objetos/jogador.php on line 2268
+[26-Jun-2019 22:23:11 UTC] PHP Warning:  Missing argument 4 for Jogador::enviarEmailProposta(), called in /home/lhsaia/confusa.top/jogadores/fazer_proposta.php on line 69 and defined in /home/lhsaia/confusa.top/objetos/jogador.php on line 2268
+[26-Jun-2019 22:23:11 UTC] PHP Notice:  Undefined index: email in /home/lhsaia/confusa.top/objetos/jogador.php on line 2287
+[26-Jun-2019 22:24:51 UTC] PHP Notice:  Undefined index: email in /home/lhsaia/confusa.top/objetos/jogador.php on line 2287
+[02-Jul-2019 18:24:54 UTC] PHP Notice:  Undefined index: clube in /home/lhsaia/confusa.top/jogadores/criar_jogador.php on line 55
+[05-Jul-2019 14:26:56 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('2', '424', '37', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[05-Jul-2019 14:26:59 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('36', '36', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('2', '424', '36', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[05-Jul-2019 14:56:43 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('2', '424', '37', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[11-Jul-2019 17:43:29 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('38', '38', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '38', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[11-Jul-2019 17:43:32 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('38', '38', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '38', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[11-Jul-2019 17:43:35 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('38', '38', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '38', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[11-Jul-2019 17:43:39 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('36', '36', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '36', '25', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[11-Jul-2019 17:43:44 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('38', '38', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '38', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[11-Jul-2019 17:43:56 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('36', '36', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '36', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[11-Jul-2019 17:45:41 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('36', '36', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('11', '424', '36', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[11-Jul-2019 17:46:05 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('36', '36', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('11', '424', '36', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[11-Jul-2019 17:47:22 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('11', '424', '37', '25', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[11-Jul-2019 17:47:48 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('38', '38', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('11', '424', '38', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[11-Jul-2019 17:48:45 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('38', '38', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('11', '424', '38', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[11-Jul-2019 17:48:46 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('36', '36', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('11', '424', '36', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[11-Jul-2019 17:48:50 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('11', '424', '37', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[13-Jul-2019 05:13:55 UTC] PHP Notice:  Undefined index: clube in /home/lhsaia/confusa.top/jogadores/criar_jogador.php on line 55
+[23-Jul-2019 20:08:40 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '37', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[23-Jul-2019 20:08:46 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '37', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[23-Jul-2019 20:08:48 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '37', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[23-Jul-2019 20:08:49 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '37', '25', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[23-Jul-2019 20:09:51 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '37', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[23-Jul-2019 20:09:56 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('36', '36', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '36', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[13-Aug-2019 21:24:46 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('38', '38', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer(10, '424', '38', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[12-Sep-2019 21:36:19 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('5', '424', '37', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[12-Sep-2019 21:41:30 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('36', '36', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('5', '424', '36', '5', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[25-Sep-2019 13:57:03 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '37', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[25-Sep-2019 13:57:11 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '37', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[25-Sep-2019 13:57:44 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:1987
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1987): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1929): Jogador->geranomes('37', '37', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('7', '424', '37', '13', 18, 36, 30, 90, 60, 27, '0', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1987
+[30-Sep-2019 15:47:03 UTC] PHP Notice:  Undefined variable: error_msg in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 194
+[30-Sep-2019 15:47:03 UTC] PHP Notice:  Undefined variable: jogador in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 198
+[30-Sep-2019 15:47:08 UTC] PHP Notice:  Undefined variable: error_msg in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 194
+[30-Sep-2019 15:47:08 UTC] PHP Notice:  Undefined variable: jogador in /home/lhsaia/confusa.top/jogadores/hexagen.php on line 198
+[11-Jan-2020 03:31:34 UTC] PHP Notice:  Undefined index: tipoTransacao in /home/lhsaia/confusa.top/jogadores/fazer_proposta.php on line 17
+[11-Jan-2020 03:31:34 UTC] PHP Notice:  Undefined index: fimContrato in /home/lhsaia/confusa.top/jogadores/fazer_proposta.php on line 18
+[11-Jan-2020 03:37:48 UTC] PHP Notice:  Undefined index: tipoTransacao in /home/lhsaia/confusa.top/jogadores/fazer_proposta.php on line 17
+[11-Jan-2020 03:37:48 UTC] PHP Notice:  Undefined index: fimContrato in /home/lhsaia/confusa.top/jogadores/fazer_proposta.php on line 18
+[11-Jan-2020 03:37:48 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'encerramento' cannot be null in /home/lhsaia/confusa.top/objetos/jogador.php:395
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(395): PDOStatement->execute()
+#1 /home/lhsaia/confusa.top/jogadores/fazer_proposta.php(50): Jogador->proporTransferencia('11278', '499', '520', '0', '0', NULL, NULL)
+#2 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 395
+[11-Jan-2020 03:38:03 UTC] PHP Notice:  Undefined index: tipoTransacao in /home/lhsaia/confusa.top/jogadores/fazer_proposta.php on line 17
+[11-Jan-2020 03:38:03 UTC] PHP Notice:  Undefined index: fimContrato in /home/lhsaia/confusa.top/jogadores/fazer_proposta.php on line 18
+[11-Jan-2020 03:38:03 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'encerramento' cannot be null in /home/lhsaia/confusa.top/objetos/jogador.php:395
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(395): PDOStatement->execute()
+#1 /home/lhsaia/confusa.top/jogadores/fazer_proposta.php(50): Jogador->proporTransferencia('11278', '499', '520', '0', '0', NULL, NULL)
+#2 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 395
+[11-Jan-2020 03:42:00 UTC] PHP Notice:  Undefined index: tipoTransacao in /home/lhsaia/confusa.top/jogadores/fazer_proposta.php on line 17
+[11-Jan-2020 03:42:00 UTC] PHP Notice:  Undefined index: fimContrato in /home/lhsaia/confusa.top/jogadores/fazer_proposta.php on line 18
+[11-Jan-2020 03:42:00 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'encerramento' cannot be null in /home/lhsaia/confusa.top/objetos/jogador.php:395
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(395): PDOStatement->execute()
+#1 /home/lhsaia/confusa.top/jogadores/fazer_proposta.php(50): Jogador->proporTransferencia('11278', '499', '518', '0', '0', NULL, NULL)
+#2 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 395
+[11-Jan-2020 03:55:16 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY093]: Invalid parameter number: parameter was not defined in /home/lhsaia/confusa.top/objetos/jogador.php:1095
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(1095): PDOStatement->bindParam(':clubeDestino', '499')
+#1 /home/lhsaia/confusa.top/jogadores/editar_jogador.php(35): Jogador->demitir('11278', '524')
+#2 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 1095
+[15-Jan-2020 13:27:09 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:2038
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(2038): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1980): Jogador->geranomes('47', '47', true, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('8', '429', '47', '46', 18, 36, 30, 90, 60, 27, '20', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 2038
+[15-Jan-2020 13:27:14 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:2038
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(2038): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1980): Jogador->geranomes('47', '47', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('8', '429', '47', '46', 18, 36, 30, 90, 60, 27, '20', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 2038
+[18-Feb-2020 19:55:53 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:2038
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(2038): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1980): Jogador->geranomes('47', '47', true, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('1', '429', '47', '46', 18, 36, 30, 90, 60, 27, '20', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 2038
+[18-Feb-2020 19:55:57 UTC] PHP Fatal error:  Uncaught Error: Minimum value must be less than or equal to the maximum value in /home/lhsaia/confusa.top/objetos/jogador.php:2038
+Stack trace:
+#0 /home/lhsaia/confusa.top/objetos/jogador.php(2038): random_int(0, -1)
+#1 /home/lhsaia/confusa.top/objetos/jogador.php(1980): Jogador->geranomes('47', '47', false, '0')
+#2 /home/lhsaia/confusa.top/jogadores/hexagen.php(148): Jogador->randomPlayer('1', '429', '47', '46', 18, 36, 30, 90, 60, 27, '20', '0', '0')
+#3 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 2038
+[25-Feb-2020 19:16:14 UTC] PHP Notice:  Undefined variable: stt in /home/lhsaia/confusa.top/objetos/jogador.php on line 2368
+[25-Feb-2020 19:16:14 UTC] PHP Fatal error:  Uncaught Error: Call to a member function fetch() on null in /home/lhsaia/confusa.top/objetos/jogador.php:2368
+Stack trace:
+#0 /home/lhsaia/confusa.top/jogadores/fazer_proposta.php(71): Jogador->enviarEmailProposta('25969', '799', '524', '28432')
+#1 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 2368
+[25-Feb-2020 19:16:36 UTC] PHP Notice:  Undefined variable: stt in /home/lhsaia/confusa.top/objetos/jogador.php on line 2368
+[25-Feb-2020 19:16:36 UTC] PHP Fatal error:  Uncaught Error: Call to a member function fetch() on null in /home/lhsaia/confusa.top/objetos/jogador.php:2368
+Stack trace:
+#0 /home/lhsaia/confusa.top/jogadores/fazer_proposta.php(71): Jogador->enviarEmailProposta('25969', '799', '524', '28433')
+#1 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 2368
+[25-Feb-2020 19:17:07 UTC] PHP Notice:  Undefined variable: stt in /home/lhsaia/confusa.top/objetos/jogador.php on line 2368
+[25-Feb-2020 19:17:07 UTC] PHP Fatal error:  Uncaught Error: Call to a member function fetch() on null in /home/lhsaia/confusa.top/objetos/jogador.php:2368
+Stack trace:
+#0 /home/lhsaia/confusa.top/jogadores/fazer_proposta.php(71): Jogador->enviarEmailProposta('25969', '799', '524', '28434')
+#1 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 2368
+[25-Feb-2020 19:17:38 UTC] PHP Notice:  Undefined variable: stt in /home/lhsaia/confusa.top/objetos/jogador.php on line 2375
+[25-Feb-2020 19:17:38 UTC] PHP Fatal error:  Uncaught Error: Call to a member function fetch() on null in /home/lhsaia/confusa.top/objetos/jogador.php:2375
+Stack trace:
+#0 /home/lhsaia/confusa.top/jogadores/fazer_proposta.php(71): Jogador->enviarEmailProposta('25969', '799', '524', '28435')
+#1 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 2375
+[25-Feb-2020 19:18:08 UTC] PHP Notice:  Undefined variable: stt in /home/lhsaia/confusa.top/objetos/jogador.php on line 2375
+[25-Feb-2020 19:18:08 UTC] PHP Fatal error:  Uncaught Error: Call to a member function fetch() on null in /home/lhsaia/confusa.top/objetos/jogador.php:2375
+Stack trace:
+#0 /home/lhsaia/confusa.top/jogadores/fazer_proposta.php(71): Jogador->enviarEmailProposta('25964', '798', '513', '28436')
+#1 {main}
+  thrown in /home/lhsaia/confusa.top/objetos/jogador.php on line 2375
+[25-Feb-2020 19:18:43 UTC] PHP Notice:  Undefined index: Nome in /home/lhsaia/confusa.top/objetos/jogador.php on line 2376
+[25-Feb-2020 19:18:43 UTC] PHP Notice:  Undefined index: Escudo in /home/lhsaia/confusa.top/objetos/jogador.php on line 2377
+[25-Feb-2020 19:18:44 UTC] PHP Warning:  file_get_contents(https://confusa.top/images/escudos/): failed to open stream: HTTP request failed! HTTP/1.1 403 Forbidden
+ in /home/lhsaia/confusa.top/objetos/jogador.php on line 2379
+[25-Feb-2020 19:22:50 UTC] PHP Notice:  Undefined index: Nome in /home/lhsaia/confusa.top/objetos/jogador.php on line 2378
+[25-Feb-2020 19:22:50 UTC] PHP Notice:  Undefined index: Escudo in /home/lhsaia/confusa.top/objetos/jogador.php on line 2379
+[25-Feb-2020 19:22:50 UTC] PHP Warning:  file_get_contents(https://confusa.top/images/escudos/): failed to open stream: HTTP request failed! HTTP/1.1 403 Forbidden
+ in /home/lhsaia/confusa.top/objetos/jogador.php on line 2381

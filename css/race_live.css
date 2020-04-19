@@ -1,0 +1,986 @@
+@font-face {
+    font-family: 'alte_din_1451_mittelschriftRg';
+    src: url('din1451alt-webfont.woff2') format('woff2'),
+         url('din1451alt-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+.out-of-race{
+	color:red !important;
+}
+
+.driver-name{
+	min-width:100px;
+}
+
+.best-lap-own{
+	color:palegreen !important;
+}
+
+.best-lap-overall{
+	color: plum !important;
+}
+
+#drivers-table{
+  border-spacing:2px;
+  background-color: black;
+  width:100%;
+}
+
+.driver-position{
+  color:black;
+  background-color:yellow;
+  width:25px;
+  text-align:center;
+  font-family: 'Share Tech Mono';
+  font-size:1.1em;
+  font-weight: 900;
+
+}
+
+.driver-headers{
+color:#D4DABA;
+}
+
+.headers-left{
+  text-align:left;
+}
+
+.headers-right{
+  text-align:right;
+}
+
+.driver-team-names{
+text-align:left;
+color:#E9E5AA;
+}
+
+.driver-other-numbers{
+  color:#E2E2E2;
+  text-align:right;
+}
+
+.white-tire{
+	color:white;
+}
+
+.yellow-tire::before, .yellow-tire::after{
+	color:yellow;
+}
+
+.blue-tire::before, .blue-tire::after{
+	color:blue;
+}
+
+.green-tire{
+	color:green;
+}
+
+.red-tire::before, .red-tire::after{
+	color:red;
+}
+
+
+.driver-flag{
+	height:20px;
+	width: 30px;
+}
+
+#race-flag{
+  height:40px;
+  width: 60px;
+}
+
+.driver-text{
+  font-family: 'alte_din_1451_mittelschriftRg';
+  font-size:1.1em;
+  padding: 2px 5px 2px 5px;
+}
+
+#top-bar, #bottom-bar{
+  background-color: gray !important;
+  color:black !important;
+}
+
+#top-bar span{
+  color: darkgray !important;
+}
+
+#botaoVoltar {
+  background-color: black !important;
+}
+
+.icon{
+  color:black !important;
+}
+
+#bottom-bar a:visited{
+  color:darkgray !important;
+}
+
+#bottom-bar a{
+  color:darkgray !important;
+}
+
+#copyright-text::after{
+  content: " and Zé D'Agostini";
+}
+
+#container-live-main{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  height: 100%;
+  border-radius:10px;
+  box-sizing: border-box;
+}
+
+#container-live-aux{
+  width:50%;
+  height:90%;
+  display: flex;
+  flex-direction: column;
+}
+
+#container-live-table{
+  width:50%;
+  overflow-y:auto;
+  height: 90%;
+  /* height:580px; */
+  height:80%;
+  width:50%;
+  display:flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  box-sizing: border-box;
+  background-color:black;
+  border: gray 2px solid;
+  filter: drop-shadow(10px 10px 4px black);
+  box-shadow: 0 0 3pt 2pt black;
+  border-radius:10px;
+  padding:20px;
+  margin: 40px 30px 100px 10px;
+  overflow-y: auto;
+}
+
+#container-race-info{
+
+    width:95%;
+    overflow:hidden;
+    /* height: 40%; */
+    /* min-height: 300px; */
+    display:flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    box-sizing: border-box;
+    background-color:black;
+    border: gray 2px solid;
+    filter: drop-shadow(10px 10px 4px black);
+    box-shadow: 0 0 3pt 2pt black;
+    border-radius:10px;
+    padding:20px;
+    margin: 40px 30px 100px 10px;
+
+}
+
+#container-race-narration{
+
+}
+
+#race-name-bar{
+  /* line-height: 40px; */
+  height: 40px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items:center;
+}
+
+#race-weather-bar{
+  height: 60px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items:center;
+  margin-top:10px;
+}
+
+#weather-name{
+  font-size: 1.4em;
+  /* width:30%; */
+  text-align: center;
+  font-family: 'alte_din_1451_mittelschriftRg';
+}
+
+#race-name{
+  /* display: inline-block; */
+  font-family: 'krunchbold_italic';
+  font-size: 1.4em;
+  padding-left:10px;
+  /* vertical-align: middle; */
+  /* line-height: normal; */
+}
+
+#track-name{
+  font-size: 1.4em;
+  width:70%;
+  /* text-align: center; */
+  font-family: 'alte_din_1451_mittelschriftRg';
+}
+
+.tire{
+font-family: 'Kanit', sans-serif;
+font-weight: 400;
+color:white !important;
+}
+
+.out-quali{
+  background-color: red;
+}
+
+.tire::before{
+  font-family: 'Kanit', sans-serif;
+  font-weight: 900;
+  content:"(";
+}
+
+.tire::after{
+  font-family: 'Kanit', sans-serif;
+  font-weight: 900;
+  content:")";
+}
+
+#race-timing-box{
+  width:70%;
+  height: 80px;
+}
+
+#race-flag-box{
+  /* width:100%; */
+  height: 60px;
+  border-radius:10px;
+  padding:15px;
+  display:flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  /* width:100px; */
+}
+
+.flag-name{
+  font-family: 'krunchbold';
+  font-size: 1.3em;
+  color:black;
+  text-align:center;
+}
+
+.safety-car{
+  background-color: yellow;
+}
+
+.green-flag{
+  background-color: green;
+}
+
+.chequered-flag{
+  background-color: white;
+}
+
+.starting-lights{
+  /* background-color: blue; */
+  position:relative;
+}
+
+.flag-icon{
+  font-size:3em;
+  transform: rotate(20deg);
+  color:black;
+  width:30%;
+}
+
+#race-boxes{
+  display:flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+
+#race-technical-box{
+  display:flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  margin-top:20px;
+  width:30%;
+  justify-content: center;
+  align-items: center;
+}
+
+#race-timing-info{
+  display:flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  margin-top:20px;
+  width:70%;
+}
+
+#race-timing-box{
+  display:flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+#event-name{
+  font-size: 2em;
+  font-family: 'alte_din_1451_mittelschriftRg';
+}
+
+#lap-time-counter{
+  font-size:3em;
+  font-family: 'alte_din_1451_mittelschriftRg';
+}
+
+#day-hour-minute-box{
+  display:flex;
+  flex-direction:row;
+  flex-wrap: nowrap;
+  margin:10px;
+  box-sizing: border-box;
+  width:70%;
+}
+
+#day-hour-minute-box-two{
+  display:flex;
+  flex-direction:row;
+  flex-wrap: nowrap;
+  margin:20px;
+  padding:10px;
+  box-sizing: border-box;
+  width:100%;
+}
+
+#hour-box, #day-box, #hour-box-two, #day-box-two{
+  border-right: 2px solid #232323;
+}
+
+#hour-box::after, #hour-box-two::after{
+    content: "HRS";
+    color:#585858;
+    font-size:40%;
+}
+
+#day-box::after, #day-box-two::after{
+  content: "DAYS";
+  color:#585858;
+  font-size:40%;
+}
+
+#minute-box::after, #minute-box-two::after{
+  content: "MINS";
+  color:#585858;
+  font-size:40%;
+}
+
+#second-box::after{
+  content: "SEC";
+  color:#585858;
+  font-size:40%;
+}
+
+.timing-box{
+width:33%;
+color:white;
+font-size:2.8em;
+font-family: 'krunchbold';
+text-align:center;
+display:flex;
+flex-direction: column;
+}
+
+.timing-box::after{
+
+}
+
+#rolex-time{
+width:30%;
+height:100%;
+background-color:#282828;
+border-top-right-radius: 10px;
+border-bottom-right-radius: 10px;
+position:relative;
+/* display:flex;
+align-items: center;
+justify-content: center; */
+}
+
+#rolex-face, #rolex-minute, #rolex-second, #rolex-hour{
+  position:absolute;
+  top:50%;
+  left:50%;
+  margin-left:-35px;
+  margin-top:-35px;
+  width: 70px;
+  height: 70px;
+}
+
+/* @keyframes rotate {
+  100% {
+    transform: rotateZ(360deg);
+  }
+} */
+
+
+
+/* #rolex-minute {
+  animation: rotate 3600s infinite linear;
+} */
+
+
+#countdown-container, #countdown-container-two{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  height:100%;
+  width:100%;
+  border-radius:10px;
+  background-color: #181818;
+}
+
+
+#grid-container{
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  width: 100%;
+  background-color:white;
+  border-radius:10px;
+}
+
+.grid-row{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  width: 100%;
+  height:150px;
+  align-items: flex-end;
+}
+
+.grid-element:first-child{
+  align-self: flex-start;
+}
+
+.grid-element{
+  width: 50%;
+  height: 70%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  border-radius:10px;
+  margin: 5px;
+}
+
+.grid-pos{
+  width:15%;
+  height: 50%;
+  background-color: black;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid-pos span{
+  font-family: "krunchbold";
+  font-size: 2em;
+  color:yellow;
+}
+
+.grid-driver{
+  width:85%;
+  height: 100%;
+
+}
+
+.grid-car{
+  width:100%;
+  height: 70%;
+  border-top-right-radius: 10px;
+  box-sizing: border-box;
+  display:flex;
+  align-items: flex-end;
+
+}
+
+.grid-car img{
+  max-width:100%;
+  max-height: 100%;
+  width:auto;
+  height: auto;
+    box-sizing: border-box;
+}
+
+.grid-driver-label{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  width:100%;
+  height: 30%;
+}
+
+.grid-driver-name{
+  height: 100%;
+  width: 60%;
+  display:flex;
+  align-items: center;
+  justify-content: center;
+  background-color: black;
+}
+
+.grid-driver-name span{
+
+  font-family: "alte_din_1451_mittelschriftRg";
+  /* font-family: "krunchbold"; */
+  font-size: 1.1em;
+  font-weight: bold;
+  color:white;
+  text-transform: uppercase;
+}
+
+.grid-driver-time{
+  height: 100%;
+  width: 30%;
+  background-color: white;
+  display:flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid-driver-time span{
+
+  font-family: "alte_din_1451_mittelschriftRg";
+  font-size: 1.2em;
+  font-weight: bold;
+  color:black;
+}
+
+.grid-driver-quali{
+  height: 100%;
+  width: 10%;
+  background-color: black;
+  border-bottom-right-radius: 10px;
+  display:flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid-driver-quali span{
+
+  font-family: "alte_din_1451_mittelschriftRg";
+  font-size: 1.2em;
+  font-weight: bold;
+  color:white;
+}
+
+/*  starting lights */
+
+.light {
+  margin:0;
+  border-radius: 100%;
+  background: #222;
+  /* margin: 10px; */
+  height:12px;
+  width:12px;
+  margin:2.5px;
+  box-sizing: border-box;
+
+}
+
+.light::before {
+  content: '';
+  display: block;
+  padding-top: 100%;
+}
+
+.light-strip.on .light:nth-child(1n+3) {
+  background: red;
+}
+
+#f1-lights {
+  display: flex;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* background-color: blue; */
+
+}
+
+.light-strip {
+  background: black;
+  border-radius: 3px;
+  margin: 0 2px;
+  position: relative;
+  flex: 1;
+  height:100%;
+}
+
+#back-board {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  top: 35%;
+  height: 8%;
+  background: #000;
+  width:100%;
+  /* transform: translateY(-50%); */
+}
+
+
+/* sky gradients */
+/* Gradients */
+.sky-gradient-night-3 { background: linear-gradient(to bottom, #020111 10%,#3a3a52 100%); }
+.sky-gradient-night-4 { background: linear-gradient(to bottom, #20202c 0%,#515175 100%); }
+.sky-gradient-night-5 { background: linear-gradient(to bottom, #40405c 0%,#6f71aa 80%,#8a76ab 100%); }
+.sky-gradient-night-6 { background: linear-gradient(to bottom, #4a4969 0%,#7072ab 50%,#cd82a0 100%); }
+.sky-gradient-day-1 { background: linear-gradient(to bottom, #94c5f8 1%,#a6e6ff 70%,#b1b5ea 100%); }
+.sky-gradient-day-2 { background: linear-gradient(to bottom, #b7eaff 0%,#94dfff 100%); }
+.sky-gradient-day-3 { background: linear-gradient(to bottom, #9be2fe 0%,#67d1fb 100%); }
+.sky-gradient-day-4 { background: linear-gradient(to bottom, #90dffe 0%,#38a3d1 100%); }
+.sky-gradient-day-5 { background: linear-gradient(to bottom, #57c1eb 0%,#246fa8 100%); }
+.sky-gradient-rain-1 { background: linear-gradient(to bottom, #2d91c2 0%,#1e528e 100%); }
+.sky-gradient-rain-2 { background: linear-gradient(to bottom, #2473ab 0%,#1e528e 70%,#5b7983 100%); }
+.sky-gradient-night-7 { background: linear-gradient(to bottom, #1e528e 0%,#265889 50%,#9da671 100%); }
+.sky-gradient-night-8 { background: linear-gradient(to bottom, #1e528e 0%,#728a7c 50%,#e9ce5d 100%); }
+.sky-gradient-night-9 { background: linear-gradient(to bottom, #154277 0%,#576e71 30%,#e1c45e 70%,#b26339 100%); }
+.sky-gradient-night-1 { background: linear-gradient(to bottom, #163C52 0%,#4F4F47 30%,#C5752D 60%,#B7490F 80%, #2F1107 100%); }
+.sky-gradient-night-2 { background: linear-gradient(to bottom, #071B26 0%,#071B26 30%,#8A3B12 80%,#240E03 100%); }
+
+
+/* Main race banners */
+
+#container-foca{
+  width:97%;
+  height:50%;
+  margin:10px;
+  box-sizing: border-box;
+  background-color:black;
+  border: gray 2px solid;
+  filter: drop-shadow(10px 10px 4px black);
+  box-shadow: 0 0 3pt 2pt black;
+  border-radius:10px;
+  padding:10px;
+  overflow: hidden;
+}
+
+#container-foca-two{
+  width:48%;
+  height:50%;
+  margin:10px 0 20px 10px;
+  box-sizing: border-box;
+  background-color:black;
+  border: gray 2px solid;
+  filter: drop-shadow(10px 10px 4px black);
+  box-shadow: 0 0 3pt 2pt black;
+  border-radius:10px;
+  padding:10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+#container-other-competitions{
+  width:48%;
+  height:50%;
+  background-color:aquamarine;
+  margin:10px 0 20px 10px;
+  box-sizing: border-box;
+  background-color:black;
+  border: gray 2px solid;
+  filter: drop-shadow(10px 10px 4px black);
+  box-shadow: 0 0 3pt 2pt black;
+  border-radius:10px;
+  padding:10px;
+  overflow-y: hidden;
+  overflow-x: auto;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+
+#race-live-viewer{
+  width:100%;
+  height:87%;
+  display:flex;
+  flex-direction:row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+
+}
+
+body{
+  overflow-y:hidden;
+}
+
+#container-foca{
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+#foca-country-year-outer{
+  height: 70%;
+  width:30%;
+  display:flex;
+}
+
+
+#foca-countdown-outer{
+  height: 30%;
+  width:30%;
+  display:flex;
+}
+
+#foca-circuit-outer{
+  height: 100%;
+  max-width:30%;
+  width:auto;
+  /* background: salmon; */
+  filter: invert(1);
+}
+
+#foca-logo-live{
+  max-height: 100%;
+  max-width:30%;
+  width:auto;
+  height: auto;
+}
+
+#new-race-season-container{
+  display:flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+
+#new-race-season-container > button{
+  background-color: #A3A3A3;
+  border-radius: 5px;
+  margin:5px;
+  font-family: 'alte_din_1451_mittelschriftRg';
+  color:black !important;
+  font-size:1.1em;
+}
+
+#new-race-season-container > div > input, #new-race-season-container > div > select{
+  background-color: black;
+    border: 2px solid #808080;
+    outline: none;
+    border-radius: 5px;
+    width: calc(100% - 20px);
+    padding: 10px;
+    color: #808080;
+    font-size: 1.2em;
+    text-align: center;
+    margin: 10px;
+    box-sizing: border-box;
+    text-align-last:center;
+}
+
+#new-race-season-container option{
+  text-align:center;
+}
+
+#new-race-season-container > div > label{
+  margin-top: 5px;
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+}
+
+#new-race-season-container > div{
+  display:flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  width:100%;
+}
+
+#new-race-season-container > div > button{
+  width:calc(50% - 10px);
+  border-radius: 5px;
+  margin:5px;
+}
+
+#new-race-season-container > div > button:first-of-type{
+  font-family: 'alte_din_1451_mittelschriftRg';
+  background-color:palegreen;
+  color:darkgreen;
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+#new-race-season-container > div > button:last-of-type{
+  font-family: 'alte_din_1451_mittelschriftRg';
+  background-color:lightcoral;
+  color:darkred;
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.editable-race{
+  width: 30px;
+  height: 30px;
+  color:black;
+  margin-left:20px;
+}
+
+#foca-country-year-outer > span, #foca-countdown-outer > span{
+  font-weight: 700;
+  font-family: 'alte_din_1451_mittelschriftRg';
+  font-size: 4em;
+  align-self: center;
+}
+
+#foca-two-country-year-outer > span{
+  font-weight: 700;
+  font-family: 'alte_din_1451_mittelschriftRg';
+  font-size: 2em;
+  align-self: center;
+}
+
+.out-of-season{
+  cursor: auto;
+}
+
+#foca-country-year-outer > div, #foca-two-country-year-outer > div{
+  display:flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+#foca-country-year-outer > div > span{
+  font-weight: 700;
+  font-family: 'krunchbold';
+  font-size: 3em;
+  align-self: center;
+  margin:5px;
+}
+
+#foca-two-country-year-outer > div > span{
+  font-weight: 700;
+  font-family: 'krunchbold';
+  font-size: 2em;
+  align-self: center;
+  margin:5px;
+}
+
+.clickable-true{
+  cursor:pointer;
+}
+
+#foca-two-country-year-outer, #foca-two-countdown-outer{
+  padding:10px;
+  width:50%;
+  height: 50%;
+  box-sizing: border-box;
+}
+
+#foca-two-country-year-outer{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+ #foca-two-circuit-outer, #foca-two-logo-live{
+   padding:5px;
+   max-width:50%;
+   max-height: 50%;
+   box-sizing: border-box;
+ }
+
+ .other-competition-card{
+   width:200px;
+   height: 100%;
+   display: flex;
+   flex-direction: column;
+   flex-wrap: nowrap;
+   box-sizing: border-box;
+   align-items: center;
+   justify-content: center;
+   background-color: white;
+   margin:3px;
+   border-radius:10px;
+ }
+
+.other-competition-name{
+  max-height: 20%;
+  max-width: 100%;
+  height: auto;
+  width: auto;
+  /* box-sizing: border-box; */
+}
+
+.other-competition-circuit{
+  max-height: 45%;
+  max-width: 100%;
+  height: auto;
+  width: auto;
+  /* box-sizing: border-box; */
+}
+
+.other-competition-race-name-year >span{
+  font-weight: 700;
+  font-family: 'krunchbold';
+  font-size: 1em;
+  align-self: center;
+  margin:5px;
+  text-align: center;
+  color: black;
+}
+
+.other-competition-date-time >span{
+  font-weight: 700;
+  font-family: 'alte_din_1451_mittelschriftRg';
+  font-size: 1em;
+  align-self: center;
+  margin:5px;
+  text-align: center;
+  color: black;
+}
+
+.other-competition-date-time{
+  margin-top:20px;
+}
+
+.other-competition-race-name-year{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.others-empty > span{
+  width:100%;
+  height: 100%;
+  font-size:1.5em;
+  font-weight: 700;
+  font-family: 'alte_din_1451_mittelschriftRg';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.others-empty{
+  width:100%;
+  height: 100%;
+}

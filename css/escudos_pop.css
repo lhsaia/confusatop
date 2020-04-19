@@ -1,0 +1,62 @@
+#tabela-escudos{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin:30px 30px 0 30px;
+}
+
+.conjunto-escudo{
+  max-width:250px;
+  display:flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  margin:20px;
+
+}
+
+.escudo-time{
+  height: 250px;
+  width: 250px;
+  box-sizing: border-box;
+}
+
+.adivinhador-nome{
+  height: 40px;
+  padding: 10px;
+  box-sizing: border-box;
+  text-transform: uppercase;
+  text-align: center;
+  font-weight: 700;
+  border-radius:5px;
+  font-size:1.3em;
+
+}
+
+.smaller-font{
+  font-size:0.95em;
+}
+
+.adivinhador-nome:focus{
+  outline:none;
+filter: drop-shadow(0px 0px 3px #1A1469);
+}
+
+.palpite-incorreto{
+  background-color: darkred;
+  color:white;
+}
+
+.palpite-correto{
+  background-color: gray;
+  color:white;
+}
+
+#escudos-pop-header{
+  padding:30px 30px 0 30px;
+}
+
+#copyright-text::after{
+  content: " and Patrick Hegenbart";
+}

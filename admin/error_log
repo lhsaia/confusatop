@@ -1,0 +1,2 @@
+[18-Apr-2020 11:34:52 UTC] PHP Notice:  Undefined index: paises_vinculados in /home/lhsaia/confusa.top/admin/criar_usuario.php on line 98
+[18-Apr-2020 11:34:52 UTC] PHP Warning:  Invalid argument supplied for foreach() in /home/lhsaia/confusa.top/admin/criar_usuario.php on line 98

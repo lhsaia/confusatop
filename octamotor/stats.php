@@ -1,0 +1,1 @@
+SELECT driver.name, count(race), sum(case when position = -1 then 1 else 0 end) as abandon, (sum(case when position = -1 then 1 else 0 end) / count(race))*100 as abandon_rate FROM `race_position` LEFT JOIN driver ON driver.ID = race_position.driver GROUP BY driver HAVING count(race) > 20 ORDER BY `abandon_rate` DESC

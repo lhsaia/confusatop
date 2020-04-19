@@ -1,0 +1,99 @@
+#match-info-header{
+  width: 100%;
+  display:flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  margin: 20px auto;
+  align-items: center;
+  justify-content: center;
+
+}
+
+#match-info-team-1-flag, #match-info-team-2-flag{
+  width:80px;
+  height: 60px;
+  padding:5px;
+}
+
+#match-info-team-1-name, #match-info-team-2-name, #match-info-team-1-score, #match-info-team-2-score{
+  font-size:2em;
+  padding:5px;
+}
+
+#match-info-base{
+  width: 100%;
+  display:flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  margin: 10px auto;
+  align-items: center;
+  justify-content: center;
+}
+
+#match-info-competition-block{
+  width: 100%;
+  display:flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.yellow-card{
+  color:#eaea00;
+}
+
+.red-card{
+  color:red;
+}
+
+.own-goal{
+  color:red;
+}
+
+.match-event-unit{
+  width:100%;
+  display:flex;
+  flex-direction:row;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+}
+
+#match-info-events{
+  margin-top:20px;
+}
+
+.match-event-unit span, .match-event-unit i{
+  text-align: center;
+}
+
+.match-event-unit a{
+    width:37%;
+}
+
+.match-event-player-name-1{
+  width:37%;
+}
+
+.match-event-player-name-2{
+  width:37%;
+}
+
+.match-event-minute-1{
+  width:10%;
+  font-weight: 700;
+}
+
+.match-event-minute-2{
+  width:10%;
+  font-weight: 700;
+}
+
+.match-event-icon{
+  width:6%;
+}
+
+.goal{
+  color:black;
+}

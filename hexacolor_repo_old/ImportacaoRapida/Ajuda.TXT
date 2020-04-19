@@ -1,0 +1,147 @@
+===Módulo de Importação Rápida===
+
+O módulo de importação rápida tem como objetivo acelerar o processo de edição de jogadores e técnicos, possibilitando que o mesmo seja feito diretamente em uma planilha ao invés do módulo de edição padrão do Hexacolor YMT.
+
+Ele pode ser acessado no menu principal da aplicação, através da aba "Importação Rápida"
+
+***Conteúdo***
+
+1. Exportar Planilha Base
+2. Importar Planilha Preenchida
+	2.1. Criando um jogador ou técnico
+3. Importar Nova Planilha
+4. Regras de Preenchimento das Colunas
+	4.1 Jogador/Nacionalidade
+	4.2 Jogador/Nível
+	4.3 Jogador/Mentalidade
+	4.4 Jogador/Cobrador de Falta
+	4.5 Jogador/Determinação
+	4.6 Jogador/Posições
+	4.7 Jogador/Perfis
+	4.8 Técnico/Nível
+	4.9 Técnico/Estilo
+	4.9 Técnico/Mentalidade
+
+---1 . Exportar Planilha Base---
+
+A primeira opção do sub-menu produzirá uma planilha contendo todos os jogadores e técnicos existentes na sua base de dados. Essa planilha será salva na pasta "ImportacaoRapida", com o nome "BaseExportada-'data e hora da exportação'".
+
+Esse processo pode demorar alguns minutos, dependendo do tamanho da base de dados.
+
+---2. Importar Planilha Preenchida---
+
+Uma vez exportada, você poderá modificar a planilha base para, por exemplo, alterar o nível de seus jogadores.
+
+Após preenchê-la, você deverá usar a opção "Importar Planilha Preenchida" do sub-menu para atualizar a base de dados do Hexacolor YMT. Quando o fizer, o programa sugerirá que você crie um backup da base de dados atual, ou seja, do arquivo "database.db3", contido na pasta "data". Esse passo é extremamente importante, pois caso haja um erro grave de preenchimento que o programa não esteja preparado para tratar, a database poderá ser seriamente danificada e tornar-se não-funcional.
+
+O processo de importação poderá demorar alguns minutos, caso haja muitas atualizações a serem feitas. É recomendado que você remova todas as linhas da planilha que não serão modificadas, pois isso acelerará o processo. Nunca, porém, deixe linhas vazias entre linhas preenchidas (por exemplo, as linhas 1 e 3 preenchidas e a 2 vazia), pois isso fará com que a leitura seja interrompida na linha vazia (no exemplo anterior, a linha 1 seria lida, mas a 3 seria ignorada).
+
+Jamais retire a primeira linha da planilha, que contém a legenda, pois isso poderá gerar um erro de leitura.
+
+	+++2.1 Criando um Jogador ou técnico+++
+	
+	A planilha também pode ser utilizada para adicionar novos jogadores ou técnicos. Para isso, basta você preencher todos os dados de uma determinada linha, deixando a coluna "ID" vazia. Isso informará ao programa que um novo jogador ou técnico deverá ser criado com aqueles dados. Utilize a sessão "Regras de Preenchimento das Colunas" como referência para o preenchimento das informações.
+
+---3. Importar Nova Planilha---
+
+Você não precisa utilizar uma planilha base para fazer alterações. Se, por exemplo, desejar apenas criar algums jogadores, você pode fazer uma cópia da planilha "Base Vazia", presente na pasta "Importacao Rapida", preenchê-la e enviá-la para o programa utilizando a mesma opção "Importar Planilha Preenchida" do sub-menu.
+
+---4. Regras de Preenchimento das Colunas--- 
+
+Todos os campos, com exceção do Nome, podem ser deixados em branco, dadas as restrições abaixo:
+
+- Se o campo ID for deixado em branco, o programa interpretará que essa linha determina a criação de um novo jogador ou técnico.
+- Se o nome for deixado em branco, ocorrerá um erro e a leitura será interrompida na linha em questão.
+- Se a nacionalidade for deixada em branco, o programa utilizará a nacionalidade-padrão da configuração de parâmetros utilizada no momento da importação.
+- Se nenhuma posição for preenchida, o jogador não poderá ser corretamente escalado, nunca entrará em campo via substituição e poderá causar um erro na partida se tiver a sua escalação forçada na "Edição Manual".
+- Na criação de um jogador, se não for informado nenhum Perfil, ele terá todos os atributos iguais.
+- Para os demais campos, se nenhum valor for informado será utilizado o valor padrão, o mesmo que é carregado quando se abre a tela de Criação/Edição de um jogador no Hexacolor YMT.
+
+	+++4.1 Jogador/Nacionalidade+++
+	
+	Nesta coluna, deverá ser inserido o nome do arquivo que representa a bandeira do país, presente na pasta "data/paises". Não se esqueça da extensão (Exemplo: País Menor é "PAM.jpg", Bahavia é "BAH.png" e Outside a Place é "OAP.gif").
+
+	+++4.2 Jogador/Nível+++
+
+	São permitidos apenas valores entre 30 e 100.
+
+	+++4.3 Jogador/Mentalidade+++
+
+	Os valores permitidos são:
+		1 - Mascarado
+		2 - Sangue Frio
+		3 - Pacificador
+		4 - Neutro
+		5 - Líder
+		6 - Provocador
+		7 - Explosivo
+
+	+++4.4 Jogador/Cobrador de Falta+++
+
+	Os valores permitidos são:
+		0 - Não cobra faltas
+		1 - Força Pura
+		2 - Equilibrada
+		3 - Pura Categoria
+
+	+++4.5 Jogador/Determinação+++
+	
+	São permitidos apenas valores entre 1 e 5.
+
+	+++4.6 Jogador/Posições+++
+
+	Marque com 1 as posições em que o jogador atua e com 0 ou vazio as demais. Caso um jogador tenha a posição G ("Goleiro") marcada, as demais posições serão ignoradas.
+
+	+++4.7 Jogador/Perfis+++
+
+	Os valores permitidos para Goleiros são:
+		1 - Goleiro Ágil
+		2 - Goleiro Seguro
+		3 - Goleiro Espalhafatoso
+		4 - Pegador de Pênaltis
+		5 - Goleiro de Presença
+
+	Os valores permitidos para Jogadores são:
+		1 - Lateral Defensivo
+		2 - Lateral Incansável
+		3 - Ala Ofensivo
+		4 - Beque Central
+		5 - Quarto Zagueiro
+		6 - Líbero
+		7 - Cabeça de Área
+		8 - Volante de Raça
+		9 - 2º Volante
+		10 - Carregador de Piano
+		11 - Meia Lateral
+		12 - Meia Controlador
+		13 - Armador de Cadência
+		14 - Armador Arisco
+		15 - Ponta Fixo
+		16 - Atacante de Movimentação
+		17 - 2º Atacante
+		18 - Atacante de Área
+		19 - Centroavante Oportunista	
+
+	Para utilizar um perfil que você tenha criado dentro do Hexacolor YMT, utilize a posição em que ele aparece na lista de Perfis da tela de Criação/Edição de Jogador (Exemplo: o perfil que vem depois de "Goleiro de Presença", nos perfis de goleiro, será o 6; o perfil que vem depois de "Centroavante Oportunista", nos perfis de jogadores, será o 20).
+
+	+++4.8 Técnico/Nível+++
+
+	São permitidos apenas valores entre 1 e 10.
+
+	+++4.9 Técnico/Estilo+++
+
+	Os valores permitidos são:
+		1 - Explorar Contra-Ataques
+		2 - Cadenciar o Jogo
+		3 - Neutro
+		4 - Atacar pelas Laterais
+		5 - Impôr Ritmo Ofensivo
+
+	+++4.9 Técnico/Mentalidade+++
+
+	Os valores permitidos são:
+		1 - Retranca
+		2 - Defensiva
+		3 - Balanceada
+		4 - Ofensiva
+		5 - Ataque Total

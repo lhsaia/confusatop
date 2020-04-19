@@ -1,0 +1,277 @@
+﻿Hexacolor YMT v2.11
+Release Beta
+
+Dúvidas, sugestões, comentários e/ou suporte podem ser enviados para digisabio@hotmail.com
+
+Boa simulação!
+digisabioSoft
+
+---Log de Mudanças---
+***Versão 2.11***
+-> Inclusões:
+	- Adicionada a mentalidade Raçudo, que surge como alternativa para jogadores que possuíam determinação alta (ver remoção de determinação abaixo) e não se encaixam em outras mentalidades.
+	- Adicionada a opção de editar mentalidades em batch. Dessa forma, é possível rapidamente alterar a mentalidade de múltiplos jogadores de uma vez só.	
+	- Adicionado um gerador de times genéricos, uma forma muito rápida de criar times com jogadores genéricos.
+	- Adicionada a possibilidade de importar cores dos times a partir do Excel (basta copiar células coloridas e clicar no botão de importar; instruções mais detalhadas acompanham o botão).
+	- Adicionada a opção de exportar múltiplos jogadores de uma só vez, filtrando por nacionalidade e idade.
+-> Modificações:
+	- REMOVIDO O ATRIBUTO DETERMINAÇÃO. Jogadores não possuem mais esse atributo e todos os algoritmos foram atualizados para considerar isso. A exportação de jogadores mantém compatibilidade com versões antigas.
+	- Modificado sistema de escolha de posição durante substituição, de forma que a mesma posição agora tem prioridade a posições próximas (por exemplo, o algoritmo agora vai sempre buscar um Aa para substituir diretamente um Aa, e não considerar a possibilidade de utilizar um Am).
+	- Melhorado o sistema de cálculo de temperatura por clima, evitando situações absurdas como neve com 14º.
+	- Melhorada a rapidez da importação de databases geradas pelo portal CONFUSA.top.
+	- Melhorado o algoritmo de decidir quando a torcida irá grita "olé".
+	- Jogadores substituídos por exaustão/cãimbras agora são apresentados como lesionados por 1 dia, para deixar clara a razão da substituição, de acordo com sugestão recebida.
+-> Correções de Bugs:
+	- Corrigido bug no algoritmo de escolha de substituto para jogos enviados pelo Scheduler, que poderia travar ao não encontrar qualquer jogador para uma posição específica.
+	- Corrigido bug em que partida poderia travar se não fosse possível escolher nenhum jogador para cobrar uma falta de levantamento para a área.
+	- Corrigido bug no algoritmo de objetivos durante a prorrogação, que fazia com que o time que estava perdendo pudesse recuar, e o time que estivesse vencendo podia mandar o goleiro para a área.
+	- Corrigidos erros de português em algumas narrações, de acordo com sugestões recebidas.
+	- Corrigido bug de narração que informava que goleiro fizera pênalti tocando a bola com a mão.
+	- Corrigido bug de narração em que cartão vermelho por toque de mão aparecia como agressão.
+
+***Versão 2.10***
+-> Inclusões:
+	- Adicionado VAR, que vem desabilitado, por padrão. Para habilitá-lo, basta ir em Arquivo->Opções e marcar o campo correspondente.
+	- Adicionada a opção de substituição extra na prorrogação.
+	- Adicionada uma grande quantidade de novos eventos de jogo, incluindo bola parada resultando em cruzamento para a área, pênalti por mão na bola, cruzamento rasteiro e choque de cabeça.
+	- Adicionados novos eventos de cartão amarelo, incluindo reclamação, simulação e comemoração sem camisa.
+	- Adicionados também mais alguns eventos raros. 
+	- Adicionada uma grande variedade de novas narrações para cobranças de pênalti.
+	- Adicionada uma ferramenta para atualizar automaticamente a idade de todos os jogadores da base de dados.
+-> Modificações:
+	- Algumas modificações no algoritmo de simulação, após estudo de base de dados de partidas, incluindo maior influência do estilo de jogo da equipe, menos chances de finalizações resultarem em trave/travessão e uma influência maior do cartão vermelho no desempenho da equipe com jogador a menos.
+	- Melhorado o algoritmo de seleção do batedor de escanteio, para evitar que jogadores de área sejam escolhidos.
+	- Modificada a influência da condição física no desempenho do jogador, visando reduzir a quantidade de gols no início das partidas.
+	- Alterado o algoritmo de comparação de cores para uma versão mais atualizada e eficiente.
+-> Correções de Bugs:
+	- Corrigido bug que causava travamento da simulação caso algum dos jogadores não tivesse nacionalidade.
+	- Corrigido bug raro que podia causar travamento da simulação durante uma tentativa de execução de finalização especial.
+	- Corrigido bug em que a configuração revertia para "Padrão" ao abrir o Hexacolor pela primeira vez após salvar a configuração anterior.
+	- Corrigido bug em que jogador se lesionava após falta por mão na bola.
+	- Corrigido bug em que o jogo não terminava se um dos times ficasse com menos de 7 jogadores por consequência de uma lesão.
+	- Corrigido bug em que o atributo Faro de Gol de jogadores criados há alguns anos, em versões antigas, poderia ficar proporcionalmente inferior ao valor desejado.
+	- Corrigido bug em que, ao editar o nível de um jogador ou goleiro diretamente pela tela de Edição de Jogador, a divisão de pontos entre os atributos poderia ser feita de forma incorreta.
+	- Corrigido bug raro em que um time poderia ficar com um a menos após uma lesão, por não haver nenhum jogador daquela posição (ou de outra aceitável) no banco e o treinador não conseguir improvisar nenhum outro atleta.
+
+***Vers縊 2.9.3***
+-> Corre鋏es de Bugs:
+	- Corrigido bug que podia travar a simula鈬o de partidas utilizando o limitador de less por data em jogos retroativos.
+
+***Vers縊 2.9.2***
+-> Incluss:
+	- Inclu冝a, na aba de op鋏es, a alternativa de limitar (ou expandir) o tempo m痊imo das less. Isso pode ser feito pelo n伹ero de dias ou atrav駸 de uma data limite.
+-> Modifica鋏es:
+	- Agora as idades dos jogadores tamb駑 s縊 mostradas ao lado dos nomes e das mentalidades na tela de sele鈬o de capit縊 e cobradores de p麩alti, na escala鈬o.
+-> Corre鋏es de Bugs:
+	- Corrigido bug em que era imposs咩el salvar uma partida simulada atrav駸 do Scheduler caso a competi鈬o utilizada tivesse uma "/" no nome, o que deixava o programa preso no loading de simula鈬o.
+	- Corrigido bug em que o Hexacolor n縊 reconhecia a obrigatoriedade de atualizar a escala鈬o quando a 佖ica modifica鈬o feita no elenco era a cria鈬o de um novo jogador.
+	- Corrigido bug que diminu僘 a dificuldade de execu鈬o de dribles raros, por conta de um cigo que se tornou obsoleto ap as modifica鋏es feitas ao sistema de atributos a partir da vers縊 2.7.5.
+
+***Vers縊 2.9.1***
+-> Incluss:
+	- Adicionada a aba de op鋏es, com a alternativa de n縊 mais exibir diretamente a s伹ula partida ao final da simula鈬o, para aqueles que possam preferir n縊 saber o resultado imediatamente.
+-> Modifica鋏es:
+	- Modificada a sele鈬o de capit縊 e cobradores de p麩alti, durante a montagem da escala鈬o, para exibir a mentalidade do jogador e possibilitar uma escolha mais bem informada.
+	- Melhorado o algoritmo de escolha de atributos durante a execu鈬o das jogadas.
+	- A partida simulada atrav駸 de um comando do Scheduler ・agora distribu冝a para uma thread separada, com o objetivo de tornar o fluxo de desenvolver e salvar gr畴icos mais confi疱el e tentar evitar os erros gr畴icos nas s伹ulas.
+-> Corre鋏es de Bugs:
+	- Corrigido bug que deixava o Hexacolor travado durante a verifica鈬o de compatibilidade. Adicionada uma verifica鈬o extra para resolver problemas com jogadores que tenham atributos e/ou determina鈬o original igual a zero.
+	- Corrigido bug em que uma partida partida poderia travar pela aus麩cia de um cobrador de p麩altis.
+	- Corrigido bug em que uma partida inicializada a partir do Scheduler poderia travar se, em um caso extremo, um goleiro precisasse ser improvisado como jogador de linha por falta de substitutos.
+	- Corrigido bug em que a determina鈬o calculada, e n縊 a original, era exportada na Planilha-base de importa鈬o r疳ida.
+
+***Vers縊 2.9***
+-> Incluss:
+	- Adicionada conex縊 ao Hexacolor Scheduler para permitir simula鈬o autom疸ica de jogos.
+-> Corre鋏es de Bugs:
+	- Corrigido bug que podia causar travamento da partida durante simula鈬o.
+
+***Vers縊 2.8***
+-> Incluss:
+	- Simulador passa a exportar arquivos no formato .hyl, utilizados para a transmiss縊 do jogo no portal CONFUSA Live.
+	- Simulador agora contabiliza assist麩cias.
+	- Adicionados alguns eventos raros ao matchengine, como gol ol匇pico, gol do meio de campo e o goleiro ir para a 疵ea advers疵ia em escanteio do seu time nos minutos finais de um jogo decisivo.
+	- Adicionada a possibilidade de editar est疆ios.
+	- Adicionadas as bandeiras de todos os pa﨎es reais do mundo, possibilitando que os jogadores assumam essas nacionalidades. 
+-> Modifica鋏es:
+	- Identifica鈬o do Capit縊 da equipe na s伹ula.
+	- Identifica鈬o das assist麩cias de cada jogador na s伹ula.
+	- Identifica鈬o da idade dos jogadores na s伹ula.
+	- S伹ula agora exibe os titulares de in兤io de jogo sempre em ordem de escala鈬o, mesmo que o time seja editado antes da partida. Desta forma, um goleiro reserva que comece jogando, por exemplo, n縊 aparecer・mais ap os atacantes.
+	- Melhorado o algoritmo de escolha de substitutos. Entre as mudan軋s, est・a possibilidade do treinador lan軋r jogadores jovens quando sua equipe estiver vencendo por uma margem confort疱el.
+	- Tela de cria鈬o da partida agora mostra as cores das duas equipes, para facilitar a escolha manual dos uniformes.
+	- Melhorado o algoritmo de acr駸cimos.
+	- Melhorado o algoritmo de gera鈬o de escanteios.
+	- Melhorado o algoritmo de substitui鋏es em jogos com mais do que 3 substitui鋏es permitidas, incluindo a possibilidade de trocar o goleiro no final do jogo, para dar experi麩cia ao reserva.
+	- Relatio do jogo agora informa os acr駸cimos de cada tempo.
+-> Corre鋏es de Bugs:
+	- Corrigido um grande bug em que os jogadores perdiam pontos nos seus atributos toda vez que eram editados, fazendo com que, ao longo do tempo, o somatio de seus atributos ficasse bastante abaixo do somatio ideal para o seu n咩el.
+	- Corrigido bug em que a simula鈬o do jogo falhava caso um dos dois times n縊 tivesse capit縊 (o que s・deveria acontecer ap um erro de importa鈬o ou uma edi鈬o direta do banco de dados).
+	- Corrigido bug em que a simula鈬o poderia falhar em jogos com mais do que 3 substitui鋏es permitidas.
+	- Corrigido erro de narra鈬o que dizia "...a bola passando raspando...", ao inv駸 de "...a bola passa raspando...".
+
+***Vers縊 2.7.7***
+-> Modifica鋏es:
+	- Aberto o leque de n咩eis entre 1 e 30. O uso de jogadores nesses n咩eis n縊 ・recomendado, pois esses jogadores ser縊 extremamente fracos, e as partidas entre times desse patamar e times de patamares acima de 30 poder縊 terminar em goleadas de 2 d刕itos. 
+-> Corre鋏es de Bugs:
+	- Corrigido um bug em que, ao editar um jogador, aparecia o valor incorreto de determina鈬o.
+
+***Vers縊 2.7.6***
+-> Corre鋏es de Bugs:
+	- Corrigido um bug que impedia a compatibilidade de equipes importadadas de verss anteriores.
+
+***Vers縊 2.7.5***
+-> Modifica鋏es:
+	- Modificado o m騁odo de simula鈬o para remover uma brecha que dava aos times uma vantagem consider疱el a partir do uso de um recurso espec凬ico.
+	- Na tela de Edi鈬o Manual, agora ・poss咩el escalar um jogador de linha como goleiro desde o in兤io do jogo (para o caso raro de um time n縊 ter goleiros dispon咩eis).
+
+***Vers縊 2.7.4***
+-> Incluss:
+	- Ao atualizar um clube atrav駸 de um importa鈬o, o editor oferece a op鈬o de atualizar um jogador j・existente na base de dados, caso haja um jogador a ser importado que n縊 fa軋 parte do elenco na base de dados e, simultaneamente, j・exista um jogador com aquele nome na base de dados. Aplica鈬o pr疸ica: uma sele鈬o que contenha o jogador X na primeira convocatia, remova-o do elenco na segunda convocatio e o traga de volta na terceira. Assim, quando esse jogador for importado, na terceira convocatia, ele n縊 ser・automaticamente inserido na base de dados como um jogador novo, como era at・ent縊. Ao inv駸 disso, aparecer・a op鈬o de atualizar o jogador inserido quando da primeira convocatia.
+-> Corre鋏es de Bugs:
+	- Corrigido o posicionamento da imagem do duplo cart縊 amarelo com cart縊 vermelho na s伹ula do jogo.	
+	- Corrigido bug em que a lista de importa鈬o de clubes n縊 era inteiramente vis咩el (n縊 possu僘 scroll) ao importar um grande n伹ero de clubes de uma s・vez.
+
+***Vers縊 2.7.3***
+-> Incluss:
+	- Adicionada a op鈬o de se atualizar um clube j・existente atrav駸 de uma importa鈬o. Ao selecionar o arquivo do clube a ser importado, o usu疵io ter・a op鈬o de adicion・lo como um novo clube na base de dados ou de utilizar seus dados para atualizar um clube j・existente.
+-> Modifica鋏es:
+	- Adicionados indicadores de "Carregando" 灣 fun鋏es mais demoradas da aplica鈬o.	
+
+***Vers縊 2.7.2***
+-> Modifica鋏es:
+	- O escudo e os uniformes dos clubes agora s縊 exportados diretamente no arquivo .ymt. Desse modo, n縊 ・mais necess疵io enviar as imagens junto ao arquivo do clube para um outro usu疵io que for utiliz・lo.
+	- Na tela de criar uma nova partida, a data utilizada na 伃tima simula鈬o agora ・mantida para as simula鋏es seguintes.
+	- Na tela de criar uma nova partida, a configura鈬o de cores utilizada na 伃tima simula鈬o agora ・mantida para as simula鋏es seguintes.
+	- A vers縊 do Hexacolor YMT agora ・exibida na s伹ula, para facilitar detec鈬o de problemas de compatibilidade.
+-> Corre鋏es de Bugs:
+	- S伹ula agora mostra as setas de entrada/sa冝a de uma substitui鈬o que ocorre no minuto 0.
+	- S伹ula agora mant駑 a propor鈬o das imagens dos escudos e uniformes dos clubes.
+
+***Vers縊 2.7.1***
+-> Modifica鋏es:
+	- Criado suporte para que clubes exportados antes da vers縊 2.7 sejam importados com o encoding correto nas verss 2.7+.
+-> Corre鋏es de Bugs:
+	- Corrigido bug que causava problemas nos acentos, ao importar clubes, em computadores que n縊 possu僘m ambiente de desenvolvimento Java.
+
+***Vers縊 2.7***
+-> Incluss:
+	- Adicionado sistema de objetivos por time, para direcionar a atua鈬o do treinador.
+	- Adicionada a exporta鈬o/importa鈬o de t馗nicos (.tec).
+	- Adicionada a op鈬o de Editar T馗nicos.
+	- Adicionada a Remo鈬o de Jogadores, usando o sistema de importa鈬o r疳ida por planilha.
+-> Modifica鋏es:
+	- Sistema de p炻lico alterado, com a exclus縊 do fator "import穗cia" e a cria鈬o de 10 n咩eis distintos de p炻lico presente, para escolha do simulador.
+	- Reduzida dramaticamente a possibilidade de um jogador que entrou em campo durante a partida ser substitu冝o.
+	- Modificada a mec穗ica de substitui鋏es, para que os t馗nicos n縊 troquem um zagueiro por outro "・toa".
+	- A partir de agora, quando um p麩alti ocorre, a narra鈬o passa para o minuto seguinte. 
+	- Modificada por completo a mec穗ica de substitui鋏es, passando a atuar em cima dos objetivos de um time na partida.
+	- Ao editar um clube, agora ・poss咩el ter um preview de como ficar縊 os esquema de cores dos dois uniformes.
+	- A partir de agora, n縊 ・mais necess疵io escolher um par穃etro de configura鈬o toda vez que o programa ・iniciado. A configura鈬o "Padr縊" ser・a inicial. Para alter・la, basta usar a fun鈬o "Alterar Configura鈬o". Essa altera鈬o ficar・persistida para os usos futuros.
+	- Na Edi鈬o Manual antes de um jogo, agora ・poss咩el escalar um jogador em uma posi鈬o onde ele n縊 sabe atuar, como j・ocorria na Cria鈬o da Escala鈬o de um clube. Lembrando que um jogador improvisado recebe uma redu鈬o severa em seus atributos.
+	- A partir de agora, quando um goleiro defende um p麩alti, tamb駑 ・exibido na s伹ula o nome do jogador que o cobrou.
+	- A partir de agora, quando o usu疵io editar o elenco de um clube, a escala鈬o n縊 precisar・ser refeita do zero. A tela de Criar Escala鈬o agora carrega a escala鈬o anterior, que pode estar incompleta, facilitando o processo.
+	- Na janela de buscar clubes, agora ・poss咩el encontrar um clube a partir da sua abrevia鈬o de tr黌 letras, al駑 do nome, como j・ocorria.
+	- Em todas as janelas de busca, o bot縊 Enter foi inserido como atalho. Ao digitar palavras-chave para a pesquisa, o Enter agora executa a busca. Ao selecionar uma op鈬o na lista, o Enter confirma a escolha (nesse caso, o duplo-clique tamb駑 foi adicionado como atalho).
+-> Corre鋏es de Bugs:
+	- Corrigido bug em que um jogador podia retornar ao jogo ap ser substitu冝o.
+	- Corrigido bug que fazia a simula鈬o n縊 ser realizada ap uma Edi鈬o Manual, caso o usu疵io tivesse escolhido a resposta "N縊" na primeira vez em que fora perguntado se a simula鈬o deveria ser iniciada.
+	- Corrigido bug de enconding na exporta鈬o, o que causava erros nos nomes de jogadores de pa﨎es como Tarmaquest縊 e Yunjian.
+	- Corrigido bug que permitia a escala鈬o de mais de um goleiro por time, a partir da Edi鈬o Manual.
+	- Corrigido bug que deixava o "X" fora de posi鈬o na tela de Estat﨎ticas da Partida.
+
+***Vers縊 2.6.2***
+-> Modifica鋏es:
+	- Quando um jogador substituto ・expulso, a seta informando com quantos minutos ele entrou em campo passa a aparecer na s伹ula.
+	- Reduzida a possibilidade de ocorrer carts vermelhos diretos.
+-> Corre鋏es de Bugs:
+	- Corrigido bug que substitu僘 o goleiro de forma incorreta, quando ele se lesionava ao sair jogando com os p駸.
+	- Corrigida a situa鈬o em que um jogador ficava com nota negativa (menor nota poss咩el passa a ser 0).
+
+***Vers縊 2.6.1***
+-> Modifica鋏es:
+	- Ao exportar um clube ou jogador, a nacionalidade tamb駑 passa a ser exportada.
+	- Ao importar um clube ou jogador, a nacionalidade tamb駑 passa a ser importada. Caso o arquivo de exporta鈬o seja antigo e n縊 contemple nacionalidade, ・inserida a nacionalidade vazia ("-") para aquele jogador.
+-> Corre鋏es de Bugs:
+	- Corrigido bug que fazia com que um clube exportado n縊 funcionasse (n縊 fosse poss咩el simular um jogo do mesmo) por erro na escala鈬o.
+
+***Vers縊 2.6***
+-> Incluss:
+	- Adicionada a exporta鈬o da partida em formato HYJ, utilizado pelo Hexacolor YMT Dashboard.
+	- Adicionada a possibilidade de adicionar uma nacionalidade a um jogador.
+	- Adicionada a possibilidade de definir a nacionalidade padr縊 da configura鈬o de jogo (jogadores com a nacionalidade padr縊 n縊 ter縊 a bandeira exibida na s伹ula; a nacionalidade ser・automaticamente inicializada como a padr縊 durante a cria鈬o de um jogador).
+	- Adicionada a possibilidade de exibir a nacionalidade de cada jogador na s伹ula. Atrav駸 da customiza鈬o de par穃etros, essa exibi鈬o pode ser ativada ou desativada.
+	- Adicionado o mulo para edi鈬o r疳ida de jogadores e t馗nicos, com exporta鈬o da base de dados em forma de planilha e a importa鈬o da mesma planilha ap ter sido preenchida.
+-> Modifica鋏es:
+	- Removida a exporta鈬o da partida em formato HCL, pois o formato n縊 foi implementado de fato no Hexacolor Leagues.
+	- Reduzida a possibilidade de ocorr麩cia de p麩altis.
+	- Reduzida a possibilidade de ocorr麩cia de gols contra.
+	- Aumentada a possibilidade de ocorr麩cia de les縊 em goleiros.
+	- Aumentada a possibilidade de ocorr麩cia de carts para goleiros.
+	- Aumentada a possibilidade de ocorr麩cia de p麩altis causados por goleiros.
+
+***Vers縊 2.5.2***
+-> Incluss:
+	- Adicionada a exporta鈬o da partida em formato HCL, para ser futuramente importada para o Hexacolor Leagues. Esse arquivo ・automaticamente gerado ao se exportar uma partida.
+	- Adicionada ・s伹ula a tag "(Pen.)" logo ap os minutos em que foram marcados gols de p麩altis.
+-> Modifica鋏es:
+	- Reduzida drasticamente a possibilidade de um jogador receber um cart縊 vermelho direto.
+	- Modificado o sistema de cobran軋 de p麩altis, pois jogadores de n咩el abaixo da m馘ia (<65) cobravam muitos p麩altis na trave ou para fora.
+	- Modificado o sistema de notas dos goleiros, pois o antigo gerava notas proporcionalmente superiores 灣 dos jogadores de linha.
+-> Corre鋏es de Bugs:
+	- Corrigido bug da s伹ula: quando um jogador cobrava um p麩alti na trave ou para fora, ele n縊 aparecia na s伹ula, sob a se鈬o "P麩altis Perdidos".
+	- Corrigido bug da substitui鈬o: o t馗nico podia substituir o 3ｺ zagueiro em um esquema sem laterais ou alas, para deixar o time mais ofensivo. Isso n縊 ・mais permitido.
+	- Corrigido bug da substitui鈬o: o t馗nico podia substituir o goleiro caso ele fosse o jogador de pior nota no time titular. Isso n縊 ・mais poss咩el.
+
+***Vers縊 2.5.1***
+-> Incluss:
+	- Adicionada a possibilidade de escolher o uniforme das duas equipes antes do jogo.
+	- Adicionada ・s伹ula a se鈬o 撤麩altis Perdidos・ em complemento ・撤麩altis Defendidos・ para cobran軋s na trave ou jogadas para fora.
+	- Adicionada a possibilidade de simular jogos com datas anteriores a 2010 (a partir de 1900).
+	- Adicionado o nome do t馗nico ・s伹ula.
+	- Adicionada a exibi鈬o da m馘ia do time titular na tela de cria鈬o da escala鈬o. 
+-> Modifica鋏es:
+	- O n咩el deixou de ser o 佖ico crit駻io utilizado na hora de escolher o substituto a entrar.
+	- Reduzida a frequ麩cia da ocorr麩cia de p麩altis.
+	- Refor軋do o sistema que aumenta a for軋 do time da casa em partidas que n縊 sejam Ports Fechados ou Campo Neutro.
+	- Reduzida a frequ麩cia da ocorr麩cia de gols contra.
+	- Reduzida a frequ麩cia da ocorr麩cia de voleios e bicicletas.
+	- Editar um clube sem editar o seu elenco n縊 mais implica na edi鈬o obrigatia da escala鈬o ao final do processo.
+	- Reduzida a frequ麩cia da ocorr麩cia de gols em bolas paradas.
+	- Modificado o sistema de par穃etros de gols para mesclar os sistemas utilizados nas verss 2.4 e 2.5.
+-> Corre鋏es de Bugs:
+	- Corrigido bug do empate condicional: o c疝culo do resultado combinado n縊 era realizado corretamente quando o usu疵io selecionava a Edi鈬o Manual antes de simular a partida.
+	- Corrigido bug da s伹ula: quando um jogador marcava mais de um gol contra no mesmo jogo, apenas o 伃timo deles era exibido na s伹ula.
+	- Corrigido bug da simula鈬o: era poss咩el que um jogador cobrasse uma falta no mesmo lance em que ele sa僘 de campo para receber atendimento.	
+	- Corrigido bug da edi鈬o de clubes: ao atualizar um clube, eram criados novos arquivos para as imagens (Escudos e Uniformes) daquele clube.
+
+***Vers縊 2.5***
+-> Incluss:
+	- Adicionado suporte ao empate condicional.
+	- Adicionada a op鈬o de simular apenas disputa de p麩altis.
+	- Adicionada a op鈬o de definir o n伹ero de substitui鋏es permitidas na partida.
+	- Adicionada a funcionalidade de exportar Est疆ios e Climas.
+-> Modifica鋏es:
+	- Adicionada maior amplitude para customiza鈬o de par穃etros, causando maior efeito na simula鈬o.	
+	- Lista de 撤麩altis Defendidos・ na s伹ula, foi substitu冝a por lista de 撤麩altis Perdidos・
+	- Reduzida a possibilidade de um reserva que entrou durante o jogo ser substitu冝o, posteriormente, por motivos t疸icos.
+-> Corre鋏es de Bugs:
+	- Corrigido bug da edi鈬o de jogadores: ao apagar Perfil 3 do jogador, ele era apagado corretamente, mas na tela aparecia como se tivesse sido apagado o Perfil 2.
+	- Corrigido bug do final de partida causado por alguma equipe ter menos de 7 jogadores: existia a possibilidade da outra equipe cobrar a falta resultante da expuls縊 do 5ｺ jogador advers疵io, quando a partida, na verdade, j・deveria ter sido finalizada.
+	- Corrigido bug gr畴ico: X do placar, na s伹ula da partida, ficava incorretamente posicionado no Windows 7 (e, possivelmente, tamb駑 no Windows Vista).
+	- Corrigido bug gr畴ico: no Windows 7 (e, possivelmente, tamb駑 no Windows Vista), apareciam alguns restos de imagens por tr疽 dos bots da tela inicial.
+
+***Vers縊 2.4***
+-> Incluss:
+	- Inserido suporte ・configura鈬o de par穃etros.
+	- Inserida a Edi鈬o e Remo鈬o de Clubes.
+	- Inserida a Edi鈬o de Jogadores.
+	- Inserida Exporta鈬o e Importa鈬o de Jogadores.
+-> Modifica鋏es:
+	- S伹ula da partida agora exibe p麩altis defendidos pelo goleiro durante o jogo.
+	- Modificada a tonalidade do amarelo do texto do relatio do jogo.
+-> Corre鋏es de Bugs:
+	- Corrigido bug que impedia a cria鈬o de um clube sem uniforme ou escudo.
+
+
+

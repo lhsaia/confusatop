@@ -1,0 +1,4 @@
+RewriteEngine on
+RewriteCond %{HTTP_HOST} ^confusa.top/coiso [NC,OR] 
+RewriteCond %{HTTP_HOST} ^www.confusa.top/coiso [NC] 
+RewriteRule ^(.*)$ http://52.203.150.214:8080/Portal_COISO_v3/$1 [L,R=301,NC]

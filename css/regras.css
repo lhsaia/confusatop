@@ -1,0 +1,22 @@
+#ranking p{
+    padding:0.8rem 0.8rem 0 0.8rem;
+    text-align:left;
+    text-indent:3rem;
+    text-align:justify;
+    hyphens:auto;
+}
+
+#ranking .doubleindent{
+    text-indent:5rem;
+
+}
+
+#ranking .tripleindent{
+    text-indent:7rem;
+
+}
+
+#ranking .low-padding{
+    padding-top: 0;
+    padding-bottom: 0;
+}

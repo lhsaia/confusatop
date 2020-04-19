@@ -1,0 +1,66 @@
+.custom-file-upload {
+    border: 1px solid #ccc;
+    display: inline-block;
+    padding: 10px 12px;
+    cursor: pointer;
+}
+
+input[type="checkbox"]{
+    margin-right:20px;
+    transform: scale(2);
+    display:inline-block;
+    margin:20px 0;
+}
+
+.smallInput{
+    width:40px;
+    border: 1px solid rgb(204,204,204);
+    margin: 1px;
+}
+
+.spec_height{
+    height:170px;
+}
+
+.row_atributo{
+    display:none;
+}
+
+.inputHerdeiro{
+    color:inherit;
+    font-size:inherit;
+    font-family:inherit;
+}
+
+#sigla{
+    text-transform:uppercase;
+}
+
+.ui-slider-handle:nth-child(3) {
+    background: darkorange;
+    width:10px;
+ }
+
+
+.slider_container{
+    vertical-align:middle;
+    height:58px;
+    position:relative;
+
+}
+
+#spanEstilo{
+    position:absolute;
+    margin:0 auto;
+    left:0;
+    right:0;
+    text-align:center;
+}
+
+.slider_itself{
+    margin-top:25px;
+}
+
+.checkbox_container{
+    text-align:center !important;
+}

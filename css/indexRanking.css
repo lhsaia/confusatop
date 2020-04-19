@@ -1,0 +1,642 @@
+* {
+margin:0;
+padding:0;
+border:0;
+text-decoration:none;
+}
+
+
+body, select,option{
+
+font-family: 'Montserrat', sans-serif !important;
+color:gray !important;
+
+}
+
+#selecaodata{
+  color:gray !important;
+}
+
+[data-href] {
+    cursor: pointer;
+}
+
+#menu-bar {
+
+height:90px;
+clear:both;
+background-color:white;
+}
+
+#bandeiraGrande{
+    float:right;
+}
+
+
+#top-bar, #bottom-bar {
+    background-color:#1A1469;
+    color:white;
+}
+
+#logo-text {
+ margin:5px;
+float:left;
+
+}
+
+#top-menu {
+margin:7px 20px 0 0;
+float:right;
+}
+
+.icon {
+width:25px;
+color:white;
+
+
+}
+
+.orange {
+
+color:orange;
+}
+
+.icon:hover {
+
+color:#99ebff;
+}
+
+#logo{
+
+width:80px;
+float:left;
+padding-left:70px;
+
+}
+
+h1 {
+
+font-weight:normal;
+float:left;
+position:relative;
+top:30px;
+left:20px;
+
+}
+
+#ranking-menu {
+
+border-top: 1px #CCCCCC solid;
+clear:both;
+margin:0;
+padding:0;
+float:bottom;
+
+}
+
+.ranking-menu-item {
+
+color:#1A1469;
+font-weight:bold;
+font-size:90%;
+float:left;
+padding:20px 0 20px 70px;
+
+
+}
+
+.ranking-menu-item:hover {
+
+color:#99ebff;
+
+}
+
+#ranking-container{
+
+background-color:#F0F3F7;
+clear:both;
+float:left;
+height:200%;
+width:100%;
+}
+
+#ranking{
+background-color:white;
+width:70%;
+clear:both;
+margin: 30px 0 0 80px;
+padding:20px;
+}
+
+h2 {
+font-weight:normal;
+font-size:230%;
+text-align:left;
+margin-bottom:20px;
+
+}
+
+h3 {
+font-weight:normal;
+font-size:140%;
+text-align:left;
+margin-bottom:20px;
+
+}
+
+hr{
+
+border-top: 2px #F0F3F7 solid;
+
+}
+
+table {
+    border-collapse: collapse;
+width:100%;
+
+}
+
+td, th {
+    text-align: center;
+    padding: 8px;
+}
+
+td:nth-child(2) {
+  text-align:left;
+}
+
+th {
+
+font-size:60%;
+height:10px;
+}
+
+tbody tr:nth-child(2n-1) {
+    background-color: #F2F2F2;
+}
+
+tbody tr:nth-child(2n) {
+    background-color: #FFFFFF;
+}
+
+
+.bandeira {
+height:24px;
+width:36px;
+}
+
+
+.pagination {
+    display: inline-block;
+    list-style: none;
+
+}
+
+.pagination li{
+    float:left;
+
+}
+
+.pagination a {
+    color:gray;
+    float: left;
+    padding: 8px 16px;
+    text-decoration: none;
+}
+
+.pagination a:active {
+color:gray;
+}
+
+.esquerdo{
+
+    text-align:left;
+}
+
+.direito{
+
+    text-align:right;
+}
+
+.alert {
+ padding:20px;
+border-radius: 5px;
+float:bottom;
+
+}
+
+/* The close button */
+.closebtn {
+    margin-left: 15px;
+    color: white;
+    font-weight: bold;
+    float: right;
+    font-size: 22px;
+    line-height: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* When moving the mouse over the close button */
+.closebtn:hover {
+    color: black;
+}
+
+.alert-success{
+background-color:lightgreen;
+color:green;
+}
+
+.alert-danger{
+background-color:indianred;
+color:white;
+}
+
+.form-control{
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+.float-table {
+    float:left;
+
+}
+
+.btn{
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    background-color: navy;
+    color:white;
+    border-radius:5px;
+
+}
+
+.tr_inv {
+    display: block;
+    float: left;
+}
+.th_inv, .td_inv {
+    display: block;
+}
+
+.input_gols {
+    width:60px;
+}
+
+.input_nome_time{
+    width:210px;
+}
+
+.x_placar{
+    width:20px;
+    font-size:200%;
+    text-align:center;
+    padding-top:20px;
+}
+
+.input_penalti{
+    width:70px;
+}
+
+.input_data{
+    width:180px;
+}
+
+.table_below{
+    margin-top:40px;
+}
+
+.btn_area{
+    background-color: white !important;
+
+}
+
+.penaltybox{
+    font-size:60%;
+    position:relative;
+}
+
+.preto{
+    color:black;
+}
+
+.cinza{
+    color:lightgray;
+}
+
+.cinza a{
+    color:lightgray;
+}
+
+.infoblock{
+    float:left;
+    display:block;
+    width:120px;
+    height:40px;
+    border:3px #F2f2f2 inset;
+    margin:5px;
+    font-size:200%;
+    padding:5px 0 0 5px;
+
+}
+
+.vitoria{
+    color:green !important;
+}
+
+.derrota{
+    color:red !important;
+}
+
+.empate{
+    color:goldenrod !important;
+}
+
+a.disabled {
+    pointer-events: none;
+    cursor: default;
+    color:#F2f2f2;
+ }
+
+ #federation-select{
+    font-size:150%;
+ }
+
+a.infoblock{
+    color:#808080;
+}
+
+a.infoblock:hover{
+    color:#808080;
+}
+
+a.infoblock:visited{
+    color:#808080;
+}
+
+a.infoblock:active{
+    color:#808080;
+}
+
+
+ .moreInfoModal{
+    display: block;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    /* width:600px;
+    height:400px; */
+    transform: translate(-50%, -50%);
+    max-width: 100%;
+    max-height: 90%;
+    z-index: 100;
+    background: white;
+    box-shadow: 0 0 60px 10px rgba(0, 0, 0, 0.9);
+    /* border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px; */
+    border-radius:10px;
+    padding:5px;
+ }
+
+ .modal-guts h3, h4{
+     padding-left:20px;
+ }
+
+ #adversarioJogo{
+    text-align:left;
+ }
+
+
+  .closed {
+    display: none;
+  }
+
+  .modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 50;
+
+    background: rgba(0, 0, 0, 0.6);
+  }
+  .modal-guts {
+    position: relative;
+    margin: 5% auto 15% auto; /* 5% from the top, 15% from the bottom and centered */
+    /* left: 0; */
+    width: 100%;
+    height: 100%;
+    z-index:60;
+
+
+  }
+
+
+
+  .moreInfoModal .toggleButton {
+
+    /* don't need to go crazy with z-index here, just sits over .modal-guts */
+    z-index: 110;
+
+    border: 0;
+    background: navy;
+    color: white;
+    padding: 5px 10px;
+    font-size: 1.3rem;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    margin:0;
+  }
+
+  span.ativo{
+    background-color:green;
+    color:white;
+    border-radius:10px;
+    padding:5px;
+    margin-left:10px;
+  }
+
+  span.inativo{
+    background-color:darkred;
+    color:white;
+    border-radius:10px;
+    padding:5px;
+    margin-left:10px;
+  }
+
+
+
+
+
+
+  /*media query*/
+
+  @media only screen and (max-width: 55rem ) {
+
+  img{
+        float:right;
+      }
+
+  #ranking{
+    background-color:white;
+    width:100%;
+    margin: 0;
+    padding:0;
+    margin-bottom: 40px;
+    }
+
+        /*
+	Label the data
+	*/
+	#ranking td:nth-of-type(1):before { content: "Posição"; }
+	#ranking td:nth-of-type(2):before { content: "País"; }
+    #ranking td:nth-of-type(3):before { content: "Pontos Totais"; }
+
+    #tabelajogos td:nth-of-type(1):before { content: none; padding-left:8px;}
+	#tabelajogos td:nth-of-type(2):before { content: none; }
+    #tabelajogos td:nth-of-type(3):before { content: none; }
+    #tabelajogos td:nth-of-type(6):before { content: "Data"; }
+    #tabelajogos td:nth-of-type(7):before { content: "Campeonato"; }
+    #tabelajogos td:nth-of-type(8):before { content: "Calculado?"; }
+
+    #modalPontos td:nth-of-type(1):before { content: none;}
+    #modalPontos td:nth-of-type(2):before { content: none;}
+    #modalPontos td:nth-of-type(3):before { content: none;}
+    #modalPontos td:nth-of-type(4):before { content: none;}
+    #modalPontos td:nth-of-type(6):before { content: "Data";}
+    #modalPontos td:nth-of-type(7):before { content: "Campeonato";}
+    #modalPontos td:nth-of-type(8):before { content: "Pontos";}
+
+    [id^='modalGols'] td:nth-of-type(6):before { content: "Data";}
+    [id^='modalGols'] td:nth-of-type(7):before { content: "Campeonato";}
+
+    [id^='modal'] td{
+        text-align:center;
+        border:none;
+    }
+
+
+    #modalJogos td{
+        text-align:center;
+    }
+
+    #modalJogos td:before{
+        content:none;
+    }
+
+    #ranking td{
+        text-align:center;
+
+    }
+
+    #menu-bar h1{
+        max-width:70%;
+        font-size:150%;
+    }
+
+    #menu-bar #logo{
+        padding-left:0;
+    }
+
+    #menu-bar {
+        position:relative;
+        height:auto;
+    }
+
+    #menu-bar #ranking-menu{
+        display:flex;
+        align-items:stretch;
+        flex-direction: row;
+        position:relative;
+    }
+
+    #ranking-container{
+        position:relative;
+    }
+
+    #menu-bar .ranking-menu-item{
+        padding-left:0;
+        display:block;
+        width:50%;
+        line-height:60px;
+        text-align:center;
+        margin-left: auto;
+        margin-right: auto;
+        left:0;
+        right:0;
+        height:auto;
+        width:auto;
+    }
+
+    h1, h2, h3, img {
+        text-align:center;
+    }
+
+    #ranking img {
+        float:none;
+        margin:0 35%;
+    }
+
+    #info-jogos{
+        display:flex;
+        flex-direction:row;
+        flex-wrap:wrap;
+        justify-content: flex-start;
+        align-items:stretch;
+    }
+
+    .infoblock{
+        width:40%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .moreInfoModal{
+        max-width:100%;
+        top:0;
+        left:0;
+        right:0;
+        /* max-height: calc(100vh - 210px); */
+        max-height:100%;
+        height:100%;
+        overflow-y: auto;
+        transform:none;
+        border-radius:0;
+        text-align:center;
+
+    }
+
+    .moreInfoModal h4{
+        font-size: 120%;
+    }
+
+
+
+    .modal-guts{
+        width:100%;
+        height:100%;
+        position:absolute;
+        left:0;
+        right:0;
+        top:30;
+        bottom:0px;
+    }
+
+    .moreInfoModal .toggleButton{
+        border-radius:0;
+        position:absolute;
+        top:0;
+        width:100%;
+        left:0;
+    }
+
+}

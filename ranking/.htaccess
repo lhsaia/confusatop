@@ -1,0 +1,2 @@
+php_value allow_url_include On
+php_value session.gc_maxlifetime 14000

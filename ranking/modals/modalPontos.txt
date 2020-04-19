@@ -1,0 +1,38 @@
+<h3>Recordes de pontos em jogos</h3>
+    <h4>Melhores</h4>
+    <table>
+        <?php 
+
+        echo "<thead>";
+        echo "<tr><th></th><th></th><th></th><th></th><th></th><th>Data</th><th>Campeonato</th><th>Pontos</th></tr>";
+        echo "</thead>";
+        echo "<tbody>";
+        $record_stmt = $jogo->maiorGanhoPontos($id);
+        while ($result = $record_stmt->fetch(PDO::FETCH_ASSOC)){
+        extract($result);
+    
+        echo "<tr><td>{$nomeTime}</td><td>{$timeGols}</td><td>X</td><td>{$adversarioGols}</td><td>{$nomeAdversario}</td><td>{$data}</td><td>{$nomeCampeonato}</td><td>{$pontos}</td></tr>";
+        }
+
+        ?>
+        </tbody>
+    </table>
+    <br>
+    <h4>Piores</h4>
+    <table>
+    <?php 
+
+        echo "<thead>";
+        echo "<tr><th></th><th></th><th></th><th></th><th></th><th>Data</th><th>Campeonato</th><th>Pontos</th></tr>";
+        echo "</thead>";
+        echo "<tbody>";
+        $record_stmt = $jogo->maiorPerdaPontos($id);
+        while ($result = $record_stmt->fetch(PDO::FETCH_ASSOC)){
+        extract($result);
+
+        echo "<tr><td>{$nomeTime}</td><td>{$timeGols}</td><td>X</td><td>{$adversarioGols}</td><td>{$nomeAdversario}</td><td>{$data}</td><td>{$nomeCampeonato}</td><td>{$pontos}</td></tr>";
+        }
+
+        ?>
+        </tbody>
+    </table>

@@ -1,0 +1,8 @@
+[21-May-2019 19:40:25 UTC] PHP Warning:  include_once(/config/database.php): failed to open stream: No such file or directory in /home/lhsaia/confusa.top/octamotor/blog/load_post_list.php on line 11
+[21-May-2019 19:40:25 UTC] PHP Warning:  include_once(): Failed opening '/config/database.php' for inclusion (include_path='.:/opt/alt/php70/usr/share/pear') in /home/lhsaia/confusa.top/octamotor/blog/load_post_list.php on line 11
+[21-May-2019 19:40:25 UTC] PHP Warning:  include_once(/objetos/usuarios.php): failed to open stream: No such file or directory in /home/lhsaia/confusa.top/octamotor/blog/load_post_list.php on line 12
+[21-May-2019 19:40:25 UTC] PHP Warning:  include_once(): Failed opening '/objetos/usuarios.php' for inclusion (include_path='.:/opt/alt/php70/usr/share/pear') in /home/lhsaia/confusa.top/octamotor/blog/load_post_list.php on line 12
+[21-May-2019 19:40:25 UTC] PHP Fatal error:  Uncaught Error: Class 'Database' not found in /home/lhsaia/confusa.top/octamotor/blog/load_post_list.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/lhsaia/confusa.top/octamotor/blog/load_post_list.php on line 14

@@ -1,0 +1,270 @@
+* {
+  margin:0;
+  padding:0;
+  border:0;
+  text-decoration:none;
+}
+
+html{
+  height:90%;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity:0;
+  }
+  100% {
+    opacity:1;
+  }
+}
+
+.quadro-flex, .outros-links-container, .tela-cheia, .texto-sobreposto {
+  /* This section calls the slideInFromLeft animation we defined above */
+  animation: fadeIn 2.5s ease-in-out ;
+}
+
+body{
+  font-family: 'Montserrat', sans-serif;
+  color:gray;
+  /* background-color:#1A1469; */
+  height:100%;
+}
+
+body.loggedin{
+  height:90%;
+}
+
+#tabela-quadros {
+  display:flex;
+  flex-wrap: wrap;
+  height:100%;
+  background-image: url("/images/confusa-blue.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-blend-mode: luminosity;
+  background-color:#1A1469;
+  background-position:center center;
+}
+
+.quadro-flex {
+ height:50%;
+ width:20%;
+ position:relative;
+
+}
+
+.outros-links-container {
+ height:50%;
+ width:40%;
+ position:relative;
+}
+
+.outros-links-container:hover .legenda{
+  opacity:0;
+}
+
+.outros-links-container:hover .meio-quadro{
+  opacity:1;
+}
+
+.legenda{
+  text-align:center;
+  color:orange;
+  font-weight: bold;
+  font-size:200%;
+  width:100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 1s ease-in-out;
+}
+
+.tela-cheia{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.meio-quadro{
+  height:50%;
+  width:50%;
+  position:absolute;
+  opacity:0;
+  transition: all 1s ease-in-out;
+}
+
+.inf{
+  top:50%;
+}
+
+.dir{
+  left:50%;
+}
+
+.quadro-animado:hover img{
+  opacity: 1;
+}
+
+.quadro-animado:hover span{
+  color:white;
+  top:70%;
+  /* text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; */
+  /* width:100%; */
+  background-color: #1A1469;
+}
+
+.quadro-animado img{
+ width:100%;
+height:100%;
+opacity:0;
+object-fit:cover;
+position:absolute;
+transition: opacity 0.5s ease-in-out;
+}
+
+.quadro-animado span {
+  /* display:block;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);*/
+  text-align:center;
+  color:orange;
+  font-weight: bold;
+  font-size:200%;
+  width:100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 1s ease-in-out;
+
+}
+
+.texto-sobreposto{
+  text-align:center;
+  color:white;
+  font-weight: bold;
+  font-size:300%;
+  width:100%;
+  position: absolute;
+  top: 70%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #1A1469;
+}
+
+#top-bar, #bottom-bar {
+  background-color:white;
+  color:#1A1469;
+}
+
+#menu-bar {
+  height:90px;
+  clear:both;
+  background-color:white;
+}
+
+#logo-text {
+ margin:5px;
+ float:left;
+}
+
+#top-menu {
+  margin:7px 20px 0 0;
+  float:right;
+}
+
+.icon {
+  width:25px;
+  color:#1A1469;
+}
+
+.orange {
+  color:orange;
+}
+
+.icon:hover {
+  color:#99ebff;
+}
+
+.nav-item, .menu-toggle-button{
+  color:#1A1469 !important;
+}
+
+.nav-item:visited, .menu-toggle-button:visited{
+    color:#1A1469 !important;
+}
+
+.nav-item:hover, .menu-toggle-button:hover{
+    color:orange !important;
+    cursor:pointer !important;
+}
+
+.nav-item{
+    background-color: white !important;
+}
+
+nav{
+  background-color: white !important;
+}
+
+#logo {
+  width:80px;
+  float:left;
+  padding-left:70px;
+}
+
+h1 {
+  font-weight:normal;
+  float:left;
+  position:relative;
+  top:30px;
+  left:20px;
+}
+
+@media only screen and (max-width: 600px) {
+  .texto-sobreposto{
+    font-size:100%;
+  }
+
+  .quadro-flex, .outros-links-container{
+    width:100%;
+    height:100%;
+  }
+
+  .quadro-animado img{
+    opacity: 1;
+  }
+
+  .quadro-animado span{
+    color:white;
+    top:70%;
+    /* text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; */
+    /* width:100%; */
+    background-color: #1A1469;
+  }
+
+  .legenda{
+    opacity:0;
+  }
+
+  .meio-quadro{
+    opacity:1;
+    width:100%;
+    position:relative;
+  }
+
+  .dir, .inf{
+    left:auto;
+    top:auto;
+  }
+
+  .outros-links-container{
+    display:flex;
+    flex-wrap:wrap;
+  }
+
+}
