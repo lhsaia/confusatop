@@ -1,0 +1,214 @@
+#melhorias-header{
+  padding:30px 30px 0 30px;
+}
+
+#caixa_pesquisa{
+    width:16rem;
+    height:2rem;
+    border:none;
+    margin:0;
+	font-family: Montserrat, sans-serif;
+
+}
+
+
+#search_wrapper{
+	margin: 10px 0;
+    float:left;
+    border: 0.1rem lightgray inset;
+    padding:0.08rem;
+}
+
+#search_wrapper i {
+    padding:0.2rem;
+    font-size:1.5rem;
+    cursor: default;
+}
+
+hr {
+	 margin:20px; 
+	 
+}
+
+#loading{
+	padding: 30px;
+}
+
+#add-new-suggestion{
+	background-color: navy;
+	border-radius:5px;
+	width: 180px;
+	margin: 10px 30px;
+	font-family: Montserrat, sans-serif;
+}
+
+#confirm-new-suggestion{
+	flex-basis: 10%;
+	border-radius:5px;
+	padding: 20px 10px;
+	background-color: green;
+	width: 100px;
+	margin: 0 10px;
+	font-family: Montserrat, sans-serif;
+}
+
+#cancel-new-suggestion{
+	flex-basis: 10%;
+	border-radius:5px;
+	padding: 20px 10px;
+	background-color: maroon;
+	width: 100px;
+	margin: 0 10px;
+	font-family: Montserrat, sans-serif;
+}
+
+#newSuggestionTitle{
+	flex-basis: 30%;
+	margin: 0 5px 0 30px;
+	padding: 20px 10px;
+	font-family: Montserrat, sans-serif;
+}
+
+#newSuggestionDescription{
+	flex-basis: 30%;
+	resize:none;
+	margin: 0 5px 0 5px;
+	font-family: Montserrat, sans-serif;
+}
+
+#newSuggestionType{
+	width:100%;
+	flex-basis: 10%;
+	padding: 20px 10px;
+	margin: 0 5px 0 5px;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+	font-family: Montserrat, sans-serif;
+}
+
+#newSuggestion{
+	display:flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	justify-content: flex-start;
+	align-items: center;
+}
+
+#newSuggestionWrapper{
+	height: 0px;
+    transition: height 0.3s linear;
+	z-index: 99;
+}
+
+.newSuggestionItem{
+	visibility: hidden;
+    transition: visibility 0.1s ease-in-out;
+}
+
+.newSuggestionItem.open{
+  visibility:visible;
+  transition: visibility 0.1s ease-in-out 0.3s;
+
+}
+
+#newSuggestionHr{
+	visibility: hidden;
+}
+
+#newSuggestionHr.open{
+	visibility: hidden;
+}
+
+#newSuggestionWrapper.open {
+    height: 100%;
+    transition: height 0.3s linear;
+}
+
+.pagination_link{
+    background-color:white;
+    color:#808080;
+    font-size:1.25rem;
+    padding:0.5rem;
+
+}
+
+.pagination_link:disabled{
+    color:lightgray;
+    cursor:default;
+}
+
+.pagination{
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    justify-content: center;
+	visibility: visible;
+	min-height: 50px;
+}
+
+.pagination.closed{
+	visibility: hidden;
+}
+
+.highlighted{
+    color:gray;
+    background-color:#EEEEEE;
+}
+
+.ascending{
+    color:green;
+}
+
+.descending{
+    color:red;
+}
+
+.hidden{
+    display:none;
+}
+
+th i{
+    font-size:200%;
+}
+
+td{
+text-align:center !important;
+}
+
+.icon_box{
+	border-radius: 5px;
+	height: 100%;
+	width: 100%;
+	padding: 10px 0;
+	background-color: green;
+}
+
+.cancelled, .bug{
+	background-color: maroon;
+	color: white;
+}
+
+.processing, .suggestion{
+	background-color: yellow;
+	color: black;
+}
+
+.completed{
+	background-color:green;
+	color: white;
+}
+
+.pending{
+	background-color: gray;
+	color: black;
+}
+
+#main-wrapper{
+display:flex;
+flex-direction:column;
+}
+
+.toggle_like.toggled{
+	background-color: gray;
+}

@@ -818,3 +818,10 @@ nav.open {
     color:orange !important;
     cursor:pointer !important;
 }
+
+#suggestions{
+	color: navy;
+	float:left;
+	padding-left: 10px;
+}
+

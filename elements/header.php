@@ -91,6 +91,7 @@ if(isset($aux_css)){
 <span id="logged-user" class="<?php echo $class_conectado?>">
   <?php echo $welcometext ?>
 </span>
+
 <div id="hamburger-menu" class='no-capture'>
   <a id="open-menu" class='menu-toggle-button no-capture'><i class="fas fa-bars no-capture"></i></a>
   <a id="close-menu" class='menu-toggle-button no-capture'><i class="fas fa-times"></i></a>
@@ -99,6 +100,7 @@ if(isset($aux_css)){
     <?php echo "<a class='nav-item' onclick='{$onclick_log}'>{$title_log}</a>" ?>
     <?php echo "<a class='nav-item' href='https://confusa.top/sobre.php'>Sobre / Tutorial</a>" ?>
     <?php echo "<a class='nav-item' href='https://confusa.top/contato.php'>Contato</a>" ?>
+	<?php echo "<a class='nav-item' href='https://confusa.top/sugestoes'><i class='fas fa-comment-dots'></i>  Sugestões/Bugs</a>" ?>
     <?php echo $change_pass ?>
     <?php echo $admin_btn ?>
     <?php
