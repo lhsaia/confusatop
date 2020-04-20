@@ -37,14 +37,12 @@ function clear_values(){
 }
 
 $('#add-new-suggestion').click(function(){
-	$("#newSuggestionHr").addClass("open");
 	$("#newSuggestion").addClass("open");
 	$(".newSuggestionItem").addClass("open");
 	$(".pagination").addClass("closed");
 });
 
 $('#cancel-new-suggestion').click(function(){
-	$("#newSuggestionHr").removeClass("open");
 	$("#newSuggestion").removeClass("open");
 	$(".newSuggestionItem").removeClass("open");
 	$(".pagination").removeClass("closed");
@@ -52,7 +50,6 @@ $('#cancel-new-suggestion').click(function(){
 });
 
 $('#confirm-new-suggestion').click(function(){
-	$("#newSuggestionHr").removeClass("open");
 	$("#newSuggestion").removeClass("open");
 	$(".newSuggestionItem").removeClass("open");
 	$(".pagination").removeClass("closed");
@@ -364,8 +361,6 @@ echo "<div id='newSuggestionWrapper'><div id='newSuggestion'>
 <button class='newSuggestionItem' id='confirm-new-suggestion'>Inserir</button>
 <button class='newSuggestionItem' id='cancel-new-suggestion'>Cancelar</button>
 </div>";
-
-echo "<hr id='newSuggestionHr'></div>";
 
 //echo "<div style='clear:both; float:center'></div>";
 

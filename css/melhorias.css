@@ -88,17 +88,20 @@ hr {
 }
 
 #newSuggestion{
-	display:flex;
+	display:none;
 	flex-direction: row;
 	flex-wrap: nowrap;
 	justify-content: flex-start;
 	align-items: center;
 }
 
+#newSuggestion.open{
+	display:flex;
+}
+
 #newSuggestionWrapper{
 	height: 0px;
     transition: height 0.3s linear;
-	z-index: 99;
 }
 
 .newSuggestionItem{
@@ -147,9 +150,6 @@ hr {
 	min-height: 50px;
 }
 
-.pagination.closed{
-	visibility: hidden;
-}
 
 .highlighted{
     color:gray;
