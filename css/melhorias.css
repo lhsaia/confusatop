@@ -104,6 +104,11 @@ hr {
     transition: height 0.3s linear;
 }
 
+#newSuggestionWrapper.open{
+	height: 100%;
+    transition: height 0.3s linear;
+}
+
 .newSuggestionItem{
 	visibility: hidden;
     transition: visibility 0.1s ease-in-out;
@@ -150,6 +155,9 @@ hr {
 	min-height: 50px;
 }
 
+body{
+	margin-bottom:80px;
+}
 
 .highlighted{
     color:gray;

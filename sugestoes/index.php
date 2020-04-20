@@ -38,12 +38,14 @@ function clear_values(){
 
 $('#add-new-suggestion').click(function(){
 	$("#newSuggestion").addClass("open");
+	$("#newSuggestionWrapper").addClass("open");
 	$(".newSuggestionItem").addClass("open");
 	$(".pagination").addClass("closed");
 });
 
 $('#cancel-new-suggestion').click(function(){
 	$("#newSuggestion").removeClass("open");
+	$("#newSuggestionWrapper").removeClass("open");
 	$(".newSuggestionItem").removeClass("open");
 	$(".pagination").removeClass("closed");
 	clear_values();
@@ -51,6 +53,7 @@ $('#cancel-new-suggestion').click(function(){
 
 $('#confirm-new-suggestion').click(function(){
 	$("#newSuggestion").removeClass("open");
+	$("#newSuggestionWrapper").removeClass("open");
 	$(".newSuggestionItem").removeClass("open");
 	$(".pagination").removeClass("closed");
 	let title = $('#newSuggestionTitle').val();
@@ -347,7 +350,7 @@ $suggestion = new Suggestion($db);
 
 
 // paging buttons here
-echo "<div style='clear:both; float:center'></div>";
+//echo "<div style='clear:both; float:center'></div>";
 echo "<hr>";
 
 echo "<div id='newSuggestionWrapper'><div id='newSuggestion'>
@@ -360,7 +363,7 @@ echo "<div id='newSuggestionWrapper'><div id='newSuggestion'>
 </select>
 <button class='newSuggestionItem' id='confirm-new-suggestion'>Inserir</button>
 <button class='newSuggestionItem' id='cancel-new-suggestion'>Cancelar</button>
-</div>";
+</div></div>";
 
 //echo "<div style='clear:both; float:center'></div>";
 
@@ -371,6 +374,8 @@ echo "<div class='tbl_user_data'><img id='loading' src='/images/icons/ajax-loade
 echo('</div>');
 echo('</div>');
 echo('</div>');
+
+//echo "<div style='clear:both; float:center'></div>";
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 
