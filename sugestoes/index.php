@@ -22,7 +22,7 @@ var activeSort = '';
 
 $(document).ready(function($){
 
- var logged ='<?php if(isset($_SESSION['user_id'])){
+ var logged ='<?php if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 		echo "true";
 	 } else {
 		echo "false";

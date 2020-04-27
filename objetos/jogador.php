@@ -441,7 +441,7 @@ return $stmt;
             } else {
 
                 $anoAtual = date("Y");
-                $idade = $anoAtual - $this->nascimento;
+                $idade = $anoAtual - (int)$this->nascimento;
 
             }
 

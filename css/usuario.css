@@ -167,7 +167,7 @@ tbody tr.tipo2{
     text-align:center;
     line-height: 50px;
     padding:0;
-    margin-right:40px;
+    margin-right:20px;
 }
 
 .quadro{
@@ -543,6 +543,74 @@ a.disabled span{
       font-weight: bold;
       color:navy;
   }
+
+  #caixa_pesquisa{
+    width:16rem;
+    border:none;
+    margin:0;
+	font-family: Montserrat, sans-serif;
+	height: 50px;
+	border-radius: 10px;
+}
+
+
+#search_wrapper{
+	margin: 0 20px 0 0;
+    float:right;
+    border: 0.1rem lightgray inset;
+	border-radius: 10px;
+}
+
+#search_wrapper i {
+    padding:0.2rem;
+    font-size:1.5rem;
+    cursor: default;
+}
+
+
+.pagination_link{
+    background-color:white;
+    color:#808080;
+    font-size:1.25rem;
+    padding:0.5rem;
+
+}
+
+.pagination_link:disabled{
+    color:lightgray;
+    cursor:default;
+}
+
+.pagination{
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    justify-content: center;
+	visibility: visible;
+	min-height: 50px;
+}
+
+
+.highlighted{
+    color:gray;
+    background-color:#EEEEEE;
+}
+
+.ascending{
+    color:green;
+}
+
+.descending{
+    color:red;
+}
+
+.hidden{
+    display:none;
+}
+
+th i{
+    font-size:200%;
+}
 
 
 @media only screen and (min-width: 600px) {

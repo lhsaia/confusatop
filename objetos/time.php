@@ -1310,6 +1310,51 @@ if($idUsuario != null){
           return false;
       };
     }
+	
+	
+    //ler todos os jogadores para o quadro - versão para página com Ajax
+    function readAllAjax($item_pesquisado, $dono = null){
+		$item_pesquisado = htmlspecialchars(strip_tags($item_pesquisado));
+		$dono = htmlspecialchars(strip_tags($dono));
+
+        //ver se é por dono ou geral
+        if($dono === null){
+            $sub_query_inicio = "SELECT * FROM (";
+            $sub_query_fim = ") t1 WHERE Nome LIKE ? LIMIT 100";
+        } else {
+            $sub_query_inicio = "SELECT * FROM (";
+            $sub_query_fim = ") t1 WHERE idDonoPais = ? AND status = 0 AND Nome LIKE ? LIMIT 100";
+
+        } 
+
+    $query = $sub_query_inicio."SELECT
+                a.ID as id, a.Nome, a.TresLetras, a.Escudo, a.Uni1Cor1, a.Uni1Cor2, a.Uni1Cor3, a.Uni2Cor1, a.Uni2Cor2, a.Uni2Cor3, a.Uniforme1, a.Uniforme2, a.MaxTorcedores, a.Fidelidade, p.id as idPais, p.dono as idDonoPais, e.Nome as nomeEstadio, l.nome as nomeLiga, p.sigla as siglaPais, p.bandeira as bandeiraPais, a.liga, l.logo, e.Capacidade as capacidade, a.estadio as estadioId, a.Sexo as sexo, a.status
+                FROM " . $this->table_name . " a
+        LEFT JOIN paises p ON a.Pais = p.id
+        LEFT JOIN estadio e ON a.Estadio = e.id
+        LEFT JOIN liga l ON a.liga = l.id
+        ORDER BY
+            a.Nome ASC ".$sub_query_fim;
+
+$stmt = $this->conn->prepare( $query );
+$item_pesquisado = "%" . $item_pesquisado . "%";
+	
+if($dono === null){
+	$stmt->bindParam(1, $item_pesquisado);
+} else {
+    $stmt->bindParam(1, $dono);
+	$stmt->bindParam(2, $item_pesquisado);
+} 
+
+$stmt->execute();
+
+return $stmt;
+
+
+
+}
+
+
 
 
 
