@@ -1320,10 +1320,10 @@ if($idUsuario != null){
         //ver se é por dono ou geral
         if($dono === null){
             $sub_query_inicio = "SELECT * FROM (";
-            $sub_query_fim = ") t1 WHERE Nome LIKE ? LIMIT 100";
+            $sub_query_fim = ") t1 WHERE (Nome LIKE ? OR TresLetras LIKE ?) LIMIT 150";
         } else {
             $sub_query_inicio = "SELECT * FROM (";
-            $sub_query_fim = ") t1 WHERE idDonoPais = ? AND status = 0 AND Nome LIKE ? LIMIT 100";
+            $sub_query_fim = ") t1 WHERE idDonoPais = ? AND status = 0 AND (Nome LIKE ? OR TresLetras LIKE ?) LIMIT 150";
 
         } 
 
@@ -1341,9 +1341,11 @@ $item_pesquisado = "%" . $item_pesquisado . "%";
 	
 if($dono === null){
 	$stmt->bindParam(1, $item_pesquisado);
+	$stmt->bindParam(2, $item_pesquisado);
 } else {
     $stmt->bindParam(1, $dono);
 	$stmt->bindParam(2, $item_pesquisado);
+	$stmt->bindParam(3, $item_pesquisado);
 } 
 
 $stmt->execute();
