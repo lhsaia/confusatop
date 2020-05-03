@@ -24,6 +24,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/tecnico.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/estadio.php");
+require($_SERVER['DOCUMENT_ROOT']."/lib/functions.php");
 
 $database = new Database();
 $db = $database->getConnection();
@@ -53,12 +54,22 @@ $bandeira_pais = $info['bandeiraPais']; //ok
 $idade_jogador = $info['idade']; //ok
 $nascimento_jogador = $info['nascimento']; //ok
 $posicoes_jogador = $info['stringPosicoes'];
+$isGoleiro = ($posicoes_jogador[0] == 1? 1:0);
 $valor_jogador = $info['valor']; //ok
 $salario_jogador = $info['salario']; //ok
 $desde_quando = $info['inicioContrato'];
 $ate_quando = $info['fimContrato'];
 $nome_pais_time = $info['nomePaisTime']; //ok
 $bandeira_pais_time = $info['bandeiraPaisTime']; //ok
+
+$personalidade = $jogador->avaliarPersonalidade($id_jogador);
+
+if($isGoleiro){
+	$attribute_array = adjustAttributes(true, $info['Nivel'], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, $info['Reflexos'], $info['Seguranca'],  $info['Saidas'],  $info['JogoAereo'],  $info['Lancamentos'],  $info['DefesaPenaltis']);
+} else {
+	$attribute_array = adjustAttributes(false, $info['Nivel'], $info['Marcacao'], $info['Desarme'], $info['VisaoJogo'], $info['Movimentacao'], $info['Cruzamentos'], $info['Cabeceamento'], $info['Tecnica'], $info['ControleBola'], $info['Finalizacao'], $info['FaroGol'], $info['Velocidade'], $info['Forca'], 0, 0, 0, 0, 0, 0);
+}
+
 
 $page_title = $nome_jogador;
 $css_filename = "indexRanking";
@@ -67,7 +78,85 @@ $aux_css = 'ligas';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
-//$escudo_time = explode(".",$escudo_time);
+?>
+
+<script>
+
+var results = <?php echo json_encode($attribute_array); ?>;
+var isGoleiro = <?php echo $isGoleiro; ?>;
+
+
+$("document").ready(function(){
+	
+	attribute_chart(results, isGoleiro);
+	
+function attribute_chart(results, isGoleiro){
+
+if(isGoleiro){
+	 data = [{
+		  type: 'scatterpolar',
+		  mode: "markers",
+		  r: Object.values(results),
+		  theta: ['REF','SEG','SAI','JOG', 'LAN','PEN'],
+		  fill: 'toself'
+		}]
+} else {
+	 data = [{
+		  type: 'scatterpolar',
+		  mode: "markers",
+		  r: Object.values(results),
+		  theta: ['MAR','DES','VIS','MOV', 'CRU','CAB', 'TEC', 'CON', 'FIN', 'FAR', 'VEL', 'FOR'],
+		  fill: 'toself'
+		}]
+}
+
+ layout = {
+  margin: {
+   l: 40,
+   r: 40,
+   b: 40,
+   t: 40,
+   pad: 4
+ },
+  polar: {
+    radialaxis: {
+      visible: true,
+      range: [0, 10],
+      color:"#000000",
+      showline: false,
+      linewidth: 0,
+      ticks: "",
+      showticklabels: false
+    },
+    angularaxis: {
+      color:"#000000",
+      type: "category"
+    },
+    bgcolor: 'rgba(0,0,0,0)',
+  },
+  showlegend: false,
+  paper_bgcolor: 'rgba(0,0,0,0)',
+  plot_bgcolor: 'rgba(0,0,0,0)',
+  font: {
+    color:"#ffffff"
+  },
+  gridshape: "linear"
+
+
+}
+
+Plotly.newPlot("attribute-chart", data, layout, {staticPlot: true},
+{displayModeBar: false});
+
+}
+});
+
+
+</script>
+
+
+
+<?php
 
 echo "<div id='quadro-container'>";
 echo "<h2>" . $nome_jogador ." </h2>";
@@ -122,6 +211,14 @@ echo "<div id='info_geral'>";
  echo "<div ".($posicoes_jogador[10] == '1'?"":" hidden ")." class='posicaoCampao posPE'></div>";
  echo "<div ".($posicoes_jogador[11] == '1'?"":" hidden ")." class='posicaoCampao posPD'></div>";
  echo "</div>";
+ echo "<div id='mostrador-atributos'>";
+	 echo "<div id='attribute-chart'></div>";
+	 echo "<div id='personalidade'>";
+		echo "<div class='fundo-barra'><div class='barra-cheia' style='width:" . array_values($personalidade)[0]. "%'></div><p class='texto-barra'>".array_keys($personalidade)[0] ." (".array_values($personalidade)[0]."%)"."</p></div>";
+		echo "<div class='fundo-barra'><div class='barra-cheia' style='width:" . array_values($personalidade)[1]. "%'></div><p class='texto-barra'>".array_keys($personalidade)[1]." (".array_values($personalidade)[1]."%)"."</p></div>";
+		echo "<div class='fundo-barra'><div class='barra-cheia' style='width:" . array_values($personalidade)[2]. "%'></div><p class='texto-barra'>".array_keys($personalidade)[2]." (".array_values($personalidade)[2]."%)"."</p></div>";
+	 echo "</div>";
+echo "</div>";
  echo "</div>";
 
  echo "<br>";

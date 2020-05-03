@@ -1420,7 +1420,7 @@ return $stmt;
 
             $idJogador = htmlspecialchars(strip_tags($idJogador));
 
-            $queryBase = "SELECT j.Nome as nome, j.Pais as idPais, j.Nascimento as nascimento, j.StringPosicoes as stringPosicoes, j.valor, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as idade, p.bandeira as bandeiraPais, p.nome as Pais FROM jogador j LEFT JOIN paises p ON j.Pais = p.id WHERE j.ID = ?";
+            $queryBase = "SELECT j.Nome as nome, j.Pais as idPais, j.Nascimento as nascimento, j.StringPosicoes as stringPosicoes, j.valor, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as idade, p.bandeira as bandeiraPais, p.nome as Pais, j.Marcacao, j.Desarme, j.VisaoJogo, j.Movimentacao, j.Cruzamentos, j.Cabeceamento, j.Tecnica, j.ControleBola, j.Finalizacao, j.FaroGol, j.Velocidade, j.Forca, j.Reflexos, j.Seguranca, j.Saidas, j.JogoAereo, j.Lancamentos, j.DefesaPenaltis, j.Nivel FROM jogador j LEFT JOIN paises p ON j.Pais = p.id WHERE j.ID = ?";
             $stmt = $this->conn->prepare($queryBase);
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
@@ -1466,6 +1466,39 @@ return $stmt;
             return $resultTotal;
 
         }
+		
+		function avaliarPersonalidade($idJogador){
+			$idJogador = htmlspecialchars(strip_tags($idJogador));
+			
+			$query = "SELECT `ID`, `nome`, (reflexos/soma) as reflexos, (seguranca/soma) as seguranca, (saidas/soma) as saidas, (jogoAereo/soma) as jogoAereo, (lancamentos/soma) as lancamentos, (defesaPenaltis/soma) as defesaPenaltis, (marcacao/soma) as marcacao, (visaoJogo/soma) as visaoJogo, (cruzamentos/soma) as cruzamentos, (tecnica/soma) as tecnica,(finalizacao/soma) as finalizacao, (velocidade/soma) as velocidade, (desarme/soma) as desarme, (movimentacao/soma) as movimentacao, (cabeceamento/soma) as cabeceamento, (controleBola/soma) as controleBola, (faroGol/soma) as faroGol, (forca/soma) as forca FROM `perfis` 
+			UNION
+			SELECT jogador.ID, Nome, (reflexos/soma) as reflexos, (seguranca/soma) as seguranca, (saidas/soma) as saidas, (jogoAereo/soma) as jogoAereo, (lancamentos/soma) as lancamentos, (defesaPenaltis/soma) as defesaPenaltis, (marcacao/soma) as marcacao, (visaoJogo/soma) as visaoJogo, (cruzamentos/soma) as cruzamentos, (tecnica/soma) as tecnica,(finalizacao/soma) as finalizacao, (velocidade/soma) as velocidade, (desarme/soma) as desarme, (movimentacao/soma) as movimentacao, (cabeceamento/soma) as cabeceamento, (controleBola/soma) as controleBola, (faroGol/soma) as faroGol, (forca/soma) as forca FROM (SELECT ID, (reflexos+seguranca+saidas+jogoAereo+lancamentos+defesaPenaltis+marcacao+visaoJogo+cruzamentos+tecnica+finalizacao+velocidade+desarme+movimentacao+cabeceamento+controleBola+faroGol+forca) as soma FROM jogador WHERE ID = ?) t1
+			LEFT JOIN jogador ON jogador.ID = t1.ID";
+			$stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1,$idJogador);
+            $stmt->execute();
+			
+			$array_personalidades = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			$array_jogador = array_pop($array_personalidades);
+			$atributos_jogador = array_slice($array_jogador, 2);
+			
+			$coletor_perc =array();
+			
+			foreach($array_personalidades as $personalidade){
+				$somatorio_diferenca = 0;
+				$atributos_personalidade = array_slice($personalidade,2);
+				foreach($atributos_personalidade as $key => $atributo){
+					$somatorio_diferenca += abs($atributos_jogador[$key] - $atributo);
+				}
+				$coletor_perc[$personalidade["nome"]] =  round(1-$somatorio_diferenca,4)*100;
+			} 
+			
+			arsort($coletor_perc);
+			
+			
+			return(array_slice($coletor_perc,0,3));
+					
+		}
 
         function readTransferencias($from_record_num,$records_per_page,$idJogador){
             $idJogador = htmlspecialchars(strip_tags($idJogador));

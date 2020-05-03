@@ -2,8 +2,21 @@
     float:right;
 }
 
+#attribute-chart{
+  height:300px;
+  width:400px;
+  /* overflow:hidden; */
+  /* filter: drop-shadow(5px 5px 2px black); */
+}
+
+
+#mostrador-atributos{
+	display:flex;
+	flex-direction:column;
+}
+
 .large{
-    width:35vw;
+    width:25vw;
     position:relative;
 }
 
@@ -12,6 +25,40 @@
   position: relative;
 }
 
+.fundo-barra{
+	background-color: lightgray;
+	border: 2px solid white;
+	padding: 5px;
+	border-radius: 10px;
+	color:white;
+	line-height:100%;
+	position:relative;
+	height:24px;
+	display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.barra-cheia{
+	background-color: navy;
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+	display: flex;
+    flex-direction: column;
+    justify-content: center;
+	padding-left:5px;
+	position: absolute;
+	top:5px;
+	left: 5px;
+	height:24px;
+}
+
+.texto-barra{
+	position:absolute;
+	top:10px;
+	left: 5px;
+	padding-left:5px;
+}
 
 .floatleft{
     float:left;
@@ -56,29 +103,29 @@ select:disabled {
 
 .posGoleiro{
     left:calc(50% - 20px);
-    bottom:7%;
+    bottom:5%;
 }
 
 .posLD{
-    left:62%;
-    bottom:20%;
+    left:75%;
+    bottom:15%;
 }
 
 .posLE{
-    left:28%;
-    bottom:20%;
+    left:12%;
+    bottom:15%;
 }
 .posZagueiro{
     left:calc(50% - 20px);
-    bottom:20%;
+    bottom:15%;
 }
 .posAE{
-    left:28%;
+    left:12%;
     bottom:32.5%;
 }
 
 .posAD{
-    left:62%;
+    left:75%;
     bottom:32.5%;
 }
 .posVolante{
@@ -86,12 +133,12 @@ select:disabled {
     bottom:32.5%;
 }
 .posME{
-    left:28%;
+    left:12%;
     bottom:52%;
 }
 
 .posMD{
-    left:62%;
+    left:75%;
     bottom:52%;
 }
 .posMeia{
@@ -103,12 +150,12 @@ select:disabled {
     bottom:60%;
 }
 .posPE{
-    left:28%;
+    left:12%;
     bottom:72%;
 }
 
 .posPD{
-    left:62%;
+    left:75%;
     bottom:72%;
 }
 .posAtacanteMov{
@@ -122,17 +169,20 @@ select:disabled {
 }
 
 .info_jogador{
-    width:45vw;
+    width:30vw;
 }
 
+
+
 #info-desempenho-selecao{
-  width:10vw;
+  /* width:10vw; */
   padding-top:15px;
   display:flex;
   flex-direction:column;
   flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
+  flex-basis: 10%;
 }
 
 #info-desempenho-selecao > span{
@@ -141,7 +191,7 @@ select:disabled {
 
 #info_posicionamento{
     /* float:right; */
-    width:30vw;
+    min-width:20vw;
 
     position:relative;
     background-image:url(/images/campaorodado.png?v=1);
@@ -149,6 +199,7 @@ select:disabled {
     background-attachment: local;
     background-position: center;
     background-size: contain;
+	flex-basis:25%;
 
 }
 
