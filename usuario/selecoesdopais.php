@@ -224,6 +224,28 @@ $(document).ready(function() {
       data: {idTime: idTime}
     })
     .done(function(response) {
+		
+	     let arquivoEsc;
+         let arquivoUni1;
+         let arquivoUni2;
+
+         if(response[5] != ""){
+           arquivoEsc = "Escudos/team"+idTime+".png";
+         } else {
+           arquivoEsc = "null";
+         }
+
+         if(response[6] != ""){
+           arquivoUni1 = "Uniformes/1-team"+idTime+".png";
+         } else {
+           arquivoUni1 = "null";
+         }
+
+         if(response[7] != ""){
+           arquivoUni2 = "Uniformes/2-team"+idTime+".png";
+         } else {
+           arquivoUni2 = "null";
+         }
 
       var estilo = 1;
       var xmlData = "<clubeExportado>\n <clube>\n <ID>"+
@@ -231,15 +253,15 @@ $(document).ready(function() {
       response[0][0].Nome+"</Nome>\n  <TresLetras>"+
       response[0][0].TresLetras+"</TresLetras>\n  <bdEstadio>"+
       response[0][0].Estadio+"</bdEstadio>\n  <Escudo>"+
-      "Escudos/team"+idTime+".png"+"</Escudo>\n <Uni1Cor1>"+
+      arquivoEsc+"</Escudo>\n <Uni1Cor1>"+
       response[0][0].Uni1Cor1+"</Uni1Cor1>\n <Uni1Cor2>"+
       response[0][0].Uni1Cor2+"</Uni1Cor2>\n <Uni1Cor3>"+
       response[0][0].Uni1Cor3+"</Uni1Cor3>\n <Uniforme1>"+
-      "Uniformes/1-team"+idTime+".png"+"</Uniforme1>\n <Uni2Cor1>"+
+      arquivoUni1+"</Uniforme1>\n <Uni2Cor1>"+
       response[0][0].Uni2Cor1+"</Uni2Cor1>\n <Uni2Cor2>"+
       response[0][0].Uni2Cor2+"</Uni2Cor2>\n <Uni2Cor3>"+
       response[0][0].Uni2Cor3+"</Uni2Cor3>\n <Uniforme2>"+
-      "Uniformes/2-team"+idTime+".png"+"</Uniforme2>\n <MaxTorcedores>"+
+      arquivoUni2+"</Uniforme2>\n <MaxTorcedores>"+
       response[0][0].MaxTorcedores+"</MaxTorcedores>\n <Fidelidade>"+
       response[0][0].Fidelidade+"</Fidelidade>\n <numJogadores>"+
       0+"</numJogadores>\n <numReservas>"+
@@ -377,14 +399,36 @@ $(document).ready(function() {
       }
 
       // recuperacao de imagens
+	  
+	     let formatoEsc;
+         let formatoUni1;
+         let formatoUni2;
+
+         if(response[5] != ""){
+           formatoEsc = (response[0][0].Escudo).slice(((response[0][0].Escudo).lastIndexOf(".") - 1 >>> 0) + 2);
+         } else {
+           formatoEsc = "null";
+         }
+
+         if(response[6] != ""){
+           formatoUni1 = (response[0][0].Uniforme1).slice(((response[0][0].Uniforme1).lastIndexOf(".") - 1 >>> 0) + 2);
+         } else {
+          formatoUni1 = "null";
+         }
+
+         if(response[7] != ""){
+           formatoUni2 = (response[0][0].Uniforme2).slice(((response[0][0].Uniforme2).lastIndexOf(".") - 1 >>> 0) + 2);
+         } else {
+           formatoUni2 = "null";
+         }
 
       xmlData += "</posicoesJogador>\n <escudoBase64>\n"+
       response[5]+"</escudoBase64>\n <uniforme1Base64>\n"+
       response[6]+"</uniforme1Base64>\n <uniforme2Base64>"+
       response[7]+"</uniforme2Base64>\n <formatoEscudoBase64>"+
-      (response[0][0].Escudo).slice(((response[0][0].Escudo).lastIndexOf(".") - 1 >>> 0) + 2)+"</formatoEscudoBase64>\n <formatoUniforme1Base64>"+
-      (response[0][0].Uniforme1).slice(((response[0][0].Uniforme1).lastIndexOf(".") - 1 >>> 0) + 2)+"</formatoUniforme1Base64>\n <formatoUniforme2Base64>"+
-      (response[0][0].Uniforme2).slice(((response[0][0].Uniforme2).lastIndexOf(".") - 1 >>> 0) + 2)+"</formatoUniforme2Base64>\n "+
+      formatoEsc+"</formatoEscudoBase64>\n <formatoUniforme1Base64>"+
+      formatoUni1+"</formatoUniforme1Base64>\n <formatoUniforme2Base64>"+
+      formatoUni2+"</formatoUniforme2Base64>\n "+
       "</clubeExportado>";
 
       var fileName = response[0][0].Nome+".ymt";

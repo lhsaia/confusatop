@@ -269,12 +269,13 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
     // used by select drop-down list
     function read($dono = null,$jogos = null, $incluirReais = null){
 
-
-      if($incluirReais != null){
+	if($incluirReais === false){
+		$add_query = "WHERE dono != 0";
+	} else if($incluirReais != null){
         $add_query = " OR dono = 0 ";
       } else {
-        $add_query = "";
-      }
+		  $add_query = "";
+	  }
 
         //ver se é por dono ou geral
         if($dono != null){
@@ -282,7 +283,7 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
         } else if ($jogos != null){
             $sub_query = "WHERE ranqueavel=0";
         } else {
-            $sub_query = "";
+            $sub_query = $add_query;
         }
         //select all data
         $query = "SELECT

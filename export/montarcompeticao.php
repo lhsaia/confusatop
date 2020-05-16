@@ -15,7 +15,7 @@ $time = new Time($db);
 $torneio = new ExportTorneio($db);
 
 // query caixa de seleção países
-$stmtPais = $pais->read(null,true,null);
+$stmtPais = $pais->read(null,null,false);
 $listaPaises = array();
 while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
     extract($row_pais);
