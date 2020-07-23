@@ -128,30 +128,36 @@ class Estadio{
     }
 
     //alterar jogador
-    function alterar($idRecebida,$nomeJogadorRec,$nomeAux1Rec,$nomeAux2Rec,$cobradorFaltaRec,$paisRec = 0){
+    function alterar($idEstadio,$nomeEstadio,$capacidade,$pais,$altitude, $caldeirao, $clima){
 
-        // $idRecebida = htmlspecialchars(strip_tags($idRecebida));
-        // $nomeJogadorRec = htmlspecialchars(strip_tags($nomeJogadorRec));
-        // $nomeAux1Rec = htmlspecialchars(strip_tags($nomeAux1Rec));
-        // $nomeAux2Rec = htmlspecialchars(strip_tags($nomeAux2Rec));
-        // $cobradorFaltaRec = htmlspecialchars(strip_tags($cobradorFaltaRec));
-        // $paisRec = htmlspecialchars(strip_tags($paisRec));
+        $idEstadio = htmlspecialchars(strip_tags($idEstadio));
+        $nomeEstadio = htmlspecialchars(strip_tags($nomeEstadio));
+        $capacidade = htmlspecialchars(strip_tags($capacidade));
+        $pais = htmlspecialchars(strip_tags($pais));
+        $altitude = htmlspecialchars(strip_tags($altitude));
+		$caldeirao = htmlspecialchars(strip_tags($caldeirao));
+		$clima = htmlspecialchars(strip_tags($clima));
+		
+		$altitude = ($altitude == 'true') ? 1 : 0;
+		$caldeirao = ($caldeirao == 'true') ? 1 : 0;
+		
 
-        // $query = "UPDATE " . $this->table_name . " SET nomeJogador = ?, nascimento = ?, mentalidade = ?, cobradorFalta = ?, pais = ? WHERE id = ?";
-        // $stmt = $this->conn->prepare( $query );
+        $query = "UPDATE " . $this->table_name . " SET Nome=:nome, Capacidade=:capacidade, Clima=:clima, Altitude=:altitude, Caldeirao=:caldeirao, Pais=:pais WHERE ID=:id";
+        $stmt = $this->conn->prepare( $query );
 
-        // $stmt->bindParam(1, $nomeJogadorRec);
-        // $stmt->bindParam(2, $nomeAux1Rec);
-        // $stmt->bindParam(3, $nomeAux2Rec);
-        // $stmt->bindParam(4, $cobradorFaltaRec);
-        // $stmt->bindParam(5, $paisRec);
-        // $stmt->bindParam(6, $idRecebida);
+        $stmt->bindParam(":nome", $nomeEstadio);
+        $stmt->bindParam(":capacidade", $capacidade);
+		$stmt->bindParam(":clima", $clima);
+		$stmt->bindParam(":altitude", $altitude);
+		$stmt->bindParam(":caldeirao", $caldeirao);
+        $stmt->bindParam(":pais", $pais);
+        $stmt->bindParam(":id", $idEstadio);
 
-        // if($stmt->execute()){
-        //     return true;
-        // } else {
-        //     return false;
-        // }
+        if($stmt->execute()){
+            return true;
+        } else {
+            return false;
+        }
 
     }
 

@@ -615,7 +615,7 @@ echo $date->format('Y-m-d');
       <select id="clubeDestinoTecnico"  name="clubeDestinoTecnico" class="form-control" required>
           <?php
       // ler times do banco de dados
-                $newStmt = $time->read($_SESSION['user_id']);
+                $newStmt = $time->read($_SESSION['user_id'], false);
 
                 echo "<option value=''>Selecione time...</option>";
 

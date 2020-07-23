@@ -116,10 +116,10 @@ if($num>0){
 
             extract($row);
 
-            echo "<tr id='".$id."'>";
+            echo "<tr id='".$ID."'>";
                 //echo "<td><span id=".$id.">{$id}</span></td>";
-                echo "<td><span class='nomeEstadio nomeEditavel' id='nom".$id."'>{$Nome}</span></td>";
-                echo "<td><span class='capacidade nomeEditavel' id='cap".$id."'>{$Capacidade}</span></td>";
+                echo "<td><span class='nomeEstadio nomeEditavel' id='nom".$ID."'>{$Nome}</span></td>";
+                echo "<td><span class='capacidadeFixo' id='cap".$ID."'>{$Capacidade}</span><input id='capedit".$ID."' type='number' min='0' step='100' class='capacidade inputHerdeiro' value={$Capacidade} hidden></td>";
 
                 echo "<td class='wide'><span class='nomeClima' id='cli".$ID."'>{$nomeClima}</span>";
                 echo " <select class='comboClima editavel ' id='{$Clima}' hidden>'  ";
@@ -130,8 +130,8 @@ if($num>0){
                     echo "</select>";
                     echo "</td>";
 
-                echo "<td><input type='checkbox' class='altitude' id='alt".$id."' ". ($Altitude == 1? 'checked' : '')." disabled></td>";
-                echo "<td><input type='checkbox' class='caldeirao' id='cal".$id."' ". ($Caldeirao == 1? 'checked' : '')." disabled></td>";
+                echo "<td><input type='checkbox' class='altitude' id='alt".$ID."' ". ($Altitude == 1? 'checked' : '')." disabled></td>";
+                echo "<td><input type='checkbox' class='caldeirao' id='cal".$ID."' ". ($Caldeirao == 1? 'checked' : '')." disabled></td>";
 
                 echo "<td class='wide'><img src='/images/bandeiras/{$bandeiraPais}' class='bandeira nomePais' id='ban".$ID."'>  <span class='nomePais' id='pai".$ID."'>{$siglaPais}</span>";
                 echo " <select class='comboPais editavel ' id='{$idPais}' hidden>'  ";
@@ -143,9 +143,9 @@ if($num>0){
                     echo "</td>";
                     $optionsString = "<td class='wide'>";
 
-                        //$optionsString .= "<a id='edi".$id."' title='Editar' class='clickable editar'><i class='far fa-edit inlineButton'></i></a>";
-                        $optionsString .= "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar'><i class='fas fa-check inlineButton positive'></i></a>";
-                        $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><i class='fas fa-times inlineButton negative'></i></a>";
+                        $optionsString .= "<a id='edi".$ID."' title='Editar' class='clickable editar'><i class='far fa-edit inlineButton'></i></a>";
+                        $optionsString .= "<a hidden id='sal".$ID."' title='Salvar' class='clickable salvar'><i class='fas fa-check inlineButton positive'></i></a>";
+                        $optionsString .= "<a hidden id='can".$ID."' title='Cancelar' class='clickable cancelar'><i class='fas fa-times inlineButton negative'></i></a>";
                         //$optionsString .= "<a id='del".$id."' title='Deletar' class='clickable deletar'><i class='far fa-trash-alt inlineButton negative'></i></a>";
                     $optionsString .= "</td>";
                     echo $optionsString;
@@ -171,118 +171,147 @@ echo('</div>');
 
 <script>
 
-//     $(document).ready(function() {
+$(document).ready(function() {
 
-//          $('.editar').click(function(){
-//         var tbl_row =  $(this).closest('tr');
-//         tbl_row.find('span').each(function(index, val){
-//             $(this).attr('original_entry', $(this).html());
+	$('.editar').click(function(){
+        var tbl_row =  $(this).closest('tr');
+        tbl_row.find('span').each(function(index, val){
+            $(this).attr('original_entry', $(this).html());
+        });
+		let id = tbl_row.attr("id")
+        tbl_row.find('.nomeEditavel').css("cursor","text");
+        // tbl_row.find('.nomeLiga').css("cursor","text");
+        // tbl_row.find('.nomeLiga').css("pointer-events","none");
+        tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
+        tbl_row.find('.salvar').show();
+        tbl_row.find('.cancelar').show();
+        tbl_row.find('.editar').hide();
+        // tbl_row.find('.deletar').hide();
+        tbl_row.find('.nomePais').hide();
+		tbl_row.find('.nomeClima').hide();
+        tbl_row.find('.newlogoedit').show();
+        tbl_row.find('.logoimage').hide();
+		tbl_row.find('.capacidadeFixo').hide();
+		tbl_row.find('.capacidade').show();
+		tbl_row.find('.capacidade').val(tbl_row.find('.capacidadeFixo').html());
+		document.getElementById("alt" + id).disabled= false;
+		document.getElementById("cal" + id).disabled= false;
+		let altitude = document.getElementById("alt" + id).checked;
+		let caldeirao = document.getElementById("cal" + id).checked;
+		document.getElementById("alt" + id).setAttribute("original_entry", altitude)
+		document.getElementById("cal" + id).setAttribute("original_entry", caldeirao)
 
-//         });
-//         tbl_row.find('.nomeEditavel').css("cursor","text");
-//         tbl_row.find('.nomeLiga').css("cursor","text");
-//         tbl_row.find('.nomeLiga').css("pointer-events","none");
-//         tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
-//         tbl_row.find('.salvar').show();
-//         tbl_row.find('.cancelar').show();
-//         tbl_row.find('.editar').hide();
-//         tbl_row.find('.deletar').hide();
-//         tbl_row.find('.nomePais').hide();
-//         tbl_row.find('.newlogoedit').show();
-//         tbl_row.find('.logoimage').hide();
+        var paisId = tbl_row.find('.comboPais').attr('id');
+        tbl_row.find('.comboPais').show().val(paisId); 
+		
+		var climaId = tbl_row.find('.comboClima').attr('id');
+        tbl_row.find('.comboClima').show().val(climaId); 
+		
+		
 
-//         var paisId = tbl_row.find('.comboPais').attr('id');
-//         tbl_row.find('.comboPais').show().val(paisId);
+     });
 
-//     });
+    $('.cancelar').click(function(){
+        let tbl_row =  $(this).closest('tr');
+		let id = tbl_row.attr("id")
+        tbl_row.find('.nomeEstadio').css("pointer-events","auto");
+        tbl_row.find('.nomeEstadio').css("cursor","auto");
+        tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+        tbl_row.find('.comboPais').hide();
+        tbl_row.find('.nomePais').show();
+		tbl_row.find('.nomeClima').show();
+		tbl_row.find('.comboClima').hide();
+        tbl_row.find('.salvar').hide();
+        tbl_row.find('.cancelar').hide();
+        tbl_row.find('.editar').show();
+		tbl_row.find('.capacidadeFixo').show();
+		tbl_row.find('.capacidade').hide();
+        // tbl_row.find('.deletar').show();
+        tbl_row.find('.newlogoedit').hide();
+        tbl_row.find('.logoimage').show();
+		document.getElementById("alt" + id).disabled= true;
+		document.getElementById("cal" + id).disabled= true;
+		let altitude = (document.getElementById("alt" + id).getAttribute("original_entry") === 'true')
+		let caldeirao = (document.getElementById("cal" + id).getAttribute("original_entry") === 'true')
+		document.getElementById("alt" + id).checked = altitude
+		document.getElementById("cal" + id).checked = caldeirao
+		//document.getElementById("capedit" + id).value(document.getElementById("capedit" + id).getAttribute("original_entry"))
 
-//         $('.cancelar').click(function(){
-//         var tbl_row =  $(this).closest('tr');
-//         tbl_row.find('.nomeLiga').css("pointer-events","auto");
-//         tbl_row.find('.nomeLiga').css("cursor","auto");
-//         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
-//         tbl_row.find('.comboPais').hide();
-//         tbl_row.find('.nomePais').show();
-//         tbl_row.find('.salvar').hide();
-//         tbl_row.find('.cancelar').hide();
-//         tbl_row.find('.editar').show();
-//         tbl_row.find('.deletar').show();
-//         tbl_row.find('.newlogoedit').hide();
-//         tbl_row.find('.logoimage').show();
 
-//         tbl_row.find('span').each(function(index, val){
-//             $(this).html($(this).attr('original_entry'));
-//         });
-//     });
 
-//     $('.salvar').click(function(){
-//         var tbl_row =  $(this).closest('tr');
-//         tbl_row.find('.nomeLiga').css("pointer-events","auto");
-//         tbl_row.find('.nomeLiga').css("cursor","auto");
-//         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
-//         tbl_row.find('.comboPais').hide();
-//         tbl_row.find('.nomePais').show();
-//         tbl_row.find('.salvar').hide();
-//         tbl_row.find('.cancelar').hide();
-//         tbl_row.find('.editar').show();
-//         tbl_row.find('.deletar').show();
-//         tbl_row.find('.newlogoedit').hide();
-//         tbl_row.find('.logoimage').show();
+        tbl_row.find('span, input').each(function(index, val){
+            $(this).html($(this).attr('original_entry'));
+        });
+    });
 
-//         var id = tbl_row.attr('id');
-//         var nomeLiga = tbl_row.find('#nom'+id).html();
-//         var tierLiga = tbl_row.find('#tie'+id).html();
-//         var pais = tbl_row.find('.comboPais').val();
+     $('.salvar').click(function(){
+		let tbl_row =  $(this).closest('tr');
+		let id = tbl_row.attr("id")
+        tbl_row.find('.nomeEstadio').css("pointer-events","auto");
+        tbl_row.find('.nomeEstadio').css("cursor","auto");
+        tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+        tbl_row.find('.comboPais').hide();
+        tbl_row.find('.nomePais').show();
+		tbl_row.find('.nomeClima').show();
+		tbl_row.find('.comboClima').hide();
+        tbl_row.find('.salvar').hide();
+        tbl_row.find('.cancelar').hide();
+        tbl_row.find('.editar').show();
+		tbl_row.find('.capacidadeFixo').show();
+		tbl_row.find('.capacidade').hide();
+        tbl_row.find('.newlogoedit').hide();
+        tbl_row.find('.logoimage').show();
+		document.getElementById("alt" + id).disabled= true;
+		document.getElementById("cal" + id).disabled= true;
+		
+         let nomeEstadio = tbl_row.find('#nom'+id).html();
+         let capacidade = tbl_row.find('#capedit'+id).val();
+		 let clima = tbl_row.find('.comboClima').val();
+         let pais = tbl_row.find('.comboPais').val();
+		 let altitude = document.getElementById("alt" + id).checked
+		 let caldeirao = document.getElementById("cal" + id).checked
 
-//         var input = (tbl_row.find('#newlogo'+id))[0];
-//         var logo;
-
-//         if (input.files.length > 0) {
-//            logo = input.files[0];
-//         } else {
-//            logo = null;
-//         }
 
 //         //var formId = 'form'+id;
 //         //var form = document.getElementById(formId);
-//          var formData = new FormData();
-//          formData.append('id', id);
-//          formData.append('nomeLiga', nomeLiga);
-//          formData.append('tierLiga', tierLiga);
-//          formData.append('pais', pais);
-//          if(logo != null){
-//             formData.append('logo', logo);
-//          }
+          var formData = new FormData();
+          formData.append('id', id);
+          formData.append('nomeEstadio', nomeEstadio);
+          formData.append('capacidade', capacidade);
+          formData.append('clima', clima);
+          formData.append('altitude', altitude);
+          formData.append('caldeirao', caldeirao);
+          formData.append('pais', pais);
 
 
-//     // for (var key of formData.entries()) {
-//     //      console.log(key[0] + ', ' + key[1]);
-//     //  }
+ //for (var key of formData.entries()) {
+  //    console.log(key[0] + ', ' + key[1]);
+  //}
 
 //         //console.log(formData);
-//          $.ajax({
-//              url: 'alterar_liga.php',
-//              processData: false,
-//             contentType: false,
-//             cache: false,
-//             type: "POST",
-//             dataType: 'json',
-//              data: formData,
-//                   success: function(data) {
-//                       if(data.error != ''){
-//                         alert(data.error)
-//                       }
-//                       location.reload();
-//                   },
-//                   error: function(data) {
-//                       successmessage = 'Error';
-//                       alert("Erro, o procedimento não foi realizado, tente novamente.");
-//                       location.reload();
-//                   }
-//               });
-//      });
+          $.ajax({
+              url: 'alterar_estadio.php',
+              processData: false,
+             contentType: false,
+             cache: false,
+             type: "POST",
+             dataType: 'json',
+              data: formData,
+                   success: function(data) {
+                       if(data.error != ''){
+                         alert(data.error)
+                       }
+                       location.reload();
+                   },
+                   error: function(data) {
+                       successmessage = 'Error';
+                       alert("Erro, o procedimento não foi realizado, tente novamente.");
+                       //location.reload();
+                   }
+               });
+      });
 
-// });
+ });
 
 
 

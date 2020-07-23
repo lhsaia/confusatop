@@ -639,8 +639,25 @@ return $stmt;
             return $info['Nome'];
         }
 
-        function lerPropostasPendentes($idUsuario,$from_record_num,$records_per_page){
+        function lerPropostasPendentes($idUsuario,$admin, $from_record_num,$records_per_page){
             $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+			
+			if($admin == 0){
+				$admin_query = "";
+			} else {
+				$admin_query = " 
+				UNION 
+				SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem, d.Nome as clubeDestino, t.valor, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 when t.status_execucao = 3 then 2 end) as precedencia, emprestimo, encerramento 
+				FROM transferencias t
+				LEFT JOIN clube c ON t.clubeOrigem = c.id
+				LEFT JOIN jogador j ON t.jogador = j.id
+				LEFT JOIN paises p ON c.Pais = p.id
+				LEFT JOIN clube d ON t.clubeDestino = d.id
+				LEFT JOIN paises q ON j.Pais = q.id
+				LEFT JOIN paises z ON d.Pais = z.id
+				WHERE (p.dono = 0 AND q.dono = 0 AND (t.status_execucao = 0 OR t.status_execucao = 3))";
+			
+			}
 
             $query = "SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem, d.Nome as clubeDestino, t.valor, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 when t.status_execucao = 3 then 2 end) as precedencia, emprestimo, encerramento 
             FROM transferencias t
@@ -659,7 +676,7 @@ return $stmt;
             LEFT JOIN paises p ON d.Pais = p.id
             LEFT JOIN clube c ON t.clubeOrigem = c.id
             LEFT JOIN paises q ON j.Pais = q.id
-            WHERE p.dono = ? AND (c.id <> 0 OR q.dono <> ?)
+            WHERE p.dono = ? AND (c.id <> 0 OR q.dono <> ?) ".$admin_query ." 
             ORDER BY precedencia ASC, data DESC
                     LIMIT
                         {$from_record_num}, {$records_per_page}";
@@ -2409,7 +2426,7 @@ return $stmt;
         $nomeClube = $result["Nome"];
         $escudoClube = $result["Escudo"];
         $extEscudoClube = substr($escudoClube, -3, 3);
-        $img = file_get_contents("https://confusa.top/images/escudos/" . $escudoClube); 
+        $img = file_get_contents("https://confusa.top/images/escudos/" . urlencode($escudoClube)); 
         $data = base64_encode($img); 
         
     // informações transferência
@@ -2429,7 +2446,7 @@ return $stmt;
         }
         
         if($encerramento == "0000-00-00"){
-            $finalPeriodo = " por tempo indeterminado.";
+            $finalPeriodo = " por tempo indeterminado";
         } else {
             $finalPeriodo = " até " . substr($encerramento, -2,2) . "/" . substr($encerramento, -5,2) . "/" . substr($encerramento, 0,4);
         }
@@ -2438,7 +2455,7 @@ return $stmt;
     $subject_old = "Você recebeu uma proposta de transferência no CONFUSA.TOP ";
     $subject = "[CONFUSA.top] " . $nomeClube . " fez uma proposta por " . $nomeJogador;
     $body_old = "Foi feita uma nova proposta de transferência para um jogador sob seu controle, acesse o portal para negociar.";
-    $body = "<div style='text-align:center;' width='100%'><img align='middle' height='60' src='https://confusa.top/images/escudos/" . $escudoClube. "'/><div><br/>O clube "  . $nomeClube . " fez uma proposta de " . $tipoTransferencia . " por " .$nomeJogador . " no valor de F$" . $valor . $finalPeriodo . ". <br/> Acesse o portal para aceitar, rejeitar ou realizar uma contra proposta." ; 
+    $body = "<div style='text-align:center;' width='100%'><img align='middle' height='60' src='https://confusa.top/images/escudos/" . urlencode($escudoClube). "'/><div><br/>O clube "  . $nomeClube . " fez uma proposta de " . $tipoTransferencia . " por " .$nomeJogador . " no valor de F$" . $valor . $finalPeriodo . ". <br/> Acesse o portal para aceitar, rejeitar ou realizar uma contra proposta." ; 
     
     //<img height='30' width='30' src='data:image/" . $extEscudoClube . ";base64," .$data . "'/>
     

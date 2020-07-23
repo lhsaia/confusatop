@@ -53,7 +53,7 @@ $pais = new Pais($db);
 $jogador = new Jogador($db);
 
 //query
-$stmt = $jogador->lerPropostasPendentes($_SESSION['user_id'],$from_record_num,$records_per_page);
+$stmt = $jogador->lerPropostasPendentes($_SESSION['user_id'], $_SESSION['admin_status'],$from_record_num,$records_per_page);
 
 $num = $stmt->rowCount();
 

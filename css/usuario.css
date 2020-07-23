@@ -15,6 +15,10 @@ h2{
     border: 1px solid gray;
 }
 
+.capacidade{
+	width: 95px !important;
+}
+
 .transpBack{
     background-color: none;
     background:none;

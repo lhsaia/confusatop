@@ -52,20 +52,26 @@ if(isset($_POST['nome']) && isset($_POST['nascimento']) && $_POST['pais'] != 0 &
     $jogador->determinacaoOriginal = $_POST['determinacao'];
     $jogador->sexo = $_POST['sexo'];
 
-    $clube = $_POST['clube'];
-
+    if(isset($_POST['clube'])){
+		$clube = $_POST['clube'];
+	} else {
+		$clube = 0;
+	}
 
     //var_dump($_POST);
+	
     //posicoes
     $prePosicoes = $_POST['comboPosicoes'];
     $stringPosicoes = '';
 
-    if(array_search(1,$prePosicoes)){
+    if(array_search(1,$prePosicoes) === 0){
         $isGoleiro = true;
     } else {
         $isGoleiro = false;
     }
 
+	
+	//exit();
     //var_dump($prePosicoes);
 
     for($i = 0;$i < 15;$i++){
