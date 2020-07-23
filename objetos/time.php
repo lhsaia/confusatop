@@ -215,7 +215,7 @@ function readInfo($id){
     $stmt->execute();
     $info1 = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $query = "SELECT avg(DATEDIFF(NOW(), j.Nascimento)/365) as mediaIdade, SUM(j.valor) as valorTotal, sum(case when j.Pais != b.Pais then 1 else 0 end) as estrangeiros, count(*) as jogadores, (SELECT count(*) FROM (SELECT DISTINCT jogador FROM contratos_jogador WHERE tipoContrato > 0) t3
+    $query = "SELECT avg(DATEDIFF(NOW(), j.Nascimento)/365) as mediaIdade, avg(j.Nivel) as mediaNivel, sum(case when c.titularidade > 0 then j.Nivel else 0 end)/11 as mediaNivelOnze, SUM(j.valor) as valorTotal, sum(case when j.Pais != b.Pais then 1 else 0 end) as estrangeiros, count(*) as jogadores, (SELECT count(*) FROM (SELECT DISTINCT jogador FROM contratos_jogador WHERE tipoContrato > 0) t3
     INNER JOIN
     (SELECT jogador FROM contratos_jogador WHERE tipoContrato = 0 AND clube = {$id}) t4 USING(jogador)) as emSelecao
     FROM contratos_jogador c

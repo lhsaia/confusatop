@@ -100,6 +100,8 @@ $jogadores_selecao = $info['emSelecao'];
 $valor_total_clube = number_format($info['valorTotal']/1000000,1) . "M";
 $recorde_transferencia = $time->balancoTransferencias($idTime);
 $recorde_transferencia = number_format($recorde_transferencia/1000000,1) . "M";
+$nivel_medio = number_format($info['mediaNivel'], 1);
+$nivel_medio_onze = number_format($info['mediaNivelOnze'],1);
 
 
 if($liga_time != ''){
@@ -205,6 +207,7 @@ if(!$is_selecao){
 echo "<div id='Recorde' class='infoblock' title='Balanço de caixa (em F$)'><i class='fas fa-hand-holding-usd'></i><span class='informacao mini'>{$recorde_transferencia}</span></div>";
 }
 echo "<div id='Valor' class='infoblock' title='Valor de mercado (em F$)'><i class='fas fa-dollar-sign'></i><span class='informacao menor'>{$valor_total_clube}</span></div>";
+echo "<div id='MediaNivel' class='infoblock' title='Média de Nível (titulares/total)'><i class='fas fa-award'></i><span class='informacao mini'> {$nivel_medio_onze}   <span class='informacao mini'> &nbsp {$nivel_medio} </span></span></div>";
 echo "</div>";
 echo "<br>";
 
