@@ -62,6 +62,8 @@ $mediaIdade = number_format($info['mediaIdade'],1);
 $estrangeiros = $info['estrangeiros'];
 $valor_total_clube = number_format($info['valorTotal']/1000000000,2) . "B";
 $jogadores = $info['jogadores'];
+$nivel_medio = number_format($info['mediaNivel'], 1);
+$nivel_medio_onze = number_format($info['mediaNivelOnze'],1);
 
 $page_title = $nome_liga;
 $css_filename = "indexRanking";
@@ -94,6 +96,7 @@ echo "<div id='jogadores' class='infoblock' title='Quantidade de jogadores'><i c
 echo "<div id='Idades' class='infoblock' title='Média de idade'><i class='fas fa-male'></i><span class='informacao'>{$mediaIdade}</span></div>";
 echo "<div id='Estrangeiros' class='infoblock' title='Estrangeiros'><i class='fas fa-globe'></i><span class='informacao'>{$estrangeiros}</span><span class='informacao micro'>({$perc_estrangeiros})</span></div>";
 echo "<div id='Valor' class='infoblock' title='Valor de mercado (em F$)'><i class='fas fa-dollar-sign'></i><span class='informacao menor'>{$valor_total_clube}</span></div>";
+echo "<div id='MediaNivel' class='infoblock' title='Média de Nível (titulares/total)'><i class='fas fa-award'></i><span class='informacao mini'> {$nivel_medio_onze}   <span class='informacao mini'> &nbsp {$nivel_medio} </span></span></div>";
 echo "</div>";
 echo "<br>";
 

@@ -228,23 +228,28 @@ class Tecnico{
 
 
         //transpor para tabela de exportação
-        function exportacao($idPais = null, $idTime = null){
+        function exportacao($idPais = null, $idTime = null, $idLiga = null){
 
             $idPais = htmlspecialchars(strip_tags($idPais));
             $idTime = htmlspecialchars(strip_tags($idTime));
+			$idLiga = htmlspecialchars(strip_tags($idLiga));
 
             if($idPais != null){
               $subquery = " b.Pais=:pais ";
-            } else {
+            } else if($idTime != null){
               $subquery = " b.ID=:clube ";
-            }
+            } else if($idLiga != null) {
+			  $subquery = " b.liga=:liga ";
+			}
 
             $query = "SELECT DISTINCT a.ID, CONCAT(a.Nome,' [',p.sigla,']' ) as Nome, IFNULL(FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365),0) as Idade, a.Nivel, a.Mentalidade, a.Estilo FROM contratos_tecnico c LEFT JOIN tecnico a ON c.tecnico = a.ID LEFT JOIN paises p ON a.Pais = p.id LEFT JOIN clube b ON c.clube = b.ID WHERE " . $subquery;
             $stmt = $this->conn->prepare( $query );
             if($idPais != null){
               $stmt->bindParam(":pais", $idPais);
-            } else {
+            } else if($idTime != null){
               $stmt->bindParam(":clube", $idTime);
+            } else if($idLiga != null){
+              $stmt->bindParam(":liga", $idLiga);
             }
 
             $stmt->execute();

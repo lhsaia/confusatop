@@ -1,4 +1,4 @@
-﻿Hexacolor YMT v2.11
+﻿Hexacolor YMT v2.12
 Release Beta
 
 Dúvidas, sugestões, comentários e/ou suporte podem ser enviados para digisabio@hotmail.com
@@ -7,6 +7,12 @@ Boa simulação!
 digisabioSoft
 
 ---Log de Mudanças---
+***Versão 2.12***
+-> Modificações:
+	- Após as mudanças realizadas na versão 2.11, foi identificado um aumento acima do esperado na média de gols em partidas entre times de níveis diferentes, assim como no número de goleadas e no número de jogos com muitos gols entre times de níveis próximos. Para resolver o problema, foi realizado um processo de re-calibragem, com mais de 1 milhão de jogos simulados entre times genéricos, pra identificar os pontos do algoritmo que não estavam de acordo com a parametrização desejada e alterá-los.
+-> Correções de Bugs:
+	- A partir desse grande número de partidas de teste simuladas, foi possível encontrar e resolver uma série de pequenos bugs no algoritmo, ligados a casos excepcionais de substituição, escolha de batedores de falta quando nenhum jogador em campo é um batedor natural, jogadores substituídos por cansaço extremo, entre outros.
+
 ***Versão 2.11***
 -> Inclusões:
 	- Adicionada a mentalidade Raçudo, que surge como alternativa para jogadores que possuíam determinação alta (ver remoção de determinação abaixo) e não se encaixam em outras mentalidades.

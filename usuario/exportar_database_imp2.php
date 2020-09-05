@@ -26,6 +26,12 @@ $parametro = new Parametro($db);
 $exportFiles = array();
 $newFiles = array();
 
+$listaPaises = explode("," , $_GET['countries']);
+$listaLigas = explode(",", $_GET['leagues']);
+$opcao = $_GET['option'];
+
+
+
 //determinar paises do usuario e criar um array
 $stmtPais = $pais->read($userId);
 $listaPaises = array();
@@ -34,9 +40,6 @@ while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
    $listaPaises[$id] = $nome;
 
 }
-
-//$listaPaises = array();
-//$listaPaises[2] = "Praias";
 
 //remove all user files and create directories only if needed
 function delTree($dir) {

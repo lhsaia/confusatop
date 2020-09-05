@@ -276,23 +276,28 @@ LEFT JOIN clube b ON c.clube = b.id
             return $stmt;
         }
 
-        function exportacao($idPais = null, $idTime = null){
+        function exportacao($idPais = null, $idTime = null, $idLiga = null){
 
             $idPais = htmlspecialchars(strip_tags($idPais));
             $idTime = htmlspecialchars(strip_tags($idTime));
+			$idLiga = htmlspecialchars(strip_tags($idLiga));
 
             if($idPais != null){
               $subquery = " Pais=:pais  ";
-            } else {
+            } else if($idTime != null){
               $subquery = " ID=:clube ";
-            }
+            } else if($idLiga != null) {
+			  $subquery = " liga=:liga ";
+			}
 
             $query = "SELECT DISTINCT c.ID, c.Nome, c.TresLetras, c.Estadio, c.Escudo, c.Uni1Cor1, c.Uni1Cor2, c.Uni1Cor3, c.Uni2Cor1, c.Uni2Cor2, c.Uni2Cor3, c.Uniforme1, c.Uniforme2, c.MaxTorcedores, c.Fidelidade, c.Sexo  FROM clube c WHERE " . $subquery;
             $stmt = $this->conn->prepare( $query );
             if($idPais != null){
               $stmt->bindParam(":pais", $idPais);
-            } else {
+            } else if($idTime != null){
               $stmt->bindParam(":clube", $idTime);
+            } else if($idLiga != null){
+              $stmt->bindParam(":liga", $idLiga);
             }
             $stmt->execute();
 
@@ -1351,6 +1356,35 @@ if($dono === null){
 $stmt->execute();
 
 return $stmt;
+
+
+
+}
+
+    //ler todos os jogadores para o quadro
+function readAllMultiLeague($ligas){
+
+	$subquery = " liga = ? ";
+	$totalLigas = count($ligas);
+	for($i = 1;$i < $totalLigas;$i++){
+		$subquery .= " OR liga = ? ";
+	}
+
+    $query = "SELECT ID FROM " . $this->table_name . " WHERE " . $subquery;
+
+
+
+	$stmt = $this->conn->prepare( $query );
+	for($j = 0; $j < $totalLigas ; $j++){
+		$stmt->bindParam($j+1, $ligas[$j]);
+	}
+	$stmt->execute();
+	while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+		extract($row);
+		$listaTimes[] = $ID;
+	}
+
+	return $listaTimes;
 
 
 

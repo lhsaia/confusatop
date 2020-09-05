@@ -318,6 +318,18 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
 
     $this->nome = $row['nome'];
     }
+	
+	public function setId($id){
+		
+		$id = htmlspecialchars(strip_tags($id));
+
+    $this->id = $id;
+    }
+	
+		public function getName(){
+		
+     return $this->nome;
+    }
 
     //funcao para retornar id a partir da sigla
     function idPorSigla($siglaEnviada){

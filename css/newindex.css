@@ -28,6 +28,7 @@ body{
   color:gray;
   /* background-color:#1A1469; */
   height:100%;
+  margin-bottom:0 !important;
 }
 
 body.loggedin{
@@ -46,9 +47,28 @@ body.loggedin{
   background-position:center center;
 }
 
+#tabela-quadros-usuario {
+  display:flex;
+  flex-wrap: wrap;
+  height:100%;
+  background-image: url("/images/vestiario_small.jpg");
+  background-size: fill;
+  background-repeat: no-repeat;
+  /* background-blend-mode: luminosity; */
+  /* background-color:#1A1469; */
+  background-position:center center;
+}
+
 .quadro-flex {
  height:50%;
  width:20%;
+ position:relative;
+
+}
+
+.quadro-flex-usuario {
+ height:50%;
+ width:16.66%;
  position:relative;
 
 }
@@ -141,6 +161,15 @@ transition: opacity 0.5s ease-in-out;
   transform: translate(-50%, -50%);
   transition: all 1s ease-in-out;
 
+}
+
+.azul-marinho span{
+	  color:#1A1469 !important; 
+}
+
+.azul-marinho:hover span{
+
+	  background-color: #ff8c00 !important;
 }
 
 .texto-sobreposto{

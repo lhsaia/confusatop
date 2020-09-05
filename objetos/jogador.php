@@ -828,16 +828,19 @@ return $stmt;
         }
 
 
-        function exportacao($idPais = null, $idTime = null, $orderBy = null){
+        function exportacao($idPais = null, $idTime = null, $orderBy = null, $idLiga = null){
 
             $idPais = htmlspecialchars(strip_tags($idPais));
             $idTime = htmlspecialchars(strip_tags($idTime));
+			$idLiga = htmlspecialchars(strip_tags($idLiga));
 
             if($idPais != null){
               $subquery = " b.Pais=:pais";
-            } else {
+            } else if($idTime != null){
               $subquery = " b.ID=:clube ";
-            }
+            } else if($idLiga != null) {
+			  $subquery = " b.liga=:liga ";
+			}
             
             if($orderBy != null){
                 $subquery .= " ORDER BY c.titularidade DESC, c.posicaoBase ASC ";
@@ -853,8 +856,10 @@ return $stmt;
             $stmt = $this->conn->prepare( $query );
             if($idPais != null){
               $stmt->bindParam(":pais", $idPais);
-            } else {
+            } else if($idTime != null){
               $stmt->bindParam(":clube", $idTime);
+            } else if($idLiga != null){
+              $stmt->bindParam(":liga", $idLiga);
             }
             $stmt->execute();
 
@@ -1013,7 +1018,7 @@ return $stmt;
         function disponibilizar($idJogador){
             $idJogador = htmlspecialchars(strip_tags($idJogador));
 
-            $query = "UPDATE jogador SET disponibilidade = 1 WHERE ID = ?";
+            $query = "UPDATE jogador SET disponibilidade = ABS(disponibilidade - 1) WHERE ID = ?";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(1,$idJogador);
             if($stmt->execute()){

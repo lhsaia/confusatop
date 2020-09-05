@@ -31,7 +31,7 @@ $opcoes = $parametro->coletarOpcoes($_SESSION['user_id']);
 if($opcoes->rowCount() <> 0 ){
     $opcoesResult = $opcoes->fetch(PDO::FETCH_ASSOC);
     ($opcoesResult['mostrarSumula'] == 0 ? $mostrarSumula = '' : $mostrarSumula = 'checked');
-    ($opcoesResult['VAR'] == 0 ? $VAR = '' : $VAR = 'checked');
+    ($opcoesResult['videoAr'] == 0 ? $VAR = '' : $VAR = 'checked');
     ($opcoesResult['limitarLesoes'] == 0 ? $limitarLesoes = '' : $limitarLesoes = 'checked');
     $porTempo = $opcoesResult['porTempo'];
     $porData = $opcoesResult['porData'];

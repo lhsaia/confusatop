@@ -175,7 +175,7 @@ class Liga{
     $stmt->execute();
     $info1 = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $query = "SELECT avg(DATEDIFF(NOW(), j.Nascimento)/365) as mediaIdade, SUM(j.valor) as valorTotal, sum(case when j.Pais != b.Pais then 1 else 0 end) as estrangeiros, count(*) as jogadores 
+    $query = "SELECT avg(DATEDIFF(NOW(), j.Nascimento)/365) as mediaIdade, avg(j.Nivel) as mediaNivel, avg(case when c.titularidade > 0 then j.Nivel else null end) as mediaNivelOnze, SUM(j.valor) as valorTotal, sum(case when j.Pais != b.Pais then 1 else 0 end) as estrangeiros, count(*) as jogadores 
     FROM contratos_jogador c
     LEFT JOIN jogador j ON c.jogador = j.id
     LEFT JOIN paises p ON j.Pais = p.id
@@ -318,5 +318,33 @@ LEFT JOIN clube b ON c.clube = b.id
         $result = $stmt->fetchColumn();
         return $result;
     }
+	
+	function isFromUser($leagueList, $userID){
+		
+		$subquery = " l.id = ? ";
+		$totalLigas = count($leagueList);
+		for($i = 1;$i < $totalLigas;$i++){
+			$subquery .= " OR l.id = ? ";
+		}
+		
+		$query = "SELECT p.dono FROM " . $this->table_name . " l LEFT JOIN paises p ON p.id = l.pais WHERE " . $subquery;
+        $stmt = $this->conn->prepare($query);
+        for($j = 0; $j < $totalLigas ; $j++){
+			$stmt->bindParam($j+1, $leagueList[$j]);
+		}
+        $stmt->execute();
+		//return $stmt;
+        $listaDonos = array();
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+            extract($row);
+            $listaDonos[] = $dono;
+        }
+		
+		if (array_unique($listaDonos) === array($userID)) { 
+			return true;
+		} else {
+			return false;
+		}		
+	}
 }
 ?>
