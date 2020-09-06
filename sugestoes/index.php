@@ -52,13 +52,17 @@ $('#cancel-new-suggestion').click(function(){
 });
 
 $('#confirm-new-suggestion').click(function(){
+	let title = $('#newSuggestionTitle').val();
+	let description = $('#newSuggestionDescription').val();
+	let type = $('#newSuggestionType').val();
+	
+	if(title.length > 0 && description.length > 0){
+		
 	$("#newSuggestion").removeClass("open");
 	$("#newSuggestionWrapper").removeClass("open");
 	$(".newSuggestionItem").removeClass("open");
 	$(".pagination").removeClass("closed");
-	let title = $('#newSuggestionTitle').val();
-	let description = $('#newSuggestionDescription').val();
-	let type = $('#newSuggestionType').val();
+	
 	clear_values();
 	$.ajax({
 		url:"include_suggestion.php",
@@ -71,6 +75,7 @@ $('#confirm-new-suggestion').click(function(){
 			load_data();
     }
 	});
+	}
 });
 
 
@@ -354,8 +359,8 @@ $suggestion = new Suggestion($db);
 echo "<hr>";
 
 echo "<div id='newSuggestionWrapper'><div id='newSuggestion'>
-<input id='newSuggestionTitle' class='newSuggestionItem' type='text' maxlength='40' placeholder='Título...'></input>
-<textarea id='newSuggestionDescription' class='newSuggestionItem' placeholder='Descrição...'></textarea>
+<input required  id='newSuggestionTitle' class='newSuggestionItem' type='text' maxlength='40' placeholder='Título...'></input>
+<textarea id='newSuggestionDescription' class='newSuggestionItem' placeholder='Descrição...' required ></textarea>
 <select id='newSuggestionType' class='newSuggestionItem'>
 <option value='0' selected disabled hidden>Tipo...</option>
 <option value='1'>Sugestão</option>

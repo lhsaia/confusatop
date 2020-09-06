@@ -356,7 +356,7 @@ $agora = date('Y-m-d');
                 }
 
                 if($titular == 'titular'){
-                    $lista_titulares[] = ['nome' => $nomeJogador, 'nivel' => $Nivel, 'mod' => $ModificadorNivel, 'posicaoBase' => $posicaoBase, 'stringPosicoes' => $stringPosicoes, 'idJogador' => $idJogador, 'mentalidade' => $mentalidade, 'capitao' => $capitao, 'cobrancaPenalti' => $cobrancaPenalti];
+                    $lista_titulares[] = ['nome' => $nomeJogador, 'nivel' => $Nivel, 'mod' => $ModificadorNivel, 'posicaoBase' => $posicaoBase, 'stringPosicoes' => $stringPosicoes, 'idJogador' => $idJogador, 'mentalidade' => $mentalidade, 'capitao' => $capitao, 'cobrancaPenalti' => $cobrancaPenalti, 'cobradorFalta' => $cobradorFalta];
                 } else if($titular == 'reserva'){
                     $lista_reservas[] = ['nome' => $nomeJogador, 'nivel' => $Nivel, 'mod' => $ModificadorNivel, 'posicaoBase' => $posicaoBase, 'stringPosicoes' => $stringPosicoes, 'idJogador' => $idJogador];
                 } else {
@@ -437,7 +437,7 @@ if($donoLogado){
 //pagina do elenco
 echo "<div class='tabcontent' id='Elenco' hidden>";
 
-echo "<table id='tabelaTitulares'>";
+echo "<div class='tableHolder'><table id='tabelaTitulares'>";
 echo "<caption>Titulares</caption>";
 echo "<thead>";
 echo "<tr>";
@@ -455,7 +455,7 @@ foreach($lista_titulares as $jogador_tabela){
     echo "</tr>";
 }
 echo "</tbody>";
-echo "</table>";
+echo "</table></div>";
 
 echo "<div>";
 echo '<a id="trocar_titular_reserva" title="Trocar jogadores selecionados" class="clickable"><i class="alto fas fa-exchange-alt inlineButton azul"></i></a>';
@@ -463,7 +463,7 @@ echo '<a id="enviar_para_titular" title="Enviar jogador para titular" class="cli
 echo '<a id="remover_titular" title="Enviar jogador para reserva" class="clickable"><i class="alto fas fa-long-arrow-alt-right inlineButton azul"></i></a>';
 echo "</div>";
 
-echo "<table id='tabelaReservas'>";
+echo "<div class='tableHolder'><table id='tabelaReservas'>";
 echo "<caption>Reservas</caption>";
 echo "<thead>";
 echo "<tr>";
@@ -481,7 +481,7 @@ foreach($lista_reservas as $jogador_tabela){
     echo "</tr>";
 }
 echo "</tbody>";
-echo "</table>";
+echo "</table></div>";
 
 echo "<div>";
 echo '<a id="trocar_reserva_suplente" title="Trocar jogadores selecionados" class="clickable"><i class="alto fas fa-exchange-alt inlineButton azul"></i></a>';
@@ -489,7 +489,7 @@ echo '<a id="enviar_para_suplente" title="Retirar jogador da reserva" class="cli
 echo '<a id="enviar_para_reserva" title="Enviar jogador para reserva" class="clickable"><i class="alto fas fa-long-arrow-alt-left inlineButton azul"></i></a>';
 echo "</div>";
 
-echo "<table id='tabelaSuplentes'>";
+echo "<div class='tableHolder'><table id='tabelaSuplentes'>";
 echo "<caption>Suplentes</caption>";
 echo "<thead>";
 echo "<tr>";
@@ -507,7 +507,7 @@ foreach($lista_suplentes as $jogador_tabela){
     echo "</tr>";
 }
 echo "</tbody>";
-echo "</table>";
+echo "</table></div>";
 
 
 
@@ -664,7 +664,7 @@ echo '<select class="form-control" id="selectPenal1" name="penal1Select">';
 echo '<option class="form-control" value="0">Selecione cobrador...</option>';
 foreach($lista_titulares as $titular){
 
-    echo '<option class="form-control" value="'.$titular['idJogador'].'"'.($titular['cobrancaPenalti'] == 1? "selected" : "").'>'.$titular['nome']." (N-".$titular['nivel'].')</option>';
+    echo '<option class="form-control" value="'.$titular['idJogador'].'"'.($titular['cobrancaPenalti'] == 1? "selected" : "").'>'.$titular['nome']." (N-".$titular['nivel']." / C- ". $titular['cobradorFalta'] . ')</option>';
 }
 echo '</select>';
 echo '<label for="selectPenal2"> Segundo cobrador de pênalti </label>';
@@ -672,7 +672,7 @@ echo '<select class="form-control" id="selectPenal2" name="penal2Select">';
 echo '<option class="form-control" value="0">Selecione cobrador...</option>';
 foreach($lista_titulares as $titular){
 
-    echo '<option class="form-control" value="'.$titular['idJogador'].'"'.($titular['cobrancaPenalti'] == 2? "selected" : "").'>'.$titular['nome']." (N-".$titular['nivel'].')</option>';
+    echo '<option class="form-control" value="'.$titular['idJogador'].'"'.($titular['cobrancaPenalti'] == 2? "selected" : "").'>'.$titular['nome']." (N-".$titular['nivel']." / C- ". $titular['cobradorFalta'] .')</option>';
 }
 echo '</select>';
 echo '<label for="selectPenal3"> Terceiro cobrador de pênalti </label>';
@@ -680,7 +680,7 @@ echo '<select class="form-control" id="selectPenal3" name="penal3Select">';
 echo '<option class="form-control" value="0">Selecione cobrador...</option>';
 foreach($lista_titulares as $titular){
 
-    echo '<option class="form-control" value="'.$titular['idJogador'].'"'.($titular['cobrancaPenalti'] == 3? "selected" : "").'>'.$titular['nome']." (N-".$titular['nivel'].')</option>';
+    echo '<option class="form-control" value="'.$titular['idJogador'].'"'.($titular['cobrancaPenalti'] == 3? "selected" : "").'>'.$titular['nome']." (N-".$titular['nivel']." / C- ". $titular['cobradorFalta'] .')</option>';
 }
 echo '</select>';
 

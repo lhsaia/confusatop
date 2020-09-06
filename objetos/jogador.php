@@ -530,7 +530,7 @@ return $stmt;
 
         $id_time = htmlspecialchars(strip_tags($id_time));
 
-        $query = "SELECT j.id as idJogador, j.Sexo as sexoJogador, j.Nome as nomeJogador, j.Nascimento, c.titularidade, c.posicaoBase, c.capitao, c.cobrancaPenalti, c.ModificadorNivel, c.encerramento, c.tipoContrato, j.valor, j.disponibilidade, p.bandeira as bandeiraPais, p.sigla as siglaPais, j.Nivel, j.StringPosicoes, p.id as idPais, c.titularidade, m.Nome as mentalidade, p.dono as donoJogador, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as Idade
+        $query = "SELECT j.id as idJogador, j.cobradorFalta, j.Sexo as sexoJogador, j.Nome as nomeJogador, j.Nascimento, c.titularidade, c.posicaoBase, c.capitao, c.cobrancaPenalti, c.ModificadorNivel, c.encerramento, c.tipoContrato, j.valor, j.disponibilidade, p.bandeira as bandeiraPais, p.sigla as siglaPais, j.Nivel, j.StringPosicoes, p.id as idPais, c.titularidade, m.Nome as mentalidade, p.dono as donoJogador, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as Idade
         FROM contratos_jogador c
         LEFT JOIN jogador j ON c.jogador = j.id
         LEFT JOIN mentalidade m ON j.Mentalidade = m.ID

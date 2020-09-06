@@ -509,10 +509,13 @@ caption{
     background-color: #ccc;
 }
 
+.tableHolder{
+	width:100%;
+}
+
 #tabelaTitulares{
     background-color:palegreen;
     border:palegreen 2px solid;
-
 }
 
 #tabelaTitulares tr td{
