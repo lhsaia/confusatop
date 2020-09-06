@@ -7,6 +7,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
     $idJogador = $_POST['idJogador'];
     $tipo = $_POST['alteracao'];
+	if(isset($_POST['timeParaDemissao'])){
+		$timeParaDemissao = $_POST['timeParaDemissao'];
+	} else {
+		$timeParaDemissao = null;
+	}
 
     //conferir informações sobre o dono do time e do jogador vs o usuário logado!
 
@@ -111,7 +116,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             $is_success = false;
             $error_msg = "Falha ao incorporar modificador";
         }
-    } else if($tipo == 9){
+    } else if($tipo == 7){
+		        //criar transferencia pendente
+        $idTime = $_POST['idTime'];
+        if($jogador->expatriar($idJogador,$idTime)){
+            $usuario->atualizarAlteracao($_SESSION['user_id']);
+            $is_success = true;
+            $error_msg = "";
+        } else {
+            $is_success = false;
+            $error_msg = "Falha ao expatriar jogador";
+        }
+	}else if($tipo == 9){
           //colocar aqui dados sobre edição de jogador
           $idDonoJogador = $_SESSION['user_id'];
           //$idDonoTime = 9;
@@ -130,6 +146,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
               $cobrancaFaltaJogador = $_POST['cobrancaFalta'];
               $mentalidadeJogador = $_POST['mentalidade'];
               $atividadeJogador = $_POST['atividade'];
+			  $timeEnviado = $timeParaDemissao;
               $isDono = true;
           } else {
               $nomeJogador = null;
@@ -141,6 +158,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
               $mentalidadeJogador = "none";
               $atividadeJogador = null;
               $isDono = false;
+			  $timeEnviado = null;
           }
 
           //$idTime = $_POST['idTime'];
@@ -152,8 +170,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
           }
 
           $nivelJogador = $_POST['nivel'];
+		  
+		  
 
-          if($jogador->editar($idJogador,null,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono,$atividadeJogador, $mentalidadeJogador, $determinacaoJogador, $cobrancaFaltaJogador)){
+          if($jogador->editar($idJogador,$timeEnviado,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono,$atividadeJogador, $mentalidadeJogador, $determinacaoJogador, $cobrancaFaltaJogador)){
             $usuario->atualizarAlteracao($_SESSION['user_id']);
               $is_success = true;
               $error_msg = "";

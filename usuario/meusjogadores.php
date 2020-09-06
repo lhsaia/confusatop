@@ -185,7 +185,29 @@ if($num>0){
                 }
 
                 echo "</td>";
-                echo "<td><span class='nomeAtividade' id='dis".$ID."'>".($disponibilidade >= 0 ? "Ativo" : "Aposentado")."</span><select class='comboAtividade editavel' id='seldis".$ID."' hidden ><option value='0'>Ativo</option><option value='-1'>Aposentado</option></select></td>";
+				
+				switch($disponibilidade){
+					case -2:
+						$nomeDisponibilidade = "Expatriado";
+						break;
+					case -1:
+						$nomeDisponibilidade = "Aposentado";
+						break;
+					case 0:
+						$nomeDisponibilidade = "Ativo";
+						break;
+					case 1:
+						$nomeDisponibilidade = "Ativo (disponível)";
+						break;
+				}
+				
+
+                echo "<td><span class='nomeAtividade' id='dis".$ID."'>".$nomeDisponibilidade."</span><select data-idTime='{$idClubeVinculado}' class='comboAtividade editavel' id='seldis".$ID."' hidden >
+				<option value='1' title='Ativo e disponível para negociar'>Ativo (disponível)</option>
+				<option value='0' title='Ativo'>Ativo</option>
+				<option value='-1' title='Aposentado, não pode ser contratado'>Aposentado</option>
+				<option value='-2' title='Jogando em clubes fora do Portal, não pode ser contratado'>Expatriado</option>
+				</select></td>";
                 // if($clubeEmprestimo != null){
                 //     echo "<td><span class='nomeEditavel' id='dis".$id."'>{$clubeEmprestimo}</span></td>";
                 // } else {
@@ -456,6 +478,7 @@ $('.cancelar').click(function(){
             var mentalidade = tbl_row.find(".comboMentalidade").val();
             var cobrancaFalta = tbl_row.find(".comboCobrador").val();
             var atividade = tbl_row.find(".comboAtividade").val();
+			var timeParaDemissao = tbl_row.find(".comboAtividade").attr("data-idTime");
         }
 
         var nivel = tbl_row.find(".nivelEditavel").html();
@@ -480,7 +503,8 @@ if(isDono){
             'determinacao' : determinacao,
             'mentalidade' : mentalidade,
             'cobrancaFalta' : cobrancaFalta,
-            'atividade' : atividade
+            'atividade' : atividade,
+			'timeParaDemissao' : timeParaDemissao
 
         }
 

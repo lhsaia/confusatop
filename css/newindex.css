@@ -18,7 +18,7 @@ html{
   }
 }
 
-.quadro-flex, .outros-links-container, .tela-cheia, .texto-sobreposto {
+.quadro-flex, .outros-links-container, .tela-cheia, .texto-sobreposto, .quadro-flex-usuario {
   /* This section calls the slideInFromLeft animation we defined above */
   animation: fadeIn 2.5s ease-in-out ;
 }
@@ -165,6 +165,7 @@ transition: opacity 0.5s ease-in-out;
 
 .azul-marinho span{
 	  color:#1A1469 !important; 
+	  
 }
 
 .azul-marinho:hover span{

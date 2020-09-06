@@ -400,16 +400,17 @@ $agora = date('Y-m-d');
                     if(!$is_selecao){
                         $optionsString .= "<a id='pro".$idJogador."' title='Fazer Proposta' class='clickable proposta'><i class='fas fa-money-bill inlineButton'></i></a>";
                         if($donoLogado){
-                            $optionsString .= "<a id='dem".$idJogador."' title='Editar jogador' class='clickable editar'><i class='fas fa-edit inlineButton azul'></i></a>";
-                            $optionsString .= "<a id='dem".$idJogador."' title='Disponibilizar jogador' class='clickable disponibilizar'><i class='fas fa-list-ul inlineButton azul'></i></a>";
-                            $optionsString .= "<a id='dem".$idJogador."' title='Demitir jogador' class='clickable demitir'><i class='fas fa-file-contract inlineButton vermelho'></i></a>";
-                            $optionsString .= "<a id='dem".$idJogador."' title='Aposentar jogador' class='clickable aposentar'><i class='fas fa-glasses inlineButton vermelho'></i></a>";
+                            $optionsString .= "<a id='edit".$idJogador."' title='Editar jogador' class='clickable editar'><i class='fas fa-edit inlineButton azul'></i></a>";
+                            $optionsString .= "<a id='disp".$idJogador."' title='Disponibilizar jogador' class='clickable disponibilizar'><i class='fas fa-list-ul inlineButton azul'></i></a>";
+                            $optionsString .= "<a id='demi".$idJogador."' title='Demitir jogador' class='clickable demitir'><i class='fas fa-file-contract inlineButton vermelho'></i></a>";
+                            $optionsString .= "<a id='apos".$idJogador."' title='Aposentar jogador' class='clickable aposentar'><i class='fas fa-glasses inlineButton vermelho'></i></a>";
+							$optionsString .= "<a id='expa".$idJogador."' title='Expatriar jogador' class='clickable expatriar'><i class='fas fa-plane-departure inlineButton vermelho'></i></a>"; 
                             $optionsString .= "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar'><i class='fas fa-check inlineButton positive'></i></a>";
                             $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><i class='fas fa-times inlineButton vermelho'></i></a>";
 
                         }
                     } else {
-                        $optionsString .= "<a id='dem".$idJogador."' title='Desconvocar jogador' class='clickable desconvocar'><i class='fas fa-plane inlineButton vermelho'></i></a>";
+                        $optionsString .= "<a id='desc".$idJogador."' title='Desconvocar jogador' class='clickable desconvocar'><i class='fas fa-plane inlineButton vermelho'></i></a>";
                     }
 
 
@@ -1598,6 +1599,20 @@ var idTime = $('#quadro-container').prop('class');
  var formData = {
     'idJogador' : idJogador,
     'alteracao' : 4,
+    'idTime' : idTime,
+};
+
+ajaxCallJogador(formData);
+});
+
+$('.expatriar').on("click", function(event){
+
+var idJogador = $(this).closest('tr').prop('id');
+var idTime = $('#quadro-container').prop('class');
+
+ var formData = {
+    'idJogador' : idJogador,
+    'alteracao' : 7,
     'idTime' : idTime,
 };
 

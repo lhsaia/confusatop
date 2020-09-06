@@ -118,7 +118,7 @@ class Time{
             $sub_query_fim = "";
         } else if($liga === null) {
             $sub_query_inicio = "SELECT * FROM (";
-            $sub_query_fim = ") t1 WHERE idDonoPais = ? AND status = 0";
+            $sub_query_fim = ") t1 WHERE idDonoPais = ? AND status = 0 ORDER BY Nome ASC";
 
         } else if($dono === null){
             $sub_query_inicio = "SELECT * FROM (";
@@ -1328,7 +1328,7 @@ if($idUsuario != null){
             $sub_query_fim = ") t1 WHERE (Nome LIKE ? OR TresLetras LIKE ?) LIMIT 150";
         } else {
             $sub_query_inicio = "SELECT * FROM (";
-            $sub_query_fim = ") t1 WHERE idDonoPais = ? AND status = 0 AND (Nome LIKE ? OR TresLetras LIKE ?) LIMIT 150";
+            $sub_query_fim = ") t1 WHERE idDonoPais = ? AND status = 0 AND (Nome LIKE ? OR TresLetras LIKE ?) ORDER BY Nome ASC LIMIT 150";
 
         } 
 

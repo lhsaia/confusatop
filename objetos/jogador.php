@@ -159,7 +159,7 @@ function readAll($from_record_num, $records_per_page, $dono = null){
         $sub_query_fim = "";
     } else {
         $sub_query_inicio = "SELECT * FROM (";
-        $sub_query_fim = ") t1 WHERE idDonoPais = ?";
+        $sub_query_fim = ") t1 WHERE idDonoPais = ? ORDER BY Nome ASC";
 
     }
 
@@ -341,7 +341,7 @@ return $stmt;
         }
 
         if($alterarPasse){
-            $query_valor = "UPDATE jogador SET valor = ? WHERE id = ?";
+            $query_valor = "UPDATE jogador SET valor = ?, disponibilidade = 0 WHERE id = ?";
             $stmt = $this->conn->prepare($query_valor);
             $stmt->bindParam(1,$passeJogador);
             $stmt->bindParam(2,$idJogador);
@@ -350,7 +350,16 @@ return $stmt;
             } else {
                 $error_count++;
             }
-        }
+        } else {
+			$query_valor = "UPDATE jogador SET disponibilidade = 0 WHERE id = ?";
+            $stmt = $this->conn->prepare($query_valor);
+            $stmt->bindParam(1,$idJogador);
+            if($stmt->execute()){
+
+            } else {
+                $error_count++;
+            }
+		}
 
         if($error_count > 0){
             return false;
@@ -917,7 +926,7 @@ return $stmt;
             if($disponivel != null){
                 $subquery .= ' AND disponibilidade = "Sim" ';
             } else {
-              $subquery .= ' AND disponibilidade <> "Aposentado" ';
+              $subquery .= ' AND disponibilidade <> "Aposentado" AND disponibilidade <> "Expatriado" ';
             }
 
             if($nome != null){
@@ -976,7 +985,7 @@ return $stmt;
             CASE WHEN SUBSTRING(j.StringPosicoes,13,1) = 0 THEN '' ELSE 'MA-' END,
             CASE WHEN SUBSTRING(j.StringPosicoes,14,1) = 0 THEN '' ELSE 'Am-' END,
             CASE WHEN SUBSTRING(j.StringPosicoes,15,1) = 0 THEN '' ELSE 'Aa-' END) as posicoes, j.StringPosicoes as stringPosicoes,
-            j.valor, j.Nivel as nivel, CASE WHEN j.disponibilidade = -1 THEN 'Aposentado' WHEN j.disponibilidade = 0 THEN 'Não' ELSE 'Sim' END as disponibilidade, p.bandeira, q.bandeira as bandeiraClube, q.ID as paisClube, CASE WHEN b.ID is not NULL THEN b.ID ELSE 0 END as idClube, b.liga as idLiga, l.Nome as ligaClube,  CASE WHEN c.posicaoBase <> 0 THEN o.Nome ELSE '' END as posicaoBaseJogador, j.Mentalidade as mentalidadeIndex, p.ranqueavel, CASE WHEN p.dono <> :usuarioLogado THEN 0 ELSE 1 END as donoJogador, c.tipoContrato
+            j.valor, j.Nivel as nivel, CASE WHEN j.disponibilidade = -1 THEN 'Aposentado' WHEN j.disponibilidade = 0 THEN 'Não' WHEN j.disponibilidade = -2 THEN 'Expatriado' ELSE 'Sim' END as disponibilidade, p.bandeira, q.bandeira as bandeiraClube, q.ID as paisClube, CASE WHEN b.ID is not NULL THEN b.ID ELSE 0 END as idClube, b.liga as idLiga, l.Nome as ligaClube,  CASE WHEN c.posicaoBase <> 0 THEN o.Nome ELSE '' END as posicaoBaseJogador, j.Mentalidade as mentalidadeIndex, p.ranqueavel, CASE WHEN p.dono <> :usuarioLogado THEN 0 ELSE 1 END as donoJogador, c.tipoContrato
             FROM jogador j
             LEFT JOIN paises p ON j.Pais = p.id
             LEFT JOIN contratos_jogador c ON j.ID = c.jogador
@@ -1055,6 +1064,34 @@ return $stmt;
 
 
         }
+		
+		function expatriar($idJogador,$idClube){
+            $idJogador = htmlspecialchars(strip_tags($idJogador));
+            $idClube = htmlspecialchars(strip_tags($idClube));
+
+            $error_count = 0;
+            $query = "UPDATE jogador SET disponibilidade = -2 WHERE ID = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1,$idJogador);
+            if($stmt->execute()){
+            } else {
+                $error_count++;
+            }
+
+            if($this->demitir($idJogador,$idClube)){
+
+            } else {
+                $error_count++;
+            }
+
+            if($error_count > 0){
+                return false;
+            } else {
+                return true;
+            }
+
+
+        }
 
 
 
@@ -1077,7 +1114,8 @@ return $stmt;
                 }
 
                 $error_count = 0;
-                
+				
+		
             if($clubeVinculado == 0){
                 $query_contrato = "DELETE FROM
                             contratos_jogador
@@ -1240,7 +1278,7 @@ return $stmt;
 
 
 
-                    $query = "UPDATE jogador SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, StringPosicoes=:stringPosicoes, valor=:valor, Nivel=:nivel, Mentalidade=:mentalidade, Determinacao=:determinacao, DeterminacaoOriginal=:determinacaoOriginal, CobradorFalta=:cobradorFalta, disponibilidade = CASE WHEN disponibilidade < 0 THEN :disponibilidade1 WHEN disponibilidade = 0 THEN disponibilidade + :disponibilidade2 WHEN disponibilidade = 1 THEN disponibilidade + 2 * :disponibilidade3 END WHERE ID = :id";
+                    $query = "UPDATE jogador SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, StringPosicoes=:stringPosicoes, valor=:valor, Nivel=:nivel, Mentalidade=:mentalidade, Determinacao=:determinacao, DeterminacaoOriginal=:determinacaoOriginal, CobradorFalta=:cobradorFalta, disponibilidade =:disponibilidade WHERE ID = :id";
                     $stmt = $this->conn->prepare($query);
                     $stmt->bindParam(":nome", $nome);
                     $stmt->bindParam(":nascimento", $nascimento);
@@ -1253,9 +1291,7 @@ return $stmt;
                     $stmt->bindParam(":determinacao", $determinacao);
                     $stmt->bindParam(":determinacaoOriginal", $determinacao);
                     $stmt->bindParam(":mentalidade", $mentalidade);
-                    $stmt->bindParam(":disponibilidade1", $atividade);
-                    $stmt->bindParam(":disponibilidade2", $atividade);
-                    $stmt->bindParam(":disponibilidade3", $atividade);
+                    $stmt->bindParam(":disponibilidade", $atividade);
                     if($stmt->execute()){
 
                     } else {
@@ -1430,6 +1466,15 @@ return $stmt;
             }
 
         }
+		
+		if($atividadeJogador < 0 && $isDono){
+			if($this->demitir($idJogador,$idTime)){
+
+            } else {
+                $error_count++;
+            }
+		}
+		
             if($error_count == 0){
                 return true;
             } else {
@@ -1622,7 +1667,8 @@ return $stmt;
         function readExpat($from_record_num, $records_per_page, $user_id){
             $user_id = htmlspecialchars(strip_tags($user_id));
 
-            $query = "SELECT * FROM (SELECT tf.ID, tf.Nome, tf.Nascimento, tf.Mentalidade, tf.CobradorFalta, tf.StringPosicoes, tf.valor, tf.Nivel, tf.disponibilidade, tf.idPais, tf.idDonoPais, tf.siglaPais, tf.bandeiraPais, tf.posicaoBase as posicaoBase, tf.titularidade, b.Nome as clubeVinculado, d.Nome as clubeEmprestimo, f.Nome as clubeSelecao, tf.determinacaoOriginal, b.Escudo as escudoClubeVinculado, b.ID as idClubeVinculado, tf.Idade, q.dono as donoPaisClube, tf.modificadorNivel FROM ( SELECT
+            $query = "SELECT * FROM (
+			SELECT tf.ID, tf.Nome, tf.Nascimento, tf.Mentalidade, tf.CobradorFalta, tf.StringPosicoes, tf.valor, tf.Nivel, tf.disponibilidade, tf.idPais, tf.idDonoPais, tf.siglaPais, tf.bandeiraPais, tf.posicaoBase as posicaoBase, tf.titularidade, b.Nome as clubeVinculado, d.Nome as clubeEmprestimo, f.Nome as clubeSelecao, tf.determinacaoOriginal, b.Escudo as escudoClubeVinculado, b.ID as idClubeVinculado, tf.Idade, q.dono as donoPaisClube, tf.modificadorNivel FROM ( SELECT
             a.ID, a.Nome, a.Nascimento, m.Nome as Mentalidade, r.Nome as CobradorFalta, a.StringPosicoes, a.valor, a.Nivel, a.disponibilidade, p.id as idPais, p.dono as idDonoPais, p.sigla as siglaPais, p.bandeira as bandeiraPais, c.clube as clubeVinculado, e.clube as clubeEmprestimo, s.clube as clubeSelecao, c.posicaoBase as posicaoBase, c.titularidade, a.determinacaoOriginal, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, c.ModificadorNivel as modificadorNivel
             FROM
                 " . $this->table_name . " a
@@ -1637,8 +1683,7 @@ return $stmt;
             LEFT JOIN clube d ON tf.clubeEmprestimo = d.id
             LEFT JOIN clube f ON tf.clubeSelecao = f.id
             LEFT JOIN paises q ON b.Pais = q.id
-            ORDER BY
-                tf.Nome ASC ) t1 WHERE idDonoPais = ? AND donoPaisClube <> idDonoPais AND donoPaisClube <> 0
+			) t1 WHERE idDonoPais = ? AND ((donoPaisClube <> idDonoPais AND donoPaisClube <> 0) OR (disponibilidade = -2)) ORDER BY Nome ASC
             LIMIT
                 {$from_record_num}, {$records_per_page}";
 

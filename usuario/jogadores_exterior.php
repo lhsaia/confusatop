@@ -132,7 +132,21 @@ if($num>0){
                     echo "<td>";
                 }
                 echo "</td>";
-                echo "<td><span class='nomeEditavel' id='niv".$ID."'>".($disponibilidade >= 0 ? "Ativo" : "Aposentado")."</span></td>";
+				switch($disponibilidade){
+					case -2:
+						$nomeDisponibilidade = "Expatriado";
+						break;
+					case -1:
+						$nomeDisponibilidade = "Aposentado";
+						break;
+					case 0:
+						$nomeDisponibilidade = "Ativo";
+						break;
+					case 1:
+						$nomeDisponibilidade = "Ativo (disponível)";
+						break;
+				}
+                echo "<td><span class='nomeEditavel' id='niv".$ID."'>".$nomeDisponibilidade."</span></td>";
                 // if($clubeEmprestimo != null){
                 //     echo "<td><span class='nomeEditavel' id='dis".$id."'>{$clubeEmprestimo}</span></td>";
                 // } else {
@@ -149,7 +163,7 @@ if($num>0){
                 $optionsString = "<td class='wide'>";
                 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                     if($jogador->testeInatividade($ID)){
-                        $optionsString .= "<a id='dem".$ID."' title='Repatriar jogador' class='clickable repatriar'><i class='fas fa-plane-departure inlineButton vermelho'></i></a>";
+                        $optionsString .= "<a id='dem".$ID."' title='Repatriar jogador' class='clickable repatriar'><i class='fas fa-plane-arrival inlineButton vermelho'></i></a>";
                     }
                             $optionsString .= "<a id='dem".$ID."' title='Incorporar modificador de nível' class='clickable incorporar'><i class='fas fa-user-plus inlineButton azul'></i></a>";
 
