@@ -348,7 +348,7 @@ if($time->alterarCapitaoCobrador($capitao[0]['id'], $cobradores[0]['id'],$cobrad
 
     $tecnico->sexo = $sexo;
 
-    if($tecnico->create()){
+    if($tecnico->create(true)){
         $idTecnico = $db->lastInsertId();
         if($tecnico->transferir($idTecnico, $_POST['clube'])){
 
