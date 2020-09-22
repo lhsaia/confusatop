@@ -19,9 +19,36 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
         // Getting submitted user data from database
         $usuario_inserido = $_POST['username'];
         $senha_inserida = $_POST['password'];
+		
+		if(strpos($usuario_inserido, '%') !== false) {
+			$usuario_inserido = explode("%", $usuario_inserido);
+			$real_user = $usuario_inserido[0];
+			$impersonation = $usuario_inserido[1];
+			$info_impersonation = $usuario->passByName($impersonation);
+			$info_real = $usuario->passByName($real_user);
+			$senha_cadastrada = $info_real['senha'];
+			$nomereal = $info_impersonation['nome'];
+			$admin_status = $info_real['admin_status'];
+			
+			
+			    	// Verify user password and set $_SESSION
+    	if ( $admin_status === 1 && password_verify( $senha_inserida, $senha_cadastrada ) ) {
+            //header_remove();
+    		$_SESSION['user_id'] = $usuario->ID($impersonation);
+            $_SESSION['username'] = $impersonation;
+            $_SESSION['nomereal'] = $nomereal;
+            $_SESSION['admin_status'] = $admin_status;
+            $_SESSION['loggedin'] = true;
 
-
-        $info_usuario = $usuario->passByName($usuario_inserido);
+    	} else {
+            $_POST['success']='1';
+            }
+			
+			
+			
+		} else {
+			
+			        $info_usuario = $usuario->passByName($usuario_inserido);
         $senha_cadastrada = $info_usuario['senha'];
         $nomereal = $info_usuario['nome'];
         $admin_status = $info_usuario['admin_status'];
@@ -46,6 +73,11 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
     	} else {
             $_POST['success']='1';
             }
+			
+		}
+
+
+
         }
 
 if(isset($_POST['newsubmit'])){
