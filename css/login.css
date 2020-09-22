@@ -795,6 +795,10 @@ nav.open {
   content: "(admin)";
 }
 
+#logged-user.impersonado::before{
+  content: " (admin as) ";
+}
+
 #logged-user.user::after{
   content: "";
 }

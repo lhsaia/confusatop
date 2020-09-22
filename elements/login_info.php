@@ -39,6 +39,7 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
             $_SESSION['nomereal'] = $nomereal;
             $_SESSION['admin_status'] = $admin_status;
             $_SESSION['loggedin'] = true;
+			$_SESSION['impersonated'] = true;
 
     	} else {
             $_POST['success']='1';
@@ -62,6 +63,7 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
             $_SESSION['nomereal'] = $nomereal;
             $_SESSION['admin_status'] = $admin_status;
             $_SESSION['loggedin'] = true;
+			$_SESSION['impersonated'] = false;
 
             if(isset($_POST['remember'])){
 

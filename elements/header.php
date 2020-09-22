@@ -5,17 +5,20 @@ echo "<head>";
 
 echo "<title>" . $page_title . "</title>";
 
-if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true) {
+if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && isset($_SESSION['impersonated'])) {
     $status_style = "block";
     $welcometext = $_SESSION['nomereal'];
     $onclick_log = 'document.getElementById("id02").style.display="block"';
     $title_log = "Log-out";
     $change_pass = "<a class='nav-item' href='/usuario/alterar_senha.php'>Alterar senha</a>";
 
-    if($_SESSION['admin_status'] == '1'){
+    if($_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == false){
       $admin_btn = "<a class='nav-item' href='/admin/criar_usuario.php'>Criar usuário</a>";
       $class_conectado = " admin conectado ";
-    } else {
+    } else if($_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == true){
+      $class_conectado = " impersonado conectado ";
+	  $admin_btn = "";
+	} else {
       $admin_btn = "";
       $class_conectado = " user conectado ";
     }
