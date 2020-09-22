@@ -1783,6 +1783,7 @@ return $stmt;
 
             return $stmt;
            }
+		   
 
            public function listaCobradorFalta(){
             $query = "SELECT ID, Nome FROM cobrador";
@@ -2554,6 +2555,56 @@ public function resolverEmprestimos(){
             }
 }
 
+
+    function readAllAjax($item_pesquisado, $dono = null){
+		$item_pesquisado = htmlspecialchars(strip_tags($item_pesquisado));
+		$dono = htmlspecialchars(strip_tags($dono));
+
+        //ver se é por dono ou geral
+        if($dono === null){
+            $sub_query_inicio = "SELECT * FROM (";
+            $sub_query_fim = ") t1 WHERE (Nome LIKE ?) LIMIT 150";
+        } else {
+            $sub_query_inicio = "SELECT * FROM (";
+            $sub_query_fim = ") t1 WHERE idDonoPais = ? AND (Nome LIKE ?) ORDER BY Nome ASC LIMIT 150";
+
+        } 
+
+    $query = $sub_query_inicio."SELECT tf.ID, tf.Nome, tf.Nascimento, tf.Mentalidade, tf.CobradorFalta, tf.StringPosicoes, tf.valor, tf.Nivel, tf.disponibilidade, tf.idPais, tf.idDonoPais, tf.siglaPais, tf.bandeiraPais, tf.posicaoBase as posicaoBase, tf.titularidade, b.Nome as clubeVinculado, d.Nome as clubeEmprestimo, f.Nome as clubeSelecao, tf.determinacaoOriginal, tf.sexo, b.Escudo as escudoClubeVinculado, b.ID as idClubeVinculado, tf.Idade, q.dono as donoClubeVinculado FROM ( SELECT
+            a.ID, a.Nome, a.Nascimento, m.Nome as Mentalidade, r.Nome as CobradorFalta, a.StringPosicoes, a.valor, a.Nivel, a.disponibilidade, p.id as idPais, p.dono as idDonoPais, p.sigla as siglaPais, p.bandeira as bandeiraPais, c.clube as clubeVinculado, e.clube as clubeEmprestimo, s.clube as clubeSelecao, c.posicaoBase as posicaoBase, c.titularidade, a.Sexo as sexo, a.determinacaoOriginal, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade
+        FROM
+            " . $this->table_name . " a
+        LEFT JOIN paises p ON a.Pais = p.id
+        LEFT JOIN contratos_jogador c ON a.ID = c.jogador AND c.tipoContrato = 0
+        LEFT JOIN contratos_jogador e ON a.ID = e.jogador AND e.tipoContrato = 1
+        LEFT JOIN contratos_jogador s ON a.ID = s.jogador AND s.tipoContrato = 2
+        LEFT JOIN mentalidade m ON a.Mentalidade = m.ID
+        LEFT JOIN cobrador r ON a.CobradorFalta = r.ID
+          ) tf
+        LEFT JOIN clube b ON tf.clubeVinculado = b.id
+        LEFT JOIN clube d ON tf.clubeEmprestimo = d.id
+        LEFT JOIN clube f ON tf.clubeSelecao = f.id
+        LEFT JOIN paises q ON b.Pais = q.id
+        ORDER BY
+            tf.Nome ASC ".$sub_query_fim;
+			
+	$stmt = $this->conn->prepare( $query );
+	$item_pesquisado = "%" . $item_pesquisado . "%";
+		
+	if($dono === null){
+		$stmt->bindParam(1, $item_pesquisado);
+	} else {
+		$stmt->bindParam(1, $dono);
+		$stmt->bindParam(2, $item_pesquisado);
+	} 
+
+	$stmt->execute();
+
+	return $stmt;
+
+
+
+}
 
 }
 ?>
