@@ -19,6 +19,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 var localData = [];
 var asc = true;
 var activeSort = '';
+var show_all = true;
 
 $(document).ready(function($){
 
@@ -29,6 +30,8 @@ $(document).ready(function($){
 	 };?>';
 
 load_data();
+
+
 
 function clear_values(){
 	$('#newSuggestionTitle').val("");
@@ -42,6 +45,17 @@ $('#add-new-suggestion').click(function(){
 	$(".newSuggestionItem").addClass("open");
 	$(".pagination").addClass("closed");
 });
+
+    $('#filter-pending').click(function (e) {
+		e.preventDefault();
+		show_all = !show_all;
+		let new_text = (show_all ? 'Mostrar apenas pendentes' : 'Mostrar todos');
+
+		$('#filter-pending span').text(new_text);
+
+		updateTable(localData, 1,0,0);
+		
+    });
 
 $('#cancel-new-suggestion').click(function(){
 	$("#newSuggestion").removeClass("open");
@@ -152,7 +166,10 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 
         // criar linhas
         $.each(ajax_data, function(index, val){
-
+			
+			if(show_all || (!show_all && val['status'] == 0)){
+				
+				
             if(index>=(from_result_num-1) && index<=(from_result_num+results_per_page-2)){
 				
 			//status
@@ -184,8 +201,6 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 			// votado pelo usuário
 			let voted_by_user = val['voted_by_user'];
 			let button_class = "";
-			console.log(val['title']);
-			console.log(voted_by_user);
 			if(voted_by_user == 1){
 				button_class = "<button class='icon_box toggle_like toggled'><i class='fas fa-check'></i></button>";
 			} else {
@@ -203,7 +218,13 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                 tbl += "<td>"+val['vote_count']+"</td>";
             tbl +=  "</tr>";
             }
-        });
+        
+				
+			}
+
+		});
+		
+
 
         tbl += '</tbody>';
     tbl += '</table>';
@@ -343,6 +364,9 @@ echo "<div id='melhorias-header'>
 	if(isset($_SESSION['user_id'])){
 		echo "<button id='add-new-suggestion'>+ Adicionar sugestão</button>";
 	}
+	echo "<label for='checkbox-21' id='filter-pending'><span>Mostrar apenas pendentes</span>";
+    echo "<input type='checkbox' id='checkbox-21' name='apenasConfusa'>";
+    echo "</label>";
 	echo "</div>";
 
 //query informacoes
