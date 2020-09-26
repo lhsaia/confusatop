@@ -189,7 +189,7 @@ return $num;
         $idTime = htmlspecialchars(strip_tags($idTime));
 
         if($idPais != null){
-          $query = "SELECT c.ID as idClima, c.Nome as nomeClima, c.TempVerao, c.EstiloVerao, c.TempOutono, c.EstiloOutono, c.TempInverno, c.EstiloInverno, c.TempPrimavera, c.EstiloPrimavera, c.Hemisferio FROM clima c WHERE c.Pais=:pais";
+          $query = "SELECT DISTINCT c.ID as idClima, c.Nome as nomeClima, c.TempVerao, c.EstiloVerao, c.TempOutono, c.EstiloOutono, c.TempInverno, c.EstiloInverno, c.TempPrimavera, c.EstiloPrimavera, c.Hemisferio FROM estadio e LEFT JOIN clima c ON e.Clima = c.ID WHERE e.Pais=:pais";
         } else {
           $query = "SELECT DISTINCT c.ID as idClima, c.Nome as nomeClima, c.TempVerao, c.EstiloVerao, c.TempOutono, c.EstiloOutono, c.TempInverno, c.EstiloInverno, c.TempPrimavera, c.EstiloPrimavera, c.Hemisferio FROM clube b LEFT JOIN estadio e ON b.Estadio = e.ID LEFT JOIN clima c ON c.ID = e.Clima WHERE b.ID=:clube";
         }

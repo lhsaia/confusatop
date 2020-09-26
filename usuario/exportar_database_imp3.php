@@ -346,7 +346,7 @@ $zip->open($zip_name, ZIPARCHIVE::CREATE);
 
 	if($opcaoPrincipal < 1){
 		
-		foreach($listaNomesPaises as $nomePais){
+		 foreach($listaNomesPaises as $nomePais){
 			
 		$zip->addEmptyDir($nomePais);
 		$zip->addEmptyDir($nomePais . "/Exports");
@@ -373,10 +373,16 @@ $zip->open($zip_name, ZIPARCHIVE::CREATE);
 		}
 
 		foreach (glob($_SERVER['DOCUMENT_ROOT']. "/hexacolor_repo/Imagens/*") as $file) {
-		$zip->addFile($file, $nomePais . "/Imagens/".basename($file));
+			$zip->addFile($file, $nomePais . "/Imagens/".basename($file));
+		}
+
+		foreach (glob($_SERVER['DOCUMENT_ROOT']. "/images/bandeiras/*") as $file) {
+		  if(strlen(basename($file)) == 6){
+			$zip->addFile($file, $nomePais . "/data/PaisesReais/". basename($file));
+		  }
 		}
 			
-		}
+		 }
 	
 	}
 
