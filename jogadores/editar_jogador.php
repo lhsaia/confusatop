@@ -57,11 +57,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             $nomeJogador = $_POST['nome'];
             $nacionalidadeJogador = $_POST['nacionalidade'];
             $nascimentoJogador = $_POST['nascimento'];
+			$encerramentoContrato = $_POST['encerramento'];
             $isDono = true;
         } else {
             $nomeJogador = null;
             $nacionalidadeJogador = null;
             $nascimentoJogador = null;
+			$encerramentoContrato = null;
             $isDono = false;
         }
 
@@ -75,7 +77,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
         $nivelJogador = $_POST['nivel'];
 
-        if($jogador->editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono)){
+        if($jogador->editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono,null,null,null,null, $encerramentoContrato)){
             $usuario->atualizarAlteracao($_SESSION['user_id']);
             $is_success = true;
             $error_msg = "";

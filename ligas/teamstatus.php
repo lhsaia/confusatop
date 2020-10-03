@@ -386,11 +386,11 @@ $agora = date('Y-m-d');
                     }
                     echo "</select>";
                 echo "</td>";
-                echo "<td class='nopadding'><span class='nascimentoEIdade'>{$Nascimento} (".$Idade.")</span><input type='date' class='editavel nascimento' hidden></span></td>";
-                echo "<td class='nopadding'><span class='nivelEMod'>{$Nivel} (".$ModificadorNivel.")</span><span class='editavel nivel' hidden></span></td>";
+                echo "<td class='nopadding'><span class='nascimentoEIdade'>{$Nascimento} (".$Idade.")</span><input type='date' class='editavel nascimento' hidden></td>";
+                echo "<td class='nopadding'><span class='nivelEMod'>{$Nivel} (".$ModificadorNivel.")</span><span class='editavel nivel' hidden></td>";
                 echo "<td class='nopadding'>{$dadosTransferencia["Data"]}</td>";
                 echo "<td class='nopadding'>{$dadosTransferencia["Clube"]}</td>";
-                echo "<td class='nopadding'>{$encerramento}</td>";
+                echo "<td class='nopadding'><span class='encerramentoFixo'>{$encerramento}</span><input type='date' class='editavel encerramento' hidden></td>";
                 echo "<td class='nopadding'><span class='valorEditavel valor'>{$valor}</span></td>";
                 echo "<td class='nopadding'>{$disponibilidade}</td>";
                 $optionsString = "<td class='wide' id='dono{$donoJogador}'>";
@@ -1725,6 +1725,8 @@ var idJogador = tbl_row.prop('id');
 if(isDono){
     tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
     tbl_row.find('.nascimentoEIdade').hide();
+	tbl_row.find('.encerramentoFixo').hide();
+	tbl_row.find('.encerramento').show();
     tbl_row.find('.nascimento').show();
     tbl_row.find('.posicao').hide();
 
@@ -1742,6 +1744,17 @@ if(isDono){
     var year = nascimento.split("-")[2];
     var nascimentoInicial = year + "-" + month + "-" + day;
     tbl_row.find('.nascimento').prop("value",nascimentoInicial);
+	
+	//valor original encerramento
+    var encerramento = tbl_row.find(".encerramentoFixo").html();
+
+		var day = encerramento.split("-")[0];
+		var month = encerramento.split("-")[1];
+		var year = encerramento.split("-")[2];
+
+		var encerramentoInicial = year + "-" + month + "-" + day;
+
+    tbl_row.find('.encerramento').prop("value",encerramentoInicial);
 }
 
 
@@ -1800,6 +1813,8 @@ tbl_row.find(".valor").html(valor);
         tbl_row.find('.posicao').show();
         tbl_row.find('.nomePais').show();
         tbl_row.find('.comboPais').hide();
+		tbl_row.find('.encerramentoFixo').show();
+		tbl_row.find('.encerramento').hide();
 
         tbl_row.find('span').each(function(index, val){
             $(this).html($(this).attr('original_entry'));
@@ -1939,6 +1954,8 @@ tbl_row.find(".valor").html(valor);
         tbl_row.find('.posicao').show();
         tbl_row.find('.nomePais').show();
         tbl_row.find('.comboPais').hide();
+		tbl_row.find('.encerramentoFixo').show();
+		tbl_row.find('.encerramento').hide();
 
         //coleta de valores
 
@@ -1960,6 +1977,7 @@ tbl_row.find(".valor").html(valor);
             var nome = tbl_row.find('.nomeEditavel').html();
             var nacionalidade = tbl_row.find(".comboPais").val();
             var nascimento = tbl_row.find(".nascimento").val();
+			var encerramento = tbl_row.find(".encerramento").val();
         }
 
         var valor = parseInt(tbl_row.find(".valorEditavel").html());
@@ -1983,6 +2001,7 @@ if(isDono){
             'nome' : nome,
             'nacionalidade' : nacionalidade,
             'nascimento' : nascimento,
+			'encerramento' : encerramento
 
         }
 
@@ -1996,6 +2015,7 @@ if(isDono){
 //console.log(formData);
 
     ajaxCallJogador(formData);
+
 
     });
 

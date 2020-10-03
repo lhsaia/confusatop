@@ -1219,7 +1219,7 @@ return $stmt;
 
         }
 
-        function editar($idJogador,$idTime = null,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono, $atividadeJogador = null, $mentalidadeJogador = null, $determinacaoJogador = null, $cobrancaFaltaJogador = null){
+        function editar($idJogador,$idTime = null,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono, $atividadeJogador = null, $mentalidadeJogador = null, $determinacaoJogador = null, $cobrancaFaltaJogador = null, $encerramentoContrato = null){
 
             $idJogador = htmlspecialchars(strip_tags($idJogador));
             $idTime = htmlspecialchars(strip_tags($idTime));
@@ -1232,6 +1232,7 @@ return $stmt;
             $mentalidadeJogador = htmlspecialchars(strip_tags($mentalidadeJogador));
             $determinacaoJogador = htmlspecialchars(strip_tags($determinacaoJogador));
             $cobrancaFaltaJogador = htmlspecialchars(strip_tags($cobrancaFaltaJogador));
+			$encerramentoContrato = htmlspecialchars(strip_tags($encerramentoContrato));
 
             if($nivelJogador > 99){
               $nivelJogador = 99;
@@ -1469,6 +1470,14 @@ return $stmt;
 		
 		if($atividadeJogador < 0 && $isDono){
 			if($this->demitir($idJogador,$idTime)){
+
+            } else {
+                $error_count++;
+            }
+		}
+		
+		if($isDono && $encerramentoContrato != null){
+			if($this->alterarContrato($idJogador,$idTime, $encerramentoContrato)){
 
             } else {
                 $error_count++;
@@ -2605,6 +2614,50 @@ public function resolverEmprestimos(){
 
 
 }
+
+        function alterarContrato($idJogador,$idClube, $encerramentoNovo){
+
+        //verificar tipo transferencia
+                $query_origem = "SELECT tipoContrato, clubeVinculado FROM contratos_jogador WHERE jogador=:jogador AND clube=:clube";
+
+                $stmt = $this->conn->prepare( $query_origem );
+                $stmt->bindParam(":jogador", $idJogador);
+                $stmt->bindParam(":clube", $idClube);
+                $stmt->execute();
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                if($row == false){
+                    $tipoContrato = 0;
+                    $clubeVinculado = 0;
+                } else {
+                    $tipoContrato = $row['tipoContrato'];
+                    $clubeVinculado = $row['clubeVinculado'];
+                }
+
+                $error_count = 0;
+				
+		
+                $query_contrato = "UPDATE contratos_jogador SET encerramento = :encerramento   
+                        WHERE
+                            jogador=:jogador AND clube=:clube";
+                $stmt = $this->conn->prepare( $query_contrato );
+				$stmt->bindParam(":encerramento", $encerramentoNovo);
+                $stmt->bindParam(":jogador", $idJogador);
+                $stmt->bindParam(":clube", $idClube);
+                if($stmt->execute()){
+                } else {
+                    $error_count++;
+                }
+            
+
+
+
+            if($error_count == 0){
+                return true;
+            } else {
+                return false;
+            }
+
+        }
 
 }
 ?>
