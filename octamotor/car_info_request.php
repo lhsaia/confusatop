@@ -25,6 +25,10 @@ while($driver_result = $driver_info->fetch(PDO::FETCH_ASSOC)){
   $driver_number = "second";
 }
 
+if(!isset($driver_data)){
+	$driver_data = [];
+}
+
 die(json_encode(["car_data" => $result, "driver_data" => $driver_data]));
 
 

@@ -456,7 +456,7 @@ html{
   border: 2px solid darkred;
 }
 
-#driver-basic-form input,#driver-basic-form textArea, #driver-basic-form select, #driver-level-form input{
+#driver-basic-form input,#driver-basic-form textArea, #driver-basic-form select, #driver-level-form input, #driver-image-form select{
   width: 100%;
   margin: 5px 10px;
   border-radius:10px;

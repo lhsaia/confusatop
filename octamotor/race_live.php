@@ -134,8 +134,9 @@ $("document").ready(function(){
       get_ajax_data();
       //console.log(data);
     })
-    .fail(function() {
-    console.log("error");
+          .fail(function(xhr, status, error) {
+            console.log("error");
+			console.log(xhr.responseText);
     });
 
   });
@@ -152,6 +153,8 @@ function get_ajax_data(){
   data: {file_name: file_name}
   })
   .done(function(data) {
+	  
+	 // console.log(data);
 
     var stage_letter = data.current_step.substring(0,1);
     var stage_name = "";
@@ -286,6 +289,9 @@ function get_ajax_data(){
       if(data.current_step.replace(/\D/g,'') == data.race_info.total_laps){
         setFlag("CF");
       }
+	  if(data.timestamp > (parseFloat(data.race_info.base_timestamp) + data.race_info.max_time)){
+        setFlag("CF");
+      }
     }
 
     $("#track-name").text(data.race_info.track_name);
@@ -299,8 +305,9 @@ function get_ajax_data(){
 
     bestLap();
   })
-  .fail(function() {
-  console.log("error");
+          .fail(function(xhr, status, error) {
+            console.log("error");
+			console.log(xhr.responseText);
   });
 }
 
@@ -470,7 +477,7 @@ function display_table(raw_data){
               var outQualiStatus = "";
             }
 
-            console.log(row);
+            //console.log(row);
           tbl += "<tr>";
           tbl += "<td class='driver-position" + outQualiStatus + "'>" + position + "</td>";
           tbl += "<td class='driver-name driver-team-names driver-text'>"+ row.name +"</td>";
@@ -807,7 +814,7 @@ function createStartingGrid(data){
       document.querySelector("#grid-container > div:nth-child("+selection+") div:nth-child(1) div:nth-child(2) div:nth-child(2) div:nth-child(2) span.driverTime").textContent = convertGapView(row.gap, position);
 
     }
-    console.log(convertGapView(row.gap,1));
+    //console.log(convertGapView(row.gap,1));
   });
 
 }
@@ -874,7 +881,7 @@ function raceLights(){
       let max=6;
       let random =Math.floor(Math.random() * (+max - +min)) + +min;
       mod_item.className += " sky-gradient-day-" + random.toString() + " ";
-      console.log(mod_item);
+      //console.log(mod_item);
     } else { //noite
       let min=1;
       let max=10;

@@ -430,8 +430,9 @@ function display_car(updateEditor){
       populate_editor(false);
     }
   })
-  .fail(function() {
-    console.log("error");
+          .fail(function(xhr, status, error) {
+            console.log("error");
+			console.log(xhr.responseText);
   });
 
 }

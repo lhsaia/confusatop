@@ -455,8 +455,10 @@ if(best_position){
       $("#container-driver-info").removeClass("aposentado");
       $("#competition-info").html(competition);
     }
-
-    window.history.replaceState(null, null, 'https://confusa.top/octamotor/driver_info.php?driver=' + $("#select-driver").val());
+	let getUrl = window.location;
+	let baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
+	
+    window.history.replaceState(null, null, baseUrl + '/driver_info.php?driver=' + $("#select-driver").val());
 
     if(updateEditor){
       populate_editor(false);

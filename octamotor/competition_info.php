@@ -146,6 +146,14 @@ $country_list = $pais->read(null, null, null);
             <label class="picture-label" for="competition-logo"><span id="competition-logo-text">Logo</span><img class="hidden" id="competition-logo-preview" src=""/></label>
             <input type="file" id="competition-logo" onchange="readURL(this, 'logo');"/>
           </div>
+		  <div class='form-group'>
+            <label for="competition-type">Tipo de competição</label>
+            <select id="competition-type" required>
+              <option value="" selected disable>Selecione o tipo de competição...</option>
+              <option value=0>Monopostos</option>
+              <option value=1>Turismo</option>
+            </select>
+          </div>
         </form>
       </div>
       <div id="container-level-form">
@@ -239,6 +247,7 @@ var cached_data;
 var point_system;
 var extra_points;
 var car_factor;
+var competition_type;
 
 function retrieveStandingsData(event_id, event_type){
   $.ajax({
@@ -378,8 +387,9 @@ function retrieveRaces(season_id, panel_element){
                   }
 
                 })
-                .fail(function() {
-                  console.log("error");
+          .fail(function(xhr, status, error) {
+            console.log("error");
+			console.log(xhr.responseText);
                 });
 
 
@@ -503,8 +513,9 @@ function retrieveSeasons(){
             }
 
           })
-          .fail(function() {
+          .fail(function(xhr, status, error) {
             console.log("error");
+			console.log(xhr.responseText);
           });
 
 
@@ -554,8 +565,9 @@ function retrieveSeasons(){
             }
 
           })
-          .fail(function() {
+          .fail(function(xhr, status, error) {
             console.log("error");
+			console.log(xhr.responseText);
           });
 
 
@@ -682,6 +694,7 @@ function display_competition(updateEditor){
     max_time = data.competition_data.max_time;
     total_length = data.competition_data.total_length;
     car_factor = data.competition_data.car_factor;
+	competition_type = data.competition_data.competition_type;
 
     if(country_id != 0){
       $("#competition-country-info").html(country);
@@ -700,8 +713,9 @@ function display_competition(updateEditor){
       populate_editor(false);
     }
   })
-  .fail(function() {
-    console.log("error");
+          .fail(function(xhr, status, error) {
+            console.log("error");
+			console.log(xhr.responseText);
   });
 
 }
@@ -736,6 +750,7 @@ function populate_editor(changeBar){
   $("#competition-max-time").val(max_time);
   $("#competition-total-length").val(total_length);
   $("#competition-logo").val("");
+  $("#competition-type").val(competition_type);
   $(".picture-label").addClass("no-padding");
 
 }
@@ -897,6 +912,7 @@ if($("#competition-id").html() != ""){
     formData.append("about", $("#competition-about").val());
     formData.append("max_time", $("#competition-max-time").val());
     formData.append("total_length", $("#competition-total-length").val());
+	formData.append("competition_type" , $("#competition-type").val());
 
       if($("#competition-id").html() != ""){
         previous_logo = (logo.substr(logo.lastIndexOf("/") + 1));

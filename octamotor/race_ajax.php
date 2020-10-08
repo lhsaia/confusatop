@@ -42,6 +42,7 @@ if(isset($_POST['file_name']) && $_POST['file_name'] != ""){
 			$safety_car_status = $event[0]['safety_car_status'];
 			$air_temp = $event[0]['air_temp'];
 			$track_temp = $event[0]['track_temp'];
+			$timestamp = $event[0]['timestamp'];
 			break;
 		}
 		// else {
@@ -196,7 +197,7 @@ if($stage_number == "R"){
 }
 
 
-die(json_encode([ 'total_data'=> $total_data, 'current_step' => $current_step, 'race_info' => $race_info, 'rain_status' => $rain_status, 'safety_car_status' => $safety_car_status, 'air_temp' => $air_temp, 'track_temp' => $track_temp]));
+die(json_encode([ 'total_data'=> $total_data, 'current_step' => $current_step, 'race_info' => $race_info, 'rain_status' => $rain_status, 'safety_car_status' => $safety_car_status, 'air_temp' => $air_temp, 'track_temp' => $track_temp, 'timestamp' => $timestamp]));
 
 
 ?>
