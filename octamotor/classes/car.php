@@ -1,6 +1,8 @@
 <?php
 
-class Car implements \JsonSerializable{
+require_once "db_name.php";
+
+class Car extends db_name implements \JsonSerializable{
 
   private $id;
   private $chassis;
@@ -153,7 +155,7 @@ class Car implements \JsonSerializable{
 
   public function getCarsList(){
 
-    $query = "SELECT car.id, car.team_name, competition.name as comp_name, p.dono as owner FROM car LEFT JOIN lhsaia_confusa.paises p ON p.id = car.country LEFT JOIN competition ON car.competition_id = competition.id";
+    $query = "SELECT car.id, car.team_name, competition.name as comp_name, p.dono as owner FROM car LEFT JOIN ".$this->db_name.".paises p ON p.id = car.country LEFT JOIN competition ON car.competition_id = competition.id";
     $stmt = $this->conn->prepare($query);
     $stmt->execute();
 	  $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -162,7 +164,7 @@ class Car implements \JsonSerializable{
 
   public function loadCar($id){
     $id = htmlspecialchars(strip_tags($id));
-    $query = "SELECT suit as car_suit, color, tv_name, team_name as name, engine, chassis, car.logo, pit_stop_skills, strategy, reliability, team_chief, tech_chief, base, chassis_name, engine_name, picture as car_picture, competition.name as competition, competition_id, p.nome as country_name, p.id as country_id, p.bandeira as country_flag FROM car LEFT JOIN competition ON car.competition_id = competition.id LEFT JOIN lhsaia_confusa.paises p ON p.id = car.country WHERE car.id = :id";
+    $query = "SELECT suit as car_suit, color, tv_name, team_name as name, engine, chassis, car.logo, pit_stop_skills, strategy, reliability, team_chief, tech_chief, base, chassis_name, engine_name, picture as car_picture, competition.name as competition, competition_id, p.nome as country_name, p.id as country_id, p.bandeira as country_flag FROM car LEFT JOIN competition ON car.competition_id = competition.id LEFT JOIN ".$this->db_name.".paises p ON p.id = car.country WHERE car.id = :id";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(":id",$id);
     $stmt->execute();
@@ -224,7 +226,7 @@ class Car implements \JsonSerializable{
     $car_id = htmlspecialchars(strip_tags($car_id));
     $user_id = htmlspecialchars(strip_tags($user_id));
 
-    $query = "SELECT p.dono FROM car LEFT JOIN lhsaia_confusa.paises p ON p.id = car.country WHERE car.id = ? ";
+    $query = "SELECT p.dono FROM car LEFT JOIN ".$this->db_name.".paises p ON p.id = car.country WHERE car.id = ? ";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(1,$car_id);
     $stmt->execute();

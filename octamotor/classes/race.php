@@ -1,7 +1,10 @@
 <?php
 
-class Race {
+require_once "db_name.php";
 
+class Race extends db_name {
+
+  private $race_type;
   private $drivers;
   private $conn;
   private $date;
@@ -20,6 +23,7 @@ class Race {
   private $current_user;
   private $race_id;
   private $quali_end;
+  private $current_lap;
 
   public function setCurrentUser($user){
     $this->current_user = $user;
@@ -37,6 +41,8 @@ class Race {
     $race_info["season"] = $season;
     $race_info["quali_type"] = $this->competition->getQualifyingLaps();
     $race_info["drivers_excess"] = count($this->race_list) - $this->competition->getMaxDrivers();
+	$race_info["race_type"] = $this->competition->getRaceType();
+	$race_info["max_time"] = $this->competition->getMaxTime();
     $this->lap_results["INFO"] = $race_info;
     $this->race_id = $race_id;
   }
@@ -63,6 +69,7 @@ class Race {
       if($competition != null && $track != null){
         $this->competition = $competition;
         $this->track = $track;
+		$this->race_type = $this->competition->getRaceType();
       }
   }
 
@@ -360,24 +367,25 @@ class Race {
     // all laps
 
     for($lap = 1;$lap <= $this->total_laps; $lap++){
-      //echo $this->event_counter;
-      //echo $this->event_combo;
-      $this->resetEventCounter();
-      $this->resetEventCombo();
+		
+	  $this->current_lap = $lap;
+ 
       $next_total_time = 0;
       $next_lap_time = 0;
       $time_difference = 0;
       $threshold = 0;
 	  if($this->safety_car_status == 0 && $this->event_counter > 0){
-		  $this->checkSafetyCar($this->event_counter);
+		  $this->safety_car_status = $this->checkSafetyCar($this->event_counter);
 	  } else if($this->safety_car_status == 1){
 		  if($this->safety_car_counter > 0){
-        $this->safety_car_counter = $this->safety_car_counter - 1;
+          $this->safety_car_counter = $this->safety_car_counter - 1;
       } else {
-        $this->safety_car_status = 0;
-        $this->safety_car_penalty = 0;
+          $this->safety_car_status = 0;
+          $this->safety_car_penalty = 0;
       }
 	  }
+	  $this->resetEventCounter();
+      $this->resetEventCombo();
 
       foreach($this->race_list as $key => &$racer){
 
@@ -389,7 +397,7 @@ class Race {
 			$racer['driver']->setIssueName("");
 		}
 
-
+        $leader_average_speed = 0;
 
         $racer["driver"]->setLapTime($racer["driver"]->race_lap_time($racer["car"],$this->track,$this->competition,$this->highest_level, $lap, $this->safety_car_penalty));
 
@@ -466,7 +474,7 @@ class Race {
           }
 
             // DRS allowed only after lap 3
-           if($lap > 2 && ($racer["driver"]->getTotalTime() - $next_total_time) < 1){
+           if($lap > 2 && ($racer["driver"]->getTotalTime() - $next_total_time) < 1 && $this->competition->getRaceType() == 0){
              $threshold = - $overtaking_threshold + 0.4;
            } else {
              $threshold = - $overtaking_threshold;
@@ -510,7 +518,9 @@ class Race {
           } else if ($time_difference > $threshold && $time_difference < 0.2){
              $racer['driver']->increaseLapTime(0.2 - $time_difference);
 
-           }
+           } else if ($time_difference < $threshold && $this->safety_car_status == 1){
+			   $racer['driver']->increaseLapTime(0.2 - $time_difference);
+		   }
          }
 
          if($key == 0){
@@ -553,6 +563,10 @@ class Race {
 
     $this->recordResults("R-" . $lap, ($this->base_timestamp) + ($this->race_list[0]["driver"]->getTotalTime()));
 
+	if($this->race_list[0]["driver"]->getTotalTime() > $this->competition->getMaxTime()){
+		break;
+	}
+	
     }
 
 
@@ -600,9 +614,9 @@ class Race {
       $abandon_race = mt_rand() / mt_getrandmax();
 
       if($abandon_race < $failure["severity"] ){
-        return array("name" => $failure["failure_name"], "abandon" => true, "time_penalty" => 0);
+        return array("name" => $failure["failure_name"], "abandon" => true, "time_penalty" => 0, "pit" => false);
       } else {
-        return array("name" => $failure["failure_name"], "abandon" => false, "time_penalty" => $failure["time_penalty"]);
+        return array("name" => $failure["failure_name"], "abandon" => false, "time_penalty" => $failure["time_penalty"], "pit" => true);
       }
     } else {
       return false;
@@ -612,16 +626,19 @@ class Race {
 
   public function checkCarFailure(Car $car){
     $types_of_failure = array(
-      array("failure_code" => 1, "failure_name" => "Engine", "severity" => 0.7, "time_penalty"  => (float)mt_rand(1,6)),
-      array("failure_code" => 2, "failure_name" => "Suspension", "severity" => 1, "time_penalty"  => 0),
-      array("failure_code" => 3, "failure_name" => "Electronics", "severity" => 1, "time_penalty"  => 0),
-      array("failure_code" => 4, "failure_name" => "Gearbox", "severity" => 0.7, "time_penalty"  => (float)mt_rand(1,6)),
-      array("failure_code" => 5, "failure_name" => "Hydraulics", "severity" => 1, "time_penalty"  => 0),
-      array("failure_code" => 6, "failure_name" => "Nose damage", "severity" => 0.2, "time_penalty"  => 1),
-      array("failure_code" => 7, "failure_name" => "DRS", "severity" => 1, "time_penalty"  => 0),
-      array("failure_code" => 8, "failure_name" => "Steering", "severity" => 1, "time_penalty"  => 0),
-	  array("failure_code" => 9, "failure_name" => "Puncture", "severity" => 1, "time_penalty"  => 0)
+      array("failure_code" => 0, "failure_name" => "Engine", "severity" => 0.7, "time_penalty"  => (float)mt_rand(1,6)),
+      array("failure_code" => 1, "failure_name" => "Suspension", "severity" => 1, "time_penalty"  => 0),
+      array("failure_code" => 2, "failure_name" => "Electronics", "severity" => 1, "time_penalty"  => 0),
+      array("failure_code" => 3, "failure_name" => "Gearbox", "severity" => 0.7, "time_penalty"  => (float)mt_rand(1,6)),
+      array("failure_code" => 4, "failure_name" => "Hydraulics", "severity" => 1, "time_penalty"  => 0),
+      array("failure_code" => 5, "failure_name" => "Nose damage", "severity" => 0.2, "time_penalty"  => 1),
+      array("failure_code" => 6, "failure_name" => "Steering", "severity" => 1, "time_penalty"  => 0),
+	  array("failure_code" => 7, "failure_name" => "Puncture", "severity" => 1, "time_penalty"  => 0)
     );
+	
+	  if($this->competition->getRaceType() == 0){
+		array_push($types_of_failure, array("failure_code" => 8, "failure_name" => "DRS", "severity" => 1, "time_penalty"  => 0));
+	  }
 
     $reliability = $car->getReliability();
 
@@ -816,7 +833,6 @@ class Race {
 
   public function checkSafetyCar($number_of_cars){
 
-	  $this->event_counter = 0;
     $safety_car_threshold = 0.05 * ($number_of_cars ** 2);
     $safety_car_chance = mt_rand()/mt_getrandmax();
 
@@ -825,7 +841,7 @@ class Race {
     } else if($safety_car_chance < $safety_car_threshold){
 
      $this->safety_car_status = 1;	 // safety car in
-  	 $this->safety_car_counter = 6;
+  	 $this->safety_car_counter = rand ( 1 , 6 );
   	 $this->safety_car_penalty = 4;
      return 1;
 
@@ -913,7 +929,7 @@ class Race {
     $final_time = $current_time + (14 * 24 * 60 * 60);
     $current_year = date("Y");
 
-    $query = "SELECT competition.logo, race.name, race.id, race.file, track.image, season.competition_id, season.year, race.datetime, p.nome as country_name FROM race LEFT JOIN season ON race.season_id = season.id LEFT JOIN track ON race.track_id = track.id LEFT JOIN competition ON competition.id = season.competition_id LEFT JOIN lhsaia_confusa.paises p ON p.id = race.country_id WHERE season.year = ?  AND race.datetime > ? AND (season.competition_id < 3 OR race.datetime < ?) ORDER BY race.datetime";
+    $query = "SELECT competition.logo, race.name, race.id, race.file, track.image, season.competition_id, season.year, race.datetime, p.nome as country_name FROM race LEFT JOIN season ON race.season_id = season.id LEFT JOIN track ON race.track_id = track.id LEFT JOIN competition ON competition.id = season.competition_id LEFT JOIN ".$this->db_name.".paises p ON p.id = race.country_id WHERE season.year = ?  AND race.datetime > ? AND (season.competition_id < 3 OR race.datetime < ?) ORDER BY race.datetime";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(1, $current_year);
     $stmt->bindParam(2, $current_time);
@@ -1065,6 +1081,14 @@ class Race {
     $point_system_array = explode("-",$this->competition->getPointSystem());
     $competition_id = $this->competition->getId();
     $race_end = $this->base_timestamp + $this->race_list[0]["driver"]->getTotalTime();
+	$race_last_lap = $this->current_lap;
+	
+	if(($race_last_lap / $this->total_laps) > 0.7){
+		$total_points = true;
+	} else {
+		$total_points = false;
+	}
+	
 
     //foreach driver
     foreach($this->race_list as $key => $single_driver){
@@ -1072,12 +1096,18 @@ class Race {
       $car_id = $single_driver['car']->getId();
       $best_lap = $single_driver['driver']->getBestLapTime();
       if(isset($point_system_array[$key])){
-        $current_points = $point_system_array[$key];
+		  if($total_points){
+			$current_points = $point_system_array[$key];
+		  } else {
+			$current_points = $point_system_array[$key] / 2;
+		  }
+        
       } else {
         $current_points = 0;
       }
       if($single_driver['driver']->getStatus() < 0){
         $position = "-1";
+		$current_points = 0;
       } else {
         $position = $key + 1;
       }

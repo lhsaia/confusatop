@@ -1,6 +1,8 @@
 <?php
 
-class Driver implements \JsonSerializable{
+require_once "db_name.php";
+
+class Driver extends db_name implements \JsonSerializable{
 
   private $id;
   private $level;
@@ -380,7 +382,7 @@ class Driver implements \JsonSerializable{
 
   public function getDriversList(){
 
-    $query = "SELECT driver.status, driver.id, driver.name, driver.car_id, p.dono as owner FROM driver LEFT JOIN lhsaia_confusa.paises p ON p.id = driver.country ORDER BY status DESC, driver.name";
+    $query = "SELECT driver.status, driver.id, driver.name, driver.car_id, p.dono as owner FROM driver LEFT JOIN ".$this->db_name.".paises p ON p.id = driver.country ORDER BY status DESC, driver.name";
     $stmt = $this->conn->prepare($query);
     $stmt->execute();
 	  $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -461,7 +463,7 @@ class Driver implements \JsonSerializable{
 
   public function loadDrivers($competition){
 
-    $query = "SELECT driver.tv_name, driver.id, driver.name, driver.level, driver.speed, driver.pace, driver.start_skills, driver.technique, driver.rain_skills, driver.aggressiveness, car.picture as car_picture, car_id, car.team_name as team_name, number, p.nome as country_name, p.bandeira as country_flag FROM driver LEFT JOIN car ON car.id = driver.car_id LEFT JOIN lhsaia_confusa.paises p ON p.id = driver.country LEFT JOIN competition ON competition.id = car.competition_id WHERE competition_id = :competition ORDER BY driver.name";
+    $query = "SELECT driver.tv_name, driver.id, driver.name, driver.level, driver.speed, driver.pace, driver.start_skills, driver.technique, driver.rain_skills, driver.aggressiveness, car.picture as car_picture, car_id, car.team_name as team_name, number, p.nome as country_name, p.bandeira as country_flag FROM driver LEFT JOIN car ON car.id = driver.car_id LEFT JOIN ".$this->db_name.".paises p ON p.id = driver.country LEFT JOIN competition ON competition.id = car.competition_id WHERE competition_id = :competition ORDER BY driver.name";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(":competition",$competition);
     $stmt->execute();
@@ -614,7 +616,7 @@ class Driver implements \JsonSerializable{
   public function loadDriver($id){
     $timestamp = time();
     $id = htmlspecialchars(strip_tags($id));
-    $query = "SELECT driver.genre, driver.tv_name, driver.status, hicomp.name as highest_comp, SUM(d.points) as points, COUNT(d.driver) as gps, SUM(case when (d.position > 0 && d.position < 4) then 1 else 0 end) as podiums ,SUM(case when d.position = -1 then 1 else 0 end) as abandon, MIN(NULLIF(ABS(d.position), -d.position)) as best_position, SUM(case when d.position = (SELECT MIN(NULLIF(ABS(position), -position)) FROM race_position WHERE driver = :id1 ) then 1 else 0 end) as best_position_times, driver.name, driver.photo, competition.name as competition, driver.bio, driver.helmet, driver.level, driver.speed, driver.pace, driver.start_skills, driver.technique, driver.rain_skills, driver.aggressiveness, car.picture as car_picture, driver.car_id, car.team_name as team_name, driver.number, p.nome as country_name, p.id as country_id, p.bandeira as country_flag, driver.birth_date, driver.birth_place FROM driver LEFT JOIN car ON car.id = driver.car_id LEFT JOIN competition ON car.competition_id = competition.id LEFT JOIN competition hicomp ON driver.highest_comp = hicomp.id LEFT JOIN lhsaia_confusa.paises p ON p.id = driver.country  LEFT JOIN race_position d ON driver.id = d.driver WHERE driver.id = :id2 AND (case when driver.car_id <> 0 then (car.competition_id = d.competition_id) else (d.competition_id = driver.highest_comp) end) AND d.timestamp < :timestamp AND d.race <> 9999";
+    $query = "SELECT driver.genre, driver.tv_name, driver.status, hicomp.name as highest_comp, SUM(d.points) as points, COUNT(d.driver) as gps, SUM(case when (d.position > 0 && d.position < 4) then 1 else 0 end) as podiums ,SUM(case when d.position = -1 then 1 else 0 end) as abandon, MIN(NULLIF(ABS(d.position), -d.position)) as best_position, SUM(case when d.position = (SELECT MIN(NULLIF(ABS(position), -position)) FROM race_position WHERE driver = :id1 ) then 1 else 0 end) as best_position_times, driver.name, driver.photo, competition.name as competition, driver.bio, driver.helmet, driver.level, driver.speed, driver.pace, driver.start_skills, driver.technique, driver.rain_skills, driver.aggressiveness, car.picture as car_picture, driver.car_id, car.team_name as team_name, driver.number, p.nome as country_name, p.id as country_id, p.bandeira as country_flag, driver.birth_date, driver.birth_place FROM driver LEFT JOIN car ON car.id = driver.car_id LEFT JOIN competition ON car.competition_id = competition.id LEFT JOIN competition hicomp ON driver.highest_comp = hicomp.id LEFT JOIN ".$this->db_name.".paises p ON p.id = driver.country  LEFT JOIN race_position d ON driver.id = d.driver WHERE driver.id = :id2 AND (case when driver.car_id <> 0 then (car.competition_id = d.competition_id) else (d.competition_id = driver.highest_comp) end) AND d.timestamp < :timestamp AND d.race <> 9999";
 
 	//	$query = "SELECT driver.name, driver.photo, competition.name as competition, bio, driver.helmet, driver.level, driver.speed, driver.pace, driver.start_skills, driver.technique, driver.rain_skills, driver.aggressiveness, car.picture as car_picture, car_id, car.team_name as team_name, number, p.nome as country_name, p.id as country_id, p.bandeira as country_flag, birth_date, birth_place FROM driver LEFT JOIN car ON car.id = driver.car_id LEFT JOIN competition ON car.competition_id = competition.id LEFT JOIN lhsaia_confusa.paises p ON p.id = driver.country WHERE driver.id = ?";
 		$stmt = $this->conn->prepare($query);
@@ -720,7 +722,7 @@ class Driver implements \JsonSerializable{
     $driver_id = htmlspecialchars(strip_tags($driver_id));
     $user_id = htmlspecialchars(strip_tags($user_id));
 
-    $query = "SELECT p.dono FROM driver LEFT JOIN lhsaia_confusa.paises p ON p.id = driver.country WHERE driver.id = ? ";
+    $query = "SELECT p.dono FROM driver LEFT JOIN ".$this->db_name.".paises p ON p.id = driver.country WHERE driver.id = ? ";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(1,$driver_id);
     $stmt->execute();

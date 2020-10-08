@@ -1,6 +1,8 @@
 <?php
 
-class Competition{
+require_once "db_name.php";
+
+class Competition extends db_name{
 
   private $id;
   private $name;
@@ -25,6 +27,7 @@ class Competition{
   private $total_length;
   private $point_system;
   private $extra_points;
+  private $race_type;
 
   public function getName(){
     return $this->name;
@@ -59,7 +62,7 @@ if($number != null){
 
   private function loadFactors(){
 
-    $query = "SELECT point_system, extra_points, name, max_time, total_length, max_drivers, qualifying_style, event_factor, position_factor, random_factor, speed_factor, pace_factor, technique_factor, start_skills_factor, rain_skills_factor, aggressiveness_factor, car_factor, race_prop_factor, quali_prop_factor, time_random_factor FROM competition WHERE id = :id";
+    $query = "SELECT point_system, extra_points, name, max_time, total_length, max_drivers, qualifying_style, event_factor, position_factor, random_factor, speed_factor, pace_factor, technique_factor, start_skills_factor, rain_skills_factor, aggressiveness_factor, car_factor, race_prop_factor, quali_prop_factor, time_random_factor, competition_type FROM competition WHERE id = :id";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(":id", $this->id);
     if($stmt->execute()){
@@ -90,6 +93,7 @@ if($number != null){
         $this->total_length = $results["total_length"];
         $this->point_system = $results['point_system'];
         $this->extra_points = $results['extra_points'];
+		$this->race_type = $results["competition_type"];
       }
       return true;
     } else {
@@ -164,7 +168,7 @@ if($number != null){
 
   public function loadCompetition($id){
     $id = htmlspecialchars(strip_tags($id));
-    $query = "SELECT competition.point_system, competition.extra_points, competition.logo, competition.name, max_time, total_length, about, qualifying_style, car_factor, speed_factor, technique_factor, pace_factor, random_factor, aggressiveness_factor, rain_skills_factor, start_skills_factor, quali_prop_factor, race_prop_factor, position_factor, event_factor, owner, max_drivers, p.nome as country_name, p.id as country_id, p.bandeira as country_flag, MIN(season.year) as first_year, COUNT(DISTINCT season.id) as total_seasons, COUNT(race.id) as total_races FROM competition LEFT JOIN lhsaia_confusa.paises p ON p.id = competition.country_id LEFT JOIN season ON season.competition_id = competition.id LEFT JOIN race ON season.id = race.season_id WHERE competition.id = :id";
+    $query = "SELECT competition.point_system, competition.extra_points, competition.logo, competition.name, max_time, total_length, about, qualifying_style, car_factor, speed_factor, technique_factor, pace_factor, random_factor, aggressiveness_factor, rain_skills_factor, start_skills_factor, quali_prop_factor, race_prop_factor, position_factor, event_factor, owner, max_drivers, p.nome as country_name, p.id as country_id, p.bandeira as country_flag, MIN(season.year) as first_year, COUNT(DISTINCT season.id) as total_seasons, COUNT(race.id) as total_races, competition.competition_type FROM competition LEFT JOIN ".$this->db_name.".paises p ON p.id = competition.country_id LEFT JOIN season ON season.competition_id = competition.id LEFT JOIN race ON season.id = race.season_id WHERE competition.id = :id";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(":id",$id);
     $stmt->execute();
@@ -176,7 +180,7 @@ if($number != null){
       $data = htmlspecialchars(strip_tags($data));
     }
     unset($data);
-    $query = "INSERT INTO competition (name, extra_points, point_system, tier, qualifying_style, car_factor, speed_factor, technique_factor, pace_factor, random_factor, aggressiveness_factor, rain_skills_factor, start_skills_factor, quali_prop_factor, race_prop_factor, time_random_factor, position_factor, event_factor, owner, country_id, max_drivers, about, max_time, total_length, logo) VALUES (?,?,?,3,?,?,?,?,?,?,?,?,?,?,?,1,?,?,?,?,?,?,?,?,?) ";
+    $query = "INSERT INTO competition (name, extra_points, point_system, tier, qualifying_style, car_factor, speed_factor, technique_factor, pace_factor, random_factor, aggressiveness_factor, rain_skills_factor, start_skills_factor, quali_prop_factor, race_prop_factor, time_random_factor, position_factor, event_factor, owner, country_id, max_drivers, about, max_time, total_length, competition_type, logo) VALUES (?,?,?,3,?,?,?,?,?,?,?,?,?,?,?,1,?,?,?,?,?,?,?,?,?,?) ";
     $stmt = $this->conn->prepare($query);
     $counter = 1;
     foreach($competition_data as &$data){
@@ -201,7 +205,7 @@ if($number != null){
 
     //var_dump($track_data);
 
-    $query = "UPDATE competition SET name=?, extra_points=?, point_system=?, qualifying_style=?, car_factor=?, speed_factor=?, technique_factor=?, pace_factor=?, random_factor=?, aggressiveness_factor=?, rain_skills_factor=?, start_skills_factor=?, quali_prop_factor=?, race_prop_factor = ?, position_factor=?, event_factor=?, owner=?, country_id=?, max_drivers=?, about=?, max_time =?, total_length=?,logo=? WHERE id = ? ";
+    $query = "UPDATE competition SET name=?, extra_points=?, point_system=?, qualifying_style=?, car_factor=?, speed_factor=?, technique_factor=?, pace_factor=?, random_factor=?, aggressiveness_factor=?, rain_skills_factor=?, start_skills_factor=?, quali_prop_factor=?, race_prop_factor = ?, position_factor=?, event_factor=?, owner=?, country_id=?, max_drivers=?, about=?, max_time =?, total_length=?, competition_type = ?, logo=? WHERE id = ? ";
     $stmt = $this->conn->prepare($query);
     $counter = 1;
     foreach($competition_data as &$single_data){
@@ -256,7 +260,7 @@ if($number != null){
   public function retrieveRaces($season_id){
     $season_id = htmlspecialchars(strip_tags($season_id));
 
-    $query = "SELECT race.id, datetime, track_id, file, name, race.status, paises.bandeira as flag, paises.nome as country_name FROM race LEFT JOIN lhsaia_confusa.paises ON paises.id = race.country_id WHERE season_id = ? ORDER BY race.id DESC ";
+    $query = "SELECT race.id, datetime, track_id, file, name, race.status, paises.bandeira as flag, paises.nome as country_name FROM race LEFT JOIN ".$this->db_name.".paises ON paises.id = race.country_id WHERE season_id = ? ORDER BY race.id DESC ";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(1,$season_id);
     $stmt->execute();
@@ -313,7 +317,9 @@ if($number != null){
     return $this->extra_points;
   }
 
-
+  public function getRaceType(){
+    return $this->race_type;
+  }
 
 
 }

@@ -1,6 +1,8 @@
 <?php
 
-class Track {
+require_once "db_name.php";
+
+class Track extends db_name {
 
   private $id;
   private $name;
@@ -46,7 +48,7 @@ class Track {
 
   public function loadFactors(){
 
-        $query = "SELECT rain_possibility, lap_base_time, style, length, pit_lane_time, avg_temp, name, p.nome as country_name, p.bandeira as country_flag FROM track LEFT JOIN lhsaia_confusa.paises p ON p.id = track.country WHERE track.id = :id";
+        $query = "SELECT rain_possibility, lap_base_time, style, length, pit_lane_time, avg_temp, name, p.nome as country_name, p.bandeira as country_flag FROM track LEFT JOIN ".$this->db_name.".paises p ON p.id = track.country WHERE track.id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":id", $this->id);
         if($stmt->execute()){
@@ -114,7 +116,7 @@ class Track {
 
   public function getTracksList(){
 
-    $query = "SELECT track.id, track.name, p.dono as owner FROM track LEFT JOIN lhsaia_confusa.paises p ON p.id = track.country";
+    $query = "SELECT track.id, track.name, p.dono as owner FROM track LEFT JOIN ".$this->db_name.".paises p ON p.id = track.country";
     $stmt = $this->conn->prepare($query);
     $stmt->execute();
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -123,7 +125,7 @@ class Track {
 
   public function loadTrack($id){
     $id = htmlspecialchars(strip_tags($id));
-    $query = "SELECT name, pit_lane_time, lap_base_time, style, rain_possibility, avg_temp, length, about, curves, first_used, image, p.nome as country_name, p.id as country_id, p.bandeira as country_flag FROM track LEFT JOIN lhsaia_confusa.paises p ON p.id = track.country WHERE track.id = :id";
+    $query = "SELECT name, pit_lane_time, lap_base_time, style, rain_possibility, avg_temp, length, about, curves, first_used, image, p.nome as country_name, p.id as country_id, p.bandeira as country_flag FROM track LEFT JOIN ".$this->db_name.".paises p ON p.id = track.country WHERE track.id = :id";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(":id",$id);
     $stmt->execute();
@@ -186,7 +188,7 @@ class Track {
     $track_id = htmlspecialchars(strip_tags($track_id));
     $user_id = htmlspecialchars(strip_tags($user_id));
 
-    $query = "SELECT p.dono FROM track LEFT JOIN lhsaia_confusa.paises p ON p.id = track.country WHERE track.id = ? ";
+    $query = "SELECT p.dono FROM track LEFT JOIN ".$this->db_name.".paises p ON p.id = track.country WHERE track.id = ? ";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(1,$track_id);
     $stmt->execute();
@@ -202,7 +204,7 @@ class Track {
 
   public function retrieveTracks(){
 
-    $query = "SELECT track.id, track.name, p.id as country_id, p.bandeira as country_flag FROM track LEFT JOIN lhsaia_confusa.paises p ON p.id = track.country";
+    $query = "SELECT track.id, track.name, p.id as country_id, p.bandeira as country_flag FROM track LEFT JOIN ".$this->db_name.".paises p ON p.id = track.country";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(":id",$id);
     $stmt->execute();
