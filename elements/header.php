@@ -66,7 +66,8 @@ $currentPage =  explode('/',strtok($_SERVER['REQUEST_URI'], '?'));
 <link href="https://fonts.googleapis.com/css?family=Kanit:400,600,900" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css?family=Gugi" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css?family=Share+Tech+Mono" rel="stylesheet">
-<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+<!--<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous"> -->
+<script src="https://kit.fontawesome.com/376cb796e7.js" crossorigin="anonymous"></script> 
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
 <?php
 if(isset($css_filename)){
