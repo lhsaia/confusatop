@@ -155,7 +155,11 @@ class Car extends db_name implements \JsonSerializable{
 
   public function getCarsList(){
 
-    $query = "SELECT car.id, car.team_name, competition.name as comp_name, p.dono as owner FROM car LEFT JOIN ".$this->db_name.".paises p ON p.id = car.country LEFT JOIN competition ON car.competition_id = competition.id";
+    $query = "SELECT car.id, car.team_name, competition.name as comp_name, p.dono as owner FROM car LEFT JOIN ".$this->db_name.".paises p ON p.id = car.country LEFT JOIN competition ON car.competition_id = competition.id ORDER BY 
+	 case when isnull(competition.tier) then 1 else 0 end, 
+	 competition.tier, 
+	 competition.name,
+	 car.team_name";
     $stmt = $this->conn->prepare($query);
     $stmt->execute();
 	  $results = $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -5,6 +5,7 @@
 
 session_start();
 
+require_once "classes/db_name.php";
 require_once "config/database.php";
 require_once "classes/driver.php";
 require_once "classes/car.php";

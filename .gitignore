@@ -2,3 +2,6 @@ config/database.php
 pngquant/
 cron/backup_db.php
 sqlitedb/
+octamotor/config/database.php
+octamotor/races/8test.json
+octamotor/races/test.json
