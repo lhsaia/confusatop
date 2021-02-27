@@ -21,9 +21,15 @@ $team_data = $escudos_pop->loadTeams();
 $team_ids = $escudos_pop->loadTeamIds();
 
 echo "<div id='escudos-pop-header'>
+<div>
     <h2>Escudos Pops CONFUSA</h2>
-    <h3> Redesenhamos ". count($team_ids). " escudos CONFUSA de maneira minimalista.</h3>
-    <h3>Você consegue adivinhar a quais clubes pertencem?</h3>
+    <h3> Redesenhamos <span id='contagem_escudos'>". count($team_ids). "</span> escudos CONFUSA de maneira minimalista.</h3>
+    <h3>Você consegue adivinhar a quais clubes pertencem?</h3></div>
+	<div>";
+	echo "<label for='checkbox-21' id='filter-pending'><span>Incluir fase 1</span>";
+    echo "<input type='checkbox' id='checkbox-21' name='apenasConfusa'>";
+    echo "</label>";
+	echo "</div>
 
 
 </div>";
@@ -31,7 +37,7 @@ echo "<div id='escudos-pop-header'>
 echo "<div id='tabela-escudos'>";
 
 foreach($team_ids as $single_team){
-  echo "<div class='conjunto-escudo'>";
+  echo "<div class='conjunto-escudo' data-team='{$single_team['team_id']}'>";
   echo "<img class='escudo-time' src='/escudos_pop/images/{$single_team['team_id']}.png?v=3'/>";
   echo "<input type='text' class='adivinhador-nome' data-id='{$single_team['team_id']}'/>";
   echo "</div>";
@@ -45,6 +51,8 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 ?>
 
 <script>
+
+var show_all = true;
 
 var check_guess = (function () {
   var teams_info = <?php echo json_encode($team_data) ?>;
@@ -124,6 +132,26 @@ var check_guess = (function () {
 })();
 
 $(document).ready(function() {
+	$('.conjunto-escudo').hide();
+	$('.conjunto-escudo:gt(63)').show();
+	let n = $( ".conjunto-escudo:visible").length;
+	$("#contagem_escudos").text(n);
+	
+	    $('#filter-pending').click(function (e) {
+		e.preventDefault();
+		show_all = !show_all;
+		let new_text = (show_all ? 'Incluir fase 1' : 'Apenas fase 2');
+
+		$('#filter-pending span').text(new_text);
+		
+		$('.conjunto-escudo:lt(64)').toggle();
+		
+		let n = $( ".conjunto-escudo:visible").length;
+		console.log(n);
+		$("#contagem_escudos").text(n);
+
+		
+    });
 
   $(".adivinhador-nome").focusout(function(){
 

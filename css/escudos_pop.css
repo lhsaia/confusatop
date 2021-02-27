@@ -55,8 +55,38 @@ filter: drop-shadow(0px 0px 3px #1A1469);
 
 #escudos-pop-header{
   padding:30px 30px 0 30px;
+  display:flex;
+  flex-direction:row;
 }
 
 #copyright-text::after{
   content: " and Patrick Hegenbart";
+}
+
+#filter-pending{
+	background-color: navy;
+	border-radius:5px;
+	width: 180px;
+	margin: 10px 30px;
+	font-family: Montserrat, sans-serif;
+}
+
+#filter-pending{
+	padding: 14px 20px;
+    margin:10px 30px;
+    font-family:inherit;
+	font-family: Montserrat, sans-serif;
+	color: white;
+	font-size: 13.33px;
+	cursor:pointer;
+
+}
+
+#filter-pending:hover{
+	background-color: #323299
+
+}
+
+#checkbox-21{
+	visibility: hidden;
 }
