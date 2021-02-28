@@ -204,7 +204,7 @@ echo "<div id='Selecionados' class='infoblock' title='Jogadores em seleções na
 }
 echo "<div id='Estádio' class='infoblock' title='Estádio (capacidade)'><i class='fas fa-map-marker-alt'></i><span class='informacao menor'>{$estadio_capacidade}</span></div>";
 if(!$is_selecao){
-echo "<div id='Recorde' class='infoblock' title='Balanço de caixa (em F$)'><i class='fas fa-hand-holding-usd'></i><span class='informacao mini'>{$recorde_transferencia}</span></div>";
+echo "<div id='Recorde' class='infoblock bevel' title='Balanço de caixa (em F$)'><i class='fas fa-hand-holding-usd'></i><span class='informacao mini'>{$recorde_transferencia}</span></div>";
 }
 echo "<div id='Valor' class='infoblock' title='Valor de mercado (em F$)'><i class='fas fa-dollar-sign'></i><span class='informacao menor'>{$valor_total_clube}</span></div>";
 echo "<div id='MediaNivel' class='infoblock' title='Média de Nível (titulares/total)'><i class='fas fa-award'></i><span class='informacao mini'> {$nivel_medio_onze}   <span class='informacao mini'> &nbsp {$nivel_medio} </span></span></div>";
@@ -959,6 +959,13 @@ $('#modalProposta').hide();
 });
 
 $(document).ready(function(){
+	
+	$("#Recorde").on("click", function(){
+		let idTime = $('#quadro-container').prop('class');
+		let financialLocation = "/times/resumo_financeiro.php?id=" + idTime;
+		window.location = financialLocation;
+	});
+	
     if( $("#selectPenal1").val() == 0 ){
         $("#selectPenal1").css("background-color", "lightcoral");
     }

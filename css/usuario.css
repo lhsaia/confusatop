@@ -557,6 +557,19 @@ a.disabled span{
 	border-radius: 10px;
 }
 
+.larger{
+	
+	width: 20rem !important;
+	float: center !important;
+}
+
+    #info-financeira{
+        display:flex;
+        flex-direction:row;
+        flex-wrap:wrap;
+        justify-content: center;
+        align-items:stretch;
+    }
 
 #search_wrapper{
 	margin: 0 20px 0 0;
@@ -565,12 +578,66 @@ a.disabled span{
 	border-radius: 10px;
 }
 
+#select_wrapper{
+	margin: 0 20px 0 0;
+    float:right;
+    border: 0.1rem lightgray inset;
+	border-radius: 10px;
+}
+
+#select_transaction_type{
+    width:10rem;
+    border:none;
+    margin:0;
+	font-family: Montserrat, sans-serif;
+	height: 50px;
+	border-radius: 10px;
+}
+
+.informacao {
+	float:right;
+}
+
+.infoblock i{
+	float:left;
+}
+
+.receita{
+	color: green;
+}
+
+.despesa{
+	color: red;
+}
+
 #search_wrapper i {
     padding:0.2rem;
     font-size:1.5rem;
     cursor: default;
 }
 
+#select_wrapper i {
+    padding:0.2rem;
+    font-size:1.5rem;
+    cursor: default;
+}
+
+#input_inicio, #input_fim{
+	color:gray !important;
+	width:10rem;
+    border:none;
+    margin:0;
+	font-family: Montserrat, sans-serif;
+	height: 50px;
+	border-radius: 10px;
+}
+
+.date_wrapper{
+	margin: 0 20px 0 0;
+    float:right;
+    border: 0.1rem lightgray inset;
+	border-radius: 10px;
+}
 
 .pagination_link{
     background-color:white;

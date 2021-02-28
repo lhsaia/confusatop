@@ -1390,7 +1390,25 @@ function readAllMultiLeague($ligas){
 
 }
 
+function getName($idClube){
+	        $idClube = htmlspecialchars(strip_tags($idClube));
 
+            $query = "SELECT Nome FROM " . $this->table_name . " WHERE ID = ?";
+            $stmt = $this->conn->prepare( $query );
+            $stmt->bindParam(1, $idClube);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function getDono($idClube){
+	        $idClube = htmlspecialchars(strip_tags($idClube));
+
+            $query = "SELECT p.dono FROM " . $this->table_name . " c LEFT JOIN paises p ON p.ID = c.Pais WHERE c.ID = ?";
+            $stmt = $this->conn->prepare( $query );
+            $stmt->bindParam(1, $idClube);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+}
 
 
 

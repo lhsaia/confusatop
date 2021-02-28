@@ -20,6 +20,15 @@
     position:relative;
 }
 
+.bevel{
+	border-style: outset;
+	user-select: none;
+}
+
+.bevel:active{
+	border-style: inset;
+}
+
 .small{
   width:10vw;
   position: relative;
