@@ -520,51 +520,61 @@ $meia = array();
 $armador = array();
 $atacante = array();
 foreach($lista_titulares as $jogador){
+	
+	if(strlen($jogador["nome"]) > 15){
+		$temp_nome = explode(" ", $jogador["nome"]);
+		$sobrenome_jogador = end($temp_nome);
+		$primeira_letra = $temp_nome[0][0];
+		$nome_final = $primeira_letra . ". " . $sobrenome_jogador;
+	} else {
+		$nome_final = $jogador["nome"];
+	}
+	
     switch($jogador['posicaoBase']){
         case "Goleiro":
             $goleiro = $jogador["nome"];
             break;
         case "Lateral-direito":
-            $lateral_direito = ["<p>".$jogador["nome"]."</p>",$jogador["idJogador"]];
+            $lateral_direito = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
             break;
         case "Lateral-esquerdo":
-            $lateral_esquerdo = ["<p>".$jogador["nome"]."</p>",$jogador["idJogador"]];
+            $lateral_esquerdo = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
             break;
         case "Ala direito":
-            $ala_direito = ["<p>".$jogador["nome"]."</p>",$jogador["idJogador"]];
+            $ala_direito = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
             break;
         case "Ala esquerdo":
-            $ala_esquerdo = ["<p>".$jogador["nome"]."</p>",$jogador["idJogador"]];
+            $ala_esquerdo = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
             break;
         case "Meia direito":
-            $meia_direito = ["<p>".$jogador["nome"]."</p>",$jogador["idJogador"]];
+            $meia_direito = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
             break;
         case "Meia esquerdo":
-            $meia_esquerdo = ["<p>".$jogador["nome"]."</p>",$jogador["idJogador"]];
+            $meia_esquerdo = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
             break;
         case "Ponta direita":
-            $ponta_direita = ["<p>".$jogador["nome"]."</p>",$jogador["idJogador"]];
+            $ponta_direita = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
             break;
         case "Ponta esquerda":
-            $ponta_esquerda = ["<p>".$jogador["nome"]."</p>",$jogador["idJogador"]];
+            $ponta_esquerda = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
             break;
         case "Zagueiro":
-            $zagueiro[] = ["<p>".$jogador["nome"]."</p>",$jogador["idJogador"]];
+            $zagueiro[] = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
             break;
         case "Volante":
-            $volante[] = ["<p>".$jogador["nome"]."</p>",$jogador["idJogador"]];
+            $volante[] = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
             break;
         case "Meia central":
-            $meia[] = ["<p>".$jogador["nome"]."</p>",$jogador["idJogador"]];
+            $meia[] = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
             break;
         case "Meia-atacante":
-            $armador[] = ["<p>".$jogador["nome"]."</p>",$jogador["idJogador"]];
+            $armador[] = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
             break;
         case "Atacante de movimentação":
-            $atacante[] = ["<p>".$jogador["nome"]."</p>",$jogador["idJogador"],"Am"];
+            $atacante[] = ["<p>".$nome_final."</p>",$jogador["idJogador"],"Am"];
             break;
         case "Atacante de área":
-            $atacante[] = ["<p>".$jogador["nome"]."</p>",$jogador["idJogador"],"Aa"];
+            $atacante[] = ["<p>".$nome_final."</p>",$jogador["idJogador"],"Aa"];
             break;
         default:
         break;
@@ -616,34 +626,74 @@ if(!isset($meia_esquerdo)){
 echo "<div class='tabcontent' id='Posicionamento' hidden>";
 echo '<div id="sortable" class="ui-state">';
 //echo '<div id= "background-sortable" ></div>';
-echo '<div id="draggable'.$ponta_esquerda[1].'" class="pos-ataque"><div class="PE"></div>'.($ponta_esquerda[0]!=''?$ponta_esquerda[0]:'&nbsp').'</div>';
-echo '<div id="draggable'.(count($atacante)==2 ? $atacante[0][1] : (count($atacante)==3 ? $atacante[0][1] : "AA")).'" class="pos-ataque"><div class="'.(count($atacante)==2 ? $atacante[0][2] : (count($atacante)==3 ? $atacante[0][2] : "A0")).'" ></div>'.(count($atacante)==2 ? $atacante[0][0] : (count($atacante)==3 ? $atacante[0][0] : "&nbsp")).'</div>';
-echo '<div id="draggable'.(count($atacante)==1 ? $atacante[0][1] : (count($atacante)==3 ? $atacante[1][1] : "AB")).'" class="pos-ataque"><div class="'.(count($atacante)==1 ? $atacante[0][2] : (count($atacante)==3 ? $atacante[1][2] : "A0")).'" ></div>'.(count($atacante)==1 ? $atacante[0][0] : (count($atacante)==3 ? $atacante[1][0] : "&nbsp")).'</div>';
-echo '<div id="draggable'.(count($atacante)==2 ? $atacante[1][1] : (count($atacante)==3 ? $atacante[2][1] : "AC")).'" class="pos-ataque"><div class="'.(count($atacante)==2 ? $atacante[1][2] : (count($atacante)==3 ? $atacante[2][2] : "A0")).'" ></div>'.(count($atacante)==2 ? $atacante[1][0] : (count($atacante)==3 ? $atacante[2][0] : "&nbsp")).'</div>';
-echo '<div id="draggable'.$ponta_direita[1].'" class="pos-ataque"><div class="PD"></div>'.($ponta_direita[0]!=''?$ponta_direita[0]:'&nbsp').'</div>';
+
+// ponta-esquerda
+echo '<div id="draggable'.$ponta_esquerda[1].'" class="pos-ataque">'.($ponta_esquerda[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="PE"></div>'.($ponta_esquerda[0]!=''?$ponta_esquerda[0]:'&nbsp').'</div>';
+
+// atacantes
+echo '<div id="draggable'.(count($atacante)==2 ? $atacante[0][1] : (count($atacante)==3 ? $atacante[0][1] : "AA")).'" class="pos-ataque">'.((count($atacante) == 2 OR count($atacante) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="'.(count($atacante)==2 ? $atacante[0][2] : (count($atacante)==3 ? $atacante[0][2] : "A0")).'" ></div>'.(count($atacante)==2 ? $atacante[0][0] : (count($atacante)==3 ? $atacante[0][0] : "&nbsp")).'</div>';
+
+echo '<div id="draggable'.(count($atacante)==1 ? $atacante[0][1] : (count($atacante)==3 ? $atacante[1][1] : "AB")).'" class="pos-ataque">'.((count($atacante) == 1 OR count($atacante) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="'.(count($atacante)==1 ? $atacante[0][2] : (count($atacante)==3 ? $atacante[1][2] : "A0")).'" ></div>'.(count($atacante)==1 ? $atacante[0][0] : (count($atacante)==3 ? $atacante[1][0] : "&nbsp")).'</div>';
+
+echo '<div id="draggable'.(count($atacante)==2 ? $atacante[1][1] : (count($atacante)==3 ? $atacante[2][1] : "AC")).'" class="pos-ataque">'.((count($atacante) == 2 OR count($atacante) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="'.(count($atacante)==2 ? $atacante[1][2] : (count($atacante)==3 ? $atacante[2][2] : "A0")).'" ></div>'.(count($atacante)==2 ? $atacante[1][0] : (count($atacante)==3 ? $atacante[2][0] : "&nbsp")).'</div>';
+
+// ponta-direita
+echo '<div id="draggable'.$ponta_direita[1].'" class="pos-ataque">'.($ponta_direita[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="PD"></div>'.($ponta_direita[0]!=''?$ponta_direita[0]:'&nbsp').'</div>';
+
+// armadores
 echo '<div id="nondraggable6">&nbsp</div>';
-echo '<div id="draggable'.(count($armador)==2 ? $armador[0][1] : (count($armador)==3 ? $armador[0][1] : "AD")).'" class="pos-meio-ataque"><div class="MA"></div>'.(count($armador)==2 ? $armador[0][0] : (count($armador)==3 ? $armador[0][0] : "&nbsp")).'</div>';
-echo '<div id="draggable'.(count($armador)==1 ? $armador[0][1] : (count($armador)==3 ? $armador[1][1] : "AE")).'" class="pos-meio-ataque"><div class="MA"></div>'.(count($armador)==1 ? $armador[0][0] : (count($armador)==3 ? $armador[1][0] : "&nbsp")).'</div>';
-echo '<div id="draggable'.(count($armador)==2 ? $armador[1][1] : (count($armador)==3 ? $armador[2][1] : "AF")).'" class="pos-meio-ataque"><div class="MA"></div>'.(count($armador)==2 ? $armador[1][0] : (count($armador)==3 ? $armador[2][0] : "&nbsp")).'</div>';
+
+echo '<div id="draggable'.(count($armador)==2 ? $armador[0][1] : (count($armador)==3 ? $armador[0][1] : "AD")).'" class="pos-meio-ataque">'.((count($armador) == 2 OR count($armador) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="MA"></div>'.(count($armador)==2 ? $armador[0][0] : (count($armador)==3 ? $armador[0][0] : "&nbsp")).'</div>';
+
+echo '<div id="draggable'.(count($armador)==1 ? $armador[0][1] : (count($armador)==3 ? $armador[1][1] : "AE")).'" class="pos-meio-ataque">'.((count($armador) == 1 OR count($armador) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="MA"></div>'.(count($armador)==1 ? $armador[0][0] : (count($armador)==3 ? $armador[1][0] : "&nbsp")).'</div>';
+
+echo '<div id="draggable'.(count($armador)==2 ? $armador[1][1] : (count($armador)==3 ? $armador[2][1] : "AF")).'" class="pos-meio-ataque">'.((count($armador) == 2 OR count($armador) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="MA"></div>'.(count($armador)==2 ? $armador[1][0] : (count($armador)==3 ? $armador[2][0] : "&nbsp")).'</div>';
+
 echo '<div id="nondraggable10">&nbsp</div>';
-echo '<div id="draggable'.$meia_esquerdo[1].'" class="pos-meio"><div class="ME"></div>'.($meia_esquerdo[0]!=''?$meia_esquerdo[0]:'&nbsp').'</div>';
-echo '<div id="draggable'.(count($meia)==2 ? $meia[0][1] : (count($meia)==3 ? $meia[0][1] : "AG")).'" class="pos-meio"><div class="MC"></div>'.(count($meia)==2 ? $meia[0][0] : (count($meia)==3 ? $meia[0][0] : "&nbsp")).'</div>';
-echo '<div id="draggable'.(count($meia)==1 ? $meia[0][1] : (count($meia)==3 ? $meia[1][1] : "AH")).'" class="pos-meio"><div class="MC"></div>'.(count($meia)==1 ? $meia[0][0] : (count($meia)==3 ? $meia[1][0] : "&nbsp")).'</div>';
-echo '<div id="draggable'.(count($meia)==2 ? $meia[1][1] : (count($meia)==3 ? $meia[2][1] : "AI")).'" class="pos-meio"><div class="MC"></div>'.(count($meia)==2 ? $meia[1][0] : (count($meia)==3 ? $meia[2][0] : "&nbsp")).'</div>';
-echo '<div id="draggable'.$meia_direito[1].'" class="pos-meio"><div class="MD"></div>'.($meia_direito[0]!=''?$meia_direito[0]:'&nbsp').'</div>';
-echo '<div id="draggable'.$ala_esquerdo[1].'" class="pos-zaga-meio"><div class="AE"></div>'.($ala_esquerdo[0]!=''?$ala_esquerdo[0]:'&nbsp').'</div>';
-echo '<div id="draggable'.(count($volante)==2 ? $volante[0][1] : (count($volante)==3 ? $volante[0][1] : "AJ")).'" class="pos-zaga-meio"><div class="V"></div>'.(count($volante)==2 ? $volante[0][0] : (count($volante)==3 ? $volante[0][0] : "&nbsp")).'</div>';
-echo '<div id="draggable'.(count($volante)==1 ? $volante[0][1] : (count($volante)==3 ? $volante[1][1] : "AK")).'" class="pos-zaga-meio"><div class="V"></div>'.(count($volante)==1 ? $volante[0][0] : (count($volante)==3 ? $volante[1][0] : "&nbsp")).'</div>';
-echo '<div id="draggable'.(count($volante)==2 ? $volante[1][1] : (count($volante)==3 ? $volante[2][1] : "AL")).'" class="pos-zaga-meio"><div class="V"></div>'.(count($volante)==2 ? $volante[1][0] : (count($volante)==3 ? $volante[2][0] : "&nbsp")).'</div>';
-echo '<div id="draggable'.$ala_direito[1].'" class="pos-zaga-meio"><div class="AD"></div>'.($ala_direito[0]!=''?$ala_direito[0]:'&nbsp').'</div>';
-echo '<div id="draggable'.$lateral_esquerdo[1].'" class="pos-zaga"><div class="LE"></div>'.($lateral_esquerdo[0]!=''?$lateral_esquerdo[0]:'&nbsp').'</div>';
-echo '<div id="draggable'.(count($zagueiro)==2 ? $zagueiro[0][1] : (count($zagueiro)==3 ? $zagueiro[0][1] : "AM")).'" class="pos-zaga"><div class="Z"></div>'.(count($zagueiro)==2 ? $zagueiro[0][0] : (count($zagueiro)==3 ? $zagueiro[0][0] : "&nbsp")).'</div>';
-echo '<div id="draggable'.(count($zagueiro)==1 ? $zagueiro[0][1] : (count($zagueiro)==3 ? $zagueiro[1][1] : "AN")).'" class="pos-zaga"><div class="Z"></div>'.(count($zagueiro)==1 ? $zagueiro[0][0] : (count($zagueiro)==3 ? $zagueiro[1][0] : "&nbsp")).'</div>';
-echo '<div id="draggable'.(count($zagueiro)==2 ? $zagueiro[1][1] : (count($zagueiro)==3 ? $zagueiro[2][1] : "AO")).'" class="pos-zaga"><div class="Z"></div>'.(count($zagueiro)==2 ? $zagueiro[1][0] : (count($zagueiro)==3 ? $zagueiro[2][0] : "&nbsp")).'</div>';
-echo '<div id="draggable'.$lateral_direito[1].'" class="pos-zaga"><div class="LD"></div>'.($lateral_direito[0]!=''?$lateral_direito[0]:'&nbsp').'</div>';
+
+// meia-esquerda
+echo '<div id="draggable'.$meia_esquerdo[1].'" class="pos-meio">'.($meia_esquerdo[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="ME"></div>'.($meia_esquerdo[0]!=''?$meia_esquerdo[0]:'&nbsp').'</div>';
+
+// meias-centrais
+echo '<div id="draggable'.(count($meia)==2 ? $meia[0][1] : (count($meia)==3 ? $meia[0][1] : "AG")).'" class="pos-meio">'.((count($meia) == 2 OR count($meia) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="MC"></div>'.(count($meia)==2 ? $meia[0][0] : (count($meia)==3 ? $meia[0][0] : "&nbsp")).'</div>';
+
+echo '<div id="draggable'.(count($meia)==1 ? $meia[0][1] : (count($meia)==3 ? $meia[1][1] : "AH")).'" class="pos-meio">'.((count($meia) == 1 OR count($meia) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="MC"></div>'.(count($meia)==1 ? $meia[0][0] : (count($meia)==3 ? $meia[1][0] : "&nbsp")).'</div>';
+
+echo '<div id="draggable'.(count($meia)==2 ? $meia[1][1] : (count($meia)==3 ? $meia[2][1] : "AI")).'" class="pos-meio">'.((count($meia) == 2 OR count($meia) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="MC"></div>'.(count($meia)==2 ? $meia[1][0] : (count($meia)==3 ? $meia[2][0] : "&nbsp")).'</div>';
+
+// meia-direita
+echo '<div id="draggable'.$meia_direito[1].'" class="pos-meio">'.($meia_direito[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="MD"></div>'.($meia_direito[0]!=''?$meia_direito[0]:'&nbsp').'</div>';
+
+// ala-esquerda
+echo '<div id="draggable'.$ala_esquerdo[1].'" class="pos-zaga-meio">'.($ala_esquerdo[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="AE"></div>'.($ala_esquerdo[0]!=''?$ala_esquerdo[0]:'&nbsp').'</div>';
+
+// volantes
+echo '<div id="draggable'.(count($volante)==2 ? $volante[0][1] : (count($volante)==3 ? $volante[0][1] : "AJ")).'" class="pos-zaga-meio">'.((count($volante) == 2 OR count($volante) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="V"></div>'.(count($volante)==2 ? $volante[0][0] : (count($volante)==3 ? $volante[0][0] : "&nbsp")).'</div>';
+
+echo '<div id="draggable'.(count($volante)==1 ? $volante[0][1] : (count($volante)==3 ? $volante[1][1] : "AK")).'" class="pos-zaga-meio">'.((count($volante) == 1 OR count($volante) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="V"></div>'.(count($volante)==1 ? $volante[0][0] : (count($volante)==3 ? $volante[1][0] : "&nbsp")).'</div>';
+
+echo '<div id="draggable'.(count($volante)==2 ? $volante[1][1] : (count($volante)==3 ? $volante[2][1] : "AL")).'" class="pos-zaga-meio">'.((count($volante) == 2 OR count($volante) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="V"></div>'.(count($volante)==2 ? $volante[1][0] : (count($volante)==3 ? $volante[2][0] : "&nbsp")).'</div>';
+
+// ala-direita
+echo '<div id="draggable'.$ala_direito[1].'" class="pos-zaga-meio">'.($ala_direito[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="AD"></div>'.($ala_direito[0]!=''?$ala_direito[0]:'&nbsp').'</div>';
+
+// lateral-esquerda
+echo '<div id="draggable'.$lateral_esquerdo[1].'" class="pos-zaga">'.($lateral_esquerdo[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="LE"></div>'.($lateral_esquerdo[0]!=''?$lateral_esquerdo[0]:'&nbsp').'</div>';
+
+// zagueiros
+echo '<div id="draggable'.(count($zagueiro)==2 ? $zagueiro[0][1] : (count($zagueiro)==3 ? $zagueiro[0][1] : "AM")).'" class="pos-zaga">'.((count($zagueiro) == 2 OR count($zagueiro) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="Z"></div>'.(count($zagueiro)==2 ? $zagueiro[0][0] : (count($zagueiro)==3 ? $zagueiro[0][0] : "&nbsp")).'</div>';
+
+echo '<div id="draggable'.(count($zagueiro)==1 ? $zagueiro[0][1] : (count($zagueiro)==3 ? $zagueiro[1][1] : "AN")).'" class="pos-zaga">'.((count($zagueiro) == 1 OR count($zagueiro) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="Z"></div>'.(count($zagueiro)==1 ? $zagueiro[0][0] : (count($zagueiro)==3 ? $zagueiro[1][0] : "&nbsp")).'</div>';
+
+echo '<div id="draggable'.(count($zagueiro)==2 ? $zagueiro[1][1] : (count($zagueiro)==3 ? $zagueiro[2][1] : "AO")).'" class="pos-zaga">'.((count($zagueiro) == 2 OR count($zagueiro) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="Z"></div>'.(count($zagueiro)==2 ? $zagueiro[1][0] : (count($zagueiro)==3 ? $zagueiro[2][0] : "&nbsp")).'</div>';
+
+// lateral-direita
+echo '<div id="draggable'.$lateral_direito[1].'" class="pos-zaga">'.($lateral_direito[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="LD"></div>'.($lateral_direito[0]!=''?$lateral_direito[0]:'&nbsp').'</div>';
+
+// goleiro
 echo '<div id="nondraggable26">&nbsp</div>';
 echo '<div id="nondraggable27">&nbsp</div>';
-echo '<div id="nondraggable28" class="goleiro"><p>'.$goleiro.'</p></div>';
+echo '<div id="nondraggable28" class="goleiro"><img src="/images/uniformes/'.$uniforme2_time. '" height="60px"><p>'.$goleiro.'</p></div>';
 echo '<div id="nondraggable29">&nbsp</div>';
 echo '<div id="nondraggable30">&nbsp</div>';
 echo '</div>';

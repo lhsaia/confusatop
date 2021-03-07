@@ -600,7 +600,12 @@ div[id*="draggable"] {
     table-layout: fixed;
     position:relative;
 
-}
+
+	}
+	
+	div[id*="draggable"] img{
+		margin:0 35px;
+	}
 #sortable {
 	position: relative;
 	height: 600px;
@@ -645,14 +650,15 @@ label{
 }
 
 div[id*="draggable"] p{
-    text-align:center;
-    vertical-align: middle;
+  text-align:center;
+  vertical-align: bottom;
   display: table-cell;
   font-weight:bold;
-  border: 3px solid white;
+  /* border: 3px solid white; */
   outline: 1px solid transparent;
   overflow: hidden;
   width:100%;
+  font-size: small;
 }
 
 .pagination_link{
@@ -675,32 +681,49 @@ div[id*="draggable"] p{
 ul.ui-menu { max-height: 150px !important; }
 
 .goleiro{
-    background-color:rgba(128,0,128,0.5);
+    background-image:linear-gradient(transparent, rgba(128,0,128,0.5));
     color:white;
 }
 
 .pos-zaga p{
-    background-color:rgba(0,0,255,0.5);
+    /* background-color:rgba(0,0,255,0.5); */
+	background-image: linear-gradient(transparent, rgba(0,0,255,0.5));
     color:white;
 }
 
 .pos-zaga-meio p{
-    background-image: linear-gradient(to right, rgba(0,0,255,0.5) , rgba(255,140,0,0.5));
+	
+    background: linear-gradient(to right, rgba(0,0,255,0.5) , rgba(255,140,0,0.5));
+
+  /* background: linear-gradient(to top right, rgb(238, 252, 83), rgb(120, 239, 197)); */
     color:white;
+	-webkit-mask: linear-gradient(to bottom,transparent, #fff);
+	mask: linear-gradient(to bottom,transparent, #fff);
 }
 
+/* .pos-zaga-meio p::before { */
+  /* content: ""; */
+  /* display: block; */
+  /* height: 100%; */
+  /* /* background: linear-gradient(to right, rgba(0,0,255,0.5) , rgba(255,140,0,0.5)); */ 
+  /* -webkit-mask: linear-gradient(to bottom,transparent, #fff); */
+          /* mask: linear-gradient(to bottom,transparent, #fff); */
+/* } */
+
 .pos-meio p{
-    background-color:rgba(255,140,0,0.5);
+    background-image:linear-gradient(transparent, rgba(255,140,0,0.5));
     color:white;
 }
 
 .pos-meio-ataque p{
     background-image: linear-gradient(to right, rgba(255,140,0,0.5) ,rgba(255,0,0,0.5));
     color:white;
+	-webkit-mask: linear-gradient(to bottom,transparent, #fff);
+	mask: linear-gradient(to bottom,transparent, #fff);
 }
 
 .pos-ataque p{
-    background-color:rgba(255,0,0,0.5);
+    background-image:linear-gradient(transparent, rgba(255,0,0,0.5));
     color:white;
 }
 
