@@ -6,6 +6,10 @@ h2{
     height:35px;
 }
 
+.playerThumb{
+	height: 55px;
+}
+
 .inputHerdeiro{
     color:inherit;
     font-size:inherit;

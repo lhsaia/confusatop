@@ -238,6 +238,7 @@ echo "<hr>";
 echo "<table id='tabelaElenco' class='table'>";
 echo "<thead>";
 echo "<tr>";
+echo "<th></th>";
 echo "<th>Nome</th>";
 echo "<th>Posições</th>";
 echo "<th>Nac.</th>";
@@ -263,6 +264,7 @@ $transferenciaTecnico = $tecnico->ultimaTransferencia($rowTec['ID'], $idTime);
 $encerramentoTecnico = ( $rowTec['encerramento'] == "0" ) ? 'indet.' : $rowTec['encerramento'] ;
 
 echo "<tr id='tec".$rowTec['ID']."' data-sexo='".$rowTec['Sexo']."'>";
+echo "<td class='foto_jogador'></td>";
 echo "<td class='nopadding nomeJogador'><span class='nomeEditavel'>{$rowTec['Nome']}</span><br><span class='posicao'>Técnico</span></td>";
 echo "<td>T</td>";
 if($rowTec['idPais'] != 0){
@@ -370,6 +372,7 @@ $agora = date('Y-m-d');
 
 
             echo "<tr data-sexo='".$sexoJogador."' id='".$idJogador."' class='".$titular."'>";
+				echo "<td class='foto_jogador'><img src='/images/jogadores/".$foto."' height='55px'></td>";
                 echo "<td class='nopadding nomeJogador'><a href='/ligas/playerstatus.php?player={$idJogador}' class='nomeEditavel'>{$nomeJogador}</a><br><span class='posicao'>{$posicaoBase}</span></td>";
                 echo "<td class='nopadding'><span class='posicoesAtuais'>{$stringPosicoes}</span>";
                 echo " <select multiple class='comboPosicoes editavel ' hidden>'  ";

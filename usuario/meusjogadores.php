@@ -205,6 +205,7 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 		tbl += "<table id='tabelaPrincipal' class='table'>";
 			tbl += "<thead id='headings"+user_id+"'>";
 				tbl += "<tr>";
+					tbl += "<th asc='' class='headings' width='2%'>Foto</th>";
 					tbl += "<th asc='' class='headings' width='15%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspNome</th>";
 					tbl += "<th asc='' class='headings' width='10%'>Nascimento (idade) </th>";
 					tbl += "<th asc='' class='headings' width='10%'>Mentalidade</th>";
@@ -244,9 +245,10 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 				
 				// geração da tabela
 				tbl += "<tr id='"+val['ID']+"' data-sexo='"+val['sexo']+"' >";
-					tbl +=  "<td><span class='nomeEditavel' id='nom"+val['id']+"'><a class='linkNome' href='/ligas/playerstatus.php?player="+val['id']+"' >"+val['Nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span></td>";
-					tbl += "<td><span class='nomeNascimento' id='nas"+ val['id']+"'>"+ nascimentoDisplay + " (" +val['Idade']+") "+" </span><input id='selnas"+val['id']+"' class='nascimentoEditavel editavel' type='date' value='"+val['Nascimento']+"' hidden/></td>";
-					tbl += "<td><span class='nomeMentalidade' id='men"+ val['id']+"'>"+ val['Mentalidade'] +"</span><select id='selmen"+val['id']+"' class='comboMentalidade editavel' value='"+val['Mentalidade']+"' hidden>";
+					tbl += "<td><div class='imageUpload'><img class='playerThumb' src='/images/jogadores/"+val['foto']+"' /> <input type='file' hidden id='foto"+val['ID']+"' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg'/></div></td>";
+					tbl +=  "<td><span class='nomeEditavel' id='nom"+val['ID']+"'><a class='linkNome' href='/ligas/playerstatus.php?player="+val['ID']+"' >"+val['Nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span></td>";
+					tbl += "<td><span class='nomeNascimento' id='nas"+ val['ID']+"'>"+ nascimentoDisplay + " (" +val['Idade']+") "+" </span><input id='selnas"+val['ID']+"' class='nascimentoEditavel editavel' type='date' value='"+val['Nascimento']+"' hidden/></td>";
+					tbl += "<td><span class='nomeMentalidade' id='men"+ val['ID']+"'>"+ val['Mentalidade'] +"</span><select id='selmen"+val['ID']+"' class='comboMentalidade editavel' value='"+val['Mentalidade']+"' hidden>";
 							listaMentalidades.forEach(function(value, key){
 								tbl += "<option value='"+value[0]+"'>"+value[1]+"</option>";
 							});
@@ -258,13 +260,13 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 							});
 						tbl += "</select>";	
 					tbl += "</td>";
-					tbl += "<td><span class='nomeValor id='val" + val['id']+"'>" + valorDisplay + "</span><span class='valorEditavel editavel' contenteditable='true' hidden>" + val['valor'] + "</span></td>";
+					tbl += "<td><span class='nomeValor id='val" + val['ID']+"'>" + valorDisplay + "</span><span class='valorEditavel editavel' contenteditable='true' hidden>" + val['valor'] + "</span></td>";
 					
 
 					let splitPositions = createPositionString(val['StringPosicoes']);
 					
 
-					tbl += "<td><span class='nomePosicao posicoesAtuais' id='pos"+ val['id']+"'>"+ splitPositions +"</span>";
+					tbl += "<td><span class='nomePosicao posicoesAtuais' id='pos"+ val['ID']+"'>"+ splitPositions +"</span>";
                  	tbl += " <select multiple class='comboPosicoes editavel' hidden>'  ";
 						listaPosicoes.forEach(function(value, key){
 							tbl += "<option value='"+value[0]+"'>"+value[1]+"</option>";
@@ -298,7 +300,8 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 					
 					
 					var nomeDisponibilidade = "";
-					switch(val['disponibilidade']){
+					
+					switch(parseInt(val['disponibilidade'])){
 						case -2:
 							nomeDisponibilidade = "Expatriado";
 							break;
@@ -312,6 +315,7 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 							nomeDisponibilidade = "Ativo (disponível)";
 							break;
 					}
+					
 
 					tbl += "<td><span class='nomeAtividade' id='dis"+val['ID']+"'>"+nomeDisponibilidade+"</span><select data-idTime='"+val['idClubeVinculado']+"' class='comboAtividade editavel' id='seldis"+val['ID']+"' hidden >";
 					tbl += "<option value='1' title='Ativo e disponível para negociar'>Ativo (disponível)</option>";
@@ -389,6 +393,7 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 	tbl_row.find(".cancelar").show();
 	tbl_row.find(".editar").hide();
 	tbl_row.find(".apagar").hide();
+	tbl_row.find('.hiddenInput').show();
 
 	//garantir que o dono do time está logado e que ele é o dono do jogador também (duplo check, JS e PHP)
 	var donoTime = tbl_row.find(".donoClubeVinculado").html();
@@ -494,6 +499,7 @@ $('.cancelar').click(function(){
         tbl_row.find('.valorEditavel').hide();
         tbl_row.find('.nomePosicao').show();
         tbl_row.find('.comboPosicoes').hide();
+		tbl_row.find('.hiddenInput').hide();
 
         tbl_row.find('a').each(function(index, val){
             $(this).html($(this).attr('original_entry'));
@@ -562,6 +568,7 @@ $('.cancelar').click(function(){
         tbl_row.find('.valorEditavel').hide();
         tbl_row.find('.nomePosicao').show();
         tbl_row.find('.comboPosicoes').hide();
+		tbl_row.find('.hiddenInput').hide();
 
         //coleta de valores
 
@@ -585,7 +592,7 @@ $('.cancelar').click(function(){
         var idJogador = tbl_row.prop('id');
 
         if(isDono){
-            var nome = tbl_row.find('.nomeEditavel').html();
+            var nome = tbl_row.find('.nomeEditavel').text();
             var nacionalidade = tbl_row.find(".comboPais").val();
             var nascimento = tbl_row.find(".nascimentoEditavel").val();
             var valor = parseInt(tbl_row.find(".valorEditavel").html());
@@ -595,41 +602,57 @@ $('.cancelar').click(function(){
             var atividade = tbl_row.find(".comboAtividade").val();
 			var timeParaDemissao = tbl_row.find(".comboAtividade").attr("data-idTime");
         }
+		
+		//foto
+		var inputFoto = (tbl_row.find('#foto'+idJogador))[0];
+		var foto;
+
+		if (inputFoto.files.length > 0) {
+		   foto = inputFoto.files[0];
+		} else {
+		   foto = null;
+		}
 
         var nivel = tbl_row.find(".nivelEditavel").html();
-        var posicoes = tbl_row.find(".comboPosicoes").val();
-        //var idTime = $('#quadro-container').prop('class');
-
-        var formData = {
-            'idJogador' : idJogador,
-            'alteracao' : 9,
-            'posicoes' : posicoes,
-            'nivel' : nivel
-        }
-
-
+		
+		var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
+		var isGoleiro = stringPosicoes.localeCompare("G");
+	
+		if(isGoleiro == 0){
+			var posicoes = ["1"];
+		} else {
+			var posicoes = tbl_row.find(".comboPosicoes").val();
+		}
+		
+		var formData = new FormData();
+		
+		formData.append('idJogador',idJogador);
+		formData.append('alteracao',9);
+		formData.append('posicoes',posicoes);
+		formData.append('nivel',nivel);
 
 if(isDono){
-    var moreData = {
-            'nome' : nome,
-            'nacionalidade' : nacionalidade,
-            'nascimento' : nascimento,
-            'valor' : valor,
-            'determinacao' : determinacao,
-            'mentalidade' : mentalidade,
-            'cobrancaFalta' : cobrancaFalta,
-            'atividade' : atividade,
-			'timeParaDemissao' : timeParaDemissao
-
-        }
-
-    $.extend(formData,moreData);
+	formData.append('nome',nome);
+	formData.append('nacionalidade',nacionalidade);
+	formData.append('nascimento',nascimento);
+	formData.append('valor',valor);
+	formData.append('determinacao',determinacao);
+	formData.append('mentalidade',mentalidade);
+	formData.append('cobrancaFalta',cobrancaFalta);
+	formData.append('atividade',atividade);
+	formData.append('timeParaDemissao',timeParaDemissao);
 }
 
+     if(foto != null){
+		formData.append('foto',foto);
+     }
 
-console.log(formData);
 
-     ajaxCallJogador(formData);
+for (var key of formData.entries()) {
+     console.log(key[0] + ', ' + key[1]);
+ }
+
+    ajaxCallJogador(formData);
 
 
     });
@@ -642,10 +665,11 @@ $.ajax({
         type        : 'POST', // define the type of HTTP verb we want to use (POST for our form)
         url         : '/jogadores/editar_jogador.php', // the url where we want to POST
         data        : formData, // our data object
-        // processData : false,
-        // contentType : false,
+        processData : false,
+        contentType : false,
+		cache: false,
         dataType    : 'json', // what type of data do we expect back from the server
-                    encode          : true
+                    //encode          : true
     })
 
                 .done(function(data) {

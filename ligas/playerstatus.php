@@ -40,6 +40,7 @@ $estadio = new Estadio($db);
 $info = $jogador->readInfo($id_jogador);
 
 $nome_jogador = $info['nome']; //ok entrada pagina
+$foto_jogador = $info['foto'];
 $pais_jogador = $info['Pais']; //ok
 $time_jogador = $info['time']; //ok entrada pagina
 $liga_time = $info['liga']; //ok entrada pagina
@@ -159,8 +160,13 @@ Plotly.newPlot("attribute-chart", data, layout, {staticPlot: true},
 <?php
 
 echo "<div id='quadro-container'>";
+echo "<div id='quadro-superior'>";
+echo "<div id='quadro-nomes'>";
 echo "<h2>" . $nome_jogador ." </h2>";
 echo "<h3><a href='paisstatus.php?country=".$pais_time."'><img class='smallthumb' src='/images/bandeiras/{$bandeira_pais_time}'>&nbsp" . $nome_pais_time ."</a><a href='leaguestatus.php?league=".$id_liga."'> - <img class='smallthumb' src='/images/ligas/{$logo_liga}'>&nbsp" . $liga_time ." (tier {$tier_liga})</a><a href='teamstatus.php?team=".$id_time."'> - <img class='smallthumb' src='/images/escudos/{$escudo_time}'>&nbsp".$time_jogador." </a></h3> ";
+echo "</div>";
+echo "<div id='quadro-foto'><img id='bandeiraGrande' class='margin-left' src='/images/jogadores/".$foto_jogador."' height='100px'></div>";
+echo "</div>";
 echo "<hr>";
 
 $nascimento_jogador = explode("-",$nascimento_jogador);

@@ -20,6 +20,16 @@
     position:relative;
 }
 
+#quadro-superior{
+	display:flex;
+	flex-direction:row;
+	flex-wrap: no-wrap;
+}
+
+#quadro-nomes{
+	flex-basis:90%;
+}
+
 .bevel{
 	border-style: outset;
 	user-select: none;
