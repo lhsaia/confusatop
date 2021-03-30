@@ -10,6 +10,10 @@ h2{
 	height: 55px;
 }
 
+.stadiumThumb{
+	height: 100px;
+}
+
 .inputHerdeiro{
     color:inherit;
     font-size:inherit;

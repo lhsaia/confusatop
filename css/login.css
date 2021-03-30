@@ -829,3 +829,33 @@ nav.open {
 	padding-left: 10px;
 }
 
+#toolbar{
+	display:flex;
+	flex-direction:row;
+	font-size: 14px;
+	
+}
+
+#toolbar div{
+	border: 2px outset;
+	background-color:white;
+	color:black;
+	margin: 0 10px;
+	display:flex;
+	flex-direction:row;
+	min-width: 100px; 
+	padding:5px;
+	cursor:pointer;
+	user-select: none;
+}
+
+#toolbar div:active{
+	border: 2px inset;
+
+}
+
+#toolbar div span{
+	padding-left: 5px;
+}
+
+

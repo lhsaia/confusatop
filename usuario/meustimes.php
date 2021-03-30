@@ -103,22 +103,31 @@ load_data();
 
 //typing timer ajax improvement
 //setup before functions
-var typingTimer;                //timer identifier
-var doneTypingInterval = 800;  //time in ms (5 seconds)
+//var typingTimer;                //timer identifier
+//var doneTypingInterval = 800;  //time in ms (5 seconds)
 
-//on keyup, start the countdown
-$('#caixa_pesquisa').keyup(function(){
-    clearTimeout(typingTimer);
-    if ($('#caixa_pesquisa').val()) {
-        typingTimer = setTimeout(doneTyping, doneTypingInterval);
-    }
-	typingTimer = setTimeout(doneTyping, doneTypingInterval);
-});
+	function delay(fn, ms){
+		let timer = 0;
+		return function(...args){
+			clearTimeout(timer)
+			timer = setTimeout(fn.bind(this, ...args), ms || 0)
+		}
+	}
 
-//user is "finished typing," do something
-function doneTyping () {
-    load_data();
-}
+	//on keyup, start the countdown
+	$('#caixa_pesquisa').keyup(delay(function(e){
+		load_data();
+		//clearTimeout(typingTimer);
+		//if ($('#caixa_pesquisa').val()) {
+		//	typingTimer = setTimeout(doneTyping, doneTypingInterval);
+		//}
+		//typingTimer = setTimeout(doneTyping, doneTypingInterval);
+	},800));
+
+// user is "finished typing," do something
+// function doneTyping () {
+    // load_data();
+// }
 
 //$('#caixa_pesquisa').keyup(function(){load_data()});
 

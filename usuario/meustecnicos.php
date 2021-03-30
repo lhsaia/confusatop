@@ -87,6 +87,7 @@ if($num>0){
     echo "<thead id='tabela".$_SESSION['user_id']."'>";
         echo "<tr>";
            // echo "<th>Id</th>";
+		   echo "<th width='5%'>Foto</th>";
             echo "<th width='30%'>Nome</th>";
             echo "<th width='20%'>Nascimento</th>";
             echo "<th width='10%'>Nível</th>";
@@ -117,6 +118,7 @@ if($num>0){
 
             echo "<tr id='".$ID."'>";
                 //echo "<td><span id=".$id.">{$id}</span></td>";
+				echo "<td><div class='imageUpload'><img class='playerThumb' src='/images/tecnicos/".$foto."' /> <input type='file' hidden id='foto".$ID."' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
                 echo "<td><span class='nomeEditavel' id='nom".$ID."'>{$Nome}</span><span class=' {$genderClass} genderSign'>{$genderCode}</span></td>";
                 echo "<td><span class='nomeNascimento' id='nas".$ID."'>{$Nascimento} ({$idade})</span><input id='selnas".$ID."' class='nascimentoEditavel editavel' type='date' value='{$Nascimento}' hidden/></td>";
                 echo "<td><span class='nivelEditavel' id='niv".$ID."'>{$Nivel}</span></td>";
@@ -211,6 +213,7 @@ echo('</div>');
         tbl_row.find('.salvar').show();
         tbl_row.find('.cancelar').show();
         tbl_row.find('.editar').hide();
+		tbl_row.find('.hiddenInput').show();
 
         //garantir que o dono do time está logado e que ele é o dono do jogador também (duplo check, JS e PHP)
         var donoTime = tbl_row.find(".donoClubeVinculado").html();
@@ -266,6 +269,7 @@ echo('</div>');
         tbl_row.find('.salvar').hide();
         tbl_row.find('.cancelar').hide();
         tbl_row.find('.editar').show();
+		tbl_row.find('.hiddenInput').hide();
 
         tbl_row.find('a').each(function(index, val){
             $(this).html($(this).attr('original_entry'));
@@ -304,6 +308,7 @@ echo('</div>');
       tbl_row.find('.salvar').hide();
       tbl_row.find('.cancelar').hide();
       tbl_row.find('.editar').show();
+	  tbl_row.find('.hiddenInput').hide();
 
       tbl_row.find('.comboEstilo').addClass('transpBack');
       tbl_row.find('.comboEstilo').prop('disabled', 'disabled');
@@ -347,6 +352,20 @@ echo('</div>');
             formData.append('nascimento', nascimento);
             formData.append('nome', nome);
         }
+		
+				//foto
+		var inputFoto = (tbl_row.find('#foto'+id))[0];
+		var foto;
+
+		if (inputFoto.files.length > 0) {
+		   foto = inputFoto.files[0];
+		} else {
+		   foto = null;
+		}
+		
+		     if(foto != null){
+		formData.append('foto',foto);
+     }
 
         var nivel = tbl_row.find(".nivelEditavel").html();
         var alteracao = 9;

@@ -71,6 +71,7 @@ $sigla_time = $info['TresLetras'];
 $estadio_time = $info['Estadio'];
 $estadio_capacidade = $info['Capacidade'];
 $escudo_time = $info['Escudo'];
+$foto_estadio = $info['fotoEstadio'];
 $uniforme1_time = $info['Uniforme1'];
 $uniforme2_time = $info['Uniforme2'];
 $pais_time = $info['Pais'];
@@ -137,6 +138,12 @@ window.onbeforeunload = function(e) {
 
 };
 
+$("#toolbar").html('<div id="irApresentacao"><i class="far fa-newspaper"></i><span>Apresentação</span></div>');
+
+		$("#irApresentacao").on("click", function(){
+			window.location = "/times/team_presentation.php?team=" + <?php echo $idTime ?>;
+		});
+
 window.onload = function(e) {
     var hash = window.location.hash;
 
@@ -164,11 +171,11 @@ window.onload = function(e) {
 
 <?php
 
-echo "<div id='quadro-container' class='".$idTime."'>";
+echo "<div id='quadro-container' class='".$idTime."' style='margin-left: 5px; margin-right:5px;'>";
 echo "<img id='bandeiraGrande' class='margin-left' src='/images/escudos/".$escudo_time."' height='100px'>" ;
 echo "<img class='uniformeGrande' src='/images/uniformes/".$uniforme2_time."' height='80px'>" ;
 echo "<img class='uniformeGrande' src='/images/uniformes/".$uniforme1_time. "' height='80px'>" ;
-echo "<figure id='estadio'><img class='imagemEstadio' src='/images/stadium.png'><figcaption>{$estadio_time}<figcaption></figure>";
+echo "<figure id='estadio'><img class='imagemEstadio' src='/images/estadios/{$foto_estadio}'><figcaption>{$estadio_time}<figcaption></figure>";
 echo "<h2>" . $nome_time ." </h2>";
 if(!$is_selecao){
     echo "<h3><a href='paisstatus.php?country=".$pais_id."'>" . $pais_time ."</a><a href='leaguestatus.php?league=".$liga_id."'>" . $liga_time ." </a></h3> ";
@@ -263,8 +270,10 @@ $rowTec = $stmtTec->fetch(PDO::FETCH_ASSOC);
 $transferenciaTecnico = $tecnico->ultimaTransferencia($rowTec['ID'], $idTime);
 $encerramentoTecnico = ( $rowTec['encerramento'] == "0" ) ? 'indet.' : $rowTec['encerramento'] ;
 
+$rowTec['Nascimento'] = date("d-m-Y", strtotime($rowTec['Nascimento']));
+
 echo "<tr id='tec".$rowTec['ID']."' data-sexo='".$rowTec['Sexo']."'>";
-echo "<td class='foto_jogador'></td>";
+echo "<td class='foto_jogador'><img src='/images/tecnicos/".$rowTec['foto']."' height='55px'></td>";
 echo "<td class='nopadding nomeJogador'><span class='nomeEditavel'>{$rowTec['Nome']}</span><br><span class='posicao'>Técnico</span></td>";
 echo "<td>T</td>";
 if($rowTec['idPais'] != 0){
@@ -279,10 +288,10 @@ echo " <select class='comboPais editavel ' id='{$rowTec['idPais']}' hidden>'  ";
     }
     echo "</select>";
 echo "</td>";
-echo "<td class='nopadding'><span class='nomeNascimento'>{$rowTec['Nascimento']} (".$rowTec['idade'].")</span><input id='selnas".$ID."' class='nascimentoEditavel editavel' type='date' value='{$rowTec['Nascimento']}' hidden/></td>";
+echo "<td class='nopadding'><span class='nascimentoEIdade'>{$rowTec['Nascimento']} (".$rowTec['idade'].")</span><input type='date' class='editavel nascimento' hidden/></td>";
 echo "<td class='nopadding'><span class='nivel'>{$rowTec['Nivel']}</span></td>";
-echo "<td class='nopadding'>{$transferenciaTecnico["Data"]}</td>";
-echo "<td class='nopadding'>{$transferenciaTecnico["Clube"]}</td>";
+echo "<td class='nopadding'><span class='desdeFixo'>{$transferenciaTecnico["Data"]}</span><input type='date' class='editavel desde' hidden></td>";
+echo "<td class='nopadding ultimoClube' data-ultimo-clube='{$transferenciaTecnico["ID"]}'>{$transferenciaTecnico["Clube"]}</td>";
 echo "<td class='nopadding'>{$encerramentoTecnico}</td>";
 echo "<td>-</td><td>-</td>";
 $tecOptions = "<td class='wide' id='dono{$rowTec['donoTecnico']}'>";
@@ -396,8 +405,8 @@ $agora = date('Y-m-d');
                 echo "</td>";
                 echo "<td class='nopadding'><span class='nascimentoEIdade'>{$Nascimento} (".$Idade.")</span><input type='date' class='editavel nascimento' hidden></td>";
                 echo "<td class='nopadding'><span class='nivelEMod'>{$Nivel} (".$ModificadorNivel.")</span><span class='editavel nivel' hidden></td>";
-                echo "<td class='nopadding'>{$dadosTransferencia["Data"]}</td>";
-                echo "<td class='nopadding'>{$dadosTransferencia["Clube"]}</td>";
+                echo "<td class='nopadding'><span class='desdeFixo'>{$dadosTransferencia["Data"]}</span><input type='date' class='editavel desde' hidden></td>";
+                echo "<td class='nopadding ultimoClube' data-ultimo-clube='{$dadosTransferencia["ID"]}'>{$dadosTransferencia["Clube"]}</td>";
                 echo "<td class='nopadding'><span class='encerramentoFixo'>{$encerramento}</span><input type='date' class='editavel encerramento' hidden></td>";
                 echo "<td class='nopadding'><span class='valorEditavel valor'>{$valor}</span></td>";
                 echo "<td class='nopadding'>{$disponibilidade}</td>";
@@ -1796,7 +1805,7 @@ if(donoTime.localeCompare(donoJogador) == 0 || donoJogador == 0){
 
 var idJogador = tbl_row.prop('id');
 
-
+console.log(isDono);
 
 if(isDono){
     tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
@@ -1821,6 +1830,8 @@ if(isDono){
     var nascimentoInicial = year + "-" + month + "-" + day;
     tbl_row.find('.nascimento').prop("value",nascimentoInicial);
 	
+		//console.log(nascimentoInicial);
+	
 	//valor original encerramento
     var encerramento = tbl_row.find(".encerramentoFixo").html();
 
@@ -1831,6 +1842,25 @@ if(isDono){
 		var encerramentoInicial = year + "-" + month + "-" + day;
 
     tbl_row.find('.encerramento').prop("value",encerramentoInicial);
+	
+		//valor original desde
+	let ultimo_clube = tbl_row.find(".ultimoClube").attr("data-ultimo-clube");
+	if(ultimo_clube == 0){
+		
+    var desde = tbl_row.find(".desdeFixo").html();
+
+		let desde_day = desde.split("-")[0];
+		let desde_month = desde.split("-")[1];
+		let desde_year = desde.split("-")[2];
+
+		var desdeInicial = desde_year + "-" + desde_month + "-" + desde_day;
+
+    tbl_row.find('.desde').prop("value",desdeInicial);
+	
+	tbl_row.find('.desdeFixo').hide();
+	tbl_row.find('.desde').show();
+	}
+	
 }
 
 
@@ -1891,6 +1921,8 @@ tbl_row.find(".valor").html(valor);
         tbl_row.find('.comboPais').hide();
 		tbl_row.find('.encerramentoFixo').show();
 		tbl_row.find('.encerramento').hide();
+		tbl_row.find('.desdeFixo').show();
+		tbl_row.find('.desde').hide();
 
         tbl_row.find('span').each(function(index, val){
             $(this).html($(this).attr('original_entry'));
@@ -2032,6 +2064,8 @@ tbl_row.find(".valor").html(valor);
         tbl_row.find('.comboPais').hide();
 		tbl_row.find('.encerramentoFixo').show();
 		tbl_row.find('.encerramento').hide();
+		tbl_row.find('.desdeFixo').show();
+		tbl_row.find('.desde').hide();
 
         //coleta de valores
 
@@ -2048,12 +2082,21 @@ tbl_row.find(".valor").html(valor);
         }
 
         var idJogador = tbl_row.prop('id');
+		
+		let ultimo_clube = tbl_row.find(".ultimoClube").attr("data-ultimo-clube");
+	
 
         if(isDono){
             var nome = tbl_row.find('.nomeEditavel').html();
             var nacionalidade = tbl_row.find(".comboPais").val();
             var nascimento = tbl_row.find(".nascimento").val();
 			var encerramento = tbl_row.find(".encerramento").val();
+			
+			
+			
+			if(ultimo_clube == 0){
+				var desde = tbl_row.find(".desde").val();
+			}
         }
 
         var valor = parseInt(tbl_row.find(".valorEditavel").html());
@@ -2080,8 +2123,18 @@ if(isDono){
 			'encerramento' : encerramento
 
         }
+		
 
     $.extend(formData,moreData);
+	
+	if(ultimo_clube ==0){
+		    var evenMoreData = {
+            'desde' : desde
+
+        }
+		
+		$.extend(formData,evenMoreData);
+	}
 }
 
 //         for (var pair of formData.entries()) {
@@ -2227,12 +2280,38 @@ var idTecnico = tbl_row.prop('id');
     tbl_row.find('.comboPais').show().val(paisId);
 
 
-    tbl_row.find('.nomeNascimento').hide();
-    tbl_row.find('.nascimentoEditavel').show();
+
 
     tbl_row.find('.posicao').hide();
+	
+	    //valor original nascimento
+    nascimento = tbl_row.find(".nascimentoEIdade").html().split(" ")[0];
+    day = nascimento.split("-")[0];
+    month = nascimento.split("-")[1];
+    year = nascimento.split("-")[2];
+    nascimentoInicial = year + "-" + month + "-" + day;
+    tbl_row.find('.nascimento').val(nascimentoInicial);
 
+	tbl_row.find('.nascimentoEIdade').hide();
+    tbl_row.find('.nascimento').show();
 
+			//valor original desde
+	let ultimo_clube = tbl_row.find(".ultimoClube").attr("data-ultimo-clube");
+	if(ultimo_clube == 0){
+		
+    var desde = tbl_row.find(".desdeFixo").html();
+
+		let desde_day = desde.split("-")[0];
+		let desde_month = desde.split("-")[1];
+		let desde_year = desde.split("-")[2];
+
+		var desdeInicial = desde_year + "-" + desde_month + "-" + desde_day;
+
+    tbl_row.find('.desde').prop("value",desdeInicial);
+	
+	tbl_row.find('.desdeFixo').hide();
+	tbl_row.find('.desde').show();
+	}
   }
 
   tbl_row.find('.nivel').attr('contenteditable', 'true').addClass('editavel');
@@ -2245,8 +2324,8 @@ var idTecnico = tbl_row.prop('id');
         var tbl_row =  $(this).closest('tr');
         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
         tbl_row.find('.nivel').attr('contenteditable', 'false').removeClass('editavel');
-        tbl_row.find('.nomeNascimento').show();
-        tbl_row.find('.nascimentoEditavel').hide();
+        tbl_row.find('.nascimentoEIdade').show();
+        tbl_row.find('.nascimento').hide();
         tbl_row.find('.comboPais').hide();
         tbl_row.find('.posicao').show();
         tbl_row.find('.nomePais').show();
@@ -2255,6 +2334,8 @@ var idTecnico = tbl_row.prop('id');
         tbl_row.find('.editarTecnico').show();
         tbl_row.find('.propostaTecnico').show();
         tbl_row.find('.demitirTecnico').show();
+		tbl_row.find('.desdeFixo').show();
+		tbl_row.find('.desde').hide();
 
         tbl_row.find('a').each(function(index, val){
             $(this).html($(this).attr('original_entry'));
@@ -2276,13 +2357,15 @@ var idTecnico = tbl_row.prop('id');
       var tbl_row =  $(this).closest('tr');
       tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
       tbl_row.find('.nivel').attr('contenteditable', 'false').removeClass('editavel');
-      tbl_row.find('.nomeNascimento').show();
-      tbl_row.find('.nascimentoEditavel').hide();
+      tbl_row.find('.nascimentoEIdade').show();
+      tbl_row.find('.nascimento').hide();
       tbl_row.find('.comboPais').hide();
       tbl_row.find('.nomePais').show();
       tbl_row.find('.salvarTecnico').hide();
       tbl_row.find('.cancelarTecnico').hide();
       tbl_row.find('.editarTecnico').show();
+	  		tbl_row.find('.desdeFixo').show();
+		tbl_row.find('.desde').hide();
 
         var idTecnico = tbl_row.attr('id').replace(/\D/g, "");
 
@@ -2316,8 +2399,14 @@ var idTecnico = tbl_row.prop('id');
 
         if(isDono){
             var nome = tbl_row.find('.nomeEditavel').html();
-            var nascimento = tbl_row.find(".nascimentoEditavel").val();
+            var nascimento = tbl_row.find(".nascimento").val();
             var pais = tbl_row.find('.comboPais').val();
+			
+			let ultimo_clube = tbl_row.find(".ultimoClube").attr("data-ultimo-clube");
+			
+			if(ultimo_clube == 0){
+				var desde = tbl_row.find(".desde").val();
+			}
 
             var moreData = {
                     'nome' : nome,
@@ -2327,15 +2416,18 @@ var idTecnico = tbl_row.prop('id');
                 }
 
             $.extend(formData,moreData);
+			
+				if(ultimo_clube ==0){
+		    var evenMoreData = {
+            'desde' : desde
 
-            // formData.append('pais', pais);
-            // formData.append('nascimento', nascimento);
-            // formData.append('nome', nome);
         }
-         // formData.append('idTecnico', id);
-         // formData.append('nivel', nivel);
-         // formData.append('alteracao', alteracao);
-         // formData.append('idTime', idTime);
+				}
+		$.extend(formData,evenMoreData);
+
+
+        }
+
 
 
      ajaxCallTecnico(formData);

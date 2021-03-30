@@ -72,7 +72,7 @@ class Estadio{
         $dono = htmlspecialchars(strip_tags($dono));
 
     $query = "SELECT
-                a.ID, a.Nome, a.Capacidade, a.Clima, c.Nome as nomeClima, a.Caldeirao, a.Altitude, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais
+                a.ID, a.Nome, a.Capacidade, a.Clima, c.Nome as nomeClima, a.Caldeirao, a.Altitude, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.foto 
             FROM
                 " . $this->table_name . " a
             LEFT JOIN paises p ON a.Pais = p.id
@@ -128,7 +128,7 @@ class Estadio{
     }
 
     //alterar jogador
-    function alterar($idEstadio,$nomeEstadio,$capacidade,$pais,$altitude, $caldeirao, $clima){
+    function alterar($idEstadio,$nomeEstadio,$capacidade,$pais,$altitude, $caldeirao, $clima, $foto = null){
 
         $idEstadio = htmlspecialchars(strip_tags($idEstadio));
         $nomeEstadio = htmlspecialchars(strip_tags($nomeEstadio));
@@ -137,12 +137,19 @@ class Estadio{
         $altitude = htmlspecialchars(strip_tags($altitude));
 		$caldeirao = htmlspecialchars(strip_tags($caldeirao));
 		$clima = htmlspecialchars(strip_tags($clima));
+		$foto = htmlspecialchars(strip_tags($foto));
 		
 		$altitude = ($altitude == 'true') ? 1 : 0;
 		$caldeirao = ($caldeirao == 'true') ? 1 : 0;
 		
+		if($foto != "" && $foto != null){
+			$query_foto = ", foto=:foto";
+		} else {
+			$query_foto = "";
+		}
+		
 
-        $query = "UPDATE " . $this->table_name . " SET Nome=:nome, Capacidade=:capacidade, Clima=:clima, Altitude=:altitude, Caldeirao=:caldeirao, Pais=:pais WHERE ID=:id";
+        $query = "UPDATE " . $this->table_name . " SET Nome=:nome, Capacidade=:capacidade, Clima=:clima, Altitude=:altitude, Caldeirao=:caldeirao, Pais=:pais ".$query_foto." WHERE ID=:id";
         $stmt = $this->conn->prepare( $query );
 
         $stmt->bindParam(":nome", $nomeEstadio);
@@ -152,6 +159,9 @@ class Estadio{
 		$stmt->bindParam(":caldeirao", $caldeirao);
         $stmt->bindParam(":pais", $pais);
         $stmt->bindParam(":id", $idEstadio);
+		if($foto != "" && $foto != null){
+			$stmt->bindParam(":foto", $foto);
+		} 
 
         if($stmt->execute()){
             return true;

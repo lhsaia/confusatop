@@ -66,9 +66,12 @@ $currentPage =  explode('/',strtok($_SERVER['REQUEST_URI'], '?'));
 <link href="https://fonts.googleapis.com/css?family=Kanit:400,600,900" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css?family=Gugi" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css?family=Share+Tech+Mono" rel="stylesheet">
-<!--<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous"> -->
 <script src="https://kit.fontawesome.com/376cb796e7.js" crossorigin="anonymous"></script> 
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<link rel="stylesheet" href="/css/soccerfield.min.css" />
+<link rel="stylesheet" href="/css/soccerfield.default.min.css" />
+<script src="/js/jquery.soccerfield.min.js"></script>
+
 <?php
 if(isset($css_filename)){
   echo '<link type="text/css" href="/css/' . $css_filename . '.css?versao=' . $css_versao .'" rel="stylesheet">';
@@ -76,10 +79,6 @@ if(isset($css_filename)){
  ?>
 <link type="text/css" href="/css/<?php echo $css_login . ".css?versao=" . $css_versao ?>" rel="stylesheet">
 <link type="text/css" href="/js/jquery-ui/jquery-ui.min.css?v4" rel="stylesheet">
-<!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script> !-->
 <?php
 if(isset($aux_css)){
     echo "<link type='text/css' href='/css/".$aux_css.".css?versao=".$css_versao."' rel='stylesheet'>";
@@ -96,19 +95,26 @@ if(isset($aux_css)){
 
   </div>
 
+  <div id="toolbar">
+
+<!--- for default <button><i class="fas fa-bomb"></i></button>  for default --->
+
+</div>
+
 <span id="logged-user" class="<?php echo $class_conectado?>">
   <?php echo $welcometext ?>
 </span>
+
 
 <div id="hamburger-menu" class='no-capture'>
   <a id="open-menu" class='menu-toggle-button no-capture'><i class="fas fa-bars no-capture"></i></a>
   <a id="close-menu" class='menu-toggle-button no-capture'><i class="fas fa-times"></i></a>
   <nav class="nav no-capture" id='nav'>
-    <a class="nav-item" href="https://www.confusa.top">Home</a>
+    <a class="nav-item" href="/">Home</a>
     <?php echo "<a class='nav-item' onclick='{$onclick_log}'>{$title_log}</a>" ?>
-    <?php echo "<a class='nav-item' href='https://confusa.top/sobre.php'>Sobre / Tutorial</a>" ?>
-    <?php echo "<a class='nav-item' href='https://confusa.top/contato.php'>Contato</a>" ?>
-	<?php echo "<a class='nav-item' href='https://confusa.top/sugestoes'><i class='fas fa-comment-dots'></i>  Sugestões/Bugs</a>" ?>
+    <?php echo "<a class='nav-item' href='/sobre.php'>Sobre / Tutorial</a>" ?>
+    <?php echo "<a class='nav-item' href='/contato.php'>Contato</a>" ?>
+	<?php echo "<a class='nav-item' href='/sugestoes'><i class='fas fa-comment-dots'></i>  Sugestões/Bugs</a>" ?>
     <?php echo $change_pass ?>
     <?php echo $admin_btn ?>
     <?php

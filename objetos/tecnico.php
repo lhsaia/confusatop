@@ -71,7 +71,7 @@ class Tecnico{
     }
 
     $query = "SELECT
-                a.ID, a.Nome, a.Nascimento,FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as idade, a.Mentalidade, a.Nivel, a.Estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.Sexo, q.dono as donoClubeVinculado, b.nome as clubeVinculado, b.escudo as escudoClubeVinculado, b.id as idClubeVinculado
+                a.ID, a.Nome, a.Nascimento,FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as idade, a.Mentalidade, a.Nivel, a.Estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.Sexo, q.dono as donoClubeVinculado, b.nome as clubeVinculado, b.escudo as escudoClubeVinculado, b.id as idClubeVinculado, a.foto 
             FROM
                 " . $this->table_name . " a
             LEFT JOIN paises p ON a.pais = p.id
@@ -262,7 +262,7 @@ class Tecnico{
 
             $idTime = htmlspecialchars(strip_tags($idTime));
 
-            $query = "SELECT t.Nome, t.ID, FLOOR((DATEDIFF(CURDATE(), t.Nascimento))/365) as idade, t.Nascimento, t.Nivel, t.Mentalidade, t.Estilo, p.id as idPais, p.bandeira as bandeiraPais, p.sigla as siglaPais, c.modificadorNivel, c.prazo as encerramento, p.dono as donoTecnico, t.Sexo
+            $query = "SELECT t.Nome, t.ID, FLOOR((DATEDIFF(CURDATE(), t.Nascimento))/365) as idade, t.Nascimento, t.Nivel, t.Mentalidade, t.Estilo, p.id as idPais, p.bandeira as bandeiraPais, p.sigla as siglaPais, c.modificadorNivel, c.prazo as encerramento, p.dono as donoTecnico, t.Sexo, t.foto 
             FROM contratos_tecnico c
             LEFT JOIN tecnico t ON t.ID = c.tecnico
             LEFT JOIN paises p ON t.Pais = p.ID
@@ -281,7 +281,7 @@ class Tecnico{
             $id_time = htmlspecialchars(strip_tags($id_time));
 
 
-        $query = "SELECT c.Nome, t.data FROM transferencias_tecnico t
+        $query = "SELECT c.ID, c.Nome, t.data FROM transferencias_tecnico t
         LEFT JOIN clube c ON t.clubeOrigem = c.ID
         WHERE t.tecnico=:tecnico AND t.clubeDestino=:clubeDestino ORDER BY t.data DESC LIMIT 0,1";
 
@@ -297,7 +297,7 @@ class Tecnico{
             $row['Nome']= "Sem clube";
         }
 
-        $results = array("Clube" => $row['Nome'], "Data" => $row['data']);
+        $results = array("Clube" => $row['Nome'], "Data" => $row['data'], "ID" => $row['ID']);
 
         return $results;
         }
@@ -802,7 +802,7 @@ class Tecnico{
         }
 
 
-        function editar($idTecnico,$idTime = null,$nomeTecnico,$nacionalidadeTecnico,$nascimentoTecnico,$nivelTecnico,$isDono,$mentalidadeTecnico = null, $estiloTecnico = null){
+        function editar($idTecnico,$idTime = null,$nomeTecnico,$nacionalidadeTecnico,$nascimentoTecnico,$nivelTecnico,$isDono,$mentalidadeTecnico = null, $estiloTecnico = null, $foto = null,  $desdeContrato = null){
 
             $idTecnico = htmlspecialchars(strip_tags($idTecnico));
             $idTime = htmlspecialchars(strip_tags($idTime));
@@ -812,6 +812,8 @@ class Tecnico{
             $nivelTecnico = htmlspecialchars(strip_tags($nivelTecnico));
             $mentalidadeTecnico = htmlspecialchars(strip_tags($mentalidadeTecnico));
             $estiloTecnico = htmlspecialchars(strip_tags($estiloTecnico));
+			$foto = htmlspecialchars(strip_tags($foto));
+			$desdeContrato = htmlspecialchars(strip_tags($desdeContrato));
 
             if($nivelTecnico > 10){
               $nivelTecnico = 10;
@@ -839,8 +841,16 @@ class Tecnico{
               } else {
                 $queryEstilo = "";
               }
+			  
+			  					if($foto != "" && $foto != null){
+						$query_foto = ", foto=:foto";
+					} else {
+						$query_foto = "";
+					}
+					
+					
 
-              $query = "UPDATE tecnico SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, ".$queryMentalidade ." " .$queryEstilo .  " Nivel=:nivel WHERE ID = :id";
+              $query = "UPDATE tecnico SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, ".$queryMentalidade ." " .$queryEstilo .  " Nivel=:nivel ".$query_foto. " WHERE ID = :id";
             } else {
               $query = "UPDATE tecnico SET Nivel=:nivel WHERE ID = :id";
             }
@@ -851,6 +861,10 @@ class Tecnico{
 
             $stmt->bindParam(":id", $idTecnico);
             $stmt->bindParam(":nivel",$nivel);
+			
+								if($foto != "" && $foto != null){
+						$stmt->bindParam(":foto", $foto);
+					} 
 
             if($isDono){
               $stmt->bindParam(":nome", $nome);
@@ -866,11 +880,27 @@ class Tecnico{
               }
             }
 
+			$error_count = 0;
             if($stmt->execute()){
-                return true;
+                
             } else {
-                return false;
+                $error_count++;
             }
+			
+			
+			if($isDono && $desdeContrato != null){
+			if($this->alterarInicioContrato($idTecnico,$idTime, $desdeContrato)){
+
+            } else {
+                $error_count++;
+            }
+			
+			        if($error_count == 0){
+            return true;
+        } else {
+            return false;
+        }
+		}
 
         }
 
@@ -906,7 +936,7 @@ class Tecnico{
 
            //return $result;
 
-           $to = $result['email'] . ", lhsaia@gmail.com";
+           $to = $result['email'];
            $from = "no-reply@confusa.top";
 
            $headers = "From: " . $from . "\r\n";
@@ -919,6 +949,24 @@ class Tecnico{
            } else {
              return false;
            }
+
+        }
+		
+				        function alterarInicioContrato($idTecnico,$idClube, $inicioNovo){
+
+                $query_contrato = "UPDATE transferencias_tecnico SET data = :inicio   
+                        WHERE
+                            tecnico=:tecnico AND clubeDestino=:clube AND clubeOrigem=0 AND status_execucao = 1";
+                $stmt = $this->conn->prepare( $query_contrato );
+				$stmt->bindParam(":inicio", $inicioNovo);
+                $stmt->bindParam(":tecnico", $idTecnico);
+                $stmt->bindParam(":clube", $idClube);
+                if($stmt->execute()){
+					return true;
+                } else {
+                    return false;
+                }
+            
 
         }
 

@@ -130,17 +130,26 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 
 	//typing timer ajax improvement
 	//setup before functions
-	var typingTimer;                //timer identifier
-	var doneTypingInterval = 800;  //time in ms (5 seconds)
+	//var typingTimer;                //timer identifier
+	//var doneTypingInterval = 800;  //time in ms (5 seconds)
+	
+	function delay(fn, ms){
+		let timer = 0;
+		return function(...args){
+			clearTimeout(timer)
+			timer = setTimeout(fn.bind(this, ...args), ms || 0)
+		}
+	}
 
 	//on keyup, start the countdown
-	$('#caixa_pesquisa').keyup(function(){
-		clearTimeout(typingTimer);
-		if ($('#caixa_pesquisa').val()) {
-			typingTimer = setTimeout(doneTyping, doneTypingInterval);
-		}
-		typingTimer = setTimeout(doneTyping, doneTypingInterval);
-	});
+	$('#caixa_pesquisa').keyup(delay(function(e){
+		load_data();
+		//clearTimeout(typingTimer);
+		//if ($('#caixa_pesquisa').val()) {
+		//	typingTimer = setTimeout(doneTyping, doneTypingInterval);
+		//}
+		//typingTimer = setTimeout(doneTyping, doneTypingInterval);
+	},800));
 
 	//user is "finished typing," do something
 	function doneTyping () {
@@ -245,7 +254,7 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 				
 				// geração da tabela
 				tbl += "<tr id='"+val['ID']+"' data-sexo='"+val['sexo']+"' >";
-					tbl += "<td><div class='imageUpload'><img class='playerThumb' src='/images/jogadores/"+val['foto']+"' /> <input type='file' hidden id='foto"+val['ID']+"' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg'/></div></td>";
+					tbl += "<td><div class='imageUpload'><img class='playerThumb' src='/images/jogadores/"+val['foto']+"' /> <input type='file' hidden id='foto"+val['ID']+"' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
 					tbl +=  "<td><span class='nomeEditavel' id='nom"+val['ID']+"'><a class='linkNome' href='/ligas/playerstatus.php?player="+val['ID']+"' >"+val['Nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span></td>";
 					tbl += "<td><span class='nomeNascimento' id='nas"+ val['ID']+"'>"+ nascimentoDisplay + " (" +val['Idade']+") "+" </span><input id='selnas"+val['ID']+"' class='nascimentoEditavel editavel' type='date' value='"+val['Nascimento']+"' hidden/></td>";
 					tbl += "<td><span class='nomeMentalidade' id='men"+ val['ID']+"'>"+ val['Mentalidade'] +"</span><select id='selmen"+val['ID']+"' class='comboMentalidade editavel' value='"+val['Mentalidade']+"' hidden>";

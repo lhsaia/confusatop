@@ -568,7 +568,7 @@ return $stmt;
             $id_time = htmlspecialchars(strip_tags($id_time));
 
 
-        $query = "SELECT c.Nome, t.data FROM transferencias t
+        $query = "SELECT c.Nome, t.data, c.ID FROM transferencias t
         LEFT JOIN clube c ON t.clubeOrigem = c.ID
         WHERE t.jogador=:jogador AND t.clubeDestino=:clubeDestino ORDER BY t.data DESC LIMIT 0,1";
 
@@ -584,7 +584,7 @@ return $stmt;
             $row['Nome']= "Sem clube";
         }
 
-        $results = array("Clube" => $row['Nome'], "Data" => $row['data']);
+        $results = array("Clube" => $row['Nome'], "Data" => $row['data'], "ID" => $row['ID']);
 
         return $results;
         }
@@ -1219,7 +1219,7 @@ return $stmt;
 
         }
 
-        function editar($idJogador,$idTime = null,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono, $atividadeJogador = null, $mentalidadeJogador = null, $determinacaoJogador = null, $cobrancaFaltaJogador = null, $encerramentoContrato = null, $foto = null){
+        function editar($idJogador,$idTime = null,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono, $atividadeJogador = null, $mentalidadeJogador = null, $determinacaoJogador = null, $cobrancaFaltaJogador = null, $encerramentoContrato = null, $foto = null, $desdeContrato = null){
 
             $idJogador = htmlspecialchars(strip_tags($idJogador));
             $idTime = htmlspecialchars(strip_tags($idTime));
@@ -1234,6 +1234,7 @@ return $stmt;
             $cobrancaFaltaJogador = htmlspecialchars(strip_tags($cobrancaFaltaJogador));
 			$encerramentoContrato = htmlspecialchars(strip_tags($encerramentoContrato));
 			$foto = htmlspecialchars(strip_tags($foto));
+			$desdeContrato = htmlspecialchars(strip_tags($desdeContrato));
 			
 			if(!is_array($posicoesJogador)){
 				$posicoesJogador = explode(",", $posicoesJogador);
@@ -1495,6 +1496,14 @@ return $stmt;
 		
 		if($isDono && $encerramentoContrato != null){
 			if($this->alterarContrato($idJogador,$idTime, $encerramentoContrato)){
+
+            } else {
+                $error_count++;
+            }
+		}
+		
+		if($isDono && $desdeContrato != null){
+			if($this->alterarInicioContrato($idJogador,$idTime, $desdeContrato)){
 
             } else {
                 $error_count++;
@@ -2673,6 +2682,24 @@ public function resolverEmprestimos(){
             } else {
                 return false;
             }
+
+        }
+		
+		        function alterarInicioContrato($idJogador,$idClube, $inicioNovo){
+
+                $query_contrato = "UPDATE transferencias SET data = :inicio   
+                        WHERE
+                            jogador=:jogador AND clubeDestino=:clube AND clubeOrigem=0 AND status_execucao = 1";
+                $stmt = $this->conn->prepare( $query_contrato );
+				$stmt->bindParam(":inicio", $inicioNovo);
+                $stmt->bindParam(":jogador", $idJogador);
+                $stmt->bindParam(":clube", $idClube);
+                if($stmt->execute()){
+					return true;
+                } else {
+                    return false;
+                }
+            
 
         }
 

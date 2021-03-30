@@ -64,7 +64,7 @@ $(document).ready(function(){
       console.log('oi');
         var selection = $(this).attr('id');
 
-        window.location = 'https://confusa.top/ligas/geral.php?fed='+selection;
+        window.location = '/ligas/geral.php?fed='+selection;
 
   });
 });

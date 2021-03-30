@@ -48,7 +48,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 			$compressed_png_content = compress_png($file_name);
 			$src = imagecreatefromstring($compressed_png_content);
         } else if ($type == 18 || $type == "") {
-			
+			$src = imagecreatefromwebp($file_name);
 		} else {
         			
             try {
@@ -110,12 +110,14 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             $nacionalidadeJogador = $_POST['nacionalidade'];
             $nascimentoJogador = $_POST['nascimento'];
 			$encerramentoContrato = $_POST['encerramento'];
+			$desdeContrato = $_POST['desde'];
             $isDono = true;
         } else {
             $nomeJogador = null;
             $nacionalidadeJogador = null;
             $nascimentoJogador = null;
 			$encerramentoContrato = null;
+			$desdeContrato = null;
             $isDono = false;
         }
 
@@ -129,7 +131,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
         $nivelJogador = $_POST['nivel'];
 
-        if($jogador->editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono,null,null,null,null, $encerramentoContrato)){
+        if($jogador->editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono,null,null,null,null, $encerramentoContrato, null, $desdeContrato)){
             $usuario->atualizarAlteracao($_SESSION['user_id']);
             $is_success = true;
             $error_msg = "";
@@ -245,7 +247,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
         } else {
 
-            $error_msg .= "Não foi possível inserir o escudo. ";
+            $error_msg .= "Não foi possível inserir a foto. ";
             if($fileSize > 2000000){
                 $error_msg .= "Arquivo deve ser menor que 2Mb.";
             }

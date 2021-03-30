@@ -199,7 +199,7 @@ function readInfo($id){
         $id = htmlspecialchars(strip_tags($id));
 
     $query = "SELECT
-                a.Nome, a.TresLetras, e.Nome as Estadio, e.Capacidade as Capacidade, p.Nome as Pais, a.Escudo, a.Uniforme1, a.Uniforme2, l.nome as liga, l.id as liga_id, p.id as pais_id, p.dono as donoPais, a.status
+                a.Nome, a.TresLetras, e.Nome as Estadio, e.Capacidade as Capacidade, p.Nome as Pais, a.Escudo, a.Uniforme1, a.Uniforme2, l.nome as liga, l.id as liga_id, p.id as pais_id, p.dono as donoPais, a.status, a.Uni1Cor1, a.Uni1Cor2, l.logo as logoLiga, e.foto as fotoEstadio   
             FROM
                 " . $this->table_name . " a
             LEFT JOIN
@@ -1068,7 +1068,7 @@ if($idUsuario != null){
         LEFT JOIN liga m ON d.Liga = m.ID
         LEFT JOIN contratos_jogador o ON o.jogador = t.jogador
         LEFT JOIN posicoes s ON o.posicaoBase = s.ID
-        WHERE status_execucao = 1
+        WHERE status_execucao = 1 AND o.tipoContrato = 0 
         ORDER BY valor DESC LIMIT {$from_record_num},{$records_per_page}";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -1409,6 +1409,78 @@ function getDono($idClube){
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
 }
+
+function readExtraInfo($id){
+
+        $id = htmlspecialchars(strip_tags($id));
+
+    $query = "SELECT
+                apelido, fundacao, cidade, patrocinio, material_esportivo, titulos, sobre_titulo, sobre_subtitulo, sobre_texto    
+            FROM
+                " . $this->table_name . " a
+            WHERE
+                a.id={$id}";
+
+    $stmt = $this->conn->prepare( $query );
+    $stmt->execute();
+    $info = $stmt->fetch(PDO::FETCH_ASSOC);
+
+
+
+
+    return $info;
+
+
+
+    }
+	
+	function alterarSobre($idTime,$cidade,$fundacao,$apelido,$patrocinio,$material_esportivo,$titulos,$sobre_titulo,$sobre_subtitulo,$sobre_texto){
+		
+			$idTime = htmlspecialchars(strip_tags($idTime));
+			$cidade = trim(htmlspecialchars(strip_tags($cidade)));
+			$fundacao = trim(htmlspecialchars(strip_tags($fundacao)));
+			$apelido = trim(htmlspecialchars(strip_tags($apelido)));
+			$patrocinio = trim(htmlspecialchars(strip_tags($patrocinio)));
+			$material_esportivo = trim(htmlspecialchars(strip_tags($material_esportivo)));
+			$titulos = trim(htmlspecialchars(strip_tags($titulos)));
+			$sobre_titulo = trim(htmlspecialchars(strip_tags($sobre_titulo)));
+			$sobre_subtitulo = trim(htmlspecialchars(strip_tags($sobre_subtitulo)));
+			$sobre_texto = trim($sobre_texto);
+		
+		$query = "UPDATE " . $this->table_name . " SET 
+					cidade=:cidade,  
+					fundacao=:fundacao,
+                    apelido=:apelido,
+                    patrocinio=:patrocinio,
+                    material_esportivo=:material_esportivo,
+                    titulos=:titulos,
+                    sobre_titulo=:sobre_titulo,
+                    sobre_subtitulo=:sobre_subtitulo,
+                    sobre_texto=:sobre_texto 
+                    WHERE ID=:idTime";
+
+        $stmt = $this->conn->prepare($query);
+
+        // bind values
+        $stmt->bindParam(":cidade", $cidade);
+        $stmt->bindParam(":fundacao", $fundacao);
+        $stmt->bindParam(":apelido", $apelido);
+        $stmt->bindParam(":patrocinio", $patrocinio);
+        $stmt->bindParam(":material_esportivo", $material_esportivo);
+        $stmt->bindParam(":titulos", $titulos);
+        $stmt->bindParam(":sobre_titulo", $sobre_titulo);
+        $stmt->bindParam(":sobre_subtitulo", $sobre_subtitulo);
+        $stmt->bindParam(":sobre_texto", $sobre_texto);
+        $stmt->bindParam(":idTime", $idTime);
+
+        if($stmt->execute()){
+            return true;
+        } else {
+            return false;
+        }
+		
+		
+	}
 
 
 

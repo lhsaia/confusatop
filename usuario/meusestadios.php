@@ -98,6 +98,7 @@ if($num>0){
     echo "<thead>";
         echo "<tr>";
            // echo "<th>Id</th>";
+		   echo "<th asc='' class='headings' width='2%'>Foto</th>";
             echo "<th width='30%'>Estádio</th>";
             echo "<th width='20%'>Capacidade</th>";
             echo "<th width='10%'>Clima</th>";
@@ -118,6 +119,7 @@ if($num>0){
 
             echo "<tr id='".$ID."'>";
                 //echo "<td><span id=".$id.">{$id}</span></td>";
+				echo "<td><div class='imageUpload'><img class='stadiumThumb' src='/images/estadios/{$foto}' /> <input type='file' hidden id='foto".$ID."' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg'/></div></td>";
                 echo "<td><span class='nomeEstadio nomeEditavel' id='nom".$ID."'>{$Nome}</span></td>";
                 echo "<td><span class='capacidadeFixo' id='cap".$ID."'>{$Capacidade}</span><input id='capedit".$ID."' type='number' min='0' step='100' class='capacidade inputHerdeiro' value={$Capacidade} hidden></td>";
 
@@ -200,6 +202,7 @@ $(document).ready(function() {
 		let caldeirao = document.getElementById("cal" + id).checked;
 		document.getElementById("alt" + id).setAttribute("original_entry", altitude)
 		document.getElementById("cal" + id).setAttribute("original_entry", caldeirao)
+		tbl_row.find('.hiddenInput').show();
 
         var paisId = tbl_row.find('.comboPais').attr('id');
         tbl_row.find('.comboPais').show().val(paisId); 
@@ -229,6 +232,7 @@ $(document).ready(function() {
         // tbl_row.find('.deletar').show();
         tbl_row.find('.newlogoedit').hide();
         tbl_row.find('.logoimage').show();
+		tbl_row.find('.hiddenInput').hide();
 		document.getElementById("alt" + id).disabled= true;
 		document.getElementById("cal" + id).disabled= true;
 		let altitude = (document.getElementById("alt" + id).getAttribute("original_entry") === 'true')
@@ -261,6 +265,7 @@ $(document).ready(function() {
 		tbl_row.find('.capacidade').hide();
         tbl_row.find('.newlogoedit').hide();
         tbl_row.find('.logoimage').show();
+		tbl_row.find('.hiddenInput').hide();
 		document.getElementById("alt" + id).disabled= true;
 		document.getElementById("cal" + id).disabled= true;
 		
@@ -270,6 +275,16 @@ $(document).ready(function() {
          let pais = tbl_row.find('.comboPais').val();
 		 let altitude = document.getElementById("alt" + id).checked
 		 let caldeirao = document.getElementById("cal" + id).checked
+		 
+		 		//foto
+		var inputFoto = (tbl_row.find('#foto'+id))[0];
+		var foto;
+
+		if (inputFoto.files.length > 0) {
+		   foto = inputFoto.files[0];
+		} else {
+		   foto = null;
+		}
 
 
 //         //var formId = 'form'+id;
@@ -282,6 +297,10 @@ $(document).ready(function() {
           formData.append('altitude', altitude);
           formData.append('caldeirao', caldeirao);
           formData.append('pais', pais);
+		  
+		if(foto != null){
+			formData.append('foto',foto);
+		}
 
 
  //for (var key of formData.entries()) {
