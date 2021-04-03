@@ -57,16 +57,23 @@ class Pais{
     }
 
     //ler todos os paises para o ranking
-    function readAll($from_record_num, $records_per_page, $idDono = null){
+    function readAll($from_record_num, $records_per_page, $idDono = null, $mapa = null){
 
     if($idDono != null){
         $subquery = " WHERE dono = ?";
     } else {
-        $subquery = " WHERE ranqueavel = 0 ";
+		if($mapa != null){
+			$subquery = " WHERE dono != 0 AND latitude is not null AND longitude is not null ";
+			
+		} else {
+			$subquery = " WHERE ranqueavel = 0 ";
+		}
+        
     }
 
+
     $query = "SELECT
-                a.id, a.nome, pontos, bandeira, posicao, pontos_anteriores, ativo, sigla, f.nome as federacao, f.id as idFederacao, ranqueavel
+                a.id, a.nome, pontos, bandeira, posicao, pontos_anteriores, ativo, sigla, f.nome as federacao, f.id as idFederacao, ranqueavel, latitude, longitude, dono  
             FROM
                 " . $this->table_name . " a
             LEFT JOIN federacoes f ON f.id = a.federacao
@@ -388,7 +395,7 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
 
     }
 
-    function alterar($idPais,$nomePais,$siglaPais,$federacaoPais,$ranqueavel,$logo = null){
+    function alterar($idPais,$nomePais,$siglaPais,$federacaoPais,$ranqueavel,$logo = null, $latitude, $longitude){
 
         $idPais = htmlspecialchars(strip_tags($idPais));
         $nomePais = htmlspecialchars(strip_tags($nomePais));
@@ -396,6 +403,8 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
         $federacaoPais = htmlspecialchars(strip_tags($federacaoPais));
         $ranqueavel = htmlspecialchars(strip_tags($ranqueavel));
         $logo = htmlspecialchars(strip_tags($logo));
+		$latitude = htmlspecialchars(strip_tags($latitude));
+		$longitude = htmlspecialchars(strip_tags($longitude));
 
         if($logo != null && $logo != ''){
             $subquery = ", bandeira=:bandeira";
@@ -403,13 +412,15 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
             $subquery = "";
         }
 
-        $query = "UPDATE " . $this->table_name . " SET nome=:nome, sigla=:sigla, federacao=:federacao, ranqueavel= (ranqueavel * :ranqueavel) ".$subquery." WHERE id=:id";
+        $query = "UPDATE " . $this->table_name . " SET nome=:nome, sigla=:sigla, federacao=:federacao, ranqueavel= (ranqueavel * :ranqueavel), latitude = :latitude, longitude =:longitude ".$subquery." WHERE id=:id";
         $stmt = $this->conn->prepare( $query );
 
         $stmt->bindParam(":nome", $nomePais);
         $stmt->bindParam(":sigla", $siglaPais);
         $stmt->bindParam(":federacao", $federacaoPais);
         $stmt->bindParam(":ranqueavel", $ranqueavel);
+		$stmt->bindParam(":latitude", $latitude);
+        $stmt->bindParam(":longitude", $longitude);
         if($logo != null){
             $stmt->bindParam(":bandeira", $logo);
         }

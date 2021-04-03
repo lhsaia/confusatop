@@ -78,13 +78,14 @@ if($num>0){
     echo "<thead>";
         echo "<tr>";
            // echo "<th>Id</th>";
-            echo "<th width='25%'>País</th>";
+            echo "<th width='15%'>País</th>";
             echo "<th width='20%'>Bandeira</th>";
             echo "<th width='15%'>Sigla</th>";
+			echo "<th width='10%'>Latitude | Longitude</th>";
             echo "<th width='20%' class='wide'>Federação</th>";
             echo "<th width='10%' class='wide'>Ranking?</th>";
            // echo "<th width='10%'>Demografia</th>";
-            echo "<th width='10%' class='wide'>Opções</th>";
+            echo "<th width='15%' class='wide'>Opções</th>";
 
 
         echo "</tr>";
@@ -104,6 +105,7 @@ if($num>0){
                 echo "<td><a class='nomeLiga' href='../ligas/paisstatus.php?country=".$id."'><span class='nomeEditavel' id='nom".$id."'>{$nome}</span></a></td>";
                 echo "<td><img class='logoimage' id='log".$id."' src='../images/bandeiras/".$bandeira."?" . time() . "' height='30px'/><div class='newlogoedit' hidden> <input type='file' id='newlogo".$id."' class='form-control custom-file-upload' name='file' accept='.jpg,.png,.jpeg'/></div></td>";
                 echo "<td><span class='nomeEditavel' id='sig".$id."'>{$sigla}</span></td>";
+				echo "<td><span class='coordenadas' id='coo".$id."'>{$latitude},{$longitude}</span><input class='example editavel' type='text' data-id='{$id}' value='{$latitude},{$longitude}' style='display:none' /><div id='mapContainer{$id}' style='display:none'></div></td>";
                 echo "<td><span class='nomeEditavel fedpais' id='fed".$id."'>{$federacao}</span>";
                 echo " <select class='comboPais editavel ' id='{$idFederacao}' hidden>'  ";
 
@@ -149,10 +151,32 @@ echo('</div>');
 
 ?>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+  integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+  crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+  integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+  crossorigin=""></script>
+
+<link rel="stylesheet" href="/lib/leaflet-locationpicker/dist/leaflet-locationpicker.src.css" />
+
+<script src="/lib/leaflet-locationpicker/dist/leaflet-locationpicker.min.js"></script>
+
 <script>
 
     $(document).ready(function() {
-
+		
+		$(".example").each(function(){
+			let picker_id = $(this).attr("data-id");
+			let container_name = "#mapContainer" + picker_id;
+			console.log(container_name);
+			
+			$(this).leafletLocationPicker({
+				alwaysOpen:true,
+				mapContainer:container_name,
+			});    
+		});
+		
         $('.exportarplanilha').click(function(){
             var idPais = $(this).attr("id").replace(/\D/g,'');
             //window.location.href = "exportar_planilha.php?idPais="+ idPais;
@@ -301,6 +325,9 @@ echo('</div>');
         tbl_row.find('.fedPais').hide();
         tbl_row.find('.newlogoedit').show();
         tbl_row.find('.logoimage').hide();
+		tbl_row.find("[id^='mapContainer']").show();
+		tbl_row.find(".example").show();
+		tbl_row.find(".coordenadas").hide();
         var inputranking = tbl_row.find('.inputranking');
         if(inputranking.prop("checked") == false){
             inputranking.prop("disabled", false);
@@ -326,6 +353,9 @@ echo('</div>');
         tbl_row.find('.editar').show();
         tbl_row.find('.newlogoedit').hide();
         tbl_row.find('.logoimage').show();
+		tbl_row.find("[id^='mapContainer']").hide();
+		tbl_row.find(".example").hide();
+		tbl_row.find(".coordenadas").show();
         var inputranking = tbl_row.find('.inputranking');
         if(inputranking.prop("data-original") == false){
             inputranking.prop("checked", false);
@@ -349,6 +379,9 @@ echo('</div>');
         tbl_row.find('.editar').show();
         tbl_row.find('.newlogoedit').hide();
         tbl_row.find('.logoimage').show();
+		tbl_row.find("[id^='mapContainer']").hide();
+		tbl_row.find(".example").hide();
+		tbl_row.find(".coordenadas").show();
 
         var id = tbl_row.attr('id');
         var nomePais = tbl_row.find('#nom'+id).html();
@@ -376,13 +409,19 @@ echo('</div>');
         } else {
            logo = null;
         }
+		
+		var coordenadas = tbl_row.find(".example").val().split(",");
+		var latitude = coordenadas[0];
+		var longitude = coordenadas[1];
 
          var formData = new FormData();
          formData.append('id', id);
          formData.append('nomePais', nomePais);
          formData.append('siglaPais', siglaPais);
          formData.append('federacaoPais', federacaoPais);
-         formData.append('ranqueavel', ranqueavel)
+         formData.append('ranqueavel', ranqueavel);
+		 formData.append('latitude', latitude);
+		 formData.append('longitude', longitude);
 
          if(logo != null){
             formData.append('logo', logo);
@@ -390,8 +429,8 @@ echo('</div>');
 
 
     // for (var key of formData.entries()) {
-    //      console.log(key[0] + ', ' + key[1]);
-    //  }
+         // console.log(key[0] + ', ' + key[1]);
+     // }
 
         //console.log(formData);
          $.ajax({

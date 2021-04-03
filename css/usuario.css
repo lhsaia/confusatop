@@ -701,8 +701,15 @@ th i{
 	align-items: center;
 }
 
+
 #inputsExportacao > label{
 	padding:10px;
+}
+
+div[id^='mapContainer']{
+	width:200px;
+	height:130px;
+	margin-bottom:10px;
 }
 
 @media only screen and (min-width: 600px) {

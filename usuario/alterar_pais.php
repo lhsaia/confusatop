@@ -9,6 +9,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $siglaPais = $_POST['siglaPais'];
     $federacaoPais = $_POST['federacaoPais'];
     $ranqueavel = $_POST['ranqueavel'];
+	$latitude = $_POST['latitude'];
+	$longitude = $_POST['longitude'];
     $error_msg = "";
     $new_logo_path = null;
 
@@ -60,7 +62,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     }
 
     //alterar pais
-    if($pais->alterar($idPais,$nomePais,$siglaPais,$federacaoPais, $ranqueavel,$new_logo_path)){
+    if($pais->alterar($idPais,$nomePais,$siglaPais,$federacaoPais, $ranqueavel,$new_logo_path, $latitude, $longitude)){
         if(isset($_FILES) && !empty($_FILES)){
 
             $logo_path = $_FILES['logo']['name'];

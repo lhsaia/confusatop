@@ -425,22 +425,25 @@ body{
 
 #feasco{
     position:fixed;
-    top:25%;
-    right:3%;
+    bottom:25%;
+    left:3%;
     width:14vw;
+		z-index:4;
 }
 
 #femifus{
     position:fixed;
-    top:50%;
-    left:25%;
+    bottom:5%;
+    right:20%;
+	z-index:4;
 }
 
 #compacta{
     position:fixed;
-    top:30%;
-    right:35%;
+    bottom:35%;
+    right:3%;
     width:13vw;
+		z-index:4;
 }
 
 #quadro-container{
