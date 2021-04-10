@@ -103,7 +103,12 @@ $localizacao_foto = null;
             $nacionalidadeTecnico = $_POST['pais'];
             $nascimentoTecnico = $_POST['nascimento'];
             $isDono = true;
-			$desdeContrato = $_POST['desde'];
+			if(isset($_POST['desde'])){
+				$desdeContrato = $_POST['desde'];
+			} else {
+				$desdeContrato = null;
+			}
+			
         } else {
             $nomeTecnico = null;
             $nacionalidadeTecnico = null;
@@ -120,7 +125,7 @@ $localizacao_foto = null;
             $error_msg = "";
         } else {
             $is_success = false;
-            $error_msg = "Falha ao editar técnico";
+            $error_msg = "Falha ao editar técnico na tela de time";
         }
     } else if($tipo == 4){
         // //criar transferencia pendente

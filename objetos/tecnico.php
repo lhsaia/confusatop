@@ -842,11 +842,11 @@ class Tecnico{
                 $queryEstilo = "";
               }
 			  
-			  					if($foto != "" && $foto != null){
-						$query_foto = ", foto=:foto";
-					} else {
-						$query_foto = "";
-					}
+			  if($foto != "" && $foto != null){
+			   	$query_foto = ", foto=:foto";
+			  } else {
+				$query_foto = "";
+			  }
 					
 					
 
@@ -862,9 +862,9 @@ class Tecnico{
             $stmt->bindParam(":id", $idTecnico);
             $stmt->bindParam(":nivel",$nivel);
 			
-								if($foto != "" && $foto != null){
-						$stmt->bindParam(":foto", $foto);
-					} 
+			if($foto != "" && $foto != null){
+				$stmt->bindParam(":foto", $foto);
+			} 
 
             if($isDono){
               $stmt->bindParam(":nome", $nome);
@@ -889,18 +889,20 @@ class Tecnico{
 			
 			
 			if($isDono && $desdeContrato != null){
-			if($this->alterarInicioContrato($idTecnico,$idTime, $desdeContrato)){
+				if($this->alterarInicioContrato($idTecnico,$idTime, $desdeContrato)){
 
-            } else {
-                $error_count++;
-            }
+				} else {
+					$error_count++;
+				}
 			
-			        if($error_count == 0){
-            return true;
-        } else {
-            return false;
-        }
-		}
+
+			}
+			
+			if($error_count == 0){
+				return true;
+			} else {
+				return false;
+			}
 
         }
 

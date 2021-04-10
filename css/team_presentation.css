@@ -4,7 +4,7 @@
 }
 
 #nomeTime{
-  max-width: 1200px;
+  max-width: 1000px;
   height: 80px;
   padding: .25em;
   position: fixed;
@@ -13,15 +13,17 @@
   left: 0;
   transform-origin: top left;
   transform: translateY(100%) rotate(-90deg);
-
 }
 
 body{
 	background-color:#ffffff;
+	height:calc(100%-40px);
 }
 
 html{
 	background-color:#ffffff;
+	height:calc(100%-40px);
+	margin:0px;
 }
 
 #nomeTime h3{
@@ -63,12 +65,13 @@ html{
 
 #quadroInformacoes{
 	background-image: url("/images/fundo_time.webp");
-	width:100%;
-	height: 100%;
+
 	background-repeat: no-repeat;
 	background-position: center;
 	background-size:cover;
-	position:fixed;
+	position:absolute;
+	width:100%;
+	height: calc(100% - 40px);
 	/* z-index:1; */
 	opacity:0.3;
 	
@@ -101,12 +104,26 @@ html{
 	margin-left:150px;
 	margin-top:25px;
 	color:black;
-	width: 550px;
+	/* width: 550px; */
+	font-size:0.95vw;
 	
 }
 
 #quadrosPrincipais, #quadroEsquerdo, #nomeTime, #barraVertical, #escudoTime{
 	z-index:2;
+}
+
+#quadroEsquerdo{
+	display:flex;
+	flex-direction:column;
+	width:51%;
+	max-height:100%;
+}
+
+#quadroDireito{
+	display:flex;
+	flex-direction:column;
+	width:49%;
 }
 
 #colorFilter{
@@ -115,11 +132,13 @@ html{
 }
 
 #sobreTime{
-	font-size:small;
+	font-size:0.85vw;
 	margin-left:130px;
 	margin-top:25px;
 	color:black;
-	width: 650px;
+	/* width: 650px; */
+	max-height:60%;
+	box-sizing:border-box;
 }
 
 #estadioTime{
@@ -127,14 +146,14 @@ html{
 	margin-left:130px;
 	margin-top:25px;
 	color:black;
-	width: 650px;
+	/* width: 650px; */
 	display: flex;
 	flex-direction: column;
 	max-height:120px;
 }
 
 #fotoEstadio, #uniforme1, #uniforme2{
-	height:100px;
+	max-height:100px;
 	z-index:1;
 }
 
@@ -149,7 +168,7 @@ max-height:100%;
 	justify-content: space-around;
 	margin-left: 130px;
 	margin-top:20px;
-	width: 550px;
+	/* width: 550px; */
 }
 
 #estadioTime img{
@@ -158,17 +177,19 @@ max-height:100%;
 }
 
 #quadroJogadores{
-	width:750px;
+	width:100%;
 	/* background-color:cyan; */
-	height:60%;
+	flex-basis:60%;
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
+	justify-content:space-around;
+	align-content:space-around;
 }
 
 #quadroCampo{
-	flex-basis:80%;
-	height:40%;
+	flex-basis:40%;
+	/* height:40%; */
 	display:flex;
 	flex-direction:row;
 }
@@ -177,6 +198,8 @@ max-height:100%;
 	display:flex;
 	flex-direction:row;
 	justify-content:space-around;
+	height:100%;
+	width:100%;
 	
 }
 
@@ -191,38 +214,70 @@ max-height:100%;
 }
 
 #soccerfield{
-	max-height:100%;
+	height:100%;
+	width:100%;
 	align-self:center;
+}
+
+.soccerfield-field{
+	height:100%;
+	width:100% !important;
 }
 
 .ficha_individual{
 	color:black;
-	margin-top:10px;
+	/* margin-top:10px; */
 	margin-right:5px;
-	width:180px;
-	height:80px;
+	width:24%;
+	height:21.3%;
 	display: flex;
 	flex-direction: column;
-	font-size:12px;
-	border-bottom: 4px solid;
+	font-size:0.8vw;
+	border-bottom: 0.5vmin solid;
 	z-index:1;
+	position:relative;
 
 }
 
+.foto-individual{
+	width:25%;
+	height:100%;
+}
+
 .foto_individual img{
-	max-height: 55px;
-	flex-basis: 15%;
+
+width:100%;
+height:100%;
+max-height: 55px;
+max-width:54px;
+
+     vertical-align:bottom;
+        border:0;
+		right:0;
+	
+}
+
+#aboutteam{
+	overflow-y: auto;
+	max-height:inherit;
+	box-sizing:border-box;
 }
 
 .infos_individuais{
 	display:flex;
 	flex-direction:column;
-	flex-basis:85%;
+	width:75%;
+}
+
+.desde_individual{
+	font-size:95%;
 }
 
 .outras_infos{
 		display:flex;
 	flex-direction:row;
+
+	width:100%;
 }
 
 .nome_individual{
@@ -230,11 +285,13 @@ max-height:100%;
 	padding-top:5px;
 	padding-bottom:5px;
 	flex-basis:90%;
+
 }
 
 .nomeBandeira{
 	display:flex;
 	flex-direction:row;
+	width:100%;
 }
 
 .bandeiraIndividual{
@@ -247,11 +304,12 @@ max-height:100%;
 	color:black;
 	justify-content:space-around;
 	align-items:center;
-	font-size:12px;
+	font-size:0.80vw;
 	margin-left:5px;
 	display:flex;
 	flex-direction:column;
 	flex-basis:20%;
+	height:100%;
 }
 
 #quadroReservas span:first-child{

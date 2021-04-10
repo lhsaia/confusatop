@@ -50,6 +50,7 @@ echo "<option value='4'>Quartas-de-final</option>";
 echo "<option value='5'>Semi-final</option>";
 echo "<option value='6'>Disputa de terceiro lugar</option>";
 echo "<option value='7'>Repescagem</option>";
+echo "<option value='8'>Final</option>";
 echo "</select>";
 echo "</p>";
 

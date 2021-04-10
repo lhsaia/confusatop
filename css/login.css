@@ -785,6 +785,9 @@ nav.open {
   flex-basis:30%;
   margin: 4px;
   text-align:center;
+  font-size:1vw;
+  white-space: nowrap;
+  padding:5px;
 }
 
 #logged-user.conectado{

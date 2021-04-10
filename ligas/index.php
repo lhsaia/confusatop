@@ -41,7 +41,7 @@ $arrayPaises = [];
 		extract($row_pais);
 		if($latitude != null && $longitude != null){
 			
-			$arrayPaises[] = array("nome" => $nome, "latitude" => $latitude, "longitude" => $longitude, "fill" => $colorDict[$federacao], "id" => $id, "owner" => $dono, "nc" => $ranqueavel);
+			$arrayPaises[] = array("nome" => addslashes($nome), "latitude" => $latitude, "longitude" => $longitude, "fill" => $colorDict[$federacao], "id" => $id, "owner" => $dono, "nc" => $ranqueavel);
 			
 		}
 	}
@@ -68,7 +68,7 @@ $(document).ready(function(){
 	var baseCountryLink = "/ligas/paisstatus.php?country=";
 	var countryArray =  <?php echo json_encode($arrayPaises); ?>;
 	var meusPaises = false;
-	var ncBoard = false;
+	var classePaises = 0;
 	var loggedUser = <?php echo $logged_user ?>;
 	
 	if(loggedUser != null){
@@ -402,17 +402,26 @@ showCountries();
 	});
 	
 	$("#toggleNC").on("click", function(){
-		ncBoard = !ncBoard;
-		if(!ncBoard){
-			$("#toggleNC").text("CONFUSA");
-		} else {
-			$("#toggleNC").text("NC Board");
+		classePaises++;
+		if(classePaises > 2){classePaises = 0};
+		console.log(classePaises);
+		switch (classePaises) {
+			case 0:
+				$("#toggleNC").text("CONFUSA");
+				break;
+			case 1:
+				$("#toggleNC").text("NC Board");
+				break;
+			case 2:
+				$("#toggleNC").text("Todos");
+				break;
+			default:
 		}
 		showCountries();
 	});
 	
 	function showCountries() {
-		if(meusPaises && ncBoard){
+		if(meusPaises && (classePaises == 1)){
 			$(".jsvmap-marker").each(function(){
 				let dataIndex = $(this).attr("data-index");
 				let nc = countryArray[dataIndex]["nc"];
@@ -424,7 +433,7 @@ showCountries();
 				}
 			});
 
-		} else if (meusPaises && !ncBoard) {
+		} else if (meusPaises && (classePaises == 0)) {
 			$(".jsvmap-marker").each(function(){
 				let dataIndex = $(this).attr("data-index");
 				let nc = countryArray[dataIndex]["nc"];
@@ -436,7 +445,7 @@ showCountries();
 				}
 			});
 
-		} else if (!meusPaises && ncBoard) {
+		} else if (!meusPaises && (classePaises == 1)) {
 			$(".jsvmap-marker").each(function(){
 				let dataIndex = $(this).attr("data-index");
 				let nc = countryArray[dataIndex]["nc"];
@@ -447,12 +456,29 @@ showCountries();
 					$(this).hide();
 				}
 			});
-		} else {
+		} else if (!meusPaises && (classePaises == 0)){
 			$(".jsvmap-marker").each(function(){
 				let dataIndex = $(this).attr("data-index");
 				let nc = countryArray[dataIndex]["nc"];
 				let owner = countryArray[dataIndex]["owner"];
 				if(nc == 0){
+					$(this).show();
+				} else {
+					$(this).hide();
+				}
+			});
+		} else if (!meusPaises && (classePaises == 2)){
+			$(".jsvmap-marker").each(function(){
+
+				$(this).show();
+
+			});
+		} else {
+			$(".jsvmap-marker").each(function(){
+				let dataIndex = $(this).attr("data-index");
+				let nc = countryArray[dataIndex]["nc"];
+				let owner = countryArray[dataIndex]["owner"];
+				if(owner == loggedUser){
 					$(this).show();
 				} else {
 					$(this).hide();

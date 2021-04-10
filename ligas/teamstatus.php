@@ -550,7 +550,7 @@ foreach($lista_titulares as $jogador){
 	if(strlen($jogador["nome"]) > 15){
 		$temp_nome = explode(" ", $jogador["nome"]);
 		$sobrenome_jogador = end($temp_nome);
-		$primeira_letra = $temp_nome[0][0];
+		$primeira_letra = mb_substr($temp_nome[0], 0 ,1);
 		$nome_final = $primeira_letra . ". " . $sobrenome_jogador;
 	} else {
 		$nome_final = $jogador["nome"];

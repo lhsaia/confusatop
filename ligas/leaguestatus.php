@@ -72,6 +72,12 @@ $aux_css = 'ligas';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
+if($_SESSION['user_id'] === $idDonoPais){     
+	$baseLink = "/ligas/teamstatus";
+} else {
+	$baseLink = "/times/team_presentation";
+}
+
 
 echo "<div id='quadro-container'>";
 echo "<img id='bandeiraGrande' class='margin-left' src='/images/ligas/".$logo_liga."' height='100' alt='Logo da liga ".$nome_liga."'>" ;
@@ -149,7 +155,7 @@ $agora = date('Y-m-d');
 
 
             echo "<tr id='".$idTime."' class='".$idLiga."'>";
-                echo "<td class='nopadding'><img class='logoliga' src='/images/escudos/".$escudos."' height='30px'/><a href='teamstatus.php?team=".$idTime."'>{$row['Nome']}</a></td>";
+                echo "<td class='nopadding'><img class='logoliga' src='/images/escudos/".$escudos."' height='30px'/><a href='{$baseLink}.php?team=".$idTime."'>{$row['Nome']}</a></td>";
                 echo "<td class='nopadding'>{$elencoPorTime}</td>";
                 echo "<td class='nopadding'>{$mediaIdadePorTime}</td>";
                 echo "<td class='nopadding'>{$estrangeirosPorTime}</td>";
@@ -265,6 +271,8 @@ $('.mover').click(function(){
          data: {idTime: idTime}
        })
        .done(function(response) {
+		   
+		   console.log(response);
 
          let arquivoEsc;
          let arquivoUni1;

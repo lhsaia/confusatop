@@ -110,7 +110,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             $nacionalidadeJogador = $_POST['nacionalidade'];
             $nascimentoJogador = $_POST['nascimento'];
 			$encerramentoContrato = $_POST['encerramento'];
-			$desdeContrato = $_POST['desde'];
+			if(isset($_POST['desde'])){
+				$desdeContrato = $_POST['desde'];
+			} else {
+				$desdeContrato = null;
+			}
             $isDono = true;
         } else {
             $nomeJogador = null;
