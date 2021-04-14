@@ -74,7 +74,7 @@ echo "<select multiple class='comboLigas form-control' id='ligas' name='comboLig
 echo "</select>";
 
 echo "<select class='comboOpcoes form-control' id='opcoes' name='comboOpcoes[]'>";
-	echo "<option value='0'>Pacote completo (Hexacolor 2.12)</option>";
+	echo "<option value='0'>Pacote completo (Hexacolor 2.13)</option>";
 	echo "<option value='1'>database.db3 e imagens</option>";
 	echo "<option value='2'>Apenas database.db3</option>";
 echo "</select>";

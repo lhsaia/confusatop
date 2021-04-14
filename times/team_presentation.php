@@ -294,7 +294,7 @@ $lista_reservas = array();
 		if(strlen($rowTec['Nome'])>16){
 			$temp_nome = explode(" ", $rowTec["Nome"]);
 			$sobrenome_jogador = end($temp_nome);
-			$primeira_letra = $temp_nome[0][0];
+			$primeira_letra = mb_substr($temp_nome[0], 0,1);
 			$nomeAbreviado = $primeira_letra . ". " . $sobrenome_jogador;
 		} else {
 			$nomeAbreviado = $rowTec['Nome'];
@@ -326,7 +326,7 @@ $lista_reservas = array();
 		if(strlen($ficha['nome'])>12){
 			$temp_nome = explode(" ", $ficha["nome"]);
 			$sobrenome_jogador = end($temp_nome);
-			$primeira_letra = $temp_nome[0][0];
+			$primeira_letra = mb_substr($temp_nome[0],0,1);
 			$nomeAbreviado = $primeira_letra . ". " . $sobrenome_jogador;
 		} else {
 			$nomeAbreviado = $ficha['nome'];
@@ -521,7 +521,7 @@ $(document).ready(function(){
 		if(strlen($jogador_tabela["nome"]) > 12){
 			$temp_nome = explode(" ", $jogador_tabela["nome"]);
 			$sobrenome_jogador = end($temp_nome);
-			$primeira_letra = $temp_nome[0][0];
+			$primeira_letra = mb_substr($temp_nome[0],0,1);
 			$nome_final = $primeira_letra . ". " . $sobrenome_jogador;
 		} else {
 			$nome_final = $jogador_tabela["nome"];

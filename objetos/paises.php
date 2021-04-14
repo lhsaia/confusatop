@@ -294,7 +294,7 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
         }
         //select all data
         $query = "SELECT
-                    id, nome, sigla, bandeira, federacao
+                    id, nome, sigla, bandeira, federacao, dono 
                 FROM
                     " . $this->table_name . "
                 ".$sub_query."

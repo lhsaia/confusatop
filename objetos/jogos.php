@@ -600,5 +600,44 @@ public function getMatchId(){
   return $result['id'];
 }
 
+
+    function pesquisaRetrospecto($times){
+
+        $times[0] = htmlspecialchars(strip_tags($times[0]));
+		$times[1] = htmlspecialchars(strip_tags($times[1]));
+
+		$query = "SELECT
+				 p.nome as nomeA, p.bandeira as bandeiraA,  j.timeA_gols as timeAgols, j.timeB_gols as timeBgols, c.nome as nomeB, c.bandeira as bandeiraB, j.data, l.nome as campeonato,  j.timeA_penaltis as timeApenaltis, j.timeB_penaltis as timeBpenaltis, p.id as idA, c.id as idB, j.id, IFNULL(j.fase, '0')  as fase, estadio    
+				FROM
+					jogos j
+				LEFT JOIN
+					paises p
+				ON
+					j.timeA_id = p.id
+			   LEFT JOIN
+				  paises c
+				ON
+				   j.timeB_id = c.id
+			   LEFT JOIN
+				 campeonatos l
+				 ON
+				 j.campeonato = l.id 
+				WHERE
+					(j.timeA_id = :idA1 AND j.timeB_id = :idB1) OR (j.timeA_id = :idB2 AND j.timeB_id = :idA2)
+				ORDER BY
+					data DESC";
+
+		$stmt = $this->conn->prepare( $query );
+
+		$stmt->bindParam(":idA1",$times[0]);
+		$stmt->bindParam(":idA2",$times[0]);
+		$stmt->bindParam(":idB1",$times[1]);
+		$stmt->bindParam(":idB2",$times[1]);
+
+		$stmt->execute();
+
+		return $stmt;
+}
+
 }
 ?>
