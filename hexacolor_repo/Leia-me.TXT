@@ -1,4 +1,4 @@
-﻿Hexacolor YMT v2.12
+﻿Hexacolor YMT v2.13
 Release Beta
 
 Dúvidas, sugestões, comentários e/ou suporte podem ser enviados para digisabio@hotmail.com
@@ -7,6 +7,19 @@ Boa simulação!
 digisabioSoft
 
 ---Log de Mudanças---
+***Versão 2.13***
+-> Inclusões:
+	- Agora é possível adicionar novas narrações ao YMT. Confira a pasta Narracoes para as instruções de como fazê-lo.
+	- Adicionada a possibilidade de criação de jogadores genéricos. Eles são criados durante o processo de criação de times genéricos, para fazerem parte de seus elencos.
+	- Adicionada a possibilidade de importar times e jogadores genéricos do Excel (ver pasta ImportacaoGenerica).
+	- Adicionados escudos-padrão, pintados com as cores da equipe, quando uma imagem de escudo não é inserida. A imagem-base do escudo pode ser modificada pelo usuário (em Imagens/EscudoPadrao.png).
+-> Modificações:
+	- O padrão de cores da partida agora se mantém salvo quando o Hexacolor YMT é fechado.
+	- Re-calculada a porcentagem de participação de cada jogador em uma jogada, a partir de sua posição e da posição da bola, para atingir um maior nível de realismo. 
+	- Atualizado o conector SQL para suportar sistemas de 64-bits.
+-> Correções de Bugs:
+	- Corrigido bug que dificultava amplamente a realização de gols em jogadas diferenciadas, como voleios e bicicletas.
+
 ***Versão 2.12***
 -> Modificações:
 	- Após as mudanças realizadas na versão 2.11, foi identificado um aumento acima do esperado na média de gols em partidas entre times de níveis diferentes, assim como no número de goleadas e no número de jogos com muitos gols entre times de níveis próximos. Para resolver o problema, foi realizado um processo de re-calibragem, com mais de 1 milhão de jogos simulados entre times genéricos, pra identificar os pontos do algoritmo que não estavam de acordo com a parametrização desejada e alterá-los.
