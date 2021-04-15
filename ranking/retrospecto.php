@@ -372,7 +372,18 @@ function updateCharts(ajax_data){
 			
 			
 
-			if(difGol >= maiorVitoriaA.difGol){
+			if(difGol > maiorVitoriaA.difGol){
+				maiorVitoriaA.difGol = difGol;
+				maiorVitoriaA.golPro = golPro;
+				maiorVitoriaA.id = i;
+				
+				if(item.idA == timeA){
+					maiorVitoriaA.home = true;
+				} else {
+					maiorVitoriaA.home = false;
+				}
+
+			} else if(difGol == maiorVitoriaA.difGol){
 				if(golPro > maiorVitoriaA.golPro){
 					maiorVitoriaA.difGol = difGol;
 					maiorVitoriaA.golPro = golPro;
@@ -406,7 +417,17 @@ function updateCharts(ajax_data){
 			let golPro = Math.max(item.timeAgols, item.timeBgols);
 			let id = i;
 
-			if(difGol >= maiorVitoriaB.difGol){
+			if(difGol > maiorVitoriaB.difGol){
+					maiorVitoriaB.difGol = difGol;
+					maiorVitoriaB.golPro = golPro;
+					maiorVitoriaB.id = i;
+					
+					if(item.idA == timeB){
+						maiorVitoriaB.home = true;
+					} else {
+						maiorVitoriaB.home = false;
+					}
+			} else if(difGol == maiorVitoriaB.difGol){
 				if(golPro > maiorVitoriaB.golPro){
 					maiorVitoriaB.difGol = difGol;
 					maiorVitoriaB.golPro = golPro;
