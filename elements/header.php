@@ -7,7 +7,12 @@ echo "<title>" . $page_title . "</title>";
 
 if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && isset($_SESSION['impersonated'])) {
     $status_style = "block";
-    $welcometext = $_SESSION['nomereal'];
+	if($_SESSION['emTestes']){
+		$welcometext = $_SESSION['nomereal'] . " [em período de teste]";
+	} else {
+		$welcometext = $_SESSION['nomereal'];
+	}
+    
     $onclick_log = 'document.getElementById("id02").style.display="block"';
     $title_log = "Log-out";
     $change_pass = "<a class='nav-item' href='/usuario/alterar_senha.php'>Alterar senha</a>";

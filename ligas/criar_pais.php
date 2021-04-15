@@ -17,6 +17,8 @@ $db = $database->getConnection();
 $pais = new Pais($db);
 $usuario = new Usuario($db);
 
+
+
 $page_title = "Inserir país";
 $css_filename = "indexRanking";
 $css_login = 'login';
@@ -29,11 +31,14 @@ echo"<div>";
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
     $error_msg = '';
-
+	//ver se é período de testes ou não
+$emTestes = $usuario->emTestes($_SESSION['user_id']);
 
 // if the form was submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
 if(isset($_POST['nome']) && !empty($_POST['sigla']) && !empty($_POST['nome']) ){
+	
+
 
     $logo_path = $_FILES['bandeira']['name'];
     $fileSize = $_FILES['bandeira']['size'];
@@ -45,7 +50,13 @@ if(isset($_POST['nome']) && !empty($_POST['sigla']) && !empty($_POST['nome']) ){
     // set product property values
     $pais->nome = $_POST['nome'];
     $pais->sigla = $_POST['sigla'];
-    $pais->federacao = $_POST['federacao'];
+	
+	if(isset($_POST['federacao'])) {
+        $pais->federacao = $_POST['federacao'];
+    } else {
+        $pais->federacao = 0;
+    }
+	
     $pais->dono = $_SESSION['user_id'];
     if(isset($_POST['ranking'])) {
         $pais->ranqueado = 0;
@@ -134,6 +145,31 @@ for (i = 0; i < close.length; i++) {
         </tr>
 
         <tr class="tr_inv">
+            <td class="td_inv input_nome_time">Bandeira</td>
+            <td class="td_inv input_nome_time">
+
+            <input type="file" class='form-control custom-file-upload' name='bandeira' accept=".jpg,.png,.jpeg">
+
+
+            </td>
+        </tr>
+		
+		<?php
+		if(!$emTestes){
+		?>
+
+        <tr class="tr_inv">
+            <td class="td_inv input_nome_time">É membro da CONFUSA?</td>
+            <td class="td_inv input_nome_time checkbox_container">
+
+            <input type="checkbox" class='custom-file-upload' name='ranking'>
+
+
+            </td>
+        </tr>
+		
+		
+        <tr class="tr_inv">
             <td class="td_inv input_nome_time">Federação</td>
             <td class="td_inv input_nome_time">
             <?php
@@ -153,28 +189,10 @@ for (i = 0; i < close.length; i++) {
 
 
         </tr>
-
-
-
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Bandeira</td>
-            <td class="td_inv input_nome_time">
-
-            <input type="file" class='form-control custom-file-upload' name='bandeira' accept=".jpg,.png,.jpeg">
-
-
-            </td>
-        </tr>
-
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">É membro da CONFUSA?</td>
-            <td class="td_inv input_nome_time checkbox_container">
-
-            <input type="checkbox" class='custom-file-upload' name='ranking'>
-
-
-            </td>
-        </tr>
+		
+		<?php
+		}
+		?>
 
         <tr class="tr_inv btn_area">
             <td class="td_inv btn_area"></td>

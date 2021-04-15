@@ -4,7 +4,12 @@ session_start();
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
-$page_title = "Meus paises - ".$_SESSION['nomereal'];
+if(isset($_SESSION['nomereal'])){
+	$page_title = "Meus paises - ".$_SESSION['nomereal'];
+} else {
+	$page_title = "Meus paises";
+}
+
 $css_filename = "indexRanking";
 $aux_css = "usuario";
 $css_login = 'login';
@@ -19,10 +24,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 <div style="clear:both;"></div>
 <div id="quadro-container">
 <div align="center" id="quadroTimes">
-<button id='importar_time' onclick="window.location='/ligas/criar_pais.php';">Criar país</button>
-<h2>Quadro de países - <?php echo $_SESSION['nomereal']?></h2>
-
-<hr>
 
 <?php
 
@@ -57,6 +58,22 @@ $stmt = $pais->readAll($from_record_num, $records_per_page, $_SESSION['user_id']
 
 $num = $stmt->rowCount();
 
+
+if(!$_SESSION['emTestes'] || $num < 1){
+	$onclick = "window.location='/ligas/criar_pais.php";
+	echo "<button id='importar_time' onclick=".$onclick."'>Criar país</button>";
+}
+
+
+?>
+<h2>Quadro de países - <?php echo $_SESSION['nomereal']?></h2>
+
+<hr>
+
+<?php
+
+
+
 // the page where this paging is used
 $page_url = "meuspaises.php?";
 
@@ -82,8 +99,11 @@ if($num>0){
             echo "<th width='20%'>Bandeira</th>";
             echo "<th width='15%'>Sigla</th>";
 			echo "<th width='10%'>Latitude | Longitude</th>";
-            echo "<th width='20%' class='wide'>Federação</th>";
-            echo "<th width='10%' class='wide'>Ranking?</th>";
+			if(!$_SESSION['emTestes']){
+				echo "<th width='10%' class='wide'>CONFUSA?</th>";
+				echo "<th width='20%' class='wide'>Federação</th>";
+			}
+
            // echo "<th width='10%'>Demografia</th>";
             echo "<th width='15%' class='wide'>Opções</th>";
 
@@ -106,6 +126,9 @@ if($num>0){
                 echo "<td><img class='logoimage' id='log".$id."' src='../images/bandeiras/".$bandeira."?" . time() . "' height='30px'/><div class='newlogoedit' hidden> <input type='file' id='newlogo".$id."' class='form-control custom-file-upload' name='file' accept='.jpg,.png,.jpeg'/></div></td>";
                 echo "<td><span class='nomeEditavel' id='sig".$id."'>{$sigla}</span></td>";
 				echo "<td><span class='coordenadas' id='coo".$id."'>{$latitude},{$longitude}</span><input class='example editavel' type='text' data-id='{$id}' value='{$latitude},{$longitude}' style='display:none' /><div id='mapContainer{$id}' style='display:none'></div></td>";
+				
+				if(!$_SESSION['emTestes']){
+				echo "<td><input type='checkbox' class='inputranking' id='chk".$id."' ". ($ranqueavel == 0? 'checked disabled' : 'disabled')."></span></td>";
                 echo "<td><span class='nomeEditavel fedpais' id='fed".$id."'>{$federacao}</span>";
                 echo " <select class='comboPais editavel ' id='{$idFederacao}' hidden>'  ";
 
@@ -115,7 +138,7 @@ if($num>0){
 
                     echo "</select>";
                     echo "</td>";
-                    echo "<td><input type='checkbox' class='inputranking' id='chk".$id."' ". ($ranqueavel == 0? 'checked disabled' : 'disabled')."></span></td>";
+				}
                    // echo "<td><canvas width='150px' height='35px' class='chartContainer' id='chartContainer".$id."'></canvas></td>";
                     $optionsString = "<td class='wide'>";
 

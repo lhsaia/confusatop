@@ -33,7 +33,7 @@ $country_list = $pais->read(null, null, null);
   <div id="driver-viewer" class="visible">
     <div class="container-control">
       <?php
-      if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
+      if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && !$_SESSION['emTestes']){
         echo "<a id='create-new-driver' class='editor-button'>Criar</a>";
       }
 
@@ -43,7 +43,7 @@ $country_list = $pais->read(null, null, null);
       }
       echo "</select>";
 
-      if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
+      if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && !$_SESSION['emTestes']){
         echo "<a id='edit-driver' class='editor-button'>Editar</a>";
       }
 

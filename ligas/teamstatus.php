@@ -297,7 +297,9 @@ echo "<td>-</td><td>-</td>";
 $tecOptions = "<td class='wide' id='dono{$rowTec['donoTecnico']}'>";
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     if(!$is_selecao){
-        $tecOptions .= "<a id='proTec".$rowTec['ID']."' title='Fazer Proposta' class='clickable propostaTecnico'><i class='fas fa-money-bill inlineButton'></i></a>";
+		if(!$_SESSION['emTestes']){
+			$tecOptions .= "<a id='proTec".$rowTec['ID']."' title='Fazer Proposta' class='clickable propostaTecnico'><i class='fas fa-money-bill inlineButton'></i></a>";
+		}
         if($donoLogado){
           $tecOptions .= "<a id='dem".$rowTec['ID']."' title='Editar técnico' class='clickable editarTecnico'><i class='fas fa-edit inlineButton azul'></i></a>";
             //$tecOptions .= "<a id='dem".$rowTec['ID']."' title='Disponibilizar jogador' class='clickable disponibilizar'><i class='fas fa-list-ul inlineButton azul'></i></a>";
@@ -415,7 +417,9 @@ $agora = date('Y-m-d');
                   $optionsString .= "<a id='dow".$id."' title='Baixar arquivo .jog' class='clickable exportar'><i class='fas fa-download inlineButton azul'></i></a>";
 
                     if(!$is_selecao){
-                        $optionsString .= "<a id='pro".$idJogador."' title='Fazer Proposta' class='clickable proposta'><i class='fas fa-money-bill inlineButton'></i></a>";
+						if(!$_SESSION['emTestes'] || $donoLogado){
+							$optionsString .= "<a id='pro".$idJogador."' title='Fazer Proposta' class='clickable proposta'><i class='fas fa-money-bill inlineButton'></i></a>";
+						}
                         if($donoLogado){
                             $optionsString .= "<a id='edit".$idJogador."' title='Editar jogador' class='clickable editar'><i class='fas fa-edit inlineButton azul'></i></a>";
                             $optionsString .= "<a id='disp".$idJogador."' title='Disponibilizar jogador' class='clickable disponibilizar'><i class='fas fa-list-ul inlineButton azul'></i></a>";

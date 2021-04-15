@@ -11,6 +11,7 @@ class Usuario{
     public $nome;
     public $senha;
     public $email;
+	public $emTeste;
 
     public function __construct($db){
         $this->conn = $db;
@@ -174,7 +175,7 @@ class Usuario{
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    nomeusuario=:nomeusuario, senha=:senha, email=:email, nome=:nome";
+                    nomeusuario=:nomeusuario, senha=:senha, email=:email, nome=:nome, emTeste=:emTeste";
 
         $stmt = $this->conn->prepare($query);
 
@@ -183,6 +184,7 @@ class Usuario{
         $this->senha=htmlspecialchars(strip_tags($this->senha));
         $this->email=htmlspecialchars(strip_tags($this->email));
         $this->nome=htmlspecialchars(strip_tags($this->nome));
+		$this->emTeste=htmlspecialchars(strip_tags($this->emTeste));
 
         //inserir verificação de usuario aqui
         $query_comparacao = "SELECT id FROM ". $this->table_name . " WHERE nomeusuario = ? OR email = ?";
@@ -197,6 +199,7 @@ class Usuario{
         $stmt->bindParam(":senha", $this->senha);
         $stmt->bindParam(":email", $this->email);
         $stmt->bindParam(":nome", $this->nome);
+		$stmt->bindParam(":emTeste", $this->emTeste);
 
         if($result_comp !== false){
             return false;
@@ -248,6 +251,23 @@ class Usuario{
         $stmt->bindParam(1, $idUsuario);
 
         $stmt->execute();
+    }
+	
+	function emTestes($idUsuario){
+
+        $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+
+        $query = "SELECT emTeste FROM " . $this->table_name . "  WHERE id = ?";
+        $stmt = $this->conn->prepare( $query );
+
+        $stmt->bindParam(1, $idUsuario);
+
+        $stmt->execute();
+		
+		$result = $stmt->fetch();
+		
+		return $result[0];
+				
     }
 
 }

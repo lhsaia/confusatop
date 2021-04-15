@@ -45,7 +45,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
         $error_msg = "Jogador não pode ir para o mesmo clube atual!";
         die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
     }
-
+	
+	if($_SESSION['emTestes'] && (($idLogado != $idDonoClube) || ($idDonoJogador != $idLogado))){
+        $is_success = false;
+        $error_msg = "Usuário em período de testes";
+        die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
+    }
+	
     //criar transferencia pendente
     if($jogador->proporTransferencia($idJogador, $clubeOrigem, $clubeDestino, $valor, 0, $tipoTransacao, $fimContrato)){
 

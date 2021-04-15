@@ -21,6 +21,7 @@ $paises = new Pais($db);
 $page_title = "Inserir usuário";
 $css_filename = "indexRanking";
 $css_login = 'login';
+$aux_css = 'criar';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -65,7 +66,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
         $usuario->senha = $senhahash;
         $usuario->email = $_POST['email'];
         $usuario->nome = $_POST['nomereal'];
-
+		if(isset($_POST['membro'])) {
+			$usuario->emTeste = 0;
+		} else {
+			$usuario->emTeste = 1;
+		}
+		
         // criar usuario
         if($usuario->inserir()){
             echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Usuário inserido com sucesso</div>";
@@ -95,9 +101,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
 
             $novoIdUsuario = $usuario->idByEmail($novoemail);
 
-            foreach($_POST['paises_vinculados'] as $vincular){
-                $paises->vincularUsuario($vincular, $novoIdUsuario);
-            }
+			if(isset($_POST['paises_vinculados'])){
+				foreach($_POST['paises_vinculados'] as $vincular){
+					$paises->vincularUsuario($vincular, $novoIdUsuario);
+				}
+			}
+
 
 
         } else {
@@ -139,13 +148,24 @@ for (i = 0; i < close.length; i++) {
                     <td class="td_inv input_nome_time">Nome:</td>
                     <td class="td_inv input_nome_time"><input type='text' name='nomereal' class='form-control'></td>
                 </tr>
+				
+        <tr class="tr_inv">
+            <td class="td_inv input_nome_time">É membro da CONFUSA?</td>
+            <td class="td_inv input_nome_time checkbox_container">
+
+            <input type="checkbox" class='custom-file-upload' name='membro'>
+
+
+            </td>
+        </tr>
+				
                 <!--vinculação de países inicio -->
                 <tr class="tr_inv">
                     <td class="td_inv input_nome_time">Países vinculados</td>
                     <td class="td_inv input_nome_time">
                 <?php
                     // ler times do banco de dados
-                    $stmt = $paises->read();
+                    $stmt = $paises->read(null,null,false);
 
                     // put them in a select drop-down
                     echo "<select size='15' class='form-control' name='paises_vinculados[]' multiple>";
