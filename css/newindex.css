@@ -59,6 +59,19 @@ body.loggedin{
   background-position:center center;
 }
 
+#tabela-quadros-mercado {
+  display:flex;
+  flex-wrap: wrap;
+  height:100%;
+  background-image: url("/images/mercado/campo.webp");
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* background-blend-mode: luminosity; */
+  /* background-color:#1A1469; */
+  background-position:center center;
+  /* filter: blur(5px); */
+}
+
 .quadro-flex {
  height:50%;
  width:20%;
@@ -71,6 +84,24 @@ body.loggedin{
  width:16.66%;
  position:relative;
 
+}
+
+.quadro-flex-mercado {
+ height:50%;
+ width:33.33%;
+ position:relative;
+
+}
+
+
+.quadro-flex-mercado span{
+	  color:white !important; 
+	  
+}
+
+.quadro-flex-mercado:hover span{
+
+	  background-color: darkgreen !important;
 }
 
 .outros-links-container {

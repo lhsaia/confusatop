@@ -5,15 +5,11 @@ session_start();
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "Mercado CONFUSA";
-$css_filename = "indexRanking";
-$aux_css = "usuario";
+$css_filename = "newindex";
 $css_login = 'login';
+$aux_css = 'usuario';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
-
-echo "<div id='quadro-container'>";
-echo "<h2>Mercado CONFUSA</h2>";
-echo "<hr>";
 
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
@@ -26,16 +22,14 @@ $jogador = new Jogador($db);
 
 ?>
 
-<div id='errorbox'></div>
+<div id="tabela-quadros-mercado">
 
-<a href='transferencias.php?type=ultimas' class='novoquadro'><i class="far fa-clock"></i><span>Últimas Transferências</span></a>
-<a href="transferencias.php?type=maiores" class='novoquadro'><i class="fas fa-comments-dollar"></i><span>Maiores Transferências</span></a>
-<a href='transferencias.php?type=janelas' class='novoquadro'><i class="far fa-calendar-alt"></i><span>Janelas de Transferência</span></a>
-<a href='transferencias.php?type=jogadores' class='novoquadro'><i class="fas fa-file-invoice-dollar"></i><span>Jogadores mais Valiosos</span></a>
-<a href='transferencias.php?type=busca' class='novoquadro' disabled><i class="fas fa-search"></i><span>Busca de Jogadores</span></a>
-<a href='transferencias.php?type=buscaTecnico' class='novoquadro' disabled><i class="fas fa-search-plus"></i><span>Busca de Técnicos</span></a>
-
-
+<a href='transferencias.php?type=busca' class='quadro-flex-mercado quadro-animado' disabled><img src="/images/mercado/buscajogadores.webp" /><span>Busca de Jogadores</span></a>
+<a href='transferencias.php?type=buscaTecnico' class='quadro-flex-mercado quadro-animado' disabled><img src="/images/mercado/buscatecnico.webp" /><span>Busca de Técnicos</span></a>
+<a href='transferencias.php?type=jogadores' class='quadro-flex-mercado quadro-animado'><img src="/images/mercado/maisvaliosos.webp" /><span>Jogadores mais Valiosos</span></a>
+<a href='transferencias.php?type=ultimas' class='quadro-flex-mercado quadro-animado'><img src="/images/mercado/ultimastransferencias.webp" /><span>Últimas Transferências</span></a>
+<a href="transferencias.php?type=maiores" class='quadro-flex-mercado quadro-animado'><img src="/images/mercado/maiorestransferencias.webp" /><span>Maiores Transferências</span></a>
+<a href='transferencias.php?type=janelas' class='quadro-flex-mercado quadro-animado'><img src="/images/mercado/janelatransferencias.webp" /><span>Janelas de Transferência</span></a>
 
 <?php
 
