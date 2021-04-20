@@ -403,14 +403,12 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 	tbl_row.find(".editar").hide();
 	tbl_row.find(".apagar").hide();
 	tbl_row.find('.hiddenInput').show();
+	tbl_row.find('.playerThumb').addClass('editableThumb');
 
 	//garantir que o dono do time está logado e que ele é o dono do jogador também (duplo check, JS e PHP)
 	var donoTime = tbl_row.find(".donoClubeVinculado").html();
 	var donoJogador = $("#tabelaPrincipal").find('thead').prop("id").replace(/\D/g, "");
 	//var donoJogador =9;
-	
-	console.log(donoTime);
-	console.log(donoJogador);
 
 	if (typeof donoTime === 'undefined'){
 		donoTime = donoJogador;
@@ -509,7 +507,8 @@ $('.cancelar').click(function(){
         tbl_row.find('.nomePosicao').show();
         tbl_row.find('.comboPosicoes').hide();
 		tbl_row.find('.hiddenInput').hide();
-
+		tbl_row.find('.playerThumb').removeClass('editableThumb');
+		
         tbl_row.find('a').each(function(index, val){
             $(this).html($(this).attr('original_entry'));
         });
@@ -578,7 +577,8 @@ $('.cancelar').click(function(){
         tbl_row.find('.nomePosicao').show();
         tbl_row.find('.comboPosicoes').hide();
 		tbl_row.find('.hiddenInput').hide();
-
+		tbl_row.find('.playerThumb').removeClass('editableThumb');
+		
         //coleta de valores
 
         //check se é dono do jogador
@@ -657,9 +657,9 @@ if(isDono){
      }
 
 
-for (var key of formData.entries()) {
-     console.log(key[0] + ', ' + key[1]);
- }
+// for (var key of formData.entries()) {
+     // console.log(key[0] + ', ' + key[1]);
+ // }
 
     ajaxCallJogador(formData);
 

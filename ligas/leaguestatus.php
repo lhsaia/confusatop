@@ -72,7 +72,7 @@ $aux_css = 'ligas';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
-if($_SESSION['user_id'] === $idDonoPais){     
+if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais){     
 	$baseLink = "/ligas/teamstatus";
 } else {
 	$baseLink = "/times/team_presentation";

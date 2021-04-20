@@ -1402,9 +1402,14 @@ return $stmt;
                     }
                 }
             }
+				// queryfoto
+				if($foto != "" && $foto != null){
+					$query_foto = ", foto=:foto";
+				} else {
+					$query_foto = "";
+				}
 
-
-                $query = "UPDATE jogador SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, StringPosicoes=:stringPosicoes, valor=:valor, Nivel=:nivel WHERE ID = :id";
+                $query = "UPDATE jogador SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, StringPosicoes=:stringPosicoes, valor=:valor, Nivel=:nivel ".$query_foto." WHERE ID = :id";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(":nome", $nome);
                 $stmt->bindParam(":nascimento", $nascimento);
@@ -1413,6 +1418,9 @@ return $stmt;
                 $stmt->bindParam(":nivel",$nivelJogador);
                 $stmt->bindParam(":stringPosicoes", $stringPosicoes);
                 $stmt->bindParam(":id", $idJogador);
+				if($foto != "" && $foto != null){
+					$stmt->bindParam(":foto", $foto);
+				} 
                 if($stmt->execute()){
 
                 } else {
@@ -1458,12 +1466,24 @@ return $stmt;
                     }
                 }
             }
+			
+				// queryfoto
+				if($foto != "" && $foto != null){
+					$query_foto = ", foto=:foto";
+				} else {
+					$query_foto = "";
+				}
 
-                $query = "UPDATE jogador SET StringPosicoes=:stringPosicoes, valor=:valor WHERE ID = :id";
+                $query = "UPDATE jogador SET StringPosicoes=:stringPosicoes, valor=:valor ".$query_foto." WHERE ID = :id";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(":valor",$valor);
                 $stmt->bindParam(":stringPosicoes", $stringPosicoes);
                 $stmt->bindParam(":id", $idJogador);
+				if($foto != "" && $foto != null){
+					$stmt->bindParam(":foto", $foto);
+				} 
+					
+					
                 if($stmt->execute()){
 
                 } else {

@@ -134,8 +134,41 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         }
 
         $nivelJogador = $_POST['nivel'];
+		
+		if(isset($_FILES['foto']) && !empty($_FILES['foto'])){
+			$fileName = $_FILES['foto']['name'];
+			$fileExplode = explode(".",$fileName);
+			$fileName = $fileExplode[0] . mt_rand(1,10000).".webp";// .$fileExplode[1];
+			$fileSize = $_FILES['foto']['size'];
+			$filePath = $_FILES['foto']['tmp_name'];
+			$fileType = $_FILES['foto']['type'];
+			$fileExt = strtolower( end($fileExplode));
+			$correct_extensions = array("image/png","image/jpg","image/jpeg", "image/webp");
+			$upload_dir = "/images/jogadores/";
 
-        if($jogador->editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono,null,null,null,null, $encerramentoContrato, null, $desdeContrato)){
+			if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 2000000){
+
+				$upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
+				imageImporter($filePath, $upload_path);
+				$localizacao_foto = $_SESSION['user_id'] ."-" .$fileName;
+
+
+			} else {
+
+				$error_msg .= "Não foi possível inserir a foto. ";
+				if($fileSize > 2000000){
+					$error_msg .= "Arquivo deve ser menor que 2Mb.";
+				}
+				if($filePath == ''){
+					$error_msg .= "Falha no nome do arquivo.";
+				}
+				if(in_array($fileType,$correct_extensions) == false){
+					$error_msg .= "Extensão ".$fileExt." não é permitida.";
+				}
+			}
+		}
+
+        if($jogador->editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono,null,null,null,null, $encerramentoContrato, $localizacao_foto, $desdeContrato)){
             $usuario->atualizarAlteracao($_SESSION['user_id']);
             $is_success = true;
             $error_msg = "";

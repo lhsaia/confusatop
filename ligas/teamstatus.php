@@ -383,7 +383,7 @@ $agora = date('Y-m-d');
 
 
             echo "<tr data-sexo='".$sexoJogador."' id='".$idJogador."' class='".$titular."'>";
-				echo "<td class='foto_jogador'><img src='/images/jogadores/".$foto."' height='55px'></td>";
+				echo "<td class='foto_jogador'><div class='imageUpload'><img class='playerThumb' src='/images/jogadores/".$foto."' /> <input type='file' hidden id='foto".$idJogador."' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
                 echo "<td class='nopadding nomeJogador'><a href='/ligas/playerstatus.php?player={$idJogador}' class='nomeEditavel'>{$nomeJogador}</a><br><span class='posicao'>{$posicaoBase}</span></td>";
                 echo "<td class='nopadding'><span class='posicoesAtuais'>{$stringPosicoes}</span>";
                 echo " <select multiple class='comboPosicoes editavel ' hidden>'  ";
@@ -1795,6 +1795,8 @@ tbl_row.find(".disponibilizar").hide();
 tbl_row.find(".aposentar").hide();
 tbl_row.find(".demitir").hide();
 tbl_row.find(".proposta").hide();
+tbl_row.find('.hiddenInput').show();
+tbl_row.find('.playerThumb').addClass('editableThumb');
 
 //garantir que o dono do time está logado e que ele é o dono do jogador também (duplo check, JS e PHP)
 var donoTime = $("tr th:last-child").prop("id").replace(/\D/g, "");
@@ -1927,6 +1929,8 @@ tbl_row.find(".valor").html(valor);
 		tbl_row.find('.encerramento').hide();
 		tbl_row.find('.desdeFixo').show();
 		tbl_row.find('.desde').hide();
+		tbl_row.find('.hiddenInput').hide();
+		tbl_row.find('.playerThumb').removeClass('editableThumb');
 
         tbl_row.find('span').each(function(index, val){
             $(this).html($(this).attr('original_entry'));
@@ -2070,7 +2074,9 @@ tbl_row.find(".valor").html(valor);
 		tbl_row.find('.encerramento').hide();
 		tbl_row.find('.desdeFixo').show();
 		tbl_row.find('.desde').hide();
-
+		tbl_row.find('.hiddenInput').hide();
+		tbl_row.find('.playerThumb').removeClass('editableThumb');
+		
         //coleta de valores
 
         //check se é dono do jogador
@@ -2102,51 +2108,50 @@ tbl_row.find(".valor").html(valor);
 				var desde = tbl_row.find(".desde").val();
 			}
         }
+		
+		//foto
+		var inputFoto = (tbl_row.find('#foto'+idJogador))[0];
+		var foto;
+
+		if (inputFoto.files.length > 0) {
+		   foto = inputFoto.files[0];
+		} else {
+		   foto = null;
+		}
 
         var valor = parseInt(tbl_row.find(".valorEditavel").html());
         var nivel = tbl_row.find(".nivel").html();
         var posicoes = tbl_row.find(".comboPosicoes").val();
         var idTime = $('#quadro-container').prop('class');
-
-        var formData = {
-            'idJogador' : idJogador,
-            'alteracao' : 3,
-            'valor' : valor,
-            'posicoes' : posicoes,
-            'nivel' : nivel,
-            'idTime' : idTime
-        }
-
+		
+		var formData = new FormData();
+		
+		formData.append('idJogador',idJogador);
+		formData.append('alteracao',3);
+		formData.append('posicoes',posicoes);
+		formData.append('nivel',nivel);
+		formData.append('valor',valor);
+		formData.append('idTime',idTime);
 
 
 if(isDono){
-    var moreData = {
-            'nome' : nome,
-            'nacionalidade' : nacionalidade,
-            'nascimento' : nascimento,
-			'encerramento' : encerramento
+	formData.append('nome',nome);
+	formData.append('nacionalidade',nacionalidade);
+	formData.append('nascimento',nascimento);
+	formData.append('encerramento',encerramento);
 
-        }
-		
-
-    $.extend(formData,moreData);
-	
 	if(ultimo_clube ==0){
-		    var evenMoreData = {
-            'desde' : desde
-
-        }
-		
-		$.extend(formData,evenMoreData);
+		formData.append('desde',desde);
 	}
 }
+
+     if(foto != null){
+		formData.append('foto',foto);
+     }
 
 //         for (var pair of formData.entries()) {
 //     console.log(pair[0]+ ', ' + pair[1]);
 // }
-
-//console.log(formData);
-
     ajaxCallJogador(formData);
 
 
@@ -2164,10 +2169,11 @@ function ajaxCallJogador(formData){
             type        : 'POST', // define the type of HTTP verb we want to use (POST for our form)
             url         : '/jogadores/editar_jogador.php', // the url where we want to POST
             data        : formData, // our data object
-            // processData : false,
-            // contentType : false,
+            processData : false,
+            contentType : false,
+			cache: false,
             dataType    : 'json', // what type of data do we expect back from the server
-                        encode          : true
+            //encode          : true
         })
 
                     .done(function(data) {

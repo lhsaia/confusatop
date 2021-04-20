@@ -323,7 +323,7 @@ $lista_reservas = array();
 		
 		foreach($lista_reservas as $ficha){
 			
-		if(strlen($ficha['nome'])>12){
+		if(strlen($ficha['nome'])>12 && strpos($ficha['nome'], ' ')){
 			$temp_nome = explode(" ", $ficha["nome"]);
 			$sobrenome_jogador = end($temp_nome);
 			$primeira_letra = mb_substr($temp_nome[0],0,1);
@@ -518,7 +518,7 @@ $(document).ready(function(){
 			"Atacante de movimentação" => "_F",
 		];
 		
-		if(strlen($jogador_tabela["nome"]) > 12){
+		if(strlen($jogador_tabela["nome"]) > 12 && strpos($jogador_tabela["nome"], " ")){
 			$temp_nome = explode(" ", $jogador_tabela["nome"]);
 			$sobrenome_jogador = end($temp_nome);
 			$primeira_letra = mb_substr($temp_nome[0],0,1);

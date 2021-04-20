@@ -810,3 +810,27 @@ input {
     display:flex;
     flex-direction: row;
 }
+
+.imageUpload{
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.playerThumb{
+	height: 55px;
+}
+
+.hiddenInput{
+    font-size: 100px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+}
+
+.editableThumb{
+    background-color:lightyellow;
+    border: 1px gray solid;
+
+}

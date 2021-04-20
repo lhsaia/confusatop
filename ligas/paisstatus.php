@@ -129,7 +129,7 @@ echo "<tbody>";
             $mediaIdadePorTime = number_format($info['mediaIdade'],1);
             $estrangeirosPorTime = $info['estrangeiros'];
             $valorMercadoPorTime = "F$ ". number_format(($info['valorTotal']/1000000),2)."M";
-            $valorMedioJogador = "F$ ". number_format(($info['valorTotal']/($elencoPorTime*1000000)),2)."M";
+            $valorMedioJogador = "F$ ". number_format(($info['valorTotal']/($elencoPorTime*1000000 + 0.0000000001)),2)."M";
 
 
             echo "<tr>";
