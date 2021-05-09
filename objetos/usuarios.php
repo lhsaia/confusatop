@@ -269,6 +269,24 @@ class Usuario{
 		return $result[0];
 				
     }
+	
+	function checkApiKey($apiKey){
+
+        $apiKey = htmlspecialchars(strip_tags($apiKey));
+
+        $query = "SELECT id FROM " . $this->table_name . "  WHERE apiKey = ?";
+        $stmt = $this->conn->prepare( $query );
+
+        $stmt->bindParam(1, $apiKey);
+
+        $stmt->execute();
+		
+		$result = $stmt->fetch();
+		
+		return $result[0];
+				
+    }
+
 
 }
 ?>

@@ -110,19 +110,22 @@ class Time{
     }
 
     //ler todos os jogadores para o quadro
-    function readAll($from_record_num, $records_per_page, $dono = null, $liga = null){
+    function readAll($from_record_num, $records_per_page, $dono = null, $liga = null, $pais = null){
 
         //ver se é por dono ou geral
-        if($dono === null && $liga === null){
+        if($dono === null && $liga === null && $pais === null){
             $sub_query_inicio = "";
             $sub_query_fim = "";
-        } else if($liga === null) {
+        } else if($liga === null && $pais === null) {
             $sub_query_inicio = "SELECT * FROM (";
             $sub_query_fim = ") t1 WHERE idDonoPais = ? AND status = 0 ORDER BY Nome ASC";
 
-        } else if($dono === null){
+        } else if($dono === null && $pais === null){
             $sub_query_inicio = "SELECT * FROM (";
             $sub_query_fim = ") t1 WHERE t1.liga = ?";
+        } else if($liga === null && $dono === null){
+            $sub_query_inicio = "SELECT * FROM (";
+            $sub_query_fim = ") t1 WHERE t1.idPais = ?";
         }
 
     $query = $sub_query_inicio."SELECT
@@ -140,11 +143,13 @@ class Time{
 
 $stmt = $this->conn->prepare( $query );
 
-if($dono === null && $liga === null){
-} else if($liga === null) {
+if($dono === null && $liga === null && $pais === null){
+} else if($liga === null && $pais === null) {
     $stmt->bindParam(1, $dono);
-} else if($dono === null) {
+} else if($dono === null && $pais === null) {
     $stmt->bindParam(1, $liga);
+} else if($liga === null && $dono === null) {
+    $stmt->bindParam(1, $pais);
 }
 $stmt->execute();
 
@@ -199,7 +204,7 @@ function readInfo($id){
         $id = htmlspecialchars(strip_tags($id));
 
     $query = "SELECT
-                a.Nome, a.TresLetras, e.Nome as Estadio, e.Capacidade as Capacidade, p.Nome as Pais, a.Escudo, a.Uniforme1, a.Uniforme2, l.nome as liga, l.id as liga_id, p.id as pais_id, p.dono as donoPais, a.status, a.Uni1Cor1, a.Uni1Cor2, l.logo as logoLiga, e.foto as fotoEstadio   
+                a.id, a.Nome, a.TresLetras, e.Nome as Estadio, e.Capacidade as Capacidade, p.Nome as Pais, a.Escudo, a.Uniforme1, a.Uniforme2, l.nome as liga, l.id as liga_id, p.id as pais_id, p.dono as donoPais, a.status, a.Uni1Cor1, a.Uni1Cor2, l.logo as logoLiga, e.foto as fotoEstadio   
             FROM
                 " . $this->table_name . " a
             LEFT JOIN
@@ -276,30 +281,53 @@ LEFT JOIN clube b ON c.clube = b.id
             return $stmt;
         }
 
-        function exportacao($idPais = null, $idTime = null, $idLiga = null){
+        function exportacao($idPais = null, $idTime = null, $idLiga = null, $multiple = null){
 
-            $idPais = htmlspecialchars(strip_tags($idPais));
-            $idTime = htmlspecialchars(strip_tags($idTime));
+			$multiple = htmlspecialchars(strip_tags($multiple));
+			$idPais = htmlspecialchars(strip_tags($idPais));
+			$idTime = htmlspecialchars(strip_tags($idTime));
 			$idLiga = htmlspecialchars(strip_tags($idLiga));
+			
 
             if($idPais != null){
               $subquery = " Pais=:pais  ";
-            } else if($idTime != null){
+            } else if($idTime != null && ($multiple === null || !$multiple)){
               $subquery = " ID=:clube ";
             } else if($idLiga != null) {
 			  $subquery = " liga=:liga ";
+			} else if($idTime != null && $multiple){
+				$teams = explode(",",$idTime);
+				$subquery = " ID IN ( ";
+				$first = true;
+				foreach($teams as $key => $team){
+					if(!$first){
+						$subquery .= ",";
+					} else {
+						$first = !$first;
+					}
+					$subquery .= " ? ";
+				}
+			    $subquery .= " ) ";
 			}
 
             $query = "SELECT DISTINCT c.ID, c.Nome, c.TresLetras, c.Estadio, c.Escudo, c.Uni1Cor1, c.Uni1Cor2, c.Uni1Cor3, c.Uni2Cor1, c.Uni2Cor2, c.Uni2Cor3, c.Uniforme1, c.Uniforme2, c.MaxTorcedores, c.Fidelidade, c.Sexo  FROM clube c WHERE " . $subquery;
+			
             $stmt = $this->conn->prepare( $query );
+
             if($idPais != null){
               $stmt->bindParam(":pais", $idPais);
-            } else if($idTime != null){
+            } else if($idTime != null  && ($multiple === null || !$multiple) ){
+
               $stmt->bindParam(":clube", $idTime);
             } else if($idLiga != null){
               $stmt->bindParam(":liga", $idLiga);
-            }
+            } else if($idTime != null && $multiple){
+				foreach($teams as $key => $team){
+					$stmt->bindValue($key + 1, $team);
+				}
+			}
             $stmt->execute();
+
 
             return $stmt;
 
@@ -324,15 +352,38 @@ LEFT JOIN clube b ON c.clube = b.id
 
         }
 
-        function getElenco($idClube){
+        function getElenco($idClube, $multiple = null){
             $idClube = htmlspecialchars(strip_tags($idClube));
 
-            $query = "SELECT jogador as ID FROM contratos_jogador WHERE clube = ? AND titularidade >= 0";
-            $stmt = $this->conn->prepare( $query );
-            $stmt->bindParam(1, $idClube);
+			if($multiple === null || !$multiple){
+				$query = "SELECT jogador as ID, clube FROM contratos_jogador WHERE clube = ? AND titularidade >= 0";
+				$stmt = $this->conn->prepare( $query );
+				$stmt->bindParam(1, $idClube);
+
+			} else {
+				$teams = explode(",",$idClube);
+				$subquery = " clube IN ( ";
+				$first = true;
+				foreach($teams as $key => $team){
+					if(!$first){
+						$subquery .= ",";
+					} else {
+						$first = !$first;
+					}
+					$subquery .= " ? ";
+				}
+			    $subquery .= " ) ";
+				
+				$query = "SELECT jogador as ID, clube FROM contratos_jogador WHERE ". $subquery." AND titularidade >= 0";
+				$stmt = $this->conn->prepare( $query );
+				
+				foreach($teams as $key => $team){
+					$stmt->bindValue($key + 1, $team);
+				}
+			}
+
             $stmt->execute();
             return $stmt;
-
         }
 
         function getSizeElenco($idClube){
@@ -348,12 +399,40 @@ LEFT JOIN clube b ON c.clube = b.id
 
         }
 
-        function getTecnico($idClube){
+        function getTecnico($idClube, $multiple = null){
             $idClube = htmlspecialchars(strip_tags($idClube));
+			
+			if($multiple === null || !$multiple){
+				$query = "SELECT tecnico, clube FROM contratos_tecnico WHERE clube = ? LIMIT 0,1";
+				$stmt = $this->conn->prepare( $query );
+				$stmt->bindParam(1, $idClube);
 
-            $query = "SELECT tecnico FROM contratos_tecnico WHERE clube = ?";
-            $stmt = $this->conn->prepare( $query );
-            $stmt->bindParam(1, $idClube);
+			} else {
+				$teams = explode(",",$idClube);
+				$subquery = " clube IN ( ";
+				$first = true;
+				foreach($teams as $key => $team){
+					if(!$first){
+						$subquery .= ",";
+					} else {
+						$first = !$first;
+					}
+					$subquery .= " ? ";
+				}
+			    $subquery .= " ) ";
+				
+				$query = "SELECT tecnico, clube FROM contratos_tecnico WHERE " . $subquery ;
+				$stmt = $this->conn->prepare( $query );
+				
+				
+				
+				foreach($teams as $key => $team){
+					$stmt->bindValue($key + 1, $team);
+				
+				}
+			}
+
+
             $stmt->execute();
             return $stmt;
         }
@@ -1481,6 +1560,7 @@ function readExtraInfo($id){
 		
 		
 	}
+
 
 
 

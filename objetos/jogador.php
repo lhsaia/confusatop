@@ -855,7 +855,7 @@ return $stmt;
                 $subquery .= " ORDER BY c.titularidade DESC, c.posicaoBase ASC ";
             }
 
-            $query = "SELECT DISTINCT a.ID as idJogador, a.Nome as nomeJogador, FLOOR((DATEDIFF(CURDATE(), Nascimento))/365) as Idade, o.Sigla as posicao, c.titularidade, c.posicaoBase as codigoPosicaoBase,  Mentalidade, CobradorFalta, StringPosicoes, (Nivel + c.ModificadorNivel) as Nivel, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao, DeterminacaoOriginal, p.bandeira as Nacionalidade, (Marcacao + Desarme + VisaoJogo + Movimentacao + Cruzamentos + Cabeceamento + Tecnica + ControleBola + Finalizacao + FaroGol + Velocidade + Forca + Reflexos + Seguranca + Saidas + JogoAereo + Lancamentos + DefesaPenaltis + Determinacao) as somaAtributos, Nascimento, b.Nome as Time, CASE WHEN a.sexo = 1 THEN 'F' WHEN a.sexo = 0 THEN 'M' END as sexo
+            $query = "SELECT DISTINCT a.ID as idJogador, a.Nome as nomeJogador, FLOOR((DATEDIFF(CURDATE(), Nascimento))/365) as Idade, o.Sigla as posicao, c.titularidade, c.posicaoBase as codigoPosicaoBase,  Mentalidade, CobradorFalta, StringPosicoes, (Nivel + c.ModificadorNivel) as Nivel, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao, DeterminacaoOriginal, p.bandeira as Nacionalidade, (Marcacao + Desarme + VisaoJogo + Movimentacao + Cruzamentos + Cabeceamento + Tecnica + ControleBola + Finalizacao + FaroGol + Velocidade + Forca + Reflexos + Seguranca + Saidas + JogoAereo + Lancamentos + DefesaPenaltis + Determinacao) as somaAtributos, Nascimento, b.Nome as Time, b.ID as idTime, CASE WHEN a.sexo = 1 THEN 'F' WHEN a.sexo = 0 THEN 'M' END as sexo
             FROM jogador a
             LEFT JOIN paises p ON a.Pais = p.id
             LEFT JOIN contratos_jogador c ON c.jogador = a.ID
@@ -1270,7 +1270,7 @@ return $stmt;
 					
 
                     if(sizeOf($posicoesJogador)== 0 ){
-                        $stringPosicoes = $this->verificarStringPosicoesAtual($idJogador);
+							$stringPosicoes = $this->verificarStringPosicoesAtual($idJogador);
                         } else {
                         //determinacao string posicoes
 
