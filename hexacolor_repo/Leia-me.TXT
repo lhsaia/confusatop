@@ -1,4 +1,4 @@
-﻿Hexacolor YMT v2.13
+﻿Hexacolor YMT v2.13.1
 Release Beta
 
 Dúvidas, sugestões, comentários e/ou suporte podem ser enviados para digisabio@hotmail.com
@@ -7,6 +7,11 @@ Boa simulação!
 digisabioSoft
 
 ---Log de Mudanças---
+***Versão 2.13.1***
+-> Correções de Bugs:
+	- Cores e datas não ficavam salvas quando a partida era simulada usando Edição Manual.
+	- Corrigido bug que travava o Hexacolor ao salvar um jogo caso a pasta Partidas tivesse sido deletada.
+
 ***Versão 2.13***
 -> Inclusões:
 	- Agora é possível adicionar novas narrações ao YMT. Confira a pasta Narracoes para as instruções de como fazê-lo.
