@@ -162,6 +162,10 @@ foreach($race_for_banner as $single_race){
 
 <script>
 
+$("document").ready(function(){
+	$("#toolbar").html("<a id='botaoPaginaTeste' href='race_live.php'>Página de teste</a>");
+});
+
 var race_start_time = <?php echo $race_start_time?>;
 var race_start_time_two = <?php echo $race_start_time_two?>;
 var update_flag = 1;

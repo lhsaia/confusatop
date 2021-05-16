@@ -132,14 +132,14 @@ color:#E9E5AA;
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  height: 100%;
+  height: calc( 100% - 45px );
   border-radius:10px;
   box-sizing: border-box;
 }
 
 #container-live-aux{
   width:50%;
-  height:90%;
+  height:100%;
   display: flex;
   flex-direction: column;
 }
@@ -147,9 +147,8 @@ color:#E9E5AA;
 #container-live-table{
   width:50%;
   overflow-y:auto;
-  height: 90%;
   /* height:580px; */
-  height:80%;
+  height:100%;
   width:50%;
   display:flex;
   flex-direction: column;
@@ -161,7 +160,7 @@ color:#E9E5AA;
   box-shadow: 0 0 3pt 2pt black;
   border-radius:10px;
   padding:20px;
-  margin: 40px 30px 100px 10px;
+  margin: 20px 30px 100px 10px;
   overflow-y: auto;
 }
 
@@ -181,12 +180,26 @@ color:#E9E5AA;
     box-shadow: 0 0 3pt 2pt black;
     border-radius:10px;
     padding:20px;
-    margin: 40px 30px 100px 10px;
+    margin: 20px 30px 10px 10px;
 
 }
 
-#container-race-narration{
-
+#container-race-podium{
+    width:95%;
+    overflow:hidden;
+    /* height: 40%; */
+    /* min-height: 300px; */
+    display:flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    box-sizing: border-box;
+    background-color:black;
+    border: gray 2px solid;
+    filter: drop-shadow(10px 10px 4px black);
+    box-shadow: 0 0 3pt 2pt black;
+    border-radius:10px;
+    padding:20px;
+    margin: 10px 30px 10px 10px;
 }
 
 #race-name-bar{
@@ -984,3 +997,216 @@ body{
   width:100%;
   height: 100%;
 }
+
+#container-race-podium{
+
+	background-color:black;
+	max-height:300px;
+	padding:0;
+}
+
+#main-sponsor {
+    /* width: 300px; */
+    height: 230px; 
+    /* background-color:red; */
+    background: var(--urlSponsor) no-repeat;
+    background-size: contain;
+	background-position:center;
+}
+
+#podium-container{
+	display:flex;
+	flex-direction:row;
+	overflow-y:hidden;
+}
+
+.racer-podium{
+	width:33.3%;
+	background-color:black;
+	height: 240px;
+	display: flex;
+	flex-direction:column;
+	align-items:center;
+}
+
+.third-place, .second-place{
+margin-top:40px;
+}
+
+.first-place {
+margin-top:15px;
+}
+
+#raceNameBar{
+	height:60px;
+	width:100%;
+	background-color:black;
+	display:flex;
+	justify-content:center;
+}
+
+.podium-picture{
+	width:40%;
+	
+}
+
+.podium-picture img{
+	width:100%;
+	height:auto;
+	max-height:100%;
+}
+
+.podium-flag{
+	height:50px;
+}
+
+.podium-flag img{
+	height:100%;
+	border:gray 0.5px solid;
+}
+
+.podium-name{
+	color:yellow;
+	font-family: 'alte_din_1451_mittelschriftRg';
+	margin-top:5px;
+}
+
+.podium-name::before{
+	background-color:yellow;
+	color:black;
+	padding: 0 6px;
+	margin-right: 3px;
+}
+
+.first-place .podium-name::before{
+	content: "1";
+}
+
+.second-place .podium-name::before{
+	content: "2";
+}
+
+.third-place .podium-name::before{
+	content: "3";
+}
+
+.podium-team{
+	color:white;
+	font-family: 'alte_din_1451_mittelschriftRg';
+	font-size:0.8em;
+	font-weight:normal;
+	margin-bottom:5px;
+}
+
+#competitionLogo{
+	height:100%;
+}
+
+#raceLogo{
+	font-family:krunchbold;
+	color:white;
+	word-break: normal;
+	font-size:1.3em;
+	width: 230px;
+	margin-left:40px;
+	display:flex;
+	align-items:center;
+}
+
+#competition-big-logo{
+	padding:40px;
+}
+
+#resim{
+	width:100px;
+	padding:5px;
+	border-radius:5px;
+	margin:5px;
+}
+
+#circuit-selection, #competition-selection, #race-scheduled-date, #race-scheduled-time {
+	padding:5px;
+	border-radius:5px;
+	margin:5px;
+	background-color:black;
+	color:white;
+}
+
+#competition-selection, #circuit-selection{
+	max-width:150px;
+}
+
+#race-scheduled-date,  #race-scheduled-time
+{
+	min-width:150px;
+}
+
+::-webkit-calendar-picker-indicator {
+	cursor:pointer;
+	background-color:white;
+	color:orange;
+}
+
+#raceNameBar::after{
+	content: '';
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-color: black;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	transform: scale(1);
+	transition: transform linear 1.5s;
+	transform-origin: bottom;
+
+}
+
+#raceNameBar{
+	position: relative;
+}
+
+#raceNameBar.animated::after {
+	transform: scaleY(0);
+}
+
+.racer-podium::after{
+	content: '';
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-color: black;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	transition: transform linear 5s 2s;
+	transform-origin: left;
+}
+
+.second-place::after{
+	transition: transform linear 5s 4s;
+}
+
+.third-place::after{
+	transition: transform linear 5s 6s;
+}
+
+.racer-podium{
+	position: relative;
+}
+
+.racer-podium.animate::after {
+	transform: scaleX(0);
+}
+
+#botaoPaginaTeste{
+	border-radius:5px;
+	background-color: yellow;
+	color:black;
+	font-size:90%;
+	width: 120px;
+	padding:5px;
+	margin:5px;
+	border:dashed 3px black;
+}
+

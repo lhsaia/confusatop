@@ -321,6 +321,22 @@ if($number != null){
     return $this->race_type;
   }
 
+  
+  public function getLogoFromName($name){
+	  
+	$name = htmlspecialchars(strip_tags($name));
+	
+	$name = "%" . $name . "%";
+	  
+	$query = "SELECT logo FROM competition WHERE name LIKE ?";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(1, $name);
+    $stmt->execute();
+	$result = $stmt->fetch(PDO::FETCH_ASSOC);
+	
+    return $result["logo"];
+	
+  }
 
 }
 

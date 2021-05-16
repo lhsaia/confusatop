@@ -29,6 +29,13 @@ $driver_list = $driver->getDriversList();
 $competition_list = $competition->getCompetitionList();
 $track_list = $track->getTracksList();
 
+// $urlSponsor = "/images/marcas/moon_wrap.png";
+// $sponsorType = pathinfo($urlSponsor, PATHINFO_EXTENSION);
+// $sponsorData = file_get_contents($_SERVER['DOCUMENT_ROOT'].$urlSponsor);
+// $sponsorBase64 = 'data:image/' . $sponsorType . ';base64,' . base64_encode($sponsorData);
+
+//$urlSponsorMini = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="60" height="60"><image width="40" height="40" xlink:href='.$sponsorBase64.'/></svg>';
+
 ?>
 
 <div id="container-home-octamotor">
@@ -57,34 +64,43 @@ $track_list = $track->getTracksList();
         </div>
       </div>
       </div>
-      <div id="container-race-narration">
+      <div id="container-race-podium">
+		<div id='raceNameBar'>
+		<img src='' id='competitionLogo'/><div id='raceLogo'></div></div>
+		<!--<div id='main-sponsor' style='--urlSponsor:url(/images/marcas/moon_wrap.png)'/></div> -->
+		<div id='podium-container'>
+			<div class='racer-podium second-place'><div class='podium-flag'></div><div class='podium-name'></div><div class='podium-team'></div><div class='podium-picture'></div></div>
+			<div class='racer-podium first-place'><div class='podium-flag'></div><div class='podium-name'></div><div class='podium-team'></div><div class='podium-picture'></div></div>
+			<div class='racer-podium third-place'><div class='podium-flag'></div><div class='podium-name'></div><div class='podium-team'></div><div class='podium-picture'></div></div>	
+		</div>
+		<img src='' id='competition-big-logo'/> 
       </div>
       <hr/>
       <?php
+	  	$command_center = "";
+			
       if(!isset($_GET['file_name'])){
 
 
-       ?>
-      <select id='circuit-selection'>
-        <?php
+		$command_center .= "<select id='circuit-selection'>";
+        
         foreach($track_list as $single_track){
-          echo "<option value={$single_track['id']}>{$single_track['name']}</option>";
+          $command_center .= "<option value={$single_track['id']}>{$single_track['name']}</option>";
         }
-         ?>
-      </select>
-      <select id='competition-selection'>
-        <?php
+         
+		$command_center .= "</select>";
+		$command_center .= "<select id='competition-selection'>";
+        
         foreach($competition_list as $single_competition){
-          echo "<option value={$single_competition['id']}>{$single_competition['name']}</option>";
+          $command_center .= "<option value={$single_competition['id']}>{$single_competition['name']}</option>";
         }
-         ?>
-      </select>
-      <input type="date" id="race-scheduled-date"
-       name="race-scheduled-date">
-      <input type="time" id="race-scheduled-time"
-       name="race-scheduled-time">
-      <button id='resim'>Re-simular</button>
-    <?php } ?>
+         
+ 		$command_center .= "</select>";
+		$command_center .= "<input type='date' id='race-scheduled-date' name='race-scheduled-date'>";
+		$command_center .= "<input type='time' id='race-scheduled-time' name='race-scheduled-time'>";
+		$command_center .= "<button id='resim'>Re-simular</button>";
+		
+ }  ?>
     </div>
     <div id="container-live-table">
     </div>
@@ -97,6 +113,9 @@ $track_list = $track->getTracksList();
   var dt = new Date();
   var current_time = dt.getHours().toString().padStart(2,"0") + ":" + dt.getMinutes().toString().padStart(2,"0");
   var current_date = (dt.getFullYear()) + "-" + (dt.getMonth()+1).toString().padStart(2,"0") + "-" + (dt.getDate()).toString().padStart(2,"0");
+  
+  let command_center = "<?php echo $command_center; ?>";
+  $("#toolbar").html(command_center);
 
 $("document").ready(function(){
 
@@ -145,7 +164,7 @@ $("document").ready(function(){
   setInterval( get_ajax_data, 30000 );
 
 function get_ajax_data(){
-
+	
   $.ajax({
   url: 'race_ajax.php',
   type: 'POST',
@@ -154,7 +173,7 @@ function get_ajax_data(){
   })
   .done(function(data) {
 	  
-	 // console.log(data);
+	clearPodium(data);
 
     var stage_letter = data.current_step.substring(0,1);
     var stage_name = "";
@@ -288,9 +307,11 @@ function get_ajax_data(){
     if(stage_code == 5){
       if(data.current_step.replace(/\D/g,'') == data.race_info.total_laps){
         setFlag("CF");
+        createPodium(data);
       }
 	  if(data.timestamp > (parseFloat(data.race_info.base_timestamp) + data.race_info.max_time)){
         setFlag("CF");
+        createPodium(data);
       }
     }
 
@@ -708,6 +729,97 @@ function convertGapView(time_in_seconds, position){
 
 
 	return compound;
+
+}
+
+function clearPodium(data){
+	$("#podium-container").hide();
+	$("#raceNameBar").hide();
+	$("#competition-big-logo").show();
+	
+		let competition_name = data.race_info.competition;
+	
+		$.ajax({
+			url: 'get_competition_logo.php',
+			type: 'POST',
+			dataType: 'json',
+			data: {competition_name: competition_name}
+			})
+		.done(function(competition_data) {
+		
+		  
+			$("#competition-big-logo").attr("src","/octamotor/images/competition/" + competition_data);
+			
+		  
+		})
+		  .fail(function(xhr, status, error) {
+			console.log("error");
+			console.log(xhr.responseText);
+		});
+	
+}
+
+function createPodium(data){
+	
+	$("#podium-container").show();
+	$("#raceNameBar").show();
+	$("#competition-big-logo").hide();
+	
+	let podium_drivers = [data.total_data[0].name, data.total_data[1].name, data.total_data[2].name];
+	let competition_name = data.race_info.competition;
+	
+	    $.ajax({
+			url: 'get_podium_pictures.php',
+			type: 'POST',
+			dataType: 'json',
+			data: {podium_drivers: podium_drivers}
+			})
+		.done(function(podium_data) {
+		  
+			$(".first-place").find(".podium-name").html("<span>" + data.total_data[0].tv_name == "" ? data.total_data[0].tv_name : data.total_data[0].name + "</span>");
+			$(".first-place").find(".podium-flag").html("<img src='/images/bandeiras/" + data.total_data[0].nationality + "'/></span>");
+			$(".first-place").find(".podium-team").html("<span>" + data.total_data[0].team_tv_name == "" ? data.total_data[0].team_tv_name : data.total_data[0].team + "</span>");
+			$(".first-place").find(".podium-picture").html("<img src='/octamotor/images/picture/" + podium_data[data.total_data[0].name] + "'/>");
+			
+			$(".second-place").find(".podium-name").html("<span>" + data.total_data[1].tv_name == "" ? data.total_data[1].tv_name : data.total_data[1].name + "</span>");
+			$(".second-place").find(".podium-flag").html("<img src='/images/bandeiras/" + data.total_data[1].nationality + "'/></span>");
+			$(".second-place").find(".podium-team").html("<span>" + data.total_data[1].team_tv_name == "" ? data.total_data[1].team_tv_name : data.total_data[1].team + "</span>");
+			$(".second-place").find(".podium-picture").html("<img src='/octamotor/images/picture/" + podium_data[data.total_data[1].name] + "'/>");
+			
+			$(".third-place").find(".podium-name").html("<span>" + data.total_data[2].tv_name == "" ? data.total_data[2].tv_name : data.total_data[2].name + "</span>");
+			$(".third-place").find(".podium-flag").html("<img src='/images/bandeiras/" + data.total_data[2].nationality + "'/></span>");
+			$(".third-place").find(".podium-team").html("<span>" + data.total_data[2].team_tv_name == "" ? data.total_data[2].team_tv_name : data.total_data[2].team + "</span>");
+			$(".third-place").find(".podium-picture").html("<img src='/octamotor/images/picture/" + podium_data[data.total_data[2].name] + "'/>");
+		  
+		})
+		  .fail(function(xhr, status, error) {
+			console.log("error");
+			console.log(xhr.responseText);
+		});
+	
+	$.ajax({
+			url: 'get_competition_logo.php',
+			type: 'POST',
+			dataType: 'json',
+			data: {competition_name: competition_name}
+			})
+		.done(function(competition_data) {
+		
+		  
+			$("#competitionLogo").attr("src","/octamotor/images/competition/" + competition_data);
+			$("#raceLogo").html("<span>" + $("#race-name").text() + "</span>");
+			
+		  
+		})
+		  .fail(function(xhr, status, error) {
+			console.log("error");
+			console.log(xhr.responseText);
+		});
+	
+		$("#raceNameBar").addClass("animated");
+		
+		$(".racer-podium").addClass("animate");
+
 
 }
 

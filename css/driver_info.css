@@ -569,6 +569,11 @@ select:invalid {
   color: #505050 !important;
 }
 
+::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+	cursor:pointer;
+}
+
 #driver-bio{
   height:100px;
 }

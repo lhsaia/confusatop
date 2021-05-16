@@ -735,6 +735,38 @@ class Driver extends db_name implements \JsonSerializable{
     }
 
   }
+  
+  public function getIDbyName($name){
+	  
+	$name = htmlspecialchars(strip_tags($name));
+	
+	$name = "%" . $name . "%";
+	  
+	$query = "SELECT id FROM driver WHERE name LIKE ?";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(1, $name);
+    $stmt->execute();
+	$result = $stmt->fetch(PDO::FETCH_ASSOC);
+	
+    return $result["id"];
+  }
+  
+    public function getPictures($names){
+		
+	$ids[0] = $this->getIDbyName($names[0]);
+	$ids[1] = $this->getIDbyName($names[1]);
+	$ids[2] = $this->getIDbyName($names[2]);
+
+		
+    $query = "SELECT driver.name, driver.photo FROM driver WHERE id IN ( ? ,? , ? )";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindValue(1, $ids[0]);
+	$stmt->bindValue(2, $ids[1]);    
+	$stmt->bindValue(3, $ids[2]);
+		
+    $stmt->execute();
+    return $stmt;
+  }
 
 
 }
