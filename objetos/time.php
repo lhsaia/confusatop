@@ -1075,7 +1075,7 @@ if($idUsuario != null){
         }
 
         // posted values
-        $this->nome=htmlspecialchars(strip_tags($this->nome));
+        $this->nome=htmlspecialchars(strip_tags($this->nome), $double_encode = false);
         $this->sigla=htmlspecialchars(strip_tags($this->sigla));
         $this->estadio=htmlspecialchars(strip_tags($this->estadio));
         $this->uniforme1cor1=htmlspecialchars(strip_tags($this->uniforme1cor1));
@@ -1104,6 +1104,8 @@ if($idUsuario != null){
         $stmt->bindParam(":pais", $this->pais);
         $stmt->bindParam(":liga", $this->liga);
         $stmt->bindParam(":id", $this->id);
+		
+		$this->nome = str_replace("amp;amp;","amp;",$this->nome);
 
         if($stmt->execute()){
             return true;

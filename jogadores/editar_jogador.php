@@ -1,8 +1,9 @@
 <?php
 
-ini_set( 'display_errors', true );
-error_reporting( E_ALL );
+//ini_set( 'display_errors', true );
+//error_reporting( E_ALL );
 session_start();
+
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
 	$localizacao_foto = null;
@@ -242,8 +243,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 			  $timeEnviado = $timeParaDemissao;
               $isDono = true;
           } else {
-              $nomeJogador = null;
-              $nacionalidadeJogador = null;
+              $nomeJogador = $_POST['nome'];
+              $nacionalidadeJogador = $_POST['nacionalidade'];
               $nascimentoJogador = null;
               $valorJogador = null;
               $determinacaoJogador = "none";

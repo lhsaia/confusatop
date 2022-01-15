@@ -421,27 +421,31 @@ if(donoTime.localeCompare(donoJogador) == 0){
 }
 
 if(isDono){
-    tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
-    tbl_row.find('.linkNome').css("cursor","text");
-    tbl_row.find('.linkNome').css("pointer-events","none");
+
     
     tbl_row.find('.comboMentalidade').show();
     tbl_row.find('.comboAtividade').show();
     tbl_row.find('.nomeCobrador').hide();
     tbl_row.find('.nomeMentalidade').hide();
-    tbl_row.find('.nomePais').hide();
+    
     tbl_row.find('.nomeAtividade').hide();
     tbl_row.find('.nomeNascimento').hide();
     tbl_row.find('.nascimentoEditavel').show();
     tbl_row.find('.nomeValor').hide();
     tbl_row.find('.valorEditavel').show();
 
-    var paisId = tbl_row.find('.comboPais').attr('id');
-    tbl_row.find('.comboPais').show().val(paisId);
-
 	tbl_row.find('.comboCobrador').show();
 
 }
+
+// override para permitir repaginação de praias
+    tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
+    tbl_row.find('.linkNome').css("cursor","text");
+    tbl_row.find('.linkNome').css("pointer-events","none");
+	
+	tbl_row.find('.nomePais').hide();
+	    var paisId = tbl_row.find('.comboPais').attr('id');
+    tbl_row.find('.comboPais').show().val(paisId);
 
 
 tbl_row.find('.nivelEditavel').attr('contenteditable', 'true').addClass('editavel');
@@ -601,8 +605,8 @@ $('.cancelar').click(function(){
         var idJogador = tbl_row.prop('id');
 
         if(isDono){
-            var nome = tbl_row.find('.nomeEditavel').text();
-            var nacionalidade = tbl_row.find(".comboPais").val();
+            
+            
             var nascimento = tbl_row.find(".nascimentoEditavel").val();
             var valor = parseInt(tbl_row.find(".valorEditavel").html());
             var determinacao = "1";
@@ -611,6 +615,10 @@ $('.cancelar').click(function(){
             var atividade = tbl_row.find(".comboAtividade").val();
 			var timeParaDemissao = tbl_row.find(".comboAtividade").attr("data-idTime");
         }
+		
+		//override para permitir repaginação de Praias
+		var nome = tbl_row.find('.nomeEditavel').text();
+		var nacionalidade = tbl_row.find(".comboPais").val();
 		
 		//foto
 		var inputFoto = (tbl_row.find('#foto'+idJogador))[0];
@@ -639,10 +647,12 @@ $('.cancelar').click(function(){
 		formData.append('alteracao',9);
 		formData.append('posicoes',posicoes);
 		formData.append('nivel',nivel);
+		formData.append('nome',nome);
+		formData.append('nacionalidade',nacionalidade);
 
 if(isDono){
-	formData.append('nome',nome);
-	formData.append('nacionalidade',nacionalidade);
+	
+	
 	formData.append('nascimento',nascimento);
 	formData.append('valor',valor);
 	formData.append('determinacao',determinacao);

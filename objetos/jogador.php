@@ -1350,13 +1350,18 @@ return $stmt;
                         }
                     }
                 }
+				
+				$nome = $nomeJogador;
+				$nacionalidade = $nacionalidadeJogador;
 
-                $query = "UPDATE jogador SET StringPosicoes=:stringPosicoes, Nivel=:nivel, foto=:foto  WHERE ID = :id";
+                $query = "UPDATE jogador SET Nome=:nome, StringPosicoes=:stringPosicoes, Nivel=:nivel, foto=:foto, Pais=:nacionalidade  WHERE ID = :id";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(":nivel",$nivelJogador);
                 $stmt->bindParam(":stringPosicoes", $stringPosicoes);
                 $stmt->bindParam(":id", $idJogador);
 				$stmt->bindParam(":foto", $foto);
+				$stmt->bindParam(":nome", $nome);
+				$stmt->bindParam(":nacionalidade",$nacionalidade);
                 if($stmt->execute()){
 
                 } else {
