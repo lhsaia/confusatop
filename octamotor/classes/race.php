@@ -266,7 +266,7 @@ class Race extends db_name {
     $this->lap_results[$stage] = $new_race_list;
   }
 
-  public function runRace(){
+  public function runRace($stressTest = null){
 
     // rain calculation
 
@@ -570,13 +570,19 @@ class Race extends db_name {
     }
 
 
-  $this->recordRacePositions();
+  
 
+  if($stressTest == null){
+	  
+	 $this->recordRacePositions();
+	 
 	if($this->saveToJson($this->filename)){
-    return true;
-  } else {
-    return false;
+	return true;
+	} else {
+	return false;
+	}
   }
+
 
   }
 
@@ -929,7 +935,7 @@ class Race extends db_name {
     $final_time = $current_time + (14 * 24 * 60 * 60);
     $current_year = date("Y");
 
-    $query = "SELECT competition.logo, race.name, race.id, race.file, track.image, season.competition_id, season.year, race.datetime, p.nome as country_name FROM race LEFT JOIN season ON race.season_id = season.id LEFT JOIN track ON race.track_id = track.id LEFT JOIN competition ON competition.id = season.competition_id LEFT JOIN ".$this->db_name.".paises p ON p.id = race.country_id WHERE season.year = ?  AND race.datetime > ? AND (season.competition_id < 3 OR race.datetime < ?) ORDER BY race.datetime";
+    $query = "SELECT competition.logo, race.name, race.id, race.file, track.image, season.competition_id, season.year, race.datetime, p.nome as country_name FROM race LEFT JOIN season ON race.season_id = season.id LEFT JOIN track ON race.track_id = track.id LEFT JOIN competition ON competition.id = season.competition_id LEFT JOIN ".$this->db_name.".paises p ON p.id = race.country_id WHERE season.year = ?  AND race.datetime > ? AND (season.competition_id < 3 OR race.datetime < ?) ORDER BY race.datetime DESC";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(1, $current_year);
     $stmt->bindParam(2, $current_time);
@@ -1125,6 +1131,10 @@ class Race extends db_name {
     }
 
 
+  }
+  
+  public function getLapResults(){
+	  return $this->lap_results;
   }
 
 }
