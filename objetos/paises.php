@@ -395,7 +395,7 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
 
     }
 
-    function alterar($idPais,$nomePais,$siglaPais,$federacaoPais,$ranqueavel,$logo = null, $latitude, $longitude){
+    function alterar($idPais,$nomePais,$siglaPais,$federacaoPais,$ranqueavel,$logo, $latitude, $longitude){
 
         $idPais = htmlspecialchars(strip_tags($idPais));
         $nomePais = htmlspecialchars(strip_tags($nomePais));

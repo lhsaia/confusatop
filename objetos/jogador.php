@@ -1219,7 +1219,7 @@ return $stmt;
 
         }
 
-        function editar($idJogador,$idTime = null,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono, $atividadeJogador = null, $mentalidadeJogador = null, $determinacaoJogador = null, $cobrancaFaltaJogador = null, $encerramentoContrato = null, $foto = null, $desdeContrato = null){
+        function editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono, $atividadeJogador, $mentalidadeJogador = null, $determinacaoJogador = null, $cobrancaFaltaJogador = null, $encerramentoContrato = null, $foto = null, $desdeContrato = null){
 
             $idJogador = htmlspecialchars(strip_tags($idJogador));
             $idTime = htmlspecialchars(strip_tags($idTime));
@@ -1342,7 +1342,7 @@ return $stmt;
                         if(array_search($codigo,$posicoesJogador) !== false){
                             $stringPosicoes .= "1";
                         } else {
-                            if(strcmp($stringPosicoesAtual{$i},'1') == 0){
+                            if(strcmp($stringPosicoesAtual[$i],'1') == 0){
                                 $stringPosicoes .= "1";
                             } else {
                                 $stringPosicoes .= "0";
@@ -1353,13 +1353,21 @@ return $stmt;
 				
 				$nome = $nomeJogador;
 				$nacionalidade = $nacionalidadeJogador;
+				
+				if($foto != "" && $foto != null){
+					$query_foto = ", foto=:foto";
+				} else {
+					$query_foto = "";
+				}
 
-                $query = "UPDATE jogador SET Nome=:nome, StringPosicoes=:stringPosicoes, Nivel=:nivel, foto=:foto, Pais=:nacionalidade  WHERE ID = :id";
+                $query = "UPDATE jogador SET Nome=:nome, StringPosicoes=:stringPosicoes, Nivel=:nivel, Pais=:nacionalidade ".$query_foto." WHERE ID = :id";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(":nivel",$nivelJogador);
                 $stmt->bindParam(":stringPosicoes", $stringPosicoes);
                 $stmt->bindParam(":id", $idJogador);
-				$stmt->bindParam(":foto", $foto);
+					if($foto != "" && $foto != null){
+						$stmt->bindParam(":foto", $foto);
+					} 
 				$stmt->bindParam(":nome", $nome);
 				$stmt->bindParam(":nacionalidade",$nacionalidade);
                 if($stmt->execute()){
@@ -1463,7 +1471,7 @@ return $stmt;
                     if(array_search($codigo,$posicoesJogador) !== false){
                         $stringPosicoes .= "1";
                     } else {
-                        if(strcmp($stringPosicoesAtual{$i},'1') == 0){
+                        if(strcmp($stringPosicoesAtual[$i],'1') == 0){
                             $stringPosicoes .= "1";
                         } else {
                             $stringPosicoes .= "0";
@@ -1902,7 +1910,7 @@ return $stmt;
 
         }
 
-        function randomPlayer($codigoPosicao = null, $nacionalidade, $origemNomes, $origemSobrenomes,$idadeMin,$idadeMax,$nivelMin,$nivelMax,$nivelMed,$idadeMed,$ocorrenciaNomeDuplo, $indiceMiscigenacao, $sexo){
+        function randomPlayer($codigoPosicao, $nacionalidade, $origemNomes, $origemSobrenomes,$idadeMin,$idadeMax,$nivelMin,$nivelMax,$nivelMed,$idadeMed,$ocorrenciaNomeDuplo, $indiceMiscigenacao, $sexo){
 
             if($idadeMin == 0){
                 $idadeMin = 18;

@@ -730,7 +730,7 @@ if($idUsuario != null){
 
         }
 
-        function alterarElenco($idJogador1, $idJogador2,$tipoAlteracao,$posJogador1 = null,$posJogador2 = null, $time){
+        function alterarElenco($idJogador1, $idJogador2,$tipoAlteracao,$posJogador1 = null,$posJogador2 = null, $time = null){
             $idJogador1 = htmlspecialchars(strip_tags($idJogador1));
             $idJogador2 = htmlspecialchars(strip_tags($idJogador2));
             $tipoAlteracao = htmlspecialchars(strip_tags($tipoAlteracao));
