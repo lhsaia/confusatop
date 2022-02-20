@@ -8,3 +8,7 @@ octamotor/races/test.json
 *.json
 octamotor/races/test.json
 octamotor/races/8test.json
+octamotor/races/8test.json
+octamotor/races/test.json
+octamotor/config/database.php
+*.bak
