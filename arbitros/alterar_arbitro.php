@@ -10,6 +10,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $nomeAux1 = $pacoteArbitro['nomeAux1'];
     $nomeAux2 = $pacoteArbitro['nomeAux2'];
     $estilo = $pacoteArbitro['estilo'];
+	$nivel = $pacoteArbitro['nivel'];
+	$status = $pacoteArbitro['status'];
+	$nascimento = $pacoteArbitro['nascimento'];
+	
     if(isset($pacoteArbitro['pais'])){
         $pais = $pacoteArbitro['pais'];
     }
@@ -31,7 +35,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $paisPreparado = $pais;
 
     //alterar arbitro
-    if($arbitro->alterar($idArbitro,$nomeArbitro,$nomeAux1,$nomeAux2,$estilo,$paisPreparado)){
+    if($arbitro->alterar($idArbitro,$nomeArbitro,$nomeAux1,$nomeAux2,$estilo,$paisPreparado, $nivel, $status, $nascimento)){
         $is_success = true;
         $error_msg = "";
         $usuario->atualizarAlteracao($_SESSION['user_id']);

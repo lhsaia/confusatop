@@ -19,26 +19,39 @@ if(isset($_GET['fed'])){
     $federacion = null;
 }
 
-?>
-
-
-<div id="quadro-container">
+echo '<div id="quadro-container">
 <div align="center" id="quadroArbitro">
 <h2>Quadro de árbitros <span id="nomeFederacao"></h2>
 <hr>
-<div id="federation-select">
-<a href="https://confusa.top/arbitros">Geral</a>
-<span>  /  </span>
-<a href="https://confusa.top/arbitros?fed=1">FEASCO</a>
-<span>  /  </span>
-<a href="https://confusa.top/arbitros?fed=2">FEMIFUS</a>
-<span>  /  </span>
-<a href="https://confusa.top/arbitros?fed=3">COMPACTA</a>
+<div id="federation-select">';
+
+
+
+echo '<a href="/arbitros">Geral</a>
+<span>  /  </span>';
+echo '<a href="/arbitros?fed=1">FEASCO</a>
+<span>  /  </span>';
+echo '<a href="/arbitros?fed=2">FEMIFUS</a>
+<span>  /  </span>';
+echo '<a href="/arbitros?fed=3">COMPACTA</a>
 </div>
-<hr>
+<hr>';
+
+
+
+?>
 
 <script>
-    //Seleção de federação
+
+ $(document).ready(function($){
+	 
+	 <?php
+	 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
+		 echo "$('#toolbar').html('<div id=\"criar_arbitro\"><i class=\"fas fa-plus-circle\"></i><span>Criar</span></div><div id=\"importar_arbitro\"><i class=\"fas fa-file-import\"></i><span>Importar</span></div>')";
+	 }
+    
+	?>
+	//Seleção de federação
     var codFederacao = "<?php echo $federacion; ?>";
     var nomeFederacao = '';
 
@@ -56,7 +69,14 @@ if(isset($_GET['fed'])){
             break;
     }
     $("#nomeFederacao").html(nomeFederacao);
-
+	
+	$("#criar_arbitro").click(function(){
+		window.location.href= '/arbitros/inserir_arbitro.php';
+	});
+	$("#importar_arbitro").click(function(){
+		window.location.href= '/arbitros/importar_arbitro.php';
+	});
+ });
 </script>
 
 
@@ -141,6 +161,9 @@ if($number_of_referees>0){
             echo "<th>Auxiliar 2</th>";
             echo "<th>Estilo</th>";
             echo "<th class='wide'>País</th>";
+			echo "<th>Nível</th>";
+			echo "<th>Nascimento</th>";
+			echo "<th>Status</th>";
             if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                 echo "<th class='wide'>Opções</th>";
             }
@@ -179,6 +202,33 @@ if($number_of_referees>0){
                     break;
             }
 
+            switch ($nivel) {
+                case 0:
+                    $nomenclaturaNivel = "Nacional";
+                    break;
+                case 1:
+					$nomenclaturaNivel = "Regional";
+                    break;
+                case 2:
+					$nomenclaturaNivel = "Internacional";
+                    break;
+            }
+			
+			switch ($ativo) {
+                case 1:
+                    $nomenclaturaStatus = "Ativo";
+                    break;
+                case 0:
+					$nomenclaturaStatus = "Aposentado";
+                    break;
+            }
+			
+			if($nascimento == null || $nascimento == "0000-00-00"){
+				$nascimentoComposto = "ND";
+			} else {
+				$nascimentoComposto = date("d-m-Y", strtotime($nascimento)) . " (" . $idade . ")";
+			}
+
             echo "<tr id='".$id."'>";
                 //echo "<td><span id=".$id.">{$id}</span></td>";
                 echo "<td><span class='nomeEditavel' id='nom".$id."'>{$nomeArbitro}</span></td>";
@@ -186,7 +236,7 @@ if($number_of_referees>0){
                 echo "<td><span class='nomeEditavel' id='sax".$id."'>{$nomeAuxiliarDois}</span></td>";
                 echo "<td><span class='nomeEstilo' id='est".$id."'>{$estiloComposto[1]}</span>".
                         "<select class='comboEstilo editavel' id='{$estiloComposto[0]}' hidden>".
-                            "<option value='1'><span>Gosta de deixar o jogo rolar</span></option>".
+                            "<option value='1'>Gosta de deixar o jogo rolar</option>".
                             "<option value='2'>Prefere conversar a dar cartões</option>".
                             "<option value='3'>Moderado</option>".
                             "<option value='4'>Rígido</option>".
@@ -204,7 +254,21 @@ if($number_of_referees>0){
                     }
                     echo "</select>";
                     echo "</td>";
+                echo "<td><span class='nomeNivel' id='niv".$id."'>{$nomenclaturaNivel}</span>".
+                        "<select class='comboNivel editavel' data-selected='{$nivel}' hidden>".
+                            "<option value='0'>Nacional</option>".
+                            "<option value='1'>Regional</option>".
+                            "<option value='2'>Internacional</option>".
+                        "</select></td>";
+				echo "<td><span class='nomeNascimento' id='nas".$id."'>{$nascimentoComposto}</span><input id='selnas".$id."' class='nascimentoEditavel editavel' type='date' data-selected='{$nascimento}' hidden/></td>";
 
+
+				echo "<td><span class='nomeStatus' id='dis".$id."'>".$nomenclaturaStatus."</span><select class='comboStatus editavel' data-selected='{$ativo}' hidden >";
+				echo "<option value='1' title='Ativo'>Ativo</option>";
+				echo "<option value='0' title='Aposentado, não pode ser usado'>Aposentado</option>";
+
+				echo "</select></td>";
+					
                 $optionsString = "<td class='wide'>";
 
                 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
@@ -336,12 +400,22 @@ window.onscroll = function(ev) {
         tbl_row.find('.exportar').hide();
         tbl_row.find('.nomeEstilo').hide();
         tbl_row.find('.nomePais').hide();
+		tbl_row.find('.comboNivel').show();
+		tbl_row.find('.nomeNivel').hide();
+		tbl_row.find('.comboNivel').val(tbl_row.find('.comboNivel').attr("data-selected"));
+		tbl_row.find('.comboStatus').show();
+		tbl_row.find('.nomeStatus').hide();
+		tbl_row.find('.comboStatus').val(tbl_row.find('.comboStatus').attr("data-selected"));
 
         var selectId = tbl_row.find('.comboEstilo').attr('id');
         tbl_row.find('.comboEstilo').show().val(selectId);
 
         var paisId = tbl_row.find('.comboPais').attr('id');
         tbl_row.find('.comboPais').show().val(paisId);
+		
+		tbl_row.find('.nomeNascimento').hide();
+		tbl_row.find('.nascimentoEditavel').show();
+		tbl_row.find('.nascimentoEditavel').val(tbl_row.find('.nascimentoEditavel').attr("data-selected"));
 
     });
 
@@ -357,6 +431,12 @@ window.onscroll = function(ev) {
         tbl_row.find('.editar').show();
         tbl_row.find('.deletar').show();
         tbl_row.find('.exportar').show();
+		tbl_row.find('.comboNivel').hide();
+		tbl_row.find('.nomeNivel').show();
+		tbl_row.find('.comboStatus').hide();
+		tbl_row.find('.nomeStatus').show();
+		tbl_row.find('.nomeNascimento').show();
+		tbl_row.find('.nascimentoEditavel').hide();
 
         tbl_row.find('span').each(function(index, val){
             $(this).html($(this).attr('original_entry'));
@@ -375,15 +455,24 @@ window.onscroll = function(ev) {
         tbl_row.find('.editar').show();
         tbl_row.find('.deletar').show();
         tbl_row.find('.exportar').show();
-
+		tbl_row.find('.comboNivel').hide();
+		tbl_row.find('.nomeNivel').show();
+		tbl_row.find('.comboStatus').hide();
+		tbl_row.find('.nomeStatus').show();
+		tbl_row.find('.nomeNascimento').show();
+		tbl_row.find('.nascimentoEditavel').hide();
+		
         var id = tbl_row.attr('id');
         var nomeArbitro = tbl_row.find('#nom'+id).html();
         var nomeAux1 = tbl_row.find('#pax'+id).html();
         var nomeAux2 = tbl_row.find('#sax'+id).html();
         var estilo = tbl_row.find('.comboEstilo').val();
         var pais = tbl_row.find('.comboPais').val();
+		var nivel = tbl_row.find('.comboNivel').val();
+		var status = tbl_row.find('.comboStatus').val();
+		var nascimento = tbl_row.find('.nascimentoEditavel').val();
 
-        var pacoteArbitro = {id,nomeArbitro,nomeAux1,nomeAux2,estilo,pais};
+        var pacoteArbitro = {id,nomeArbitro,nomeAux1,nomeAux2,estilo,pais, nivel, status, nascimento};
         var data = JSON.stringify(pacoteArbitro);
 
         $.ajax({

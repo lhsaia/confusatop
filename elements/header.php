@@ -16,6 +16,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && isset($_SES
     $onclick_log = 'document.getElementById("id02").style.display="block"';
     $title_log = "Log-out";
     $change_pass = "<a class='nav-item' href='/usuario/alterar_senha.php'>Alterar senha</a>";
+	$my_menu = "<a class='nav-item' href='/usuario/index.php'>Minha área</a>";
 
     if($_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == false){
       $admin_btn = "<a class='nav-item' href='/admin/criar_usuario.php'>Criar usuário</a>";
@@ -29,6 +30,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && isset($_SES
     }
 
 } else {
+  $my_menu = "";
   $change_pass = "";
   $status_style = "none";
   $welcometext = "";
@@ -43,9 +45,6 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && isset($_SES
 $inserir_jogo =  "<a class='nav-item' href='/ranking/criar_jogo.php'>Inserir Jogo</a>";
 $importar_jogo = "<a class='nav-item' href='/ranking/importar_jogo.php'>Importar Jogo</a>";
 $ver_ranking = "<a class='nav-item' href='/ranking/index.php'>Ranking</a>";
-$ver_trios = "<a class='nav-item' href='/arbitros/'>Ver Trios de Arbitragem</a>";
-$importar_trios = "<a class='nav-item' href='/arbitros/importar_arbitro.php'>Importar Trio</a>";
-$criar_trios = "<a class='nav-item' href='/arbitros/inserir_arbitro.php'>Criar Trio</a>";
 $octamotor_home = "<a class='nav-item' href='/octamotor'>Octamotor home</a>";
 
 
@@ -116,6 +115,7 @@ if(isset($aux_css)){
   <a id="close-menu" class='menu-toggle-button no-capture'><i class="fas fa-times"></i></a>
   <nav class="nav no-capture" id='nav'>
     <a class="nav-item" href="/">Home</a>
+	<?php echo $my_menu ?>
     <?php echo "<a class='nav-item' onclick='{$onclick_log}'>{$title_log}</a>" ?>
     <?php echo "<a class='nav-item' href='/sobre.php'>Sobre / Tutorial</a>" ?>
     <?php echo "<a class='nav-item' href='/contato.php'>Contato</a>" ?>
@@ -132,9 +132,6 @@ if(isset($aux_css)){
           echo $inserir_jogo;
         break;
       case "arbitros":
-          echo $ver_trios;
-          echo $criar_trios;
-          echo $importar_trios;
         break;
       case "octamotor":
           echo $octamotor_home;

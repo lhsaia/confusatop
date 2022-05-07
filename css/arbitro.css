@@ -85,5 +85,9 @@ only screen and (max-width: 40em)  {
 
     select {
         width:100%;
-        max-width: 100%;
+        max-width: 120px;
     }
+
+input{
+	color:inherit;
+}

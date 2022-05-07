@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+
 <?php
 
 session_start();
@@ -20,22 +22,18 @@ $arbitro = new TrioArbitragem($db);
 $usuario = new Usuario($db);
 
 $page_title = "Inserir árbitro";
-$css_filename = "indexRanking";
+$css_filename = "newindex";
 $css_login = 'login';
+$aux_css = 'area_competicao';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
-
-echo"<div>";
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
 
 // if the form was submitted
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
+if ($_SERVER['REQUEST_METHOD'] == 'POST'){
 if(isset($_POST['nome_arbitro']) && !empty($_POST['nome_aux2']) && !empty($_POST['nome_aux1']) && !empty($_POST['nome_arbitro'])){
-
-
-
 
     // set product property values
     $arbitro->nomeArbitro = $_POST['nome_arbitro'];
@@ -43,7 +41,8 @@ if(isset($_POST['nome_arbitro']) && !empty($_POST['nome_aux2']) && !empty($_POST
     $arbitro->nomeAuxiliarDois = $_POST['nome_aux2'];
     $arbitro->estilo = $_POST['estilo_arbitro'];
     $arbitro->pais = $_POST['nacionalidade_arbitro'];
-
+	$arbitro->nivel = $_POST['nivel_arbitro'];
+	$arbitro->nascimento = $_POST['nascimento_arbitro'];
 
 
 
@@ -51,10 +50,7 @@ if(isset($_POST['nome_arbitro']) && !empty($_POST['nome_aux2']) && !empty($_POST
     if($arbitro->create()){
         echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Árbitro inserido com sucesso</div>";
         $usuario->atualizarAlteracao($_SESSION['user_id']);
-    }
-
-    // if unable to create the product, tell the user
-    else{
+    } else{
         echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Não foi possível inserir o árbitro, possível duplicata</div>";
     }
 }  else {
@@ -65,105 +61,28 @@ if(isset($_POST['nome_arbitro']) && !empty($_POST['nome_aux2']) && !empty($_POST
 ?>
 
 <script type="application/javascript">
-var close = document.getElementsByClassName("closebtn");
-var i;
 
-for (i = 0; i < close.length; i++) {
-    close[i].onclick = function(){
-        var div = this.parentElement;
-        div.style.opacity = "0";
-        setTimeout(function(){ div.style.display = "none"; }, 600);
-    }
-}
-</script>
+ $(document).ready(function($){
+	 
+	$('#toolbar').html("<div id='hexagen'><i class='fas fa-dice'></i><span> Hexagen</span></div>");
+	 
+	var close = document.getElementsByClassName("closebtn");
+	var i;
+	
+	
 
-
-<form method="POST" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
-
-    <table class='table table-below float-table'>
-
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Nome árbitro</td>
-            <td class="td_inv input_nome_time">
-                <input type='text' name='nome_arbitro' id='nome_arbitro' class='form-control' />
-            </td>
-        </tr>
-
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Nome auxiliar 1</td>
-            <td class="td_inv input_nome_time">
-                <input type='text' name='nome_aux1' id='nome_aux1' class='form-control' />
-            </td>
-        </tr>
-
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Nome auxiliar 2</td>
-            <td class="td_inv input_nome_time">
-                <input type='text' name='nome_aux2' id='nome_aux2' class='form-control' />
-            </td>
-        </tr>
-
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Estilo</td>
-            <td class="td_inv input_nome_time">
-                <select class="form-control" name="estilo_arbitro" id='estilo_arbitro'>
-                    <option value="1">Gosta de deixar o jogo rolar</option>
-                    <option value="2">Prefere conversar a dar cartões</option>
-                    <option selected value="3">Moderado</option>
-                    <option value="4">Rígido</option>
-                    <option value="5">Carrasco</option>
-                </select>
-            </td>
-        </tr>
-
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Nacionalidade</td>
-            <td class="td_inv input_nome_time">
-                <?php
-                // ler times do banco de dados
-                $stmt = $pais->read();
-
-                // put them in a select drop-down
-                echo "<select class='form-control' name='nacionalidade_arbitro' id='pais_arbitro'>";
-                echo "<option>Selecione país...</option>";
-
-                while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
-                    extract($row_category);
-                    echo "<option value='{$id}'>{$nome}</option>";
-                }
-
-                echo "</select>";
-                ?>
-            </td>
-        </tr>
-
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time"><i class="fas fa-dice"></i>&nbsp Sexo</td>
-            <td class="td_inv input_nome_time">
-                <select class="form-control" name="sexo_arbitro" id='sexo_arbitro'>
-                    <option selected value="0">Masculino</option>
-                    <option value="1">Feminino</option>
-                    <option value="2">Misto</option>
-                </select>
-            </td>
-        </tr>
-
-        <tr class="tr_inv btn_area">
-            <td class="td_inv btn_area"></td>
-            <td class="td_inv btn_area">
-                <button type="submit" name="criar" class="btn">Inserir</button>
-                <button type='button' id="hexagen" class="btn"><i class="fas fa-dice"></i>&nbsp Hexagen</button>
-            </td>
-        </tr>
-
-    </table>
-</form>
-
-<script>
-
+	for (i = 0; i < close.length; i++) {
+		close[i].onclick = function(){
+			var div = this.parentElement;
+			div.style.opacity = "0";
+			setTimeout(function(){ div.style.display = "none"; }, 600);
+		}
+	}
+	
+	
 $("#hexagen").on("click",function(){
     var nacionalidade = $("#pais_arbitro").val();
-    var sexo = $("#sexo_arbitro").val();
+    var sexo = $("#genero_arbitro").val();
 
     var formData = {
         'nacionalidade' : nacionalidade,
@@ -180,10 +99,6 @@ $("#hexagen").on("click",function(){
 
                     .done(function(data) {
 
-            // log data to the console so we can see
-            console.log(data);
-
-
             if (data.success) {
                 //preencher campos
                 $("#nome_arbitro").val(data.arb_info.nomeArbitro);
@@ -191,6 +106,7 @@ $("#hexagen").on("click",function(){
                 $("#nome_aux2").val(data.arb_info.nomeAuxiliarDois);
                 $("#estilo_arbitro").val(data.arb_info.estilo);
                 $("#pais_arbitro").val(data.arb_info.pais);
+				$("#nascimento_arbitro").val(data.arb_info.nascimento);
 
             }
 
@@ -204,14 +120,82 @@ $("#hexagen").on("click",function(){
 
 });
 
+
+});
 </script>
+
+
+<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
+<div id='errorbox'></div>
+<div>
+<div id='inscricao'>
+
+<form method="POST" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
+
+    <label for='nome_arbitro'>Nome árbitro</label>
+	<input type='text' name='nome_arbitro' id='nome_arbitro' class='form-control' />
+
+    <label for='nome_aux1'>Nome auxiliar 1</label>
+	<input type='text' name='nome_aux1' id='nome_aux1' class='form-control'/>
+
+
+	<label for='nome_aux2'>Nome auxiliar 2</label>
+	<input type='text' name='nome_aux2' id='nome_aux2' class='form-control' />
+
+	<label for='estilo_arbitro'>Estilo</label>
+	<select class="form-control" name="estilo_arbitro" id='estilo_arbitro'>
+		<option value="1">Gosta de deixar o jogo rolar</option>
+		<option value="2">Prefere conversar a dar cartões</option>
+		<option selected value="3">Moderado</option>
+		<option value="4">Rígido</option>
+		<option value="5">Carrasco</option>
+	</select>
+
+	<label for='nacionalidade_arbitro' class="td_inv input_nome_time">Nacionalidade</label>
+		<?php
+		// ler times do banco de dados
+		$stmt = $pais->read();
+
+		// put them in a select drop-down
+		echo "<select class='form-control' name='nacionalidade_arbitro' id='pais_arbitro'>";
+		echo "<option>Selecione país...</option>";
+
+		while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
+			extract($row_category);
+			echo "<option value='{$id}'>{$nome}</option>";
+		}
+
+		echo "</select>";
+		?>
+		
+	<label for='genero_arbitro'>Gênero</label>
+	<select class="form-control" name="genero_arbitro" id='genero_arbitro'>
+		<option selected value="0">Masculino</option>
+		<option value="1">Feminino</option>
+		<option value="2">Misto</option>
+	</select>
+	
+	<label for='nivel_arbitro'>Nível</label>
+	<select class="form-control" name="nivel_arbitro" id='nivel_arbitro'>
+		<option selected value="0">Nacional</option>
+		<option value="1">Regional</option>
+		<option value="2">Internacional</option>
+	</select>
+		
+	<label for='nascimento_arbitro'>Nascimento</label>
+	<input type='date' id='nascimento_arbitro' name='nascimento_arbitro' class='form-control inputHerdeiro' /></td>
+		
+	<input type='submit' value='Inserir' id='salvar'/>		
+
+</form>
+</div>
+</div>
 
 <?php
 
     } else {
-
-    echo "Usuário sem permissão para inserir árbitros, por favor faça o login.";
-}
+		echo "Usuário sem permissão para inserir árbitros, por favor faça o login.";
+	}
 echo "</div>";
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");

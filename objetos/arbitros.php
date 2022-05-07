@@ -12,6 +12,8 @@ class TrioArbitragem{
     public $nomeAuxiliarDois;
     public $estilo;
     public $pais;
+	public $nivel;
+	public $nascimento;
 
     public function __construct($db){
         $this->conn = $db;
@@ -24,7 +26,7 @@ class TrioArbitragem{
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    nomeArbitro=:nomeArbitro, nomeAuxiliarUm=:nomeAuxiliarUm, nomeAuxiliarDois=:nomeAuxiliarDois, estilo=:estilo, pais=:pais";
+                    nomeArbitro=:nomeArbitro, nomeAuxiliarUm=:nomeAuxiliarUm, nomeAuxiliarDois=:nomeAuxiliarDois, estilo=:estilo, pais=:pais, nivel=:nivel, nascimento=:nascimento ";
 
         $stmt = $this->conn->prepare($query);
 
@@ -34,6 +36,8 @@ class TrioArbitragem{
         $this->usuario=htmlspecialchars(strip_tags($this->nomeAuxiliarDois));
         $this->pontos=htmlspecialchars(strip_tags($this->estilo));
         $this->posicao=htmlspecialchars(strip_tags($this->pais));
+		$this->nivel=htmlspecialchars(strip_tags($this->nivel));
+		$this->nascimento=htmlspecialchars(strip_tags($this->nascimento));
 
          //verificar se árbitro já existe
          $tag_comparacao = (string)$this->nomeArbitro;
@@ -44,7 +48,12 @@ class TrioArbitragem{
          $stmt_comparacao->bindParam(1, $this->nomeArbitro);
          $stmt_comparacao->execute();
          $result_comp = $stmt_comparacao->fetch(PDO::FETCH_ASSOC);
-         $tag_atual = (string)$result_comp['nomeArbitro'];
+		 if(!isset($result_comp['nomeArbitro'])){
+			 $tag_atual = "";
+		 } else {
+			 $tag_atual = (string)$result_comp['nomeArbitro'];
+		 }
+         
 
         // bind values
         $stmt->bindParam(":nomeArbitro", $this->nomeArbitro);
@@ -52,6 +61,8 @@ class TrioArbitragem{
         $stmt->bindParam(":nomeAuxiliarDois", $this->nomeAuxiliarDois);
         $stmt->bindParam(":estilo", $this->estilo);
         $stmt->bindParam(":pais", $this->pais);
+		$stmt->bindParam(":nivel", $this->nivel);
+		$stmt->bindParam(":nascimento", $this->nascimento);
 
 
         if(trim($tag_atual) != trim($tag_comparacao)){
@@ -71,7 +82,7 @@ class TrioArbitragem{
     function readAll($from_record_num, $records_per_page){
 
     $query = "SELECT
-                a.id, a.nomeArbitro, a.nomeAuxiliarUm, a.nomeAuxiliarDois, a.estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais
+                a.id, a.nomeArbitro, a.nomeAuxiliarUm, a.nomeAuxiliarDois, a.estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.nivel, a.nascimento,FLOOR((DATEDIFF(CURDATE(), a.nascimento))/365) as idade, a.ativo 
             FROM
                 " . $this->table_name . " a
             LEFT JOIN paises p ON a.pais = p.id
@@ -92,7 +103,7 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
     $federation_index = htmlspecialchars(strip_tags($federation_index));
 
     $query = "SELECT
-                a.id, a.nomeArbitro, a.nomeAuxiliarUm, a.nomeAuxiliarDois, a.estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.federacao, p.id as idPais, p.dono as idDonoPais
+                a.id, a.nomeArbitro, a.nomeAuxiliarUm, a.nomeAuxiliarDois, a.estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.federacao, p.id as idPais, p.dono as idDonoPais, a.nivel, a.nascimento,FLOOR((DATEDIFF(CURDATE(), a.nascimento))/365) as idade, a.ativo 
             FROM
                 " . $this->table_name . " a
             LEFT JOIN paises p ON a.pais = p.id
@@ -113,7 +124,10 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
     // used for paging products
     public function countAll($federacao){
 
-    $federacao = htmlspecialchars(strip_tags($federacao));
+	if($federacao != null){
+		$federacao = htmlspecialchars(strip_tags($federacao));
+	}
+    
 
     if($federacao == null || $federacao == 0 || $federacao == "0"){
 
@@ -151,7 +165,7 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
     }
 
     //alterar árbitro
-    function alterar($idRecebida,$nomeArbitroRec,$nomeAux1Rec,$nomeAux2Rec,$estiloRec,$paisRec = 0){
+    function alterar($idRecebida,$nomeArbitroRec,$nomeAux1Rec,$nomeAux2Rec,$estiloRec,$paisRec, $nivel, $status, $nascimento){
 
         $idRecebida = htmlspecialchars(strip_tags($idRecebida));
         $nomeArbitroRec = htmlspecialchars(strip_tags($nomeArbitroRec));
@@ -159,16 +173,22 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
         $nomeAux2Rec = htmlspecialchars(strip_tags($nomeAux2Rec));
         $estiloRec = htmlspecialchars(strip_tags($estiloRec));
         $paisRec = htmlspecialchars(strip_tags($paisRec));
+		$nivel = htmlspecialchars(strip_tags($nivel));
+		$status = htmlspecialchars(strip_tags($status));
+		$nascimento = htmlspecialchars(strip_tags($nascimento));
 
-        $query = "UPDATE " . $this->table_name . " SET nomeArbitro = ?, nomeAuxiliarUm = ?, nomeAuxiliarDois = ?, estilo = ?, pais = ? WHERE id = ?";
+        $query = "UPDATE " . $this->table_name . " SET nomeArbitro = :nome, nomeAuxiliarUm = :aux1, nomeAuxiliarDois = :aux2, estilo = :estilo, pais = :pais, nivel = :nivel, ativo = :status, nascimento = :nascimento WHERE id = :id";
         $stmt = $this->conn->prepare( $query );
 
-        $stmt->bindParam(1, $nomeArbitroRec);
-        $stmt->bindParam(2, $nomeAux1Rec);
-        $stmt->bindParam(3, $nomeAux2Rec);
-        $stmt->bindParam(4, $estiloRec);
-        $stmt->bindParam(5, $paisRec);
-        $stmt->bindParam(6, $idRecebida);
+        $stmt->bindParam(":nome", $nomeArbitroRec);
+        $stmt->bindParam(":aux1", $nomeAux1Rec);
+        $stmt->bindParam(":aux2", $nomeAux2Rec);
+        $stmt->bindParam(":estilo", $estiloRec);
+        $stmt->bindParam(":pais", $paisRec);
+		$stmt->bindParam(":nivel", $nivel);
+		$stmt->bindParam(":status", $status);
+		$stmt->bindParam(":nascimento", $nascimento);
+        $stmt->bindParam(":id", $idRecebida);
 
         if($stmt->execute()){
             return true;
@@ -208,9 +228,17 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
         return $stmt;
 
     }
+	
+	public function aniversario_reverso( $idade ){
+        $dias = mt_rand(1,350);
+        return date('Y-m-d', strtotime($idade . ' years '.$dias.' days ago'));
+    }
 
     function randomTrio($nacionalidade, $origemNomeArbitro, $origemSobrenomeArbitro, $ocorrenciaNomeDuploArbitro, $indiceMiscigenacaoArbitro, $origemNomeAux1, $origemSobrenomeAux1, $ocorrenciaNomeDuploAux1, $indiceMiscigenacaoAux1, $origemNomeAux2, $origemSobrenomeAux2, $ocorrenciaNomeDuploAux2, $indiceMiscigenacaoAux2, $sexo){
 
+		$idade = $this->sorteia(20,40,25);
+		$this->nascimento = $this->aniversario_reverso($idade);
+		
         $this->estilo = $this->sorteia(1,5);
         $this->pais = $nacionalidade;
 

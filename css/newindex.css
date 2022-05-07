@@ -72,6 +72,19 @@ body.loggedin{
   /* filter: blur(5px); */
 }
 
+#tabela-quadros-competicao {
+  display:flex;
+  flex-wrap: wrap;
+  height:100%;
+  background-image: url("/images/competicoes/mainscreen.webp");
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* background-blend-mode: luminosity; */
+  /* background-color:#1A1469; */
+  background-position:center center;
+  /* filter: blur(5px); */
+}
+
 .quadro-flex {
  height:50%;
  width:20%;
@@ -93,15 +106,40 @@ body.loggedin{
 
 }
 
+.quadro-flex-competicao {
+ height:50%;
+ width:33.33%;
+ position:relative;
+
+}
+
+.quadro-fix-competicao {
+ height:50%;
+ width:33.33%;
+ position:relative;
+
+}
+
 
 .quadro-flex-mercado span{
 	  color:white !important; 
 	  
 }
 
+.quadro-flex-competicao span{
+	  color:white !important; 
+	  font-weight: bold;
+	  
+}
+
 .quadro-flex-mercado:hover span{
 
 	  background-color: darkgreen !important;
+}
+
+.quadro-flex-competicao:hover span{
+
+	  background-color: darkgoldenrod !important;
 }
 
 .outros-links-container {
@@ -165,6 +203,60 @@ body.loggedin{
   background-color: #1A1469;
 }
 
+.info_competicao{
+	background-color:rgba(0, 0, 0, 0.5);
+	display:flex;
+	flex-direction:column;
+	justify-content:center;
+	align-items:center;
+	box-sizing:border-box;
+}
+
+#logo_federacao{
+	max-height:120px;
+	max-width:90px; 
+	filter: drop-shadow(0 0 0.75rem white);
+}
+
+#sede_descricao{
+	color:white;
+	padding:5px;
+	text-align: center;
+}
+
+#logo_competicao{
+	max-height:120px;
+	max-width:180px;
+}
+
+#nome_competicao{
+	font-weight:bold;
+	color:white;
+	font-size:1.5em;
+	padding:5px;
+	text-align: center;
+}
+
+#status_competicao{
+	border-radius:10px;
+	margin:20px;
+	padding:20px;
+	width: 200px;
+	font-weight:bold;
+	text-align:center;
+	
+}
+
+#times_inseridos{
+	border-radius:5%;
+	margin:20px;
+	padding:20px;
+	min-width: 200px;
+	font-weight:bold;
+	color:white;
+	text-align:center;
+}
+
 .quadro-animado img{
  width:100%;
 height:100%;
@@ -172,6 +264,33 @@ opacity:0;
 object-fit:cover;
 position:absolute;
 transition: opacity 0.5s ease-in-out;
+}
+
+.quadro-desanimado span {
+  /* display:block;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);*/
+  text-align:center;
+  /* color:orange; */
+  font-weight: bold;
+  font-size:200%;
+  width:100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* transition: all 1s ease-in-out; */
+  color:dimgray;
+
+
+}
+
+.quadro-desanimado{
+	  pointer-events: none;
+  cursor:auto;
 }
 
 .quadro-animado span {
@@ -285,6 +404,93 @@ h1 {
   top:30px;
   left:20px;
 }
+
+
+#loading{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  height:100%;
+  width:100%;
+  z-index: 13;
+  background-color: rgba(255,255,255,0.9);
+}
+
+#loading img{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  margin:auto;
+  border-radius:20px;
+
+}
+
+/* teste */
+
+/* html { */
+  /* height:100%; */
+/* } */
+
+/* body { */
+  /* margin:0; */
+/* } */
+
+h2{
+	color:white;
+	font-weight:bold;
+}
+
+.bg {
+  animation:slide 3s ease-in-out infinite alternate;
+  background-image: linear-gradient(-60deg, #1b146c 50%, #241b92 50%);
+  bottom:0;
+  left:-50%;
+  opacity:.5;
+  position:fixed;
+  right:-50%;
+  top:0;
+  z-index:-1;
+}
+
+.bg2 {
+  animation-direction:alternate-reverse;
+  animation-duration:4s;
+}
+
+.bg3 {
+  animation-duration:5s;
+}
+
+.content {
+  /* background-color:rgba(255,255,255,.8); */
+  border-radius:.25em;
+  /* box-shadow:0 0 .25em rgba(0,0,0,.25); */
+  box-sizing:border-box;
+  /* left:50%; */
+  padding:10vmin;
+  /* position:fixed; */
+  text-align:center;
+  /* top:50%; */
+  /* transform:translate(-50%, -50%); */
+}
+
+h1 {
+  font-family:monospace;
+}
+
+@keyframes slide {
+  0% {
+    transform:translateX(-25%);
+  }
+  100% {
+    transform:translateX(25%);
+  }
+}
+
 
 @media only screen and (max-width: 600px) {
   .texto-sobreposto{

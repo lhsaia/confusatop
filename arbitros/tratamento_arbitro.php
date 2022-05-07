@@ -23,6 +23,8 @@
                 
                 $trioArbitragem->pais = $idObtida;         
                 
+			$trioArbitragem->nivel = 0;
+			$trioArbitragem->$nascimento = "0000-00-00";
                     
 			if($trioArbitragem->create()){
 				$is_success = true;
