@@ -314,7 +314,12 @@ function retrieveRaces(season_id, panel_element){
       if(element.status == 0 && verifyLoggedUser(driver_owner)){
         add_edition = "<span class='editable-race'><i class='far fa-edit'></i></span>";
       } else{
-        add_edition = "";
+		  if(element.file != null){
+			  add_edition = "<a href='/octamotor/race_live.php?file_name="+element.file+"' class='see-race' ><i class='fas fa-tv'></i></a>";
+		  } else {
+			  add_edition = "";
+		  }
+        
       }
       races_html += "<button class='accordion-race' data-status='"+element.status+"' data-race='"+ element.id +"'><img class='flag-thumb' src='/images/bandeiras/"+element.flag+"'/> " +element.name + add_edition +" </button>";
     });
