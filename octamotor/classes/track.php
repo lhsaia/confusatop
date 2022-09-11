@@ -206,7 +206,6 @@ class Track extends db_name {
 
     $query = "SELECT track.id, track.name, p.id as country_id, p.bandeira as country_flag FROM track LEFT JOIN ".$this->db_name.".paises p ON p.id = track.country";
     $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(":id",$id);
     $stmt->execute();
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $results;

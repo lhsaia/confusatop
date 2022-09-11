@@ -402,7 +402,7 @@ class Race extends db_name {
         $racer["driver"]->setLapTime($racer["driver"]->race_lap_time($racer["car"],$this->track,$this->competition,$this->highest_level, $lap, $this->safety_car_penalty));
 
         $remaining_laps = $this->total_laps - $lap;
-        if(($remaining_laps > 5 && $racer["driver"]->hasToPit($racer['car']->getStrategy()))){
+        if(($remaining_laps > 5 && $this->safety_car_status == 0 && $racer["driver"]->hasToPit($racer['car']->getStrategy()))){
           $racer["driver"]->pitHappened($racer["car"]->pit_stop_length($best_pit));
 
 		  //pit failures

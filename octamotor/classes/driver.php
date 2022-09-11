@@ -415,6 +415,10 @@ class Driver extends db_name implements \JsonSerializable{
   public function getName(){
     return $this->name;
   }
+  
+  public function getLevel(){
+    return $this->level;
+  }
 
   public function definePitStrategy($strategy_array = null, $strategy_level = null, $total_laps = null){
 
@@ -739,6 +743,8 @@ class Driver extends db_name implements \JsonSerializable{
   public function getIDbyName($name){
 	  
 	$name = htmlspecialchars(strip_tags($name));
+	
+	$name = str_replace("&quot;",'"',$name);
 	
 	$name = "%" . $name . "%";
 	  
