@@ -612,20 +612,36 @@ class Driver extends db_name implements \JsonSerializable{
 
 	public function jsonSerialize()
 	{
-	$vars = get_object_vars($this);
+		$vars = get_object_vars($this);
 
-	return $vars;
+		return $vars;
 	}
 
   public function loadDriver($id){
     $timestamp = time();
     $id = htmlspecialchars(strip_tags($id));
-    $query = "SELECT driver.genre, driver.tv_name, driver.status, hicomp.name as highest_comp, SUM(d.points) as points, COUNT(d.driver) as gps, SUM(case when (d.position > 0 && d.position < 4) then 1 else 0 end) as podiums ,SUM(case when d.position = -1 then 1 else 0 end) as abandon, MIN(NULLIF(ABS(d.position), -d.position)) as best_position, SUM(case when d.position = (SELECT MIN(NULLIF(ABS(position), -position)) FROM race_position WHERE driver = :id1 ) then 1 else 0 end) as best_position_times, driver.name, driver.photo, competition.name as competition, driver.bio, driver.helmet, driver.level, driver.speed, driver.pace, driver.start_skills, driver.technique, driver.rain_skills, driver.aggressiveness, car.picture as car_picture, driver.car_id, car.team_name as team_name, driver.number, p.nome as country_name, p.id as country_id, p.bandeira as country_flag, driver.birth_date, driver.birth_place FROM driver LEFT JOIN car ON car.id = driver.car_id LEFT JOIN competition ON car.competition_id = competition.id LEFT JOIN competition hicomp ON driver.highest_comp = hicomp.id LEFT JOIN ".$this->db_name.".paises p ON p.id = driver.country  LEFT JOIN race_position d ON driver.id = d.driver WHERE driver.id = :id2 AND (case when driver.car_id <> 0 then (car.competition_id = d.competition_id) else (d.competition_id = driver.highest_comp) end) AND d.timestamp < :timestamp AND d.race <> 9999";
+    $query = "SELECT driver.genre, driver.tv_name, driver.status, hicomp.name as highest_comp, rh.pontos, rh.gps, rh.podiums, rh.abandon,  
+				rh.melhor_posicao as best_position, 
+				gh.melhor_posicao_grid as best_grid_position, 
+				rh.best_position_times, 
+				gh.best_grid_position_times, 
+				driver.name, driver.photo, competition.name as competition, driver.bio, driver.helmet, driver.level, driver.speed, driver.pace, driver.start_skills, 
+				driver.technique, driver.rain_skills, driver.aggressiveness, car.picture as car_picture, driver.car_id, car.team_name as team_name, driver.number, 
+				p.nome as country_name, p.id as country_id, p.bandeira as country_flag, driver.birth_date, driver.birth_place 
+				FROM driver
+				LEFT JOIN car ON car.id = driver.car_id 
+				LEFT JOIN competition ON car.competition_id = competition.id 
+				LEFT JOIN competition hicomp ON driver.highest_comp = hicomp.id LEFT JOIN " .$this->db_name. ".paises p ON p.id = driver.country  
+				LEFT JOIN racehistory rh ON rh.id = driver.id 
+				LEFT JOIN gridhistory gh ON gh.id = driver.id  
+				WHERE driver.id = :id  
+				AND (case when driver.car_id <> 0 then (car.competition_id = rh.competition_id AND car.competition_id = gh.competition_id) else (rh.competition_id = driver.highest_comp AND gh.competition_id = driver.highest_comp ) end)  AND rh.timestamp < :timestamp 
+";
 
 	//	$query = "SELECT driver.name, driver.photo, competition.name as competition, bio, driver.helmet, driver.level, driver.speed, driver.pace, driver.start_skills, driver.technique, driver.rain_skills, driver.aggressiveness, car.picture as car_picture, car_id, car.team_name as team_name, number, p.nome as country_name, p.id as country_id, p.bandeira as country_flag, birth_date, birth_place FROM driver LEFT JOIN car ON car.id = driver.car_id LEFT JOIN competition ON car.competition_id = competition.id LEFT JOIN lhsaia_confusa.paises p ON p.id = driver.country WHERE driver.id = ?";
 		$stmt = $this->conn->prepare($query);
-		$stmt->bindParam(":id1",$id);
-    $stmt->bindParam(":id2",$id);
+		$stmt->bindParam(":id",$id);
+
     $stmt->bindParam(":timestamp",$timestamp);
 		$stmt->execute();
 		return $stmt;
@@ -745,6 +761,8 @@ class Driver extends db_name implements \JsonSerializable{
 	$name = htmlspecialchars(strip_tags($name));
 	
 	$name = str_replace("&quot;",'"',$name);
+	$name = str_replace("&apos;",'\'',$name);
+	$name = str_replace("&#039;",'\'',$name);
 	
 	$name = "%" . $name . "%";
 	  

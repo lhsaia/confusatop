@@ -41,7 +41,7 @@ if(isset($_GET['driver'])){
   <div id="driver-viewer" class="visible">
     <div class="container-control">
       <?php
-      if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && !$_SESSION['emTestes']){
+      if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && (isset($_SESSION['emTestes']) && !$_SESSION['emTestes'])){
         echo "<a id='create-new-driver' class='editor-button'>Criar</a>";
       }
 
@@ -51,7 +51,7 @@ if(isset($_GET['driver'])){
       }
       echo "</select>";
 
-      if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && !$_SESSION['emTestes']){
+      if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && (isset($_SESSION['emTestes']) && !$_SESSION['emTestes'])){
         echo "<a id='edit-driver' class='editor-button'>Editar</a>";
       }
 
@@ -81,7 +81,7 @@ if(isset($_GET['driver'])){
         <span class="driver-info"><span class="driver-info-title">Largadas: </span><span id="gps-info"></span></span>
         <span class="driver-info"><span class="driver-info-title">Pontos: </span><span id="points-info"></span></span>
         <span class="driver-info"><span class="driver-info-title">Melhor posição (corrida): </span><span id="race-position-info"></span></span>
-        <span class="driver-info"><span class="driver-info-title">Melhor posição (grid): </span></span>
+        <span class="driver-info"><span class="driver-info-title">Melhor posição (grid): </span ><span id='grid-position-info'></span></span>
         <span class="driver-info"><span class="driver-info-title">Pódios: </span><span id="podium-info"></span></span>
         <span class="driver-info"><span class="driver-info-title">Abandonos: </span><span id="abandon-info"></span></span>
         <span class="driver-info"><span class="driver-info-title">Títulos: </span><span id="titles-info"></span></span>
@@ -362,6 +362,8 @@ function display_driver(updateEditor){
     data: {id: id}
   })
   .done(function(data) {
+	  
+	  console.log(data);
     genre = data.driver_data.genre;
     tv_name = data.driver_data.tv_name;
     country = data.driver_data.country_name;
@@ -397,8 +399,8 @@ function display_driver(updateEditor){
     status = data.driver_data.status;
     highest_comp = data.driver_data.highest_comp;
 
-    if(data.driver_data.points){
-      points = data.driver_data.points;
+    if(data.driver_data.pontos){
+      points = data.driver_data.pontos;
     } else {
       points = 0;
     }
@@ -409,6 +411,14 @@ function display_driver(updateEditor){
     } else {
       best_position = 0;
       best_position_times = 0;
+    }
+	
+	if(data.driver_data.best_grid_position){
+      best_grid_position = data.driver_data.best_grid_position;
+      best_grid_position_times = data.driver_data.best_grid_position_times;
+    } else {
+      best_grid_position = 0;
+      best_grid_position_times = 0;
     }
 
     if(data.driver_data.podiums){
@@ -426,6 +436,12 @@ if(best_position){
   $("#race-position-info").html(best_position + " (" + best_position_times + "x)");
 } else {
   $("#race-position-info").html("---");
+}
+
+if(best_grid_position){
+  $("#grid-position-info").html(best_grid_position + " (" + best_grid_position_times + "x)");
+} else {
+  $("#grid-position-info").html("---");
 }
 
     $("#podium-info").html(podiums);
