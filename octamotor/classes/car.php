@@ -155,7 +155,7 @@ class Car extends db_name implements \JsonSerializable{
 
   public function getCarsList(){
 
-    $query = "SELECT car.id, car.team_name, competition.name as comp_name, p.dono as owner FROM car LEFT JOIN ".$this->db_name.".paises p ON p.id = car.country LEFT JOIN competition ON car.competition_id = competition.id ORDER BY 
+    $query = "SELECT competition.owner as competition_owner, car.id, car.team_name, competition.name as comp_name, p.dono as owner FROM car LEFT JOIN ".$this->db_name.".paises p ON p.id = car.country LEFT JOIN competition ON car.competition_id = competition.id ORDER BY 
 	 case when isnull(competition.tier) then 1 else 0 end, 
 	 competition.tier, 
 	 competition.name,
@@ -235,14 +235,44 @@ class Car extends db_name implements \JsonSerializable{
     $stmt->bindParam(1,$car_id);
     $stmt->execute();
     $result = $stmt->fetchColumn();
+	
+	$query = "SELECT c.owner FROM car r LEFT JOIN competition c ON c.id = r.competition_id WHERE r.id = ? ";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(1,$driver_id);
+    $stmt->execute();
+    $competition_result = $stmt->fetchColumn();
 
-    if($result == $user_id){
+    if($result == $user_id || $competition_result == $user_id){
       return false;
     } else {
       return true;
     }
 
   }
+  
+  	public function getCarOwner($car_id){
+		$car_id = htmlspecialchars(strip_tags($car_id));
+
+		$query = "SELECT p.dono FROM car LEFT JOIN ".$this->db_name.".paises p ON p.id = car.country WHERE car.id = :car_id ";
+		$stmt = $this->conn->prepare($query);
+		$stmt->bindParam(":car_id",$car_id);
+		$stmt->execute();
+		$result = $stmt->fetchColumn();
+		
+		return $result;
+   }
+   
+	public function getCompetitionOwner($car_id){
+		$car_id = htmlspecialchars(strip_tags($car_id));
+
+		$query = "SELECT c.owner FROM car r LEFT JOIN competition c ON c.id = r.competition_id WHERE r.id = :car_id ";
+		$stmt = $this->conn->prepare($query);
+		$stmt->bindParam(":car_id",$car_id);
+		$stmt->execute();
+		$result = $stmt->fetchColumn();
+		
+		return $result;
+	}
 
 
 }

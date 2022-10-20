@@ -337,6 +337,30 @@ if($number != null){
     return $result["logo"];
 	
   }
+  
+  public function getCompetitionLockedStatusByDriver($driver_id){
+	  	$driver_id = htmlspecialchars(strip_tags($driver_id));
+
+		$query = "SELECT c.locked FROM driver d LEFT JOIN car r ON d.car_id = r.id LEFT JOIN competition c ON c.id = r.competition_id WHERE d.id = :driver_id ";
+		$stmt = $this->conn->prepare($query);
+		$stmt->bindParam(":driver_id",$driver_id);
+		$stmt->execute();
+		$result = $stmt->fetchColumn();
+		
+		return $result;
+  }
+  
+    public function getCompetitionLockedStatusByCar($car_id){
+	  	$car_id = htmlspecialchars(strip_tags($car_id));
+
+		$query = "SELECT c.locked FROM car r LEFT JOIN competition c ON c.id = r.competition_id WHERE r.id = :car_id ";
+		$stmt = $this->conn->prepare($query);
+		$stmt->bindParam(":car_id",$car_id);
+		$stmt->execute();
+		$result = $stmt->fetchColumn();
+		
+		return $result;
+  }
 
 }
 

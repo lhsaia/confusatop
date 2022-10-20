@@ -26,8 +26,8 @@ $pais = new Pais($db);
 $race_for_banner = $race->getWeeklyRaces();
 $foca_circuit = "";
 $foca_two_circuit = "";
-$foca_logo = "src ='/octamotor/images/competition/8-foca566.png'";
-$foca_logo_two = "src ='/octamotor/images/competition/8-foca566.png'";
+$foca_logo = "src ='/octamotor/images/competition/23-FOCA logo 27783.png'";
+$foca_logo_two = "src ='/octamotor/images/competition/23-FOCA logo 27783.png'";
 $countdown_container = "";
 $countdown_container_two = "";
 $race_info_container = "<span>Fora de temporada</span>";
@@ -164,6 +164,45 @@ foreach($race_for_banner as $single_race){
 
 $("document").ready(function(){
 	$("#toolbar").html("<a id='botaoPaginaTeste' href='race_live.php'>Página de teste</a>");
+	
+	var logged_user = {  };
+	
+	function setLoggedUser(){
+
+    Object.defineProperty(logged_user, 'user_id', {
+        value: '<?php echo (isset($_SESSION['user_id'])? $_SESSION['user_id'] : "") ?>',
+        writable : false,
+        enumerable : true,
+        configurable : false
+    });
+
+    Object.defineProperty(logged_user, 'admin_status', {
+        value: '<?php echo (isset($_SESSION['admin_status'])? $_SESSION['admin_status'] : "") ?>',
+        writable : false,
+        enumerable : true,
+        configurable : false
+    });
+
+}
+
+function verifyLoggedUser(user){
+  if(logged_user.admin_status > 0){
+    return true;
+  } else if (logged_user.user_id == user){
+    return true;
+  } else {
+    return false;
+  }
+}
+
+setLoggedUser();
+
+console.log(logged_user);
+console.log(verifyLoggedUser(-1));
+	
+	if(verifyLoggedUser(-1)){
+		$("#toolbar").append("<a id='botaoPaginaStressTest' href='stress_test.php'>Stress test</a>");
+	}
 });
 
 var race_start_time = <?php echo $race_start_time?>;
@@ -290,7 +329,7 @@ function updateCountdown(){
 setTimer(updateCountdown);
 setTimer(updateCountdownTwo);
 
-// var logged_user = {  };
+
 // var id;
 // var country;
 // var logo;
@@ -625,35 +664,7 @@ setTimer(updateCountdownTwo);
 //   retrieveSeasons();
 // });
 //
-// function setLoggedUser(){
-//
-//     Object.defineProperty(logged_user, 'user_id', {
-//         value: '<?php echo (isset($_SESSION['user_id'])? $_SESSION['user_id'] : "") ?>',
-//         writable : false,
-//         enumerable : true,
-//         configurable : false
-//     });
-//
-//     Object.defineProperty(logged_user, 'admin_status', {
-//         value: '<?php echo (isset($_SESSION['admin_status'])? $_SESSION['admin_status'] : "") ?>',
-//         writable : false,
-//         enumerable : true,
-//         configurable : false
-//     });
-//
-// }
-//
-// function verifyLoggedUser(user){
-//   if(logged_user.admin_status > 0){
-//     return true;
-//   } else if (logged_user.user_id == user){
-//     return true;
-//   } else {
-//     return false;
-//   }
-// }
-//
-// setLoggedUser();
+
 //
 //
  var $loading = $('#loadingDiv').hide();

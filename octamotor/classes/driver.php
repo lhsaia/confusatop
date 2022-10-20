@@ -382,7 +382,7 @@ class Driver extends db_name implements \JsonSerializable{
 
   public function getDriversList(){
 
-    $query = "SELECT driver.status, driver.id, driver.name, driver.car_id, p.dono as owner FROM driver LEFT JOIN ".$this->db_name.".paises p ON p.id = driver.country ORDER BY status DESC, driver.name";
+    $query = "SELECT n.owner as competition_owner, driver.status, driver.id, driver.name, driver.car_id, p.dono as owner FROM driver LEFT JOIN ".$this->db_name.".paises p ON p.id = driver.country LEFT JOIN car c ON driver.car_id = c.id LEFT JOIN competition n ON c.competition_id = n.id ORDER BY status DESC, driver.name";
     $stmt = $this->conn->prepare($query);
     $stmt->execute();
 	  $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -618,24 +618,62 @@ class Driver extends db_name implements \JsonSerializable{
 	}
 
   public function loadDriver($id){
-    $timestamp = time();
     $id = htmlspecialchars(strip_tags($id));
-    $query = "SELECT driver.genre, driver.tv_name, driver.status, hicomp.name as highest_comp, rh.pontos, rh.gps, rh.podiums, rh.abandon,  
-				rh.melhor_posicao as best_position, 
-				gh.melhor_posicao_grid as best_grid_position, 
-				rh.best_position_times, 
-				gh.best_grid_position_times, 
-				driver.name, driver.photo, competition.name as competition, driver.bio, driver.helmet, driver.level, driver.speed, driver.pace, driver.start_skills, 
+    $query = "SELECT driver.genre, driver.tv_name, driver.status, hicomp.name as highest_comp, driver.name, driver.photo, competition.name as competition, driver.bio, driver.helmet, driver.level, driver.speed, driver.pace, driver.start_skills, 
 				driver.technique, driver.rain_skills, driver.aggressiveness, car.picture as car_picture, driver.car_id, car.team_name as team_name, driver.number, 
 				p.nome as country_name, p.id as country_id, p.bandeira as country_flag, driver.birth_date, driver.birth_place 
 				FROM driver
 				LEFT JOIN car ON car.id = driver.car_id 
 				LEFT JOIN competition ON car.competition_id = competition.id 
 				LEFT JOIN competition hicomp ON driver.highest_comp = hicomp.id LEFT JOIN " .$this->db_name. ".paises p ON p.id = driver.country  
-				LEFT JOIN racehistory rh ON rh.id = driver.id 
+				WHERE driver.id = :id 
+";
+
+	//	$query = "SELECT driver.name, driver.photo, competition.name as competition, bio, driver.helmet, driver.level, driver.speed, driver.pace, driver.start_skills, driver.technique, driver.rain_skills, driver.aggressiveness, car.picture as car_picture, car_id, car.team_name as team_name, number, p.nome as country_name, p.id as country_id, p.bandeira as country_flag, birth_date, birth_place FROM driver LEFT JOIN car ON car.id = driver.car_id LEFT JOIN competition ON car.competition_id = competition.id LEFT JOIN lhsaia_confusa.paises p ON p.id = driver.country WHERE driver.id = ?";
+		$stmt = $this->conn->prepare($query);
+		$stmt->bindParam(":id",$id);
+		$stmt->execute();
+		return $stmt;
+	}
+	
+	  public function loadDriverGridInfo($id){
+    $timestamp = time();
+    $id = htmlspecialchars(strip_tags($id));
+    $query = "SELECT 
+				gh.melhor_posicao_grid as best_grid_position, 
+				gh.best_grid_position_times 
+				FROM driver
+				LEFT JOIN car ON car.id = driver.car_id 
+				LEFT JOIN competition ON car.competition_id = competition.id 
+				LEFT JOIN competition hicomp ON driver.highest_comp = hicomp.id LEFT JOIN " .$this->db_name. ".paises p ON p.id = driver.country  
 				LEFT JOIN gridhistory gh ON gh.id = driver.id  
+				LEFT JOIN racehistory rh ON rh.id = driver.id  
 				WHERE driver.id = :id  
-				AND (case when driver.car_id <> 0 then (car.competition_id = rh.competition_id AND car.competition_id = gh.competition_id) else (rh.competition_id = driver.highest_comp AND gh.competition_id = driver.highest_comp ) end)  AND rh.timestamp < :timestamp 
+				AND (case when driver.car_id <> 0 then (car.competition_id = gh.competition_id) else (gh.competition_id = driver.highest_comp ) end)  AND rh.timestamp < :timestamp 
+";
+
+	//	$query = "SELECT driver.name, driver.photo, competition.name as competition, bio, driver.helmet, driver.level, driver.speed, driver.pace, driver.start_skills, driver.technique, driver.rain_skills, driver.aggressiveness, car.picture as car_picture, car_id, car.team_name as team_name, number, p.nome as country_name, p.id as country_id, p.bandeira as country_flag, birth_date, birth_place FROM driver LEFT JOIN car ON car.id = driver.car_id LEFT JOIN competition ON car.competition_id = competition.id LEFT JOIN lhsaia_confusa.paises p ON p.id = driver.country WHERE driver.id = ?";
+		$stmt = $this->conn->prepare($query);
+		$stmt->bindParam(":id",$id);
+
+    $stmt->bindParam(":timestamp",$timestamp);
+		$stmt->execute();
+		return $stmt;
+	}
+	
+	  public function loadDriverRaceInfo($id){
+    $timestamp = time();
+    $id = htmlspecialchars(strip_tags($id));
+    $query = "SELECT rh.pontos, rh.gps, rh.podiums, rh.abandon,  
+				rh.melhor_posicao as best_position, 
+				rh.best_position_times 
+				FROM driver
+				LEFT JOIN car ON car.id = driver.car_id 
+				LEFT JOIN competition ON car.competition_id = competition.id 
+				LEFT JOIN competition hicomp ON driver.highest_comp = hicomp.id LEFT JOIN " .$this->db_name. ".paises p ON p.id = driver.country  
+				LEFT JOIN racehistory rh ON rh.id = driver.id 
+				WHERE driver.id = :id  
+				AND (case when driver.car_id <> 0 then (car.competition_id = rh.competition_id) else (rh.competition_id = driver.highest_comp) end)  AND rh.timestamp < :timestamp 
 ";
 
 	//	$query = "SELECT driver.name, driver.photo, competition.name as competition, bio, driver.helmet, driver.level, driver.speed, driver.pace, driver.start_skills, driver.technique, driver.rain_skills, driver.aggressiveness, car.picture as car_picture, car_id, car.team_name as team_name, number, p.nome as country_name, p.id as country_id, p.bandeira as country_flag, birth_date, birth_place FROM driver LEFT JOIN car ON car.id = driver.car_id LEFT JOIN competition ON car.competition_id = competition.id LEFT JOIN lhsaia_confusa.paises p ON p.id = driver.country WHERE driver.id = ?";
@@ -747,8 +785,14 @@ class Driver extends db_name implements \JsonSerializable{
     $stmt->bindParam(1,$driver_id);
     $stmt->execute();
     $result = $stmt->fetchColumn();
+	
+	$query = "SELECT c.owner FROM driver d LEFT JOIN car r ON d.car_id = r.id LEFT JOIN competition c ON c.id = r.competition_id WHERE d.id = ? ";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(1,$driver_id);
+    $stmt->execute();
+    $competition_result = $stmt->fetchColumn();
 
-    if($result == $user_id){
+    if($result == $user_id || $competition_result == $user_id){
       return false;
     } else {
       return true;
@@ -791,6 +835,32 @@ class Driver extends db_name implements \JsonSerializable{
     $stmt->execute();
     return $stmt;
   }
+  
+  
+  
+	public function getDriverOwner($driver_id){
+		$driver_id = htmlspecialchars(strip_tags($driver_id));
+
+		$query = "SELECT p.dono FROM driver LEFT JOIN ".$this->db_name.".paises p ON p.id = driver.country WHERE driver.id = :driver_id ";
+		$stmt = $this->conn->prepare($query);
+		$stmt->bindParam(":driver_id",$driver_id);
+		$stmt->execute();
+		$result = $stmt->fetchColumn();
+		
+		return $result;
+   }
+   
+	public function getCompetitionOwner($driver_id){
+		$driver_id = htmlspecialchars(strip_tags($driver_id));
+
+		$query = "SELECT c.owner FROM driver d LEFT JOIN car r ON d.car_id = r.id LEFT JOIN competition c ON c.id = r.competition_id WHERE d.id = :driver_id ";
+		$stmt = $this->conn->prepare($query);
+		$stmt->bindParam(":driver_id",$driver_id);
+		$stmt->execute();
+		$result = $stmt->fetchColumn();
+		
+		return $result;
+	}
 
 
 }

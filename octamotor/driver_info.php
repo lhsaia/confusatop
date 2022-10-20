@@ -2,7 +2,6 @@
 
 <?php
 
-/// criar bloqueios para não admin, não logado, não dono e fora de época
 /// bloqueios de nível
 
 session_start();
@@ -17,11 +16,13 @@ $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/octamotor/config/database.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/octamotor/classes/driver.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/octamotor/classes/competition.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
 
 $octa_database = new OctamotorDatabase();
 $odb = $octa_database->getConnection();
 $driver = new Driver($odb);
+$competition = new Competition($odb);
 
 $pais = new Pais($db);
 
@@ -34,27 +35,45 @@ if(isset($_GET['driver'])){
   $selected_driver = 1;
 }
 
+$driver_owner = $driver->getDriverOwner($selected_driver);
+$competition_owner = $driver->getCompetitionOwner($selected_driver);
+
+$competition_locked_status = $competition->getCompetitionLockedStatusByDriver($selected_driver);
+
+if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $competition_owner && $competition_owner != 0 && !$_SESSION['emTestes']){
+	$can_edit = true;
+} else if(isset($_SESSION['user_id']) && $competition_locked_status == 0 && $driver_owner == $_SESSION['user_id'] && !$_SESSION['emTestes']){
+	$can_edit = true;
+} else if (($_SESSION['admin_status'] == '1' && (!isset($_SESSION['impersonated']) || $_SESSION['impersonated'] == false))){
+	$can_edit = true;
+} else {
+	$can_edit = false;
+}
+
 ?>
 <div id='loadingDiv'><img src='/octamotor/images/lights.gif'/></div>
 <div id="container-home-octamotor">
   <!-- Driver viewer start -->
   <div id="driver-viewer" class="visible">
     <div class="container-control">
+	
       <?php
-      if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && (isset($_SESSION['emTestes']) && !$_SESSION['emTestes'])){
+	  
+      if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && !$_SESSION['emTestes']){
         echo "<a id='create-new-driver' class='editor-button'>Criar</a>";
       }
 
       echo "<select id='select-driver'>";
       foreach($driver_list as $driver_unit){
-        echo "<option data-owner='{$driver_unit['owner']}' value='{$driver_unit['id']}' ". ($driver_unit['id'] == $selected_driver ? "selected" : "").">{$driver_unit['name']}</option>";
+        echo "<option data-owner='{$driver_unit['owner']}' data-compowner='{$driver_unit['competition_owner']}' value='{$driver_unit['id']}' ". ($driver_unit['id'] == $selected_driver ? "selected" : "").">{$driver_unit['name']}</option>";
       }
       echo "</select>";
 
-      if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && (isset($_SESSION['emTestes']) && !$_SESSION['emTestes'])){
+      if($can_edit){
         echo "<a id='edit-driver' class='editor-button'>Editar</a>";
       }
-
+	  
+	  
         ?>
 
     </div>
@@ -348,7 +367,9 @@ function decodeHtml(html) {
 
 function display_driver(updateEditor){
   var driver_owner = parseInt($("#select-driver option:selected").attr("data-owner"));
-  if(!verifyLoggedUser(driver_owner)){
+  	var competition_owner = parseInt($("#select-driver option:selected").attr("data-compowner"));
+
+  if(!verifyLoggedUser(driver_owner, competition_owner)){
     $("#edit-driver").hide().attr("disabled", "disabled");
   } else {
     $("#edit-driver").show().removeAttr("disabled");
@@ -362,8 +383,25 @@ function display_driver(updateEditor){
     data: {id: id}
   })
   .done(function(data) {
+  
+  
+	if(data.can_edit && $('#edit-driver').length == 0){
+		$("#driver-viewer > .container-control").append("<a id='edit-driver' class='editor-button'>Editar</a>");	
+		  $("#edit-driver").on("click", function(){
+    var driver_owner = parseInt($("#select-driver option:selected").attr("data-owner"));
+		var competition_owner = parseInt($("#select-driver option:selected").attr("data-compowner"));
+
+    if(verifyLoggedUser(driver_owner, competition_owner)){
+      $("#driver-editor").removeClass("hidden").addClass("visible");
+      $("#driver-viewer").removeClass("visible").addClass("hidden");
+      populate_editor(true);
+    }
+  });
+
+	} else if(!data.can_edit  && $('#edit-driver').length > 0) {
+		$("#edit-driver").remove() ;
+	}
 	  
-	  console.log(data);
     genre = data.driver_data.genre;
     tv_name = data.driver_data.tv_name;
     country = data.driver_data.country_name;
@@ -399,35 +437,39 @@ function display_driver(updateEditor){
     status = data.driver_data.status;
     highest_comp = data.driver_data.highest_comp;
 
-    if(data.driver_data.pontos){
-      points = data.driver_data.pontos;
+    if(data.driver_race_data.pontos){
+      points = data.driver_race_data.pontos;
     } else {
       points = 0;
     }
-    gps = data.driver_data.gps;
-    if(data.driver_data.best_position){
-      best_position = data.driver_data.best_position;
-      best_position_times = data.driver_data.best_position_times;
+    if(data.driver_race_data != false){
+		gps = data.driver_race_data.gps;
+	} else {
+		gps = 0;
+		}
+    if(data.driver_race_data.best_position){
+      best_position = data.driver_race_data.best_position;
+      best_position_times = data.driver_race_data.best_position_times;
     } else {
       best_position = 0;
       best_position_times = 0;
     }
 	
-	if(data.driver_data.best_grid_position){
-      best_grid_position = data.driver_data.best_grid_position;
-      best_grid_position_times = data.driver_data.best_grid_position_times;
+	if(data.driver_grid_data.best_grid_position){
+      best_grid_position = data.driver_grid_data.best_grid_position;
+      best_grid_position_times = data.driver_grid_data.best_grid_position_times;
     } else {
       best_grid_position = 0;
       best_grid_position_times = 0;
     }
 
-    if(data.driver_data.podiums){
-      podiums = data.driver_data.podiums;
+    if(data.driver_race_data.podiums){
+      podiums = data.driver_race_data.podiums;
     } else {
       podiums = 0;
     }
-    if(data.driver_data.abandon){
-      abandon = data.driver_data.abandon;
+    if(data.driver_race_data.abandon){
+      abandon = data.driver_race_data.abandon;
     } else {
       abandon = 0;
     }
@@ -636,11 +678,13 @@ function setLoggedUser(){
 
 }
 
-function verifyLoggedUser(user){
+function verifyLoggedUser(user, competition){
   if(logged_user.admin_status > 0){
     return true;
   } else if (logged_user.user_id == user){
     return true;
+  } else if (logged_user.user_id == competition){
+	return true;
   } else {
     return false;
   }
@@ -699,7 +743,8 @@ $("document").ready(function(){
 
   $("#edit-driver").on("click", function(){
     var driver_owner = parseInt($("#select-driver option:selected").attr("data-owner"));
-    if(verifyLoggedUser(driver_owner)){
+	var competition_owner = parseInt($("#select-driver option:selected").attr("data-compowner"));
+    if(verifyLoggedUser(driver_owner, competition_owner)){
       $("#driver-editor").removeClass("hidden").addClass("visible");
       $("#driver-viewer").removeClass("visible").addClass("hidden");
       populate_editor(true);
@@ -734,7 +779,9 @@ if($(this).get(0).files.length > 0){ // only if a file is selected
 
     if($("#driver-id").html() != ""){
       var driver_owner = parseInt($("#select-driver option:selected").attr("data-owner"));
-      if(!verifyLoggedUser(driver_owner)){
+	  	var competition_owner = parseInt($("#select-driver option:selected").attr("data-compowner"));
+
+      if(!verifyLoggedUser(driver_owner, competition_owner)){
         console.log("Não é dono");
         return false;
 
