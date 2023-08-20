@@ -268,3 +268,27 @@ div[id^="maiorVitoria"]{
 html{
 	margin-bottom:40px !important;
 }
+
+.red{
+	background-color: lightPink;
+	color:fireBrick;
+	font-weight: bold;
+	text-align:center !important;
+}
+
+
+.green{
+	background-color: darkSeaGreen;
+	color:darkGreen;
+	font-weight: bold;
+	text-align:center !important;
+	
+}
+
+
+.gray{
+		background-color: Gainsboro;
+	color:black;
+	font-weight: bold;
+	text-align:center !important;
+}

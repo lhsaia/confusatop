@@ -38,6 +38,9 @@ while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
     $listaPaises[] = $addArray;
 }
 
+$listaPaises_mod = $listaPaises;
+$listaPaises_mod[] = array(0, "TOD", "Todos", "world.png", 0);
+
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	
 	$ownedCountries = array_filter($listaPaises, function ($var) {
@@ -66,7 +69,7 @@ echo "</select>";
 echo "<span id='equis'>X</span>";
 echo "<select id='selectPais2' class='selectPaises'>";
 
-foreach($listaPaises as $item){
+foreach($listaPaises_mod as $item){
 	echo "<option data-flag='{$item[3]}' value='{$item[0]}'>{$item[2]}</option>";
 }
 
@@ -214,6 +217,7 @@ $.ajax({
     method:"POST",
     cache:false,
     data:{times:times}
+	
 }).done(function(data){
 	$('#loading').hide();  // hide loading indicator
 	json_data = JSON.parse(data);
@@ -221,9 +225,30 @@ $.ajax({
 	updateTable(jogos_data,1,0,0);
 	localData = jogos_data;
 }).done(function(data){
-	updateCharts(jogos_data);
+	if(times[1] != 0){
+		console.log(1);
+		showCharts();
+		updateCharts(jogos_data);
+	} else {
+		console.log(0);
+		hideCharts();
+	}
 });
 
+}
+
+function hideCharts(){
+	$("#linhaJogos").hide();
+	$("#linhaGols").hide();
+	$("#linhaMaioresSequencias").hide();
+	$("#linhaMaioresVitorias").hide();
+}
+
+function showCharts(){
+	$("#linhaJogos").show();
+	$("#linhaGols").show();
+	$("#linhaMaioresSequencias").show();
+	$("#linhaMaioresVitorias").show();
 }
 
 function updateCharts(ajax_data){
@@ -604,6 +629,12 @@ function updateCharts(ajax_data){
 
 
 function updateTable(ajax_data, current_page, highlighted, direction){
+	
+	let single = false;
+	
+	if($("#selectPais2").val() == 0) {
+		single = true;
+	} 
 
     var results_per_page = 13;
     var total_results = ajax_data.length;
@@ -622,6 +653,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 
     var pgn = pagination(treated_page,total_pages);
 
+if(!single){
     //criar tabela dinamicamente
     var tbl = '';
     tbl += pgn;
@@ -687,6 +719,66 @@ function updateTable(ajax_data, current_page, highlighted, direction){
     activeSort = highlighted;
     activeDirection = asc;
 
+} else {
+	
+	//criar tabela dinamicamente
+    var tbl = '';
+    tbl += pgn;
+    tbl += "<hr>";
+    tbl += "<table id='tabelajogos' class='table'>";
+        tbl += "<thead id='headings'>";
+            tbl += "<tr>";
+				tbl += "<th asc='' id='nomeA' class='headings' width='30%'>&nbspAdversário</th>";
+                tbl +=  "<th asc='' id='retrospecto' class='headings' width='7%'>&nbspRetrospecto</th>";
+                tbl +=  "<th asc='' id='vitorias' class='headings' width='5%'>&nbspV</th>";
+                tbl +=  "<th asc='' id='empates' class='headings' width='5%'>&nbspE</th>";
+				tbl +=  "<th asc='' id='derrotas' class='headings' width='5%'>&nbspD</th>";
+				tbl +=  "<th asc='' id='golsPro' class='headings' width='5%'>&nbspGP</th>";
+				tbl +=  "<th asc='' id='golsContra' class='headings' width='5%'>&nbspGC</th>";
+				tbl +=  "<th asc='' id='saldoGols' class='headings' width='5%'>&nbspSG</th>";
+				tbl +=  "<th asc='' id='aproveitamento' class='headings' width='5%'>&nbsp% aprov.</th>";
+            tbl +=  "</tr>";
+        tbl +=  "</thead>";
+        tbl +=  "<tbody>";
+
+        // criar linhas
+        $.each(ajax_data, function(index, val){
+
+            var pen = '';
+            if(index>=(from_result_num-1) && index<=(from_result_num+results_per_page-2)){
+				
+			// colorCoding
+			let colorCoding;
+			if(val['retrospecto'] > 0 ){
+				colorCoding = 'green';
+			} else if(val['retrospecto'] < 0){
+				colorCoding = 'red';
+			} else {
+				colorCoding = 'gray';
+			}
+
+            tbl += "<tr id='"+val['id']+"' '>";
+				tbl +=  "<td class='nopadding'><a href='./teamstatus.php?team="+val['idB']+"'>"+val['nomeAdversario']+"</a>    <img src='/images/bandeiras/"+val['bandeiraB']+"' class='bandeira'>  </td>";
+                tbl +=  "<td class='nopadding "+colorCoding+"' >"+val['retrospecto']+"</td>";
+                tbl +=  "<td class='nopadding'>"+val['vitorias']+"</td>";
+                tbl +=  "<td class='nopadding'>"+val['empates']+"</td>";
+				tbl +=  "<td class='nopadding'>"+val['derrotas']+"</td>";
+				tbl +=  "<td class='nopadding'>"+val['gols_pro']+"</td>";
+				tbl +=  "<td class='nopadding'>"+val['gols_contra']+"</td>";
+				tbl +=  "<td class='nopadding'>"+val['saldo_gols']+"</td>";
+				tbl +=  "<td class='nopadding'>"+(val['aproveitamento'] * 100).toFixed(2) +"</td>";
+            tbl +=  "</tr>";
+            }
+        });
+
+        tbl += '</tbody>';
+    tbl += '</table>';
+
+    //mostrar dados da tabela
+    $(document).find('.tbl_user_data').html(tbl);
+	
+	
+}
     $('*[data-href]').on('click', function() {
         window.location = $(this).data("href");
     });
