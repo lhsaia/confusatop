@@ -645,7 +645,7 @@ public function getMatchId(){
 		
 		WHERE tb1.id = :idA1 AND tb2.id <> :idA2 
         GROUP BY 1, 2
-		ORDER BY retrospecto DESC";
+		ORDER BY retrospecto DESC, vitorias DESC, saldo_gols DESC, gols_pro DESC";
 
 		$stmt = $this->conn->prepare( $query );
 
