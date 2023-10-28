@@ -219,7 +219,8 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 					tbl += "<th asc='' class='headings' width='10%'>Nascimento (idade) </th>";
 					tbl += "<th asc='' class='headings' width='10%'>Mentalidade</th>";
 					tbl += "<th asc='' class='headings' width='10%'>Cobrança de Falta</th>";
-					tbl += "<th asc='' class='headings' width='5%'>Valor</th>";
+					tbl += "<th asc='' class='headings' width='10%'>Valor [Calculado]</th>";
+					//tbl += "<th asc='' class='headings' width='5%'>Valor (calculado)</th>";
 					tbl += "<th asc='' class='headings' width='10%'>Posições</th>";
 					tbl += "<th asc='' class='headings' width='3%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspNível</th>";
 					tbl += "<th asc='' class='headings' width='3%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspPaís</th>";
@@ -251,6 +252,12 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 				var nascimentoDisplay = dataNascimento.toLocaleDateString("pt-BR", options);
 				
 				var valorDisplay = "F$ " +  Math.round((parseInt(val['valor'])/1000), 2) + "k";
+				console.log(val['valorAtualizado']);
+				if(val['valorAtualizado'] != null){
+					var valorCalcDisplay = " <br>[F$ " +  Math.round((parseInt(val['valorAtualizado'])/1000), 2) + "k] ";
+				} else {
+					var valorCalcDisplay = "";
+				}
 				
 				// geração da tabela
 				tbl += "<tr id='"+val['ID']+"' data-sexo='"+val['sexo']+"' >";
@@ -269,7 +276,7 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 							});
 						tbl += "</select>";	
 					tbl += "</td>";
-					tbl += "<td><span class='nomeValor id='val" + val['ID']+"'>" + valorDisplay + "</span><span class='valorEditavel editavel' contenteditable='true' hidden>" + val['valor'] + "</span></td>";
+					tbl += "<td><span class='nomeValor id='val" + val['ID']+"'>" + valorDisplay + " "+valorCalcDisplay+"</span><span class='valorEditavel editavel' contenteditable='true' hidden>" + val['valor'] + "</span></td>";
 					
 
 					let splitPositions = createPositionString(val['StringPosicoes']);
@@ -337,7 +344,7 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 					let optionsString = "<td class='wide'>";
 
 					if(logged == "true"){
-						if(admin == "true" || user_id === val['idDonoPais']){
+						if(admin == "true" || user_id == val['idDonoPais']){
 							optionsString += "<a id='edi"+val['ID']+"' title='Editar jogador' class='clickable editar'><i class='far fa-edit inlineButton'></i></a>";
 							optionsString += "<a id='apa"+val['ID']+"' title='Apagar jogador' class='clickable apagar'><i class='fas fa-trash-alt inlineButton negativo'></i></a>";
 							optionsString += "<a hidden id='sal"+val['ID']+"' title='Salvar' class='clickable salvar'><i class='fas fa-check inlineButton positive'></i></a>";

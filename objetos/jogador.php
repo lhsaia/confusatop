@@ -440,7 +440,7 @@ return $stmt;
         return $result;
     }
 
-    function calcularPasse($novaId = null){
+    function calcularPasse($novaId = null, $nivel = null, $nascimento = null, $cobrancaFalta = null, $stringPosicoes = null ){
         if($novaId == null){
 
             $nivel = (int)$this->nivel;
@@ -448,10 +448,8 @@ return $stmt;
             if ($this->nascimento < 100) {
                 $idade = (int)$this->nascimento;
             } else {
-
                 $anoAtual = date("Y");
                 $idade = $anoAtual - (int)$this->nascimento;
-
             }
 
             $cobrancaFalta = $this->cobradorFalta;
@@ -459,10 +457,27 @@ return $stmt;
 
         } else {
             $result = $this->readOne($novaId);
-            $nivel = $result['nivel'];
-            $idade = $result['idade'];
-            $cobrancaFalta = $result['cobradorFalta'];
-            $stringPosicoes = $result['stringPosicoes'];
+			if($nivel == null){
+				$nivel = $result['nivel'];
+			} else {
+				$nivel = $nivel;
+			}
+			if($nascimento == null){
+				$idade = $result['idade'];
+			} else {
+				$anoAtual = date("Y");
+                $idade = $anoAtual - (int)$nascimento;
+			}
+            if($cobrancaFalta == null){
+				$cobrancaFalta = $result['cobradorFalta'];
+			} else {
+				$cobrancaFalta = $cobrancaFalta;
+			}
+            if($stringPosicoes == null){
+				$stringPosicoes = $result['stringPosicoes'];
+			} else {
+				$stringPosicoes = $stringPosicoes;
+			}
         }
 
         $ajustePorPosicao = array(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);
@@ -1285,6 +1300,9 @@ return $stmt;
                             }
                         }
                     }
+					
+					$valorAtualizado = $this->calcularPasse($idJogador, $nivelJogador, $nascimentoJogador, $cobrancaFaltaJogador, $stringPosicoes);
+
 
 					if($foto != "" && $foto != null){
 						$query_foto = ", foto=:foto";
@@ -1292,12 +1310,13 @@ return $stmt;
 						$query_foto = "";
 					}
 
-                    $query = "UPDATE jogador SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, StringPosicoes=:stringPosicoes, valor=:valor, Nivel=:nivel, Mentalidade=:mentalidade, Determinacao=:determinacao, DeterminacaoOriginal=:determinacaoOriginal, CobradorFalta=:cobradorFalta, disponibilidade =:disponibilidade ".$query_foto." WHERE ID = :id";
+                    $query = "UPDATE jogador SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, StringPosicoes=:stringPosicoes, valor=:valor, valorAtualizado=:valorAtualizado, Nivel=:nivel, Mentalidade=:mentalidade, Determinacao=:determinacao, DeterminacaoOriginal=:determinacaoOriginal, CobradorFalta=:cobradorFalta, disponibilidade =:disponibilidade ".$query_foto." WHERE ID = :id";
                     $stmt = $this->conn->prepare($query);
                     $stmt->bindParam(":nome", $nome);
                     $stmt->bindParam(":nascimento", $nascimento);
                     $stmt->bindParam(":nacionalidade",$nacionalidade);
                     $stmt->bindParam(":valor",$valor);
+					$stmt->bindParam(":valorAtualizado", $valorAtualizado);
                     $stmt->bindParam(":nivel",$nivelJogador);
                     $stmt->bindParam(":stringPosicoes", $stringPosicoes);
                     $stmt->bindParam(":id", $idJogador);
@@ -1398,6 +1417,7 @@ return $stmt;
                 $valor = $valorJogador;
                 $nacionalidade = $nacionalidadeJogador;
                 $nascimento = $nascimentoJogador;
+				
 
                 if(sizeOf($posicoesJogador)== 0 ){
                 $stringPosicoes = $this->verificarStringPosicoesAtual($idJogador);
@@ -1415,6 +1435,9 @@ return $stmt;
                     }
                 }
             }
+			
+			$valorAtualizado = $this->calcularPasse($idJogador, $nivelJogador, $nascimentoJogador, null, $stringPosicoes);
+			
 				// queryfoto
 				if($foto != "" && $foto != null){
 					$query_foto = ", foto=:foto";
@@ -1422,12 +1445,13 @@ return $stmt;
 					$query_foto = "";
 				}
 
-                $query = "UPDATE jogador SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, StringPosicoes=:stringPosicoes, valor=:valor, Nivel=:nivel ".$query_foto." WHERE ID = :id";
+                $query = "UPDATE jogador SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, StringPosicoes=:stringPosicoes, valor=:valor, valorAtualizado=:valorAtualizado, Nivel=:nivel ".$query_foto." WHERE ID = :id";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(":nome", $nome);
                 $stmt->bindParam(":nascimento", $nascimento);
                 $stmt->bindParam(":nacionalidade",$nacionalidade);
                 $stmt->bindParam(":valor",$valor);
+				$stmt->bindParam(":valorAtualizado", $valorAtualizado);
                 $stmt->bindParam(":nivel",$nivelJogador);
                 $stmt->bindParam(":stringPosicoes", $stringPosicoes);
                 $stmt->bindParam(":id", $idJogador);
@@ -1456,6 +1480,7 @@ return $stmt;
                 $nivel = $this->verificarNivelAtual($idJogador);
                 $modificador = $nivelJogador - $nivel;
                 $valor = $valorJogador;
+				
 
                 if(sizeOf($posicoesJogador)== 0 ){
                     $stringPosicoes = $this->verificarStringPosicoesAtual($idJogador);
@@ -1480,6 +1505,8 @@ return $stmt;
                 }
             }
 			
+			$valorAtualizado = $this->calcularPasse($idJogador, $nivelJogador, null, null, $stringPosicoes);
+			
 				// queryfoto
 				if($foto != "" && $foto != null){
 					$query_foto = ", foto=:foto";
@@ -1487,9 +1514,10 @@ return $stmt;
 					$query_foto = "";
 				}
 
-                $query = "UPDATE jogador SET StringPosicoes=:stringPosicoes, valor=:valor ".$query_foto." WHERE ID = :id";
+                $query = "UPDATE jogador SET StringPosicoes=:stringPosicoes, valorAtualizado=:valorAtualizado, valor=:valor ".$query_foto." WHERE ID = :id";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(":valor",$valor);
+				$stmt->bindParam(":valorAtualizado",$valorAtualizado);
                 $stmt->bindParam(":stringPosicoes", $stringPosicoes);
                 $stmt->bindParam(":id", $idJogador);
 				if($foto != "" && $foto != null){
@@ -2638,8 +2666,8 @@ public function resolverEmprestimos(){
 
         } 
 
-    $query = $sub_query_inicio."SELECT tf.ID, tf.Nome, tf.Nascimento, tf.Mentalidade, tf.CobradorFalta, tf.StringPosicoes, tf.valor, tf.Nivel, tf.disponibilidade, tf.idPais, tf.idDonoPais, tf.siglaPais, tf.bandeiraPais, tf.posicaoBase as posicaoBase, tf.titularidade, b.Nome as clubeVinculado, d.Nome as clubeEmprestimo, f.Nome as clubeSelecao, tf.determinacaoOriginal, tf.sexo, b.Escudo as escudoClubeVinculado, b.ID as idClubeVinculado, tf.Idade, q.dono as donoClubeVinculado, tf.foto FROM ( SELECT
-            a.ID, a.Nome, a.Nascimento, m.Nome as Mentalidade, r.Nome as CobradorFalta, a.StringPosicoes, a.valor, a.Nivel, a.disponibilidade, p.id as idPais, p.dono as idDonoPais, p.sigla as siglaPais, p.bandeira as bandeiraPais, c.clube as clubeVinculado, e.clube as clubeEmprestimo, s.clube as clubeSelecao, c.posicaoBase as posicaoBase, c.titularidade, a.Sexo as sexo, a.determinacaoOriginal, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, foto 
+    $query = $sub_query_inicio."SELECT tf.ID, tf.Nome, tf.Nascimento, tf.Mentalidade, tf.CobradorFalta, tf.StringPosicoes, tf.valor, tf.valorAtualizado, tf.Nivel, tf.disponibilidade, tf.idPais, tf.idDonoPais, tf.siglaPais, tf.bandeiraPais, tf.posicaoBase as posicaoBase, tf.titularidade, b.Nome as clubeVinculado, d.Nome as clubeEmprestimo, f.Nome as clubeSelecao, tf.determinacaoOriginal, tf.sexo, b.Escudo as escudoClubeVinculado, b.ID as idClubeVinculado, tf.Idade, q.dono as donoClubeVinculado, tf.foto FROM ( SELECT
+            a.ID, a.Nome, a.Nascimento, m.Nome as Mentalidade, r.Nome as CobradorFalta, a.StringPosicoes, a.valor,a.valorAtualizado, a.Nivel, a.disponibilidade, p.id as idPais, p.dono as idDonoPais, p.sigla as siglaPais, p.bandeira as bandeiraPais, c.clube as clubeVinculado, e.clube as clubeEmprestimo, s.clube as clubeSelecao, c.posicaoBase as posicaoBase, c.titularidade, a.Sexo as sexo, a.determinacaoOriginal, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, foto 
         FROM
             " . $this->table_name . " a
         LEFT JOIN paises p ON a.Pais = p.id
@@ -2735,6 +2763,166 @@ public function resolverEmprestimos(){
             
 
         }
+		
+		    function createSqlite(){
+				
+				$error_count = 0;
+
+				//query principal
+				$query = "INSERT INTO
+							" . $this->table_name . "(ID, Nome, Idade, Mentalidade, Potencial, CrescBase, CobradorFalta, Nivel) 
+						VALUES
+							(:id,:nomeJogador,:nascimento,:mentalidade,'0','0',:cobradorFalta,:nivel) 
+						ON CONFLICT DO NOTHING";
+
+				$stmt = $this->conn->prepare($query);
+
+				$this->id=htmlspecialchars(strip_tags($this->id));
+				$this->nomeJogador=htmlspecialchars(strip_tags($this->nomeJogador));
+				$this->nascimento=htmlspecialchars(strip_tags($this->nascimento));
+				$this->mentalidade=htmlspecialchars(strip_tags($this->mentalidade));
+				$this->cobradorFalta=htmlspecialchars(strip_tags($this->cobradorFalta));
+				$this->nivel=htmlspecialchars(strip_tags($this->nivel));
+				
+				$stmt->bindParam(":id", $this->id);
+				$stmt->bindParam(":nomeJogador", $this->nomeJogador);
+				$stmt->bindValue(":nascimento", $this->nascimento);
+				$stmt->bindParam(":mentalidade", $this->mentalidade);
+				$stmt->bindParam(":cobradorFalta", $this->cobradorFalta);
+				$stmt->bindParam(":nivel", $this->nivel);
+				
+				if(!$stmt->execute()){
+					$error_count++;
+				}
+				
+				//query nacionalidade
+				$query = "INSERT INTO
+							nacionalidades(ID_Jogador, Nacionalidade)  
+						VALUES 
+							(:id,:pais) 
+						ON CONFLICT DO NOTHING";
+
+				$stmt = $this->conn->prepare($query);
+				
+				$this->pais=htmlspecialchars(strip_tags($this->pais));
+				
+				$stmt->bindParam(":id", $this->id);
+				$stmt->bindParam(":pais", $this->pais);
+				
+				if(!$stmt->execute()){
+					$error_count++;
+				}
+				
+				//query posicoes
+				$query = "INSERT INTO
+					posicaojogador(Jogador, G, LD, LE, Z, AD, AE, V, MD, ME, MC, PD, PE, MA, Am, Aa)  
+				VALUES 
+					(:id,:g,:ld,:le,:z,:ad,:ae,:v,:md,:me,:mc,:pd,:pe,:ma,:am,:aa) 
+				ON CONFLICT DO NOTHING";
+		
+				$stmt = $this->conn->prepare($query);
+				
+				$this->stringPosicoes=htmlspecialchars(strip_tags($this->stringPosicoes));
+				
+				$stmt->bindParam(":id", $this->id);
+				$stmt->bindValue(":g", $this->stringPosicoes[0]);
+				$stmt->bindValue(":ld", $this->stringPosicoes[1]);
+				$stmt->bindValue(":le", $this->stringPosicoes[2]);
+				$stmt->bindValue(":z", $this->stringPosicoes[3]);
+				$stmt->bindValue(":ad", $this->stringPosicoes[4]);
+				$stmt->bindValue(":ae", $this->stringPosicoes[5]);
+				$stmt->bindValue(":v", $this->stringPosicoes[6]);
+				$stmt->bindValue(":md", $this->stringPosicoes[7]);
+				$stmt->bindValue(":me", $this->stringPosicoes[8]);
+				$stmt->bindValue(":mc", $this->stringPosicoes[9]);
+				$stmt->bindValue(":pd", $this->stringPosicoes[10]);
+				$stmt->bindValue(":pe", $this->stringPosicoes[11]);
+				$stmt->bindValue(":ma", $this->stringPosicoes[12]);
+				$stmt->bindValue(":am", $this->stringPosicoes[13]);
+				$stmt->bindValue(":aa", $this->stringPosicoes[14]);
+				
+				if(!$stmt->execute()){
+					$error_count++;
+				}
+				
+				
+				if($this->stringPosicoes[0] != 1){
+						//query atributos jogador
+					$query = "INSERT INTO
+						atributosjogador(Jogador, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Determinacao, determinacaoOriginal)   
+					VALUES 
+						(:id,:marcacao, :desarme, :visaoJogo,:movimentacao,:cruzamentos, :cabeceamento, :tecnica, :controleBola, :finalizacao,:faroGol, :velocidade, :forca, '1','1') 
+					ON CONFLICT DO NOTHING";
+			
+					$stmt = $this->conn->prepare($query);
+					
+					$this->marcacao=htmlspecialchars(strip_tags($this->marcacao));
+					$this->desarme=htmlspecialchars(strip_tags($this->desarme));
+					$this->visaoJogo=htmlspecialchars(strip_tags($this->visaoJogo));
+					$this->movimentacao=htmlspecialchars(strip_tags($this->movimentacao));
+					$this->cruzamentos=htmlspecialchars(strip_tags($this->cruzamentos));
+					$this->cabeceamento=htmlspecialchars(strip_tags($this->cabeceamento));
+					$this->tecnica=htmlspecialchars(strip_tags($this->tecnica));
+					$this->controleBola=htmlspecialchars(strip_tags($this->controleBola));
+					$this->finalizacao=htmlspecialchars(strip_tags($this->finalizacao));
+					$this->faroGol=htmlspecialchars(strip_tags($this->faroGol));
+					$this->velocidade=htmlspecialchars(strip_tags($this->velocidade));
+					$this->forca=htmlspecialchars(strip_tags($this->forca));
+					
+					$stmt->bindParam(":id", $this->id);
+					$stmt->bindParam(":marcacao", $this->marcacao);
+					$stmt->bindParam(":desarme", $this->desarme);
+					$stmt->bindParam(":visaoJogo", $this->visaoJogo);
+					$stmt->bindParam(":movimentacao", $this->movimentacao);
+					$stmt->bindParam(":cruzamentos", $this->cruzamentos);
+					$stmt->bindParam(":cabeceamento", $this->cabeceamento);
+					$stmt->bindParam(":tecnica", $this->tecnica);
+					$stmt->bindParam(":controleBola", $this->controleBola);
+					$stmt->bindParam(":finalizacao", $this->finalizacao);
+					$stmt->bindParam(":faroGol", $this->faroGol);
+					$stmt->bindParam(":velocidade", $this->velocidade);
+					$stmt->bindParam(":forca", $this->forca);
+					
+					if(!$stmt->execute()){
+						$error_count++;
+					}
+				} else {
+						//query atributos goleiro
+					$query = "INSERT INTO
+						atributosgoleiro(Goleiro, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao, determinacaoOriginal) 
+					VALUES 
+						(:id,:reflexos,:seguranca,:saidas,:jogoAereo,:lancamentos,:defesaPenaltis , '1','1') 
+					ON CONFLICT DO NOTHING";
+					
+					$stmt = $this->conn->prepare($query);
+
+					$this->reflexos=htmlspecialchars(strip_tags($this->reflexos));
+					$this->seguranca=htmlspecialchars(strip_tags($this->seguranca));
+					$this->saidas=htmlspecialchars(strip_tags($this->saidas));
+					$this->jogoAereo=htmlspecialchars(strip_tags($this->jogoAereo));
+					$this->lancamentos=htmlspecialchars(strip_tags($this->lancamentos));
+					$this->defesaPenaltis=htmlspecialchars(strip_tags($this->defesaPenaltis));
+
+					$stmt->bindParam(":id", $this->id);
+					$stmt->bindParam(":reflexos", $this->reflexos);
+					$stmt->bindParam(":seguranca", $this->seguranca);
+					$stmt->bindParam(":saidas", $this->saidas);
+					$stmt->bindParam(":jogoAereo", $this->jogoAereo);
+					$stmt->bindParam(":lancamentos", $this->lancamentos);
+					$stmt->bindParam(":defesaPenaltis", $this->defesaPenaltis);
+					
+					if(!$stmt->execute()){
+						$error_count++;
+					}
+				}
+
+				if($error_count == 0){
+					return true;
+				} else {
+					return false;
+				}
+
+    }
 
 }
 ?>
