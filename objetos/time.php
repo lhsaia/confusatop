@@ -220,7 +220,7 @@ function readInfo($id){
     $stmt->execute();
     $info1 = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $query = "SELECT avg(DATEDIFF(NOW(), j.Nascimento)/365) as mediaIdade, avg(j.Nivel) as mediaNivel, sum(case when c.titularidade > 0 then j.Nivel else 0 end)/11 as mediaNivelOnze, SUM(j.valor) as valorTotal, sum(case when j.Pais != b.Pais then 1 else 0 end) as estrangeiros, count(*) as jogadores, (SELECT count(*) FROM (SELECT DISTINCT jogador FROM contratos_jogador WHERE tipoContrato > 0) t3
+    $query = "SELECT avg(DATEDIFF(NOW(), j.Nascimento)/365) as mediaIdade, avg(j.Nivel + c.ModificadorNivel) as mediaNivel, sum(case when c.titularidade > 0 then (j.Nivel + c.ModificadorNivel) else 0 end)/11 as mediaNivelOnze, SUM(j.valor) as valorTotal, sum(case when j.Pais != b.Pais then 1 else 0 end) as estrangeiros, count(*) as jogadores, (SELECT count(*) FROM (SELECT DISTINCT jogador FROM contratos_jogador WHERE tipoContrato > 0) t3
     INNER JOIN
     (SELECT jogador FROM contratos_jogador WHERE tipoContrato = 0 AND clube = {$id}) t4 USING(jogador)) as emSelecao
     FROM contratos_jogador c
@@ -262,7 +262,7 @@ LEFT JOIN clube b ON c.clube = b.id
 
             //select all data
             $query = "SELECT
-                        a.id, a.nome, a.Sexo, a.status, a.Pais as paisTime
+                        a.id, a.nome, a.Sexo, a.status, a.Pais as paisTime, p.nome as nomePais, a.escudo  
                     FROM
                         " . $this->table_name . " a
                     LEFT JOIN
@@ -470,24 +470,37 @@ LEFT JOIN clube b ON c.clube = b.id
         }
 
         function verificarElencoMenor($idUsuario = null, $listaTimesExportados = null){
-            $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+           if($idUsuario != null){
+			 $idUsuario = htmlspecialchars(strip_tags($idUsuario));  
+		   } 
 
-if($idUsuario != null){
-  $query = "SELECT c.Nome, count(CASE WHEN t.jogador IS NOT NULL THEN t.jogador ELSE 0 END) as total FROM `contratos_jogador` t RIGHT JOIN clube c ON c.id = t.clube LEFT JOIN paises p ON c.Pais = p.id WHERE p.dono = ? GROUP BY c.Nome HAVING total <13";
-  $stmt = $this->conn->prepare( $query );
-  $stmt->bindParam(1, $idUsuario);
-} else {
-  $subquery = " c.ID = ? ";
-  $totalTimes = count($listaTimesExportados);
-  for($i = 1;$i < $totalTimes;$i++){
-    $subquery .= " OR c.ID = ? ";
-  }
-  $query = "SELECT c.Nome, count(CASE WHEN t.jogador IS NOT NULL THEN t.jogador ELSE 0 END) as total FROM `contratos_jogador` t RIGHT JOIN clube c ON c.id = t.clube WHERE ".$subquery." GROUP BY c.Nome HAVING total <13";
-  $stmt = $this->conn->prepare($query);
-  for($j = 0; $j < $totalTimes ; $j++){
-    $stmt->bindParam($j+1, $listaTimesExportados[$j]);
-  }
-}
+			if($idUsuario != null){
+			  $query = "SELECT c.Nome, count(CASE WHEN t.jogador IS NOT NULL THEN t.jogador ELSE 0 END) as total FROM `contratos_jogador` t RIGHT JOIN clube c ON c.id = t.clube LEFT JOIN paises p ON c.Pais = p.id WHERE p.dono = ? GROUP BY c.Nome HAVING total <13";
+			  $stmt = $this->conn->prepare( $query );
+			  $stmt->bindParam(1, $idUsuario);
+			} else {
+			  $subquery = " c.ID = ? ";
+			  if(is_array($listaTimesExportados)){
+				  $totalTimes = count($listaTimesExportados);
+			  } else {
+				  $totalTimes = 1;
+			  }
+			  
+			  for($i = 1;$i < $totalTimes;$i++){
+				$subquery .= " OR c.ID = ? ";
+			  }
+			  
+			  $query = "SELECT c.Nome, count(CASE WHEN t.jogador IS NOT NULL THEN t.jogador ELSE 0 END) as total FROM `contratos_jogador` t RIGHT JOIN clube c ON c.id = t.clube WHERE ".$subquery." GROUP BY c.Nome HAVING total <13";
+			  $stmt = $this->conn->prepare($query);
+			  if(is_array($listaTimesExportados)){
+				for($j = 0; $j < $totalTimes ; $j++){
+					$stmt->bindParam($j+1, $listaTimesExportados[$j]);
+				}
+			  } else {
+				  $stmt->bindParam(1, $listaTimesExportados);
+			  }
+
+			}
             $stmt->execute();
             $listaTimes = array();
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
@@ -499,24 +512,34 @@ if($idUsuario != null){
         }
 
         function verificarElencoMaior($idUsuario = null, $listaTimesExportados = null){
-            $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+           if($idUsuario != null){
+			 $idUsuario = htmlspecialchars(strip_tags($idUsuario));  
+		   } 
 
-if($idUsuario != null){
-  $query = "SELECT c.Nome, count(t.jogador) as total FROM `contratos_jogador` t LEFT JOIN clube c ON c.id = t.clube LEFT JOIN paises p ON c.Pais = p.id WHERE p.dono = ? AND t.titularidade <> -1 GROUP BY clube HAVING count(t.jogador)>23";
-  $stmt = $this->conn->prepare( $query );
-  $stmt->bindParam(1, $idUsuario);
-} else {
-  $subquery = " c.ID = ? ";
-  $totalTimes = count($listaTimesExportados);
-  for($i = 1;$i < $totalTimes;$i++){
-    $subquery .= " OR c.ID = ? ";
-  }
-  $query = "SELECT c.Nome, count(t.jogador) as total FROM `contratos_jogador` t LEFT JOIN clube c ON c.id = t.clube WHERE (".$subquery.") AND t.titularidade <> -1 GROUP BY clube HAVING count(t.jogador)>23";
-  $stmt = $this->conn->prepare($query);
-  for($j = 0; $j < $totalTimes ; $j++){
-    $stmt->bindParam($j+1, $listaTimesExportados[$j]);
-  }
-}
+			if($idUsuario != null){
+			  $query = "SELECT c.Nome, count(t.jogador) as total FROM `contratos_jogador` t LEFT JOIN clube c ON c.id = t.clube LEFT JOIN paises p ON c.Pais = p.id WHERE p.dono = ? AND t.titularidade <> -1 GROUP BY clube HAVING count(t.jogador)>23";
+			  $stmt = $this->conn->prepare( $query );
+			  $stmt->bindParam(1, $idUsuario);
+			} else {
+			  $subquery = " c.ID = ? ";
+			  if(is_array($listaTimesExportados)){
+				  $totalTimes = count($listaTimesExportados);
+			  } else {
+				  $totalTimes = 1;
+			  }
+			  for($i = 1;$i < $totalTimes;$i++){
+				$subquery .= " OR c.ID = ? ";
+			  }
+			  $query = "SELECT c.Nome, count(t.jogador) as total FROM `contratos_jogador` t LEFT JOIN clube c ON c.id = t.clube WHERE (".$subquery.") AND t.titularidade <> -1 GROUP BY clube HAVING count(t.jogador)>23";
+			  $stmt = $this->conn->prepare($query);
+			  if(is_array($listaTimesExportados)){
+				for($j = 0; $j < $totalTimes ; $j++){
+					$stmt->bindParam($j+1, $listaTimesExportados[$j]);
+				}
+			  } else {
+				  $stmt->bindParam(1, $listaTimesExportados);
+			  }
+			}
 
             $stmt->execute();
             $listaTimes = array();
@@ -529,7 +552,9 @@ if($idUsuario != null){
         }
 
         function verificarCapitao($idUsuario = null, $listaTimesExportados = null){
-            $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+           if($idUsuario != null){
+			 $idUsuario = htmlspecialchars(strip_tags($idUsuario));  
+		   } 
 
             if($idUsuario != null){
               $query = "SELECT c.Nome, sum(t.capitao * t.titularidade) as total FROM `contratos_jogador` t LEFT JOIN clube c ON c.id = t.clube LEFT JOIN paises p ON c.Pais = p.id WHERE p.dono = ? GROUP BY clube HAVING sum(t.capitao * t.titularidade) != 1";
@@ -537,15 +562,23 @@ if($idUsuario != null){
               $stmt->bindParam(1, $idUsuario);
             } else {
               $subquery = " c.ID = ? ";
-              $totalTimes = count($listaTimesExportados);
+			  if(is_array($listaTimesExportados)){
+				  $totalTimes = count($listaTimesExportados);
+			  } else {
+				  $totalTimes = 1;
+			  }
               for($i = 1;$i < $totalTimes;$i++){
                 $subquery .= " OR c.ID = ? ";
               }
               $query = "SELECT c.Nome, sum(t.capitao * t.titularidade) as total FROM `contratos_jogador` t LEFT JOIN clube c ON c.id = t.clube WHERE ".$subquery." GROUP BY clube HAVING sum(t.capitao * t.titularidade) != 1";
               $stmt = $this->conn->prepare($query);
-              for($j = 0; $j < $totalTimes ; $j++){
-                $stmt->bindParam($j+1, $listaTimesExportados[$j]);
-              }
+			  if(is_array($listaTimesExportados)){
+				for($j = 0; $j < $totalTimes ; $j++){
+					$stmt->bindParam($j+1, $listaTimesExportados[$j]);
+				}
+			  } else {
+				  $stmt->bindParam(1, $listaTimesExportados);
+			  }
             }
 
 
@@ -560,7 +593,9 @@ if($idUsuario != null){
         }
 
         function verificarTecnicos($idUsuario = null, $listaTimesExportados = null){
-            $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+           if($idUsuario != null){
+			 $idUsuario = htmlspecialchars(strip_tags($idUsuario));  
+		   } 
 
             if($idUsuario != null){
               $query = "SELECT c.Nome, count(CASE WHEN t.tecnico IS NOT NULL THEN t.tecnico ELSE 0 END) as total FROM `contratos_tecnico` t RIGHT JOIN clube c ON c.id = t.clube LEFT JOIN paises p ON c.Pais = p.id WHERE p.dono = ? GROUP BY clube HAVING total <> 1";
@@ -568,15 +603,23 @@ if($idUsuario != null){
               $stmt->bindParam(1, $idUsuario);
             } else {
               $subquery = " c.ID = ? ";
-              $totalTimes = count($listaTimesExportados);
+			  if(is_array($listaTimesExportados)){
+				  $totalTimes = count($listaTimesExportados);
+			  } else {
+				  $totalTimes = 1;
+			  }
               for($i = 1;$i < $totalTimes;$i++){
                 $subquery .= " OR c.ID = ? ";
               }
               $query = "SELECT c.Nome, count(CASE WHEN t.tecnico IS NOT NULL THEN t.tecnico ELSE 0 END) as total FROM `contratos_tecnico` t RIGHT JOIN clube c ON c.id = t.clube WHERE ".$subquery." GROUP BY clube HAVING total <> 1";
               $stmt = $this->conn->prepare($query);
-              for($j = 0; $j < $totalTimes ; $j++){
-                $stmt->bindParam($j+1, $listaTimesExportados[$j]);
-              }
+			  if(is_array($listaTimesExportados)){
+				for($j = 0; $j < $totalTimes ; $j++){
+					$stmt->bindParam($j+1, $listaTimesExportados[$j]);
+				}
+			  } else {
+				  $stmt->bindParam(1, $listaTimesExportados);
+			  }
             }
 
 
@@ -591,7 +634,9 @@ if($idUsuario != null){
         }
 
         function verificarPenaltis($idUsuario = null, $listaTimesExportados = null){
-            $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+           if($idUsuario != null){
+			 $idUsuario = htmlspecialchars(strip_tags($idUsuario));  
+		   } 
 
             if($idUsuario != null){
               $query = "SELECT c.Nome, sum(t.cobrancaPenalti * t.titularidade) as total FROM `contratos_jogador` t LEFT JOIN clube c ON c.id = t.clube LEFT JOIN paises p ON c.Pais = p.id WHERE p.dono = ? GROUP BY clube HAVING sum(t.cobrancaPenalti * t.titularidade) != 6";
@@ -599,15 +644,23 @@ if($idUsuario != null){
               $stmt->bindParam(1, $idUsuario);
             } else {
               $subquery = " c.ID = ? ";
-              $totalTimes = count($listaTimesExportados);
+			  if(is_array($listaTimesExportados)){
+				  $totalTimes = count($listaTimesExportados);
+			  } else {
+				  $totalTimes = 1;
+			  }
               for($i = 1;$i < $totalTimes;$i++){
                 $subquery .= " OR c.ID = ? ";
               }
               $query = "SELECT c.Nome, sum(t.cobrancaPenalti * t.titularidade) as total FROM `contratos_jogador` t LEFT JOIN clube c ON c.id = t.clube WHERE ".$subquery." GROUP BY clube HAVING sum(t.cobrancaPenalti * t.titularidade) != 6";
               $stmt = $this->conn->prepare($query);
-              for($j = 0; $j < $totalTimes ; $j++){
-                $stmt->bindParam($j+1, $listaTimesExportados[$j]);
-              }
+			  if(is_array($listaTimesExportados)){
+				for($j = 0; $j < $totalTimes ; $j++){
+					$stmt->bindParam($j+1, $listaTimesExportados[$j]);
+				}
+			  } else {
+				  $stmt->bindParam(1, $listaTimesExportados);
+			  }
             }
 
 
@@ -622,7 +675,9 @@ if($idUsuario != null){
         }
 
         function verificarGoleiros($idUsuario = null, $listaTimesExportados = null){
-            $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+           if($idUsuario != null){
+			 $idUsuario = htmlspecialchars(strip_tags($idUsuario));  
+		   } 
 
             if($idUsuario != null){
               $query = "SELECT c.Nome, sum(case when (t.posicaoBase = 1 AND t.titularidade = 1) THEN 1 ELSE 0 END) as total FROM `contratos_jogador` t LEFT JOIN clube c ON c.id = t.clube LEFT JOIN paises p ON c.Pais = p.id WHERE p.dono = ? GROUP BY clube HAVING total != 1";
@@ -630,15 +685,23 @@ if($idUsuario != null){
               $stmt->bindParam(1, $idUsuario);
             } else {
               $subquery = " c.ID = ? ";
-              $totalTimes = count($listaTimesExportados);
+			  if(is_array($listaTimesExportados)){
+				  $totalTimes = count($listaTimesExportados);
+			  } else {
+				  $totalTimes = 1;
+			  }
               for($i = 1;$i < $totalTimes;$i++){
                 $subquery .= " OR c.ID = ? ";
               }
               $query = "SELECT c.Nome, sum(case when (t.posicaoBase = 1 AND t.titularidade = 1) THEN 1 ELSE 0 END) as total FROM `contratos_jogador` t LEFT JOIN clube c ON c.id = t.clube WHERE ".$subquery." GROUP BY clube HAVING total != 1";
               $stmt = $this->conn->prepare($query);
-              for($j = 0; $j < $totalTimes ; $j++){
-                $stmt->bindParam($j+1, $listaTimesExportados[$j]);
-              }
+			  if(is_array($listaTimesExportados)){
+				for($j = 0; $j < $totalTimes ; $j++){
+					$stmt->bindParam($j+1, $listaTimesExportados[$j]);
+				}
+			  } else {
+				  $stmt->bindParam(1, $listaTimesExportados);
+			  }
             }
 
 
@@ -653,7 +716,9 @@ if($idUsuario != null){
         }
 
         function verificarEscalacoes($idUsuario = null, $listaTimesExportados = null){
-            $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+           if($idUsuario != null){
+			 $idUsuario = htmlspecialchars(strip_tags($idUsuario));  
+		   } 
 
             if($idUsuario != null){
               $query = "SELECT c.Nome, sum(case when t.titularidade = 1 THEN 1 ELSE 0 END) as total FROM `contratos_jogador` t LEFT JOIN clube c ON c.id = t.clube LEFT JOIN paises p ON c.Pais = p.id WHERE p.dono = ? GROUP BY clube HAVING total != 11";
@@ -661,15 +726,23 @@ if($idUsuario != null){
               $stmt->bindParam(1, $idUsuario);
             } else {
               $subquery = " c.ID = ? ";
-              $totalTimes = count($listaTimesExportados);
+			  if(is_array($listaTimesExportados)){
+				  $totalTimes = count($listaTimesExportados);
+			  } else {
+				  $totalTimes = 1;
+			  }
               for($i = 1;$i < $totalTimes;$i++){
                 $subquery .= " OR c.ID = ? ";
               }
               $query = "SELECT c.Nome, sum(case when t.titularidade = 1 THEN 1 ELSE 0 END) as total FROM `contratos_jogador` t LEFT JOIN clube c ON c.id = t.clube  WHERE ".$subquery." GROUP BY clube HAVING total != 11";
               $stmt = $this->conn->prepare($query);
-              for($j = 0; $j < $totalTimes ; $j++){
-                $stmt->bindParam($j+1, $listaTimesExportados[$j]);
-              }
+			  if(is_array($listaTimesExportados)){
+				for($j = 0; $j < $totalTimes ; $j++){
+					$stmt->bindParam($j+1, $listaTimesExportados[$j]);
+				}
+			  } else {
+				  $stmt->bindParam(1, $listaTimesExportados);
+			  }
             }
 
 
@@ -684,7 +757,9 @@ if($idUsuario != null){
         }
 
         function verificarAposentados($idUsuario = null, $listaTimesExportados = null){
-            $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+           if($idUsuario != null){
+			 $idUsuario = htmlspecialchars(strip_tags($idUsuario));  
+		   } 
 
             if($idUsuario != null){
               $query = "SELECT c.Nome, sum(case when FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) > 45 THEN 1 ELSE 0 END) as total FROM contratos_jogador t LEFT JOIN clube c ON c.id = t.clube LEFT JOIN paises p ON c.Pais = p.id LEFT JOIN jogador j ON j.ID = t.jogador WHERE p.dono = ? GROUP BY clube HAVING total > 0";
@@ -692,15 +767,23 @@ if($idUsuario != null){
               $stmt->bindParam(1, $idUsuario);
             } else {
               $subquery = " c.ID = ? ";
-              $totalTimes = count($listaTimesExportados);
+			  if(is_array($listaTimesExportados)){
+				  $totalTimes = count($listaTimesExportados);
+			  } else {
+				  $totalTimes = 1;
+			  }
               for($i = 1;$i < $totalTimes;$i++){
                 $subquery .= " OR c.ID = ? ";
               }
               $query = "SELECT c.Nome, sum(case when FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) > 45 THEN 1 ELSE 0 END) as total FROM contratos_jogador t LEFT JOIN clube c ON c.id = t.clube LEFT JOIN jogador j ON j.ID = t.jogador WHERE ".$subquery." GROUP BY clube HAVING total > 0";
               $stmt = $this->conn->prepare($query);
-              for($j = 0; $j < $totalTimes ; $j++){
-                $stmt->bindParam($j+1, $listaTimesExportados[$j]);
-              }
+			  if(is_array($listaTimesExportados)){
+				for($j = 0; $j < $totalTimes ; $j++){
+					$stmt->bindParam($j+1, $listaTimesExportados[$j]);
+				}
+			  } else {
+				  $stmt->bindParam(1, $listaTimesExportados);
+			  }
             }
 
 
@@ -1562,8 +1645,213 @@ function readExtraInfo($id){
 		
 		
 	}
+	
+	    function createSqlite(){
+
+        //escrever query
+        $query = "INSERT INTO
+                    clube(ID, Nome, TresLetras, Estadio, Escudo, Uni1Cor1, Uni1Cor2, Uni1Cor3, Uni2Cor1, Uni2Cor2, Uni2Cor3, Uniforme1, Uniforme2, MaxTorcedores, Fidelidade)
+                VALUES
+                    (:id,:nome,:sigla,:estadio,:escudo,:uniforme1cor1,:uniforme1cor2,:uniforme1cor3,:uniforme2cor1,:uniforme2cor2,:uniforme2cor3,:uniforme1,:uniforme2, :maxTorcedores,:fidelidade) 
+				ON CONFLICT DO NOTHING";
+
+        $stmt = $this->conn->prepare($query);
+
+        // posted values
+		$this->id=htmlspecialchars(strip_tags($this->id));
+        $this->nome=htmlspecialchars(strip_tags($this->nome));
+        $this->sigla=htmlspecialchars(strip_tags($this->sigla));
+        $this->estadio=htmlspecialchars(strip_tags($this->estadio));
+        $this->escudo=htmlspecialchars(strip_tags($this->escudo));
+        $this->uniforme1cor1=htmlspecialchars(strip_tags($this->uniforme1cor1));
+        $this->uniforme1cor2=htmlspecialchars(strip_tags($this->uniforme1cor2));
+        $this->uniforme1cor3=htmlspecialchars(strip_tags($this->uniforme1cor3));
+        $this->uniforme1=htmlspecialchars(strip_tags($this->uniforme1));
+        $this->uniforme2cor1=htmlspecialchars(strip_tags($this->uniforme2cor1));
+        $this->uniforme2cor2=htmlspecialchars(strip_tags($this->uniforme2cor2));
+        $this->uniforme2cor3=htmlspecialchars(strip_tags($this->uniforme2cor3));
+        $this->uniforme2=htmlspecialchars(strip_tags($this->uniforme2));
+        $this->maxTorcedores=htmlspecialchars(strip_tags($this->maxTorcedores));
+        $this->fidelidade=htmlspecialchars(strip_tags($this->fidelidade));
+
+        // bind values
+		$stmt->bindParam(":id", $this->id);
+        $stmt->bindParam(":nome", $this->nome);
+        $stmt->bindParam(":sigla", $this->sigla);
+        $stmt->bindParam(":estadio", $this->estadio);
+        $stmt->bindParam(":escudo", $this->escudo);
+        $stmt->bindParam(":uniforme1cor1", $this->uniforme1cor1);
+        $stmt->bindParam(":uniforme1cor2", $this->uniforme1cor2);
+        $stmt->bindParam(":uniforme1cor3", $this->uniforme1cor3);
+        $stmt->bindParam(":uniforme1", $this->uniforme1);
+        $stmt->bindParam(":uniforme2cor1", $this->uniforme2cor1);
+        $stmt->bindParam(":uniforme2cor2", $this->uniforme2cor2);
+        $stmt->bindParam(":uniforme2cor3", $this->uniforme2cor3);
+        $stmt->bindParam(":uniforme2", $this->uniforme2);
+        $stmt->bindParam(":maxTorcedores", $this->maxTorcedores);
+        $stmt->bindParam(":fidelidade", $this->fidelidade);
+
+        try {
+            //PDO query execution goes here.
+            if($stmt->execute()){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        catch (\PDOException $e) {
+            if ($e->errorInfo[1] == 1062) {
+                //The INSERT query failed due to a key constraint violation.
+                return false;
+            }
+        }
 
 
+    }
+	
+	function inserirElencosSqlite($codigo_time, $arrayJogadores){
+		//escrever query
+        $query = "INSERT INTO
+                    elenco(Clube, Jogador1, Jogador2, Jogador3, Jogador4, Jogador5, Jogador6, Jogador7, Jogador8, Jogador9, Jogador10, Jogador11, Jogador12, Jogador13, Jogador14, Jogador15, Jogador16, Jogador17, Jogador18, Jogador19, Jogador20, Jogador21, Jogador22, Jogador23, Tecnico) 
+                VALUES 
+                    (:id,:jogador1,:jogador2,:jogador3,:jogador4,:jogador5,:jogador6,:jogador7,:jogador8,:jogador9,:jogador10,:jogador11,:jogador12,:jogador13,:jogador14,:jogador15,:jogador16,:jogador17,:jogador18,:jogador19,:jogador20,:jogador21,:jogador22,:jogador23, :tecnico)
+				ON CONFLICT DO NOTHING";
+        $stmt = $this->conn->prepare($query);
+
+        // posted values
+		$codigo_time=htmlspecialchars(strip_tags($codigo_time));
+
+        // bind values
+		$stmt->bindParam(":id", $codigo_time);
+		$stmt->bindParam(":tecnico", $codigo_time);
+		
+		$lastOne = 1;
+		
+		foreach($arrayJogadores as $key => $jogadorUnico){
+			$codigo_jogador = $codigo_time * 1000 - $key;
+			$paramBinder = ":jogador" . ($key + 1);
+			$stmt->bindValue($paramBinder, $codigo_jogador);
+			$lastOne++;
+		}
+		
+		if($lastOne<23){
+			$paramBinder = ":jogador" . $lastOne;
+			$stmt->bindParam($paramBinder, '0');
+		}
+        
+
+        try {
+            //PDO query execution goes here.
+            if($stmt->execute()){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        catch (\PDOException $e) {
+            if ($e->errorInfo[1] == 1062) {
+                //The INSERT query failed due to a key constraint violation.
+                return false;
+            }
+        }
+	}
+	
+	function inserirEscalacaoSqlite($codigo_time, $capitaoNewId, $penaltisNewArray, $titularesNewArray){
+		//escrever query
+        $query = "INSERT INTO
+                    escalacao(Clube, Pos1, Jogador1, Pos2, Jogador2, Pos3, Jogador3, Pos4, Jogador4, Pos5, Jogador5, Pos6, Jogador6, Pos7, Jogador7, Pos8, Jogador8, Pos9, Jogador9, Pos10, Jogador10, Pos11, Jogador11, Capitao, Penalti1, Penalti2, Penalti3)
+                VALUES 
+                    (:id,:pos1,:jogador1,:pos2,:jogador2, :pos3, :jogador3,:pos4,:jogador4, :pos5, :jogador5,:pos6, :jogador6, :pos7, :jogador7, :pos8,:jogador8, :pos9, :jogador9, :pos10, :jogador10, :pos11, :jogador11, :capitao, :penalti1,:penalti2, :penalti3) 
+				ON CONFLICT DO NOTHING";
+
+        $stmt = $this->conn->prepare($query);
+
+        // posted values
+		$codigo_time=htmlspecialchars(strip_tags($codigo_time));
+		$capitaoNewId=htmlspecialchars(strip_tags($capitaoNewId));
+
+        // bind values
+		$stmt->bindParam(":id", $codigo_time);
+		$stmt->bindParam(":capitao", $capitaoNewId);
+		
+		$stmt->bindParam(":penalti1" , $penaltisNewArray[1]);
+		$stmt->bindParam(":penalti2" , $penaltisNewArray[2]);
+		$stmt->bindParam(":penalti3" , $penaltisNewArray[3]);
+		
+		$playerCounter = 1;
+	
+		foreach($titularesNewArray as $key => $posicaoJogador){
+			$paramBinder = ":pos" . $playerCounter;
+			$stmt->bindValue($paramBinder, $posicaoJogador);
+			$paramBinder = ":jogador" . $playerCounter;
+			$stmt->bindValue($paramBinder, $key);
+			$playerCounter++;
+		}
+
+        try {
+            //PDO query execution goes here.
+            if($stmt->execute()){
+                return true;
+            } else {
+                return false;
+            }
+        }
+        catch (\PDOException $e) {
+            if ($e->errorInfo[1] == 1062) {
+                //The INSERT query failed due to a key constraint violation.
+                return false;
+            }
+        }
+	}
+
+	function encontrarTimeExterno($codigo_time){
+		
+		$codigo_time = htmlspecialchars(strip_tags($codigo_time));
+		
+		$codigo_time = -1 * $codigo_time;
+		
+		$query = "SELECT Nome, Escudo FROM clube WHERE ID = :codigo_time";
+        $stmt = $this->conn->prepare( $query );
+
+        $stmt->bindParam(":codigo_time", $codigo_time);
+
+        $stmt->execute();
+		$teamInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+		return $teamInfo;
+		
+	}
+	
+	function carregarListaTimesSqlite(){
+	
+		
+		$query = "SELECT ID, Nome FROM clube";
+        $stmt = $this->conn->prepare( $query );
+
+        $stmt->execute();
+		return $stmt;
+		
+	}
+	
+	function getSigla($idTime){
+		
+		$idTime = htmlspecialchars(strip_tags($idTime));
+
+		$query = "SELECT
+                TresLetras    
+            FROM
+                clube 
+            WHERE
+                ID = :id";
+
+    $stmt = $this->conn->prepare( $query );
+	$stmt->bindParam(":id", $idTime);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+	$sigla = $result['TresLetras'];
+	
+    return $sigla;
+		
+	}
 
 
 }

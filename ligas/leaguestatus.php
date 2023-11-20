@@ -126,6 +126,8 @@ echo "<th>Time</th>";
 echo "<th>Elenco</th>";
 echo "<th>Média de idade</th>";
 echo "<th>Estrangeiros</th>";
+echo "<th>Nível (geral)</th>";
+echo "<th>Nível (titulares)</th>";
 echo "<th>Valor de mercado</th>";
 echo "<th>Valor médio (por jogador)</th>";
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['user_id'] === $idDonoPais){
@@ -152,6 +154,8 @@ $agora = date('Y-m-d');
             $valorMercadoPorTime = "F$ ". number_format(($info['valorTotal']/1000000),2)."M";
             $valorMedioJogador = "F$ ". number_format(($info['valorTotal']/($elencoPorTime*1000000)),2)."M";
             $escudos = $info['Escudo'];
+			$nivel_medio = number_format($info['mediaNivel'], 1);
+			$nivel_medio_onze = number_format($info['mediaNivelOnze'],1);
 
 
             echo "<tr id='".$idTime."' class='".$idLiga."'>";
@@ -159,6 +163,8 @@ $agora = date('Y-m-d');
                 echo "<td class='nopadding'>{$elencoPorTime}</td>";
                 echo "<td class='nopadding'>{$mediaIdadePorTime}</td>";
                 echo "<td class='nopadding'>{$estrangeirosPorTime}</td>";
+				echo "<td class='nopadding'>{$nivel_medio}</td>";
+				echo "<td class='nopadding'>{$nivel_medio_onze}</td>";
                 echo "<td class='nopadding'>{$valorMercadoPorTime}</td>";
                 echo "<td class='nopadding'>{$valorMedioJogador}</td>";
                 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){

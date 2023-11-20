@@ -124,7 +124,6 @@ class Liga{
      return $num;
     }
 
-    //alterar jogador
     function alterar($idLiga,$nomeLiga,$tierLiga,$pais,$logo = null){
 
         $idLiga = htmlspecialchars(strip_tags($idLiga));
