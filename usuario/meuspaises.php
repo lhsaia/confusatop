@@ -196,7 +196,7 @@ echo('</div>');
 			
 			$(this).leafletLocationPicker({
 				alwaysOpen:true,
-				mapContainer:container_name,
+				mapContainer:container_name
 			});    
 		});
 		
@@ -435,7 +435,12 @@ echo('</div>');
 		
 		var coordenadas = tbl_row.find(".example").val().split(",");
 		var latitude = coordenadas[0];
-		var longitude = coordenadas[1];
+		var preLongitude = parseFloat(coordenadas[1]);
+		
+		let longitude = preLongitude + Math.round(preLongitude/-360) * 360;
+		
+		// console.log(preLongitude);
+		// console.log(longitude);
 
          var formData = new FormData();
          formData.append('id', id);
