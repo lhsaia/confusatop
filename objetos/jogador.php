@@ -1583,7 +1583,7 @@ return $stmt;
 
             $idJogador = htmlspecialchars(strip_tags($idJogador));
 
-            $queryBase = "SELECT j.Nome as nome, j.Pais as idPais, j.Nascimento as nascimento, j.StringPosicoes as stringPosicoes, j.valor, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as idade, p.bandeira as bandeiraPais, p.nome as Pais, j.Marcacao, j.Desarme, j.VisaoJogo, j.Movimentacao, j.Cruzamentos, j.Cabeceamento, j.Tecnica, j.ControleBola, j.Finalizacao, j.FaroGol, j.Velocidade, j.Forca, j.Reflexos, j.Seguranca, j.Saidas, j.JogoAereo, j.Lancamentos, j.DefesaPenaltis, j.Nivel, j.foto FROM jogador j LEFT JOIN paises p ON j.Pais = p.id WHERE j.ID = ?";
+            $queryBase = "SELECT j.Nome as nome, j.Pais as idPais, j.Nascimento as nascimento, j.StringPosicoes as stringPosicoes, j.valor, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as idade, p.bandeira as bandeiraPais, p.nome as Pais, j.Marcacao, j.Desarme, j.VisaoJogo, j.Movimentacao, j.Cruzamentos, j.Cabeceamento, j.Tecnica, j.ControleBola, j.Finalizacao, j.FaroGol, j.Velocidade, j.Forca, j.Reflexos, j.Seguranca, j.Saidas, j.JogoAereo, j.Lancamentos, j.DefesaPenaltis, j.Nivel, j.foto, p.dono as donoPais FROM jogador j LEFT JOIN paises p ON j.Pais = p.id WHERE j.ID = ?";
             $stmt = $this->conn->prepare($queryBase);
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
@@ -1652,6 +1652,62 @@ return $stmt;
 				$atributos_personalidade = array_slice($personalidade,2);
 				foreach($atributos_personalidade as $key => $atributo){
 					$somatorio_diferenca += abs($atributos_jogador[$key] - $atributo);
+				}
+				$coletor_perc[$personalidade["nome"]] =  round(1-$somatorio_diferenca,4)*100;
+			} 
+			
+			arsort($coletor_perc);
+			
+			
+			return(array_slice($coletor_perc,0,3));
+					
+		}
+		
+		function avaliarPersonalidadeDinamica($arrayAtributos){
+			
+			$query = "SELECT `ID`, `nome`, 
+						(marcacao/soma) as marcacao, 
+						(desarme/soma) as desarme, 
+						(visaoJogo/soma) as visaoJogo, 
+						(movimentacao/soma) as movimentacao, 
+						(cruzamentos/soma) as cruzamentos,
+						(cabeceamento/soma) as cabeceamento,			
+						(tecnica/soma) as tecnica,
+						(controleBola/soma) as controleBola, 
+						(finalizacao/soma) as finalizacao, 
+						(faroGol/soma) as faroGol, 
+						(velocidade/soma) as velocidade, 
+						(forca/soma) as forca, 
+						
+			(reflexos/soma) as reflexos, 
+			(seguranca/soma) as seguranca, 
+			(saidas/soma) as saidas, 
+			(jogoAereo/soma) as jogoAereo, 
+			(lancamentos/soma) as lancamentos, 
+			(defesaPenaltis/soma) as defesaPenaltis
+			 
+			 FROM `perfis` ";
+			$stmt = $this->conn->prepare($query);
+            $stmt->execute();
+			
+			$array_personalidades = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			
+			$atributos_jogador = array_slice($arrayAtributos, 2);
+			$soma_atributos = array_sum($atributos_jogador);
+			$atributos_balanceados = array_map(function ($element) use ($soma_atributos) {
+				return $element / $soma_atributos;
+			}, $atributos_jogador);
+
+			$coletor_perc =array();
+			
+			foreach($array_personalidades as $personalidade){
+				$somatorio_diferenca = 0;
+				$atributos_personalidade = array_slice($personalidade,2);
+				foreach($atributos_personalidade as $key => $atributo){
+					if (array_key_exists($key, $atributos_balanceados)){
+						$diferenca = abs($atributos_balanceados[$key] - $atributo);
+						$somatorio_diferenca += $diferenca;
+					} 
 				}
 				$coletor_perc[$personalidade["nome"]] =  round(1-$somatorio_diferenca,4)*100;
 			} 
@@ -2923,6 +2979,82 @@ public function resolverEmprestimos(){
 				}
 
     }
+	
+	
+	
+	    function alterarAtributos($idJogador, $arrayJogador, $isGoleiro){
+
+
+        $idJogador =htmlspecialchars(strip_tags($idJogador));
+		$isGoleiro =htmlspecialchars(strip_tags($isGoleiro));
+
+
+
+		if($isGoleiro){
+			$query = "UPDATE
+						" . $this->table_name . "
+					SET
+						Reflexos = :reflexos,
+						Seguranca = :seguranca,
+						Saidas = :saidas,
+						JogoAereo = :jogoAereo,
+						Lancamentos = :lancamentos,
+						DefesaPenaltis = :defesaPenaltis
+					WHERE ID = :idJogador";
+
+			$stmt = $this->conn->prepare($query);
+				
+			$stmt->bindParam(':reflexos', $arrayJogador['reflexos']);
+			$stmt->bindParam(':seguranca', $arrayJogador['seguranca']);
+			$stmt->bindParam(':saidas', $arrayJogador['saidas']);
+			$stmt->bindParam(':jogoAereo', $arrayJogador['jogoAereo']);
+			$stmt->bindParam(':lancamentos', $arrayJogador['lancamentos']);
+			$stmt->bindParam(':defesaPenaltis', $arrayJogador['defesaPenaltis']);
+			$stmt->bindParam(':idJogador', $idJogador);
+		} else {
+			
+			$query = "UPDATE
+						" . $this->table_name . "
+					SET
+						Marcacao = :marcacao,
+						Desarme = :desarme,
+						VisaoJogo = :visaoJogo,
+						Movimentacao = :movimentacao,
+						Cruzamentos = :cruzamentos,
+						Cabeceamento = :cabeceamento,
+						Tecnica = :tecnica,
+						ControleBola = :controleBola,
+						Finalizacao = :finalizacao,
+						FaroGol = :faroGol,
+						Velocidade = :velocidade,
+						Forca = :forca
+					WHERE ID = :idJogador";
+
+			$stmt = $this->conn->prepare($query);
+			
+			$stmt->bindParam(':marcacao', $arrayJogador['marcacao']);
+			$stmt->bindParam(':desarme', $arrayJogador['desarme']);
+			$stmt->bindParam(':visaoJogo', $arrayJogador['visaoJogo']);
+			$stmt->bindParam(':movimentacao', $arrayJogador['movimentacao']);
+			$stmt->bindParam(':cruzamentos', $arrayJogador['cruzamentos']);
+			$stmt->bindParam(':cabeceamento', $arrayJogador['cabeceamento']);
+			$stmt->bindParam(':tecnica', $arrayJogador['tecnica']);
+			$stmt->bindParam(':controleBola', $arrayJogador['controleBola']);
+			$stmt->bindParam(':finalizacao', $arrayJogador['finalizacao']);
+			$stmt->bindParam(':faroGol', $arrayJogador['faroGol']);
+			$stmt->bindParam(':velocidade', $arrayJogador['velocidade']);
+			$stmt->bindParam(':forca', $arrayJogador['forca']);
+			$stmt->bindParam(':idJogador', $idJogador);
+
+		}
+
+			if($stmt->execute()){
+				return true;
+			} else {
+				return false;
+			}
+
+		}
 
 }
 ?>

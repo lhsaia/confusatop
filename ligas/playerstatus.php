@@ -52,6 +52,7 @@ $id_pais = $info['idPais']; //ok
 $logo_liga = $info['logoLiga']; //ok
 $escudo_time = $info['escudoTime']; //ok
 $bandeira_pais = $info['bandeiraPais']; //ok
+$donoPais = $info['donoPais'];
 $idade_jogador = $info['idade']; //ok
 $nascimento_jogador = $info['nascimento']; //ok
 $posicoes_jogador = $info['stringPosicoes'];
@@ -62,6 +63,16 @@ $desde_quando = $info['inicioContrato'];
 $ate_quando = $info['fimContrato'];
 $nome_pais_time = $info['nomePaisTime']; //ok
 $bandeira_pais_time = $info['bandeiraPaisTime']; //ok
+$nivel_jogador = $info['Nivel'];
+
+
+if(isset($_SESSION['user_id']) && $donoPais == $_SESSION["user_id"]){
+    $donoLogado = true;
+} else {
+    $donoLogado = false;
+}
+
+
 
 $personalidade = $jogador->avaliarPersonalidade($id_jogador);
 
@@ -83,13 +94,43 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
 <script>
 
-var results = <?php echo json_encode($attribute_array); ?>;
-var isGoleiro = <?php echo $isGoleiro; ?>;
+
 
 
 $("document").ready(function(){
 	
+	var donoLogado = <?php echo $donoLogado?1:0 ?>;
+	var results = <?php echo json_encode($attribute_array); ?>;
+	var isGoleiro = <?php echo $isGoleiro; ?>;
+
 	attribute_chart(results, isGoleiro);
+	
+
+		
+		
+		if(donoLogado){
+		$("#toolbar").append('<div id="salvarDados"><i class="far fa-save"></i><span>Salvar</span></div>');
+		$("#toolbar").hide();
+		}
+	
+	  $("#form-atributos :input").change(function() {
+
+    level_distributor();
+	$("#toolbar").show();
+    });
+	
+function update_personality(personalidade){
+	
+// add personalidade
+
+$("#personalidade").html(
+		"<div class='fundo-barra'><div class='barra-cheia' style='width:" + Object.values(personalidade)[0] + "%'></div><p class='texto-barra'>"+ Object.keys(personalidade)[0] +" ("+ (Object.values(personalidade)[0]).toFixed(2) +"%)</p></div>"
+		+ "<div class='fundo-barra'><div class='barra-cheia' style='width:" + Object.values(personalidade)[1] + "%'></div><p class='texto-barra'>"+ Object.keys(personalidade)[1] +" ("+ (Object.values(personalidade)[1]).toFixed(2) +"%)</p></div>"
+		+ "<div class='fundo-barra'><div class='barra-cheia' style='width:" + Object.values(personalidade)[2] + "%'></div><p class='texto-barra'>"+ Object.keys(personalidade)[2] +" ("+ (Object.values(personalidade)[2]).toFixed(2) +"%)</p></div>"
+);
+
+}
+	
 	
 function attribute_chart(results, isGoleiro){
 
@@ -146,10 +187,211 @@ if(isGoleiro){
 
 }
 
+if(isGoleiro){
+	$("#jogo-aereo").val(results.jogoAereo);
+	$("#reflexos").val(results.reflexos);
+	$("#lancamentos").val(results.lancamentos);
+	$("#penaltis").val(results.defesaPenaltis);
+	$("#saida-bola").val(results.saidas);
+	$("#seguranca").val(results.seguranca);
+} else {
+	$("#movimentacao").val(results.movimentacao);
+	$("#visao").val(results.visaoJogo);
+	$("#desarme").val(results.desarme);
+	$("#marcacao").val(results.marcacao);
+	$("#forca").val(results.forca);
+	$("#velocidade").val(results.velocidade);
+	$("#faroGol").val(results.faroGol);
+	$("#finalizacao").val(results.finalizacao);
+	$("#controle").val(results.controleBola);
+	$("#tecnica").val(results.tecnica);
+	$("#cabeceamento").val(results.cabeceamento);
+	$("#cruzamentos").val(results.cruzamentos);
+
+}
+
 Plotly.newPlot("attribute-chart", data, layout, {staticPlot: true},
 {displayModeBar: false});
 
 }
+
+
+	
+function level_distributor(){
+  var level = <?php echo $nivel_jogador;?> ;
+  
+  var formData = new FormData();
+
+  
+  if(isGoleiro){
+	var jogo_aereo = $("#jogo-aereo").val();
+	var saida_bola = $("#saida-bola").val();
+	var seguranca = $("#seguranca").val();
+	var reflexos = $("#reflexos").val();
+	var penaltis = $("#penaltis").val();
+	var lancamentos = $("#lancamentos").val();
+	
+	formData.append('isGoleiro', isGoleiro);
+	formData.append('level', level);
+	formData.append('jogo_aereo', jogo_aereo);
+	formData.append('saida_bola', saida_bola);
+	formData.append('seguranca', seguranca);
+	formData.append('reflexos', reflexos);
+	formData.append('penaltis', penaltis);
+	formData.append('lancamentos', lancamentos);
+
+	
+  } else {
+	var movimentacao = $("#movimentacao").val();
+	var visao = $("#visao").val();
+	var desarme = $("#desarme").val();
+	var marcacao = $("#marcacao").val();
+	var forca = $("#forca").val();
+	var velocidade = $("#velocidade").val();
+	var faroGol = $("#faroGol").val();
+	var finalizacao = $("#finalizacao").val();
+	var controle = $("#controle").val();
+	var tecnica = $("#tecnica").val();
+	var cabeceamento = $("#cabeceamento").val();
+	var cruzamentos = $("#cruzamentos").val();
+	
+	formData.append('isGoleiro', isGoleiro);
+	formData.append('level', level);
+	formData.append('movimentacao', movimentacao);
+	formData.append('visao', visao);
+	formData.append('desarme', desarme);
+	formData.append('marcacao', marcacao);
+	formData.append('forca', forca);
+	formData.append('velocidade', velocidade);
+	formData.append('faroGol', faroGol);
+	formData.append('finalizacao', finalizacao);
+	formData.append('controle', controle);
+	formData.append('tecnica', tecnica);
+	formData.append('cabeceamento', cabeceamento);
+	formData.append('cruzamentos', cruzamentos);
+
+  }
+ 
+
+   $.ajax({
+    url: '../jogadores/alterar_atributos.php',
+    type: 'POST',
+    dataType: 'json',
+	cache: false,
+	processData: false,
+	contentType: false,
+    data: formData 
+  })
+  .done(function(data) {
+	  
+	  //console.log("Nivel: " + level);
+	  
+	 let attributeValues = Object.values(data.attributeArray);
+	 
+	  
+	  let sumAttributes = attributeValues.reduce((a, b) => a + b, 0);
+
+		//console.log("Soma atributos: " + sumAttributes);
+		
+		//console.log(data.personalidade);
+	  
+	  attribute_chart(data.attributeArray, isGoleiro);
+	  update_personality (data.personalidade);
+	  });
+  
+  
+
+  
+}
+
+
+		$('#salvarDados').click(function(){
+			
+			let idJogador = <?php echo $id_jogador;?> ;	
+			let level = <?php echo $nivel_jogador;?> ;
+			let formData = new FormData();
+			
+			formData.append('isGoleiro', isGoleiro);
+			formData.append('level', level);
+			formData.append('idJogador', idJogador);
+			formData.append('salvar', true);
+		  
+		  if(isGoleiro){
+			let jogo_aereo = $("#jogo-aereo").val();
+			let saida_bola = $("#saida-bola").val();
+			let seguranca = $("#seguranca").val();
+			let reflexos = $("#reflexos").val();
+			let penaltis = $("#penaltis").val();
+			let lancamentos = $("#lancamentos").val();
+		
+			formData.append('jogo_aereo', jogo_aereo);
+			formData.append('saida_bola', saida_bola);
+			formData.append('seguranca', seguranca);
+			formData.append('reflexos', reflexos);
+			formData.append('penaltis', penaltis);
+			formData.append('lancamentos', lancamentos);
+			
+		  } else {
+			let movimentacao = $("#movimentacao").val();
+			let visao = $("#visao").val();
+			let desarme = $("#desarme").val();
+			let marcacao = $("#marcacao").val();
+			let forca = $("#forca").val();
+			let velocidade = $("#velocidade").val();
+			let faroGol = $("#faroGol").val();
+			let finalizacao = $("#finalizacao").val();
+			let controle = $("#controle").val();
+			let tecnica = $("#tecnica").val();
+			let cabeceamento = $("#cabeceamento").val();
+			let cruzamentos = $("#cruzamentos").val();
+			
+			formData.append('movimentacao', movimentacao);
+			formData.append('visao', visao);
+			formData.append('desarme', desarme);
+			formData.append('marcacao', marcacao);
+			formData.append('forca', forca);
+			formData.append('velocidade', velocidade);
+			formData.append('faroGol', faroGol);
+			formData.append('finalizacao', finalizacao);
+			formData.append('controle', controle);
+			formData.append('tecnica', tecnica);
+			formData.append('cabeceamento', cabeceamento);
+			formData.append('cruzamentos', cruzamentos);
+		  }
+
+			// let total = 0;
+
+			// for (var value of formData.values()) {
+			 // total += parseInt(value);
+			// }
+
+			// console.log(total);
+
+			// for (var key of formData.entries()) {
+				 // console.log(key[0] + ', ' + key[1]);
+			 // }
+
+			 $.ajax({
+				url: '../jogadores/alterar_atributos.php',
+				 processData: false,
+				contentType: false,
+				cache: false,
+				type: "POST",
+				dataType: 'json',
+				 data: formData,
+					  success: function(data) {
+						  if(data.error != ''){
+							alert(data.error)
+						  }
+						  $("#toolbar").hide();
+					  },
+					  error: function(data) {
+						  successmessage = 'Error';
+						  alert("Erro, o procedimento não foi realizado, tente novamente.");
+					  }
+				  });
+		 });	
+
 });
 
 
@@ -217,6 +459,110 @@ echo "<div id='info_geral'>";
  echo "<div ".($posicoes_jogador[10] == '1'?"":" hidden ")." class='posicaoCampao posPD'></div>";
  echo "<div ".($posicoes_jogador[11] == '1'?"":" hidden ")." class='posicaoCampao posPE'></div>";
  echo "</div>";
+ if($donoLogado){
+	 
+ ?>
+ <form id="form-atributos">
+ <div class="form-master-group">
+            <div class='form-group'>
+              <label>Atributos</label>
+            </div>
+			
+<?php if($posicoes_jogador[0] == "1") { ?>
+	
+            <div class='form-group'>
+              <label for="jogo-aereo">Jogo Aéreo</label>
+              <input type="range" min="1" max="10" id="jogo-aereo"/>
+            </div>
+            <div class='form-group'>
+              <label for="saida-bola">Saída de Bola</label>
+              <input type="range" min="1" max="10" id="saida-bola"/>
+            </div>
+            <div class='form-group'>
+              <label for="seguranca">Segurança</label>
+              <input type="range" min="1" max="10" id="seguranca"/>
+            </div>
+            <div class='form-group'>
+              <label for="reflexos">Reflexos</label>
+              <input type="range" min="1" max="10" id="reflexos"/>
+            </div>
+            <div class='form-group'>
+              <label for="penaltis">Defesa de Pênaltis</label>
+              <input type="range" min="1" max="10" id="penaltis"/>
+            </div>
+            <div class='form-group'>
+              <label for="lancamentos">Lançamentos</label>
+              <input type="range" min="1" max="10" id="lancamentos"/>
+            </div>
+			
+			<?php 
+} else {
+	?>
+	            <div class='form-group'>
+              <label for="movimentacao">Movimentação</label>
+              <input type="range" min="1" max="7" id="movimentacao"/>
+            </div>
+            <div class='form-group'>
+              <label for="visao">Visão de Jogo</label>
+              <input type="range" min="1" max="7" id="visao"/>
+            </div>
+            <div class='form-group'>
+              <label for="desarme">Desarme</label>
+              <input type="range" min="1" max="7" id="desarme"/>
+            </div>
+            <div class='form-group'>
+              <label for="marcacao">Marcação</label>
+              <input type="range" min="1" max="7" id="marcacao"/>
+            </div>
+            <div class='form-group'>
+              <label for="forca">Força</label>
+              <input type="range" min="1" max="5" id="forca"/>
+            </div>
+            <div class='form-group'>
+              <label for="velocidade">Velocidade</label>
+              <input type="range" min="1" max="5" id="velocidade"/>
+            </div>
+			<div class='form-group'>
+              <label for="faroGol">Faro de Gol</label>
+              <input type="range" min="1" max="7" id="faroGol"/>
+            </div>
+			<div class='form-group'>
+              <label for="finalizacao">Finalização</label>
+              <input type="range" min="1" max="7" id="finalizacao"/>
+            </div>
+						<div class='form-group'>
+              <label for="controle">Controle de Bola</label>
+              <input type="range" min="1" max="7" id="controle"/>
+            </div>
+						<div class='form-group'>
+              <label for="tecnica">Técnica</label>
+              <input type="range" min="1" max="7" id="tecnica"/>
+            </div>
+						<div class='form-group'>
+              <label for="cabeceamento">Cabeceamento</label>
+              <input type="range" min="1" max="7" id="cabeceamento"/>
+            </div>
+						<div class='form-group'>
+              <label for="cruzamentos">Cruzamentos</label>
+              <input type="range" min="1" max="7" id="cruzamentos"/>
+            </div>
+			
+			
+			
+			
+			
+			
+	
+	<?php
+	
+}
+
+			
+     echo "</div>";
+	 echo "</form>";
+	 
+ }
+		  
  echo "<div id='mostrador-atributos'>";
 	 echo "<div id='attribute-chart'></div>";
 	 echo "<div id='personalidade'>";
