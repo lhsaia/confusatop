@@ -1692,7 +1692,7 @@ return $stmt;
 			
 			$array_personalidades = $stmt->fetchAll(PDO::FETCH_ASSOC);
 			
-			$atributos_jogador = array_slice($arrayAtributos, 2);
+			$atributos_jogador = $arrayAtributos;
 			$soma_atributos = array_sum($atributos_jogador);
 			$atributos_balanceados = array_map(function ($element) use ($soma_atributos) {
 				return $element / $soma_atributos;
@@ -1716,7 +1716,7 @@ return $stmt;
 			
 			
 			return(array_slice($coletor_perc,0,3));
-					
+				//return $coletor_perc;	
 		}
 
         function readTransferencias($from_record_num,$records_per_page,$idJogador){
