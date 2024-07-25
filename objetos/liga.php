@@ -64,7 +64,7 @@ class Liga{
         }
 
      $query = "SELECT
-                 a.id, a.nome, a.tier, a.logo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.Sexo as sexo
+                 a.id, a.nome, a.tier, a.logo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.Sexo as sexo, p.nome as nomePais 
              FROM
                  " . $this->table_name . " a
              LEFT JOIN paises p ON a.pais = p.id

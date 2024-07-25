@@ -47,13 +47,17 @@ switch($pageType){
     case 'busca':
         $nomePagina = 'Busca Avançada de Jogadores';
         include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
+		include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
         $pais = new Pais($db);
+		$liga = new Liga($db);
         break;
     case 'buscaTecnico';
         $nomePagina = 'Busca Avançada de Técnicos';
         include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
         include_once($_SERVER['DOCUMENT_ROOT']."/objetos/tecnico.php");
+		include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
         $pais = new Pais($db);
+		$liga = new Liga($db);
         $tecnico = new Tecnico($db);
         break;
 	case 'usuario':
@@ -487,6 +491,19 @@ else{
 
         <?php }?>
     </select>
+	
+	<label for='input_liga'>Liga:</label>
+	    <select name='liga' id='input_liga' class='smallform'>
+        <option selected value='0'>Qualquer uma</option>
+        <?php
+        // query caixa de seleção países desse dono
+        $stmtLiga = $liga->readAll(0,10000);
+        while ($row_liga = $stmtLiga->fetch(PDO::FETCH_ASSOC)){
+            extract($row_liga);
+            echo "<option value='".$id."'>".$nomePais . " - " . $nome."</option>";
+        }
+        ?>
+    </select>
 
   </fieldset>
   <br>
@@ -886,6 +903,7 @@ $('span', '#toggleButtonLabel3').text('Masculino');
 
     $('#input_mentalidade').selectmenu();
     $('#input_nacionalidade').selectmenu();
+	$('#input_liga').selectmenu();
     if($("#input_estilo").length != 0) {
         $('#input_estilo').selectmenu();
       }

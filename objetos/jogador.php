@@ -905,7 +905,7 @@ return $stmt;
             return $stmt;
         }
 
-        function pesquisaAvancada($nivelMin, $nivelMax, $idadeMin, $idadeMax, $cobrancaFalta, $disponivel, $nome, $nacionalidade, $mentalidade, $stringPosicoes, $seletorPosicoes, $semclube, $valorMin, $valorMax, $sexo, $apenasConfusa, $usuarioLogado){
+        function pesquisaAvancada($nivelMin, $nivelMax, $idadeMin, $idadeMax, $cobrancaFalta, $disponivel, $nome, $nacionalidade, $mentalidade, $stringPosicoes, $seletorPosicoes, $semclube, $valorMin, $valorMax, $sexo, $apenasConfusa, $usuarioLogado, $liga){
 
             $nivelMin = htmlspecialchars(strip_tags($nivelMin));
             $nivelMax = htmlspecialchars(strip_tags($nivelMax));
@@ -923,6 +923,7 @@ return $stmt;
             $valorMax = htmlspecialchars(strip_tags($valorMax));
             $sexo = htmlspecialchars(strip_tags($sexo));
             $apenasConfusa = htmlspecialchars(strip_tags($apenasConfusa));
+			$liga = htmlspecialchars(strip_tags($liga));
 
             //converter stringPosicoes para cada posicao
             $splitPosicoes = str_split($stringPosicoes);
@@ -954,6 +955,10 @@ return $stmt;
 
             if($mentalidade != null){
                 $subquery .= ' AND mentalidadeIndex = :mentalidade ';
+            }
+			
+			if($liga != null){
+                $subquery .= ' AND idLiga = :liga ';
             }
 
             if($semclube != null){
@@ -1026,6 +1031,9 @@ return $stmt;
             $stmt->bindParam(':sexo',$sexo);
             if($mentalidade != null){
                 $stmt->bindParam(':mentalidade',$mentalidade);
+            }
+			if($liga != null){
+                $stmt->bindParam(':liga',$liga);
             }
             if($nome != null){
                 $nome = "%".$nome."%";

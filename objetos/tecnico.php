@@ -611,7 +611,7 @@ class Tecnico{
 
             }
 
-            function pesquisaAvancada($nivelMin, $nivelMax, $nome, $nacionalidade, $mentalidade, $estilo, $semclube, $sexo, $apenasConfusa, $usuarioLogado){
+            function pesquisaAvancada($nivelMin, $nivelMax, $nome, $nacionalidade, $mentalidade, $estilo, $semclube, $sexo, $apenasConfusa, $usuarioLogado, $liga){
 
             $nivelMin = htmlspecialchars(strip_tags($nivelMin));
             $nivelMax = htmlspecialchars(strip_tags($nivelMax));
@@ -622,6 +622,7 @@ class Tecnico{
             $semclube = htmlspecialchars(strip_tags($semclube));
             $sexo = htmlspecialchars(strip_tags($sexo));
             $apenasConfusa = htmlspecialchars(strip_tags($apenasConfusa));
+			$liga = htmlspecialchars(strip_tags($liga));
 
             $subquery = '';
             if($estilo != null){
@@ -638,6 +639,10 @@ class Tecnico{
 
             if($mentalidade != null){
                 $subquery .= ' AND mentalidadeIndex = :mentalidade ';
+            }
+			
+			if($liga != null){
+                $subquery .= ' AND idLiga = :liga ';
             }
 
             if($semclube != null){
@@ -671,6 +676,9 @@ class Tecnico{
             $stmt->bindParam(':sexo',$sexo);
             if($mentalidade != null){
                 $stmt->bindParam(':mentalidade',$mentalidade);
+            }
+            if($liga != null){
+                $stmt->bindParam(':liga',$liga);
             }
             if($estilo != null){
                 $stmt->bindParam(':estilo',$estilo);
@@ -802,7 +810,7 @@ class Tecnico{
         }
 
 
-        function editar($idTecnico,$idTime = null,$nomeTecnico,$nacionalidadeTecnico,$nascimentoTecnico,$nivelTecnico,$isDono,$mentalidadeTecnico = null, $estiloTecnico = null, $foto = null,  $desdeContrato = null){
+        function editar($idTecnico,$idTime,$nomeTecnico,$nacionalidadeTecnico,$nascimentoTecnico,$nivelTecnico,$isDono,$mentalidadeTecnico = null, $estiloTecnico = null, $foto = null,  $desdeContrato = null){
 
             $idTecnico = htmlspecialchars(strip_tags($idTecnico));
             $idTime = htmlspecialchars(strip_tags($idTime));
@@ -971,6 +979,41 @@ class Tecnico{
             
 
         }
+		
+		    function createSqlite(){
+
+        //escrever query
+        $query = "INSERT INTO
+                    " . $this->table_name . "(ID, Nome, Idade, Nivel, Mentalidade, Estilo) 
+                VALUES 
+                    (:id,:nome,:nascimento,:nivel,:mentalidade,:estilo) 
+				ON CONFLICT DO NOTHING";
+
+        $stmt = $this->conn->prepare($query);
+
+        // posted values
+		$this->id=htmlspecialchars(strip_tags($this->id));
+        $this->nome=htmlspecialchars(strip_tags($this->nome));
+        $this->nascimento=htmlspecialchars(strip_tags($this->nascimento));
+        $this->nivel=htmlspecialchars(strip_tags($this->nivel));
+        $this->mentalidade=htmlspecialchars(strip_tags($this->mentalidade));
+        $this->estilo=htmlspecialchars(strip_tags($this->estilo));
+
+        // bind values
+		$stmt->bindParam(":id", $this->id);
+        $stmt->bindParam(":nome", $this->nome);
+		$stmt->bindValue(":nascimento", $this->nascimento);
+        $stmt->bindParam(":nivel", $this->nivel);
+        $stmt->bindParam(":mentalidade", $this->mentalidade);
+        $stmt->bindParam(":estilo", $this->estilo);
+
+        if($stmt->execute()){
+            return true;
+        } else {
+            return false;
+        }
+
+    }
 
 }
 ?>

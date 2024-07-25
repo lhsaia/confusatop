@@ -38,6 +38,7 @@ if($_POST['tipoBusca'] === "busca"){
     $semclube = (isset($_POST['semclube'])) ? 1 : null;
     $nome = (strcmp($_POST['nomejogador'],'') != 0) ? $_POST['nomejogador'] : null;
     $nacionalidade = ($_POST['nacionalidade'] != 0) ? $_POST['nacionalidade'] : null;
+	$liga = ($_POST['liga'] != 0) ? $_POST['liga'] : null;
     $mentalidade = ($_POST['mentalidade'] != 0) ? $_POST['mentalidade'] : null;
     $sexo = (isset($_POST['sexo'])) ? 1 : 0;
     $apenasConfusa = (isset($_POST['apenasConfusa'])) ? 1 : null;
@@ -72,10 +73,10 @@ if($_POST['tipoBusca'] === "busca"){
 
     if($_POST['tipoBusca'] === "busca"){
         $jogador = new Jogador($db); 
-        $stmt = $jogador->pesquisaAvancada($nivelMin, $nivelMax, $idadeMin, $idadeMax, $cobrancaFalta, $disponivel, $nome, $nacionalidade, $mentalidade, $stringPosicoes, $seletorPosicoes, $semclube, $valorMin, $valorMax, $sexo, $apenasConfusa, $usuarioLogado);
+        $stmt = $jogador->pesquisaAvancada($nivelMin, $nivelMax, $idadeMin, $idadeMax, $cobrancaFalta, $disponivel, $nome, $nacionalidade, $mentalidade, $stringPosicoes, $seletorPosicoes, $semclube, $valorMin, $valorMax, $sexo, $apenasConfusa, $usuarioLogado, $liga);
     }else if($_POST['tipoBusca'] === "buscaTecnico"){
         $tecnico = new Tecnico($db); 
-        $stmt = $tecnico->pesquisaAvancada($nivelMin, $nivelMax, $nome, $nacionalidade, $mentalidade, $estilo, $semclube, $sexo, $apenasConfusa, $usuarioLogado);
+        $stmt = $tecnico->pesquisaAvancada($nivelMin, $nivelMax, $nome, $nacionalidade, $mentalidade, $estilo, $semclube, $sexo, $apenasConfusa, $usuarioLogado, $liga);
     }
     
     $return_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
