@@ -1,17 +1,37 @@
+# Secrets & Configuration
 config/database.php
-pngquant/
+config/databasePitor.php
+octamotor/config/database.php
 cron/backup_db.php
+.env
+.env.local
+apiKey.xml
+
+# Dependencies & Third Party
+vendor/
+node_modules/
+myadmin/
+pngquant/
+
+# Data & Exports
 sqlitedb/
-octamotor/config/database.php
-octamotor/races/8test.json
-octamotor/races/test.json
-*.json
-octamotor/races/test.json
-octamotor/races/8test.json
-octamotor/races/8test.json
-octamotor/races/test.json
-octamotor/config/database.php
+octamotor/races/*.json
+*.csv
+*.exe
+*.db3
+*.db
+
+# Logs & Debugging
+*.log
+debug_*.txt
+info_debug*.txt
+test_api_output*.txt
+error_log
+
+# System & IDE
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
 *.bak
-octamotor/races/8test.json
-octamotor/races/test.json
-octamotor/races/8test.json
+*.tmp
