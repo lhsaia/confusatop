@@ -25,14 +25,8 @@ jobs:
             MESSAGE=$(echo "${{ github.event.head_commit.message }}" | head -n 1)
             URL="${{ github.event.head_commit.url }}"
 
-            MSG=$(cat <<EOF
-          📦 **Push em ${{ github.repository }}**
-          👤 Autor: *$AUTHOR*
-          🌿 Branch: \`$BRANCH\`
-          📝 Commit: $MESSAGE
-          🔗 $URL
-          EOF
-          )
+            MSG=$(printf "📦 **Push em %s**\n👤 Autor: *%s*\n🌿 Branch: \`%s\`\n📝 Commit: %s\n🔗 %s" \
+              "${{ github.repository }}" "$AUTHOR" "$BRANCH" "$MESSAGE" "$URL")
 
           elif [ "$EVENT" = "issues" ]; then
             ACTION="${{ github.event.action }}"
@@ -41,15 +35,13 @@ jobs:
             USER="${{ github.event.issue.user.login }}"
             URL="${{ github.event.issue.html_url }}"
 
-            MSG=$(cat <<EOF
-          🐞 Issue **#$NUMBER** $ACTION por *$USER*
-          **$TITLE**
-          🔗 $URL
-          EOF
-          )
+            MSG=$(printf "🐞 Issue **#%s** %s por *%s*\n**%s**\n🔗 %s" \
+              "$NUMBER" "$ACTION" "$USER" "$TITLE" "$URL")
           fi
+
+          PAYLOAD=$(jq -Rn --arg msg "$MSG" '{content: $msg}')
 
           curl -X POST \
             -H "Content-Type: application/json" \
-            -d "{\"content\":\"$MSG\"}" \
+            -d "$PAYLOAD" \
             ${{ secrets.DISCORD_WEBHOOK }}
