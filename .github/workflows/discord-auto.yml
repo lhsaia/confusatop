@@ -1,0 +1,37 @@
+name: GitHub → Discord (Auto)
+
+on:
+  push:
+    branches:
+      - "**"
+
+  issues:
+    types:
+      - opened
+      - closed
+      - reopened
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Discord
+        run: |
+          EVENT="${{ github.event_name }}"
+
+          if [ "$EVENT" = "push" ]; then
+            BRANCH="${GITHUB_REF##*/}"
+            MSG="📦 Push em **${{ github.repository }}** (branch: $BRANCH)"
+
+          elif [ "$EVENT" = "issues" ]; then
+            ACTION="${{ github.event.action }}"
+            TITLE="${{ github.event.issue.title }}"
+            URL="${{ github.event.issue.html_url }}"
+            USER="${{ github.event.issue.user.login }}"
+            MSG="🐞 Issue **$ACTION** por *$USER*\n**$TITLE**\n$URL"
+          fi
+
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"$MSG\"}" \
+            ${{ secrets.DISCORD_WEBHOOK }}
