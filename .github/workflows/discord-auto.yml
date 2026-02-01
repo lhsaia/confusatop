@@ -21,14 +21,32 @@ jobs:
 
           if [ "$EVENT" = "push" ]; then
             BRANCH="${GITHUB_REF##*/}"
-            MSG="📦 Push em **${{ github.repository }}** (branch: $BRANCH)"
+            AUTHOR="${{ github.event.head_commit.author.name }}"
+            MESSAGE=$(echo "${{ github.event.head_commit.message }}" | head -n 1)
+            URL="${{ github.event.head_commit.url }}"
+
+            MSG=$(cat <<EOF
+          📦 **Push em ${{ github.repository }}**
+          👤 Autor: *$AUTHOR*
+          🌿 Branch: \`$BRANCH\`
+          📝 Commit: $MESSAGE
+          🔗 $URL
+          EOF
+          )
 
           elif [ "$EVENT" = "issues" ]; then
             ACTION="${{ github.event.action }}"
+            NUMBER="${{ github.event.issue.number }}"
             TITLE="${{ github.event.issue.title }}"
-            URL="${{ github.event.issue.html_url }}"
             USER="${{ github.event.issue.user.login }}"
-            MSG="🐞 Issue **$ACTION** por *$USER*\n**$TITLE**\n$URL"
+            URL="${{ github.event.issue.html_url }}"
+
+            MSG=$(cat <<EOF
+          🐞 Issue **#$NUMBER** $ACTION por *$USER*
+          **$TITLE**
+          🔗 $URL
+          EOF
+          )
           fi
 
           curl -X POST \
