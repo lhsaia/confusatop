@@ -6,7 +6,7 @@
 <a href="/ranking" class="ranking-menu-item">Masculino</a>
 <a href="" class="ranking-menu-item disabled">Feminino</a>
 <a href="/ranking/regras.php" class="ranking-menu-item">Regras</a>
-<a href="" class="ranking-menu-item disabled">Seleções</a>
+<a href="/ranking/selecoes.php" class="ranking-menu-item">Seleções</a>
 <a href="/ranking/jogoserecordes.php" class="ranking-menu-item">Jogos & Recordes</a>
 <a href="/ranking/retrospecto.php" class="ranking-menu-item">Retrospecto</a>
 
