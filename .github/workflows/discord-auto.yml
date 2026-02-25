@@ -39,7 +39,7 @@ jobs:
               "$NUMBER" "$ACTION" "$USER" "$TITLE" "$URL")
           fi
 
-          PAYLOAD=$(jq -Rn --arg msg "$MSG" '{content: $msg}')
+          PAYLOAD=$(jq -Rn --arg msg "$MSG" '{content: $msg, flags: 4}')
 
           curl -X POST \
             -H "Content-Type: application/json" \
