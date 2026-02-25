@@ -1,0 +1,188 @@
+openapi: 3.0.0
+info:
+  title: ConfusaTop API
+  description: API for ConfusaTop application.
+  version: 1.0.0
+servers:
+  - url: /api
+    description: Local API Server
+paths:
+  /paises/buscar.php:
+    get:
+      summary: Search Countries
+      description: Search for countries with optional filters. Returns a list of matching countries.
+      parameters:
+        - name: apiKey
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API Key for authentication.
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Partial match on country name.
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Exact match on country ID.
+        - name: organizacao
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [real, confusa, nc]
+          description: Filter by organization type (real, confusa, nc).
+        - name: federacao
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Exact match on Federation Name.
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [0, 1]
+          description: Filter by status (1 = active, 0 = inactive).
+        - name: dono
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Exact match on Owner's Username.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: Country ID
+                        text:
+                          type: string
+                          description: Country Name
+                        organizacao:
+                          type: string
+                          description: Organization Type
+                        bandeira:
+                          type: string
+                          nullable: true
+                          description: URL to flag image
+                        federacao:
+                          type: string
+                          nullable: true
+                          description: Federation Name
+                        status:
+                          type: string
+                          description: Active Status (1 or 0)
+                        dono:
+                          type: string
+                          nullable: true
+                          description: Owner Username
+        '403':
+          description: Authentication failed
+
+  /hexagen/gerar.php:
+    get:
+      summary: Generate People
+      description: Generates a list of fictional people with names, gender, and level based on provided parameters using the Hexagen function.
+      parameters:
+        - name: apiKey
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API Key for authentication.
+        - name: quantidade
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 1
+          description: Number of people to generate (1-100).
+        - name: pais
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Country Code (Sigla) or ID. If omitted, a random country will be selected.
+        - name: genero
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [masculino, feminino, misto]
+            default: misto
+          description: Gender of the generated people.
+        - name: nivel_min
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 99
+          description: Minimum level.
+        - name: nivel_max
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 99
+          description: Maximum level.
+        - name: nivel_med
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 99
+          description: Median level.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quantidade_gerada:
+                    type: integer
+                    description: Number of people successfully generated.
+                  pessoas:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        nome:
+                          type: string
+                          description: Full Name
+                        genero:
+                          type: string
+                          description: Gender (masculino/feminino)
+                        nivel:
+                          type: integer
+                          description: Generated level
+                        pais_id:
+                          type: integer
+                          description: Internal Country ID
+        '400':
+          description: Invalid Parameters
+        '404':
+          description: Country not found
