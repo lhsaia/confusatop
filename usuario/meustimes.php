@@ -188,17 +188,18 @@ function updateTable(ajax_data, current_page, highlighted, direction){
     tbl += "<table id='tabelaPrincipal' class='table'>";
         tbl += "<thead id='headings'>";
 			tbl += "<tr>";
-				tbl += "<th asc='' class='headings' width='10%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTime</th>";
+				tbl += "<th asc='' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspTime</th>";
 				tbl += "<th asc='' class='headings' width='2%'>Escudo</th>";
+				tbl += "<th asc='' class='headings' width='2%'>Mascote</th>";
 				tbl += "<th asc='' class='headings' width='2%'>Uniforme 1</th>";
 				tbl += "<th asc='' class='headings' width='2%'>Cores 1</th>";
 				tbl += "<th asc='' class='headings' width='2%'>Uniforme 2</th>";
 				tbl += "<th asc='' class='headings' width='2%'>Cores 2</th>";
-				tbl += "<th asc='' class='headings' width='15%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspEstadio</th>";
-				tbl += "<th asc='' class='headings' width='2%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspMax Torcida</th>";
-				tbl += "<th asc='' class='headings' width='2%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspFidelidade</th>";
-				tbl += "<th asc='' class='headings' width='20%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspLiga</th>";
-				tbl += "<th asc='' class='headings' width='20%' class=''><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspPaís</th>";
+				tbl += "<th asc='' class='headings' width='15%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspEstadio</th>";
+				tbl += "<th asc='' class='headings' width='2%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspMax Torcida</th>";
+				tbl += "<th asc='' class='headings' width='2%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspFidelidade</th>";
+				tbl += "<th asc='' class='headings' width='20%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspLiga</th>";
+				tbl += "<th asc='' class='headings' width='20%' class=''><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspPaís</th>";
 				tbl += "<th asc='' class='headings' width='5%' class=''>Opções</th>";
 			tbl += "</tr>";
         tbl +=  "</thead>";
@@ -224,6 +225,10 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 			tbl += "<tr id='"+val['id']+"' data-sexo='"+val['sexo']+"' >";
 				tbl +=  "<td><span class='nomeEditavel' id='nom"+val['id']+"'><a class='linkNome' href='/ligas/teamstatus.php?team="+val['id']+"' >"+val['Nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span></td>";
 				tbl += "<td><div class='imageUpload'><img class='thumb' src='/images/escudos/"+val['Escudo']+"' /> <input type='file' hidden id='escudo"+val['id']+"' class='hiddenInput custom-file-upload' name='escudo' accept='.jpg,.png,.jpeg'/></div></td>";
+
+				let mascoteThumb = val['mascote'] && val['mascote'] != 'null' ? '/images/mascotes/' + val['mascote'] : '/images/mascotes/placeholder.png';
+				tbl += "<td><div class='imageUpload'><img class='thumb' src='"+mascoteThumb+"' /> <input type='file' hidden id='mascote"+val['id']+"' class='hiddenInput custom-file-upload' name='mascote' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
+
 				tbl += "<td><div class='imageUpload'><img class='thumb' src='/images/uniformes/"+val['Uniforme1']+"' /> <input type='file' hidden id='uni1"+val['id']+"' class='hiddenInput custom-file-upload' name='uni1' accept='.jpg,.png,.jpeg'/></div></td>";
 				tbl += "<td class='celula-uniforme'><div class='quadrado-uniforme' id='"+val['Uni1Cor1']+"'><input type='color' name='u1c1' hidden class='hiddenInput' /></div><div class='quadrado-uniforme' id='"+val['Uni1Cor2']+"'><input type='color' name='u1c2' hidden class='hiddenInput' /></div><div class='quadrado-uniforme' id='"+val['Uni1Cor3']+"'><input type='color' name='u1c3' hidden class='hiddenInput' /></div></td>";
 				tbl += "<td><div class='imageUpload'><img class='thumb' src='/images/uniformes/"+val['Uniforme2']+"' /> <input type='file' hidden id='uni2"+val['id']+"' class='hiddenInput custom-file-upload' name='uni2' accept='.jpg,.png,.jpeg'/></div></td>";
@@ -288,10 +293,10 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 
                 if(logged == "true"){
                     if(admin == "true" || user_id === val['idDonoPais']){
-                        optionsString += "<a id='edi"+val['id']+"' title='Editar' class='clickable editar'><i class='far fa-edit inlineButton'></i></a>";
-                        optionsString += "<a hidden id='sal"+val['id']+"' title='Salvar' class='clickable salvar'><i class='fas fa-check inlineButton positive'></i></a>";
-                        optionsString += "<a hidden id='can"+val['id']+"' title='Cancelar' class='clickable cancelar'><i class='fas fa-times inlineButton negative'></i></a>";
-                        optionsString += "<a id='pro"+val['id']+"' title='Promover 1 jogador da base' class='clickable promover'><i class='fas fa-hand-point-up inlineButton'></i></a>";
+                        optionsString += "<a id='edi"+val['id']+"' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
+                        optionsString += "<a hidden id='sal"+val['id']+"' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
+                        optionsString += "<a hidden id='can"+val['id']+"' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
+                        optionsString += "<a id='pro"+val['id']+"' title='Promover 1 jogador da base' class='clickable promover'><span class='material-symbols-outlined inlineButton'>pan_tool_alt</span></a>";
                     }
                     optionsString += "</td>";
                     tbl += optionsString;
@@ -500,6 +505,16 @@ $('.salvar').click(function(){
        escudo = null;
     }
 
+    //mascote
+    var inputMascote = (tbl_row.find('#mascote'+id))[0];
+    var mascote;
+
+    if (inputMascote && inputMascote.files.length > 0) {
+       mascote = inputMascote.files[0];
+    } else {
+       mascote = null;
+    }
+
     //uniforme 1
     var inputUni1 = (tbl_row.find('#uni1'+id))[0];
     var uni1;
@@ -528,8 +543,11 @@ $('.salvar').click(function(){
     formData.append('pais', pais);
     formData.append('estadio', estadio);
     formData.append('liga', liga);
-     if(escudo != null){
+      if(escudo != null){
         formData.append('escudo', escudo);
+     }
+     if(mascote != null){
+        formData.append('mascote', mascote);
      }
      if(uni1 != null){
         formData.append('uni1', uni1);
@@ -746,7 +764,7 @@ function hexToRgb(hex) {
 
 <div id="quadro-container">
 <div align="center" id="quadroTimes">
-<div id='search_wrapper'><input type=text id='caixa_pesquisa' placeholder='Pesquisar...'><i class='fas fa-search'></i></div>
+<div id='search_wrapper'><input type=text id='caixa_pesquisa' placeholder='Pesquisar...'><span class='material-symbols-outlined'>search</span></div>
 <button id='importar_time' onclick="window.location='/times/criar_time.php';">Criar time</button>
 <button id='importar_time' onclick="window.location='/times/importar_time.php';">Importar time</button>
 <h2>Quadro de times - <?php echo $_SESSION['nomereal']?></h2>

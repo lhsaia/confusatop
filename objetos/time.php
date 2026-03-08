@@ -352,6 +352,32 @@ LEFT JOIN clube b ON c.clube = b.id
 
         }
 
+        function idPorNome($nomeTime){
+             $nomeTime = htmlspecialchars(strip_tags($nomeTime));
+             // Busca exata primeiro
+             $query = "SELECT ID, Nome FROM clube WHERE Nome = :nome LIMIT 0,1";
+             $stmt = $this->conn->prepare( $query );
+             $stmt->bindParam(":nome", $nomeTime);
+             $stmt->execute();
+             $row = $stmt->fetch(PDO::FETCH_ASSOC);
+ 
+             if($row){
+                 return $row['ID'];
+             }
+ 
+             // Se nao achar, busca aproximada
+             $query = "SELECT ID, Nome FROM clube WHERE Nome LIKE :nome LIMIT 0,1";
+             $nomeLike = "%".$nomeTime."%";
+             $stmt = $this->conn->prepare($query);
+             $stmt->bindParam(":nome", $nomeLike);
+             $stmt->execute();
+              $row = $stmt->fetch(PDO::FETCH_ASSOC);
+              if($row){
+                  return $row['ID'];
+              }
+              return 0;
+        }
+
         function getElenco($idClube, $multiple = null){
             $idClube = htmlspecialchars(strip_tags($idClube));
 
@@ -1126,6 +1152,10 @@ LEFT JOIN clube b ON c.clube = b.id
             $query .= " Uniforme2=:uniforme2, ";
         }
 
+        if(isset($this->mascote)){
+            $query .= " mascote=:mascote, ";
+        }
+
         //escrever query
         $query .= " Estadio=:estadio,
                     Uni1Cor1=:uniforme1cor1,
@@ -1155,6 +1185,11 @@ LEFT JOIN clube b ON c.clube = b.id
         if(isset($this->uniforme2)){
             $this->uniforme2=htmlspecialchars(strip_tags($this->uniforme2));
             $stmt->bindParam(":uniforme2", $this->uniforme2);
+        }
+
+        if(isset($this->mascote)){
+            $this->mascote=htmlspecialchars(strip_tags($this->mascote));
+            $stmt->bindParam(":mascote", $this->mascote);
         }
 
         // posted values
@@ -1193,6 +1228,7 @@ LEFT JOIN clube b ON c.clube = b.id
         if($stmt->execute()){
             return true;
         } else {
+            error_log(print_r($stmt->errorInfo(), true));
             return false;
         }
 
@@ -1497,7 +1533,7 @@ LEFT JOIN clube b ON c.clube = b.id
         } 
 
     $query = $sub_query_inicio."SELECT
-                a.ID as id, a.Nome, a.TresLetras, a.Escudo, a.Uni1Cor1, a.Uni1Cor2, a.Uni1Cor3, a.Uni2Cor1, a.Uni2Cor2, a.Uni2Cor3, a.Uniforme1, a.Uniforme2, a.MaxTorcedores, a.Fidelidade, p.id as idPais, p.dono as idDonoPais, e.Nome as nomeEstadio, l.nome as nomeLiga, p.sigla as siglaPais, p.bandeira as bandeiraPais, a.liga, l.logo, e.Capacidade as capacidade, a.estadio as estadioId, a.Sexo as sexo, a.status
+                a.ID as id, a.Nome, a.TresLetras, a.Escudo, a.mascote, a.Uni1Cor1, a.Uni1Cor2, a.Uni1Cor3, a.Uni2Cor1, a.Uni2Cor2, a.Uni2Cor3, a.Uniforme1, a.Uniforme2, a.MaxTorcedores, a.Fidelidade, p.id as idPais, p.dono as idDonoPais, e.Nome as nomeEstadio, l.nome as nomeLiga, p.sigla as siglaPais, p.bandeira as bandeiraPais, a.liga, l.logo, e.Capacidade as capacidade, a.estadio as estadioId, a.Sexo as sexo, a.status
                 FROM " . $this->table_name . " a
         LEFT JOIN paises p ON a.Pais = p.id
         LEFT JOIN estadio e ON a.Estadio = e.id
@@ -1579,7 +1615,7 @@ function readExtraInfo($id){
         $id = htmlspecialchars(strip_tags($id));
 
     $query = "SELECT
-                apelido, fundacao, cidade, patrocinio, material_esportivo, titulos, sobre_titulo, sobre_subtitulo, sobre_texto    
+                apelido, fundacao, cidade, patrocinio, material_esportivo, titulos, sobre_titulo, sobre_subtitulo, sobre_texto, mascote    
             FROM
                 " . $this->table_name . " a
             WHERE

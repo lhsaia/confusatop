@@ -188,18 +188,21 @@ $time_stmt = $jogador->selecionarElencoTime($id,$from_record_num,$records_per_pa
  echo "<div id='quadrosPrincipais'>";
  echo "<div id='quadroEsquerdo'>";
  echo "	 <div id='informacaoBase' >
-		 <div id='cidadeTime'><i class='fas fa-map-marker-alt' style='color: ".$color1."'></i><span class='infos_time' contenteditable={$editable}> {$cidade_time}</span></div>
-		 <div id='fundacaoTime'><i class='far fa-calendar-alt' style='color: ".$color1."'></i><span class='infos_time' contenteditable={$editable}> {$fundacao_time}</span></div>
-		 <div id='apelidoTime'><i class='fas fa-signature' style='color: ".$color1."'></i><span class='infos_time' contenteditable={$editable}> {$apelido_time}</span></div>
-		 <div id='patrocinioTime'><i class='fas fa-hand-holding-usd' style='color: ".$color1."'></i><span class='infos_time' contenteditable={$editable}> {$patrocinio_time}</span></div>
-		 <div id='materialEsportivoTime'> <i class='fas fa-tshirt' style='color: ".$color1."'></i><span class='infos_time' contenteditable={$editable}> {$material_esportivo_time}</span></div>
-		 <div id='titulosTime'> <i class='fas fa-trophy' style='color: ".$color1."'></i><span class='infos_time' contenteditable={$editable}> {$titulos_time}</span></div>
-		 <div id='nomeEstadio'><i class='fas fa-home' style='color: ".$color1."'></i><span class='infos_time'> ".$estadio_time." (" .$estadio_capacidade .")</span></div>
+		 <div id='cidadeTime'><span class='material-symbols-outlined' style='color: ".$color1."'>location_on</span><span class='infos_time' contenteditable={$editable}> {$cidade_time}</span></div>
+		 <div id='fundacaoTime'><span class='material-symbols-outlined' style='color: ".$color1."'>calendar_today</span><span class='infos_time' contenteditable={$editable}> {$fundacao_time}</span></div>
+		 <div id='apelidoTime'><span class='material-symbols-outlined' style='color: ".$color1."'>ink_pen</span><span class='infos_time' contenteditable={$editable}> {$apelido_time}</span></div>
+		 <div id='patrocinioTime'><span class='material-symbols-outlined' style='color: ".$color1."'>attach_money</span><span class='infos_time' contenteditable={$editable}> {$patrocinio_time}</span></div>
+		 <div id='materialEsportivoTime'> <span class='material-symbols-outlined' style='color: ".$color1."'>checkroom</span><span class='infos_time' contenteditable={$editable}> {$material_esportivo_time}</span></div>
+		 <div id='titulosTime'> <span class='material-symbols-outlined' style='color: ".$color1."'>emoji_events</span><span class='infos_time' contenteditable={$editable}> {$titulos_time}</span></div>
+		 <div id='nomeEstadio'><span class='material-symbols-outlined' style='color: ".$color1."'>stadium</span><span class='infos_time'> ".$estadio_time." (" .$estadio_capacidade .")</span></div>
  </div>";
+ $mascote_time = $extra_info['mascote'] && $extra_info['mascote'] != 'null' ? '/images/mascotes/' . $extra_info['mascote'] : '/images/mascotes/placeholder.png';
+
  echo "<div id='imagensEstadioUniformes'>";
  echo "<div id='fotoEstadio'><img src='/images/estadios/{$foto_estadio}'></div>";
- echo "<div id='uniforme1'><img src='/images/uniformes/".$info["Uniforme1"]."'></div>";
- echo "<div id='uniforme2'><img src='/images/uniformes/".$info["Uniforme2"]."'></div>";
+ echo "<div id='mascoteTime'><img src='{$mascote_time}'></div>";
+ echo '<div id="uniforme1"><img src="/images/uniformes/'.$info["Uniforme1"].'"></div>';
+ echo '<div id="uniforme2"><img src="/images/uniformes/'.$info["Uniforme2"].'"></div>';
  echo "</div>";
  echo "<div id='sobreTime'><h2 contenteditable={$editable} >{$sobre_titulo}</h2><h3  contenteditable={$editable} style='color: ".$color1."'>{$sobre_subtitulo}</h3><div id='aboutTeam' contenteditable={$editable} >{$sobre_texto}</div></div>";
   echo "</div>";
@@ -359,14 +362,14 @@ $(document).ready(function(){
 	
 	var donoLogado = <?php echo $donoLogado?1:0 ?>;
 	
-	$("#toolbar").html('<div id="irDetalhes"><i class="fas fa-tasks"></i><span>Detalhes</span></div>');
+	$("#toolbar").html('<div id="irDetalhes"><span class="material-symbols-outlined">assignment</span><span>Detalhes</span></div>');
 	
 			$("#irDetalhes").on("click", function(){
 			window.location = "/ligas/teamstatus.php?team=" + <?php echo $idTime ?>;
 		});
 	
 	if(donoLogado){
-		$("#toolbar").append('<div id="salvarDados"><i class="far fa-save"></i><span>Salvar</span></div><div id="tirarPrint"><i class="fas fa-print"></i><span>Baixar print</span></div>');
+		$("#toolbar").append('<div id="salvarDados"><span class="material-symbols-outlined">save</span><span>Salvar</span></div><div id="tirarPrint"><span class="material-symbols-outlined">print</span><span>Baixar print</span></div>');
 		
 		$("#tirarPrint").on("click", function(){
 			
@@ -376,7 +379,7 @@ $(document).ready(function(){
 			domtoimage.toBlob(document.getElementsByTagName("body")[0])
 			//domtoimage.toBlob(document.getElementById("principal"))
 				.then(function (blob) {
-					window.saveAs(blob, 'Ficha_<?php echo $nome_time ?>.png');
+					window.saveAs(blob, "Ficha_<?php echo $nome_time ?>.png");
 					$("#top-bar").children().toggle();
 					$("#bottom-bar").children().toggle();
 				});
@@ -588,12 +591,14 @@ $(document).ready(function(){
 				$uniforme_final = $uniforme1_time;
 			}
 	
-		echo "{name: '" . $nome_final . "', position: '" .$posicao_final . "', img: '/images/uniformes/" .$uniforme_final. "'},";
+		echo '{name: "' . $nome_final . '", position: "' .$posicao_final . '", img: "/images/uniformes/' .$uniforme_final. '"},';
 
 	}
 
 	?>
 ];
+
+console.log(soccerfieldData);
 
 $("#soccerfield").soccerfield(soccerfieldData,{
   field: {
