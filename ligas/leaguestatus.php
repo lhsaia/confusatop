@@ -97,12 +97,12 @@ $time_stmt = $time->readAll($from_record_num,$records_per_page,null,$idLiga);
     $perc_estrangeiros = number_format(($estrangeiros / $jogadores)*100,1)."%";
 
 echo "<div id='info-jogos'>";
-echo "<div id='times' class='infoblock' title='Quantidade de times'><i class='fas fa-shield-alt'></i><span class='informacao'>{$total_rows}</span></div>";
-echo "<div id='jogadores' class='infoblock' title='Quantidade de jogadores'><i class='fas fa-users'></i><span class='informacao'>{$jogadores}</span></div>";
-echo "<div id='Idades' class='infoblock' title='Média de idade'><i class='fas fa-male'></i><span class='informacao'>{$mediaIdade}</span></div>";
-echo "<div id='Estrangeiros' class='infoblock' title='Estrangeiros'><i class='fas fa-globe'></i><span class='informacao'>{$estrangeiros}</span><span class='informacao micro'>({$perc_estrangeiros})</span></div>";
-echo "<div id='Valor' class='infoblock' title='Valor de mercado (em F$)'><i class='fas fa-dollar-sign'></i><span class='informacao menor'>{$valor_total_clube}</span></div>";
-echo "<div id='MediaNivel' class='infoblock' title='Média de Nível (titulares/total)'><i class='fas fa-award'></i><span class='informacao mini'> {$nivel_medio_onze}   <span class='informacao mini'> &nbsp {$nivel_medio} </span></span></div>";
+echo "<div id='times' class='infoblock' title='Quantidade de times'><span class='material-symbols-outlined'>shield</span><span class='informacao'>{$total_rows}</span></div>";
+echo "<div id='jogadores' class='infoblock' title='Quantidade de jogadores'><span class='material-symbols-outlined'>groups</span><span class='informacao'>{$jogadores}</span></div>";
+echo "<div id='Idades' class='infoblock' title='Média de idade'><span class='material-symbols-outlined'>elderly</span><span class='informacao'>{$mediaIdade}</span></div>";
+echo "<div id='Estrangeiros' class='infoblock' title='Estrangeiros'><span class='material-symbols-outlined'>globe_location_pin</span><span class='informacao'>{$estrangeiros}</span><span class='informacao micro'>({$perc_estrangeiros})</span></div>";
+echo "<div id='Valor' class='infoblock' title='Valor de mercado (em F$)'><span class='material-symbols-outlined'>attach_money</span><span class='informacao menor'>{$valor_total_clube}</span></div>";
+echo "<div id='MediaNivel' class='infoblock' title='Média de Nível (titulares/total)'><span class='material-symbols-outlined'>star_half</span><span class='informacao mini'> {$nivel_medio_onze}   <span class='informacao mini'> &nbsp {$nivel_medio} </span></span></div>";
 echo "</div>";
 echo "<br>";
 
@@ -123,6 +123,7 @@ echo "<table id='tabelaElenco' class='table'>";
 echo "<thead>";
 echo "<tr>";
 echo "<th>Time</th>";
+echo "<th>Uniformes</th>";
 echo "<th>Elenco</th>";
 echo "<th>Média de idade</th>";
 echo "<th>Estrangeiros</th>";
@@ -154,12 +155,22 @@ $agora = date('Y-m-d');
             $valorMercadoPorTime = "F$ ". number_format(($info['valorTotal']/1000000),2)."M";
             $valorMedioJogador = "F$ ". number_format(($info['valorTotal']/($elencoPorTime*1000000)),2)."M";
             $escudos = $info['Escudo'];
+            $uniforme1 = $info['Uniforme1'];
+            $uniforme2 = $info['Uniforme2'];
 			$nivel_medio = number_format($info['mediaNivel'], 1);
 			$nivel_medio_onze = number_format($info['mediaNivelOnze'],1);
 
 
             echo "<tr id='".$idTime."' class='".$idLiga."'>";
                 echo "<td class='nopadding'><img class='logoliga' src='/images/escudos/".$escudos."' height='30px'/><a href='{$baseLink}.php?team=".$idTime."'>{$row['Nome']}</a></td>";
+                echo "<td class='nopadding'>";
+                if(!empty($uniforme1)){
+                    echo "<img src='/images/uniformes/".$uniforme1."' height='30px' style='margin-right: 5px;'/>";
+                }
+                if(!empty($uniforme2)){
+                    echo "<img src='/images/uniformes/".$uniforme2."' height='30px'/>";
+                }
+                echo "</td>";
                 echo "<td class='nopadding'>{$elencoPorTime}</td>";
                 echo "<td class='nopadding'>{$mediaIdadePorTime}</td>";
                 echo "<td class='nopadding'>{$estrangeirosPorTime}</td>";
@@ -169,16 +180,16 @@ $agora = date('Y-m-d');
                 echo "<td class='nopadding'>{$valorMedioJogador}</td>";
                 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                     
-                    echo "<td><a id='dow".$id."' title='Baixar arquivo .ymt' class='clickable exportar'><i class='fas fa-download inlineButton azul'></i></a>";
+                    echo "<td><a id='dow".$id."' title='Baixar arquivo .ymt' class='clickable exportar'><span class='material-symbols-outlined inlineButton azul'>download</span></a>";
                     if($_SESSION['user_id'] === $idDonoPais){                    
-                    echo "<a id='mov".$id."' title='Mover' class='clickable mover'><i class='fas fa-arrows-alt-v inlineButton azul'></i></a>";
+                    echo "<a id='mov".$id."' title='Mover' class='clickable mover'><span class='material-symbols-outlined inlineButton azul'>swap_vert</span></a>";
                     echo "<select id='sel".$id."' title='Selecionar liga' class='selecionar_liga' hidden>";
                     for($i = 0; $i < count($listaLigas);$i++){
                         echo "<option value='{$listaLigas[$i][0]}'>{$listaLigas[$i][1]}</option>";
                     }
                     echo "</select>";
-                    echo "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar'><i class='fas fa-check inlineButton'></i></a>";
-                    echo "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><i class='fas fa-times inlineButton vermelho'></i></a>";
+                    echo "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton'>check</span></a>";
+                    echo "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton vermelho'>close</span></a>";
                     echo "";
                     echo "</td>";
                     }
