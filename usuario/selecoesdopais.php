@@ -137,8 +137,30 @@ if($num>0){
                     }
                     echo "</select>";
                     echo "</td>";
-                echo "<td><span class='nomeEditavel' id='max".$ID."'>{$MaxTorcedores}</span></td>";
-                echo "<td><span class='nomeEditavel' id='fid".$ID."'>{$Fidelidade}</span></td>";
+                $maximoTorcedores = ($MaxTorcedores == 0? ">100000" : "<" . $MaxTorcedores);
+                echo "<td><span class='maxTorcedores' id='max".$ID."'>{$maximoTorcedores}</span><select class='editavel inputHerdeiro comboTorcedores' name='maxTorcida' id='".$MaxTorcedores."' hidden>" .
+                "<option value='1000'>&lt;1000</option>" .
+                "<option value='2000'>&lt;2000</option>" .
+                "<option value='3000'>&lt;3000</option>" .
+                "<option value='4000'>&lt;4000</option>" .
+                "<option value='5000'>&lt;5000</option>" .
+                "<option value='6000'>&lt;6000</option>" .
+                "<option value='7000'>&lt;7000</option>" .
+                "<option value='8000'>&lt;8000</option>" .
+                "<option value='9000'>&lt;9000</option>" .
+                "<option value='10000'>&lt;10000</option>" .
+                "<option value='20000'>&lt;20000</option>" .
+                "<option value='30000'>&lt;30000</option>" .
+                "<option value='40000'>&lt;40000</option>" .
+                "<option value='50000'>&lt;50000</option>" .
+                "<option value='60000'>&lt;60000</option>" .
+                "<option value='70000'>&lt;70000</option>" .
+                "<option value='80000'>&lt;80000</option>" .
+                "<option value='90000'>&lt;90000</option>" .
+                "<option value='100000'>&lt;100000</option>" .
+                "<option selected value='0'>&gt;100000</option>" .
+                "</select></td>";
+                echo "<td><span class='fidelidadeFixo'>{$Fidelidade}</span><input type='number' min='1' max='10' class=' fidelidade inputHerdeiro' value=".$Fidelidade." id='fid".$ID."' hidden></td>";
 
                 if($idPais != 0){
                     echo "<td class='wide'><img src='/images/bandeiras/{$bandeiraPais}' class='bandeira nomePais' id='ban".$ID."'>  <span class='nomePais' id='pai".$ID."'>{$siglaPais}</span>";
@@ -157,11 +179,11 @@ if($num>0){
 
                 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                     if($_SESSION['admin_status'] == '1' || $_SESSION['user_id'] === $idDonoPais){
-                        $optionsString .= "<a id='edi".$ID."' title='Editar' class='clickable editar'><i class='far fa-edit inlineButton'></i></a>";
-                        $optionsString .= "<a id='dow".$id."' title='Baixar arquivo .ymt' class='clickable exportar'><i class='fas fa-download inlineButton azul'></i></a>";
+                        $optionsString .= "<a id='edi".$ID."' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
+                        $optionsString .= "<a id='dow".$id."' title='Baixar arquivo .ymt' class='clickable exportar'><span class='material-symbols-outlined inlineButton azul'>download</span></a>";
 
-                        $optionsString .= "<a hidden id='sal".$ID."' title='Salvar' class='clickable salvar'><i class='fas fa-check inlineButton positive'></i></a>";
-                        $optionsString .= "<a hidden id='can".$ID."' title='Cancelar' class='clickable cancelar'><i class='fas fa-times inlineButton negative'></i></a>";
+                        $optionsString .= "<a hidden id='sal".$ID."' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
+                        $optionsString .= "<a hidden id='can".$ID."' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
                     }
                     $optionsString .= "</td>";
                     echo $optionsString;
@@ -472,6 +494,10 @@ $(document).ready(function() {
     tbl_row.find('.deletar').hide();
     tbl_row.find('.nomePais').hide();
     tbl_row.find('.hiddenInput').show();
+    tbl_row.find('.fidelidadeFixo').hide();
+    tbl_row.find('.fidelidade').show();
+    tbl_row.find('.maxTorcida').show();
+    tbl_row.find('.maxTorcedores').hide();
 
         //acertar questão cores
         tbl_row.find(".celula-uniforme :input").each(function(){
@@ -488,7 +514,8 @@ $(document).ready(function() {
     var paisId = tbl_row.find('.comboPais').attr('id');
     tbl_row.find('.comboPais').show().val(paisId);
 
-
+    var torcidaId = tbl_row.find('.comboTorcedores').attr('id');
+    tbl_row.find('.comboTorcedores').show().val(torcidaId);
 
     var estadioId = tbl_row.find('.comboEstadio').attr('id').replace(/\D/g,'');
 
@@ -513,12 +540,37 @@ $(document).ready(function() {
     tbl_row.find('.deletar').show();
     tbl_row.find('.thumb').removeClass('editableThumb');
     tbl_row.find('.hiddenInput').hide();
+    tbl_row.find('.comboTorcedores').hide();
+    tbl_row.find('.maxTorcedores').show();
+
+    tbl_row.find('.fidelidadeFixo').show();
+    tbl_row.find('.fidelidade').hide();
 
     tbl_row.find('span').each(function(index, val){
         $(this).html($(this).attr('original_entry'));
     });
 });
 
+  $(".fidelidade").each(function(){
+
+    $(this).keydown(function () {
+    // Save old value.
+    if (!$(this).val() || (parseInt($(this).val()) <= 10 && parseInt($(this).val()) >= 1))
+    $(this).data("old", $(this).val());
+  });
+
+  });
+
+  $(".fidelidade").each(function(){
+
+    $(this).keyup(function () {
+    // Check correct, else revert back to old value.
+    if (!$(this).val() || (parseInt($(this).val()) <= 10 && parseInt($(this).val()) >= 1));
+    else
+      $(this).val($(this).data("old"));
+  });
+
+  });
 
 
 $('.salvar').click(function(){
@@ -538,11 +590,16 @@ $('.salvar').click(function(){
     tbl_row.find('.deletar').show();
     tbl_row.find('.thumb').removeClass('editableThumb');
     tbl_row.find('.hiddenInput').hide();
+    tbl_row.find('.comboTorcedores').hide();
+    tbl_row.find('.maxTorcedores').show();
+
+    tbl_row.find('.fidelidadeFixo').show();
+    tbl_row.find('.fidelidade').hide();
 
     var id = tbl_row.attr('id');
     var nomeTime = tbl_row.find('#nom'+id).html();
-    var maxTorcedores = tbl_row.find('#max'+id).html();
-    var fidelidade = tbl_row.find('#fid'+id).html();
+    var maxTorcedores = tbl_row.find('.comboTorcedores').val();
+    var fidelidade = tbl_row.find('#fid'+id).val();
     var estadio = tbl_row.find('.comboEstadio').val();
     var liga = -1;
     var pais = tbl_row.find('.comboPais').val();
