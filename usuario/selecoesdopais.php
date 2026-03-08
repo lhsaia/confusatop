@@ -246,6 +246,12 @@ $(document).ready(function() {
       data: {idTime: idTime}
     })
     .done(function(response) {
+
+        if(!response[2] || response[2].length === 0) {
+            window.scrollTo(0, 0);
+            $('#errorbox').html('<div class="alert alert-danger">Esta seleção não possui nenhum técnico registrado. Para exportar um time, é obrigatório contratar um técnico primeiro.</div>');
+            return;
+        }
 		
 	     let arquivoEsc;
          let arquivoUni1;
