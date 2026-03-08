@@ -968,7 +968,7 @@ $('#form_busca_jogador').submit(function(e){
                 $('#loading').hide();  // hide loading indicator
                 updateTable(JSON.parse(data),1,0,0);
                 localData = JSON.parse(data);
-                //console.log(localData);
+                //console.log(data);
             }
         });
 
@@ -1250,7 +1250,7 @@ $(document).on("click", '.convocar', function(event){
     let jogId = parseInt(propId.replace(/\D/g,''));
 	
 
-    var arrayJogador = localData.find(jogador => jogador.idJogador === jogId);
+    var arrayJogador = localData.find(jogador => jogador.idJogador == jogId);
 
     var nome = arrayJogador.nomeJogador;
     var sexoJogador = arrayJogador.sexoJogador;
@@ -1303,19 +1303,22 @@ $(document).on("click", '.convocarTecnico', function(event){
     let propId = $(this).prop("id");
     let jogId = parseInt(propId.replace(/\D/g,''));
 
-    var arrayJogador = localData.find(jogador => jogador.idJogador === jogId);
+    var arrayJogador = localData.find(jogador => jogador.idJogador == jogId);
 
     var nome = arrayJogador.nomeJogador;
     var nacionalidadeJogador = arrayJogador.nacionalidade;
 
     var counter = 0;
+    var firstMatchSelected = false;
     $("#selecaoDestino option").each(function(){
 
-        if($(this).attr("data-pais") == nacionalidadeJogador){
-
+        if($(this).attr("data-pais") == nacionalidadeJogador && $(this).val() !== 'erro'){
             $(this).show();
+            if(!firstMatchSelected){
+                $(this).prop('selected', true);
+                firstMatchSelected = true;
+            }
             counter = counter + 1;
-
         } else {
             $(this).hide();
             $(this).prop('selected', false);
@@ -1324,11 +1327,11 @@ $(document).on("click", '.convocarTecnico', function(event){
     });
 
     if(counter == 0){
+        window.scrollTo(0, 0);
         $("#errorbox").html("<div class='alert alert-danger'>Não há seleções disponíveis para esse(a) técnico(a)!</div>");
     } else {
         $('#nomeJogadorConvoca').val(nome);
         $("#idJogadorConvoca").val(jogId);
-
         $("#nacionalidadeJogadorConvoca").val(nacionalidadeJogador);
 
         $('#modalConvocacao').show();
@@ -1342,7 +1345,7 @@ $(document).on("click", '.proposta', function(event) {
     let propId = $(this).prop("id");
     let jogId = parseInt(propId.replace(/\D/g,''));
 
-	var arrayJogador = localData.find( jogador => jogador.idJogador === jogId );
+	var arrayJogador = localData.find( jogador => jogador.idJogador == jogId );
 
 	//console.log(localData);
 
@@ -1391,7 +1394,7 @@ $(document).on("click", '.propostaTecnico', function(event) {
     let jogId = parseInt(propId.replace(/\D/g,''));
 
 
-var arrayJogador = localData.find(jogador => jogador.idJogador === jogId);
+var arrayJogador = localData.find(jogador => jogador.idJogador == jogId);
 
 var nome = arrayJogador.nomeJogador;
 var clube = arrayJogador.idClube;
@@ -1562,27 +1565,23 @@ $("#formConvocacao").submit(function(event){
             dataType    : 'json', // what type of data do we expect back from the server
                         encode          : true
         })
+        .done(function(data) {
+            window.scrollTo(0, 0);
 
-                    .done(function(data) {
-
-// log data to the console so we can see
-//console.log(data);
-window.scrollTo(0, 0);
-
-if (! data.success) {
-    $('#modalConvocacao').hide();
-     $('#errorbox').html('<div class="alert alert-danger">Não foi possível fazer a convocação, '+data.error+'</div>');
-
-
-} else {
-
-$('#modalConvocacao').hide();
-     $('#errorbox').html("<div class='alert alert-success'>Convocação realizada com sucesso!</div>");
-
-}
-
-// here we will handle errors and validation messages
-});
+            if (!data.success) {
+                $('#modalConvocacao').hide();
+                $('#errorbox').html('<div class="alert alert-danger">Não foi possível fazer a convocação, '+data.error+'</div>');
+            } else {
+                $('#modalConvocacao').hide();
+                $('#errorbox').html("<div class='alert alert-success'>Convocação realizada com sucesso!</div>");
+            }
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            window.scrollTo(0, 0);
+            $('#modalConvocacao').hide();
+            $('#errorbox').html('<div class="alert alert-danger">Erro de comunicação com o servidor.</div>');
+            console.error("AJAX Error: ", textStatus, errorThrown, jqXHR.responseText);
+        });
 
 
 
