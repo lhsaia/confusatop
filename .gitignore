@@ -6,6 +6,8 @@ cron/backup_db.php
 .env
 .env.local
 apiKey.xml
+auth/*.key
+auth/db.php
 
 # Dependencies & Third Party
 vendor/
