@@ -109,7 +109,7 @@ $("document").ready(function(){
 		
 		
 		if(donoLogado){
-		$("#toolbar").append('<div id="salvarDados"><i class="far fa-save"></i><span>Salvar</span></div>');
+		$("#toolbar").append('<div id="salvarDados"><span class="material-symbols-outlined">save</span><span>Salvar</span></div>');
 		$("#toolbar").hide();
 		}
 	
@@ -384,6 +384,9 @@ function level_distributor(){
 							alert(data.error)
 						  }
 						  $("#toolbar").hide();
+						    attribute_chart(data.attributeArray, isGoleiro);
+							update_personality (data.personalidade);
+						  
 					  },
 					  error: function(data) {
 						  successmessage = 'Error';
@@ -405,8 +408,32 @@ echo "<div id='quadro-container'>";
 echo "<div id='quadro-superior'>";
 echo "<div id='quadro-nomes'>";
 echo "<h2>" . $nome_jogador ." </h2>";
-echo "<h3><a href='paisstatus.php?country=".$pais_time."'><img class='smallthumb' src='/images/bandeiras/{$bandeira_pais_time}'>&nbsp" . $nome_pais_time ."</a><a href='leaguestatus.php?league=".$id_liga."'> - <img class='smallthumb' src='/images/ligas/{$logo_liga}'>&nbsp" . $liga_time ." (tier {$tier_liga})</a><a href='teamstatus.php?team=".$id_time."'> - <img class='smallthumb' src='/images/escudos/{$escudo_time}'>&nbsp".$time_jogador." </a></h3> ";
+if ($id_time == 0) {
+    echo "<h3><span>".$time_jogador."</span></h3>";
+} else {
+    echo "<h3><a href='paisstatus.php?country=".$pais_time."'><img class='smallthumb' src='/images/bandeiras/{$bandeira_pais_time}'>&nbsp" . $nome_pais_time ."</a><a href='leaguestatus.php?league=".$id_liga."'> - <img class='smallthumb' src='/images/ligas/{$logo_liga}'>&nbsp" . $liga_time ." (tier {$tier_liga})</a><a href='teamstatus.php?team=".$id_time."'> - <img class='smallthumb' src='/images/escudos/{$escudo_time}'>&nbsp".$time_jogador." </a></h3> ";
+}
 echo "</div>";
+ echo "<div id='info-desempenho-selecao'>";
+ if($info['golsSelecao'] + $info['amarelosSelecao'] + $info['vermelhosSelecao'] +$info['golsTime'] + $info['amarelosTime'] + $info['vermelhosTime'] + $info['jogosTime'] > 0){
+	 
+	 $golsTotais = $info['golsTime'] + $info['golsSelecao'];
+	 $amarelosTotais = $info['amarelosTime'] + $info['amarelosSelecao'];
+	 $vermelhosTotais = $info['vermelhosTime'] + $info['vermelhosSelecao'];
+	 
+   echo "<span>Marcas na carreira</span>";
+   echo "<div id='jogosSelecao' class='infoblock small' title='Jogos'><span class='informacao_carreira'><span class='floatleft material-symbols-outlined'>calendar_check</span>{$info['jogosTime']}</span></div>";
+   echo "<div id='golsSelecao' class='infoblock small' title='Gols'><span class='informacao_carreira'><span class='floatleft material-symbols-outlined'>sports_and_outdoors</span>{$golsTotais}</span></div>";
+   echo "<div id='amarelosSelecao' class='infoblock small' title='Amarelos'><span class='informacao_carreira'><span class='floatleft material-symbols-outlined' style='font-variation-settings: \"FILL\" 1; color: yellow;'>crop_portrait</span>{$amarelosTotais}</span></div>";
+echo "<div id='vermelhosSelecao' class='infoblock small' title='Vermelhos'>
+        <span class='informacao_carreira'>
+            <span class='floatleft material-symbols-outlined' style='font-variation-settings: \"FILL\" 1; color: red;'>
+                crop_portrait
+            </span>
+            {$vermelhosTotais}
+        </span>
+      </div>"; }
+  echo "</div>";
 echo "<div id='quadro-foto'><img id='bandeiraGrande' class='margin-left' src='/images/jogadores/".$foto_jogador."' height='100px'></div>";
 echo "</div>";
 echo "<hr>";
@@ -416,32 +443,30 @@ $nascimento_jogador = $nascimento_jogador[2] . "/" . $nascimento_jogador[1] . "/
 $valor_jogador = $valor_jogador / 1000;
 $salario_jogador = $salario_jogador / 1000;
 
-if($ate_quando == 0){
+if(empty($ate_quando) || $ate_quando == 0 || $ate_quando == "0000-00-00"){
     $ate_quando = "Indeterminado";
 }
 
-$desde_quando = explode(" ",$desde_quando);
-$desde_quando = explode("-",$desde_quando[0]);
-$desde_quando = $desde_quando[2] . "/" . $desde_quando[1] . "/" . $desde_quando[0];
+if(empty($desde_quando)){
+    $desde_quando = "-";
+} else {
+    $desde_quando = explode(" ",$desde_quando);
+    $desde_quando = explode("-",$desde_quando[0]);
+    $desde_quando = $desde_quando[2] . "/" . $desde_quando[1] . "/" . $desde_quando[0];
+}
+
 //$posicoes_jogador = "111111111111111";
 
 echo "<div id='info_geral'>";
  echo "<div id='info-jogos' class='info_jogador'>";
- echo "<div id='nacionalidade' class='infoblock large' title='Nacionalidade'><span class='informacao'><i class='floatleft far fa-flag'></i>{$pais_jogador}&nbsp<img class='smallthumb' src='/images/bandeiras/{$bandeira_pais}'></span></div>";
- echo "<div id='idade' class='infoblock large' title='Nascimento (idade)'><span class='informacao'><i class='floatleft fas fa-calendar-alt'></i>{$nascimento_jogador} ({$idade_jogador} anos)</span></div>";
- echo "<div id='valor' class='infoblock large' title='Valor (em F$)'><span class='informacao'><i class='floatleft fas fa-dollar-sign'></i>{$valor_jogador} k</span></div>";
- echo "<div id='salario' class='infoblock large' title='Salário (em F$)'><span class='informacao'><i class='floatleft fas fa-file-invoice-dollar'></i>{$salario_jogador} k</span></div>";
- echo "<div id='inicioContrato' class='infoblock large' title='Início do contrato'><span class='informacao'><i class='floatleft fas fa-hourglass-start'></i>{$desde_quando}</span></div>";
- echo "<div id='fimContrato' class='infoblock large' title='Fim do contrato'><span class='informacao'><i class='floatleft fas fa-hourglass-end'></i>{$ate_quando}</span></div>";
+ echo "<div id='nacionalidade' class='infoblock large' title='Nacionalidade'><span class='informacao'><span class='floatleft material-symbols-outlined'>flag</span>{$pais_jogador}&nbsp<img class='smallthumb' src='/images/bandeiras/{$bandeira_pais}'></span></div>";
+ echo "<div id='idade' class='infoblock large' title='Nascimento (idade)'><span class='informacao'><span class='floatleft material-symbols-outlined'>cake</span>{$nascimento_jogador} ({$idade_jogador} anos)</span></div>";
+ echo "<div id='valor' class='infoblock large' title='Valor (em F$)'><span class='informacao'><span class='floatleft material-symbols-outlined'>price_change</span>{$valor_jogador} k</span></div>";
+ echo "<div id='salario' class='infoblock large' title='Salário (em F$)'><span class='informacao'><span class='floatleft material-symbols-outlined'>paid</span>{$salario_jogador} k</span></div>";
+ echo "<div id='inicioContrato' class='infoblock large' title='Início do contrato'><span class='informacao'><span class='floatleft material-symbols-outlined'>contract_edit</span>{$desde_quando}</span></div>";
+ echo "<div id='fimContrato' class='infoblock large' title='Fim do contrato'><span class='informacao'><span class='floatleft material-symbols-outlined'>contract_delete</span>{$ate_quando}</span></div>";
  echo "</div>";
- echo "<div id='info-desempenho-selecao'>";
- if($info['golsSelecao'] + $info['amarelosSelecao'] + $info['vermelhosSelecao'] > 0){
-   echo "<span>Desempenho na seleção</span>";
-   echo "<div id='golsSelecao' class='infoblock small' title='Gols'><span class='informacao'><i class='floatleft fas fa-futbol'></i>{$info['golsSelecao']}</span></div>";
-   echo "<div id='amarelosSelecao' class='infoblock small' title='Amarelos'><span class='informacao'><i class='floatleft far fa-square'></i>{$info['amarelosSelecao']}</span></div>";
-   echo "<div id='vermelhosSelecao' class='infoblock small' title='Vermelhos'><span class='informacao'><i class='floatleft fas fa-square'></i>{$info['vermelhosSelecao']}</span></div>";
- }
-  echo "</div>";
+
  echo "<div id='info_posicionamento'>";
  echo "<div ".($posicoes_jogador[0] == '1'?"":" hidden ")." class='posicaoCampao posGoleiro'></div>";
  echo "<div ".($posicoes_jogador[1] == '1'?"":" hidden ")." class='posicaoCampao posLD'></div>";

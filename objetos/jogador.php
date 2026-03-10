@@ -1647,6 +1647,14 @@ return $stmt;
             $stmt->execute();
             $resultContrato = $stmt->fetch(PDO::FETCH_ASSOC);
 
+            if (!$resultContrato) {
+                $resultContrato = [
+                    'logoLiga' => '', 'tier' => '', 'liga' => 'Sem clube', 'escudoTime' => '',
+                    'idTime' => 0, 'time' => 'Sem clube', 'paisTime' => 0, 'nomePaisTime' => '',
+                    'bandeiraPaisTime' => '', 'idLiga' => 0, 'fimContrato' => '', 'salario' => 0
+                ];
+            }
+
             $queryTransferencia = "SELECT data as inicioContrato FROM transferencias
             WHERE jogador=? AND clubeDestino=? ORDER BY data DESC LIMIT 0,1";
             $stmt = $this->conn->prepare($queryTransferencia);
@@ -1654,6 +1662,10 @@ return $stmt;
             $stmt->bindParam(2,$resultContrato['idTime']);
             $stmt->execute();
             $resultTransferencia = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$resultTransferencia) {
+                $resultTransferencia = ['inicioContrato' => ''];
+            }
 
             $queryGolsSelecao = "SELECT count(id_evento) as golsSelecao FROM jogos_eventos
             WHERE id_jogador=? AND tipo = 1";
