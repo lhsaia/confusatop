@@ -54,8 +54,8 @@ paths:
           in: query
           required: false
           schema:
-            type: string
-          description: Exact match on Owner's Username.
+            type: integer
+          description: Exact match on Owner's ID.
       responses:
         '200':
           description: Successful response
@@ -90,9 +90,9 @@ paths:
                           type: string
                           description: Active Status (1 or 0)
                         dono:
-                          type: string
+                          type: integer
                           nullable: true
-                          description: Owner Username
+                          description: Owner ID
         '403':
           description: Authentication failed
 

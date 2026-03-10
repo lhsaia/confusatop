@@ -58,7 +58,7 @@ if ($status !== '') {
 }
 
 if ($dono) {
-    $where[] = "u.nomeusuario = :dono";
+    $where[] = "u.ID = :dono";
     $params[':dono'] = $dono;
 }
 
@@ -66,7 +66,7 @@ $whereClause = count($where) > 0 ? "WHERE " . implode(" AND ", $where) : "";
 
 $query = "SELECT p.id, p.nome, 
           (CASE when char_length(p.sigla) = 2 then 'real' when p.ranqueavel = 0 then 'confusa' else 'nc' end) as 'organizacao', 
-          p.bandeira, f.nome as 'federacao', p.ativo as status, u.nomeusuario as 'dono' 
+          p.bandeira, f.nome as 'federacao', p.ativo as status, u.ID as 'dono' 
           FROM paises p
           LEFT JOIN usuarios u ON p.dono = u.ID 
           LEFT JOIN federacoes f ON p.federacao = f.id 

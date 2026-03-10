@@ -369,7 +369,7 @@ $(document).ready(function(){
 		});
 	
 	if(donoLogado){
-		$("#toolbar").append('<div id="salvarDados"><span class="material-symbols-outlined">save</span><span>Salvar</span></div><div id="tirarPrint"><span class="material-symbols-outlined">print</span><span>Baixar print</span></div>');
+		$("#toolbar").append('<div id="salvarDados"><span class="material-symbols-outlined">save</span><span>Salvar</span></div><div id="tirarPrint"><span class="material-symbols-outlined">print</span><span>Print</span></div>');
 		
 		$("#tirarPrint").on("click", function(){
 			
@@ -406,12 +406,12 @@ $(document).ready(function(){
 		
 		$('#salvarDados').click(function(){
 			
-			let cidade = $("#cidadeTime").text();
-			let fundacao = $("#fundacaoTime").text();
-			let apelido = $("#apelidoTime").text();
-			let patrocinio = $("#patrocinioTime").text();
-			let material_esportivo = $("#materialEsportivoTime").text();
-			let titulos = $("#titulosTime").text();
+			let cidade = $("#cidadeTime .infos_time").text();
+			let fundacao = $("#fundacaoTime .infos_time").text();
+			let apelido = $("#apelidoTime .infos_time").text();
+			let patrocinio = $("#patrocinioTime .infos_time").text();
+			let material_esportivo = $("#materialEsportivoTime .infos_time").text();
+			let titulos = $("#titulosTime .infos_time").text();
 			let sobre_titulo = $("#sobreTime h2").text();
 			let sobre_subtitulo = $("#sobreTime h3").text();
 			let sobre_texto = $("#aboutTeam").html();

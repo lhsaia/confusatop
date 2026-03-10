@@ -1,7 +1,7 @@
 <?php
 
-//ini_set( 'display_errors', true );
-//error_reporting( E_ALL );
+ini_set( 'display_errors', false );
+error_reporting( 0 );
 session_start();
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
@@ -22,6 +22,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
 	require ($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php");
+    
     $database = new Database();
     $db = $database->getConnection();
     $jogador = new Jogador($db);
@@ -133,6 +134,12 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         } else {
             $posicoesJogador = array();
         }
+		
+		if(isset($_POST['numeroCamisa'])){
+			$numeroCamisa = $_POST['numeroCamisa'];
+		} else {
+			$numeroCamisa = null;
+		}
 
         $nivelJogador = $_POST['nivel'];
 		
@@ -169,7 +176,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 			}
 		}
 
-        if($jogador->editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono,null,null,null,null, $encerramentoContrato, $localizacao_foto, $desdeContrato)){
+        if($jogador->editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono,null,null,null,null, $encerramentoContrato, $localizacao_foto, $desdeContrato, $numeroCamisa)){
             $usuario->atualizarAlteracao($_SESSION['user_id']);
             $is_success = true;
             $error_msg = "";
@@ -307,6 +314,20 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
               $is_success = false;
               $error_msg = "Falha ao editar jogador";
           }
+    } else if($tipo == 10){
+        // Atualizar link de referencia
+        $referencia = isset($_POST['referencia']) ? trim($_POST['referencia']) : '';
+        $resultado = $jogador->atualizarReferencia($idJogador, $referencia);
+        if ($resultado === true) {
+            $is_success = true;
+            $error_msg = "";
+        } else if ($resultado === "DUPLICATE") {
+            $is_success = false;
+            $error_msg = "Esse link já está sendo usado por outro jogador.";
+        } else {
+            $is_success = false;
+            $error_msg = "Falha ao adicionar link de referência.";
+        }
     }
 
 
@@ -319,4 +340,3 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
 
 
-?>

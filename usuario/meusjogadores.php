@@ -215,17 +215,17 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 			tbl += "<thead id='headings"+user_id+"'>";
 				tbl += "<tr>";
 					tbl += "<th asc='' class='headings' width='2%'>Foto</th>";
-					tbl += "<th asc='' class='headings' width='15%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspNome</th>";
+					tbl += "<th asc='' class='headings' width='15%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspNome</th>";
 					tbl += "<th asc='' class='headings' width='10%'>Nascimento (idade) </th>";
 					tbl += "<th asc='' class='headings' width='10%'>Mentalidade</th>";
 					tbl += "<th asc='' class='headings' width='10%'>Cobrança de Falta</th>";
 					tbl += "<th asc='' class='headings' width='10%'>Valor [Calculado]</th>";
 					//tbl += "<th asc='' class='headings' width='5%'>Valor (calculado)</th>";
 					tbl += "<th asc='' class='headings' width='10%'>Posições</th>";
-					tbl += "<th asc='' class='headings' width='3%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspNível</th>";
-					tbl += "<th asc='' class='headings' width='3%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspPaís</th>";
-					tbl += "<th asc='' class='headings' width='10%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspClube</th>";
-					tbl += "<th asc='' class='headings' width='5%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspStatus</th>";
+					tbl += "<th asc='' class='headings' width='3%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspNível</th>";
+					tbl += "<th asc='' class='headings' width='3%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspPaís</th>";
+					tbl += "<th asc='' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspClube</th>";
+					tbl += "<th asc='' class='headings' width='5%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspStatus</th>";
 					tbl += "<th asc='' class='headings' width='10%' class=''>Opções</th>";
 				tbl += "</tr>";
 			tbl +=  "</thead>";
@@ -345,10 +345,15 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 
 					if(logged == "true"){
 						if(admin == "true" || user_id == val['idDonoPais']){
-							optionsString += "<a id='edi"+val['ID']+"' title='Editar jogador' class='clickable editar'><i class='far fa-edit inlineButton'></i></a>";
-							optionsString += "<a id='apa"+val['ID']+"' title='Apagar jogador' class='clickable apagar'><i class='fas fa-trash-alt inlineButton negativo'></i></a>";
-							optionsString += "<a hidden id='sal"+val['ID']+"' title='Salvar' class='clickable salvar'><i class='fas fa-check inlineButton positive'></i></a>";
-							optionsString += "<a hidden id='can"+val['ID']+"' title='Cancelar' class='clickable cancelar'><i class='fas fa-times inlineButton negative'></i></a>";
+                            if(val['referencia'] && val['referencia'].trim() !== ''){
+                                optionsString += "<a href='"+val['referencia']+"' target='_blank' id='ref"+val['ID']+"' title='Ver Referência' class='clickable'><span class='material-symbols-outlined inlineButton positive'>link</span></a>";
+                            } else {
+                                optionsString += "<a id='ref"+val['ID']+"' title='Adicionar Referência' class='clickable add-referencia' data-id='"+val['ID']+"'><span class='material-symbols-outlined inlineButton'>link</span></a>";
+                            }
+							optionsString += "<a id='edi"+val['ID']+"' title='Editar jogador' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
+							optionsString += "<a id='apa"+val['ID']+"' title='Apagar jogador' class='clickable apagar'><span class='material-symbols-outlined inlineButton negativo'>delete</span></a>";
+							optionsString += "<a hidden id='sal"+val['ID']+"' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
+							optionsString += "<a hidden id='can"+val['ID']+"' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
 						}
 						optionsString += "</td>";
 						tbl += optionsString;
@@ -733,6 +738,29 @@ $.ajax({
 		
 
 	}
+
+	$(document).on('click', '.add-referencia', function(){
+		var jogadorId = $(this).attr('data-id');
+		var referencia = prompt("Insira o link de referência para este jogador:");
+		if (referencia !== null && referencia.trim() !== "") {
+			$.ajax({
+				type: "POST",
+				url: '/jogadores/editar_jogador.php',
+				data: {idJogador: jogadorId, alteracao: 10, referencia: referencia},
+				dataType: 'json',
+				success: function(data) {
+					if(!data.success){
+						$('#errorbox').html('<div class="alert alert-danger">'+ data.error +'</div>');
+					} else {
+						location.reload();
+					}
+				},
+				error: function() {
+					$('#errorbox').html('<div class="alert alert-danger">Não foi possível adicionar a referência.</div>');
+				}
+			});
+		}
+	});
 
 	$(document).on('click', '.pagination_link', function(){
 		var page = $(this).attr('id');

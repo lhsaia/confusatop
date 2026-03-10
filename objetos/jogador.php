@@ -545,7 +545,7 @@ return $stmt;
 
         $id_time = htmlspecialchars(strip_tags($id_time));
 
-        $query = "SELECT j.id as idJogador, j.cobradorFalta, j.Sexo as sexoJogador, j.Nome as nomeJogador, j.Nascimento, c.titularidade, c.posicaoBase, c.capitao, c.cobrancaPenalti, c.ModificadorNivel, c.encerramento, c.tipoContrato, j.valor, j.disponibilidade, p.bandeira as bandeiraPais, p.sigla as siglaPais, j.Nivel, j.StringPosicoes, p.id as idPais, c.titularidade, m.Nome as mentalidade, p.dono as donoJogador, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as Idade, j.foto 
+        $query = "SELECT j.id as idJogador, j.cobradorFalta, j.Sexo as sexoJogador, j.Nome as nomeJogador, j.Nascimento, c.titularidade, c.posicaoBase, c.capitao, c.cobrancaPenalti, c.ModificadorNivel, c.encerramento, c.tipoContrato, j.valor, j.disponibilidade, p.bandeira as bandeiraPais, p.sigla as siglaPais, j.Nivel, j.StringPosicoes, p.id as idPais, c.titularidade, m.Nome as mentalidade, p.dono as donoJogador, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as Idade, j.foto, c.numeroCamisa 
         FROM contratos_jogador c
         LEFT JOIN jogador j ON c.jogador = j.id
         LEFT JOIN mentalidade m ON j.Mentalidade = m.ID
@@ -1170,7 +1170,7 @@ return $stmt;
             if($tipoContrato == 0){
                         $query_transferencia = "INSERT INTO transferencias
                         SET
-                            jogador=:jogador, clubeOrigem=:clubeOrigem, clubeDestino=:clubeVinculado, valor=0, tipoTransferencia=:tipoTransferencia, status_execucao=1";
+                            jogador=:jogador, clubeOrigem=:clubeOrigem, clubeDestino=:clubeVinculado, valor=0, tipoTransferencia=:tipoTransferencia, status_execucao=1, emprestimo=0, data=NOW(), encerramento='0000-00-00'";
         $stmt = $this->conn->prepare( $query_transferencia );
         $stmt->bindParam(":jogador", $idJogador);
         $stmt->bindParam(":tipoTransferencia", $tipoContrato);
@@ -1242,7 +1242,7 @@ return $stmt;
 
         }
 
-        function editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono, $atividadeJogador, $mentalidadeJogador = null, $determinacaoJogador = null, $cobrancaFaltaJogador = null, $encerramentoContrato = null, $foto = null, $desdeContrato = null){
+        function editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono, $atividadeJogador, $mentalidadeJogador = null, $determinacaoJogador = null, $cobrancaFaltaJogador = null, $encerramentoContrato = null, $foto = null, $desdeContrato = null, $numeroCamisa = null){
 
             $idJogador = htmlspecialchars(strip_tags($idJogador));
             $idTime = htmlspecialchars(strip_tags($idTime));
@@ -1318,7 +1318,7 @@ return $stmt;
 						$query_foto = "";
 					}
 
-                    $query = "UPDATE jogador SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, StringPosicoes=:stringPosicoes, valor=:valor, valorAtualizado=:valorAtualizado, Nivel=:nivel, Mentalidade=:mentalidade, Determinacao=:determinacao, DeterminacaoOriginal=:determinacaoOriginal, CobradorFalta=:cobradorFalta, disponibilidade =:disponibilidade ".$query_foto." WHERE ID = :id";
+                $query = "UPDATE jogador SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, StringPosicoes=:stringPosicoes, valor=:valor, valorAtualizado=:valorAtualizado, Nivel=:nivel, Mentalidade=:mentalidade, Determinacao=:determinacao, DeterminacaoOriginal=:determinacaoOriginal, CobradorFalta=:cobradorFalta, disponibilidade =:disponibilidade ".$query_foto." WHERE ID = :id";
                     $stmt = $this->conn->prepare($query);
                     $stmt->bindParam(":nome", $nome);
                     $stmt->bindParam(":nascimento", $nascimento);
@@ -1341,6 +1341,19 @@ return $stmt;
 
                     } else {
                         $error_count++;
+                    }
+
+                    if($numeroCamisa !== null){
+                         $queryContrato = "UPDATE contratos_jogador SET numeroCamisa = :numeroCamisa WHERE jogador=:jogador AND clube=:clube";
+                         $stmt = $this->conn->prepare($queryContrato);
+                         $stmt->bindParam(":numeroCamisa", $numeroCamisa);
+                         $stmt->bindParam(":jogador", $idJogador);
+                         $stmt->bindParam(":clube", $idTime);
+                         if($stmt->execute()){
+     
+                         } else {
+                             $error_count++;
+                         }
                     }
 
                     // $queryContrato = "UPDATE contratos_jogador SET ModificadorNivel=ModificadorNivel + :mod WHERE jogador=:jogador";
@@ -1398,10 +1411,24 @@ return $stmt;
 				$stmt->bindParam(":nome", $nome);
 				$stmt->bindParam(":nacionalidade",$nacionalidade);
                 if($stmt->execute()){
-
                 } else {
                     $error_count++;
                 }
+
+                if($numeroCamisa !== null){
+                    $queryContrato = "UPDATE contratos_jogador SET numeroCamisa = :numeroCamisa WHERE jogador=:jogador AND clube=:clube";
+                    $stmt = $this->conn->prepare($queryContrato);
+                    $stmt->bindParam(":numeroCamisa", $numeroCamisa);
+                    $stmt->bindParam(":jogador", $idJogador);
+                    $stmt->bindParam(":clube", $idTime);
+                    if($stmt->execute()){
+
+                    } else {
+                        $error_count++;
+                    }
+               }
+
+
 
                 $queryContrato = "UPDATE contratos_jogador SET ModificadorNivel=ModificadorNivel + :mod WHERE jogador=:jogador";
                 $stmt = $this->conn->prepare($queryContrato);
@@ -1418,7 +1445,7 @@ return $stmt;
             } else {
 
             if($isDono){
-
+ 
                 $nivel = $this->verificarNivelAtual($idJogador);
                 $modificador = $nivelJogador - $nivel;
                 $nome = $nomeJogador;
@@ -1472,17 +1499,17 @@ return $stmt;
                     $error_count++;
                 }
 
-                // $queryContrato = "UPDATE contratos_jogador SET ModificadorNivel=:mod WHERE jogador=:jogador AND clube=:clube";
-                // $stmt = $this->conn->prepare($queryContrato);
-                // $stmt->bindParam(":mod", $modificador);
-                // $stmt->bindParam(":clube", $idTime);
-                // $stmt->bindParam(":jogador", $idJogador);
-                // if($stmt->execute()){
+                if($stmt->execute()){
 
-                // } else {
-                //     $error_count++;
-                // }
+                } else {
+                    $error_count++;
+                }
 
+                if($stmt->execute()){
+
+                } else {
+                    $error_count++;
+                }
             } else {
 
                 $nivel = $this->verificarNivelAtual($idJogador);
@@ -1550,7 +1577,11 @@ return $stmt;
                     $error_count++;
                 }
 
+                if($stmt->execute()){
 
+                } else {
+                    $error_count++;
+                }
             }
 
         }
@@ -1578,6 +1609,19 @@ return $stmt;
                 $error_count++;
             }
 		}
+
+        if($numeroCamisa !== null){
+            $queryContrato = "UPDATE contratos_jogador SET numeroCamisa = :numeroCamisa WHERE jogador=:jogador AND clube=:clube";
+            $stmt = $this->conn->prepare($queryContrato);
+            $stmt->bindParam(":numeroCamisa", $numeroCamisa);
+            $stmt->bindParam(":jogador", $idJogador);
+            $stmt->bindParam(":clube", $idTime);
+            if($stmt->execute()){
+
+            } else {
+                $error_count++;
+            }
+        }
 		
             if($error_count == 0){
                 return true;
@@ -1617,6 +1661,13 @@ return $stmt;
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
             $resultGolsSelecao = $stmt->fetch(PDO::FETCH_ASSOC);
+			
+			$queryGolsTime = "SELECT count(id_evento) as golsTime FROM jogos_clube_eventos
+            WHERE id_jogador=? AND tipo = 1";
+            $stmt = $this->conn->prepare($queryGolsTime);
+            $stmt->bindParam(1,$idJogador);
+            $stmt->execute();
+            $resultGolsTime = $stmt->fetch(PDO::FETCH_ASSOC);
 
             $queryAmarelosSelecao = "SELECT count(id_evento) as amarelosSelecao FROM jogos_eventos
             WHERE id_jogador=? AND tipo = 2";
@@ -1624,6 +1675,14 @@ return $stmt;
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
             $resultAmarelosSelecao = $stmt->fetch(PDO::FETCH_ASSOC);
+			
+			$queryAmarelosTime = "SELECT count(id_evento) as amarelosTime FROM jogos_clube_eventos
+            WHERE id_jogador=? AND tipo = 2";
+            $stmt = $this->conn->prepare($queryAmarelosTime);
+            $stmt->bindParam(1,$idJogador);
+            $stmt->execute();
+            $resultAmarelosTime = $stmt->fetch(PDO::FETCH_ASSOC);
+
 
             $queryVermelhosSelecao = "SELECT count(id_evento) as vermelhosSelecao FROM jogos_eventos
             WHERE id_jogador=? AND tipo = 3";
@@ -1631,8 +1690,22 @@ return $stmt;
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
             $resultVermelhosSelecao = $stmt->fetch(PDO::FETCH_ASSOC);
+			
+			$queryVermelhosTime = "SELECT count(id_evento) as vermelhosTime FROM jogos_clube_eventos
+            WHERE id_jogador=? AND tipo = 3";
+            $stmt = $this->conn->prepare($queryVermelhosTime);
+            $stmt->bindParam(1,$idJogador);
+            $stmt->execute();
+            $resultVermelhosTime = $stmt->fetch(PDO::FETCH_ASSOC);
+			
+			$queryEscalacaoTime = "SELECT count(id_partida) as jogosTime FROM jogos_clube_escalacao
+            WHERE id_jogador=? AND (titular = 1 OR entrada_tempo IS NOT NULL)";
+            $stmt = $this->conn->prepare($queryEscalacaoTime);
+            $stmt->bindParam(1,$idJogador);
+            $stmt->execute();
+            $resultEscalacaoTime = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            $resultTotal = array_merge($resultBase,$resultContrato,$resultTransferencia,$resultGolsSelecao, $resultAmarelosSelecao, $resultVermelhosSelecao);
+            $resultTotal = array_merge($resultBase,$resultContrato,$resultTransferencia,$resultGolsSelecao, $resultAmarelosSelecao, $resultVermelhosSelecao, $resultGolsTime, $resultAmarelosTime, $resultVermelhosTime, $resultEscalacaoTime);
 
             return $resultTotal;
 
@@ -2538,34 +2611,76 @@ return $stmt;
             }
 
 
- public function idPorNomePais($nomeJogador, $idPais, $tempId){
-   $query = "SELECT nome, id, pais FROM ". $this->table_name . " WHERE id= ?";
-   $stmt = $this->conn->prepare($query);
-   $stmt->bindParam(1, $tempId);
-   $stmt->execute();
-   $result = $stmt->fetch(PDO::FETCH_ASSOC);
-   similar_text($result['nome'], $nomeJogador, $perc);
-   if($result['pais'] == $idPais && $perc > 80){
-     return $result['id'];
-   } else {
-     $newquery = "SELECT nome, id FROM ". $this->table_name . " WHERE pais = ? AND nome LIKE ?";
-     $newstmt = $this->conn->prepare($newquery);
-     $newstmt->bindParam(1, $idPais);
-     $nomeLike = "%". $nomeJogador . "%";
-     $newstmt->bindParam(2, $nomeLike);
-     $newstmt->execute();
-     $highest_perc = 0;
-     $likely_id = 0;
-     while($newresult = $newstmt->fetch(PDO::FETCH_ASSOC)){
-       similar_text($newresult['nome'], $nomeJogador, $temp_perc);
-       if($temp_perc > 70 && $temp_perc > $highest_perc){
-         $highest_perc = $temp_perc;
-         $likely_id = $newresult['id'];
-       }
-     }
-     return $likely_id;
-   }
- }
+  public function idPorNomePais($nomeJogador, $idPais, $tempId){
+    $query = "SELECT nome, id, pais FROM ". $this->table_name . " WHERE id= ?";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(1, $tempId);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    similar_text($result['nome'], $nomeJogador, $perc);
+    if($result['pais'] == $idPais && $perc > 80){
+      return $result['id'];
+    } else {
+      $newquery = "SELECT nome, id FROM ". $this->table_name . " WHERE pais = ? AND nome LIKE ?";
+      $newstmt = $this->conn->prepare($newquery);
+      $newstmt->bindParam(1, $idPais);
+      $nomeLike = "%". $nomeJogador . "%";
+      $newstmt->bindParam(2, $nomeLike);
+      $newstmt->execute();
+      $highest_perc = 0;
+      $likely_id = 0;
+      while($newresult = $newstmt->fetch(PDO::FETCH_ASSOC)){
+        similar_text($newresult['nome'], $nomeJogador, $temp_perc);
+        if($temp_perc > 70 && $temp_perc > $highest_perc){
+          $highest_perc = $temp_perc;
+          $likely_id = $newresult['id'];
+        }
+      }
+      return $likely_id;
+    }
+  }
+
+  public function idPorNomeClube($nomeJogador, $idTime, $tempId){
+     // Primeiro tenta pelo ID direto se existir e pertencer ao clube (via contrato)
+    $query = "SELECT j.Nome, j.ID, c.clube FROM ". $this->table_name . " j 
+              LEFT JOIN contratos_jogador c ON j.ID = c.jogador 
+              WHERE j.ID = ? AND c.clube = ? AND c.tipoContrato = 0"; // tipoContrato 0 = contrato profissional/ativo
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(1, $tempId);
+    $stmt->bindParam(2, $idTime);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if($result && $result['clube'] == $idTime){
+        // Verifica similaridade do nome apenas para garantir (opcional, mas bom pra evitar ids errados de outros contextos)
+        similar_text($result['Nome'], $nomeJogador, $perc);
+        if($perc > 70){
+            return $result['ID'];
+        }
+    }
+    
+    // Se não achou pelo ID, busca por nome no elenco do clube
+    $newquery = "SELECT j.Nome, j.ID FROM ". $this->table_name . " j
+                 INNER JOIN contratos_jogador c ON j.ID = c.jogador
+                 WHERE c.clube = ? AND j.Nome LIKE ?";
+    $newstmt = $this->conn->prepare($newquery);
+    $newstmt->bindParam(1, $idTime);
+    $nomeLike = "%". $nomeJogador . "%";
+    $newstmt->bindParam(2, $nomeLike);
+    $newstmt->execute();
+
+    $highest_perc = 0;
+    $likely_id = 0;
+    while($newresult = $newstmt->fetch(PDO::FETCH_ASSOC)){
+      similar_text($newresult['Nome'], $nomeJogador, $temp_perc);
+      if($temp_perc > 70 && $temp_perc > $highest_perc){
+        $highest_perc = $temp_perc;
+        $likely_id = $newresult['ID'];
+      }
+    }
+
+    return $likely_id;
+  }
 
  public function coletarJogadoresTime($idTime){
    $idTime = htmlspecialchars(strip_tags($idTime));
@@ -2730,8 +2845,8 @@ public function resolverEmprestimos(){
 
         } 
 
-    $query = $sub_query_inicio."SELECT tf.ID, tf.Nome, tf.Nascimento, tf.Mentalidade, tf.CobradorFalta, tf.StringPosicoes, tf.valor, tf.valorAtualizado, tf.Nivel, tf.disponibilidade, tf.idPais, tf.idDonoPais, tf.siglaPais, tf.bandeiraPais, tf.posicaoBase as posicaoBase, tf.titularidade, b.Nome as clubeVinculado, d.Nome as clubeEmprestimo, f.Nome as clubeSelecao, tf.determinacaoOriginal, tf.sexo, b.Escudo as escudoClubeVinculado, b.ID as idClubeVinculado, tf.Idade, q.dono as donoClubeVinculado, tf.foto FROM ( SELECT
-            a.ID, a.Nome, a.Nascimento, m.Nome as Mentalidade, r.Nome as CobradorFalta, a.StringPosicoes, a.valor,a.valorAtualizado, a.Nivel, a.disponibilidade, p.id as idPais, p.dono as idDonoPais, p.sigla as siglaPais, p.bandeira as bandeiraPais, c.clube as clubeVinculado, e.clube as clubeEmprestimo, s.clube as clubeSelecao, c.posicaoBase as posicaoBase, c.titularidade, a.Sexo as sexo, a.determinacaoOriginal, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, foto 
+    $query = $sub_query_inicio."SELECT tf.ID, tf.Nome, tf.Nascimento, tf.Mentalidade, tf.CobradorFalta, tf.StringPosicoes, tf.valor, tf.valorAtualizado, tf.Nivel, tf.disponibilidade, tf.idPais, tf.idDonoPais, tf.siglaPais, tf.bandeiraPais, tf.posicaoBase as posicaoBase, tf.titularidade, b.Nome as clubeVinculado, d.Nome as clubeEmprestimo, f.Nome as clubeSelecao, tf.determinacaoOriginal, tf.sexo, b.Escudo as escudoClubeVinculado, b.ID as idClubeVinculado, tf.Idade, q.dono as donoClubeVinculado, tf.foto, tf.referencia FROM ( SELECT
+            a.ID, a.Nome, a.Nascimento, m.Nome as Mentalidade, r.Nome as CobradorFalta, a.StringPosicoes, a.valor,a.valorAtualizado, a.Nivel, a.disponibilidade, p.id as idPais, p.dono as idDonoPais, p.sigla as siglaPais, p.bandeira as bandeiraPais, c.clube as clubeVinculado, e.clube as clubeEmprestimo, s.clube as clubeSelecao, c.posicaoBase as posicaoBase, c.titularidade, a.Sexo as sexo, a.determinacaoOriginal, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, foto, a.referencia 
         FROM
             " . $this->table_name . " a
         LEFT JOIN paises p ON a.Pais = p.id
@@ -3063,6 +3178,26 @@ public function resolverEmprestimos(){
 			}
 
 		}
+
+        
+    public function atualizarReferencia($idJogador, $referencia) {
+        try {
+            $query = "UPDATE " . $this->table_name . " SET referencia = :referencia WHERE ID = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":referencia", $referencia);
+            $stmt->bindParam(":id", $idJogador);
+
+            if ($stmt->execute()) {
+                return true;
+            }
+            return false;
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000) { // Integrity constraint violation (Duplicate entry)
+                return "DUPLICATE";
+            }
+            return false;
+        }
+    }
 
 }
 ?>
