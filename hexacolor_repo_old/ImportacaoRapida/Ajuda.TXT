@@ -1,145 +1,146 @@
-===MÛdulo de ImportaÁ„o R·pida===
+Ôªø===M√≥dulo de Importa√ß√£ R√°pida===
 
-O mÛdulo de importaÁ„o r·pida tem como objetivo acelerar o processo de ediÁ„o de jogadores e tÈcnicos, possibilitando que o mesmo seja feito diretamente em uma planilha ao invÈs do mÛdulo de ediÁ„o padr„o do Hexacolor YMT.
+O m√≥dulo de importa√ß√£o r√°pida tem como objetivo acelerar o processo de edi√ß√£o de jogadores e t√©cnicos, possibilitando que o mesmo seja feito diretamente em uma planilha ao inv√©s do m√≥dulo de edi√ß√£o padr√£o do Hexacolor YMT.
 
-Ele pode ser acessado no menu principal da aplicaÁ„o, atravÈs da aba "ImportaÁ„o R·pida"
+Ele pode ser acessado no menu principal da aplica√ß√£o, atrav√©s da aba "Importa√ß√£o R√°pida"
 
-***Conte˙do***
+***Conte√∫do***
 
 1. Exportar Planilha Base
 2. Importar Planilha Preenchida
-	2.1. Criando um jogador ou tÈcnico
+	2.1. Criando um jogador ou t√©cnico
 3. Importar Nova Planilha
 4. Regras de Preenchimento das Colunas
 	4.1 Jogador/Nacionalidade
-	4.2 Jogador/NÌvel
+	4.2 Jogador/N√≠vel
 	4.3 Jogador/Mentalidade
 	4.4 Jogador/Cobrador de Falta
-	4.5 Jogador/DeterminaÁ„o
-	4.6 Jogador/PosiÁıes
+	4.5 Jogador/Determina√ß√£o
+	4.6 Jogador/Posi√ß√µes
 	4.7 Jogador/Perfis
-	4.8 TÈcnico/NÌvel
-	4.9 TÈcnico/Estilo
-	4.9 TÈcnico/Mentalidade
+	4.8 T√©cnico/N√≠vel
+	4.9 T√©cnico/Estilo
+	4.9 T√©cnico/Mentalidade
 
----1 . Exportar Planilha Base---
+---1. Exportar Planilha Base---
 
-A primeira opÁ„o do sub-menu produzir· uma planilha contendo todos os jogadores e tÈcnicos existentes na sua base de dados. Essa planilha ser· salva na pasta "ImportacaoRapida", com o nome "BaseExportada-'data e hora da exportaÁ„o'".
+A primeira op√ß√£o do sub-menu produzir√° uma planilha contendo todos os jogadores e t√©nicos existentes na sua base de dados. Essa planilha ser√° salva na pasta "ImportacaoRapida", com o nome "BaseExportada-'data e hora da exporta√ß√£o'".
 
 Esse processo pode demorar alguns minutos, dependendo do tamanho da base de dados.
 
 ---2. Importar Planilha Preenchida---
 
-Uma vez exportada, vocÍ poder· modificar a planilha base para, por exemplo, alterar o nÌvel de seus jogadores.
+Uma vez exportada, voc√™ poder√° modificar a planilha base para, por exemplo, alterar o n√≠vel de seus jogadores.
 
-ApÛs preenchÍ-la, vocÍ dever· usar a opÁ„o "Importar Planilha Preenchida" do sub-menu para atualizar a base de dados do Hexacolor YMT. Quando o fizer, o programa sugerir· que vocÍ crie um backup da base de dados atual, ou seja, do arquivo "database.db3", contido na pasta "data". Esse passo È extremamente importante, pois caso haja um erro grave de preenchimento que o programa n„o esteja preparado para tratar, a database poder· ser seriamente danificada e tornar-se n„o-funcional.
+Ap√≥s preench√™-la, voc√™ dever√° usar a op√ß√£o "Importar Planilha Preenchida" do sub-menu para atualizar a base de dados do Hexacolor YMT. Quando o fizer, o programa sugerir√° que voc√™ crie um backup da base de dados atual, ou seja, do arquivo "database.db3", contido na pasta "data". Esse passo √© extremamente importante, pois caso haja um erro grave de preenchimento que o programa n√£o esteja preparado para tratar, a database poder√° ser seriamente danificada e tornar-se n√£o-funcional.
 
-O processo de importaÁ„o poder· demorar alguns minutos, caso haja muitas atualizaÁıes a serem feitas. … recomendado que vocÍ remova todas as linhas da planilha que n„o ser„o modificadas, pois isso acelerar· o processo. Nunca, porÈm, deixe linhas vazias entre linhas preenchidas (por exemplo, as linhas 1 e 3 preenchidas e a 2 vazia), pois isso far· com que a leitura seja interrompida na linha vazia (no exemplo anterior, a linha 1 seria lida, mas a 3 seria ignorada).
+O processo de importa√ß√£o poder√° demorar alguns minutos, caso haja muitas atualiza√ß√µes a serem feitas. √â recomendado que voc√™ remova todas as linhas da planilha que n√£o ser√£o modificadas, pois isso acelerar√° o processo. Nunca, por√©m, deixe linhas vazias entre linhas preenchidas (por exemplo, as linhas 1 e 3 preenchidas e a 2 vazia), pois isso far√° com que a leitura seja interrompida na linha vazia (no exemplo anterior, a linha 1 seria lida, mas a 3 seria ignorada).
 
-Jamais retire a primeira linha da planilha, que contÈm a legenda, pois isso poder· gerar um erro de leitura.
+Jamais retire a primeira linha da planilha, que cont√©m a legenda, pois isso poder√° gerar um erro de leitura.
 
-	+++2.1 Criando um Jogador ou tÈcnico+++
+	+++2.1 Criando um Jogador ou t√©cnico+++
 	
-	A planilha tambÈm pode ser utilizada para adicionar novos jogadores ou tÈcnicos. Para isso, basta vocÍ preencher todos os dados de uma determinada linha, deixando a coluna "ID" vazia. Isso informar· ao programa que um novo jogador ou tÈcnico dever· ser criado com aqueles dados. Utilize a sess„o "Regras de Preenchimento das Colunas" como referÍncia para o preenchimento das informaÁıes.
+	A planilha tamb√©m pode ser utilizada para adicionar novos jogadores ou t√©cnicos. Para isso, basta voc√™ preencher todos os dados de uma determinada linha, deixando a coluna "ID" vazia. Isso informar√° ao programa que um novo jogador ou t√©cnico dever√° ser criado com aqueles dados. Utilize a sess√£o "Regras de Preenchimento das Colunas" como refer√™ncia para o preenchimento das informa√ß√µes.
 
 ---3. Importar Nova Planilha---
 
-VocÍ n„o precisa utilizar uma planilha base para fazer alteraÁıes. Se, por exemplo, desejar apenas criar algums jogadores, vocÍ pode fazer uma cÛpia da planilha "Base Vazia", presente na pasta "Importacao Rapida", preenchÍ-la e envi·-la para o programa utilizando a mesma opÁ„o "Importar Planilha Preenchida" do sub-menu.
+Voc√™ n√£o precisa utilizar uma planilha base para fazer altera√ß√µes. Se, por exemplo, desejar apenas criar algums jogadores, voc√™ pode fazer uma c√≥pia da planilha "Base Vazia", presente na pasta "Importacao Rapida", preench√™-la e envi√°-la para o programa utilizando a mesma op√ß√£o "Importar Planilha Preenchida" do sub-menu.
 
 ---4. Regras de Preenchimento das Colunas--- 
 
-Todos os campos, com exceÁ„o do Nome, podem ser deixados em branco, dadas as restriÁıes abaixo:
+Todos os campos, com exce√ß√£o do Nome, podem ser deixados em branco, dadas as restri√ß√µes abaixo:
 
-- Se o campo ID for deixado em branco, o programa interpretar· que essa linha determina a criaÁ„o de um novo jogador ou tÈcnico.
-- Se o nome for deixado em branco, ocorrer· um erro e a leitura ser· interrompida na linha em quest„o.
-- Se a nacionalidade for deixada em branco, o programa utilizar· a nacionalidade-padr„o da configuraÁ„o de par‚metros utilizada no momento da importaÁ„o.
-- Se nenhuma posiÁ„o for preenchida, o jogador n„o poder· ser corretamente escalado, nunca entrar· em campo via substituiÁ„o e poder· causar um erro na partida se tiver a sua escalaÁ„o forÁada na "EdiÁ„o Manual".
-- Na criaÁ„o de um jogador, se n„o for informado nenhum Perfil, ele ter· todos os atributos iguais.
-- Para os demais campos, se nenhum valor for informado ser· utilizado o valor padr„o, o mesmo que È carregado quando se abre a tela de CriaÁ„o/EdiÁ„o de um jogador no Hexacolor YMT.
+- Se o campo ID for deixado em branco, o programa interpretar√° que essa linha determina a cria√ß√£o de um novo jogador ou t√©cnico.
+- Se o nome for deixado em branco, ocorrer√° um erro e a leitura ser√° interrompida na linha em quest√£o.
+- Se a nacionalidade for deixada em branco, o programa utilizar√° a nacionalidade-padr√£o da configura√ß√£o de par√¢metros utilizada no momento da importa√ß√£o.
+- Se nenhuma posi√ß√£o for preenchida, o jogador n√£o poder√° ser corretamente escalado, nunca entrar√° em campo via substitui√ß√£o e poder√° causar um erro na partida se tiver a sua escala√ß√£o for√ßada na "Edi√ß√£o Manual".
+- Na cria√ß√£o de um jogador, se n√£o for informado nenhum Perfil, ele ter√° todos os atributos iguais.
+- Para os demais campos, se nenhum valor for informado ser√° utilizado o valor padr√£o, o mesmo que √© carregado quando se abre a tela de Cria√ß√£o/Edi√ß√£o de um jogador no Hexacolor YMT.
 
 	+++4.1 Jogador/Nacionalidade+++
 	
-	Nesta coluna, dever· ser inserido o nome do arquivo que representa a bandeira do paÌs, presente na pasta "data/paises". N„o se esqueÁa da extens„o (Exemplo: PaÌs Menor È "PAM.jpg", Bahavia È "BAH.png" e Outside a Place È "OAP.gif").
+	Nesta coluna, dever√° ser inserido o nome do arquivo que representa a bandeira do pa√≠s, presente na pasta "data/paises". N√£o se esque√ßa da extens√£o (Exemplo: Pa√≠s Menor - "PAM.jpg"; Bahavia - "BAH.png"; Outside a Place -"OAP.gif").
 
-	+++4.2 Jogador/NÌvel+++
+	+++4.2 Jogador/N√≠vel+++
 
-	S„o permitidos apenas valores entre 30 e 100.
+	S√£o permitidos apenas valores entre 30 e 100.
 
 	+++4.3 Jogador/Mentalidade+++
 
-	Os valores permitidos s„o:
+	Os valores permitidos s√£o:
 		1 - Mascarado
 		2 - Sangue Frio
 		3 - Pacificador
 		4 - Neutro
-		5 - LÌder
+		5 - L√≠der
 		6 - Provocador
 		7 - Explosivo
+		8 - Ra√ßudo
 
 	+++4.4 Jogador/Cobrador de Falta+++
 
-	Os valores permitidos s„o:
-		0 - N„o cobra faltas
-		1 - ForÁa Pura
+	Os valores permitidos s√£o:
+		0 - N√£o cobra faltas
+		1 - For√ßa Pura
 		2 - Equilibrada
 		3 - Pura Categoria
 
-	+++4.5 Jogador/DeterminaÁ„o+++
+	+++4.5 Jogador/Determina√ß√£o+++
 	
-	S„o permitidos apenas valores entre 1 e 5.
+	S√£o permitidos apenas valores entre 1 e 5.
 
-	+++4.6 Jogador/PosiÁıes+++
+	+++4.6 Jogador/Posi√ß√µes+++
 
-	Marque com 1 as posiÁıes em que o jogador atua e com 0 ou vazio as demais. Caso um jogador tenha a posiÁ„o G ("Goleiro") marcada, as demais posiÁıes ser„o ignoradas.
+	Marque com 1 as posi√ß√µes em que o jogador atua e com 0 ou vazio as demais. Caso um jogador tenha a posi√ß√£o G ("Goleiro") marcada, as demais posi√ß√µes ser√£o ignoradas.
 
 	+++4.7 Jogador/Perfis+++
 
-	Os valores permitidos para Goleiros s„o:
-		1 - Goleiro ¡gil
+	Os valores permitidos para Goleiros s√£o:
+		1 - Goleiro √Ågil
 		2 - Goleiro Seguro
 		3 - Goleiro Espalhafatoso
-		4 - Pegador de PÍnaltis
-		5 - Goleiro de PresenÁa
+		4 - Pegador de P√™naltis
+		5 - Goleiro de Presen√ßa
 
-	Os valores permitidos para Jogadores s„o:
+	Os valores permitidos para Jogadores s√£o:
 		1 - Lateral Defensivo
-		2 - Lateral Incans·vel
+		2 - Lateral Incans√°vel
 		3 - Ala Ofensivo
 		4 - Beque Central
 		5 - Quarto Zagueiro
-		6 - LÌbero
-		7 - CabeÁa de ¡rea
-		8 - Volante de RaÁa
-		9 - 2∫ Volante
+		6 - L√≠bero
+		7 - Cabe√ßa de √Årea
+		8 - Volante de Ra√ßa
+		9 - 2¬∫ Volante
 		10 - Carregador de Piano
 		11 - Meia Lateral
 		12 - Meia Controlador
-		13 - Armador de CadÍncia
+		13 - Armador de Cad√™ncia
 		14 - Armador Arisco
 		15 - Ponta Fixo
-		16 - Atacante de MovimentaÁ„o
-		17 - 2∫ Atacante
-		18 - Atacante de ¡rea
+		16 - Atacante de Movimenta√ß√£o
+		17 - 2¬∫ Atacante
+		18 - Atacante de √Årea
 		19 - Centroavante Oportunista	
 
-	Para utilizar um perfil que vocÍ tenha criado dentro do Hexacolor YMT, utilize a posiÁ„o em que ele aparece na lista de Perfis da tela de CriaÁ„o/EdiÁ„o de Jogador (Exemplo: o perfil que vem depois de "Goleiro de PresenÁa", nos perfis de goleiro, ser· o 6; o perfil que vem depois de "Centroavante Oportunista", nos perfis de jogadores, ser· o 20).
+	Para utilizar um perfil que voc√™ tenha criado dentro do Hexacolor YMT, utilize a posi√ß√£o em que ele aparece na lista de Perfis da tela de Cria√ß√£o/Edi√ß√£o de Jogador (Exemplo: o perfil que vem depois de "Goleiro de Presen√ßa", nos perfis de goleiro, ser√° o 6; o perfil que vem depois de "Centroavante Oportunista", nos perfis de jogadores, ser√° o 20).
 
-	+++4.8 TÈcnico/NÌvel+++
+	+++4.8 T√©cnico/N√≠vel+++
 
-	S„o permitidos apenas valores entre 1 e 10.
+	S√£o permitidos apenas valores entre 1 e 10.
 
-	+++4.9 TÈcnico/Estilo+++
+	+++4.9 T√©cnico/Estilo+++
 
-	Os valores permitidos s„o:
+	Os valores permitidos s√£o:
 		1 - Explorar Contra-Ataques
 		2 - Cadenciar o Jogo
 		3 - Neutro
 		4 - Atacar pelas Laterais
-		5 - ImpÙr Ritmo Ofensivo
+		5 - ImpÓå¢ Ritmo Ofensivo
 
-	+++4.9 TÈcnico/Mentalidade+++
+	+++4.9 T√©cnico/Mentalidade+++
 
-	Os valores permitidos s„o:
+	Os valores permitidos s√£o:
 		1 - Retranca
 		2 - Defensiva
 		3 - Balanceada

@@ -1,4 +1,4 @@
-﻿Hexacolor YMT v2.13.1
+﻿Hexacolor YMT v2.17
 Release Beta
 
 Dúvidas, sugestões, comentários e/ou suporte podem ser enviados para digisabio@hotmail.com
@@ -7,6 +7,43 @@ Boa simulação!
 digisabioSoft
 
 ---Log de Mudanças---
+
+***Versão 2.17***
+-> Inclusões:
+	- Adicionado um gerador de pôster de equipes, em pixel art.
+
+***Versão 2.16***
+-> Modificações:
+	- Cartões re-balizados, de acordo com os padrões do futebol mundial em 2023. Balizamento feito considerando todas as possibilidades de parametrização de faltas e números de cartões, e também todos os tipos de arbitragem.
+	- Atualizado para importar corretamente equipes geradas pelo Hexacolor Country Manager.
+-> Correções de Bugs:
+	- Corrigido bug em que goleiros não tinham a nota aumentada quando defendiam penalidades em disputa de pênaltis.
+
+***Versão 2.15***
+-> Inclusões:
+	- Súmula da partida agora exibe o xG por equipe.
+	- Adicionada nova opção de balizamento (Internacional 2022). Usuário pode agora escolher, na tela Opções, qual balizamento deseja utilizar para as simulações. Essa tela traz a descrição de cada tipo de balizamento.
+	- Adicionado suporte à simulação via argumentos, que poderá permitir a integração do Hexacolor YMT a outras ferramentas, como o portal CONFUSA.top.
+-> Modificações:
+	- Adicionado suporte a lesões aleatórias, jogadores genéricos, condição física aleatória e objetivos em simulação via Scheduler.
+-> Correções de Bugs:
+	- Corrigido crash quando a narração escolhida era apagada da pasta.
+	- Corrigido crash quando uma bandeira com nome com mais de 7 caracteres era adicionada à pasta.
+
+
+***Versão 2.14***
+-> Inclusões:
+	- Adicionado uma nova opção (em Arquivo->Opções) para usuário determinar quão o padrão de quantas substituições por partida, e em quantas paradas, deseja nas suas simulações. Esse padrão fica salvo é respeitado por Scheduler.
+		- Ao selecionar um padrão diferente na tela de Simular Partida, esse novo padrão é usado apenas para aquela partida e não fica salvo.
+	- Adicionada uma nova função para exportar a lista de jogadores com os clubes aos quais eles estão ligados.
+-> Modificações:
+	- Adicionada a opção de importar via Excel a abreviação de 3 letras de um time genérico, utilizando a coluna I (ver ImportacaoGenerica/Ajuda.TXT).
+	- Ao importar um time genérico, ele é agora configurado para buscar Escudo e Uniformes com o mesmo nome. Ou seja, se o time se chama União Futebol, ele tentará carregar o escudo União Futebol.png da pasta Escudos, e os uniformes União Futebol 1.png e União Futebol 2.png da pasta Uniformes.
+-> Correções de Bugs:
+	- Corrigido crash quando um clube era importado e a pasta Escudos ou Uniformes havia sido deletada. 
+	- Corrigido bug na importação via Excel de jogadores genéricos, em que copiar um jogador sem posição de titular poderia não carregar seu nível e nacionalidade.
+	- Corrigido crash ao importar qualquer entidade (jogdores, clubes, estádios, trios de arbitragem...) com aspas duplas no nome.
+
 ***Versão 2.13.1***
 -> Correções de Bugs:
 	- Cores e datas não ficavam salvas quando a partida era simulada usando Edição Manual.

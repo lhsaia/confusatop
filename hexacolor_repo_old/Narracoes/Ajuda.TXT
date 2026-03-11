@@ -1,0 +1,12 @@
+﻿Para criar uma nova narração, basta copiar o arquivo Base.xlsx e modificar os textos da forma que desejar. 
+
+Em seguida, abra o Hexacolor YMT, vá no menu Configurações e depois em Narrações. Seu novo arquivo estará disponível na lista. Você pode utilizá-lo em paralelo com a narração existente (o texto da jogada será sorteado entre todos os arquivos disponíveis), ou até mesmo desabilitar a narração padrão, para utilizar apenas os seus novos arquivos.
+
+== Informações sobre a edição da narração ==
+
+- Na planilha você vai ver os 3 tipos diferentes de narrações que existem: de jogadas, de finalizações e de eventos.
+- Cada texto de narração tem um id. Você pode remover à vontade as linhas pras quais não queira criar narrações: nesse caso, o sistema irá reverter para o texto da narração padrão. 
+- Você também pode criar mais de uma narração diferente pro mesmo evento: basta ter duas linhas com o mesmo id. Nesse caso, será sorteado um dentre todos os textos disponíveis praquela jogada.
+- Você vai notar que algumas narrações se repetem. Isso é porque há algumas jogadas que podem acontecer em posições diferentes do campo.
+- Nas narrações de jogadas, você vai ver que a última coluna é pro "resultado especial". Ele pode ser um gol contra, uma falta com potencial lesão ou uma falta por mão na bola. Você pode mudar o texto à vontade, mas é muito importante não mudar o significado do resultado. Ou seja, não pode transformar uma jogada que pode terminar em gol contra numa jogada que pode terminar em falta, porque não fará sentido para o simulador.
+- Por fim, você vai ver alguns símbolos no texto que depois são processados pelo YMT. &OFE e &DEF são, respectivamente, os jogadores de ataque e defesa participando na jogada. &TOF e &TDF são os times atacando e defendendo na quela jogada. #YEL, #RED e #GRE aparecem no início de narrações de eventos especiais e pintam de amarelo, vermelho (cartões) e verde (lesão) o texto no relatório em pdf.

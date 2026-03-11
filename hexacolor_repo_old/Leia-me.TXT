@@ -1,4 +1,4 @@
-﻿Hexacolor YMT v2.10
+﻿Hexacolor YMT v2.15
 Release Beta
 
 Dúvidas, sugestões, comentários e/ou suporte podem ser enviados para digisabio@hotmail.com
@@ -7,6 +7,77 @@ Boa simulação!
 digisabioSoft
 
 ---Log de Mudanças---
+
+***Versão 2.15***
+-> Inclusões:
+	- Súmula da partida agora exibe o xG por equipe.
+	- Adicionada nova opção de balizamento (Internacional 2022). Usuário pode agora escolher, na tela Opções, qual balizamento deseja utilizar para as simulações. Essa tela traz a descrição de cada tipo de balizamento.
+	- Adicionado suporte à simulação via argumentos, que poderá permitir a integração do Hexacolor YMT a outras ferramentas, como o portal CONFUSA.top.
+-> Modificações:
+	- Adicionado suporte a lesões aleatórias, jogadores genéricos, condição física aleatória e objetivos em simulação via Scheduler.
+-> Correções de Bugs:
+	- Corrigido crash quando a narração escolhida era apagada da pasta.
+	- Corrigido crash quando uma bandeira com nome com mais de 7 caracteres era adicionada à pasta.
+
+
+***Versão 2.14***
+-> Inclusões:
+	- Adicionado uma nova opção (em Arquivo->Opções) para usuário determinar quão o padrão de quantas substituições por partida, e em quantas paradas, deseja nas suas simulações. Esse padrão fica salvo é respeitado por Scheduler.
+		- Ao selecionar um padrão diferente na tela de Simular Partida, esse novo padrão é usado apenas para aquela partida e não fica salvo.
+	- Adicionada uma nova função para exportar a lista de jogadores com os clubes aos quais eles estão ligados.
+-> Modificações:
+	- Adicionada a opção de importar via Excel a abreviação de 3 letras de um time genérico, utilizando a coluna I (ver ImportacaoGenerica/Ajuda.TXT).
+	- Ao importar um time genérico, ele é agora configurado para buscar Escudo e Uniformes com o mesmo nome. Ou seja, se o time se chama União Futebol, ele tentará carregar o escudo União Futebol.png da pasta Escudos, e os uniformes União Futebol 1.png e União Futebol 2.png da pasta Uniformes.
+-> Correções de Bugs:
+	- Corrigido crash quando um clube era importado e a pasta Escudos ou Uniformes havia sido deletada. 
+	- Corrigido bug na importação via Excel de jogadores genéricos, em que copiar um jogador sem posição de titular poderia não carregar seu nível e nacionalidade.
+	- Corrigido crash ao importar qualquer entidade (jogdores, clubes, estádios, trios de arbitragem...) com aspas duplas no nome.
+
+***Versão 2.13.1***
+-> Correções de Bugs:
+	- Cores e datas não ficavam salvas quando a partida era simulada usando Edição Manual.
+	- Corrigido bug que travava o Hexacolor ao salvar um jogo caso a pasta Partidas tivesse sido deletada.
+
+***Versão 2.13***
+-> Inclusões:
+	- Agora é possível adicionar novas narrações ao YMT. Confira a pasta Narracoes para as instruções de como fazê-lo.
+	- Adicionada a possibilidade de criação de jogadores genéricos. Eles são criados durante o processo de criação de times genéricos, para fazerem parte de seus elencos.
+	- Adicionada a possibilidade de importar times e jogadores genéricos do Excel (ver pasta ImportacaoGenerica).
+	- Adicionados escudos-padrão, pintados com as cores da equipe, quando uma imagem de escudo não é inserida. A imagem-base do escudo pode ser modificada pelo usuário (em Imagens/EscudoPadrao.png).
+-> Modificações:
+	- O padrão de cores da partida agora se mantém salvo quando o Hexacolor YMT é fechado.
+	- Re-calculada a porcentagem de participação de cada jogador em uma jogada, a partir de sua posição e da posição da bola, para atingir um maior nível de realismo. 
+	- Atualizado o conector SQL para suportar sistemas de 64-bits.
+-> Correções de Bugs:
+	- Corrigido bug que dificultava amplamente a realização de gols em jogadas diferenciadas, como voleios e bicicletas.
+
+***Versão 2.12***
+-> Modificações:
+	- Após as mudanças realizadas na versão 2.11, foi identificado um aumento acima do esperado na média de gols em partidas entre times de níveis diferentes, assim como no número de goleadas e no número de jogos com muitos gols entre times de níveis próximos. Para resolver o problema, foi realizado um processo de re-calibragem, com mais de 1 milhão de jogos simulados entre times genéricos, pra identificar os pontos do algoritmo que não estavam de acordo com a parametrização desejada e alterá-los.
+-> Correções de Bugs:
+	- A partir desse grande número de partidas de teste simuladas, foi possível encontrar e resolver uma série de pequenos bugs no algoritmo, ligados a casos excepcionais de substituição, escolha de batedores de falta quando nenhum jogador em campo é um batedor natural, jogadores substituídos por cansaço extremo, entre outros.
+
+***Versão 2.11***
+-> Inclusões:
+	- Adicionada a mentalidade Raçudo, que surge como alternativa para jogadores que possuíam determinação alta (ver remoção de determinação abaixo) e não se encaixam em outras mentalidades.
+	- Adicionada a opção de editar mentalidades em batch. Dessa forma, é possível rapidamente alterar a mentalidade de múltiplos jogadores de uma vez só.	
+	- Adicionado um gerador de times genéricos, uma forma muito rápida de criar times com jogadores genéricos.
+	- Adicionada a possibilidade de importar cores dos times a partir do Excel (basta copiar células coloridas e clicar no botão de importar; instruções mais detalhadas acompanham o botão).
+	- Adicionada a opção de exportar múltiplos jogadores de uma só vez, filtrando por nacionalidade e idade.
+-> Modificações:
+	- REMOVIDO O ATRIBUTO DETERMINAÇÃO. Jogadores não possuem mais esse atributo e todos os algoritmos foram atualizados para considerar isso. A exportação de jogadores mantém compatibilidade com versões antigas.
+	- Modificado sistema de escolha de posição durante substituição, de forma que a mesma posição agora tem prioridade a posições próximas (por exemplo, o algoritmo agora vai sempre buscar um Aa para substituir diretamente um Aa, e não considerar a possibilidade de utilizar um Am).
+	- Melhorado o sistema de cálculo de temperatura por clima, evitando situações absurdas como neve com 14º.
+	- Melhorada a rapidez da importação de databases geradas pelo portal CONFUSA.top.
+	- Melhorado o algoritmo de decidir quando a torcida irá grita "olé".
+	- Jogadores substituídos por exaustão/cãimbras agora são apresentados como lesionados por 1 dia, para deixar clara a razão da substituição, de acordo com sugestão recebida.
+-> Correções de Bugs:
+	- Corrigido bug no algoritmo de escolha de substituto para jogos enviados pelo Scheduler, que poderia travar ao não encontrar qualquer jogador para uma posição específica.
+	- Corrigido bug em que partida poderia travar se não fosse possível escolher nenhum jogador para cobrar uma falta de levantamento para a área.
+	- Corrigido bug no algoritmo de objetivos durante a prorrogação, que fazia com que o time que estava perdendo pudesse recuar, e o time que estivesse vencendo podia mandar o goleiro para a área.
+	- Corrigidos erros de português em algumas narrações, de acordo com sugestões recebidas.
+	- Corrigido bug de narração que informava que goleiro fizera pênalti tocando a bola com a mão.
+	- Corrigido bug de narração em que cartão vermelho por toque de mão aparecia como agressão.
 
 ***Versão 2.10***
 -> Inclusões:

@@ -1,0 +1,30 @@
+﻿===Importação de Clubes Genéricos===
+
+Veja no arquivo "Exemplo - Clubes.xls" para o formato correto a preencher.
+
+Colunas do Excel:
+A - Cor de fundo é a cor 1 do 1º uniforme do clube, texto é o nome do clube, cor do texto é a cor 3 do 1º do uniforme do clube
+B - Cor de fundo é a cor 2 do 1º uniforme do clube
+C - Coluna vazia
+D - Cor de fundo é a cor 1 do 2º uniforme do clube, texto é o nome do clube, cor do texto é a cor 3 do 2º do uniforme do clube
+E - Cor de fundo é a cor 2 do 2º uniforme do clube
+F - País do clube (deve ser a mesma cicla da bandeira no Hexacolor)
+G - Nível dos titulares
+H - Tática do clube. Cada posição deve ser separada por um hífen (-), sem incluir o goleiro.
+
+Após preencher uma linha abaixo da outra, copie todas as linhas desejadas e clique no botão "Importar clubes do Excel", na aba Clubes da tela "Gerar Clubes Genéricos".
+
+===Importação de Jogadores Genéricos===
+
+Veja no arquivo "Exemplo - Jogadores.xls" para o formato correto a preencher.
+
+Colunas do Excel:
+A - Nome do clube (deve ser igual ao de um dos clubes genéricos)
+B - Nome do jogador
+C - Posições do jogador, separadas por uma barra (/)
+D - Posição do jogador na escalação. Pode ser deixada vazia se ele for um reserva.
+E - Idade
+F - Nível
+G - Nacionalidade
+
+Após preencher uma linha abaixo da outra, copie todas as linhas desejadas e clique no botão "Importar jogadores do Excel", na aba Jogadores da tela "Gerar Clubes Genéricos".
