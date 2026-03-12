@@ -11,7 +11,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
     //informações recebidas para propor transferencia: id jogador, clube destino, clube origem, valor
     //$pacoteTransferencia = json_decode($_POST['data'],true);
     $idJogador = $_POST['idJogador'];
-    $clubeOrigem = $_POST['clubeOrigem'];
+    $clubeOrigemReq = $_POST['clubeOrigem'];
     $clubeDestino = $_POST['clubeDestino'];
     $valor = $_POST['valor'];
     $tipoTransacao = $_POST['tipoTransacao'];
@@ -28,9 +28,30 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
     $time = new Time($db);
     $usuario = new Usuario($db);
 
+    // Obter clube de origem real e se está emprestado
+    $query_vinculo = "SELECT clube, clubeVinculado FROM contratos_jogador WHERE jogador=:jogador AND tipoContrato = 0";
+    $stmt_vinculo = $db->prepare($query_vinculo);
+    $stmt_vinculo->bindParam(":jogador", $idJogador);
+    $stmt_vinculo->execute();
+    $row_vinculo = $stmt_vinculo->fetch(PDO::FETCH_ASSOC);
+    
+    $clubeOrigem = 0;
+    $estaEmprestado = false;
+    if ($row_vinculo) {
+        if ($row_vinculo['clubeVinculado'] != 0) {
+            $clubeOrigem = $row_vinculo['clubeVinculado']; // Dono real dos direitos
+            $estaEmprestado = true;
+            $clubeAtual = $row_vinculo['clube']; // Clube em que atua (mutuário)
+        } else {
+            $clubeOrigem = $row_vinculo['clube'];
+            $estaEmprestado = false;
+            $clubeAtual = $row_vinculo['clube'];
+        }
+    }
+
     //verificar ID logado e do clube de origem
     $idLogado = $_SESSION['user_id'];
-    $idDonoClube = $time->donoClube($clubeOrigem,$idJogador);
+    $idDonoClube = $time->donoClube($clubeOrigem, $idJogador);
     $idDonoJogador = $jogador->donoJogador($idJogador);
     //$error_msg .= $idDonoClube;
 
@@ -40,10 +61,24 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
         die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
     }
 
-    if($clubeOrigem == $clubeDestino){
+    if($clubeOrigem == $clubeDestino && !$estaEmprestado){
         $is_success = false;
         $error_msg = "Jogador não pode ir para o mesmo clube atual!";
         die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
+    }
+    
+    if ($estaEmprestado) {
+        if ($clubeDestino != $clubeAtual) {
+            $is_success = false;
+            $error_msg = "Apenas o clube que pegou o jogador emprestado pode fazer propostas durante o empréstimo.";
+            die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
+        }
+        
+        if ($tipoTransacao != 3 && $tipoTransacao != 0 && $tipoTransacao != 1) {
+            $is_success = false;
+            $error_msg = "Para estender o empréstimo, selecione 'Extensão de Empréstimo'.";
+            die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
+        }
     }
 	
 	if($_SESSION['emTestes'] && (($idLogado != $idDonoClube) || ($idDonoJogador != $idLogado))){
@@ -63,6 +98,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
                 $is_success = true;
             } else {
                 $is_success = false;
+                $error_msg .= "Erro ao avaliar proposta (dono_clube).";
             }
 
         } else if($idDonoClube == 0 && $idDonoJogador == $idLogado){
@@ -71,6 +107,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
               $is_success = true;
           } else {
               $is_success = false;
+              $error_msg .= "Erro ao avaliar proposta (dono_jogador).";
           }
         } else {
           // enviar email
@@ -81,7 +118,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
         $error_msg .= "";
     } else {
         $is_success = false;
-        $error_msg .= "Falha ao solicitar transferência";
+        $error_msg .= "Falha ao solicitar transferência - bloqueado em proporTransferencia()";
     }
 
 } else {

@@ -372,21 +372,40 @@ return $stmt;
     //propor transferencia
     function proporTransferencia($idJogador, $clubeOrigem, $clubeDestino, $valor, $tipoTransferencia = 0, $tipoTransacao = 0, $fimContrato = 0){
         
-        //verificar se jogador é emprestado
-        $query_check_vinculo = "SELECT (tipoContrato + clubeVinculado) as aptoProposta FROM contratos_jogador WHERE jogador = :jogador AND clube = :clube";
+        //verificar vinculo atual
+        $query_check_vinculo = "SELECT tipoContrato, clubeVinculado, clube FROM contratos_jogador WHERE jogador = :jogador AND tipoContrato = 0";
         $stmt_check_vinculo = $this->conn->prepare($query_check_vinculo);
         $stmt_check_vinculo->bindParam(":jogador", $idJogador);
-        $stmt_check_vinculo->bindParam(":clube", $clubeOrigem);
         $stmt_check_vinculo->execute();
         $result_check_vinculo = $stmt_check_vinculo->fetch(PDO::FETCH_ASSOC);
-        if($result_check_vinculo["aptoProposta"] != 0){
-            return false;
+        
+        if($result_check_vinculo) {
+            $estaEmprestado = ($result_check_vinculo['clubeVinculado'] != 0);
+            
+            // Se está emprestado, permite venda e extensão, mas barra novo empréstimo
+            if ($estaEmprestado) {
+                if ($tipoTransacao == 2) {
+                    return false;
+                }
+            } else {
+                // Para não-emprestados, verifica se quem propõe é o dono real
+                $donoNormal = ($result_check_vinculo['clubeVinculado'] == 0 && $result_check_vinculo['clube'] == $clubeOrigem);
+                if (!$donoNormal && $clubeOrigem != 0) {
+                    return false;
+                }
+            }
         }
         
         if($tipoTransacao == 2){
             $emprestimo = 1;
+        } else if ($tipoTransacao == 3){
+            $emprestimo = 2; // Extensão de Empréstimo
         } else {
             $emprestimo = 0;
+        }
+        
+        if ($fimContrato == '' || $fimContrato == 0) {
+            $fimContrato = '0000-00-00';
         }
 
         $query_transferencia = "INSERT INTO transferencias
@@ -545,7 +564,7 @@ return $stmt;
 
         $id_time = htmlspecialchars(strip_tags($id_time));
 
-        $query = "SELECT j.id as idJogador, j.cobradorFalta, j.Sexo as sexoJogador, j.Nome as nomeJogador, j.Nascimento, c.titularidade, c.posicaoBase, c.capitao, c.cobrancaPenalti, c.ModificadorNivel, c.encerramento, c.tipoContrato, j.valor, j.disponibilidade, p.bandeira as bandeiraPais, p.sigla as siglaPais, j.Nivel, j.StringPosicoes, p.id as idPais, c.titularidade, m.Nome as mentalidade, p.dono as donoJogador, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as Idade, j.foto, c.numeroCamisa 
+        $query = "SELECT j.id as idJogador, j.cobradorFalta, j.Sexo as sexoJogador, j.Nome as nomeJogador, j.Nascimento, c.titularidade, c.posicaoBase, c.capitao, c.cobrancaPenalti, c.ModificadorNivel, c.encerramento, c.tipoContrato, j.valor, j.disponibilidade, p.bandeira as bandeiraPais, p.sigla as siglaPais, j.Nivel, j.StringPosicoes, p.id as idPais, c.titularidade, m.Nome as mentalidade, p.dono as donoJogador, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as Idade, j.foto, c.numeroCamisa, c.clubeVinculado 
         FROM contratos_jogador c
         LEFT JOIN jogador j ON c.jogador = j.id
         LEFT JOIN mentalidade m ON j.Mentalidade = m.ID
@@ -791,13 +810,20 @@ return $stmt;
 
                 $novoSalario = $this->calcularSalario($passe);
                 
-                if($row['emprestimo'] == 1){
+                if($row['emprestimo'] == 1 || $row['emprestimo'] == 2){
                     $clubeVinculado = $row['clubeOrigem'];
                 } else {
                     $clubeVinculado = 0;
                 }
+                
+                // Verificar se o jogador tem um contrato ativo real (clube > 0)
+                $query_check_contrato = "SELECT clube FROM contratos_jogador WHERE jogador = ? AND tipoContrato = 0";
+                $stmt_check = $this->conn->prepare($query_check_contrato);
+                $stmt_check->bindParam(1, $row['jogador']);
+                $stmt_check->execute();
+                $contratoAtivo = $stmt_check->fetch(PDO::FETCH_ASSOC);
 
-                if($row['clubeOrigem'] == 0){
+                if(!$contratoAtivo || $contratoAtivo['clube'] == 0){
                     $prequery = "INSERT INTO contratos_jogador SET
                     clube=:clube, tipoContrato=0, clubeVinculado=:clubeVinculado, salario=:salario, capitao=0, cobrancaPenalti=0, titularidade=-1, jogador=:jogador, encerramento=:encerramento";
                     $stmt = $this->conn->prepare($prequery);
@@ -805,9 +831,8 @@ return $stmt;
                     $prequery = "UPDATE contratos_jogador
                     SET
                         clube=:clube, encerramento=:encerramento, clubeVinculado=:clubeVinculado, tipoContrato=0, salario=:salario, capitao=0, cobrancaPenalti=0, titularidade=-1
-                        WHERE jogador=:jogador AND clube=:clubeOrigem";
+                        WHERE jogador=:jogador AND tipoContrato=0";
                     $stmt = $this->conn->prepare($prequery);
-                    $stmt->bindParam(':clubeOrigem',$row['clubeOrigem']);
                 }
                 $stmt->bindParam(':clube',$row['clubeDestino']);
                 $stmt->bindParam(':salario',$novoSalario);
@@ -1005,7 +1030,7 @@ return $stmt;
             CASE WHEN SUBSTRING(j.StringPosicoes,13,1) = 0 THEN '' ELSE 'MA-' END,
             CASE WHEN SUBSTRING(j.StringPosicoes,14,1) = 0 THEN '' ELSE 'Am-' END,
             CASE WHEN SUBSTRING(j.StringPosicoes,15,1) = 0 THEN '' ELSE 'Aa-' END) as posicoes, j.StringPosicoes as stringPosicoes,
-            j.valor, j.Nivel as nivel, CASE WHEN j.disponibilidade = -1 THEN 'Aposentado' WHEN j.disponibilidade = 0 THEN 'Não' WHEN j.disponibilidade = -2 THEN 'Expatriado' ELSE 'Sim' END as disponibilidade, p.bandeira, q.bandeira as bandeiraClube, q.ID as paisClube, CASE WHEN b.ID is not NULL THEN b.ID ELSE 0 END as idClube, b.liga as idLiga, l.Nome as ligaClube,  CASE WHEN c.posicaoBase <> 0 THEN o.Nome ELSE '' END as posicaoBaseJogador, j.Mentalidade as mentalidadeIndex, p.ranqueavel, CASE WHEN p.dono <> :usuarioLogado THEN 0 ELSE 1 END as donoJogador, c.tipoContrato
+            j.valor, j.Nivel as nivel, CASE WHEN j.disponibilidade = -1 THEN 'Aposentado' WHEN j.disponibilidade = 0 THEN 'Não' WHEN j.disponibilidade = -2 THEN 'Expatriado' ELSE 'Sim' END as disponibilidade, p.bandeira, q.bandeira as bandeiraClube, q.ID as paisClube, CASE WHEN b.ID is not NULL THEN b.ID ELSE 0 END as idClube, b.liga as idLiga, l.Nome as ligaClube,  CASE WHEN c.posicaoBase <> 0 THEN o.Nome ELSE '' END as posicaoBaseJogador, j.Mentalidade as mentalidadeIndex, p.ranqueavel, CASE WHEN p.dono <> :usuarioLogado THEN 0 ELSE 1 END as donoJogador, c.tipoContrato, COALESCE(c.clubeVinculado, 0) as idDonoVinculado
             FROM jogador j
             LEFT JOIN paises p ON j.Pais = p.id
             LEFT JOIN contratos_jogador c ON j.ID = c.jogador
@@ -2399,7 +2424,7 @@ return $stmt;
                 $tipoContrato = 1;
             }
 
-            $query = "INSERT INTO contratos_jogador (jogador, clube, posicaoBase, titularidade, capitao, cobrancaPenalti, modificadorNivel, encerramento, salario, tipoContrato) VALUES (?, ?, 0, -1, 0, 0, 0, 0, 0, ?) ON DUPLICATE KEY UPDATE jogador = jogador";
+            $query = "INSERT INTO contratos_jogador (jogador, clube, posicaoBase, titularidade, capitao, cobrancaPenalti, modificadorNivel, encerramento, salario, tipoContrato, clubeVinculado) VALUES (?, ?, 0, -1, 0, 0, 0, 0, 0, ?, 0) ON DUPLICATE KEY UPDATE jogador = jogador";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(1, $idJogador);
             $stmt->bindParam(2, $selecaoDestino);

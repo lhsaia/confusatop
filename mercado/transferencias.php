@@ -336,18 +336,18 @@ if($pageType == 'maiores' || $pageType == 'ultimas'){
                     foreach($calendario as $index => $mes){
                         if($mes == 1){
                             $statusMes = 'Aberto';
-                            $icone = '<i class="fas fa-door-open"></i>';
+                            $icone = '<span class="material-symbols-outlined">door_open</span>';
                         } else {
                             $statusMes = 'Fechado';
-                            $icone = '<i class="fas fa-door-closed"></i>';
+                            $icone = '<span class="material-symbols-outlined">door_front</span>';
                         }
                         echo "<td class='nopadding mercado".$statusMes."'><span class='nomSM'>{$icone}</span><select class='selSM".$index."' hidden><option value=1>O</option><option value=0>X</option></select></td>";
                     }
                     $optionString = '';
                     if($_SESSION['user_id']===$idDonoPais){
-                        $optionString .= "<a id='dem".$idPais."' title='Editar janela' class='clickable editar'><i class='fas fa-edit inlineButton azul'></i></a>";
-                        $optionString .= "<a hidden id='sal".$idPais."' title='Salvar' class='clickable salvar'><i class='fas fa-check inlineButton positive'></i></a>";
-                        $optionString .= "<a hidden id='can".$idPais."' title='Cancelar' class='clickable cancelar'><i class='fas fa-times inlineButton vermelho'></i></a>";
+                        $optionString .= "<a id='dem".$idPais."' title='Editar janela' class='clickable editar'><span class='material-symbols-outlined inlineButton azul'>edit</span></a>";
+                        $optionString .= "<a hidden id='sal".$idPais."' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
+                        $optionString .= "<a hidden id='can".$idPais."' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton vermelho'>close</span></a>";
                     }
 
 
@@ -570,6 +570,7 @@ echo('</div>');
           <option selected value="0">Venda (tempo indeterminado)</option>
           <option value="1">Venda (com data de encerramento)</option>
           <option value="2">Empréstimo</option>
+          <option value="3">Extensão de Empréstimo</option>
       </select>
       
       <label for="fimContrato"><b>Encerramento</b></label>
@@ -611,6 +612,7 @@ echo $date->format('Y-m-d');
 
       <input type="hidden" value="" name="idJogadorTransf" id="idJogadorTransf" required>
       <input type="hidden" value="" name="clubeOrigemTransf" id="clubeOrigemTransf" required>
+      <input type="hidden" value="" name="isLoanedTransf" id="isLoanedTransf">
       <input type="hidden" value="" name="sorvete" id="sorvete" required>
 
       <button type="submit" name="newsubmit" class="submitbtn">Propor transferência</button>
@@ -1007,26 +1009,26 @@ function updateTable(ajax_data, current_page, highlighted, direction){
         tbl += "<thead id='headings'>";
             tbl += "<tr>";
             if(tipoPagina.localeCompare('busca') == 0){
-                tbl += "<th asc='' id='nomeJogador' class='headings'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspJogador</th>";
+                tbl += "<th asc='' id='nomeJogador' class='headings'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspJogador</th>";
             }  if(tipoPagina.localeCompare('buscaTecnico') == 0){
-                tbl += "<th asc='' id='nomeJogador' class='headings'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTécnico</th>";
+                tbl += "<th asc='' id='nomeJogador' class='headings'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspTécnico</th>";
             }
-                tbl +=  "<th asc='' id='posicoes' class='headings' ><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspPosições</th>";
-                tbl +=  "<th asc='' id='idadeJogador' class='headings' ><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspIdade</th>";
-                tbl +=  "<th asc='' id='bandeira' class='headings'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspNacionalidade</th>";
-                tbl +=  "<th asc='' id='nivel' class='headings' ><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspNivel</th>";
-                tbl +=  "<th asc='' id='mentalidade' class='headings' ><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspMentalidade</th>";
+                tbl +=  "<th asc='' id='posicoes' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspPosições</th>";
+                tbl +=  "<th asc='' id='idadeJogador' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspIdade</th>";
+                tbl +=  "<th asc='' id='bandeira' class='headings'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspNacionalidade</th>";
+                tbl +=  "<th asc='' id='nivel' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspNivel</th>";
+                tbl +=  "<th asc='' id='mentalidade' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspMentalidade</th>";
                 if(tipoPagina.localeCompare('busca') == 0){
-                tbl +=  "<th asc='' id='cobrancaFalta' class='headings' ><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspCobrança de Falta</th>";
+                tbl +=  "<th asc='' id='cobrancaFalta' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspCobrança de Falta</th>";
                 } else if(tipoPagina.localeCompare('buscaTecnico') == 0){
-                    tbl +=  "<th asc='' id='cobrancaFalta' class='headings' ><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspEstilo</th>";
+                    tbl +=  "<th asc='' id='cobrancaFalta' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspEstilo</th>";
                 }
-                tbl +=  "<th asc='' id='nomeClube' class='headings' ><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspClube</th>";
+                tbl +=  "<th asc='' id='nomeClube' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspClube</th>";
                 if(tipoPagina.localeCompare('busca') == 0){
-                tbl +=  "<th asc='' id='disponibilidade' class='headings' ><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspDisp.</th>";
-                tbl +=  "<th asc='' id='valor' class='headings' ><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspValor</th>";
+                tbl +=  "<th asc='' id='disponibilidade' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspDisp.</th>";
+                tbl +=  "<th asc='' id='valor' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspValor</th>";
                 }
-                tbl += "<th asc=''  ><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspOpções</td>";
+                tbl += "<th asc=''  ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspOpções</td>";
             tbl +=  "</tr>";
         tbl +=  "</thead>";
         tbl +=  "<tbody>";
@@ -1090,17 +1092,17 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 
 
                 if((tipoPagina.localeCompare('busca') == 0 && !emTestes) || (tipoPagina.localeCompare('busca') == 0 && emTestes && val['donoJogador'] == 1) ){
-                    tbl += "<a id='pro"+val['idJogador']+"' title='Fazer Proposta' class='clickable proposta'><i class='fas fa-money-bill inlineButton'></i></a>";
+                    tbl += "<a id='pro"+val['idJogador']+"' title='Fazer Proposta' class='clickable proposta'><span class='material-symbols-outlined inlineButton'>payments</span></a>";
                 } else if((tipoPagina.localeCompare('buscaTecnico') == 0 && !emTestes) || (tipoPagina.localeCompare('buscaTecnico') == 0 && emTestes && val['donoJogador'] == 1)){
-                    tbl += "<a id='pro"+val['idJogador']+"' title='Fazer Proposta' class='clickable propostaTecnico'><i class='fas fa-money-bill inlineButton'></i></a>";
+                    tbl += "<a id='pro"+val['idJogador']+"' title='Fazer Proposta' class='clickable propostaTecnico'><span class='material-symbols-outlined inlineButton'>payments</span></a>";
                 }
 
 
                     if(val['donoJogador'] == 1) {
                         if(tipoPagina.localeCompare('busca') == 0){
-                            tbl += "<a id='pro"+val['idJogador']+"' title='Convocar' class='clickable convocar'><i class='fas fa-globe inlineButton'></i></a>";
+                            tbl += "<a id='pro"+val['idJogador']+"' title='Convocar' class='clickable convocar'><span class='material-symbols-outlined inlineButton'>public</span></a>";
                         } else if(tipoPagina.localeCompare('buscaTecnico') == 0){
-                            tbl += "<a id='pro"+val['idJogador']+"' title='Convocar' class='clickable convocarTecnico'><i class='fas fa-globe inlineButton'></i></a>";
+                            tbl += "<a id='pro"+val['idJogador']+"' title='Convocar' class='clickable convocarTecnico'><span class='material-symbols-outlined inlineButton'>public</span></a>";
                         }
 
                     }
@@ -1354,6 +1356,49 @@ var valorInicial = arrayJogador.valor;
 var clube = arrayJogador.idClube;
 var sorvete = $("#maquinaSorvete").html();
 var sexoJogador = arrayJogador.sexoJogador;
+var idDonoVinculado = arrayJogador.idDonoVinculado;
+
+if (idDonoVinculado != 0 && idDonoVinculado != null) {
+    $('#tipoTransacao option[value="3"]').show();
+    $('#tipoTransacao option[value="2"]').hide();
+    if ($('#tipoTransacao').val() == '2') {
+        $('#tipoTransacao').val('0');
+        $('#tipoTransacao').trigger('change');
+    }
+
+    $("#clubeDestinoTransf option").each(function(){
+        if($(this).val() == clube){
+            $(this).show();
+            $(this).removeAttr("disabled");
+            $(this).prop("selected", true);
+        } else {
+            $(this).attr("disabled", "disabled");
+            $(this).hide();
+        }
+    });
+} else {
+    $('#tipoTransacao option[value="3"]').hide();
+    $('#tipoTransacao option[value="2"]').show();
+    if ($('#tipoTransacao').val() == '3') {
+        $('#tipoTransacao').val('0');
+        $('#tipoTransacao').trigger('change');
+    }
+
+    $("#clubeDestinoTransf option").each(function(){
+        if($(this).attr("data-sexo") == sexoJogador){
+            if($(this).val() == clube){
+                $(this).prop("disabled", true);
+                $(this).hide();
+            } else {
+                $(this).show();
+                $(this).prop("disabled", false);
+            }
+        } else {
+            $(this).attr("disabled", "disabled");
+            $(this).hide();
+        }
+    });
+}
 
 if(clube != 0){
     $('#valorJogadorTransf').val(valorInicial);
@@ -1361,25 +1406,9 @@ if(clube != 0){
     $('#valorJogadorTransf').val(0);
 }
 
-$("#clubeDestinoTransf option").each(function(){
-
-    if($(this).attr("data-sexo") == sexoJogador){
-        if($(this).val() == clube){
-            $(this).attr("disabled", "disabled");
-            $(this).hide();
-
-
-        } else {
-            $(this).show();
-            $(this).removeAttr("disabled");
-        }
-    } else {
-        $(this).attr("disabled", "disabled");
-        $(this).hide();
-    }
-
-});
-
+// Limpa qualquer selecao anterior e forca o trigger para renderizar correto o Selectmenu, caso use o jQuery UI
+var idDonoVinculadoNum = idDonoVinculado == null ? 0 : idDonoVinculado;
+$("#isLoanedTransf").val((idDonoVinculadoNum != 0) ? 1 : 0);
 
 $('#nomeJogadorTransf').val(nome);
 $("#idJogadorTransf").val(jogId);
@@ -1490,13 +1519,15 @@ $("#formProposta").submit(function(event){
         'clubeDestino' : clubeDestino,
         'valor' : $('input[name=valorJogadorTransf]').val(),
         'sorvete' : $('input[name=sorvete]').val(),
-        'tipoTransacao' : $('select[name=tipoTransacao').val(),
-        'fimContrato' : $('input[name=fimContrato').val()
+        'tipoTransacao' : $('#tipoTransacao').val(),
+        'fimContrato' : $('#fimContrato').val()
     };
 
     //console.log(formData);
+    
+    var isLoaned = $('#isLoanedTransf').val() == 1;
 
-    if(clubeOrigem == clubeDestino){
+    if(clubeOrigem == clubeDestino && !isLoaned){
         $('#errorbox').html("<div class='alert alert-danger'>O jogador não pode ir para seu time atual!</div>");
 
     } else {
@@ -1527,12 +1558,13 @@ $('#modalProposta').hide();
 }
 
 // here we will handle errors and validation messages
+}).fail(function(jqXHR, textStatus, errorThrown ){
+    console.log("Erro");
+    //console.log(jqXHR);
+    //console.log(textStatus);
+    //console.log(errorThrown);
 });
     }
-
-
-
-
 
 });
 

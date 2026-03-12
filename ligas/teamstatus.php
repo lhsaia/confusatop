@@ -123,26 +123,70 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
 echo "<div style='clear:both; float:center'></div>";
 
+echo "
+<style>
+.jersey-icon {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    background-image: url(\"data:image/svg+xml,%3Csvg width='800px' height='800px' viewBox='0 -63.5 1151 1151' version='1.1' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M902.984598 1024h-653.972493a27.200282 27.200282 0 0 1-27.200282-27.200282v-562.13916l-5.945204 7.16274a27.200282 27.200282 0 0 1-38.300588 3.561942L9.830959 306.184559a27.200282 27.200282 0 0 1-3.561942-38.300587L220.490667 9.831011A27.200282 27.200282 0 0 1 241.421931 0.000052h174.599905a27.200282 27.200282 0 0 1 13.341091 3.497179l146.143229 82.248472L711.002418 3.885806a27.200282 27.200282 0 0 1 14.066431-3.885754H910.56182a27.200282 27.200282 0 0 1 20.931264 9.830959l214.22165 258.052961a27.200282 27.200282 0 0 1-3.561942 38.300587l-167.735072 139.239539a27.200282 27.200282 0 0 1-38.300588-3.561942l-5.945204-7.162741v562.139161a27.200282 27.200282 0 0 1-27.18733 27.161424z m-626.772211-54.400564h599.57193V359.354634A27.200282 27.200282 0 0 1 923.915863 341.946454l36.694476 44.206934 125.872543-104.48794L897.816545 54.400616H732.633118l-142.568335 86.121273a27.200282 27.200282 0 0 1-27.407522 0.427433L408.885 54.400616H254.193111L65.500869 281.704305l125.872543 104.487941L228.08084 341.946454a27.200282 27.200282 0 0 1 48.131547 17.369323z' fill='%23cccccc' /%3E%3Cpath d='M574.54767 144.498312H336.946731a13.600141 13.600141 0 0 1-11.190973-21.31984l72.158462-104.526798a13.600141 13.600141 0 0 1 22.381946 15.45235l-57.431452 83.194006h211.682956a13.600141 13.600141 0 0 1 0 27.200282z' fill='%23cccccc' /%3E%3Cpath d='M802.900513 144.498312H565.312527a13.600141 13.600141 0 0 1 0-27.200282h211.682956l-57.431453-83.194006a13.600141 13.600141 0 0 1 22.381947-15.45235l72.158462 104.526798a13.600141 13.600141 0 0 1-11.190973 21.31984zM366.19351 92.234913H220.853337a13.600141 13.600141 0 0 1 0-27.200282h145.327221a13.600141 13.600141 0 0 1 0 27.200282z' fill='%23cccccc' /%3E%3Cpath d='M922.504039 97.143916H777.150913a13.600141 13.600141 0 0 1 0-27.200282h145.327221a13.600141 13.600141 0 1 1 0 27.200282z' fill='%23cccccc' /%3E%3C/svg%3E\");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    font-size: 13px;
+    font-weight: bold;
+    padding-top: 4px;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+.foto_jogador {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 5px;
+}
+.jersey-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin-left: 5px;
+    min-width: 40px;
+    min-height: 32px;
+}
+.numeroCamisa {
+    width: 60px;
+    text-align: center;
+}
+.inlineButton {
+    font-size: 22px;
+}
+</style>
+";
+
 ?>
 
 <script>
 
 // on load of the page: switch to the currently selected tab
 var hash = window.location.hash;
+var isDataDirty = false;
 
 window.onbeforeunload = function(e) {
-    e.preventDefault();
-    window.location.href += hash;
-    location.reload();
-
-
+    if(isDataDirty){
+        e.returnValue = "Você tem alterações não salvas. Deseja realmente sair?";
+        return "Você tem alterações não salvas. Deseja realmente sair?";
+    }
 };
 
-$("#toolbar").html('<div id="irApresentacao"><i class="far fa-newspaper"></i><span>Apresentação</span></div>');
+$("#toolbar").html('<div id="irApresentacao"><span class="material-symbols-outlined">newspaper</span><span>Apresentação</span></div>');
 
-		$("#irApresentacao").on("click", function(){
-			window.location = "/times/team_presentation.php?team=" + <?php echo $idTime ?>;
-		});
+$(document).on("click", "#irApresentacao", function(){
+    if(isDataDirty && !confirm("Você tem alterações não salvas. Deseja sair desta página?")) return;
+    window.location = "/times/team_presentation.php?team=" + <?php echo $idTime ?>;
+});
 
 window.onload = function(e) {
     var hash = window.location.hash;
@@ -161,9 +205,41 @@ window.onload = function(e) {
     } else {
         $('#Jogadores').show();
     }
+}
 
+function reloadPageContent() {
+    // Show some loading indicator if desired
+    $("#errorbox").html('<div class="alert alert-info">Atualizando...</div>');
+    
+    $.get(window.location.href + "&v=" + new Date().getTime(), function(data) {
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(data, "text/html");
 
+        // Update parts of the page
+        $("#info-jogos").html($(doc).find("#info-jogos").html());
+        $("#Jogadores").html($(doc).find("#Jogadores").html());
+        $("#Elenco").html($(doc).find("#Elenco").html());
+        $("#Posicionamento").html($(doc).find("#Posicionamento").html());
+        
+        // Update error box only if there is something relevant in the new page, 
+        // but usually we want to keep the success/error message from the AJAX call that triggered this.
+        // So maybe we don't wipe errorbox immediately. 
+        // Let's just remove the loading indicator.
+        $("#errorbox").html($(doc).find("#errorbox").html());
 
+        // Re-initialize drag and drop
+        initDragDrop();
+        
+        // Re-bind sortable if needed (Posicionamento page uses #sortable but seemingly no JS init for it in the snippet?)
+        // The snippet shows `echo '<div id="sortable" class="ui-state">';` but no `$("#sortable").sortable(...)`.
+        // Checked file content again, it seems it is using manual drag/drop logic with specific IDs.
+        
+        // Re-apply background colors for selects if needed (from $(document).ready)
+        if( $("#selectPenal1").val() == 0 ) $("#selectPenal1").css("background-color", "lightcoral");
+        if( $("#selectPenal2").val() == 0 ) $("#selectPenal2").css("background-color", "lightcoral");
+        if( $("#selectPenal3").val() == 0 ) $("#selectPenal3").css("background-color", "lightcoral");
+        if( $("#selectCapitao").val() == 0 ) $("#selectCapitao").css("background-color", "lightcoral");
+    });
 }
 
 </script>
@@ -172,9 +248,9 @@ window.onload = function(e) {
 <?php
 
 echo "<div id='quadro-container' class='".$idTime."' style='margin-left: 5px; margin-right:5px;'>";
-echo "<img id='bandeiraGrande' class='margin-left' src='/images/escudos/".$escudo_time."' height='100px'>" ;
-echo "<img class='uniformeGrande' src='/images/uniformes/".$uniforme2_time."' height='80px'>" ;
-echo "<img class='uniformeGrande' src='/images/uniformes/".$uniforme1_time. "' height='80px'>" ;
+echo '<img id="bandeiraGrande" class="margin-left" src="/images/escudos/'.$escudo_time.'" height="100px">' ;
+echo '<img class="uniformeGrande" src="/images/uniformes/'.$uniforme2_time.'" height="80px">' ;
+echo '<img class="uniformeGrande" src="/images/uniformes/'.$uniforme1_time.'" height="80px">' ;
 echo "<figure id='estadio'><img class='imagemEstadio' src='/images/estadios/{$foto_estadio}'><figcaption>{$estadio_time}<figcaption></figure>";
 echo "<h2>" . $nome_time ." </h2>";
 if(!$is_selecao){
@@ -203,18 +279,18 @@ $time_stmt = $jogador->selecionarElencoTime($id,$from_record_num,$records_per_pa
 
     echo "<div style='clear:both; float:center'></div>";
 echo "<div id='info-jogos'>";
-echo "<div id='TamElenco' class='infoblock' title='Tamanho do elenco'><i class='fas fa-users'></i><span class='informacao'>{$total_rows}</span></div>";
-echo "<div id='Idades' class='infoblock' title='Média de idade'><i class='fas fa-male'></i><span class='informacao'>{$mediaIdade}</span></div>";
+echo "<div id='TamElenco' class='infoblock' title='Tamanho do elenco'><span class='material-symbols-outlined'>groups</span><span class='informacao'>{$total_rows}</span></div>";
+echo "<div id='Idades' class='infoblock' title='Média de idade'><span class='material-symbols-outlined'>elderly</span><span class='informacao'>{$mediaIdade}</span></div>";
 if(!$is_selecao){
-    echo "<div id='Estrangeiros' class='infoblock' title='Estrangeiros'><i class='fas fa-globe'></i><span class='informacao'>{$estrangeiros}</span><span class='informacao micro'>({$perc_estrangeiros})</span></div>";
-echo "<div id='Selecionados' class='infoblock' title='Jogadores em seleções nacionais'><i class='fas fa-clipboard-list'></i> <span class='informacao'>{$jogadores_selecao}</span></div>";
+    echo "<div id='Estrangeiros' class='infoblock' title='Estrangeiros'><span class='material-symbols-outlined'>globe_location_pin</span><span class='informacao'>{$estrangeiros}</span><span class='informacao micro'>({$perc_estrangeiros})</span></div>";
+echo "<div id='Selecionados' class='infoblock' title='Jogadores em seleções nacionais'><span class='material-symbols-outlined'>flag</span> <span class='informacao'>{$jogadores_selecao}</span></div>";
 }
-echo "<div id='Estádio' class='infoblock' title='Estádio (capacidade)'><i class='fas fa-map-marker-alt'></i><span class='informacao menor'>{$estadio_capacidade}</span></div>";
+echo "<div id='Estádio' class='infoblock' title='Estádio (capacidade)'><span class='material-symbols-outlined'>stadium</span><span class='informacao menor'>{$estadio_capacidade}</span></div>";
 if(!$is_selecao){
-echo "<div id='Recorde' class='infoblock bevel' title='Balanço de caixa (em F$)'><i class='fas fa-hand-holding-usd'></i><span class='informacao mini'>{$recorde_transferencia}</span></div>";
+echo "<div id='Recorde' class='infoblock bevel' title='Balanço de caixa (em F$)'><span class='material-symbols-outlined'>account_balance</span><span class='informacao mini'>{$recorde_transferencia}</span></div>";
 }
-echo "<div id='Valor' class='infoblock' title='Valor de mercado (em F$)'><i class='fas fa-dollar-sign'></i><span class='informacao menor'>{$valor_total_clube}</span></div>";
-echo "<div id='MediaNivel' class='infoblock' title='Média de Nível (titulares/total)'><i class='fas fa-award'></i><span class='informacao mini'> {$nivel_medio_onze}   <span class='informacao mini'> &nbsp {$nivel_medio} </span></span></div>";
+echo "<div id='Valor' class='infoblock' title='Valor de mercado (em F$)'><span class='material-symbols-outlined'>attach_money</span><span class='informacao menor'>{$valor_total_clube}</span></div>";
+echo "<div id='MediaNivel' class='infoblock' title='Média de Nível (titulares/total)'><span class='material-symbols-outlined'>star_half</span><span class='informacao mini'> {$nivel_medio_onze}   <span class='informacao mini'> &nbsp {$nivel_medio} </span></span></div>";
 echo "</div>";
 echo "<br>";
 
@@ -273,7 +349,7 @@ $encerramentoTecnico = ( $rowTec['encerramento'] == "0" ) ? 'indet.' : $rowTec['
 $rowTec['Nascimento'] = date("d-m-Y", strtotime($rowTec['Nascimento']));
 
 echo "<tr id='tec".$rowTec['ID']."' data-sexo='".$rowTec['Sexo']."'>";
-echo "<td class='foto_jogador'><img src='/images/tecnicos/".$rowTec['foto']."' height='55px'></td>";
+echo "<td class='nopadding'><div class='foto_jogador'><img src='/images/tecnicos/".$rowTec['foto']."' height='55px'></div></td>";
 echo "<td class='nopadding nomeJogador'><span class='nomeEditavel'>{$rowTec['Nome']}</span><br><span class='posicao'>Técnico</span></td>";
 echo "<td>T</td>";
 if($rowTec['idPais'] != 0){
@@ -298,19 +374,17 @@ $tecOptions = "<td class='wide' id='dono{$rowTec['donoTecnico']}'>";
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     if(!$is_selecao){
 		if(!$_SESSION['emTestes']){
-			$tecOptions .= "<a id='proTec".$rowTec['ID']."' title='Fazer Proposta' class='clickable propostaTecnico'><i class='fas fa-money-bill inlineButton'></i></a>";
+			$tecOptions .= "<a id='proTec".$rowTec['ID']."' title='Fazer Proposta' class='clickable propostaTecnico'><span class='material-symbols-outlined inlineButton'>payment_arrow_down</span></a>";
 		}
         if($donoLogado){
-          $tecOptions .= "<a id='dem".$rowTec['ID']."' title='Editar técnico' class='clickable editarTecnico'><i class='fas fa-edit inlineButton azul'></i></a>";
-            //$tecOptions .= "<a id='dem".$rowTec['ID']."' title='Disponibilizar jogador' class='clickable disponibilizar'><i class='fas fa-list-ul inlineButton azul'></i></a>";
-            $tecOptions .= "<a id='demTec".$rowTec['ID']."' title='Demitir técnico' class='clickable demitirTecnico'><i class='fas fa-file-contract inlineButton vermelho'></i></a>";
-            //$tecOptions .= "<a id='dem".$rowTec['ID']."' title='Aposentar técnico' class='clickable aposentarTecnico'><i class='fas fa-glasses inlineButton vermelho'></i></a>";
-            $tecOptions .= "<a hidden id='sal".$rowTec['ID']."' title='Salvar' class='clickable salvarTecnico'><i class='fas fa-check inlineButton positive'></i></a>";
-            $tecOptions .= "<a hidden id='can".$rowTec['ID']."' title='Cancelar' class='clickable cancelarTecnico'><i class='fas fa-times inlineButton vermelho'></i></a>";
+          $tecOptions .= "<a id='dem".$rowTec['ID']."' title='Editar técnico' class='clickable editarTecnico'><span class='material-symbols-outlined inlineButton azul'>person_edit</span></a>";
+            $tecOptions .= "<a id='demTec".$rowTec['ID']."' title='Demitir técnico' class='clickable demitirTecnico'><span class='material-symbols-outlined inlineButton vermelho'>contract_delete</span></a>";
+            $tecOptions .= "<a hidden id='sal".$rowTec['ID']."' title='Salvar' class='clickable salvarTecnico'><span class='material-symbols-outlined inlineButton positive'>save</span></a>";
+            $tecOptions .= "<a hidden id='can".$rowTec['ID']."' title='Cancelar' class='clickable cancelarTecnico'><span class='material-symbols-outlined inlineButton vermelho'>cancel</span></a>";
 
         }
     } else {
-        $tecOptions .= "<a id='desTec".$rowTec['ID']."' title='Desconvocar técnico' class='clickable desconvocarTecnico'><i class='fas fa-plane inlineButton vermelho'></i></a>";
+        $tecOptions .= "<a id='desTec".$rowTec['ID']."' title='Desconvocar técnico' class='clickable desconvocarTecnico'><span class='material-symbols-outlined inlineButton vermelho'>travel</span></a>";
     }
 }
 
@@ -382,8 +456,13 @@ $agora = date('Y-m-d');
                 }
 
 
-            echo "<tr data-sexo='".$sexoJogador."' id='".$idJogador."' class='".$titular."'>";
-				echo "<td class='foto_jogador'><div class='imageUpload'><img class='playerThumb' src='/images/jogadores/".$foto."' /> <input type='file' hidden id='foto".$idJogador."' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
+            echo "<tr data-id-dono-vinculado='".$clubeVinculado."' data-sexo='".$sexoJogador."' id='".$idJogador."' class='".$titular."'>";
+            echo "<td class='nopadding'><div class='foto_jogador'><div class='imageUpload'><img class='playerThumb' src='/images/jogadores/".$foto."' /> <input type='file' hidden id='foto".$idJogador."' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div>
+                <div class='jersey-container'>
+                    <div class='jersey-icon' title='Número da camisa'>{$numeroCamisa}</div>
+                    <input type='number' class='editavel numeroCamisa' value='{$numeroCamisa}' min='1' max='99' style='display:none;'>
+                </div>
+                </div></td>";
                 echo "<td class='nopadding nomeJogador'><a href='/ligas/playerstatus.php?player={$idJogador}' class='nomeEditavel'>{$nomeJogador}</a><br><span class='posicao'>{$posicaoBase}</span></td>";
                 echo "<td class='nopadding'><span class='posicoesAtuais'>{$stringPosicoes}</span>";
                 echo " <select multiple class='comboPosicoes editavel ' hidden>'  ";
@@ -414,24 +493,24 @@ $agora = date('Y-m-d');
                 echo "<td class='nopadding'>{$disponibilidade}</td>";
                 $optionsString = "<td class='wide' id='dono{$donoJogador}'>";
                 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
-                  $optionsString .= "<a id='dow".$id."' title='Baixar arquivo .jog' class='clickable exportar'><i class='fas fa-download inlineButton azul'></i></a>";
+                  $optionsString .= "<a id='dow".$id."' title='Baixar arquivo .jog' class='clickable exportar'><span class='material-symbols-outlined inlineButton azul'>download</span></a>";
 
                     if(!$is_selecao){
 						if(!$_SESSION['emTestes'] || $donoLogado){
-							$optionsString .= "<a id='pro".$idJogador."' title='Fazer Proposta' class='clickable proposta'><i class='fas fa-money-bill inlineButton'></i></a>";
+							$optionsString .= "<a id='pro".$idJogador."' title='Fazer Proposta' class='clickable proposta'><span class='material-symbols-outlined inlineButton'>payment_arrow_down</span></a>";
 						}
                         if($donoLogado){
-                            $optionsString .= "<a id='edit".$idJogador."' title='Editar jogador' class='clickable editar'><i class='fas fa-edit inlineButton azul'></i></a>";
-                            $optionsString .= "<a id='disp".$idJogador."' title='Disponibilizar jogador' class='clickable disponibilizar'><i class='fas fa-list-ul inlineButton azul'></i></a>";
-                            $optionsString .= "<a id='demi".$idJogador."' title='Demitir jogador' class='clickable demitir'><i class='fas fa-file-contract inlineButton vermelho'></i></a>";
-                            $optionsString .= "<a id='apos".$idJogador."' title='Aposentar jogador' class='clickable aposentar'><i class='fas fa-glasses inlineButton vermelho'></i></a>";
-							$optionsString .= "<a id='expa".$idJogador."' title='Expatriar jogador' class='clickable expatriar'><i class='fas fa-plane-departure inlineButton vermelho'></i></a>"; 
-                            $optionsString .= "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar'><i class='fas fa-check inlineButton positive'></i></a>";
-                            $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><i class='fas fa-times inlineButton vermelho'></i></a>";
+                            $optionsString .= "<a id='edit".$idJogador."' title='Editar jogador' class='clickable editar'><span class='material-symbols-outlined inlineButton azul'>person_edit</span></a>";
+                            $optionsString .= "<a id='disp".$idJogador."' title='Disponibilizar jogador' class='clickable disponibilizar'><span class='material-symbols-outlined inlineButton azul'>sell</span></a>";
+                            $optionsString .= "<a id='demi".$idJogador."' title='Demitir jogador' class='clickable demitir'><span class='material-symbols-outlined inlineButton vermelho'>contract_delete</span></a>";
+                            $optionsString .= "<a id='apos".$idJogador."' title='Aposentar jogador' class='clickable aposentar'><span class='material-symbols-outlined inlineButton vermelho'>assist_walker</span></a>";
+							$optionsString .= "<a id='expa".$idJogador."' title='Expatriar jogador' class='clickable expatriar'><span class='material-symbols-outlined inlineButton vermelho'>flight_takeoff</span></a>"; 
+                            $optionsString .= "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>save</span></a>";
+                            $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton vermelho'>cancel</span></a>";
 
                         }
                     } else {
-                        $optionsString .= "<a id='desc".$idJogador."' title='Desconvocar jogador' class='clickable desconvocar'><i class='fas fa-plane inlineButton vermelho'></i></a>";
+                        $optionsString .= "<a id='desc".$idJogador."' title='Desconvocar jogador' class='clickable desconvocar'><span class='material-symbols-outlined inlineButton vermelho'>travel</span></a>";
                     }
 
 
@@ -483,9 +562,9 @@ echo "</tbody>";
 echo "</table></div>";
 
 echo "<div>";
-echo '<a id="trocar_titular_reserva" title="Trocar jogadores selecionados" class="clickable"><i class="alto fas fa-exchange-alt inlineButton azul"></i></a>';
-echo '<a id="enviar_para_titular" title="Enviar jogador para titular" class="clickable"><i class="alto fas fa-long-arrow-alt-left inlineButton azul"></i></a>';
-echo '<a id="remover_titular" title="Enviar jogador para reserva" class="clickable"><i class="alto fas fa-long-arrow-alt-right inlineButton azul"></i></a>';
+echo '<a id="trocar_titular_reserva" title="Trocar jogadores selecionados" class="clickable"><span class="alto material-symbols-outlined inlineButton azul">sync_alt</span></a>';
+echo '<a id="enviar_para_titular" title="Enviar jogador para titular" class="clickable"><span class="alto material-symbols-outlined inlineButton azul">arrow_back</span></a>';
+echo '<a id="remover_titular" title="Enviar jogador para reserva" class="clickable"><span class="alto material-symbols-outlined inlineButton azul">arrow_forward</span></a>';
 echo "</div>";
 
 echo "<div class='tableHolder'><table id='tabelaReservas'>";
@@ -509,9 +588,9 @@ echo "</tbody>";
 echo "</table></div>";
 
 echo "<div>";
-echo '<a id="trocar_reserva_suplente" title="Trocar jogadores selecionados" class="clickable"><i class="alto fas fa-exchange-alt inlineButton azul"></i></a>';
-echo '<a id="enviar_para_suplente" title="Retirar jogador da reserva" class="clickable"><i class="alto fas fa-long-arrow-alt-right inlineButton azul"></i></a>';
-echo '<a id="enviar_para_reserva" title="Enviar jogador para reserva" class="clickable"><i class="alto fas fa-long-arrow-alt-left inlineButton azul"></i></a>';
+echo '<a id="trocar_reserva_suplente" title="Trocar jogadores selecionados" class="clickable"><span class="alto material-symbols-outlined inlineButton azul">sync_alt</span></a>';
+echo '<a id="enviar_para_suplente" title="Retirar jogador da reserva" class="clickable"><span class="alto material-symbols-outlined inlineButton azul">arrow_forward</span></a>';
+echo '<a id="enviar_para_reserva" title="Enviar jogador para reserva" class="clickable"><span class="alto material-symbols-outlined inlineButton azul">arrow_back</span></a>';
 echo "</div>";
 
 echo "<div class='tableHolder'><table id='tabelaSuplentes'>";
@@ -797,6 +876,7 @@ echo "</div>";
           <option selected value="0">Venda (tempo indeterminado)</option>
           <option value="1">Venda (com data de encerramento)</option>
           <option value="2">Empréstimo</option>
+          <option value="3">Extensão de Empréstimo</option>
       </select>
       
       <label for="fimContrato"><b>Encerramento</b></label>
@@ -808,10 +888,10 @@ echo $date->format('Y-m-d');
 ?>
 
       <label for="valorJogadorTransf"><b>Proposta de transferência</b></label>
-      <input id="valorJogadorTransf" type="number" name="valorJogadorTransf" class='form-control' required>
+      <input id="valorJogadorTransf" type="number" name="valor" class='form-control' required>
 
       <label for="clubeDestinoTransf"><b>Clube de destino</b></label>
-      <select id="clubeDestinoTransf"  name="clubeDestinoTransf" class="form-control" required>
+      <select id="clubeDestinoTransf"  name="clubeDestino" class="form-control" required>
           <?php
       // ler times do banco de dados
                 $userId = (isset($_SESSION['user_id'])?$_SESSION['user_id']:0);
@@ -821,17 +901,15 @@ echo $date->format('Y-m-d');
 
                 while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
                     extract($row_category);
-                    if($id != $idTime){
                     echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}</option>";
-                    }
                 }
 
                 ?>
 
       </select>
 
-      <input type="hidden" value="" name="idJogadorTransf" id="idJogadorTransf" required>
-      <input type="hidden" value="<?php echo $idTime ?>" name="clubeOrigemTransf" id="clubeOrigemTransf" required>
+      <input type="hidden" value="" name="idJogador" id="idJogadorTransf" required>
+      <input type="hidden" value="<?php echo $idTime ?>" name="clubeOrigem" id="clubeOrigemTransf" required>
       <input type="hidden" value="<?php echo (isset($_SESSION['user_id'])?$_SESSION['user_id']:0); ?>" name="sorvete" required>
 
       <button type="submit" name="newsubmit" class="submitbtn">Propor transferência</button>
@@ -865,9 +943,7 @@ echo $date->format('Y-m-d');
 
                 while ($new_row_category = $newStmt->fetch(PDO::FETCH_ASSOC)){
                     extract($new_row_category);
-                    if($id != $idTime){
                     echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}</option>";
-                    }
                 }
 
                 ?>
@@ -890,32 +966,82 @@ echo $date->format('Y-m-d');
 
 <script>
 
-$(".proposta").click(function(){
-    var nome = $(this).closest('tr').find('.nomeEditavel').html();
-    var valorInicial = $(this).closest('tr').find('td:nth(8)').html();
-    valorInicial = valorInicial.replace(/\D/g, "");
-    valorInicial = parseInt(valorInicial) * 1000;
-    var id = $(this).attr("id");
-    id = id.split("o");
-    id = parseInt(id[1]);
-    $('#valorJogadorTransf').val(valorInicial);
-    $('#nomeJogadorTransf').val(nome);
 
-    sexoJogador = $(this).closest("tr").attr("data-sexo");
-
-    $("#clubeDestinoTransf option").each(function(){
-
-    if($(this).attr("data-sexo") == sexoJogador){
-        $(this).show();
+//adicionado para ocultar data de encerramento em caso de venda direta
+$(document).on("change", "#tipoTransacao", function(){
+    if($(this).val() == 0){
+        $('#fimContrato').hide();
+        $('label[for="fimContrato"]').hide();
+        $('#fimContrato').val('');
     } else {
-        $(this).hide();
+        $('#fimContrato').show();
+        $('label[for="fimContrato"]').show();
+    }
+});
+
+$(document).ready(function(){
+    $('#fimContrato').hide();
+    $('label[for="fimContrato"]').hide();
+    $('#fimContrato').val('');
+});
+
+$(document).on("click", '.proposta', function(event){
+    var tbl_row = $(this).closest('tr');
+    var idJogador = tbl_row.prop('id');
+    var nomeJogador = tbl_row.find('.nomeEditavel').text();
+    var valorInicial = tbl_row.find('.valor').text().replace(/\D/g, "");
+    valorInicial = parseInt(valorInicial) * 1000;
+    
+    var idDonoVinculado = tbl_row.attr('data-id-dono-vinculado');
+    var clubeOrigem = $('#clubeOrigemTransf').val(); // Este é o ID do time atual (idTime)
+    var sexoJogador = tbl_row.attr("data-sexo");
+
+    if (idDonoVinculado != 0 && idDonoVinculado != null && typeof idDonoVinculado !== 'undefined') {
+        $('#tipoTransacao option[value="3"]').show();
+        $('#tipoTransacao option[value="2"]').hide();
+        if ($('#tipoTransacao').val() == '2') {
+            $('#tipoTransacao').val('0');
+            $('#tipoTransacao').trigger('change');
+        }
+
+        $("#clubeDestinoTransf option").each(function(){
+            if($(this).val() == clubeOrigem){
+                $(this).show();
+                $(this).removeAttr("disabled");
+                $(this).prop("selected", true);
+            } else {
+                $(this).attr("disabled", "disabled");
+                $(this).hide();
+            }
+        });
+    } else {
+        $('#tipoTransacao option[value="3"]').hide();
+        $('#tipoTransacao option[value="2"]').show();
+        if ($('#tipoTransacao').val() == '3') {
+            $('#tipoTransacao').val('0');
+            $('#tipoTransacao').trigger('change');
+        }
+
+        $("#clubeDestinoTransf option").each(function(){
+            if($(this).attr("data-sexo") == sexoJogador){
+                if($(this).val() == clubeOrigem){
+                    $(this).prop("disabled", true);
+                    $(this).hide();
+                } else {
+                    $(this).show();
+                    $(this).prop("disabled", false);
+                }
+            } else {
+                $(this).attr("disabled", "disabled");
+                $(this).hide();
+            }
+        });
     }
 
-    });
-
-    $("#modalProposta").show();
-    $("#idJogadorTransf").val(id);
-
+    $('#valorJogadorTransf').val(valorInicial);
+    $('#nomeJogadorTransf').val(nomeJogador);
+    $('#idJogadorTransf').val(idJogador);
+    $('#modalProposta').show();
 });
 
 $(".propostaTecnico").click(function(){
@@ -1042,7 +1168,7 @@ $('#modalProposta').hide();
 
 $(document).ready(function(){
 	
-	$("#Recorde").on("click", function(){
+	$(document).on("click", "#Recorde", function(){
 		let idTime = $('#quadro-container').prop('class');
 		let financialLocation = "/times/resumo_financeiro.php?id=" + idTime;
 		window.location = financialLocation;
@@ -1063,7 +1189,7 @@ $(document).ready(function(){
     }
 });
 
-$("select[id^='select']").on("click", function(){
+$(document).on("click", "select[id^='select']", function(){
 $(this).css("background-color", "white");
 });
 
@@ -1071,7 +1197,7 @@ $(this).css("background-color", "white");
 
 <script>
 
-$('.tablinks').on("click", function(event){
+$(document).on("click", '.tablinks', function(event){
 
     var id = $(this).html();
 
@@ -1095,7 +1221,7 @@ $('.tablinks').on("click", function(event){
 
 });
 
-$('.clickablerow_tit').on("click",function(event){
+$(document).on("click", '.clickablerow_tit', function(event){
     if($(this).hasClass('selected')){
         $(this).removeClass('selected');
     } else {
@@ -1106,7 +1232,7 @@ $('.clickablerow_tit').on("click",function(event){
     }
 });
 
-$('.clickablerow_res').on("click",function(event){
+$(document).on("click", '.clickablerow_res', function(event){
     if($(this).hasClass('selected')){
         $(this).removeClass('selected');
     } else {
@@ -1118,7 +1244,7 @@ $('.clickablerow_res').on("click",function(event){
 
 });
 
-$('.clickablerow_sup').on("click",function(event){
+$(document).on("click", '.clickablerow_sup', function(event){
     if($(this).hasClass('selected')){
         $(this).removeClass('selected');
     } else {
@@ -1130,7 +1256,7 @@ $('.clickablerow_sup').on("click",function(event){
 
 });
 
-$('#trocar_titular_reserva').on("click",function(event){
+$(document).on("click", "#trocar_titular_reserva", function(event){
 
 try {
     var idTitular = $('.clickablerow_tit.selected').attr("id").replace(/\D/g, "");
@@ -1169,7 +1295,7 @@ var formData = {
 
 // log data to the console so we can see
 console.log(data);
-window.scrollTo(0, 0);
+// window.scrollTo(0, 0);
 
 if (! data.success) {
 
@@ -1179,7 +1305,7 @@ if (! data.success) {
 } else {
 
 
-    location.reload();
+    reloadPageContent();
 
 }
 
@@ -1189,7 +1315,7 @@ if (! data.success) {
 
 });
 
-$('#trocar_reserva_suplente').on("click",function(event){
+$(document).on("click", "#trocar_reserva_suplente", function(event){
 
 try {
     var idTitular = $('.clickablerow_res.selected').attr("id").replace(/\D/g, "");
@@ -1221,7 +1347,7 @@ var formData = {
 
 // log data to the console so we can see
 console.log(data);
-window.scrollTo(0, 0);
+// window.scrollTo(0, 0);
 
 if (! data.success) {
 
@@ -1231,7 +1357,7 @@ if (! data.success) {
 } else {
 
 
-    location.reload();
+    reloadPageContent();
 
 }
 
@@ -1241,7 +1367,7 @@ if (! data.success) {
 
 });
 
-$('#enviar_para_suplente').on("click",function(event){
+$(document).on("click", "#enviar_para_suplente", function(event){
 
 try {
     var idTitular = $('.clickablerow_res.selected').attr("id").replace(/\D/g, "");
@@ -1271,7 +1397,7 @@ var formData = {
 
 // log data to the console so we can see
 console.log(data);
-window.scrollTo(0, 0);
+// window.scrollTo(0, 0);
 
 if (! data.success) {
 
@@ -1281,7 +1407,7 @@ if (! data.success) {
 } else {
 
 
-    location.reload();
+    reloadPageContent();
 
 }
 
@@ -1293,7 +1419,7 @@ if (! data.success) {
 
 
 
-$('#enviar_para_reserva').on("click",function(event){
+$(document).on("click", "#enviar_para_reserva", function(event){
 
 try {
     var idTitular = $('.clickablerow_sup.selected').attr("id").replace(/\D/g, "");
@@ -1329,7 +1455,7 @@ var formData = {
 
 // log data to the console so we can see
 console.log(data);
-window.scrollTo(0, 0);
+// window.scrollTo(0, 0);
 
 if (! data.success) {
 
@@ -1339,7 +1465,7 @@ if (! data.success) {
 } else {
 
 
-    location.reload();
+    reloadPageContent();
 
 }
 
@@ -1349,7 +1475,7 @@ if (! data.success) {
 
 });
 
-$('#enviar_para_titular').on("click",function(event){
+$(document).on("click", "#enviar_para_titular", function(event){
 
   try {
       var idTitular = $('.clickablerow_res.selected').attr("id").replace(/\D/g, "");
@@ -1385,7 +1511,7 @@ $('#enviar_para_titular').on("click",function(event){
 
 // log data to the console so we can see
 console.log(data);
-window.scrollTo(0, 0);
+// window.scrollTo(0, 0);
 
 if (! data.success) {
 
@@ -1395,7 +1521,7 @@ if (! data.success) {
 } else {
 
 
-    location.reload();
+    reloadPageContent();
 
 }
 
@@ -1406,7 +1532,7 @@ if (! data.success) {
 });
 
 
-$('#remover_titular').on("click",function(event){
+$(document).on("click", "#remover_titular", function(event){
 
   try {
       var idTitular = $('.clickablerow_tit.selected').attr("id").replace(/\D/g, "");
@@ -1442,7 +1568,7 @@ $('#remover_titular').on("click",function(event){
 
 // log data to the console so we can see
 console.log(data);
-window.scrollTo(0, 0);
+// window.scrollTo(0, 0);
 
 if (! data.success) {
 
@@ -1452,7 +1578,7 @@ if (! data.success) {
 } else {
 
 
-    location.reload();
+    reloadPageContent();
 
 }
 
@@ -1467,72 +1593,78 @@ if (! data.success) {
 
 <script>
 
-$("[id^=draggable]").contextmenu(function(event) {
-    event.preventDefault();
+function initDragDrop() {
 
-   var idJogador = $(this).attr('id').replace( /\D/g, '');
-   var idTime = $('#quadro-container').prop('class');
-   var posicao = $(this).children('div').attr('class');
-   var posJogador;
-   if(posicao == 'Aa'){
-        $(this).children('div').removeClass('Aa').addClass('Am');
-        posJogador = 'Am';
-   } else if (posicao == 'Am'){
-        $(this).children('div').removeClass('Am').addClass('Aa');
-        posJogador = 'Aa';
-   }
+    $("[id^=draggable]").contextmenu(function(event) {
+        event.preventDefault();
 
-   primeiraLetra = posicao.charAt(0);
+       var idJogador = $(this).attr('id').replace( /\D/g, '');
+       var idTime = $('#quadro-container').prop('class');
+       var posicao = $(this).children('div').attr('class');
+       var posJogador;
+       if(posicao == 'Aa'){
+            $(this).children('div').removeClass('Aa').addClass('Am');
+            posJogador = 'Am';
+       } else if (posicao == 'Am'){
+            $(this).children('div').removeClass('Am').addClass('Aa');
+            posJogador = 'Aa';
+       }
 
-   console.log(idJogador.length);
-   console.log(primeiraLetra.localeCompare('A'));
+       primeiraLetra = posicao.charAt(0);
 
-   if((idJogador.length > 0) && (primeiraLetra.localeCompare('A') === 0)){
+       console.log(idJogador.length);
+       console.log(primeiraLetra.localeCompare('A'));
 
-              //efetuar a troca por AJAX
-              var formData = {
-        'idJogador1' : idJogador,
-        'tipoAlteracao' : 7,
-        'posicao1' : posJogador,
-        'clube' : idTime
-    };
+       if((idJogador.length > 0) && (primeiraLetra.localeCompare('A') === 0)){
 
-    console.log("id1:"+idJogador + "pos" + posJogador);
+                  //efetuar a troca por AJAX
+                  var formData = {
+            'idJogador1' : idJogador,
+            'tipoAlteracao' : 7,
+            'posicao1' : posJogador,
+            'clube' : idTime
+        };
 
-     $.ajax({
-            type        : 'POST', // define the type of HTTP verb we want to use (POST for our form)
-            url         : 'alteracao_elenco.php', // the url where we want to POST
-            data        : formData, // our data object
-            dataType    : 'json', // what type of data do we expect back from the server
-            encode          : true
-        })
+        console.log("id1:"+idJogador + "pos" + posJogador);
 
-                    .done(function(data) {
+         $.ajax({
+                type        : 'POST', // define the type of HTTP verb we want to use (POST for our form)
+                url         : 'alteracao_elenco.php', // the url where we want to POST
+                data        : formData, // our data object
+                dataType    : 'json', // what type of data do we expect back from the server
+                encode          : true
+            })
 
-// log data to the console so we can see
-console.log(data);
-//window.scrollTo(0, 0);
-
-if (! data.success) {
-
-     $('#errorbox').append('<div class="alert alert-danger">Não foi possível realizar o pedido, '+data.error+'</div>');
+                        .done(function(data) {
 
 
-} else {
+    // log data to the console so we can see
+    console.log(data);
+    //window.scrollTo(0, 0);
+
+    if (! data.success) {
+
+         $('#errorbox').append('<div class="alert alert-danger">Não foi possível realizar o pedido, '+data.error+'</div>');
 
 
-    //location.reload();
-
-}
-
-// here we will handle errors and validation messages
-});
-   }
+    } else {
 
 
-});
+        reloadPageContent();
 
-$(function() {
+    }
+
+    // here we will handle errors and validation messages
+    });
+       }
+
+
+    });
+    
+    // Unbind previous draggable/droppable to avoid memory leaks or double binds if called multiple times?
+    // jQuery UI destroys automatically if we remove elements, but here we might be re-binding to new elements.
+    // If elements are new (replaced by AJAX), we don't need to unbind.
+    
     $("[id^=draggable]").
     draggable({ revert: true, revertDuration: 0 }).
     droppable({
@@ -1621,7 +1753,7 @@ if (! data.success) {
 } else {
 
 
-    //location.reload();
+    reloadPageContent();
 
 }
 
@@ -1631,8 +1763,11 @@ if (! data.success) {
 
 
         }});
-});
+} // end initDragDrop
 
+$(function() {
+    initDragDrop();
+});
 
 function swapNodes(a, b) {
     var aparent= a.parentNode;
@@ -1646,7 +1781,7 @@ function swapNodes(a, b) {
 
 <script>
 
-    $("#formCapitaoCobrancas").on("submit", function(event) {
+    $(document).on("submit", "#formCapitaoCobrancas", function(event) {
     event.preventDefault();
 
     console.log($('#formCapitaoCobrancas').serialize());
@@ -1657,7 +1792,7 @@ function swapNodes(a, b) {
         errosForm = data.error;
         successForm = data.success;
 }, "json").done(function(data){
-    location.reload();
+    reloadPageContent();
 });
 
 
@@ -1668,56 +1803,62 @@ function swapNodes(a, b) {
 
 <script>
 
-$('.disponibilizar').on("click", function(event){
+$(document).on("click", '.disponibilizar', function(event){
 
     var idJogador = $(this).closest('tr').prop('id');
-
-     var formData = {
-        'idJogador' : idJogador,
-        'alteracao' : 1,
-    };
+	
+	let formData = new FormData();
+		
+	formData.append('idJogador',idJogador);
+	formData.append('alteracao',1);
 
     ajaxCallJogador(formData);
 });
 
-$('.aposentar').on("click", function(event){
+$(document).on("click", '.aposentar', function(event){
 
 var idJogador = $(this).closest('tr').prop('id');
 var idTime = $('#quadro-container').prop('class');
 
- var formData = {
-    'idJogador' : idJogador,
-    'alteracao' : 4,
-    'idTime' : idTime,
-};
+let formData = new FormData();
+	
+formData.append('idJogador',idJogador);
+formData.append('alteracao',4);
+formData.append('idTime',idTime);
 
-ajaxCallJogador(formData);
+console.log(idJogador);
+
+if(window.confirm("Deseja mesmo aposentar este jogador?")){
+    ajaxCallJogador(formData);
+}
 });
 
-$('.expatriar').on("click", function(event){
+$(document).on("click", '.expatriar', function(event){
 
 var idJogador = $(this).closest('tr').prop('id');
 var idTime = $('#quadro-container').prop('class');
 
- var formData = {
-    'idJogador' : idJogador,
-    'alteracao' : 7,
-    'idTime' : idTime,
-};
+let formData = new FormData();
+	
+formData.append('idJogador',idJogador);
+formData.append('alteracao',7);
+formData.append('idTime',idTime);
 
-ajaxCallJogador(formData);
+if(window.confirm("Deseja mesmo expatriar este jogador?")){
+    ajaxCallJogador(formData);
+}
 });
 
-$('.demitir').on("click", function(event){
+$(document).on("click", '.demitir', function(event){
 
     var idJogador = $(this).closest('tr').prop('id');
     var idTime = $('#quadro-container').prop('class');
-
-    var formData = {
-        'idJogador' : idJogador,
-        'idTime' : idTime,
-        'alteracao' : 2,
-    };
+	
+	let formData = new FormData();
+	
+	formData.append('idJogador',idJogador);
+	formData.append('alteracao',2);
+	formData.append('idTime',idTime);
 
     if(window.confirm("Deseja mesmo demitir?")){
     ajaxCallJogador(formData);
@@ -1725,7 +1866,7 @@ $('.demitir').on("click", function(event){
 
 });
 
-$('.demitirTecnico').on("click", function(event){
+$(document).on("click", '.demitirTecnico', function(event){
 
 var idTecnico = $(this).closest('tr').prop('id').replace(/\D/g, "");;
 var idTime = $('#quadro-container').prop('class');
@@ -1742,7 +1883,7 @@ ajaxCallTecnico(formData);
 
 });
 
-$('.desconvocarTecnico').on("click", function(event){
+$(document).on("click", '.desconvocarTecnico', function(event){
 
 var idTecnico = $(this).closest('tr').prop('id').replace(/\D/g, "");;
 var idTime = $('#quadro-container').prop('class');
@@ -1761,16 +1902,16 @@ ajaxCallTecnico(formData);
 
 });
 
-$('.desconvocar').on("click", function(event){
+$(document).on("click", '.desconvocar', function(event){
 
 var idJogador = $(this).closest('tr').prop('id');
 var idTime = $('#quadro-container').prop('class');
 
-var formData = {
-    'idJogador' : idJogador,
-    'idTime' : idTime,
-    'alteracao' : 2,
-};
+let formData = new FormData();
+	
+formData.append('idJogador',idJogador);
+formData.append('alteracao',2);
+formData.append('idTime',idTime);
 
 if(window.confirm("Deseja mesmo desconvocar?")){
     ajaxCallJogador(formData);
@@ -1779,8 +1920,8 @@ if(window.confirm("Deseja mesmo desconvocar?")){
 
 });
 
-$('.editar').on("click", function(event){
-
+$(document).on("click", '.editar', function(event){
+    isDataDirty = true;
 var tbl_row = $(this).closest('tr');
 
         tbl_row.find('span').each(function(index, val){
@@ -1813,13 +1954,19 @@ var idJogador = tbl_row.prop('id');
 
 console.log(isDono);
 
-if(isDono){
+    // Jersey (always editable if permitted by role context, but here logic assumes viewing user has rights to toggle edit mode in general)
+    tbl_row.find('.jersey-icon').hide();
+    tbl_row.find('input.numeroCamisa').css('display', 'inline-block');
+
+    if(isDono){
     tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
     tbl_row.find('.nascimentoEIdade').hide();
 	tbl_row.find('.encerramentoFixo').hide();
-	tbl_row.find('.encerramento').show();
+    tbl_row.find('.encerramento').show();
     tbl_row.find('.nascimento').show();
     tbl_row.find('.posicao').hide();
+
+    //valor original pais
 
     //valor original pais
     var idPais = tbl_row.find('.comboPais').prop("id");
@@ -1905,7 +2052,8 @@ tbl_row.find(".valor").html(valor);
 
 });
 
-        $('.cancelar').click(function(){
+        $(document).on("click", '.cancelar', function(){
+            isDataDirty = false;
         var tbl_row =  $(this).closest('tr');
         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
         tbl_row.find(".salvar").hide();
@@ -1931,13 +2079,17 @@ tbl_row.find(".valor").html(valor);
 		tbl_row.find('.desde').hide();
 		tbl_row.find('.hiddenInput').hide();
 		tbl_row.find('.playerThumb').removeClass('editableThumb');
+        
+        // Jersey
+        tbl_row.find('.jersey-icon').show();
+        tbl_row.find('input.numeroCamisa').css('display', 'none');
 
         tbl_row.find('span').each(function(index, val){
             $(this).html($(this).attr('original_entry'));
         });
     });
 
-    $('.exportar').click(function(){
+    $(document).on("click", '.exportar', function(){
 
       var tbl_row =  $(this).closest('tr');
       var idJogador = $(this).closest('tr').attr("id");
@@ -2049,8 +2201,41 @@ tbl_row.find(".valor").html(valor);
 
 
     });
+    
+    // Proposta handler consolidated above
 
-    $('.salvar').click(function(){
+
+    $(document).on("submit", "#formProposta", function(event) {
+        event.preventDefault();
+        
+        $.ajax({
+            type: 'POST',
+            url: '/jogadores/fazer_proposta.php',
+            data: $(this).serialize(),
+            dataType: 'json',
+            encode: true
+        })
+        .done(function(data) {
+            $('#modalProposta').hide();
+            if (!data.success) {
+                $('#errorbox').append('<div class="alert alert-danger">' + data.error + '</div>');
+            } else {
+                 if(data.error && data.error != "") {
+                    $('#errorbox').append('<div class="alert alert-warning">' + data.error + '</div>');
+                 } else {
+                    $('#errorbox').append('<div class="alert alert-success">Proposta enviada com sucesso!</div>');
+                 }
+                 reloadPageContent();
+            }
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            $('#modalProposta').hide();
+            $('#errorbox').append('<div class="alert alert-danger">Erro de conexão: ' + errorThrown + '</div>');
+        });
+    });
+
+    $(document).on("click", '.salvar', function(){
+        isDataDirty = false;
         var tbl_row =  $(this).closest('tr');
         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
         tbl_row.find(".salvar").hide();
@@ -2067,6 +2252,10 @@ tbl_row.find(".valor").html(valor);
         tbl_row.find('.nivel').attr('contenteditable', 'false').hide();
         tbl_row.find('.nascimentoEIdade').show();
         tbl_row.find('.nascimento').hide();
+
+        // Jersey cleanup
+        tbl_row.find('.jersey-icon').show();
+        tbl_row.find('input.numeroCamisa').css('display', 'none');
         tbl_row.find('.posicao').show();
         tbl_row.find('.nomePais').show();
         tbl_row.find('.comboPais').hide();
@@ -2121,8 +2310,16 @@ tbl_row.find(".valor").html(valor);
 
         var valor = parseInt(tbl_row.find(".valorEditavel").html());
         var nivel = tbl_row.find(".nivel").html();
-        var posicoes = tbl_row.find(".comboPosicoes").val();
         var idTime = $('#quadro-container').prop('class');
+		
+		var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
+		var isGoleiro = stringPosicoes.localeCompare("G");
+	
+		if(isGoleiro == 0){
+			var posicoes = ["1"];
+		} else {
+			var posicoes = tbl_row.find(".comboPosicoes").val();
+		}
 		
 		var formData = new FormData();
 		
@@ -2145,12 +2342,15 @@ if(isDono){
 	}
 }
 
+    var numeroCamisa = tbl_row.find("input.numeroCamisa").val();
+    formData.append('numeroCamisa', numeroCamisa);
+
      if(foto != null){
 		formData.append('foto',foto);
      }
 
-//         for (var pair of formData.entries()) {
-//     console.log(pair[0]+ ', ' + pair[1]);
+        // for (var pair of formData.entries()) {
+    // console.log(pair[0]+ ', ' + pair[1]);
 // }
     ajaxCallJogador(formData);
 
@@ -2192,7 +2392,7 @@ function ajaxCallJogador(formData){
             $('#modalProposta').hide();
                 //$('#errorbox').append("<div class='alert alert-success'>A ação foi concluída com sucesso!</div>");
 
-                location.reload();
+                reloadPageContent();
 
             }
 
@@ -2235,7 +2435,7 @@ $.ajax({
         //$('#modalPropostaTecnico').hide();
             //$('#errorbox').append("<div class='alert alert-success'>A ação foi concluída com sucesso!</div>");
 
-            location.reload();
+            reloadPageContent();
 
         }
 
@@ -2250,8 +2450,8 @@ $.ajax({
         });
 }
 
-$('.editarTecnico').on("click", function(event){
-
+$(document).on("click", '.editarTecnico', function(event){
+    isDataDirty = true;
 var tbl_row = $(this).closest('tr');
 
         tbl_row.find('span').each(function(index, val){
@@ -2330,7 +2530,8 @@ var idTecnico = tbl_row.prop('id');
 });
 
 
-        $('.cancelarTecnico').click(function(){
+        $(document).on("click", '.cancelarTecnico', function(){
+            isDataDirty = false;
         var tbl_row =  $(this).closest('tr');
         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
         tbl_row.find('.nivel').attr('contenteditable', 'false').removeClass('editavel');
@@ -2363,7 +2564,8 @@ var idTecnico = tbl_row.prop('id');
     });
 
 
-    $('.salvarTecnico').click(function(){
+    $(document).on("click", '.salvarTecnico', function(){
+        isDataDirty = false;
       var tbl_row =  $(this).closest('tr');
       tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
       tbl_row.find('.nivel').attr('contenteditable', 'false').removeClass('editavel');
