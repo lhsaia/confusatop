@@ -38,6 +38,37 @@ Thumbs.db
 *.bak
 *.tmp
 
+# User Uploaded Assets
+images/uniformes/*.png
+images/uniformes/*.jpg
+images/uniformes/*.jpeg
+images/uniformes/*.PNG
+images/uniformes/*.JPG
+images/uniformes/*.JPEG
+images/uniformes/*.webp
+images/escudos/*.png
+images/escudos/*.jpg
+images/escudos/*.jpeg
+images/escudos/*.PNG
+images/escudos/*.JPG
+images/escudos/*.JPEG
+images/escudos/*.webp
+export/kitbasher_repo/*.zip
+images/ligas/*.png
+images/ligas/*.jpg
+images/ligas/*.jpeg
+images/ligas/*.PNG
+images/ligas/*.JPG
+images/ligas/*.JPEG
+images/ligas/*.webp
+images/mascotes/*.png
+images/mascotes/*.jpg
+images/mascotes/*.jpeg
+images/mascotes/*.PNG
+images/mascotes/*.JPG
+images/mascotes/*.JPEG
+images/mascotes/*.webp
+
 # temporary unfinished business
 competicoes/
 java_station/
