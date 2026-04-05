@@ -22,13 +22,13 @@ $pais = new Pais($db);
 $usuario = new Usuario($db);
 
 $page_title = "Inserir Estádio";
-$css_filename = "indexRanking";
+$css_filename = "newindex";
 $css_login = 'login';
-$aux_css = 'criar';
+$aux_css = 'area_competicao';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
-echo"<div>";
+
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
@@ -88,24 +88,23 @@ for (i = 0; i < close.length; i++) {
 </script>
 
 
+<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
+<div id='errorbox'></div>
+<div>
+<div id='inscricao'>
+
 <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
 
-    <table class='table table-below float-table'>
+    
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Nome</td>
-            <td class="td_inv input_nome_time"><input type='text' name='nome' class='form-control' /></td>
-        </tr>
+        <label>Nome</label>
+<input type='text' name='nome' class='form-control' />
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Capacidade</td>
-            <td class="td_inv input_nome_time"><input type='number' name='capacidade' class='form-control' min='100'/></td>
-        </tr>
+        <label>Capacidade</label>
+<input type='number' name='capacidade' class='form-control' min='100'/>
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Clima</td>
-            <td class="td_inv input_nome_time">
-            <?php
+        <label>Clima</label>
+<?php
                 // ler times do banco de dados
                 $stmt = $clima->read($_SESSION['user_id']);
 
@@ -120,34 +119,14 @@ for (i = 0; i < close.length; i++) {
 
                 echo "</select>";
                 ?>
-            </td>
+        <label>Altitude</label>
+<input type="checkbox" class='custom-file-upload' name='altitude'>
+        <label>Caldeirão</label>
+<input type="checkbox" class='custom-file-upload' name='caldeirao'>
 
 
-        </tr>
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Altitude</td>
-            <td class="td_inv input_nome_time checkbox_container">
-
-            <input type="checkbox" class='custom-file-upload' name='altitude'>
-
-
-            </td>
-        </tr>
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Caldeirão</td>
-            <td class="td_inv input_nome_time checkbox_container">
-
-            <input type="checkbox" class='custom-file-upload' name='caldeirao'>
-
-
-            </td>
-        </tr>
-
-
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">País</td>
-            <td class="td_inv input_nome_time">
-                <?php
+        <label>País</label>
+<?php
                 // ler times do banco de dados
                 $stmt = $pais->read($_SESSION['user_id']);
 
@@ -162,18 +141,14 @@ for (i = 0; i < close.length; i++) {
 
                 echo "</select>";
                 ?>
-            </td>
-        </tr>
 
-        <tr class="tr_inv btn_area">
-            <td class="td_inv btn_area"></td>
-            <td class="td_inv btn_area">
-                <button type="submit" name="criar" class="btn">Inserir</button>
-            </td>
-        </tr>
+        <div style="margin-top: 15px;">
+<button type="submit" name="criar" class="btn">Inserir</button>
+</div>
 
-    </table>
-</form>
+    </form>
+</div>
+</div>
 
 <?php
 
@@ -183,7 +158,7 @@ for (i = 0; i < close.length; i++) {
 }
 
 
-echo "</div>";
+
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 ?>

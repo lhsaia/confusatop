@@ -36,7 +36,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && isset($_SES
   $welcometext = "";
   $admin_btn = "";
   $onclick_log = 'document.getElementById("id01").style.display="block"';
-  $icone_log = "icon fas fa-sign-in-alt";
+  $icone_log = "material-symbols-outlined icon login";
   $title_log = "Log-in";
   $class_conectado = "";
 }
@@ -57,7 +57,7 @@ $currentPage =  explode('/',strtok($_SERVER['REQUEST_URI'], '?'));
 <script src="/js/prefixfree.js?v5"></script>
 <script src="/js/jquery-ui/jquery-ui.min.js?v8"></script>
 <script src="/js/Chart.min.js?v1"></script>
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-3.4.0.min.js"></script>
 <link rel="shortcut icon" type="image/ico" href="/favicon.ico"/>
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -66,11 +66,12 @@ $currentPage =  explode('/',strtok($_SERVER['REQUEST_URI'], '?'));
 <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
 <meta name="msapplication-TileColor" content="#da532c">
 <meta name="theme-color" content="#ffffff">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, viewport-fit=cover, maximum-scale=1.0, user-scalable=0">
 <link href="https://fonts.googleapis.com/css?family=Kanit:400,600,900" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css?family=Gugi" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css?family=Share+Tech+Mono" rel="stylesheet">
-<script src="https://kit.fontawesome.com/376cb796e7.js" crossorigin="anonymous"></script> 
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
 <link rel="stylesheet" href="/css/soccerfield.min.css" />
 <link rel="stylesheet" href="/css/soccerfield.default.min.css" />
@@ -89,6 +90,18 @@ if(isset($aux_css)){
 }
 ?>
 
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').then(function(registration) {
+      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    }, function(err) {
+      console.log('ServiceWorker registration failed: ', err);
+    });
+  });
+}
+</script>
+
 </head>
 
 <body class='loggedout no-capture'>
@@ -101,7 +114,6 @@ if(isset($aux_css)){
 
   <div id="toolbar">
 
-<!--- for default <button><i class="fas fa-bomb"></i></button>  for default --->
 
 </div>
 
@@ -111,15 +123,15 @@ if(isset($aux_css)){
 
 
 <div id="hamburger-menu" class='no-capture'>
-  <a id="open-menu" class='menu-toggle-button no-capture'><i class="fas fa-bars no-capture"></i></a>
-  <a id="close-menu" class='menu-toggle-button no-capture'><i class="fas fa-times"></i></a>
+  <a id="open-menu" class='menu-toggle-button no-capture'><span class="material-symbols-outlined no-capture">menu</span></a>
+  <a id="close-menu" class='menu-toggle-button no-capture'><span class="material-symbols-outlined">close</span></a>
   <nav class="nav no-capture" id='nav'>
     <a class="nav-item" href="/">Home</a>
 	<?php echo $my_menu ?>
     <?php echo "<a class='nav-item' onclick='{$onclick_log}'>{$title_log}</a>" ?>
     <?php echo "<a class='nav-item' href='/sobre.php'>Sobre / Tutorial</a>" ?>
     <?php echo "<a class='nav-item' href='/contato.php'>Contato</a>" ?>
-	<?php echo "<a class='nav-item' href='/sugestoes'><i class='fas fa-comment-dots'></i>  Sugestões/Bugs</a>" ?>
+	<?php echo "<a class='nav-item' href='/sugestoes'><span class='material-symbols-outlined'>chat</span>  Sugestões/Bugs</a>" ?>
     <?php echo $change_pass ?>
     <?php echo $admin_btn ?>
     <?php
@@ -287,6 +299,22 @@ $(document).ready(function() {
     $("#close-menu").css("display", "none");
 });
 
+
+    $(document).on('change', 'input[type="file"].custom-file-upload', function(e) {
+        var file = e.target.files[0];
+        if (file && file.type.startsWith('image/')) {
+            var reader = new FileReader();
+            var element = $(this);
+            reader.onload = function(e) {
+                element.css('background-image', 'url(' + e.target.result + ')');
+                element.css('background-size', 'contain');
+                element.css('background-repeat', 'no-repeat');
+                element.css('background-position', 'center');
+                element.css('color', 'transparent');
+            }
+            reader.readAsDataURL(file);
+        }
+    });
 
 });
 </script>

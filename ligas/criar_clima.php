@@ -20,13 +20,13 @@ $pais = new Pais($db);
 $usuario = new Usuario($db);
 
 $page_title = "Inserir Clima";
-$css_filename = "indexRanking";
+$css_filename = "newindex";
 $css_login = 'login';
-$aux_css = 'criar';
+$aux_css = 'area_competicao';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
-echo"<div>";
+
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
@@ -81,32 +81,29 @@ for (i = 0; i < close.length; i++) {
 </script>
 
 
+<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
+<div id='errorbox'></div>
+<div>
+<div id='inscricao'>
+
 <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
 
-    <table class='table table-below float-table'>
+    
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Nome</td>
-            <td class="td_inv input_nome_time"><input type='text' name='nome' class='form-control' /></td>
-        </tr>
+        <label>Nome</label>
+<input type='text' name='nome' class='form-control' />
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Temp. Verão</td>
-            <td class="td_inv input_nome_time">
-                <select class='form-control' name='tempVerao' id='tempVerao'>
+        <label for="tempVerao">Temp. Verão</label>
+<select class='form-control' name='tempVerao' id='tempVerao'>
                     <option value='Muito Frio' data-season='1'>Muito Frio</option>
                     <option value='Frio'  data-season='2'>Frio</option>
                     <option selected value='Normal'  data-season='3'>Normal</option>
                     <option value='Quente'  data-season='4'>Quente</option>
                     <option value='Muito Quente'  data-season='5'>Muito Quente</option>
                 </select>
-            </td>
-        </tr>
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Estilo Verão</td>
-            <td class="td_inv input_nome_time">
-                <select class='form-control' name='estVerao' id='estVerao'>
+        <label for="estVerao">Estilo Verão</label>
+<select class='form-control' name='estVerao' id='estVerao'>
                     <option value='Neve Forte' data-season='1'>Neve Forte</option>
                     <option value='Neve' data-season='1'>Neve</option>
                     <option value='Neve Ocasional' data-season='1'>Neve Ocasional</option>
@@ -117,26 +114,18 @@ for (i = 0; i < close.length; i++) {
                     <option value='Seco' data-season='45'>Seco</option>
                     <option value='Árido' data-season='5'>Árido</option>
                 </select>
-            </td>
-        </tr>
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Temp. Outono</td>
-            <td class="td_inv input_nome_time">
-                <select class='form-control' name='tempOutono' id='tempOutono'>
+        <label for="tempOutono">Temp. Outono</label>
+<select class='form-control' name='tempOutono' id='tempOutono'>
                 <option value='Muito Frio' data-season='1'>Muito Frio</option>
                     <option value='Frio'  data-season='2'>Frio</option>
                     <option selected value='Normal'  data-season='3'>Normal</option>
                     <option value='Quente'  data-season='4'>Quente</option>
                     <option value='Muito Quente'  data-season='5'>Muito Quente</option>
                 </select>
-            </td>
-        </tr>
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Estilo Outono</td>
-            <td class="td_inv input_nome_time">
-                <select class='form-control' name='estOutono' id='estOutono'>
+        <label for="estOutono">Estilo Outono</label>
+<select class='form-control' name='estOutono' id='estOutono'>
                     <option value='Neve Forte' data-season='1'>Neve Forte</option>
                     <option value='Neve' data-season='1'>Neve</option>
                     <option value='Neve Ocasional' data-season='1'>Neve Ocasional</option>
@@ -147,25 +136,17 @@ for (i = 0; i < close.length; i++) {
                     <option value='Seco' data-season='45'>Seco</option>
                     <option value='Árido' data-season='5'>Árido</option>
                 </select>
-            </td>
-        </tr>
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Temp. Inverno</td>
-            <td class="td_inv input_nome_time">
-                <select class='form-control' name='tempInverno' id='tempInverno'>
+        <label for="tempInverno">Temp. Inverno</label>
+<select class='form-control' name='tempInverno' id='tempInverno'>
                     <option value='Muito Frio' data-season='1'>Muito Frio</option>
                     <option value='Frio'  data-season='2'>Frio</option>
                     <option selected value='Normal'  data-season='3'>Normal</option>
                     <option value='Quente'  data-season='4'>Quente</option>
                     <option value='Muito Quente'  data-season='5'>Muito Quente</option>
                 </select>
-            </td>
-        </tr>
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Estilo Inverno</td>
-            <td class="td_inv input_nome_time">
-                <select class='form-control' name='estInverno' id='estInverno'>
+        <label for="estInverno">Estilo Inverno</label>
+<select class='form-control' name='estInverno' id='estInverno'>
                     <option value='Neve Forte' data-season='1'>Neve Forte</option>
                     <option value='Neve' data-season='1'>Neve</option>
                     <option value='Neve Ocasional' data-season='1'>Neve Ocasional</option>
@@ -176,25 +157,17 @@ for (i = 0; i < close.length; i++) {
                     <option value='Seco' data-season='45'>Seco</option>
                     <option value='Árido' data-season='5'>Árido</option>
                 </select>
-            </td>
-        </tr>
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Temp. Primavera</td>
-            <td class="td_inv input_nome_time">
-                <select class='form-control' name='tempPrimavera' id='tempPrimavera'>
+        <label for="tempPrimavera">Temp. Primavera</label>
+<select class='form-control' name='tempPrimavera' id='tempPrimavera'>
                     <option value='Muito Frio' data-season='1'>Muito Frio</option>
                     <option value='Frio'  data-season='2'>Frio</option>
                     <option selected value='Normal'  data-season='3'>Normal</option>
                     <option value='Quente'  data-season='4'>Quente</option>
                     <option value='Muito Quente'  data-season='5'>Muito Quente</option>
                 </select>
-            </td>
-        </tr>
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Estilo Primavera</td>
-            <td class="td_inv input_nome_time">
-                <select class='form-control' name='estPrimavera' id='estPrimavera'>
+        <label for="estPrimavera">Estilo Primavera</label>
+<select class='form-control' name='estPrimavera' id='estPrimavera'>
                     <option value='Neve Forte' data-season='1'>Neve Forte</option>
                     <option value='Neve' data-season='1'>Neve</option>
                     <option value='Neve Ocasional' data-season='1'>Neve Ocasional</option>
@@ -205,23 +178,15 @@ for (i = 0; i < close.length; i++) {
                     <option value='Seco' data-season='45'>Seco</option>
                     <option value='Árido' data-season='5'>Árido</option>
                 </select>
-            </td>
-        </tr>
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Hemisfério</td>
-            <td class="td_inv input_nome_time">
-                <select class='form-control' name='hemisferio'>
+        <label>Hemisfério</label>
+<select class='form-control' name='hemisferio'>
                     <option selected value='0'>Sul</option>
                     <option value='1'>Norte</option>
                 </select>
-            </td>
-        </tr>
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">País</td>
-            <td class="td_inv input_nome_time">
-                <?php
+        <label>País</label>
+<?php
                 // ler times do banco de dados
                 $stmt = $pais->read($_SESSION['user_id']);
 
@@ -236,18 +201,14 @@ for (i = 0; i < close.length; i++) {
 
                 echo "</select>";
                 ?>
-            </td>
-        </tr>
 
-        <tr class="tr_inv btn_area">
-            <td class="td_inv btn_area"></td>
-            <td class="td_inv btn_area">
-                <button type="submit" name="criar" class="btn">Inserir</button>
-            </td>
-        </tr>
+        <div style="margin-top: 15px;">
+<button type="submit" name="criar" class="btn">Inserir</button>
+</div>
 
-    </table>
-</form>
+    </form>
+</div>
+</div>
 
 <script>
 
@@ -287,7 +248,7 @@ function updateDropdown(target){
 }
 
 
-echo "</div>";
+
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 ?>

@@ -20,13 +20,13 @@ $pais = new Pais($db);
 $usuario = new Usuario($db);
 
 $page_title = "Criar Técnico";
-$css_filename = "indexRanking";
+$css_filename = "newindex";
 $css_login = 'login';
-$aux_css = 'criar';
+$aux_css = 'area_competicao';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
-echo"<div>";
+
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
@@ -79,25 +79,23 @@ for (i = 0; i < close.length; i++) {
 </script>
 
 
+<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
+<div id='errorbox'></div>
+<div>
+<div id='inscricao'>
+
 <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
 
-    <table class='table table-below float-table'>
+    
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Nome</td>
-            <td class="td_inv input_nome_time"><input type='text' name='nome' id='nomeTecnico' class='form-control inputHerdeiro' /></td>
-        </tr>
+        <label for="nomeTecnico">Nome</label>
+<input type='text' name='nome' id='nomeTecnico' class='form-control inputHerdeiro' />
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Nascimento</td>
-            <td class="td_inv input_nome_time"><input type='date' id='nascimentoTecnico' name='nascimento' class='form-control inputHerdeiro' /></td>
-        </tr>
+        <label for="nascimentoTecnico">Nascimento</label>
+<input type='date' id='nascimentoTecnico' name='nascimento' class='form-control inputHerdeiro' />
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Mentalidade</td>
-            <td class="td_inv input_nome_time">
-
-                    <select class='form-control' id='mentalidade' name='mentalidade'>
+        <label for="mentalidade">Mentalidade</label>
+<select class='form-control' id='mentalidade' name='mentalidade'>
 
 
                         <option value='1'>Retranca</option>
@@ -108,14 +106,8 @@ for (i = 0; i < close.length; i++) {
 
                     </select>
 
-            </td>
-        </tr>
-
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Estilo</td>
-            <td class="td_inv input_nome_time">
-
-                    <select class='form-control' id='estilo' name='estilo'>
+        <label for="estilo">Estilo</label>
+<select class='form-control' id='estilo' name='estilo'>
 
 
                         <option value='1'>Explorar contra-ataques</option>
@@ -126,29 +118,17 @@ for (i = 0; i < close.length; i++) {
 
                     </select>
 
-            </td>
-        </tr>
+        <label for="nivel">Nivel</label>
+<input type='number' id='nivel' value='6' max='10' min='1' name='nivel' class='form-control inputHerdeiro' />
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Nivel</td>
-            <td class="td_inv input_nome_time"><input type='number' id='nivel' value='6' max='10' min='1' name='nivel' class='form-control inputHerdeiro' /></td>
-        </tr>
-
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Masc/Fem</td>
-            <td class="td_inv input_nome_time">
-
-                <select class='form-control' id='sexo' name='sexo'>
+        <label for="sexo">Masc/Fem</label>
+<select class='form-control' id='sexo' name='sexo'>
                 <option value='0'>Homem</option>
                 <option value='1'>Mulher</option>
                 </select>
-            </td>
-        </tr>
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Nacionalidade</td>
-            <td class="td_inv input_nome_time">
-                <?php
+        <label for="pais">Nacionalidade</label>
+<?php
                 // ler times do banco de dados
                 $stmt = $pais->read();
 
@@ -163,20 +143,16 @@ for (i = 0; i < close.length; i++) {
 
                 echo "</select>";
                 ?>
-            </td>
-        </tr>
 
-        <tr class="tr_inv btn_area">
-            <td class="td_inv btn_area"></td>
-            <td class="td_inv btn_area">
-                <button type="submit" name="criar" class="btn">Inserir</button>
+        <div style="margin-top: 15px;">
+<button type="submit" name="criar" class="btn">Inserir</button>
                 <button type="reset" name="reset" class="btn">Limpar</button>
-                <button type='button' id="hexagen" class="btn"><i class="fas fa-dice"></i>&nbsp Hexagen</button>
-            </td>
-        </tr>
+                <button type='button' id="hexagen" class="btn"><span class="material-symbols-outlined">casino</span>&nbsp Hexagen</button>
+</div>
 
-    </table>
-</form>
+    </form>
+</div>
+</div>
 
   <script>
 
@@ -250,7 +226,7 @@ $("#hexagen").on("click",function(){
 }
 
 
-echo "</div>";
+
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 ?>

@@ -18,13 +18,13 @@ $liga = new Liga($db);
 $pais = new Pais($db);
 
 $page_title = "Inserir liga";
-$css_filename = "indexRanking";
+$css_filename = "newindex";
 $css_login = 'login';
-$aux_css = 'criar';
+$aux_css = 'area_competicao';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
-echo"<div>";
+
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
@@ -39,35 +39,34 @@ if(isset($_POST['nome']) && !empty($_POST['pais']) && !empty($_POST['nome']) && 
     $logo_path = $_FILES['logo']['name'];
     $fileSize = $_FILES['logo']['size'];
     $filePath = $_FILES['logo']['tmp_name'];
-    $extension = explode(".",$logo_path);
+    $tempVar = explode(".",$logo_path);
+    $fileExt = strtolower(end($tempVar));
     $correct_extensions = array("png","jpg","jpeg");
     $upload_dir = "/images/ligas/";
 
-    if($logo_path != "" && substr_count($logo_path,".")==1 && in_array($extension[1],$correct_extensions) && $fileSize <= 100000){
+    if($logo_path != "" && in_array($fileExt,$correct_extensions) && $fileSize <= 2000000){
 
 
         $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $logo_path;
         $result = move_uploaded_file($filePath, $upload_path);
             if (!$result) {
-                $error_msg .= "Não foi possível inserir o logo, erro na inserção.";
+                $error_msg .= " Não foi possível salvar o logo no servidor.";
                 $liga->logo = $liga->logoPadrao();
             } else {
                 $liga->logo = $_SESSION['user_id'] ."-" .$logo_path;
             }
 
     } else {
-        $error_msg .= "Mas não foi possível inserir o logo. ";
-        if($fileSize > 100000){
-            $error_msg .= "Arquivo deve ser menor que 100kb.";
+        $liga->logo = $liga->logoPadrao();
+        $error_msg .= " Mas ocorreu um aviso: o escudo não pôde ser enviado. ";
+        if($fileSize > 2000000){
+            $error_msg .= "A imagem enviada excede 2MB. ";
         }
         if($logo_path == ''){
-            $error_msg .= "Falha no nome do arquivo.";
+            $error_msg .= "O nome do arquivo estava em branco. ";
         }
-        if(substr_count($logo_path,".") > 1){
-            $error_msg .= "Nome do arquivo não pode conter pontos além da extensão.";
-        }
-        if(in_array($extension[1],$correct_extensions) == false){
-            $error_msg .= "Extensão ".$extension[1]." não é permitida.";
+        if(in_array($fileExt,$correct_extensions) == false){
+            $error_msg .= "A extensão (.".$fileExt.") não é permitida. Use JPG ou PNG.";
         }
     }
 
@@ -112,19 +111,20 @@ for (i = 0; i < close.length; i++) {
 </script>
 
 
+<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
+<div id='errorbox'></div>
+<div>
+<div id='inscricao'>
+
 <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
 
-    <table class='table table-below float-table'>
+    
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Nome</td>
-            <td class="td_inv input_nome_time"><input type='text' name='nome' class='form-control' /></td>
-        </tr>
+        <label>Nome</label>
+<input type='text' name='nome' class='form-control' />
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Masculina/Feminina</td>
-            <td class="td_inv input_nome_time">
-            <?php
+        <label>Masculina/Feminina</label>
+<?php
                 // put them in a select drop-down
                 echo "<select class='form-control' name='sexo'>";
                 echo "<option value='0'>Masculina</option>";
@@ -135,15 +135,8 @@ for (i = 0; i < close.length; i++) {
 
                 ?>
 
-            </td>
-
-
-        </tr>
-
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Tier</td>
-            <td class="td_inv input_nome_time">
-            <?php
+        <label>Tier</label>
+<?php
                 // put them in a select drop-down
                 echo "<select class='form-control' name='tier'>";
                 echo "<option>Selecione tier...</option>";
@@ -159,16 +152,9 @@ for (i = 0; i < close.length; i++) {
 
                 ?>
 
-            </td>
 
-
-        </tr>
-
-
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">País</td>
-            <td class="td_inv input_nome_time">
-                <?php
+        <label>País</label>
+<?php
                 // ler times do banco de dados
                 $stmt = $pais->read($_SESSION['user_id']);
 
@@ -183,28 +169,17 @@ for (i = 0; i < close.length; i++) {
 
                 echo "</select>";
                 ?>
-            </td>
-        </tr>
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Logo</td>
-            <td class="td_inv input_nome_time">
+        <label>Logo</label>
+<input type="file" class='form-control custom-file-upload' name='logo' accept=".jpg,.png,.jpeg">
 
-            <input type="file" class='form-control custom-file-upload' name='logo' accept=".jpg,.png,.jpeg">
+        <div style="margin-top: 15px;">
+<button type="submit" name="criar" class="btn">Inserir</button>
+</div>
 
-
-            </td>
-        </tr>
-
-        <tr class="tr_inv btn_area">
-            <td class="td_inv btn_area"></td>
-            <td class="td_inv btn_area">
-                <button type="submit" name="criar" class="btn">Inserir</button>
-            </td>
-        </tr>
-
-    </table>
-</form>
+    </form>
+</div>
+</div>
 
 <?php
 
@@ -214,7 +189,7 @@ for (i = 0; i < close.length; i++) {
 }
 
 
-echo "</div>";
+
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 ?>

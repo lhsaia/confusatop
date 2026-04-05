@@ -1,6 +1,7 @@
 #inscricao{
   margin: 0 auto;
   padding: 10px;
+  padding-bottom: 80px;
   max-width:500px;
 }
 
@@ -39,7 +40,7 @@ label{
   /* filter: blur(5px); */
 }
 
-input, select{
+input, select, button.btn{
   width:92% !important;
   height:50px;
   padding:12px 20px;
@@ -82,7 +83,7 @@ input[type='checkbox']{
 }
 
 
-input[type='submit'], #cadastrar{
+input[type='submit'], #cadastrar, button.btn{
   font-weight: bold;
   cursor:pointer;
   width: 92%;
@@ -98,6 +99,10 @@ input::placeholder{
 
 input[type="file"] {
     display: none;
+}
+
+input[type="file"].custom-file-upload {
+    display: inline-block;
 }
 
 .custom-file-upload {
