@@ -64,8 +64,8 @@ if(isset($_POST['nome_arbitro']) && !empty($_POST['nome_aux2']) && !empty($_POST
 
  $(document).ready(function($){
 	 
-	$('#toolbar').html("<div id='hexagen'><i class='fas fa-dice'></i><span> Hexagen</span></div>");
-	 
+	$('#toolbar').html("<div id='hexagen_new' style='cursor:pointer;'><span style=\"font-size:16px !important\" class='material-symbols-outlined'>casino</span><span style='font-weight:bold;'> Hexagen</span></div>");
+
 	var close = document.getElementsByClassName("closebtn");
 	var i;
 	
@@ -80,7 +80,7 @@ if(isset($_POST['nome_arbitro']) && !empty($_POST['nome_aux2']) && !empty($_POST
 	}
 	
 	
-$("#hexagen").on("click",function(){
+$("#hexagen_new").on("click",function(){
     var nacionalidade = $("#pais_arbitro").val();
     var sexo = $("#genero_arbitro").val();
 
@@ -158,7 +158,7 @@ $("#hexagen").on("click",function(){
 
 		// put them in a select drop-down
 		echo "<select class='form-control' name='nacionalidade_arbitro' id='pais_arbitro'>";
-		echo "<option>Selecione país...</option>";
+		echo "<option value='0'>Selecione país...</option>";
 
 		while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
 			extract($row_category);
@@ -185,7 +185,10 @@ $("#hexagen").on("click",function(){
 	<label for='nascimento_arbitro'>Nascimento</label>
 	<input type='date' id='nascimento_arbitro' name='nascimento_arbitro' class='form-control inputHerdeiro' /></td>
 		
-	<input type='submit' value='Inserir' id='salvar'/>		
+	    <div style="margin-top: 15px;">
+<button type="submit" name="criar" id="salvar" class="btn">Inserir</button>
+<button type="reset" name="reset" class="btn">Limpar</button>
+</div>
 
 </form>
 </div>

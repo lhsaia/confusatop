@@ -47,7 +47,7 @@ echo '<a href="/arbitros?fed=3">COMPACTA</a>
 	 
 	 <?php
 	 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
-		 echo "$('#toolbar').html('<div id=\"criar_arbitro\"><i class=\"fas fa-plus-circle\"></i><span>Criar</span></div><div id=\"importar_arbitro\"><i class=\"fas fa-file-import\"></i><span>Importar</span></div>')";
+		 echo "$('#toolbar').html('<div id=\"criar_arbitro\"><span style=\"font-size:16px !important\" class=\"material-symbols-outlined\">add_circle</span><span>Criar</span></div><div id=\"importar_arbitro\"><span  style=\"font-size:16px !important\" class=\"material-symbols-outlined\">upload_file</span><span>Importar</span></div>')";
 	 }
     
 	?>
@@ -273,14 +273,14 @@ if($number_of_referees>0){
 
                 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                     if($_SESSION['admin_status'] == '1' || $_SESSION['user_id'] === $idDonoPais){
-                        $optionsString .= "<a id='edi".$id."' title='Editar' class='clickable editar'><i class='far fa-edit inlineButton'></i></a>";
-                        $optionsString .= "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar'><i class='fas fa-check inlineButton positive'></i></a>";
-                        $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><i class='fas fa-times inlineButton negative'></i></a>";
+                        $optionsString .= "<a id='edi".$id."' title='Editar' class='clickable editar'><span style='font-size:16px !important' class='material-symbols-outlined inlineButton'>edit</span></a>";
+                        $optionsString .= "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar'><span style='font-size:16px !important' class='material-symbols-outlined inlineButton positive'>check</span></a>";
+                        $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><span style='font-size:16px !important' class='material-symbols-outlined inlineButton negative'>close</span></a>";
                     }
                     if($_SESSION['admin_status'] == '1'){
-                        $optionsString .= "<a id='del".$id."' title='Deletar' class='clickable deletar'><i class='far fa-trash-alt inlineButton negative'></i></a>";
+                        $optionsString .= "<a id='del".$id."' title='Deletar' class='clickable deletar'><span style='font-size:16px !important' class='material-symbols-outlined inlineButton negative'>delete</span></a>";
                     }
-                    $optionsString .= "<a id='exp".$id."' title='Exportar' class='clickable exportar'><i class='fas fa-file-export inlineButton'></i></a>";
+                    $optionsString .= "<a id='exp".$id."' title='Exportar' class='clickable exportar'><span style='font-size:16px !important' class='material-symbols-outlined inlineButton'>file_download</span></a>";
                     $optionsString .= "</td>";
                     echo $optionsString;
                 }
