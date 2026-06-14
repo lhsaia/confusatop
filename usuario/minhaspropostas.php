@@ -2,7 +2,7 @@
 
 // ini_set( 'display_errors', true );
 // error_reporting( E_ALL );
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -136,14 +136,14 @@ if($num>0){
                 $optionsString = "<td class='wide'>";
 
                 if($direcao == 'inbox' && $status_execucao == 0){
-                    $optionsString .= "<a id='acc".$idJogador."' title='Aceitar' class='clickable aceitar'><i class='far fa-check-circle inlineButton positivo'></i></a>";
-                    $optionsString .= "<a id='rec".$idJogador."' title='Recusar' class='clickable recusar'><i class='far fa-times-circle inlineButton negativo'></i></a>";
-                    $optionsString .= "<a id='con".$idJogador."' title='Oferecer contraproposta' class='clickable contrapropor'><i class='far fa-question-circle inlineButton amarelo'></i></a>";
+                    $optionsString .= "<a id='acc".$idJogador."' title='Aceitar' class='clickable aceitar'><span class='material-symbols-outlined inlineButton positivo'>check_circle</span></a>";
+                    $optionsString .= "<a id='rec".$idJogador."' title='Recusar' class='clickable recusar'><span class='material-symbols-outlined inlineButton negativo'>cancel</span></a>";
+                    $optionsString .= "<a id='con".$idJogador."' title='Oferecer contraproposta' class='clickable contrapropor'><span class='material-symbols-outlined inlineButton amarelo'>help</span></a>";
                 } else if($direcao == 'outbox' && $status_execucao == 2){
-                    $optionsString .= "<a id='acc".$idJogador."' title='Aceitar contraproposta' class='clickable aceitar'><i class='far fa-check-circle inlineButton positivo'></i></a>";
-                    $optionsString .= "<a id='rec".$idJogador."' title='Recusar contraproposta' class='clickable recusar'><i class='far fa-times-circle inlineButton negativo'></i></a>";
+                    $optionsString .= "<a id='acc".$idJogador."' title='Aceitar contraproposta' class='clickable aceitar'><span class='material-symbols-outlined inlineButton positivo'>check_circle</span></a>";
+                    $optionsString .= "<a id='rec".$idJogador."' title='Recusar contraproposta' class='clickable recusar'><span class='material-symbols-outlined inlineButton negativo'>cancel</span></a>";
                 } else if($direcao == 'outbox' && $status_execucao == 0){
-                    $optionsString .= "<a id='rec".$idJogador."' title='Cancelar proposta' class='clickable recusar'><i class='far fa-times-circle inlineButton negativo'></i></a>";
+                    $optionsString .= "<a id='rec".$idJogador."' title='Cancelar proposta' class='clickable recusar'><span class='material-symbols-outlined inlineButton negativo'>cancel</span></a>";
                 }
                     $optionsString .= "</td>";
                     echo $optionsString;

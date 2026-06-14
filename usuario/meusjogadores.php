@@ -2,7 +2,7 @@
 
 ini_set( 'display_errors', true );
 error_reporting( E_ALL );
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -260,7 +260,7 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 				}
 				
 				// geração da tabela
-				tbl += "<tr id='"+val['ID']+"' data-sexo='"+val['sexo']+"' >";
+				tbl += "<tr id='"+val['ID']+"' data-sexo='"+val['sexo']+"' data-dono-pais='"+val['idDonoPais']+"' >";
 					tbl += "<td><div class='imageUpload'><img class='playerThumb' src='/images/jogadores/"+val['foto']+"' /> <input type='file' hidden id='foto"+val['ID']+"' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
 					tbl +=  "<td><span class='nomeEditavel' id='nom"+val['ID']+"'><a class='linkNome' href='/ligas/playerstatus.php?player="+val['ID']+"' >"+val['Nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span></td>";
 					tbl += "<td><span class='nomeNascimento' id='nas"+ val['ID']+"'>"+ nascimentoDisplay + " (" +val['Idade']+") "+" </span><input id='selnas"+val['ID']+"' class='nascimentoEditavel editavel' type='date' value='"+val['Nascimento']+"' hidden/></td>";
@@ -420,19 +420,19 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 	//garantir que o dono do time está logado e que ele é o dono do jogador também (duplo check, JS e PHP)
 	var donoTime = tbl_row.find(".donoClubeVinculado").html();
 	var donoJogador = $("#tabelaPrincipal").find('thead').prop("id").replace(/\D/g, "");
-	//var donoJogador =9;
+	var donoPais = tbl_row.attr("data-dono-pais");
 
 	if (typeof donoTime === 'undefined'){
 		donoTime = donoJogador;
 	}
 
-if(donoTime.localeCompare(donoJogador) == 0){
-    var isDono = true;
-} else {
-    var isDono = false;
-}
+	if(donoTime.localeCompare(donoJogador) == 0 || (typeof donoPais !== 'undefined' && donoPais.localeCompare(donoJogador) == 0)){
+		var isDono = true;
+	} else {
+		var isDono = false;
+	}
 
-if(isDono){
+	if(isDono){
 
     
     tbl_row.find('.comboMentalidade').show();
@@ -601,13 +601,13 @@ $('.cancelar').click(function(){
         //garantir que o dono do time está logado e que ele é o dono do jogador também (duplo check, JS e PHP)
         var donoTime = tbl_row.find(".donoClubeVinculado").html();
         var donoJogador = $("#tabelaPrincipal").find('thead').prop("id").replace(/\D/g, "");
-        //var donoJogador =9;
+        var donoPais = tbl_row.attr("data-dono-pais");
 
         if (typeof donoTime === 'undefined'){
             donoTime = donoJogador;
         }
 
-        if(donoTime.localeCompare(donoJogador) == 0){
+        if(donoTime.localeCompare(donoJogador) == 0 || (typeof donoPais !== 'undefined' && donoPais.localeCompare(donoJogador) == 0)){
 
             var isDono = true;
         } else {

@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 // include database and object files
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");

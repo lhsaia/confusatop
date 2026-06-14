@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -107,9 +107,9 @@ if($num>0){
 
             extract($row);
 
-            echo "<tr id='".$id."'>";
+            echo "<tr id='".$ID."'>";
                 //echo "<td><span id=".$id.">{$id}</span></td>";
-                echo "<td><span class='nomeClima nomeEditavel' id='nom".$id."'>{$Nome}</span></td>";
+                echo "<td><span class='nomeClima nomeEditavel' id='nom".$ID."'>{$Nome}</span></td>";
                 echo "<td class='wide'><span class='nomeTempVer' id='tempver".$ID."'>{$TempVerao}</span>";
                 echo "<select class='comboTempVer editavel ' id='{$TempVerao}' hidden>'  ";
 
@@ -246,10 +246,10 @@ if($num>0){
                     echo "</td>";
                     $optionsString = "<td class='wide'>";
 
-                        //$optionsString .= "<a id='edi".$id."' title='Editar' class='clickable editar'><i class='far fa-edit inlineButton'></i></a>";
-                        $optionsString .= "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar'><i class='fas fa-check inlineButton positive'></i></a>";
-                        $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><i class='fas fa-times inlineButton negative'></i></a>";
-                        //$optionsString .= "<a id='del".$id."' title='Deletar' class='clickable deletar'><i class='far fa-trash-alt inlineButton negative'></i></a>";
+                        $optionsString .= "<a id='edi".$ID."' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
+                        $optionsString .= "<a hidden id='sal".$ID."' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
+                        $optionsString .= "<a hidden id='can".$ID."' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
+                        //$optionsString .= "<a id='del".$ID."' title='Deletar' class='clickable deletar'><i class='far fa-trash-alt inlineButton negative'></i></a>";
                     $optionsString .= "</td>";
                     echo $optionsString;
 
@@ -274,118 +274,284 @@ echo('</div>');
 
 <script>
 
-//     $(document).ready(function() {
+    $(document).ready(function() {
 
-//          $('.editar').click(function(){
-//         var tbl_row =  $(this).closest('tr');
-//         tbl_row.find('span').each(function(index, val){
-//             $(this).attr('original_entry', $(this).html());
+        const styleConstraints = {
+            'Muito Frio': ['Neve', 'Neve Forte', 'Neve Ocasional'],
+            'Frio': ['Chuvoso', 'Neblina', 'Ventos Fortes'],
+            'Normal': ['Chuvoso', 'Equilibrado', 'Ventos Fortes'],
+            'Quente': ['Chuvoso', 'Ventos Fortes', 'Seco'],
+            'Muito Quente': ['Ventos Fortes', 'Seco', 'Árido']
+        };
 
-//         });
-//         tbl_row.find('.nomeEditavel').css("cursor","text");
-//         tbl_row.find('.nomeLiga').css("cursor","text");
-//         tbl_row.find('.nomeLiga').css("pointer-events","none");
-//         tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
-//         tbl_row.find('.salvar').show();
-//         tbl_row.find('.cancelar').show();
-//         tbl_row.find('.editar').hide();
-//         tbl_row.find('.deletar').hide();
-//         tbl_row.find('.nomePais').hide();
-//         tbl_row.find('.newlogoedit').show();
-//         tbl_row.find('.logoimage').hide();
+        function updateStyleOptions(tempSelect, styleSelect) {
+            const selectedTemp = tempSelect.val();
+            const validStyles = styleConstraints[selectedTemp] || [];
+            const currentStyle = styleSelect.val();
 
-//         var paisId = tbl_row.find('.comboPais').attr('id');
-//         tbl_row.find('.comboPais').show().val(paisId);
+            // Store the original options if not already stored
+            if (!styleSelect.data('original-options')) {
+                styleSelect.data('original-options', styleSelect.find('option').clone());
+            }
 
-//     });
+            // Clear current options
+            styleSelect.empty();
 
-//         $('.cancelar').click(function(){
-//         var tbl_row =  $(this).closest('tr');
-//         tbl_row.find('.nomeLiga').css("pointer-events","auto");
-//         tbl_row.find('.nomeLiga').css("cursor","auto");
-//         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
-//         tbl_row.find('.comboPais').hide();
-//         tbl_row.find('.nomePais').show();
-//         tbl_row.find('.salvar').hide();
-//         tbl_row.find('.cancelar').hide();
-//         tbl_row.find('.editar').show();
-//         tbl_row.find('.deletar').show();
-//         tbl_row.find('.newlogoedit').hide();
-//         tbl_row.find('.logoimage').show();
+            // Add valid options
+            const originalOptions = styleSelect.data('original-options');
+            
+            let foundCheck = false;
 
-//         tbl_row.find('span').each(function(index, val){
-//             $(this).html($(this).attr('original_entry'));
-//         });
-//     });
+            originalOptions.each(function() {
+                const optionVal = $(this).val();
+                if (validStyles.includes(optionVal)) {
+                    styleSelect.append($(this).clone());
+                    if(optionVal == currentStyle){
+                        foundCheck = true;
+                    }
+                }
+            });
 
-//     $('.salvar').click(function(){
-//         var tbl_row =  $(this).closest('tr');
-//         tbl_row.find('.nomeLiga').css("pointer-events","auto");
-//         tbl_row.find('.nomeLiga').css("cursor","auto");
-//         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
-//         tbl_row.find('.comboPais').hide();
-//         tbl_row.find('.nomePais').show();
-//         tbl_row.find('.salvar').hide();
-//         tbl_row.find('.cancelar').hide();
-//         tbl_row.find('.editar').show();
-//         tbl_row.find('.deletar').show();
-//         tbl_row.find('.newlogoedit').hide();
-//         tbl_row.find('.logoimage').show();
+            // If the current style is no longer valid, select the first valid option
+            if (foundCheck) {
+                styleSelect.val(currentStyle);
+            } else {
+                 if(styleSelect.find('option').length > 0){
+                     styleSelect.prop('selectedIndex', 0);
+                 }
+            }
+        }
 
-//         var id = tbl_row.attr('id');
-//         var nomeLiga = tbl_row.find('#nom'+id).html();
-//         var tierLiga = tbl_row.find('#tie'+id).html();
-//         var pais = tbl_row.find('.comboPais').val();
+         $('.editar').click(function(){
+        var tbl_row =  $(this).closest('tr');
+        tbl_row.find('span').each(function(index, val){
+            $(this).attr('original_entry', $(this).html());
 
-//         var input = (tbl_row.find('#newlogo'+id))[0];
-//         var logo;
+        });
+		let id = tbl_row.attr("id")
+        tbl_row.find('.nomeEditavel').css("cursor","text");
+        // tbl_row.find('.nomeLiga').css("cursor","text");
+        // tbl_row.find('.nomeLiga').css("pointer-events","none");
+        tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
+        tbl_row.find('.salvar').show();
+        tbl_row.find('.cancelar').show();
+        tbl_row.find('.editar').hide();
+        // tbl_row.find('.deletar').hide();
+        tbl_row.find('.nomePais').hide();
+        tbl_row.find('.nomeTempVer').hide();
+        tbl_row.find('.nomeEstVer').hide();
+        tbl_row.find('.nomeTempOut').hide();
+        tbl_row.find('.nomeEstOut').hide();
+        tbl_row.find('.nomeTempInv').hide();
+        tbl_row.find('.nomeEstInv').hide();
+        tbl_row.find('.nomeTempPri').hide();
+        tbl_row.find('.nomeEstPri').hide();
+        tbl_row.find('.hemisferio').hide();
+        
+        // tbl_row.find('.newlogoedit').show();
+        // tbl_row.find('.logoimage').hide();
 
-//         if (input.files.length > 0) {
-//            logo = input.files[0];
-//         } else {
-//            logo = null;
-//         }
+        var paisId = tbl_row.find('.comboPais').attr('id');
+        tbl_row.find('.comboPais').show().val(paisId);
+        
+        var tempVerId = tbl_row.find('.comboTempVer').attr('id');
+        var comboTempVer = tbl_row.find('.comboTempVer');
+        var comboEstVer = tbl_row.find('.comboEstVer');
+        comboTempVer.show().val(tempVerId);
+         var estVerId = tbl_row.find('.comboEstVer').attr('id');
+        comboEstVer.show().val(estVerId);
+        updateStyleOptions(comboTempVer, comboEstVer);
+       
 
-//         //var formId = 'form'+id;
-//         //var form = document.getElementById(formId);
-//          var formData = new FormData();
-//          formData.append('id', id);
-//          formData.append('nomeLiga', nomeLiga);
-//          formData.append('tierLiga', tierLiga);
-//          formData.append('pais', pais);
-//          if(logo != null){
-//             formData.append('logo', logo);
-//          }
+        var tempOutId = tbl_row.find('.comboTempOut').attr('id');
+        var comboTempOut = tbl_row.find('.comboTempOut');
+        var comboEstOut = tbl_row.find('.comboEstOut');
+        comboTempOut.show().val(tempOutId);
+        var estOutId = tbl_row.find('.comboEstOut').attr('id');
+        comboEstOut.show().val(estOutId);
+        updateStyleOptions(comboTempOut, comboEstOut);
+        
+        
+        var tempInvId = tbl_row.find('.comboTempInv').attr('id');
+        var comboTempInv = tbl_row.find('.comboTempInv');
+        var comboEstInv = tbl_row.find('.comboEstInv');
+        comboTempInv.show().val(tempInvId);
+        var estInvId = tbl_row.find('.comboEstInv').attr('id');
+        comboEstInv.show().val(estInvId);
+        updateStyleOptions(comboTempInv, comboEstInv);
+        
+        var tempPriId = tbl_row.find('.comboTempPri').attr('id');
+        var comboTempPri = tbl_row.find('.comboTempPri');
+        var comboEstPri = tbl_row.find('.comboEstPri');
+        comboTempPri.show().val(tempPriId);
+        var estPriId = tbl_row.find('.comboEstPri').attr('id');
+        comboEstPri.show().val(estPriId);
+        updateStyleOptions(comboTempPri, comboEstPri);
+
+        var hemId = tbl_row.find('.comboHem').attr('id');
+        tbl_row.find('.comboHem').show().val(hemId);
+
+    });
+
+    // Event listeners for Temp dropdown changes
+    $(document).on('change', '.comboTempVer', function() {
+        var tbl_row = $(this).closest('tr');
+        updateStyleOptions($(this), tbl_row.find('.comboEstVer'));
+    });
+    $(document).on('change', '.comboTempOut', function() {
+        var tbl_row = $(this).closest('tr');
+        updateStyleOptions($(this), tbl_row.find('.comboEstOut'));
+    });
+    $(document).on('change', '.comboTempInv', function() {
+        var tbl_row = $(this).closest('tr');
+        updateStyleOptions($(this), tbl_row.find('.comboEstInv'));
+    });
+    $(document).on('change', '.comboTempPri', function() {
+        var tbl_row = $(this).closest('tr');
+        updateStyleOptions($(this), tbl_row.find('.comboEstPri'));
+    });
 
 
-//     // for (var key of formData.entries()) {
-//     //      console.log(key[0] + ', ' + key[1]);
-//     //  }
+        $('.cancelar').click(function(){
+        var tbl_row =  $(this).closest('tr');
+        // tbl_row.find('.nomeLiga').css("pointer-events","auto");
+        // tbl_row.find('.nomeLiga').css("cursor","auto");
+        tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+        
+        tbl_row.find('.comboPais').hide();
+        tbl_row.find('.nomePais').show();
+        
+        tbl_row.find('.comboTempVer').hide();
+        tbl_row.find('.nomeTempVer').show();
+        tbl_row.find('.comboEstVer').hide();
+        tbl_row.find('.nomeEstVer').show();
+        
+        tbl_row.find('.comboTempOut').hide();
+        tbl_row.find('.nomeTempOut').show();
+        tbl_row.find('.comboEstOut').hide();
+        tbl_row.find('.nomeEstOut').show();
+        
+        tbl_row.find('.comboTempInv').hide();
+        tbl_row.find('.nomeTempInv').show();
+        tbl_row.find('.comboEstInv').hide();
+        tbl_row.find('.nomeEstInv').show();
+        
+        tbl_row.find('.comboTempPri').hide();
+        tbl_row.find('.nomeTempPri').show();
+        tbl_row.find('.comboEstPri').hide();
+        tbl_row.find('.nomeEstPri').show();
+        
+        tbl_row.find('.comboHem').hide();
+        tbl_row.find('.hemisferio').show();
+        
+        tbl_row.find('.salvar').hide();
+        tbl_row.find('.cancelar').hide();
+        tbl_row.find('.editar').show();
+        // tbl_row.find('.deletar').show();
+        // tbl_row.find('.newlogoedit').hide();
+        // tbl_row.find('.logoimage').show();
 
-//         //console.log(formData);
-//          $.ajax({
-//              url: 'alterar_liga.php',
-//              processData: false,
-//             contentType: false,
-//             cache: false,
-//             type: "POST",
-//             dataType: 'json',
-//              data: formData,
-//                   success: function(data) {
-//                       if(data.error != ''){
-//                         alert(data.error)
-//                       }
-//                       location.reload();
-//                   },
-//                   error: function(data) {
-//                       successmessage = 'Error';
-//                       alert("Erro, o procedimento não foi realizado, tente novamente.");
-//                       location.reload();
-//                   }
-//               });
-//      });
+        tbl_row.find('span').each(function(index, val){
+            $(this).html($(this).attr('original_entry'));
+        });
+    });
 
-// });
+    $('.salvar').click(function(){
+        var tbl_row =  $(this).closest('tr');
+        // tbl_row.find('.nomeLiga').css("pointer-events","auto");
+        // tbl_row.find('.nomeLiga').css("cursor","auto");
+        tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+        
+        tbl_row.find('.comboPais').hide();
+        tbl_row.find('.nomePais').show();
+        
+        tbl_row.find('.comboTempVer').hide();
+        tbl_row.find('.nomeTempVer').show();
+        tbl_row.find('.comboEstVer').hide();
+        tbl_row.find('.nomeEstVer').show();
+        
+        tbl_row.find('.comboTempOut').hide();
+        tbl_row.find('.nomeTempOut').show();
+        tbl_row.find('.comboEstOut').hide();
+        tbl_row.find('.nomeEstOut').show();
+        
+        tbl_row.find('.comboTempInv').hide();
+        tbl_row.find('.nomeTempInv').show();
+        tbl_row.find('.comboEstInv').hide();
+        tbl_row.find('.nomeEstInv').show();
+        
+        tbl_row.find('.comboTempPri').hide();
+        tbl_row.find('.nomeTempPri').show();
+        tbl_row.find('.comboEstPri').hide();
+        tbl_row.find('.nomeEstPri').show();
+        
+        tbl_row.find('.comboHem').hide();
+        tbl_row.find('.hemisferio').show();
+        
+        tbl_row.find('.salvar').hide();
+        tbl_row.find('.cancelar').hide();
+        tbl_row.find('.editar').show();
+        // tbl_row.find('.deletar').show();
+        // tbl_row.find('.newlogoedit').hide();
+        // tbl_row.find('.logoimage').show();
+
+        var id = tbl_row.attr('id');
+        var nomeClima = tbl_row.find('#nom'+id).html();
+        var tempVerao = tbl_row.find('.comboTempVer').val();
+        var estiloVerao = tbl_row.find('.comboEstVer').val();
+        
+        var tempOutono = tbl_row.find('.comboTempOut').val();
+        var estiloOutono = tbl_row.find('.comboEstOut').val();
+        
+        var tempInverno = tbl_row.find('.comboTempInv').val();
+        var estiloInverno = tbl_row.find('.comboEstInv').val();
+        
+        var tempPrimavera = tbl_row.find('.comboTempPri').val();
+        var estiloPrimavera = tbl_row.find('.comboEstPri').val();
+        
+        var hemisferio = tbl_row.find('.comboHem').val();
+        
+        var pais = tbl_row.find('.comboPais').val();
+
+      
+         var formData = new FormData();
+         formData.append('id', id);
+         formData.append('nomeClima', nomeClima);
+         formData.append('tempVerao', tempVerao);
+         formData.append('estiloVerao', estiloVerao);
+         formData.append('tempOutono', tempOutono);
+         formData.append('estiloOutono', estiloOutono);
+         formData.append('tempInverno', tempInverno);
+         formData.append('estiloInverno', estiloInverno);
+         formData.append('tempPrimavera', tempPrimavera);
+         formData.append('estiloPrimavera', estiloPrimavera);
+         formData.append('hemisferio', hemisferio);
+         formData.append('pais', pais);
+
+        //console.log(formData);
+         $.ajax({
+             url: 'alterar_clima.php',
+             processData: false,
+            contentType: false,
+            cache: false,
+            type: "POST",
+            dataType: 'json',
+             data: formData,
+                  success: function(data) {
+                      if(data.error != ''){
+                        alert(data.error)
+                      }
+                      location.reload();
+                  },
+                  error: function(data) {
+                      successmessage = 'Error';
+                      alert("Erro, o procedimento não foi realizado, tente novamente.");
+                      location.reload();
+                  }
+              });
+     });
+
+});
 
 
 

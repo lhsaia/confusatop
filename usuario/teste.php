@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 if(file_exists("../sqlitedb/".$_SESSION['user_id'].".db3")){
     unlink("../sqlitedb/".$_SESSION['user_id'].".db3");

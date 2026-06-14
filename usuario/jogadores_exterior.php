@@ -2,7 +2,7 @@
 
 ini_set( 'display_errors', true );
 error_reporting( E_ALL );
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -163,9 +163,9 @@ if($num>0){
                 $optionsString = "<td class='wide'>";
                 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                     if($jogador->testeInatividade($ID)){
-                        $optionsString .= "<a id='dem".$ID."' title='Repatriar jogador' class='clickable repatriar'><i class='fas fa-plane-arrival inlineButton vermelho'></i></a>";
+                        $optionsString .= "<a id='dem".$ID."' title='Repatriar jogador' class='clickable repatriar'><span class='material-symbols-outlined inlineButton vermelho'>flight_land</span></a>";
                     }
-                            $optionsString .= "<a id='dem".$ID."' title='Incorporar modificador de nível' class='clickable incorporar'><i class='fas fa-user-plus inlineButton azul'></i></a>";
+                            $optionsString .= "<a id='dem".$ID."' title='Incorporar modificador de nível' class='clickable incorporar'><span class='material-symbols-outlined inlineButton azul'>person_add</span></a>";
 
                     $optionsString .= "</td>";
                     echo $optionsString;

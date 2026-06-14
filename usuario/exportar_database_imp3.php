@@ -1,6 +1,6 @@
 <?php
  
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 $userId = $_SESSION['user_id'];
 
 include_once($_SERVER['DOCUMENT_ROOT']."/config/sqliteDatabase.php");
@@ -49,6 +49,22 @@ if (!is_dir('../sqlitedb/'. $userId)) {
     mkdir('../sqlitedb/'. $userId);
 }
 
+if($opcaoPrincipal != 3){
+	
+if($opcaoPrincipal == 0){
+
+	// gerar apikey e incluir
+	$apiKey = $usuario->obterApiKey($userId);
+	
+	if($apiKey == null){
+		$apiKey = $usuario->gerarApiKey($userId);
+	}
+
+	$xmlPath = $_SERVER['DOCUMENT_ROOT']."/sqlitedb/". $userId . "/apiKey.xml";
+	$txt = '<?xml version="1.0" encoding="utf-8" ?><apiKey>'.$apiKey.'</apiKey>';
+	file_put_contents($xmlPath, $txt);
+} 
+	
 //inicio foreach paises
 foreach($masterLista as $paisSelecionado => $ligasSelecionadas){
 	
@@ -81,8 +97,15 @@ foreach($masterLista as $paisSelecionado => $ligasSelecionadas){
 	}
     } 
 
+	if($opcaoPrincipal != 3){
     $exportFiles[] = [$_SERVER['DOCUMENT_ROOT']."/sqlitedb/".$userId."/".$nomePais."/data/database.db3",$nomePais."/data/database.db3"];
-
+	}
+	
+	if($opcaoPrincipal == 0){
+		$exportFiles[] = [$_SERVER['DOCUMENT_ROOT'].'/sqlitedb/'. $userId . '/apiKey.xml',$nomePais."/apiKey.xml"];
+		$newFiles[] = [$_SERVER['DOCUMENT_ROOT'].'/export/topDaterV1.exe',$nomePais."/topDaterV1.exe"];
+	}
+	
 	if($opcaoPrincipal < 2){
     $dir = new DirectoryIterator("../images/bandeiras");
 	foreach ($dir as $fileinfo) {
@@ -329,18 +352,27 @@ foreach($masterLista as $paisSelecionado => $ligasSelecionadas){
     // echo '<pre>' , var_dump($megaQueryPais) , '</pre>';
     // die();
 
+// tratamento de erros
+
+try {
     $database->directRun($megaQueryPais);
+} catch (Exception $e) {
+    echo 'Exceção capturada: ',  $e->getMessage(), "\n";
+    echo $megaQueryPais;
+    die();
+}
+
 	
 	$listaNomesPaises[] = $nomePais;
 
 
 //fim foreach paises
 }
-
+} 
 //criar zip e fazer exportação
 $zip_name = $_SESSION['username'].'.zip'; //the real path of your final zip file on your system
-$zip = new ZipArchive;
-$zip->open($zip_name, ZIPARCHIVE::CREATE);
+$zip = new ZipArchive();
+$zip->open($zip_name, ZipArchive::CREATE);
 
 // Adicao do pacote completo
 
@@ -361,23 +393,22 @@ $zip->open($zip_name, ZIPARCHIVE::CREATE);
 		$newFiles[] = [$_SERVER['DOCUMENT_ROOT']."/hexacolor_repo/Leia-me.TXT", $nomePais . "/Leia-me.TXT"];
 		
 		 foreach (glob($_SERVER['DOCUMENT_ROOT'].'/hexacolor_repo/data/*') as $file) {
-		$zip->addFile($file, $nomePais . "/data/".basename($file));
+            if (!is_dir($file)) $zip->addFile($file, $nomePais . "/data/".basename($file));
 		 }
 		 foreach (glob($_SERVER['DOCUMENT_ROOT']. "/hexacolor_repo/lib/*") as $file) {
-		  $zip->addFile($file, $nomePais . "/lib/".basename($file));
-	  
+            if (!is_dir($file)) $zip->addFile($file, $nomePais . "/lib/".basename($file));
 		  }
 
 		foreach (glob($_SERVER['DOCUMENT_ROOT']. "/hexacolor_repo/ImportacaoRapida/*") as $file) {
-		$zip->addFile($file, $nomePais . "/ImportacaoRapida/".basename($file));
+            if (!is_dir($file)) $zip->addFile($file, $nomePais . "/ImportacaoRapida/".basename($file));
 		}
 
 		foreach (glob($_SERVER['DOCUMENT_ROOT']. "/hexacolor_repo/Imagens/*") as $file) {
-			$zip->addFile($file, $nomePais . "/Imagens/".basename($file));
+            if (!is_dir($file)) $zip->addFile($file, $nomePais . "/Imagens/".basename($file));
 		}
 
 		foreach (glob($_SERVER['DOCUMENT_ROOT']. "/images/bandeiras/*") as $file) {
-		  if(strlen(basename($file)) == 6){
+		  if(!is_dir($file) && strlen(basename($file)) == 6){
 			$zip->addFile($file, $nomePais . "/data/PaisesReais/". basename($file));
 		  }
 		}
@@ -396,13 +427,34 @@ foreach($newFiles as $file){
     $zip->addFile($file[0],$file[1]);
 }
 
+if($opcaoPrincipal == 3){
+
+	$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/export/topDaterV1.exe', "topDaterV1.exe");
+	
+	// gerar apikey e incluir
+	$apiKey = $usuario->obterApiKey($userId);
+	
+	if($apiKey == null){
+		$apiKey = $usuario->gerarApiKey($userId);
+	}
+
+	$xmlPath = $_SERVER['DOCUMENT_ROOT']."/sqlitedb/". $userId . "/apiKey.xml";
+	$txt = '<?xml version="1.0" encoding="utf-8" ?><apiKey>'.$apiKey.'</apiKey>';
+	file_put_contents($xmlPath, $txt);
+	
+	$zip->addFile($_SERVER['DOCUMENT_ROOT'].'/sqlitedb/'. $userId . '/apiKey.xml',  "apiKey.xml");
+
+} 
+
+
+
 $zip->close();
 
 $usuario->atualizarDownload($userId);
 
-header('Content-type: application/zip');
-header('Content-disposition: filename="' . $zip_name . '"');
-header("Content-length: " . filesize($zip_name));
+header("Content-Type: application/zip");
+header("Content-Disposition: attachment; filename=$zip_name");
+//header("Content-Length: " . filesize($zip_name));
 readfile($zip_name);
 unlink($zip_name);
 foreach($exportFiles as $file)

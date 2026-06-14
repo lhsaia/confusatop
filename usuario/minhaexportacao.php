@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -74,9 +74,10 @@ echo "<select multiple class='comboLigas form-control' id='ligas' name='comboLig
 echo "</select>";
 
 echo "<select class='comboOpcoes form-control' id='opcoes' name='comboOpcoes[]'>";
-	echo "<option value='0'>Pacote completo (Hexacolor 2.13)</option>";
+	echo "<option value='0'>Pacote completo (Hexacolor 2.19.1) com Topdater</option>";
 	echo "<option value='1'>database.db3 e imagens</option>";
 	echo "<option value='2'>Apenas database.db3</option>";
+	echo "<option value='3'>Apenas Topdater</option>";
 echo "</select>";
 
 echo "</div>";
@@ -213,6 +214,7 @@ $(document).ready(function() {
 			return false;
 		}
 	
+	if(opcaoSelecionada != 3){
 		$.ajax({
 			type: 'POST',
 			url: 'verificar_exportacao.php', // the url where we want to POST
@@ -243,7 +245,18 @@ $(document).ready(function() {
 			$("#errorbox").empty();
 			$('#errorbox').append("<div class='alert alert-danger'>Houve um erro não esperado na exportação dos dados, por favor contacte o admin.<div>");
         });
+	} else {
+				$("#errorbox").empty();
+				$('#errorbox').append("<div class='alert alert-success'>A exportação iniciará em instantes! Aguarde.</div>");
+				$('#exportar_hymt').addClass('disabled');
+				$('html, body').css("cursor", "wait");
+				optionString = opcaoSelecionada.toString();
+				urlToOpen = 'exportar_database_imp3.php?data=' + encodeURIComponent(JSON.stringify(ligaPais)) + '&option=' + optionString;
 
+				window.location = urlToOpen;
+
+				
+	}
 	});
 
 });

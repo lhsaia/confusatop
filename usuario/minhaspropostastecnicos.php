@@ -2,7 +2,7 @@
 
 ini_set( 'display_errors', true );
 error_reporting( E_ALL );
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -108,8 +108,8 @@ if($num>0){
                 $optionsString = "<td class='wide'>";
 
                 if($direcao == 'inbox' && $status_execucao == 0){
-                    $optionsString .= "<a id='acc".$idJogador."' title='Aceitar' class='clickable aceitar'><i class='far fa-check-circle inlineButton positivo'></i></a>";
-                    $optionsString .= "<a id='rec".$idJogador."' title='Recusar' class='clickable recusar'><i class='far fa-times-circle inlineButton negativo'></i></a>";
+                    $optionsString .= "<a id='acc".$idJogador."' title='Aceitar' class='clickable aceitar'><span class='material-symbols-outlined inlineButton positivo'>check_circle</span></a>";
+                    $optionsString .= "<a id='rec".$idJogador."' title='Recusar' class='clickable recusar'><span class='material-symbols-outlined inlineButton negativo'>cancel</span></a>";
                 }
                     $optionsString .= "</td>";
                     echo $optionsString;

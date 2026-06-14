@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
@@ -98,7 +98,7 @@ if($num>0){
                 echo "<td class='nopadding idNome'>Nomes</td>";
                 $optionsString = "<td class='wide'>";
 
-                        $optionsString .= "<a title='Apagar' class='clickable apagar'><i class='fas fa-trash-alt inlineButton negative'></i></a>";
+                        $optionsString .= "<a title='Apagar' class='clickable apagar'><span class='material-symbols-outlined inlineButton negative'>delete</span></a>";
                     $optionsString .= "</td>";
                     echo $optionsString;
                 echo "</tr>";
@@ -115,7 +115,7 @@ if($num>0){
                 echo "<td class='nopadding idNome'>Sobrenomes</td>";
                 $optionsString = "<td class='wide'>";
 
-                $optionsString .= "<a title='Apagar' class='clickable apagar'><i class='fas fa-trash-alt inlineButton negative'></i></a>";
+                $optionsString .= "<a title='Apagar' class='clickable apagar'><span class='material-symbols-outlined inlineButton negative'>delete</span></a>";
             $optionsString .= "</td>";
             echo $optionsString;
                 echo "</tr>";

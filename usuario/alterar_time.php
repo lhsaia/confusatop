@@ -2,7 +2,7 @@
 
 ini_set( 'display_errors', true );
 error_reporting( E_ALL );
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
     //estabelecer conexão com banco de dados
@@ -250,14 +250,14 @@ function imageImporterWebP($file_name, $target_filename){
         $correct_extensions = array("image/png","image/jpg","image/jpeg", "image/webp");
         $upload_dir = "/images/mascotes/";
 
-        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 2000000){
+        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 3000000){
             $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName ;
             imageImporterWebP($filePath, $upload_path);
             $time->mascote = $_SESSION['user_id'] ."-" .$fileName;
         } else {
             $error_msg .= "Não foi possível inserir o mascote. ";
-            if($fileSize > 2000000){
-                $error_msg .= "Arquivo deve ser menor que 2Mb.";
+            if($fileSize > 3000000){
+                $error_msg .= "Arquivo deve ser menor que 3Mb.";
             }
             if($filePath == ''){
                 $error_msg .= "Falha no nome do arquivo.";

@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 $logged_user = $_SESSION['user_id'];
 
 require_once("/home/lhsaia/confusa.top/vendor/autoload.php");

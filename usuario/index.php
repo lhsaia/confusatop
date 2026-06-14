@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -49,7 +49,7 @@ $horas = round($tempoDesatualizado/3600,1);
 <a href='meusparametros.php' class='quadro-flex-usuario quadro-animado azul-marinho'><img src="/images/parametro.jpg" /><span>Parâmetros HYMT</span></a>
 
 
-<a href='minhaexportacao.php' id='quadro-exportar' href='' title='<?php echo ($tempoDesatualizado > 0 ? "Alterações feitas ".$horas ." horas após o último download" :"Banco de dados atualizado") ?>' class='<?php echo ($tempoDesatualizado > 0 ? "export_pending":"") ?> quadro-flex-usuario quadro-animado azul-marinho exportar'><img src="/images/hymt.jpg" /><span>Exportar para HYMT</span><?php  echo (($tempoDesatualizado > 0) ?  "<div id='tempoDesatualizado'><i class='fas fa-bell'></i></div>" : ""); ?></a>
+<a href='minhaexportacao.php' id='quadro-exportar' href='' title='<?php echo ($tempoDesatualizado > 0 ? "Alterações feitas ".$horas ." horas após o último download" :"Banco de dados atualizado") ?>' class='<?php echo ($tempoDesatualizado > 0 ? "export_pending":"") ?> quadro-flex-usuario quadro-animado azul-marinho exportar'><img src="/images/hymt.jpg" /><span>Exportar para HYMT</span><?php  echo (($tempoDesatualizado > 0) ?  "<div id='tempoDesatualizado'><span  style=\"font-size:16px !important\"  class='material-symbols-outlined'>notifications</span></div>" : ""); ?></a>
 
 <a href='minhaspropostas.php' id="propostas" class='quadro-flex-usuario quadro-animado azul-marinho' ><img src="/images/proposta_jogador.jpg" /><span>Propostas de Jogadores</span><?php  echo (($propostasPendentes > 0) ?  "<div class='propostasPendentes'>".$propostasPendentes."</div>" : ""); ?> </a>
 

@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 $userId = $_SESSION['user_id'];
 
 include_once("/home/lhsaia/confusa.top/config/sqliteDatabase.php");

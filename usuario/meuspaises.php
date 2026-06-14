@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -142,16 +142,16 @@ if($num>0){
                    // echo "<td><canvas width='150px' height='35px' class='chartContainer' id='chartContainer".$id."'></canvas></td>";
                     $optionsString = "<td class='wide'>";
 
-                        $optionsString .= "<a id='edi".$id."' title='Editar' class='clickable editar'><i class='far fa-edit inlineButton'></i></a>";
-                        $optionsString .= "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar'><i class='fas fa-check inlineButton positive'></i></a>";
-                        $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><i class='fas fa-times inlineButton negative'></i></a>";
-                        $optionsString .= "<a id='dem".$id."' title='Alterar demografia' class='clickable demografia'><i class='fas fa-language inlineButton'></i></a>";
-                        $optionsString .= "<a id='sel".$id."' title='Tela de seleções' class='clickable selecoes'><i class='fas fa-globe inlineButton'></i></a>";
-                        $optionsString .= "<a id='exp".$id."' title='Exportar planilha base' class='clickable exportarplanilha'><i class='fas fa-file-export inlineButton'></i></a>";
-                        $optionsString .= "<a id='imp".$id."' title='Importar planilha base' class='clickable importarplanilha'><i class='fas fa-file-import inlineButton'></i></a>";
+                        $optionsString .= "<a id='edi".$id."' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
+                        $optionsString .= "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
+                        $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
+                        $optionsString .= "<a id='dem".$id."' title='Alterar demografia' class='clickable demografia'><span class='material-symbols-outlined inlineButton'>language</span></a>";
+                        $optionsString .= "<a id='sel".$id."' title='Tela de seleções' class='clickable selecoes'><span class='material-symbols-outlined inlineButton'>public</span></a>";
+                        $optionsString .= "<a id='exp".$id."' title='Exportar planilha base' class='clickable exportarplanilha'><span class='material-symbols-outlined inlineButton'>file_upload</span></a>";
+                        $optionsString .= "<a id='imp".$id."' title='Importar planilha base' class='clickable importarplanilha'><span class='material-symbols-outlined inlineButton'>file_download</span></a>";
                         $optionsString .= "<input type='file' hidden id='inputplanilha".$id."' class='inputfile' name='inputplanilha' accept='.xlsx'/>";
-                        $optionsString .= "<a hidden id='sal".$id."' title='Importar' class='clickable confirmarimport'><i class='fas fa-check inlineButton positive'></i></a>";
-                        $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelarimport'><i class='fas fa-times inlineButton negative'></i></a>";
+                        $optionsString .= "<a hidden id='sal".$id."' title='Importar' class='clickable confirmarimport'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
+                        $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelarimport'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
                         $optionsString .= "</td>";
                     echo $optionsString;
 
