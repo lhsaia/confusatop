@@ -2,7 +2,7 @@
 
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -312,10 +312,10 @@ function retrieveRaces(season_id, panel_element){
       }
       let driver_owner = parseInt($("#select-driver option:selected").attr("data-owner"));
       if(element.status == 0 && verifyLoggedUser(driver_owner)){
-        add_edition = "<span class='editable-race'><i class='far fa-edit'></i></span>";
+        add_edition = "<span class='editable-race'><span class='material-symbols-outlined'>edit</span></span>";
       } else{
 		  if(element.file != null){
-			  add_edition = "<a href='/octamotor/race_live.php?file_name="+element.file+"' class='see-race' ><i class='fas fa-tv'></i></a>";
+			  add_edition = "<a href='/octamotor/race_live.php?file_name="+element.file+"' class='see-race' ><span class='material-symbols-outlined'>tv</span></a>";
 		  } else {
 			  add_edition = "";
 		  }

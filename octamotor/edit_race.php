@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 ini_set( 'display_errors', true );
 error_reporting( E_ALL );
 

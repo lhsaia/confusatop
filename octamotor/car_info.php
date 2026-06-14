@@ -3,7 +3,7 @@
 <?php
 /// bloqueios de nível
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -240,15 +240,15 @@ if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $competition_owner && 
             <label class='picture-label' for="car-suit"><span id="car-suit-text">Macacão</span><img class="hidden" id="car-suit-preview" src=""/></label>
             <input type="file" id="car-suit" onchange="readURL(this, 'suit');"/>
           </div>
-                    <div class='form-group'>
+          <div class='form-group'>
               <button class='kit-button' id='kit-carro'>
-                  <i class="fas fa-paint-brush"></i><span> Kit carro</span>
+                  <span class='material-symbols-outlined'>brush</span><span> Kit carro</span>
                   <iframe id='download_car' hidden src=""></iframe>
               </button>
           </div>
                     <div class='form-group'>
               <button class='kit-button' id='kit-macacao'>
-                  <i class="fas fa-paint-brush"></i><span> Kit macacão</span>
+                  <span class='material-symbols-outlined'>brush</span><span> Kit macacão</span>
                   <iframe id='download_suit' hidden src=""></iframe>
               </button>
           </div>
