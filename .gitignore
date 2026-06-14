@@ -72,3 +72,8 @@ images/mascotes/*.webp
 # temporary unfinished business
 competicoes/
 java_station/
+scratch/
+*_refactor.py
+*_forms.py
+*_divs.py
+test_query_*.php
