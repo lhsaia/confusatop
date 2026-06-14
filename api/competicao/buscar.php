@@ -5,7 +5,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/objetos/competicao.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/campeonato_clube.php");
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 $dono = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0;
 
 $database = new Database();

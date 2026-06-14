@@ -1,7 +1,7 @@
 <?php
 require 'db.php';
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 $client_id = $_GET['client_id'] ?? null;
 $redirect_uri = $_GET['redirect_uri'] ?? null;

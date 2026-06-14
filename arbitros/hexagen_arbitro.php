@@ -4,7 +4,7 @@
 // error_reporting( E_ALL );
 
 if(!isset($_POST['criar'])){
-    session_start();
+    require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 }
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
