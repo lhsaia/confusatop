@@ -73,6 +73,7 @@ images/mascotes/*.webp
 competicoes/
 java_station/
 scratch/
+refactor.py
 *_refactor.py
 *_forms.py
 *_divs.py
