@@ -15,6 +15,7 @@
             <input type="hidden" name="sexo" id="sexo" value="0" />
 						<input type="hidden" name="campeonato_jogo_import" id="campeonato_jogo_import" value="10" />
 						<input type="hidden" name="fase_jogo_import" id="fase_jogo_import" value="0" />
+						<input type="hidden" name="competicao_tipo" id="competicao_tipo" value="1" />
 			<button type="submit" class="box__button">Carregar</button>
 		</div>
 

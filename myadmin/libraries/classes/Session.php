@@ -187,7 +187,7 @@ class Session
         // f.e. session dir cannot be accessed - session file not created
         $orig_error_count = $errorHandler->countErrors(false);
 
-        $session_result = session_start();
+        $session_result = require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
         if ($session_result !== true
             || $orig_error_count != $errorHandler->countErrors(false)
@@ -224,7 +224,7 @@ class Session
                 $errors = $errorHandler->sliceErrors($orig_error_count);
                 self::sessionFailed($errors);
             }
-            session_start();
+            require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
             if (empty($_SESSION[' PMA_token '])) {
                 Core::fatalError(
                     'Failed to store CSRF token in session! ' .

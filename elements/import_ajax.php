@@ -1,12 +1,10 @@
 <?php
 
-session_start();
-ini_set( 'display_errors', true );
-error_reporting( E_ALL );
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
+// ini_set( 'display_errors', true );
+// error_reporting( E_ALL );
 
 if(isset($_POST['ajax'])){
-
-
 
 include($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 include($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
@@ -17,7 +15,11 @@ include($_SERVER['DOCUMENT_ROOT']."/objetos/clima.php");
 include($_SERVER['DOCUMENT_ROOT']."/objetos/tecnico.php");
 include($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
 include($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
-include($_SERVER['DOCUMENT_ROOT']."/objetos/jogos.php");
+if(isset($_SESSION['jogadorTime']) && $_SESSION['jogadorTime'] == 7){
+    include($_SERVER['DOCUMENT_ROOT']."/objetos/jogos_clube.php");
+} else {
+    include($_SERVER['DOCUMENT_ROOT']."/objetos/jogos.php");
+}
 include($_SERVER['DOCUMENT_ROOT']."/objetos/arbitros.php");
 
 $database = new Database();
@@ -62,8 +64,13 @@ if(isset($_SESSION['jogadorTime'])){
   } else if($_SESSION['jogadorTime'] == 6){
       $arquivo_tratamento = "/import/tratamento_estadio.php";
       $correct_extension = 'est';
+      $correct_extension = 'est';
       $max_file_size = 2000;
-  }
+  } else if($_SESSION['jogadorTime'] == 7){
+      $arquivo_tratamento = "/ligas/gerenciador/tratamento_jogo.php";
+      $correct_extension = 'hyl';
+      $max_file_size = 400000;
+  } 
 }
 
     $upload_success = null;
@@ -144,7 +151,7 @@ if(isset($_SESSION['jogadorTime'])){
 
             if($filePath != "" && $forbidden == 0 && $importExt == $correct_extension && $importSize <= $max_file_size){
 
-              if($_SESSION['jogadorTime'] == 4){
+              if($_SESSION['jogadorTime'] == 4 || $_SESSION['jogadorTime'] == 7){
                 $xml = json_decode(file_get_contents($filePath));
               } else {
                 if(simplexml_load_string(file_get_contents($filePath)) == false){

@@ -3,7 +3,7 @@
 // ini_set( 'display_errors', true );
 // error_reporting( E_ALL );
 header('Content-Type: text/html; charset=utf-8');
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/estadio.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");

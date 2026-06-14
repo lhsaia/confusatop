@@ -88,7 +88,7 @@ session_set_cookie_params(0, '/', '', $secure_cookie, true);
 /* Create signon session */
 $session_name = 'SignonSession';
 session_name($session_name);
-@session_start();
+@require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 // Determine realm and return_to
 $base = 'http';

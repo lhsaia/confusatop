@@ -1,6 +1,6 @@
 <?php
 
-require("/home/lhsaia/confusa.top/lib/functions.php");
+require($_SERVER['DOCUMENT_ROOT']."/lib/functions.php");
 
 // ini_set( 'display_errors', true );
 // error_reporting( E_ALL );

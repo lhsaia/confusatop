@@ -22,7 +22,7 @@ $session_name = 'SignonSession';
 session_name($session_name);
 // Uncomment and change the following line to match your $cfg['SessionSavePath']
 //session_save_path('/foobar');
-@session_start();
+@require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 /* Was data posted? */
 if (isset($_POST['user'])) {

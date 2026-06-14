@@ -1071,7 +1071,7 @@ EOT;
         $querytime_after = array_sum(explode(' ', microtime()));
 
         // reopen session
-        session_start();
+        require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
         return array($result, $querytime_after - $querytime_before);
     }

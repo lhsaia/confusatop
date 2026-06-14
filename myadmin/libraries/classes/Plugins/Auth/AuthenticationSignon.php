@@ -153,7 +153,7 @@ class AuthenticationSignon extends AuthenticationPlugin
                 $this->setCookieParams();
                 session_name($session_name);
                 session_id($_COOKIE[$session_name]);
-                session_start();
+                require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
             }
 
             /* Clear error message */
@@ -196,7 +196,7 @@ class AuthenticationSignon extends AuthenticationPlugin
                 if (!empty($old_id)) {
                     session_id($old_id);
                 }
-                session_start();
+                require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
             }
 
             /* Set the single signon host */
@@ -259,7 +259,7 @@ class AuthenticationSignon extends AuthenticationPlugin
                 $this->setCookieParams();
                 session_name($session_name);
                 session_id($_COOKIE[$session_name]);
-                session_start();
+                require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
             }
 
             /* Set error message */

@@ -32,7 +32,7 @@ if (ini_get('session.upload_progress.enabled')) {
     $sessionupload = array();
     define('UPLOAD_PREFIX', ini_get('session.upload_progress.prefix'));
 
-    session_start();
+    require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
     foreach ($_SESSION as $key => $value) {
         // only copy session-prefixed data
         if (substr($key, 0, strlen(UPLOAD_PREFIX))
@@ -100,7 +100,7 @@ if (isset($_GET["message"]) && $_GET["message"]) {
         // sleep
         usleep(250000); // 0.25 sec
         // reopen session
-        session_start();
+        require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
         if ((time() - $timestamp) > $maximumTime) {
             $_SESSION['Import_message']['message'] = PhpMyAdmin\Message::error(

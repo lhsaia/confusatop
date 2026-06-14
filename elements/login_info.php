@@ -1,6 +1,7 @@
 <?php
 // Always start this first
 
+
 if(isset($_POST['logout']) && $_POST['logout']==true){
 $_SESSION = array();
 session_destroy();
@@ -16,6 +17,8 @@ $usuario = new Usuario($db);
 
 
 if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POST['password'] ) ) {
+	
+	//session_name('confusatop');
         // Getting submitted user data from database
         $usuario_inserido = $_POST['username'];
         $senha_inserida = $_POST['password'];
@@ -43,6 +46,11 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
             $_SESSION['loggedin'] = true;
 			$_SESSION['impersonated'] = true;
 			$_SESSION['emTestes'] = $usuario->emTestes($_SESSION['user_id']);
+
+            if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {
+    header("Location: " . $_POST['redirect']);
+    exit;
+}
 			
 
     	} else {
@@ -76,6 +84,11 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
                 setcookie(session_name(), $_COOKIE[session_name()], time() + 60*60*24*7, $params["path"], $params["domain"], $secure = TRUE, $httponly = TRUE);
 
             }
+
+            if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {
+    header("Location: " . $_POST['redirect']);
+    exit;
+}
 
     	} else {
             $_POST['success']='1';
