@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -82,12 +82,12 @@ $liga_stmt = $liga->readAll($from_record_num,$records_per_page,null,null,$idPais
     $perc_estrangeiros = number_format(($estrangeiros / $jogadores)*100,1)."%";
 
 echo "<div id='info-jogos'>";
-echo "<div id='times' class='infoblock' title='Quantidade de ligas'><i class='fas fa-trophy'></i><span class='informacao'>{$total_rows}</span></div>";
-echo "<div id='times' class='infoblock' title='Quantidade de times'><i class='fas fa-shield-alt'></i><span class='informacao'>{$moreInfo['clubes']}</span></div>";
-echo "<div id='times' class='infoblock' title='Quantidade de jogadores'><i class='fas fa-users'></i><span class='informacao'>{$jogadores}</span></div>";
-echo "<div id='Idades' class='infoblock' title='Média de idade'><i class='fas fa-male'></i><span class='informacao'>{$mediaIdade}</span></div>";
-echo "<div id='Estrangeiros' class='infoblock' title='Estrangeiros'><i class='fas fa-globe'></i><span class='informacao'>{$estrangeiros}</span><span class='informacao micro'>({$perc_estrangeiros})</span></div>";
-echo "<div id='Valor' class='infoblock' title='Valor de mercado (em F$)'><i class='fas fa-dollar-sign'></i><span class='informacao menor'>{$valor_total_clube}</span></div>";
+echo "<div id='times' class='infoblock' title='Quantidade de ligas'><span class='material-symbols-outlined'>emoji_events</span><span class='informacao'>{$total_rows}</span></div>";
+echo "<div id='times' class='infoblock' title='Quantidade de times'><span class='material-symbols-outlined'>shield</span><span class='informacao'>{$moreInfo['clubes']}</span></div>";
+echo "<div id='times' class='infoblock' title='Quantidade de jogadores'><span class='material-symbols-outlined'>groups</span><span class='informacao'>{$jogadores}</span></div>";
+echo "<div id='Idades' class='infoblock' title='Média de idade'><span class='material-symbols-outlined'>person</span><span class='informacao'>{$mediaIdade}</span></div>";
+echo "<div id='Estrangeiros' class='infoblock' title='Estrangeiros'><span class='material-symbols-outlined'>public</span><span class='informacao'>{$estrangeiros}</span><span class='informacao micro'>({$perc_estrangeiros})</span></div>";
+echo "<div id='Valor' class='infoblock' title='Valor de mercado (em F$)'><span class='material-symbols-outlined'>attach_money</span><span class='informacao menor'>{$valor_total_clube}</span></div>";
 echo "</div>";
 echo "<br>";
 
@@ -139,8 +139,9 @@ echo "<tbody>";
                 echo "<td class='nopadding'>{$estrangeirosPorTime}</td>";
                 echo "<td class='nopadding'>{$valorMercadoPorTime}</td>";
                 echo "<td class='nopadding'>{$valorMedioJogador}</td>";
-                echo "<td><a title='Baixar liga Footscore' id='dfs ".$idLiga."' class='clickable exportarFootscore'><i class='far fa-file-excel inlineButton azul'></i></a></td>";
-            echo "</tr>";
+                //echo "<td><a title='Baixar liga Footscore' id='dfs ".$idLiga."' class='clickable exportarFootscore'><span class='material-symbols-outlined inlineButton azul'>table_view</span></a></td>";
+				echo "<td><a title='Baixar times para Kitbasher' id='ktb".$idLiga."' class = 'clickable exportarKitbasher'><span class='material-symbols-outlined inlineButton azul'>checkroom</span></a></td>";
+			echo "</tr>";
 
         }
 
@@ -175,6 +176,41 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 
             $.ajax({
                 url: '/export/export_footscore.php',
+                processData: false,
+               contentType: false,
+               cache: false,
+               type: "POST",
+               dataType: 'json',
+                data: formData,
+                     success: function(data) {
+                         document.getElementById("results_sheet").src = data.filename;
+                         //location.reload();
+                     },
+                     error: function(data) {
+                         successmessage = 'Error';
+                         alert("Erro na execução da solicitação");
+                         //location.reload();
+                     }
+                 }).fail(function(jqXHR, textStatus, errorThrown ){
+                     console.log("Erro");
+                     console.log(jqXHR);
+                     console.log(textStatus);
+                     console.log(errorThrown);
+                 });
+        });
+		
+		
+		        $('.exportarKitbasher').click(function(){
+            var idLiga = $(this).attr("id").replace(/\D/g,'');
+            //window.location.href = "exportar_planilha.php?idPais="+ idPais;
+
+            var formData = new FormData();
+            formData.append('codigo_liga', idLiga);
+			
+			console.log(idLiga);
+
+            $.ajax({
+                url: '/export/export_kitbasher.php',
                 processData: false,
                contentType: false,
                cache: false,

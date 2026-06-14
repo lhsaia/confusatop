@@ -3,7 +3,7 @@
 
 ini_set( 'display_errors', true );
 error_reporting( E_ALL );
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $logged_user = $_SESSION['user_id'];
@@ -103,10 +103,11 @@ var map = new JsVectorMap({
     zoomOnScroll: true,
     zoomOnScrollSpeed: 3,
     zoomMax: 15,
-    zoomMin: 1,
+    zoomMin: 0.5,
     zoomAnimate: true,
     showTooltip: true,
     zoomStep: 1.5,
+
     bindTouchEvents: true,
     focusOn: {}, // focus on regions on page load
     /**

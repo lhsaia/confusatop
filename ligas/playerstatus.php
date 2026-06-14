@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -89,7 +89,25 @@ $css_login = 'login';
 $aux_css = 'ligas';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
-
+?>
+<style>
+.stamp {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+.stamp-definitiva { background-color: #2e7d32; color: white; }
+.stamp-semcusto { background-color: #546e7a; color: white; }
+.stamp-emprestimo { background-color: #1976d2; color: white; }
+.stamp-extensao { background-color: #7b1fa2; color: white; }
+.stamp-retorno { background-color: #f57c00; color: white; }
+.stamp-fim { background-color: #c62828; color: white; }
+</style>
 ?>
 
 <script>
@@ -639,14 +657,31 @@ echo "<tbody>";
 
              //$escudoOrigem = explode(".",$escudoOrigem);
              //$escudoDestino = explode(".",$escudoDestino);
+             $valor_raw = $valor;
              $valor = $valor/1000;
              $data = explode(" ",$data);
              $data = explode("-", $data[0]);
              $data = $data[2] . "/" . $data[1] . "/" . $data[0];
 
+             $stamp = "";
+             if ($emprestimo == 1) {
+                 $stamp = "<span class='stamp stamp-emprestimo'>Empréstimo</span>";
+             } else if ($emprestimo == 2) {
+                 $stamp = "<span class='stamp stamp-extensao'>Extensão</span>";
+             } else if ($emprestimo == 3) {
+                 $stamp = "<span class='stamp stamp-retorno'>Retorno</span>";
+             } else if ($emprestimo == 4) {
+                 $stamp = "<span class='stamp stamp-fim'>Fim de Contrato</span>";
+             } else if ($emprestimo == 0) {
+                 if ($valor_raw == 0) {
+                     $stamp = "<span class='stamp stamp-semcusto'>Sem Custo</span>";
+                 } else {
+                     $stamp = "<span class='stamp stamp-definitiva'>Definitiva</span>";
+                 }
+             }
 
             echo "<tr>";
-            echo "<td class='nopadding'>{$data}</td>";
+            echo "<td class='nopadding'>{$data}{$stamp}</td>";
             echo "<td class='nopadding'>";
                 if($idOrigem != 0){
                     echo "<a href='/ligas/teamstatus.php?team=".$idOrigem."'>";
