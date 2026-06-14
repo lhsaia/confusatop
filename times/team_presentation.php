@@ -2,7 +2,7 @@
 
 //ini_set( 'display_errors', true );
 //error_reporting( E_ALL );
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -274,7 +274,7 @@ $lista_reservas = array();
 			$nomeAbreviado = $ficha['nome'];
 		}
 		
-		echo "<div class='ficha_individual' style='border-color: {$color1}'>";
+		echo "<div class='ficha_individual' style='border-image: linear-gradient(to left, {$color1}, transparent) 1;'>";
 		echo "<div class='nomeBandeira'><span class='nome_individual'>".mb_strtoupper($nomeAbreviado)."</span><img class='bandeiraIndividual' src='/images/bandeiras/{$ficha['nacionalidade']}'></div>";
 		echo "<div class='outras_infos'>";
 		echo "<div class='infos_individuais'>";

@@ -2,7 +2,9 @@
 
 // ini_set( 'display_errors', true );
 // error_reporting( E_ALL );
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
+
+echo "<!DOCTYPE html>";
 
 $team_id = $_GET['id'];
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -211,7 +213,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
     tbl += "<table id='tabelaPrincipal' class='table'>";
         tbl += "<thead id='headings'>";
 			tbl += "<tr>";
-				tbl += "<th asc='' class='headings' width='15%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspData</th>";
+				tbl += "<th asc='' class='headings' width='15%'><span class='ascending material-symbols-outlined hidden'>arrow_drop_up</span><span class='descending material-symbols-outlined hidden'>arrow_drop_down</span>&nbspData</th>";
 				tbl += "<th asc='' class='headings' width='5%'>Tipo</th>";
 				tbl += "<th asc='' class='headings' width='2%'>Fluxo de Caixa</th>";
 				tbl += "<th asc='' class='headings' width='10%'>Valor</th>";
@@ -241,10 +243,10 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 
                 if(logged == "true"){
                     if( (admin == "true" ||user_id === donoTime) && val['tableFrom'] == "transactions"){
-                        // optionsString += "<a id='edi"+val['id']+"' title='Editar' class='clickable editar'><i class='far fa-edit inlineButton'></i></a>";
-                        // optionsString += "<a hidden id='sal"+val['id']+"' title='Salvar' class='clickable salvar'><i class='fas fa-check inlineButton positive'></i></a>";
-                        // optionsString += "<a hidden id='can"+val['id']+"' title='Cancelar' class='clickable cancelar'><i class='fas fa-times inlineButton negative'></i></a>";
-                        optionsString += "<a id='apa"+val['trans_id']+"' title='Apagar' class='clickable apagar'><i class='fas fa-trash-alt negative inlineButton'></i></a>";
+                        // optionsString += "<a id='edi"+val['id']+"' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
+                        // optionsString += "<a hidden id='sal"+val['id']+"' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
+                        // optionsString += "<a hidden id='can"+val['id']+"' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
+                        optionsString += "<a id='apa"+val['trans_id']+"' title='Apagar' class='clickable apagar'><span class='material-symbols-outlined negative inlineButton'>delete</span></a>";
                     }
                     optionsString += "</td>";
                     tbl += optionsString;
@@ -703,16 +705,16 @@ if(prop == 'pontos'){
 
 ?>
 </select><i id='transaction_type_icon' class=''></i></div>
-<!--<div id='search_wrapper'><input type=text id='caixa_pesquisa' placeholder='Pesquisar...'><i class='fas fa-search'></i></div> -->
+<!--<div id='search_wrapper'><input type=text id='caixa_pesquisa' placeholder='Pesquisar...'><span class='material-symbols-outlined'>search</span></div> -->
 <button id='importar_time' onclick="window.location='/finance/create_transaction.php?team=<?php echo $team_id ?>';">Criar transação</button>
 <h2>Resumo Financeiro - <?php echo $nome_time["Nome"]?></h2>
 <hr>
 <?php
 echo "<div style='clear:both; float:center'></div>";
 echo "<div id='info-financeira'>";
-echo "<div id='Receitas' class='infoblock vitoria larger' title='Receitas'><i class='fas fa-sign-in-alt'></i><span class='informacao'></span></div>";
-echo "<div id='Gastos' class='infoblock derrota larger' title='Gastos'><i class='fas fa-sign-out-alt'></i><span class='informacao'></span></div>";
-echo "<div id='Balanco' class='infoblock larger' title='Balanço'><i class='fas fa-balance-scale'></i><span class='informacao'></span></div>";
+echo "<div id='Receitas' class='infoblock vitoria larger' title='Receitas'><span class='material-symbols-outlined'>login</span><span class='informacao'></span></div>";
+echo "<div id='Gastos' class='infoblock derrota larger' title='Gastos'><span class='material-symbols-outlined'>logout</span><span class='informacao'></span></div>";
+echo "<div id='Balanco' class='infoblock larger' title='Balanço'><span class='material-symbols-outlined'>balance</span><span class='informacao'></span></div>";
 echo "</div>";
 echo "<br>";
 echo "<div style='clear:both;'></div>";
