@@ -1,5 +1,5 @@
 <?php  
-	session_start();
+	require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 	
 	if(isset($_SESSION['user_id']) && $_SESSION['user_id'] <> 0){
 		$user = $_SESSION['user_id'];

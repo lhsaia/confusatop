@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 $user_id = $_SESSION['user_id'];
 
