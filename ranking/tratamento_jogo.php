@@ -7,7 +7,6 @@
         $jogo->timeA_penaltis = ((int)$xml->placarPenaltisTime1 >= 0 ? (int)$xml->placarPenaltisTime1 : NULL);
         $jogo->timeB_penaltis = ((int)$xml->placarPenaltisTime2 >= 0 ? (int)$xml->placarPenaltisTime2 : NULL);
         $jogo->fase = $fase_jogo_import;
-        //$jogo->data = $data_jogo_import;
         $jogo->campeonato = $campeonato_jogo_import;
 
         $nome_pais_A = (string)$xml->time1;
@@ -69,14 +68,15 @@
         $jogo->data = date("Y-m-d", strtotime($explodedName[0]));
 
         //var_dump($log_eventos);
-			if($jogo->importar()){
-        if($db->lastInsertId() != 0){
-          $idJogo = $db->lastInsertId();
-        } else {
-          $idJogo = $jogo->getMatchId();
-        }
-        $jogo->importarEventos($log_eventos, $idJogo);
-				$is_success = true;
+		if($jogo->importar()){
+			if($db->lastInsertId() != 0){
+				$idJogo = $db->lastInsertId();
+			} else {
+				$idJogo = $jogo->getMatchId();
+			}
+			$jogo->importarEventos($log_eventos, $idJogo);
+			//$jogo->importarEscalacao($log_escalacao, $idJogo);
+			$is_success = true;
 			} else {
         $error_msg = 'Acusando duplicata';
       }

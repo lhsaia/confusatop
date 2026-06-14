@@ -2,7 +2,7 @@
 
 //ini_set( 'display_errors', true );
 //error_reporting( E_ALL );
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -79,13 +79,13 @@ $golsContra = $info['golsContraVisitante']+$info['golsContraMandante'];
 
 // Add toggleButton class to buttons below
 echo "<div id='info-jogos'>";
-echo "<a href='#' id='Pontos' class='infoblock togglebutton' title='Pontos totais no ranking'><i class='fas fa-medal'></i> " . $pontos . "</a>";
-echo "<a href='#' id='Jogos' class='infoblock togglebutton' title='Jogos totais'><i class='far fa-calendar-alt'></i> " . $total_rows . "</a>";
-echo "<a href='#' id='Vitoria' class='infoblock togglebutton' title='Número de vitórias'><i class='fas fa-arrow-circle-up vitoria'></i> " . $info['vitorias'] . "</a>";
-echo "<a href='#' id='Empate' class='infoblock togglebutton' title='Número de empates'><i class='fas fa-minus-circle empate'></i> " . $info['empates'] . "</a>";
-echo "<a href='#' id='Derrota' class='infoblock togglebutton' title='Número de derrotas'><i class='fas fa-arrow-circle-down derrota'></i> " . $info['derrotas'] . "</a>";
-echo "<a href='#' id='GolsPro' class='infoblock togglebutton' title='Total de gols marcados'><i class='fas fa-futbol vitoria'></i> " . $golsPro  . "</a>";
-echo "<a href='#' id='GolsContra' class='infoblock togglebutton' title='Total de gols sofridos'><i class='fas fa-futbol derrota'></i> " .$golsContra . "</a>";
+echo "<a href='#' id='Pontos' class='infoblock togglebutton' title='Pontos totais no ranking'><span class='material-symbols-outlined'>military_tech</span> " . $pontos . "</a>";
+echo "<a href='#' id='Jogos' class='infoblock togglebutton' title='Jogos totais'><span class='material-symbols-outlined'>calendar_today</span> " . $total_rows . "</a>";
+echo "<a href='#' id='Vitoria' class='infoblock togglebutton' title='Número de vitórias'><span class='material-symbols-outlined vitoria'>arrow_circle_up</span> " . $info['vitorias'] . "</a>";
+echo "<a href='#' id='Empate' class='infoblock togglebutton' title='Número de empates'><span class='material-symbols-outlined empate'>do_not_disturb_on</span> " . $info['empates'] . "</a>";
+echo "<a href='#' id='Derrota' class='infoblock togglebutton' title='Número de derrotas'><span class='material-symbols-outlined derrota'>arrow_circle_down</span> " . $info['derrotas'] . "</a>";
+echo "<a href='#' id='GolsPro' class='infoblock togglebutton' title='Total de gols marcados'><span class='material-symbols-outlined vitoria'>sports_soccer</span> " . $golsPro  . "</a>";
+echo "<a href='#' id='GolsContra' class='infoblock togglebutton' title='Total de gols sofridos'><span class='material-symbols-outlined derrota'>sports_soccer</span> " .$golsContra . "</a>";
 echo "</div>";
 echo "<br>";
 echo "<div style='clear:both; float:center'></div>";

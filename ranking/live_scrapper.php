@@ -107,7 +107,7 @@ file_put_contents($file, $current);
 // // // // Create DOM from URL or file
 // // // //$html = file_get_html('http://52.203.150.214:8080/CONFUSALive/matches?when=previous');
  
-// session_start();
+// require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 // include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 

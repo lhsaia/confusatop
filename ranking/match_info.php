@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -84,7 +84,7 @@ echo "<hr>";
       echo "<span id='match-info-competition'>";
         echo $results['competition_name'];
       echo "</span>";
-      if($results['fase']){
+      if(isset($results['fase'])){
         echo "<span id='match-info-phase'>";
           echo "&nbsp(" . $results['fase'] . ")";
         echo "</span>";
@@ -138,16 +138,20 @@ echo "<hr>";
 
           switch ($tipo) {
             case 1:
-              $icon = 'fas fa-futbol goal ';
+              $iconClass = 'goal';
+              $iconName = 'sports_soccer';
               break;
             case 2:
-              $icon = 'fas fa-square yellow-card ';
+              $iconClass = 'yellow-card';
+              $iconName = 'square';
               break;
             case 3:
-              $icon = 'fas fa-square red-card ';
+              $iconClass = 'red-card';
+              $iconName = 'square';
               break;
             case 4:
-              $icon = 'fas fa-futbol own-goal ';
+              $iconClass = 'own-goal';
+              $iconName = 'sports_soccer';
               break;
           }
 
@@ -158,8 +162,8 @@ echo "<hr>";
                 echo "<span class='match-event-player-name-1'>{$player_name_event_a}</span>";
               }
               echo "<span class='match-event-minute-1'>{$minute_event_a}</span>";
-              echo "<i class='match-event-icon {$icon}'>";
-              echo "</i>";
+              echo "<span class='material-symbols-outlined match-event-icon {$iconClass}'>{$iconName}</span>";
+              //echo "</i>";
               echo "<span class='match-event-minute-2'>{$minute_event_b}</span>";
               if($player_id_event_b != 0){
                 echo "<a href='/ligas/playerstatus.php?player={$player_id_event_b}'><span class='match-event-player-name-2'>{$player_name_event_b}</span></a>";

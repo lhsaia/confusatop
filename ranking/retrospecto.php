@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -661,14 +661,14 @@ if(!single){
     tbl += "<table id='tabelajogos' class='table'>";
         tbl += "<thead id='headings'>";
             tbl += "<tr>";
-                tbl += "<th asc='' id='nomeA' class='headings' width='24%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTime A</th>";
-                tbl +=  "<th asc='' id='timeAgols' class='headings' width='5%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspGols</th>";
-                tbl +=  "<th asc='' id='timeApenaltis' class='headings' width='5%' class='penaltybox'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbsp</th>";
-                tbl +=  "<th asc='' id='timeBgols' class='headings' width='5%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspGols</th>";
-                tbl +=  "<th asc='' id='nomeB' class='headings' width='24%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTime B</th>";
-                tbl +=  "<th asc='' id='data' class='headings' width='14%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspData</th>";
-                tbl +=  "<th asc='' id='campeonato' class='headings' width='14%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspCampeonato</th>";
-                tbl +=  "<th asc='' id='fase' class='headings' width='5%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspFase</th>";
+                tbl += "<th asc='' id='nomeA' class='headings' width='24%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspTime A</th>";
+                tbl +=  "<th asc='' id='timeAgols' class='headings' width='5%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspGols</th>";
+                tbl +=  "<th asc='' id='timeApenaltis' class='headings' width='5%' class='penaltybox'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp</th>";
+                tbl +=  "<th asc='' id='timeBgols' class='headings' width='5%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspGols</th>";
+                tbl +=  "<th asc='' id='nomeB' class='headings' width='24%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspTime B</th>";
+                tbl +=  "<th asc='' id='data' class='headings' width='14%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspData</th>";
+                tbl +=  "<th asc='' id='campeonato' class='headings' width='14%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspCampeonato</th>";
+                tbl +=  "<th asc='' id='fase' class='headings' width='5%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspFase</th>";
             tbl +=  "</tr>";
         tbl +=  "</thead>";
         tbl +=  "<tbody>";

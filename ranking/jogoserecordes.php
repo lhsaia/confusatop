@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -72,15 +72,15 @@ function updateTable(ajax_data, current_page, highlighted, direction){
     tbl += "<table id='tabelajogos' class='table'>";
         tbl += "<thead id='headings'>";
             tbl += "<tr>";
-                tbl += "<th asc='' id='nomeA' class='headings' width='24%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTime A</th>";
-                tbl +=  "<th asc='' id='timeAgols' class='headings' width='5%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspGols</th>";
-                tbl +=  "<th asc='' id='timeApenaltis' class='headings' width='5%' class='penaltybox'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbsp</th>";
-                tbl +=  "<th asc='' id='timeBgols' class='headings' width='5%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspGols</th>";
-                tbl +=  "<th asc='' id='nomeB' class='headings' width='24%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTime B</th>";
-                tbl +=  "<th asc='' id='data' class='headings' width='14%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspData</th>";
-                tbl +=  "<th asc='' id='campeonato' class='headings' width='14%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspCampeonato</th>";
-                tbl +=  "<th asc='' id='calculo' class='headings' width='5%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspCalculado?</th>";
-                tbl += "<th asc='' id='pontos' class='headings' width='4%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspPontos</td>";
+                tbl += "<th asc='' id='nomeA' class='headings' width='24%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspTime A</th>";
+                tbl +=  "<th asc='' id='timeAgols' class='headings' width='5%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspGols</th>";
+                tbl +=  "<th asc='' id='timeApenaltis' class='headings' width='5%' class='penaltybox'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp</th>";
+                tbl +=  "<th asc='' id='timeBgols' class='headings' width='5%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspGols</th>";
+                tbl +=  "<th asc='' id='nomeB' class='headings' width='24%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspTime B</th>";
+                tbl +=  "<th asc='' id='data' class='headings' width='14%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspData</th>";
+                tbl +=  "<th asc='' id='campeonato' class='headings' width='14%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspCampeonato</th>";
+                tbl +=  "<th asc='' id='calculo' class='headings' width='5%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspCalculado?</th>";
+                tbl += "<th asc='' id='pontos' class='headings' width='4%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspPontos</td>";
             tbl +=  "</tr>";
         tbl +=  "</thead>";
         tbl +=  "<tbody>";
@@ -272,7 +272,7 @@ if(prop == 'pontos'){
 
 echo "<div id='ranking-container'>";
 echo "<div  id='ranking'>";
-echo "<div id='direita'><input type=text id='caixa_pesquisa' placeholder='Pesquisar...'><i class='fas fa-search'></i></div>" ;
+echo "<div id='direita'><input type=text id='caixa_pesquisa' placeholder='Pesquisar...'><span class='material-symbols-outlined'>search</span></div>" ;
 echo "<h2> Recordes e jogos gerais </h2>";
 echo "<hr>";
 
@@ -287,11 +287,11 @@ $info_stmt = $jogo->recuperarInfoGeral();
 $info = $info_stmt->fetch(PDO::FETCH_ASSOC);
 
 echo "<div id='info-jogos'>";
-echo "<a href='#' id='Pontos' class='masterblock infoblock togglebutton' title='Pontos trocados no ranking'><i class='fas fa-medal'></i> " . $info['pontosTrocados']. "</a>";
-echo "<a href='#' id='Jogos' class='masterblock infoblock  togglebutton' title='Jogos totais'><i class='far fa-calendar-alt'></i> " . $info['jogosTotais'] . "</a>";
-echo "<a href='#' id='Vitoria' class='masterblock infoblock  togglebutton' title='Número de jogos com vencedor'><i class='fas fa-arrow-circle-up vitoria'></i> " . $info['vitorias'] . "</a>";
-echo "<a href='#' id='Empate' class='masterblock infoblock  togglebutton' title='Número de empates'><i class='fas fa-minus-circle empate'></i> " . $info['empates'] . "</a>";
-echo "<a href='#' id='Gols' class='masterblock infoblock  togglebutton' title='Total de gols marcados'><i class='fas fa-futbol vitoria'></i> " . $info['gols']  . "</a>";
+echo "<a href='#' id='Pontos' class='masterblock infoblock togglebutton' title='Pontos trocados no ranking'><span class='material-symbols-outlined'>military_tech</span> " . $info['pontosTrocados']. "</a>";
+echo "<a href='#' id='Jogos' class='masterblock infoblock  togglebutton' title='Jogos totais'><span class='material-symbols-outlined'>calendar_today</span> " . $info['jogosTotais'] . "</a>";
+echo "<a href='#' id='Vitoria' class='masterblock infoblock  togglebutton' title='Número de jogos com vencedor'><span class='material-symbols-outlined vitoria'>arrow_circle_up</span> " . $info['vitorias'] . "</a>";
+echo "<a href='#' id='Empate' class='masterblock infoblock  togglebutton' title='Número de empates'><span class='material-symbols-outlined empate'>do_not_disturb_on</span> " . $info['empates'] . "</a>";
+echo "<a href='#' id='Gols' class='masterblock infoblock  togglebutton' title='Total de gols marcados'><span class='material-symbols-outlined vitoria'>sports_soccer</span> " . $info['gols']  . "</a>";
 echo "</div>";
 echo "<br>";
 

@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -23,7 +23,7 @@ if(isset($_GET['fed'])){
 <div id="ranking-container">
 <div align="center" id="ranking">
 <h2>Ranking de seleções masculino <span id="nomeFederacao"></h2>
-<h3> 15 de Junho de 2019</h3>
+<h3> 02 de junho de 2026</h3>
 <hr>
 <div id="federation-select">
 <a href="https://confusa.top/ranking">Geral</a>
