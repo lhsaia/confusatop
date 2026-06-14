@@ -1,5 +1,5 @@
 <?php  
-	session_start();
+	require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
     $suggestion_id = $_POST['id'];
 	
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");

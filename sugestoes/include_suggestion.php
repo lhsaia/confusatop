@@ -1,6 +1,6 @@
 <?php  
 
-	session_start();
+	require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
     $titulo = $_POST['title'];
 	$descricao = $_POST['description'];
 	$tipo = $_POST['type'];
