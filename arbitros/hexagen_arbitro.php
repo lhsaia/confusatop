@@ -3,30 +3,35 @@
 // ini_set( 'display_errors', true );
 // error_reporting( E_ALL );
 
+$is_success = false;
+$error_msg = '';
+$arbitro = null;
+
 if(!isset($_POST['criar'])){
     require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 }
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
+    //estabelecer conexão com banco de dados
+    include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/arbitros.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
+    $database = new Database();
+    $db = $database->getConnection();
+    $arbitro = new TrioArbitragem($db);
+    $pais = new Pais($db);
+    $liga = new Liga($db);
+    $time = new Time($db);
+
     if(isset($_POST['criar'])){
         $nacionalidade = $_POST['pais'];
+        $sexo = isset($_POST['sexo']) ? $_POST['sexo'] : 0;
     } else {
         $sexo = $_POST['sexo'];
         $nacionalidade = $_POST['nacionalidade'];
-
-        //estabelecer conexão com banco de dados
-        include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
-        include_once($_SERVER['DOCUMENT_ROOT']."/objetos/arbitros.php");
-        include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
-        include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
-        include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
-        $database = new Database();
-        $db = $database->getConnection();
-        $arbitro = new TrioArbitragem($db);
-        $pais = new Pais($db);
-        $liga = new Liga($db);
-        $time = new Time($db);
     }
 
     if($nacionalidade == 0){
@@ -34,7 +39,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     }
 
     $errorCounter = 0;
-    $error_msg = '';
 
     //arbitro
     $origemNomeArbitro = $pais->sorteioDemografico($nacionalidade, 0, $sexo);

@@ -238,7 +238,7 @@ class Car extends db_name implements \JsonSerializable{
 	
 	$query = "SELECT c.owner FROM car r LEFT JOIN competition c ON c.id = r.competition_id WHERE r.id = ? ";
     $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(1,$driver_id);
+    $stmt->bindParam(1,$car_id);
     $stmt->execute();
     $competition_result = $stmt->fetchColumn();
 

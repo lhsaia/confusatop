@@ -5,12 +5,16 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
 
 $database = new Database();
 $db = $database->getConnection();
 
 $jogador = new Jogador($db);
 $time = new Time($db);
+$pais = new Pais($db);
+$liga = new Liga($db);
 
 $pageType = $_GET['type'];
 $page = isset($_GET['page']) ? $_GET['page'] : 1;
@@ -39,31 +43,26 @@ switch($pageType){
         break;
     case 'janelas':
         $nomePagina = 'Janelas de Transferência';
-        include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
-        $pais = new Pais($db);
         $stmt = $pais->janelasTransferencia($from_record_num, $records_per_page);
         $total_rows = $pais->countAllActive();
         break;
     case 'busca':
         $nomePagina = 'Busca Avançada de Jogadores';
-        include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
-		include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
-        $pais = new Pais($db);
-		$liga = new Liga($db);
         break;
     case 'buscaTecnico';
         $nomePagina = 'Busca Avançada de Técnicos';
-        include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
         include_once($_SERVER['DOCUMENT_ROOT']."/objetos/tecnico.php");
-		include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
-        $pais = new Pais($db);
-		$liga = new Liga($db);
         $tecnico = new Tecnico($db);
         break;
 	case 'usuario':
-		$nomePagina = 'Transferências de ' . $_SESSION['nomereal'];
-        $stmt = $time->todasTransferenciasUsuario($from_record_num, $records_per_page, $_SESSION['user_id']);
-        $total_rows = $time->countAllTransfers($_SESSION['user_id']);
+        if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+            header('Location: /index.php');
+            exit;
+        }
+		$nomePagina = 'Transferências de ' . ($_SESSION['nomereal'] ?? '');
+        $userId = $_SESSION['user_id'] ?? 0;
+        $stmt = $time->todasTransferenciasUsuario($from_record_num, $records_per_page, $userId);
+        $total_rows = $time->countAllTransfers($userId);
         break;
     default:
         $nomePagina = 'Essa página não existe';
@@ -344,7 +343,7 @@ if($pageType == 'maiores' || $pageType == 'ultimas'){
                         echo "<td class='nopadding mercado".$statusMes."'><span class='nomSM'>{$icone}</span><select class='selSM".$index."' hidden><option value=1>O</option><option value=0>X</option></select></td>";
                     }
                     $optionString = '';
-                    if($_SESSION['user_id']===$idDonoPais){
+                    if(isset($_SESSION['user_id']) && $_SESSION['user_id']===$idDonoPais){
                         $optionString .= "<a id='dem".$idPais."' title='Editar janela' class='clickable editar'><span class='material-symbols-outlined inlineButton azul'>edit</span></a>";
                         $optionString .= "<a hidden id='sal".$idPais."' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
                         $optionString .= "<a hidden id='can".$idPais."' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton vermelho'>close</span></a>";
@@ -534,7 +533,7 @@ else{
 </form>
 <div id='errorbox'></div>
 <img id='loading' src='/images/icons/ajax-loader.gif' hidden>
-<div hidden id='maquinaSorvete'><?php echo $_SESSION['user_id']?></div>
+<div hidden id='maquinaSorvete'><?php echo $_SESSION['user_id'] ?? '' ?></div>
 
 <div id='tabela_busca_jogador' class='tbl_user_data'></div>
 
@@ -639,7 +638,7 @@ echo $date->format('Y-m-d');
       <select id="clubeDestinoTecnico"  name="clubeDestinoTecnico" class="form-control" required>
           <?php
       // ler times do banco de dados
-                $newStmt = $time->read($_SESSION['user_id'], false);
+                $newStmt = $time->read($_SESSION['user_id'] ?? 0, false);
 
                 echo "<option value=''>Selecione time...</option>";
 
@@ -656,7 +655,7 @@ echo $date->format('Y-m-d');
 
       <input type="hidden" value="" name="idTecnicoTransf" id="idTecnicoTransf" required>
       <input type="hidden" value="" name="clubeOrigemTecnico" id="clubeOrigemTecnico" required>
-      <input type="hidden" value="<?php echo $_SESSION['user_id'] ?>" name="sorveteTec" required>
+      <input type="hidden" value="<?php echo $_SESSION['user_id'] ?? '' ?>" name="sorveteTec" required>
 
       <button type="submit" name="newsubmit" class="submitbtn">Propor transferência</button>
     </div>

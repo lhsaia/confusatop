@@ -4,7 +4,17 @@
 
 /// bloqueios de nível
 
-session_start();
+if (isset($_SERVER['DOCUMENT_ROOT'])) {
+    $dir = __DIR__;
+    while ($dir !== dirname($dir)) {
+        if (file_exists($dir . '/config/session.php')) {
+            $_SERVER['DOCUMENT_ROOT'] = $dir;
+            break;
+        }
+        $dir = dirname($dir);
+    }
+}
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -40,11 +50,11 @@ $competition_owner = $driver->getCompetitionOwner($selected_driver);
 
 $competition_locked_status = $competition->getCompetitionLockedStatusByDriver($selected_driver);
 
-if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $competition_owner && $competition_owner != 0 && !$_SESSION['emTestes']){
+if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $competition_owner && $competition_owner != 0 && !($_SESSION['emTestes'] ?? false)){
 	$can_edit = true;
-} else if(isset($_SESSION['user_id']) && $competition_locked_status == 0 && $driver_owner == $_SESSION['user_id'] && !$_SESSION['emTestes']){
+} else if(isset($_SESSION['user_id']) && $competition_locked_status == 0 && $driver_owner == $_SESSION['user_id'] && !($_SESSION['emTestes'] ?? false)){
 	$can_edit = true;
-} else if (($_SESSION['admin_status'] == '1' && (!isset($_SESSION['impersonated']) || $_SESSION['impersonated'] == false))){
+} else if ((isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && (!isset($_SESSION['impersonated']) || $_SESSION['impersonated'] == false))){
 	$can_edit = true;
 } else {
 	$can_edit = false;
@@ -197,7 +207,7 @@ if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $competition_owner && 
           </div>
           <div class='form-group'>
               <button class='kit-button' id='kit-capacete'>
-                  <i class="fas fa-paint-brush"></i><span> Kit capacete</span>
+                  <span class='material-symbols-outlined'>brush</span><span> Kit capacete</span>
                   <iframe id='download_helmet' hidden src=""></iframe>
               </button>
           </div>

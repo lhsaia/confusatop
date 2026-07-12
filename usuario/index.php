@@ -4,7 +4,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
-$page_title = "Tela inicial - ".$_SESSION['nomereal'];
+$page_title = "Tela inicial - ".($_SESSION['nomereal'] ?? 'Visitante');
 //$css_filename = "indexRanking";
 $css_filename = "newindex";
 $aux_css = "usuario";

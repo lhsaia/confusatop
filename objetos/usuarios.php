@@ -266,7 +266,10 @@ class Usuario{
 		
 		$result = $stmt->fetch();
 		
-		return $result[0];
+		if($result){
+			return $result[0];
+		}
+		return false;
 				
     }
 	
@@ -283,10 +286,48 @@ class Usuario{
 		
 		$result = $stmt->fetch();
 		
-		return $result[0];
+		if($result){
+			return $result[0];
+		}
+		
+		return false;
 				
     }
 
+	function obterApiKey($userId){
+		$userId = htmlspecialchars(strip_tags($userId));
+
+        $query = "SELECT apiKey FROM " . $this->table_name . " WHERE id = ? limit 0,1";
+
+        $stmt = $this->conn->prepare( $query );
+        $stmt->bindParam(1, $userId);
+        $stmt->execute();
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $apiKey = $row['apiKey'];
+
+        return $apiKey;
+	
+	}
+	
+    function gerarApiKey($userId){
+
+        $userId = htmlspecialchars(strip_tags($userId));
+		
+		$apiKey = implode('-', str_split(substr(strtolower(md5(microtime().rand(10000, 99999))), 0, 30), 6));
+
+        $query = "UPDATE " . $this->table_name . " SET apiKey = ? WHERE id = ?";
+        $stmt = $this->conn->prepare( $query );
+
+        $stmt->bindParam(1, $apiKey);
+        $stmt->bindParam(2, $userId);
+
+        if($stmt->execute()){
+            return $apiKey;
+        } else {
+            return null;
+        }
+    }
 
 }
 ?>

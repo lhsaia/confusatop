@@ -35,11 +35,11 @@ $competition_owner = $driver->getCompetitionOwner($id);
 
 $competition_locked_status = $competition->getCompetitionLockedStatusByDriver($id);
 
-if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $competition_owner && $competition_owner != 0 && !$_SESSION['emTestes']){
+if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $competition_owner && $competition_owner != 0 && !($_SESSION['emTestes'] ?? false)){
 	$can_edit = true;
-} else if(isset($_SESSION['user_id']) && $competition_locked_status == 0 && $driver_owner == $_SESSION['user_id'] && !$_SESSION['emTestes']){
+} else if(isset($_SESSION['user_id']) && $competition_locked_status == 0 && $driver_owner == $_SESSION['user_id'] && !($_SESSION['emTestes'] ?? false)){
 	$can_edit = true;
-} else if (($_SESSION['admin_status'] == '1' && (!isset($_SESSION['impersonated']) || $_SESSION['impersonated'] == false))){
+} else if ((isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && (!isset($_SESSION['impersonated']) || $_SESSION['impersonated'] == false))){
 	$can_edit = true;
 } else {
 	$can_edit = false;

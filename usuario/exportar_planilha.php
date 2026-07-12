@@ -1,8 +1,8 @@
 <?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
-$userId = $_SESSION['user_id'];
-$userNome = $_SESSION['nomereal'];
+$userId = $_SESSION['user_id'] ?? 0;
+$userNome = $_SESSION['nomereal'] ?? '';
 $idPais = $_POST['idPais'];
 
 require_once("/home/lhsaia/confusa.top/vendor/autoload.php");

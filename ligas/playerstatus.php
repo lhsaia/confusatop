@@ -13,7 +13,7 @@ $records_per_page = 15;
 // calculate for the query LIMIT clause
 $from_record_num = ($records_per_page * $page) - $records_per_page;
 
-$id_jogador = $_GET['player'];
+$id_jogador = $_GET['player'] ?? 0;
 
 //estabelecer conexão com banco de dados
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -55,7 +55,7 @@ $bandeira_pais = $info['bandeiraPais']; //ok
 $donoPais = $info['donoPais'];
 $idade_jogador = $info['idade']; //ok
 $nascimento_jogador = $info['nascimento']; //ok
-$posicoes_jogador = $info['stringPosicoes'];
+$posicoes_jogador = str_pad($info['stringPosicoes'] ?? '', 15, '0');
 $isGoleiro = ($posicoes_jogador[0] == 1? 1:0);
 $valor_jogador = $info['valor']; //ok
 $salario_jogador = $info['salario']; //ok
@@ -456,8 +456,15 @@ echo "<div id='quadro-foto'><img id='bandeiraGrande' class='margin-left' src='/i
 echo "</div>";
 echo "<hr>";
 
-$nascimento_jogador = explode("-",$nascimento_jogador);
-$nascimento_jogador = $nascimento_jogador[2] . "/" . $nascimento_jogador[1] . "/" . $nascimento_jogador[0];
+if (!empty($nascimento_jogador) && strpos($nascimento_jogador, '-') !== false) {
+    $nasc_parts = explode("-", $nascimento_jogador);
+    $nascimento_jogador = (count($nasc_parts) === 3) 
+        ? $nasc_parts[2] . "/" . $nasc_parts[1] . "/" . $nasc_parts[0] 
+        : "-";
+} else {
+    $nascimento_jogador = "-";
+}
+
 $valor_jogador = $valor_jogador / 1000;
 $salario_jogador = $salario_jogador / 1000;
 
@@ -468,9 +475,11 @@ if(empty($ate_quando) || $ate_quando == 0 || $ate_quando == "0000-00-00"){
 if(empty($desde_quando)){
     $desde_quando = "-";
 } else {
-    $desde_quando = explode(" ",$desde_quando);
-    $desde_quando = explode("-",$desde_quando[0]);
-    $desde_quando = $desde_quando[2] . "/" . $desde_quando[1] . "/" . $desde_quando[0];
+    $desde_quando_parts = explode(" ", $desde_quando);
+    $desde_quando_date_parts = explode("-", $desde_quando_parts[0]);
+    $desde_quando = (count($desde_quando_date_parts) === 3) 
+        ? $desde_quando_date_parts[2] . "/" . $desde_quando_date_parts[1] . "/" . $desde_quando_date_parts[0] 
+        : "-";
 }
 
 //$posicoes_jogador = "111111111111111";

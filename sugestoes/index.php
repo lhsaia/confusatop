@@ -1,9 +1,9 @@
+<?php
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
+?>
 <!DOCTYPE html>
 
 <?php
-
-require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
-
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "CONFUSA.top - Sugestões / Bugs";

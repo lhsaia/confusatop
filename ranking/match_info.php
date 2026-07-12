@@ -112,6 +112,13 @@ echo "<hr>";
 
         while ($event = $stmt->fetch(PDO::FETCH_ASSOC)){
           extract($event);
+          $player_name_event_a = "";
+          $player_id_event_a = 0;
+          $minute_event_a = "";
+          $player_name_event_b = "";
+          $player_id_event_b = 0;
+          $minute_event_b = "";
+
           if($tempo == 1 && $minutos > 45){
             $minutos_corrigidos = "45+" . ($minutos - 45);
           } else if($tempo == 2 && $minutos > 90){

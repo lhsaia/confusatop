@@ -4,7 +4,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
-$page_title = "Configurações - ".$_SESSION['nomereal'];
+$page_title = "Configurações - ".($_SESSION['nomereal'] ?? '');
 $css_filename = "indexRanking";
 $aux_css = "usuario";
 $css_login = 'login';

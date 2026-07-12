@@ -1,9 +1,7 @@
 <?php
-
 // ini_set( 'display_errors', true );
 // error_reporting( E_ALL );
-
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 require_once "classes/db_name.php";
 require_once "config/database.php";
@@ -30,103 +28,157 @@ $driver = new Driver($db);
 $car = new Car($db);
 $track = new Track($db, $track_selected);
 $competition = new Competition($db, $competition_selected);
-$race = new Race($db, $competition, $track);
 
-$race->setFilename();
-$race->setBaseTimestamp($unix_time);
-$race->setCurrentUser(isset($_SESSION['user_id']) ? $_SESSION['user_id'] : "");
-$race->setTotalLaps();
-$race->load_participants($driver, $car);
-$race->recordRaceInfo("", "2020", 1, '9999');
-$race->recordResults("A-0", 0);
-$race->calculateHighestLevel(0);
 
-$results = array();
 
-//pre-quali loop
-$all_racers = $race->getRaceList();
-$max_drivers = $competition->getMaxDrivers();
-$total_racers = count($all_racers);
 
-if($total_racers > $max_drivers){
-  $race->pre_quali();
+if(!isset($_POST['stressTest'])){
+	
+	$race = new Race($db, $competition, $track);
+
+	$race->setFilename();
+	$race->setBaseTimestamp($unix_time);
+	$race->setCurrentUser(isset($_SESSION['user_id']) ? $_SESSION['user_id'] : "");
+	$race->setTotalLaps();
+	$race->load_participants($driver, $car);
+	$race->recordRaceInfo("", "2020", 1, '9999');
+	$race->recordResults("A-0", 0);
+	$race->calculateHighestLevel(0);
+
+	$results = array();
+
+	//pre-quali loop
+	$all_racers = $race->getRaceList();
+	$max_drivers = $competition->getMaxDrivers();
+	$total_racers = count($all_racers);
+
+	if($total_racers > $max_drivers){
+	  $race->pre_quali();
+	}
+
+	$race->qualifying();
+	$race->calculateHighestLevel(1);
+	$race->runRace();
+	die(json_encode(["success" => true]));
+} else {
+	
+
+	$scoreTable = array();
+	
+	for ($i = 0; $i <= 1000; $i++) {
+		
+		$race = new Race($db, $competition, $track);
+
+		$race->setFilename();
+		$race->setBaseTimestamp($unix_time);
+		$race->setCurrentUser(isset($_SESSION['user_id']) ? $_SESSION['user_id'] : "");
+		$race->setTotalLaps();
+		$race->load_participants($driver, $car);
+		$race->recordRaceInfo("", "2020", 1, '9999');
+		$race->recordResults("A-0", 0);
+		$race->calculateHighestLevel(0);
+
+		$results = array();
+
+		//pre-quali loop
+		$all_racers = $race->getRaceList();
+		$max_drivers = $competition->getMaxDrivers();
+		$total_racers = count($all_racers);
+
+		
+		if($total_racers > $max_drivers){
+		  $race->pre_quali();
+		}
+
+		$race->qualifying();
+		$race->calculateHighestLevel(1);
+		$race->runRace(true);
+		
+		$results = $race->getLapResults();
+		
+		$lastLap = end($results);
+		
+		array_shift($lastLap);
+
+		$summaryLap = array();
+		
+		foreach($lastLap as $item){
+			$summaryLap[] = $item['driver']->getId();
+		}
+		
+		$scoreTable[] = $summaryLap;
+	
+	}
+	
+	$resultMatrix = array();
+	foreach($all_racers as $key => $value){
+		$resultMatrix[] = ["id" => $value["driver"]->getId(),"name" => $value["driver"]->getName(), "level" => $value["driver"]->getLevel(), "car_name" => $value["car"]->getName(), "car_level" => ($value["car"]->getChassis() + $value["car"]->getEngine())/2, "wins" => 0, "second" => 0, "third" => 0, "fourth" => 0, "fifth" => 0, "sixth" => 0, "seventh" => 0, "eighth" => 0 ];
+	}
+	
+	
+	foreach($resultMatrix as &$item){
+		$winCount = 0;
+		$secondCount = 0;
+		$thirdCount = 0;
+		$fourthCount = 0;
+		$fifthCount = 0;
+		$sixthCount = 0;		
+		$seventhCount = 0;		
+		$eighthCount = 0;		
+		foreach($scoreTable as $singleRace){
+			if($singleRace[0] == $item["id"]){
+				$winCount++;
+			}
+			if($singleRace[1] == $item["id"]){
+				$secondCount++;
+			}
+			if($singleRace[2] == $item["id"]){
+				$thirdCount++;
+			}
+			if($singleRace[3] == $item["id"]){
+				$fourthCount++;
+			}
+			if($singleRace[4] == $item["id"]){
+				$fifthCount++;
+			}
+			if($singleRace[5] == $item["id"]){
+				$sixthCount++;
+			}
+			if($singleRace[6] == $item["id"]){
+				$seventhCount++;
+			}
+			if($singleRace[7] == $item["id"]){
+				$eighthCount++;
+			}
+		}
+		$item["wins"] = $winCount;
+		$item["second"] = $secondCount;
+		$item["third"] = $thirdCount;
+		$item["fourth"] = $fourthCount;
+		$item["fifth"] = $fifthCount;
+		$item["sixth"] = $sixthCount;
+		$item["seventh"] = $seventhCount;
+		$item["eighth"] = $eighthCount;
+	}
+	
+	// order products by: wins DESC, inStock DESC, isRecommended DESC, name ASC
+	usort($resultMatrix, function ($a, $b): int {
+		return
+			($b["wins"] <=> $a["wins"]) * 10000000 + // wins DESC
+			($b["second"] <=> $a["second"]) * 1000000 + // second DESC
+			($b["third"] <=> $a["third"]) * 100000 + // third DESC
+			($b["fourth"] <=> $a["fourth"]) * 10000 + // fourth DESC
+			($b["fifth"] <=> $a["fifth"]) * 1000 + // fifth DESC
+			($b["sixth"] <=> $a["sixth"]) * 100 + // sixth DESC
+			($b["seventh"] <=> $a["seventh"]) * 10  +// seventh DESC
+			($b["eighth"] <=> $a["eighth"]) ; // eighth DESC
+	});
+
+	die(json_encode($resultMatrix));
+	
 }
 
 
-$race->qualifying();
-$race->calculateHighestLevel(1);
-$race->runRace();
 
-// if(!isset($_POST['track'])){
-//   $lap_results = $race->getRaceResults();
-//
-//
-//
-//     echo '<pre>'; print_r($lap_results); echo '</pre>';
-//
-//    foreach($lap_results as $key_lap => $lap_result){
-//      foreach($lap_result as $key_driver => $driver_result){
-//        //name, lap, position, lap_time, race_time
-//        $driver_name = $driver_result['driver']->getName();
-//        $lap = $key_lap;
-//        $position = $key_driver + 1;
-//        $lap_time = $driver_result['driver']->getLapTime();
-//        $race_time = $driver_result['driver']->getTotalTime();
-//        $overtakes = $driver_result['driver']->getOvertakes();
-//        $stint = $driver_result['driver']->getStint();
-//        $current_tire = $driver_result['driver']->getTire();
-//        $pit_lap = $driver_result['driver']->getRemainingPits();
-//        $threshold = $driver_result['driver']->getThreshold();
-//        $time_difference = $driver_result['driver']->getTimeDifference();
-//        $status = $driver_result['driver']->getStatus();
-//        $issue_name = $driver_result['driver']->getIssueName();
-//
-//        $results[] = array($driver_name, $lap, $position, $lap_time, $race_time, $overtakes, $stint, $current_tire, $pit_lap, $threshold, $time_difference, $status, $issue_name);
-//      }
-//    }
-//
-//    unset($lap_results);
-//
-//   /* next steps:
-//   * saving to database and displaying (JSON)
-//   improve qualifying (events) + Q1, Q2, Q3
-//   front-end
-//   optimize parameters
-//
-//   */
-//
-//
-//   // printing results
-//
-// <!--
-//   <table>
-//     <thead>
-//       <tr>
-//         <th>Driver</th>
-//         <th>Lap</th>
-//         <th>Position</th>
-//         <th>Lap Time</th>
-//         <th>Total Time</th>
-//         <th>Overtakes</th>
-//         <th>Stint</th>
-//         <th>Current Tire</th>
-//         <th>Pit Lap</th>
-//         <th>Threshold</th>
-//         <th>Time Difference</th>
-//         <th>Status</th>
-//         <th>Issue Name</th>
-//       </tr>
-//     </thead>
-//     <tbody> -->
 
-//         foreach($results as $result){
-//           echo "<tr><td>{$result[0]}</td><td>{$result[1]}</td><td>{$result[2]}</td><td>{$result[3]}</td><td>{$result[4]}</td><td>{$result[5]}</td><td>{$result[6]}</td><td>{$result[7]}</td><td>{$result[8]}</td><td>{$result[9]}</td><td>{$result[10]}</td><td>{$result[11]}</td><td>{$result[12]}</td></tr>";
-//         }
-//
-  //   <!-- </tbody>
-//   </table> -->
-  //} else {
-//
-  die(json_encode(["success" => true]));
-// }
 ?>

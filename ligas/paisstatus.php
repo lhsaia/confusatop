@@ -79,7 +79,7 @@ $liga_stmt = $liga->readAll($from_record_num,$records_per_page,null,null,$idPais
     // count all products in the database to calculate total pages
     $total_rows = $liga->countAll(null,null,$idPais);
 
-    $perc_estrangeiros = number_format(($estrangeiros / $jogadores)*100,1)."%";
+    $perc_estrangeiros = $jogadores > 0 ? number_format(($estrangeiros / $jogadores)*100,1)."%" : "0%";
 
 echo "<div id='info-jogos'>";
 echo "<div id='times' class='infoblock' title='Quantidade de ligas'><span class='material-symbols-outlined'>emoji_events</span><span class='informacao'>{$total_rows}</span></div>";

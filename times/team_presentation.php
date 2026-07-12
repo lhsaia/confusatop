@@ -152,16 +152,23 @@ $aux_css = 'indexRanking';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
-function rgb2hsl($r,$g,$b){$r/=255;$g/=255;$b/=255;$max=max($r,$g,$b);$min=min($r,$g,$b);$h;$s;$l=($max+$min)/2;$d=$max-$min;if($d==0){$h=$s=0;}else{$s=$d/(1-abs(2*$l-1));switch($max){case $r:$h=60*fmod((($g-$b)/$d),6);if($b>$g){$h+=360;}break;case $g:$h=60*(($b-$r)/$d+2);break;case $b:$h=60*(($r-$g)/$d+4);break;}}return[round($h,0),round($s*100,0),round($l*100,0)];}
+function rgb2hsl($r,$g,$b){
+    $r = is_numeric($r) ? (float)$r : 0;
+    $g = is_numeric($g) ? (float)$g : 0;
+    $b = is_numeric($b) ? (float)$b : 0;
+    $r/=255;$g/=255;$b/=255;$max=max($r,$g,$b);$min=min($r,$g,$b);$h = 0;$s = 0;$l=($max+$min)/2;$d=$max-$min;if($d!=0){$s=$d/(1-abs(2*$l-1));switch($max){case $r:$h=60*fmod((($g-$b)/$d),6);if($b>$g){$h+=360;}break;case $g:$h=60*(($b-$r)/$d+2);break;case $b:$h=60*(($r-$g)/$d+4);break;}}return[round($h,0),round($s*100,0),round($l*100,0)];}
 
 echo "<div style='clear:both; float:center'></div>";
 
- $pre_color1 = "rgb(".substr($info["Uni1Cor1"],0,3).",".substr($info["Uni1Cor1"],3,3).",".substr($info["Uni1Cor1"],6,3).")";
- $pre_color2 = "rgb(".substr($info["Uni1Cor2"],0,3).",".substr($info["Uni1Cor2"],3,3).",".substr($info["Uni1Cor2"],6,3).")";
+$uni1cor1 = (!empty($info["Uni1Cor1"]) && strlen($info["Uni1Cor1"]) === 9 && is_numeric($info["Uni1Cor1"])) ? $info["Uni1Cor1"] : "255255255";
+$uni1cor2 = (!empty($info["Uni1Cor2"]) && strlen($info["Uni1Cor2"]) === 9 && is_numeric($info["Uni1Cor2"])) ? $info["Uni1Cor2"] : "000000000";
+
+ $pre_color1 = "rgb(".substr($uni1cor1,0,3).",".substr($uni1cor1,3,3).",".substr($uni1cor1,6,3).")";
+ $pre_color2 = "rgb(".substr($uni1cor2,0,3).",".substr($uni1cor2,3,3).",".substr($uni1cor2,6,3).")";
  
  // comparacao de luminosidade de cores
-$lum_color1 = rgb2hsl(substr($info["Uni1Cor1"],0,3),substr($info["Uni1Cor1"],3,3),substr($info["Uni1Cor1"],6,3))[2];
-$lum_color2 = rgb2hsl(substr($info["Uni1Cor2"],0,3),substr($info["Uni1Cor2"],3,3),substr($info["Uni1Cor2"],6,3))[2];
+$lum_color1 = rgb2hsl(substr($uni1cor1,0,3),substr($uni1cor1,3,3),substr($uni1cor1,6,3))[2];
+$lum_color2 = rgb2hsl(substr($uni1cor2,0,3),substr($uni1cor2,3,3),substr($uni1cor2,6,3))[2];
 
 if($lum_color1 > $lum_color2){
 	$color1 = $pre_color2;
@@ -184,7 +191,7 @@ $time_stmt = $jogador->selecionarElencoTime($id,$from_record_num,$records_per_pa
  echo "<div id='barraVertical' style='border-color: ".$color2."'></div>";
  echo "<div id='escudoTime' ><img src='/images/escudos/".$escudo_time."'></div>";
  echo "<div id='simboloLiga'><img id='' src='/images/ligas/".$info["logoLiga"]."' height='120px'><span>".$info["liga"]." ".date("Y")." </span></div>";
- echo "<div id='quadroInformacoes'><div id='colorFilter' style='background-color: rgb(".substr($info["Uni1Cor1"],0,3).",".substr($info["Uni1Cor1"],3,3).",".substr($info["Uni1Cor1"],6,3).",0.6)'></div> </div>";
+ echo "<div id='quadroInformacoes'><div id='colorFilter' style='background-color: rgb(".substr($uni1cor1,0,3).",".substr($uni1cor1,3,3).",".substr($uni1cor1,6,3).",0.6)'></div> </div>";
  echo "<div id='quadrosPrincipais'>";
  echo "<div id='quadroEsquerdo'>";
  echo "	 <div id='informacaoBase' >
@@ -529,8 +536,8 @@ $(document).ready(function(){
 		} else {
 			$nome_final = $jogador_tabela["nome"];
 		}
-		
-		$posicao_final = $dicionario_posicoes[$jogador_tabela['posicaoBase']];
+		$posicao_base = isset($jogador_tabela['posicaoBase']) ? $jogador_tabela['posicaoBase'] : '';
+		$posicao_final = isset($dicionario_posicoes[$posicao_base]) ? $dicionario_posicoes[$posicao_base] : '';
 		
 		$modificador = "";
 		

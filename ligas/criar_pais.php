@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -20,13 +20,13 @@ $usuario = new Usuario($db);
 
 
 $page_title = "Inserir país";
-$css_filename = "indexRanking";
+$css_filename = "newindex";
 $css_login = 'login';
-$aux_css = 'criar';
+$aux_css = 'area_competicao';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
-echo"<div>";
+
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
@@ -44,6 +44,7 @@ if(isset($_POST['nome']) && !empty($_POST['sigla']) && !empty($_POST['nome']) ){
     $fileSize = $_FILES['bandeira']['size'];
     $filePath = $_FILES['bandeira']['tmp_name'];
     $extension = explode(".",$logo_path);
+    $file_ext = isset($extension[1]) ? $extension[1] : '';
     $correct_extensions = array("png","jpg","jpeg");
     $upload_dir = "/images/bandeiras/";
     $pais->bandeira = "flag.png";
@@ -67,15 +68,15 @@ if(isset($_POST['nome']) && !empty($_POST['sigla']) && !empty($_POST['nome']) ){
     // create the product
     if($pais->inserir()){
         $idPais = $db->lastInsertId();
-        if($logo_path != "" && substr_count($logo_path,".")==1 && in_array($extension[1],$correct_extensions) && $fileSize <= 12000){
+        if($logo_path != "" && substr_count($logo_path,".")==1 && in_array($file_ext,$correct_extensions) && $fileSize <= 12000){
 
 
-            $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir . $pais->sigla . "." . $extension[1];
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir . $pais->sigla . "." . $file_ext;
             $result = move_uploaded_file($filePath, $upload_path);
                 if (!$result) {
                     $error_msg .= "Não foi possível inserir a bandeira, erro na inserção.";
                 } else {
-                    $bandeiraAtualizada = $pais->sigla . "." . $extension[1];
+                    $bandeiraAtualizada = $pais->sigla . "." . $file_ext;
 
                     if($pais->atualizarBandeira($idPais, $bandeiraAtualizada)){
 
@@ -95,8 +96,8 @@ if(isset($_POST['nome']) && !empty($_POST['sigla']) && !empty($_POST['nome']) ){
             if(substr_count($logo_path,".") > 1){
                 $error_msg .= "Nome do arquivo não pode conter pontos além da extensão.";
             }
-            if(in_array($extension[1],$correct_extensions) == false){
-                $error_msg .= "Extensão ".$extension[1]." não é permitida.";
+            if(in_array($file_ext,$correct_extensions) == false){
+                $error_msg .= "Extensão ".$file_ext." não é permitida.";
             }
         }
 
@@ -130,49 +131,34 @@ for (i = 0; i < close.length; i++) {
 </script>
 
 
+<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
+<div id='errorbox'></div>
+<div>
+<div id='inscricao'>
+
 <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
 
-    <table class='table table-below float-table'>
+    
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Nome</td>
-            <td class="td_inv input_nome_time"><input type='text' name='nome' class='form-control' /></td>
-        </tr>
+        <label>Nome</label>
+<input type='text' name='nome' class='form-control' />
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Sigla</td>
-            <td class="td_inv input_nome_time"><input type='text' maxlength='3' id='sigla' name='sigla' class='form-control' /></td>
-        </tr>
+        <label for="sigla">Sigla</label>
+<input type='text' maxlength='3' id='sigla' name='sigla' class='form-control' />
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Bandeira</td>
-            <td class="td_inv input_nome_time">
-
-            <input type="file" class='form-control custom-file-upload' name='bandeira' accept=".jpg,.png,.jpeg">
-
-
-            </td>
-        </tr>
+        <label>Bandeira</label>
+<input type="file" class='form-control custom-file-upload' name='bandeira' accept=".jpg,.png,.jpeg">
 		
 		<?php
 		if(!$emTestes){
 		?>
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">É membro da CONFUSA?</td>
-            <td class="td_inv input_nome_time checkbox_container">
-
-            <input type="checkbox" class='custom-file-upload' name='ranking'>
-
-
-            </td>
-        </tr>
+        <label>É membro da CONFUSA?</label>
+<input type="checkbox" class='custom-file-upload' name='ranking'>
 		
 		
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Federação</td>
-            <td class="td_inv input_nome_time">
-            <?php
+        <label>Federação</label>
+<?php
                 // put them in a select drop-down
                 echo "<select class='form-control' name='federacao'>";
                 echo "<option selected value='0'>Sem federação</option>";
@@ -184,25 +170,18 @@ for (i = 0; i < close.length; i++) {
                 echo "</select>";
 
                 ?>
-
-            </td>
-
-
-        </tr>
 		
 		<?php
 		}
 		?>
 
-        <tr class="tr_inv btn_area">
-            <td class="td_inv btn_area"></td>
-            <td class="td_inv btn_area">
-                <button type="submit" name="criar" class="btn">Inserir</button>
-            </td>
-        </tr>
+        <div style="margin-top: 15px;">
+<button type="submit" name="criar" class="btn">Inserir</button>
+</div>
 
-    </table>
-</form>
+    </form>
+</div>
+</div>
 
 <?php
 
@@ -212,7 +191,7 @@ for (i = 0; i < close.length; i++) {
 }
 
 
-echo "</div>";
+
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 ?>

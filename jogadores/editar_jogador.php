@@ -2,7 +2,7 @@
 
 ini_set( 'display_errors', false );
 error_reporting( 0 );
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
@@ -154,7 +154,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 			$correct_extensions = array("image/png","image/jpg","image/jpeg", "image/webp");
 			$upload_dir = "/images/jogadores/";
 
-			if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 2000000){
+			if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 8000000){
 
 				$upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
 				imageImporter($filePath, $upload_path);
@@ -164,8 +164,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 			} else {
 
 				$error_msg .= "Não foi possível inserir a foto. ";
-				if($fileSize > 2000000){
-					$error_msg .= "Arquivo deve ser menor que 2Mb.";
+				if($fileSize > 8000000){
+					$error_msg .= "Arquivo deve ser menor que 8Mb.";
 				}
 				if($filePath == ''){
 					$error_msg .= "Falha no nome do arquivo.";
@@ -233,25 +233,26 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
           $idDonoJogador = $_SESSION['user_id'];
           //$idDonoTime = 9;
           $idDonoTime = $jogador->verificarDonoTimeVinculado($idJogador);
+          $idDonoPais = $jogador->verificarDono($idJogador);
 
           if(is_null($idDonoTime) || $idDonoTime == 0){
               $idDonoTime = $idDonoJogador;
           }
 
-          if($idDonoTime == $idDonoJogador){
-              $nomeJogador = $_POST['nome'];
-              $nacionalidadeJogador = $_POST['nacionalidade'];
-              $nascimentoJogador = $_POST['nascimento'];
-              $valorJogador = $_POST['valor'];
-              $determinacaoJogador = $_POST['determinacao'];
-              $cobrancaFaltaJogador = $_POST['cobrancaFalta'];
-              $mentalidadeJogador = $_POST['mentalidade'];
-              $atividadeJogador = $_POST['atividade'];
+          if($idDonoTime == $idDonoJogador || $idDonoPais == $idDonoJogador){
+              $nomeJogador = isset($_POST['nome']) ? $_POST['nome'] : null;
+              $nacionalidadeJogador = isset($_POST['nacionalidade']) ? $_POST['nacionalidade'] : null;
+              $nascimentoJogador = isset($_POST['nascimento']) ? $_POST['nascimento'] : null;
+              $valorJogador = isset($_POST['valor']) ? $_POST['valor'] : null;
+              $determinacaoJogador = isset($_POST['determinacao']) ? $_POST['determinacao'] : null;
+              $cobrancaFaltaJogador = isset($_POST['cobrancaFalta']) ? $_POST['cobrancaFalta'] : null;
+              $mentalidadeJogador = isset($_POST['mentalidade']) ? $_POST['mentalidade'] : null;
+              $atividadeJogador = isset($_POST['atividade']) ? $_POST['atividade'] : null;
 			  $timeEnviado = $timeParaDemissao;
-              $isDono = true;
+              $isDono = (!empty($nomeJogador)) ? true : false;
           } else {
-              $nomeJogador = $_POST['nome'];
-              $nacionalidadeJogador = $_POST['nacionalidade'];
+              $nomeJogador = isset($_POST['nome']) ? $_POST['nome'] : null;
+              $nacionalidadeJogador = isset($_POST['nacionalidade']) ? $_POST['nacionalidade'] : null;
               $nascimentoJogador = null;
               $valorJogador = null;
               $determinacaoJogador = "none";
@@ -283,7 +284,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $correct_extensions = array("image/png","image/jpg","image/jpeg", "image/webp");
         $upload_dir = "/images/jogadores/";
 
-        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 2000000){
+        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 8000000){
 
             $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
             imageImporter($filePath, $upload_path);
@@ -293,8 +294,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         } else {
 
             $error_msg .= "Não foi possível inserir a foto. ";
-            if($fileSize > 2000000){
-                $error_msg .= "Arquivo deve ser menor que 2Mb.";
+            if($fileSize > 8000000){
+                $error_msg .= "Arquivo deve ser menor que 8Mb.";
             }
             if($filePath == ''){
                 $error_msg .= "Falha no nome do arquivo.";

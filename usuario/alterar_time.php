@@ -3,6 +3,10 @@
 ini_set( 'display_errors', true );
 error_reporting( E_ALL );
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
+
+$is_success = false;
+$error_msg = "";
+
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
     //estabelecer conexão com banco de dados

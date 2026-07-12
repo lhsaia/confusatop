@@ -4,7 +4,7 @@
 ini_set( 'display_errors', true );
 error_reporting( E_ALL );
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 if(isset($_POST['file_name']) && $_POST['file_name'] != ""){
 	$file_name = $_POST['file_name'];
@@ -16,6 +16,7 @@ if(isset($_POST['file_name']) && $_POST['file_name'] != ""){
 	}
 }
 
+$auxiliary_table = array();
 
 	$file_path = "/octamotor/races/";
 	//codigo para recuperar nome do arquivo do banco de dados por numero da corrida e da competicao
@@ -32,17 +33,28 @@ if(isset($_POST['file_name']) && $_POST['file_name'] != ""){
 
 	$race_info = array_shift($lap_results);
 
-	$current_timestamp = time();
+	if($_POST["fakeTimeOffset"] == 0){
+		$current_timestamp = time();
+	} else {
+		$current_timestamp = $_POST["baseTimestamp"] + $_POST["fakeTimeOffset"];
+	}
+	
+
 	$reverse_laps = array_reverse($lap_results);
+	$breakNext = false;
 
 	foreach($reverse_laps as $key => $event){
-		if($event[0]['timestamp'] < $current_timestamp){
+		if($event[0]['timestamp'] < $current_timestamp && $breakNext == false){
 			$current_step = $key;
 			$rain_status = $event[0]['rain_status'];
 			$safety_car_status = $event[0]['safety_car_status'];
 			$air_temp = $event[0]['air_temp'];
 			$track_temp = $event[0]['track_temp'];
 			$timestamp = $event[0]['timestamp'];
+			$breakNext = true;
+		} else if($event[0]['timestamp'] < $current_timestamp && $breakNext == true){
+			$previous_step = $key;
+			$breakNext = false;
 			break;
 		}
 		// else {
@@ -72,18 +84,51 @@ if($current_step[0] == "R"){
 
 
 $single_lap_data = $lap_results[$current_step];
+if(isset($previous_step)){
+	$previous_lap_data = $lap_results[$previous_step];
+}
+
+
 preg_match_all('!\d+!', $current_step, $lap_number_array);
 
-$lap_number = $lap_number_array[0][0];
+//if($stage_number = "R"){
+
+
+	$lap_number = $lap_number_array[0][0] ?? 0;
+
+
+
+
+	$previous_lap_number = $lap_number - 1;
+	if($previous_lap_number >= 0){
+		  //inserir foreach para previous_lap_data + colocar dados obtidos na tabela auxiliar (piloto e posicao)
+		foreach($previous_lap_data as $position => $driver){
+
+		if($position != 0){
+				$auxiliary_table[$position] = $driver["driver"]['id'];
+		} 
+
+  }
+	}
+//}
 
   $total_data = array();
   $best_lap_overall = 0;
+  
+ 
+  //usar isso no foreach de baixo
 
   foreach($single_lap_data as $position => $driver){
 
 		if($position != 0){
+			
+			// ver ganho de posicao
+			$previous_position = array_search($driver["driver"]['id'], $auxiliary_table);
+			
 
 			$row_data = array();
+			
+			$row_data['position_gain'] = $previous_position - $position;
 			if(isset($driver['car']['tv_name'])){
 				$row_data['team_tv_name'] = $driver['car']['tv_name'];
 			} else {
@@ -114,7 +159,7 @@ $lap_number = $lap_number_array[0][0];
 	    if($position == 1){
 				if($stage_number == "R"){
 					$row_data["gap"] = "leader";
-				} else if($stage_number == "A" || $current_step == "QE-0" || $current_step == "QC-0"){
+		} else if($stage_number == "A" || $current_step == "QE-0" || $current_step == "QC-0" || $current_step == "PQ-0" ){
 					$row_data["gap"] = "0:00.000";
 				} else {
 					$row_data["gap"] = $driver["driver"]["qualifying_best_time"];
@@ -128,7 +173,7 @@ $lap_number = $lap_number_array[0][0];
 	    } else {
 				if($stage_number == "R"){
 					$row_data["gap"] = $driver["driver"]["race_total_time"] - $previous_total;
-				} else if($stage_number == "A" || $current_step == "QE-0" || $current_step == "QC-0"){
+				} else if($stage_number == "A" || $current_step == "QE-0" || $current_step == "QC-0" || $current_step == "PQ-0"){
 					$row_data["gap"] = 0;
 				} else {
 					$row_data["gap"] = $driver["driver"]["qualifying_best_time"] - $leader_qualifying_time;

@@ -65,7 +65,16 @@ class Tecnico{
     function readAll($from_record_num, $records_per_page, $userID = null){
 
     if($userID != null){
-        $subquery = " WHERE p.dono = {$userID} ";
+        $subquery = " WHERE p.dono = {$userID} OR (
+            (p.dono IS NULL OR p.dono = 0)
+            AND a.id IN (
+                SELECT ct.tecnico 
+                FROM contratos_tecnico ct 
+                LEFT JOIN clube cl ON ct.clube = cl.id 
+                LEFT JOIN paises pl ON cl.Pais = pl.id 
+                WHERE pl.dono = {$userID}
+            )
+        ) ";
     } else {
         $subquery = "";
     }
@@ -104,7 +113,16 @@ class Tecnico{
         $query =    "SELECT a.ID
                     FROM " . $this->table_name . " a
                      LEFT JOIN paises p ON a.pais = p.id
-                      WHERE p.dono=".$dono;
+                      WHERE p.dono = {$dono} OR (
+                          (p.dono IS NULL OR p.dono = 0)
+                          AND a.ID IN (
+                              SELECT ct.tecnico 
+                              FROM contratos_tecnico ct 
+                              LEFT JOIN clube cl ON ct.clube = cl.id 
+                              LEFT JOIN paises pl ON cl.Pais = pl.id 
+                              WHERE pl.dono = {$dono}
+                          )
+                      )";
 
     }
 
@@ -292,12 +310,16 @@ class Tecnico{
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $row['data'] = date("d-m-Y", strtotime($row['data']));
-        if($row['Nome']==""){
-            $row['Nome']= "Sem clube";
+        if($row) {
+            $row['data'] = date("d-m-Y", strtotime($row['data']));
+            $nomeClube = isset($row['Nome']) ? $row['Nome'] : '';
+            if($nomeClube == ""){
+                $nomeClube = "Sem clube";
+            }
+            $results = array("Clube" => $nomeClube, "Data" => $row['data'], "ID" => isset($row['ID']) ? $row['ID'] : 0);
+        } else {
+            $results = array("Clube" => "Sem clube", "Data" => "indet.", "ID" => 0);
         }
-
-        $results = array("Clube" => $row['Nome'], "Data" => $row['data'], "ID" => $row['ID']);
 
         return $results;
         }
@@ -870,7 +892,7 @@ class Tecnico{
             $stmt->bindParam(":id", $idTecnico);
             $stmt->bindParam(":nivel",$nivel);
 			
-			if($foto != "" && $foto != null){
+			if($isDono && $foto != "" && $foto != null){
 				$stmt->bindParam(":foto", $foto);
 			} 
 
@@ -947,20 +969,27 @@ class Tecnico{
            //return $result;
 
            $to = $result['email'];
-           $from = "no-reply@confusa.top";
+            $sendSuccess = false;
+            try {
+                require_once($_SERVER['DOCUMENT_ROOT']."/elements/mail_setup.php");
+                $mail->clearAddresses();
+                $mail->clearReplyTos();
+                $mail->setFrom('no-reply@confusa.top', 'CONFUSA.top');
+                $mail->addAddress($to);
+                $mail->Subject = "Você recebeu uma proposta de transferência no CONFUSA.TOP ";
+                $mail->Body    = "Foi feita uma nova proposta de transferência para um técnico sob seu controle, acesse o portal para negociar.";
+                $sendSuccess = $mail->send();
+            } catch (Exception $e) {
+                $sendSuccess = false;
+            }
 
-           $headers = "From: " . $from . "\r\n";
+            if($sendSuccess){
+              return true;
+            } else {
+              return false;
+            }
 
-           $subject = "Você recebeu uma proposta de transferência no CONFUSA.TOP ";
-           $body = "Foi feita uma nova proposta de transferência para um técnico sob seu controle, acesse o portal para negociar.";
-
-           if(mail($to, $subject, $body, $headers, "-f " . $from)){
-             return true;
-           } else {
-             return false;
-           }
-
-        }
+         }
 		
 				        function alterarInicioContrato($idTecnico,$idClube, $inicioNovo){
 
@@ -1007,12 +1036,50 @@ class Tecnico{
         $stmt->bindParam(":mentalidade", $this->mentalidade);
         $stmt->bindParam(":estilo", $this->estilo);
 
-        if($stmt->execute()){
-            return true;
-        } else {
-            return false;
-        }
+    }
 
+    function readAllAjax($item_pesquisado, $dono = null){
+        $item_pesquisado = htmlspecialchars(strip_tags($item_pesquisado));
+        $dono = htmlspecialchars(strip_tags($dono));
+
+        if($dono === null){
+            $sub_query_fim = " WHERE (a.Nome LIKE ?) LIMIT 150";
+        } else {
+            $sub_query_fim = " WHERE (p.dono = ? OR (
+                (p.dono IS NULL OR p.dono = 0)
+                AND a.id IN (
+                    SELECT ct.tecnico 
+                    FROM contratos_tecnico ct 
+                    LEFT JOIN clube cl ON ct.clube = cl.id 
+                    LEFT JOIN paises pl ON cl.Pais = pl.id 
+                    WHERE pl.dono = ?
+                )
+            )) AND (a.Nome LIKE ?) ORDER BY a.Nome ASC LIMIT 150";
+        } 
+
+        $query = "SELECT
+                    a.ID, a.Nome, a.Nascimento, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as idade, a.Mentalidade, a.Nivel, a.Estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.Sexo, q.dono as donoClubeVinculado, b.nome as clubeVinculado, b.escudo as escudoClubeVinculado, b.id as idClubeVinculado, a.foto 
+                FROM
+                    " . $this->table_name . " a
+                LEFT JOIN paises p ON a.pais = p.id
+                LEFT JOIN contratos_tecnico c ON c.tecnico = a.id AND c.tipoContrato = 0
+                LEFT JOIN clube b ON c.clube = b.id
+                LEFT JOIN paises q ON b.pais = q.id
+                " . $sub_query_fim;
+                
+        $stmt = $this->conn->prepare( $query );
+        $item_pesquisado = "%" . $item_pesquisado . "%";
+            
+        if($dono === null){
+            $stmt->bindParam(1, $item_pesquisado);
+        } else {
+            $stmt->bindParam(1, $dono);
+            $stmt->bindParam(2, $dono);
+            $stmt->bindParam(3, $item_pesquisado);
+        } 
+
+        $stmt->execute();
+        return $stmt;
     }
 
 }

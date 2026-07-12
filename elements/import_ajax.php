@@ -39,6 +39,9 @@ $trioArbitragem = new TrioArbitragem($db);
 $sexo = $_POST['sexo'];
 $campeonato_jogo_import = $_POST['campeonato_jogo_import'];
 $fase_jogo_import = $_POST['fase_jogo_import'];
+$correct_extension = '';
+$max_file_size = 0;
+$arquivo_tratamento = '';
 
 if(isset($_SESSION['jogadorTime'])){
   if($_SESSION['jogadorTime'] == 2){

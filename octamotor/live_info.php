@@ -1,9 +1,9 @@
+<?php
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
+?>
 <!DOCTYPE html>
 
 <?php
-
-require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
-
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "OctaMotor - Ao Vivo";
@@ -38,6 +38,8 @@ $race_start_time = 0;
 $race_start_time_two = 0;
 $clickable = " ";
 $clickable_two = " ";
+$foca_race_id = "";
+$foca_race_id_two = "";
 $inner_container_other = "";
 
 foreach($race_for_banner as $single_race){
@@ -86,7 +88,7 @@ foreach($race_for_banner as $single_race){
           $countdown_container_two .= "</div>";
         $countdown_container_two .= "</div>";
       $countdown_container_two .= "</div>";
-      $foca_two_season_status = "";
+      $foca_season_status_two = "";
       $race_info_container_two = "<div>";
         $race_info_container_two .= "<span>";
           $race_info_container_two .= $single_race['country_name'] . " ";

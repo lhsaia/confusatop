@@ -10,12 +10,12 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
 
     //informações recebidas para propor transferencia: id jogador, clube destino, clube origem, valor
     //$pacoteTransferencia = json_decode($_POST['data'],true);
-    $idJogador = $_POST['idJogador'];
-    $clubeOrigemReq = $_POST['clubeOrigem'];
-    $clubeDestino = $_POST['clubeDestino'];
-    $valor = $_POST['valor'];
-    $tipoTransacao = $_POST['tipoTransacao'];
-    $fimContrato = $_POST['fimContrato'];
+    $idJogador = $_POST['idJogador'] ?? '';
+    $clubeOrigemReq = $_POST['clubeOrigem'] ?? '';
+    $clubeDestino = $_POST['clubeDestino'] ?? '';
+    $valor = $_POST['valor'] ?? 0;
+    $tipoTransacao = $_POST['tipoTransacao'] ?? 0;
+    $fimContrato = $_POST['fimContrato'] ?? '';
 
     //estabelecer conexão com banco de dados
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -81,7 +81,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
         }
     }
 	
-	if($_SESSION['emTestes'] && (($idLogado != $idDonoClube) || ($idDonoJogador != $idLogado))){
+	if(($_SESSION['emTestes'] ?? false) && (($idLogado != $idDonoClube) || ($idDonoJogador != $idLogado))){
         $is_success = false;
         $error_msg = "Usuário em período de testes";
         die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));

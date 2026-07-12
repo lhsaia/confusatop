@@ -195,6 +195,9 @@ foreach($listaTimes as $idTime){
         while($tecRow  = $tecStmt->fetch(PDO::FETCH_ASSOC)){
             $elenco[] = $tecRow['tecnico'];
         }
+        while (count($elenco) < 25) {
+            $elenco[] = '0';
+        }
 
         $megaQuery .= "INSERT INTO elenco VALUES ('{$elenco[0]}', '{$elenco[1]}', '{$elenco[2]}', '{$elenco[3]}', '{$elenco[4]}', '{$elenco[5]}', '{$elenco[6]}', '{$elenco[7]}', '{$elenco[8]}', '{$elenco[9]}', '{$elenco[10]}', '{$elenco[11]}', '{$elenco[12]}', '{$elenco[13]}', '{$elenco[14]}', '{$elenco[15]}', '{$elenco[16]}', '{$elenco[17]}', '{$elenco[18]}', '{$elenco[19]}', '{$elenco[20]}', '{$elenco[21]}', '{$elenco[22]}', '{$elenco[23]}', '{$elenco[24]}'); ";
 
@@ -274,6 +277,23 @@ if(file_exists($zip_name)){
     unlink($zip_name);
 }
 
+function addDirToZip($dir, $zip, $zipPathPrefix) {
+    if (!is_dir($dir)) return;
+    $files = scandir($dir);
+    if ($files === false) return;
+    foreach ($files as $file) {
+        if ($file == '.' || $file == '..') continue;
+        $filePath = $dir . '/' . $file;
+        $zipPath = $zipPathPrefix . '/' . $file;
+        if (is_dir($filePath)) {
+            $zip->addEmptyDir($zipPath);
+            addDirToZip($filePath, $zip, $zipPath);
+        } else if (is_file($filePath)) {
+            $zip->addFile($filePath, $zipPath);
+        }
+    }
+}
+
 $zip = new ZipArchive;
 $zip->open($zip_name, ZIPARCHIVE::CREATE);
 $zip->addEmptyDir("Hexacolor - " . $nomeCompeticao);
@@ -287,36 +307,32 @@ $exportFiles[] = ["/home/lhsaia/confusa.top/hexacolor_repo/Leia-me.TXT", "Hexaco
 
 foreach($exportFiles as $file)
 {
-    $zip->addFile($file[0],$file[1]);
-
+    if (is_file($file[0])) {
+        $zip->addFile($file[0],$file[1]);
+    }
 }
 
-chdir('/home/lhsaia/confusa.top/hexacolor_repo/data');
-foreach (glob("*") as $file) {
-$zip->addFile($file, "Hexacolor - " . $nomeCompeticao . "/data/".$file);
-}
-chdir('/home/lhsaia/confusa.top/hexacolor_repo/lib');
-foreach (glob("*") as $file) {
-$zip->addFile($file, "Hexacolor - " . $nomeCompeticao . "/lib/".$file);
-}
-chdir('/home/lhsaia/confusa.top/hexacolor_repo/ImportacaoRapida');
-foreach (glob("*") as $file) {
-$zip->addFile($file, "Hexacolor - " . $nomeCompeticao . "/ImportacaoRapida/".$file);
-}
-chdir('/home/lhsaia/confusa.top/hexacolor_repo/Imagens');
-foreach (glob("*") as $file) {
-$zip->addFile($file, "Hexacolor - " . $nomeCompeticao . "/Imagens/".$file);
-}
-chdir('/home/lhsaia/confusa.top/images/bandeiras');
-foreach (glob("*") as $file) {
-  if(strlen($file) == 6){
-    $zip->addFile($file, "Hexacolor - " . $nomeCompeticao . "/data/PaisesReais/".$file);
-  }
-}
-foreach (glob("*") as $file) {
-  if(strlen($file) > 6){
-    $zip->addFile($file, "Hexacolor - " . $nomeCompeticao . "/data/Paises/".$file);
-  }
+addDirToZip('/home/lhsaia/confusa.top/hexacolor_repo/data', $zip, "Hexacolor - " . $nomeCompeticao . "/data");
+addDirToZip('/home/lhsaia/confusa.top/hexacolor_repo/lib', $zip, "Hexacolor - " . $nomeCompeticao . "/lib");
+addDirToZip('/home/lhsaia/confusa.top/hexacolor_repo/ImportacaoRapida', $zip, "Hexacolor - " . $nomeCompeticao . "/ImportacaoRapida");
+addDirToZip('/home/lhsaia/confusa.top/hexacolor_repo/Imagens', $zip, "Hexacolor - " . $nomeCompeticao . "/Imagens");
+
+$bandeirasDir = '/home/lhsaia/confusa.top/images/bandeiras';
+if (is_dir($bandeirasDir)) {
+    $bandeirasFiles = scandir($bandeirasDir);
+    if ($bandeirasFiles !== false) {
+        foreach ($bandeirasFiles as $file) {
+            if ($file == '.' || $file == '..') continue;
+            $filePath = $bandeirasDir . '/' . $file;
+            if (is_file($filePath)) {
+                if(strlen($file) == 6){
+                    $zip->addFile($filePath, "Hexacolor - " . $nomeCompeticao . "/data/PaisesReais/".$file);
+                } else if(strlen($file) > 6){
+                    $zip->addFile($filePath, "Hexacolor - " . $nomeCompeticao . "/data/Paises/".$file);
+                }
+            }
+        }
+    }
 }
 $zip->close();
 

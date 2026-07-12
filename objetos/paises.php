@@ -120,16 +120,17 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
     //ler um pais para o ranking
     function readOne($id){
 
-        $id = htmlspecialchars(strip_tags($id));
+        $id = intval($id);
 
     $query = "SELECT
                 pontos
             FROM
                 " . $this->table_name . "
             WHERE
-                id={$id}";
+                id = :id";
 
     $stmt = $this->conn->prepare( $query );
+    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
     $stmt->execute();
 
     return $stmt;
@@ -137,16 +138,17 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
 
     function readInfo($id){
 
-        $id = htmlspecialchars(strip_tags($id));
+        $id = intval($id);
 
     $query = "SELECT
                 nome, sigla, pontos, bandeira, federacao, ativo, ranqueavel
             FROM
                 " . $this->table_name . "
             WHERE
-                id={$id}";
+                id = :id";
 
     $stmt = $this->conn->prepare( $query );
+    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
     $stmt->execute();
 
     return $stmt;
@@ -155,14 +157,16 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
 
 
     function readMoreInfo($idPais){
+        $idPais = intval($idPais);
         $query = "SELECT avg(DATEDIFF(NOW(), j.Nascimento)/365) as mediaIdade, SUM(j.valor) as valorTotal, sum(case when j.Pais != b.Pais then 1 else 0 end) as estrangeiros, count(j.id) as jogadores, p.dono as idDonoPais, count(DISTINCT b.id) as clubes
         FROM contratos_jogador c
         LEFT JOIN jogador j ON c.jogador = j.id
         LEFT JOIN paises p ON j.Pais = p.id
         LEFT JOIN clube b ON c.clube = b.id
-        WHERE b.Pais = {$idPais}";
+        WHERE b.Pais = :idPais";
 
         $stmt = $this->conn->prepare( $query );
+        $stmt->bindParam(':idPais', $idPais, PDO::PARAM_INT);
         $stmt->execute();
         $info = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -276,21 +280,24 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
     // used by select drop-down list
     function read($dono = null,$jogos = null, $incluirReais = null){
 
-	if($incluirReais === false){
-		$add_query = "WHERE dono != 0";
-	} else if($incluirReais != null){
-        $add_query = " OR dono = 0 ";
-      } else {
-		  $add_query = "";
-	  }
-
-        //ver se é por dono ou geral
+        $conditions = array();
         if($dono != null){
-            $sub_query = "WHERE dono=? " . $add_query;
-        } else if ($jogos != null){
-            $sub_query = "WHERE ranqueavel=0";
-        } else {
-            $sub_query = $add_query;
+            $conditions[] = "dono = " . intval($dono);
+        }
+        if($jogos != null){
+            $conditions[] = "ranqueavel = 0";
+        }
+        if($incluirReais === false){
+            $conditions[] = "dono != 0";
+        } else if($incluirReais === true){
+            // No specific condition needed if we include everything, 
+            // but if we only want real countries we'd use dono = 0.
+            // Based on original logic, this part was "OR dono = 0"
+        }
+
+        $sub_query = "";
+        if(count($conditions) > 0){
+            $sub_query = "WHERE " . implode(" AND ", $conditions);
         }
         //select all data
         $query = "SELECT
@@ -302,11 +309,6 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
                     nome";
 
         $stmt = $this->conn->prepare( $query );
-        if($dono === null){
-        } else {
-            $stmt->bindParam(1, $dono);
-        }
-
         $stmt->execute();
 
         return $stmt;

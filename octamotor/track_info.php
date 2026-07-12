@@ -1,9 +1,19 @@
+<?php
+if (isset($_SERVER['DOCUMENT_ROOT'])) {
+    $dir = __DIR__;
+    while ($dir !== dirname($dir)) {
+        if (file_exists($dir . '/config/session.php')) {
+            $_SERVER['DOCUMENT_ROOT'] = $dir;
+            break;
+        }
+        $dir = dirname($dir);
+    }
+}
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
+?>
 <!DOCTYPE html>
 
 <?php
-
-require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
-
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "OctaMotor - Circuitos";

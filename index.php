@@ -1,10 +1,9 @@
-<!DOCTYPE html>
-
 <?php
-
-session_start();
-
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
+?>
+<!DOCTYPE html>
+<?php
 
 $page_title = "CONFUSA - CONFUSA.top";
 //$css_filename = "newindex";
@@ -23,6 +22,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 <?php
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
   $linkMinhaArea = "usuario" ;
+  //$linkPacotes = "competicoes/indice_competicoes.php";
   $linkPacotes = "export/montarcompeticao.php";
 } else {
   $linkMinhaArea = "apenas_membros.php";
@@ -30,12 +30,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 }
 
 echo "<a href='{$linkMinhaArea}' class='quadro-flex quadro-animado' id='usuario'><img src='/images/minhaarea.png?1' /><span>Minha área</span></a>";
-echo "<a href='{$linkPacotes}' class='quadro-flex quadro-animado' id='pacotes'><img src='/images/pacotes.png?1' /><span>Gerador de Pacotes</span></a>";
-
+echo "<div class='mini-quadros-container'><a href='{$linkPacotes}' class='mini-quadro sup quadro-animado' id='pacotes'><img src='/images/pacotes.png?1' /><span>Competições</span></a>";
 ?>
+
+<a href="escudos_pop" class="mini-quadro inf quadro-animado" id="escudos_pop"><img src="/images/escudos_pop.jpg" /><span>Escudos Pops</span></a>
+</div>
+
 <a href="ranking" class="quadro-flex quadro-animado" id="ranking"><img src="/images/ranking.png" /><span>Ranking</span></a>
+<a href="ligas/gerenciador/jogos" class="quadro-flex quadro-animado" id="jogos"><img src="/images/jogos.jpg" /><span>Jogos de Clubes</span></a>
 <a href="arbitros" class="quadro-flex quadro-animado" id="arbitros"><img src="/images/arbitro.png?1" /><span>Quadro de árbitros</span></a>
-<a href="escudos_pop" class="quadro-flex quadro-animado" id="escudos_pop"><img src="/images/escudos_pop.jpg" /><span>Escudos Pops</span></a>
+
+
+
 <a href="octamotor" class="quadro-flex quadro-animado" id="octamotor"><img src="/images/octamotor.jpg" /><span>Octamotor</span></a>
 <div class="outros-links-container">
 <span class='legenda'>Outros links</span>

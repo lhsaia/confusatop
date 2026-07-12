@@ -275,7 +275,7 @@ $time_stmt = $jogador->selecionarElencoTime($id,$from_record_num,$records_per_pa
     // count all products in the database to calculate total pages
     $total_rows = $jogador->countAllSingleTeam($id);
 
-    $perc_estrangeiros = number_format(($estrangeiros / $total_rows)*100,2)."%";
+    $perc_estrangeiros = $total_rows > 0 ? number_format(($estrangeiros / $total_rows)*100,2)."%" : "0%";
 
     echo "<div style='clear:both; float:center'></div>";
 echo "<div id='info-jogos'>";
@@ -343,60 +343,62 @@ echo "<tbody>";
 $stmtTec = $tecnico->infoTecnico($idTime);
 $rowTec = $stmtTec->fetch(PDO::FETCH_ASSOC);
 
-$transferenciaTecnico = $tecnico->ultimaTransferencia($rowTec['ID'], $idTime);
-$encerramentoTecnico = ( $rowTec['encerramento'] == "0" ) ? 'indet.' : $rowTec['encerramento'] ;
+if($rowTec) {
+    $transferenciaTecnico = $tecnico->ultimaTransferencia($rowTec['ID'], $idTime);
+    $encerramentoTecnico = ( $rowTec['encerramento'] == "0" ) ? 'indet.' : $rowTec['encerramento'] ;
 
-$rowTec['Nascimento'] = date("d-m-Y", strtotime($rowTec['Nascimento']));
+    $rowTec['Nascimento'] = date("d-m-Y", strtotime($rowTec['Nascimento']));
 
-echo "<tr id='tec".$rowTec['ID']."' data-sexo='".$rowTec['Sexo']."'>";
-echo "<td class='nopadding'><div class='foto_jogador'><img src='/images/tecnicos/".$rowTec['foto']."' height='55px'></div></td>";
-echo "<td class='nopadding nomeJogador'><span class='nomeEditavel'>{$rowTec['Nome']}</span><br><span class='posicao'>Técnico</span></td>";
-echo "<td>T</td>";
-if($rowTec['idPais'] != 0){
-    echo "<td class='nopadding'><img src='/images/bandeiras/{$rowTec['bandeiraPais']}' class='bandeira nomePais' id='ban".$rowTec['idPais']."'>  <span class='nomePais' id='pai".$rowTec['idPais']."'>{$rowTec['siglaPais']}</span>";
-} else {
-    echo "<td>";
-}
-echo " <select class='comboPais editavel ' id='{$rowTec['idPais']}' hidden>'  ";
-    //echo "<option>Selecione país...</option>";
-    for($i = 0; $i < count($listaPaises);$i++){
-        echo "<option value='{$listaPaises[$i][0]}'>{$listaPaises[$i][1]}</option>";
+    echo "<tr id='tec".$rowTec['ID']."' data-sexo='".$rowTec['Sexo']."'>";
+    echo "<td class='nopadding'><div class='foto_jogador'><img src='/images/tecnicos/".$rowTec['foto']."' height='55px'></div></td>";
+    echo "<td class='nopadding nomeJogador'><span class='nomeEditavel'>{$rowTec['Nome']}</span><br><span class='posicao'>Técnico</span></td>";
+    echo "<td>T</td>";
+    if($rowTec['idPais'] != 0){
+        echo "<td class='nopadding'><img src='/images/bandeiras/{$rowTec['bandeiraPais']}' class='bandeira nomePais' id='ban".$rowTec['idPais']."'>  <span class='nomePais' id='pai".$rowTec['idPais']."'>{$rowTec['siglaPais']}</span>";
+    } else {
+        echo "<td>";
     }
-    echo "</select>";
-echo "</td>";
-echo "<td class='nopadding'><span class='nascimentoEIdade'>{$rowTec['Nascimento']} (".$rowTec['idade'].")</span><input type='date' class='editavel nascimento' hidden/></td>";
-echo "<td class='nopadding'><span class='nivel'>{$rowTec['Nivel']}</span></td>";
-echo "<td class='nopadding'><span class='desdeFixo'>{$transferenciaTecnico["Data"]}</span><input type='date' class='editavel desde' hidden></td>";
-echo "<td class='nopadding ultimoClube' data-ultimo-clube='{$transferenciaTecnico["ID"]}'>{$transferenciaTecnico["Clube"]}</td>";
-echo "<td class='nopadding'>{$encerramentoTecnico}</td>";
-echo "<td>-</td><td>-</td>";
-$tecOptions = "<td class='wide' id='dono{$rowTec['donoTecnico']}'>";
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
-    if(!$is_selecao){
-		if(!$_SESSION['emTestes']){
-			$tecOptions .= "<a id='proTec".$rowTec['ID']."' title='Fazer Proposta' class='clickable propostaTecnico'><span class='material-symbols-outlined inlineButton'>payment_arrow_down</span></a>";
-		}
-        if($donoLogado){
-          $tecOptions .= "<a id='dem".$rowTec['ID']."' title='Editar técnico' class='clickable editarTecnico'><span class='material-symbols-outlined inlineButton azul'>person_edit</span></a>";
-            $tecOptions .= "<a id='demTec".$rowTec['ID']."' title='Demitir técnico' class='clickable demitirTecnico'><span class='material-symbols-outlined inlineButton vermelho'>contract_delete</span></a>";
-            $tecOptions .= "<a hidden id='sal".$rowTec['ID']."' title='Salvar' class='clickable salvarTecnico'><span class='material-symbols-outlined inlineButton positive'>save</span></a>";
-            $tecOptions .= "<a hidden id='can".$rowTec['ID']."' title='Cancelar' class='clickable cancelarTecnico'><span class='material-symbols-outlined inlineButton vermelho'>cancel</span></a>";
-
+    echo " <select class='comboPais editavel ' id='{$rowTec['idPais']}' hidden>'  ";
+        //echo "<option>Selecione país...</option>";
+        for($i = 0; $i < count($listaPaises);$i++){
+            echo "<option value='{$listaPaises[$i][0]}'>{$listaPaises[$i][1]}</option>";
         }
-    } else {
-        $tecOptions .= "<a id='desTec".$rowTec['ID']."' title='Desconvocar técnico' class='clickable desconvocarTecnico'><span class='material-symbols-outlined inlineButton vermelho'>travel</span></a>";
+        echo "</select>";
+    echo "</td>";
+    echo "<td class='nopadding'><span class='nascimentoEIdade'>{$rowTec['Nascimento']} (".$rowTec['idade'].")</span><input type='date' class='editavel nascimento' hidden/></td>";
+    echo "<td class='nopadding'><span class='nivel'>{$rowTec['Nivel']}</span></td>";
+    echo "<td class='nopadding'><span class='desdeFixo'>{$transferenciaTecnico["Data"]}</span><input type='date' class='editavel desde' hidden></td>";
+    echo "<td class='nopadding ultimoClube' data-ultimo-clube='{$transferenciaTecnico["ID"]}'>{$transferenciaTecnico["Clube"]}</td>";
+    echo "<td class='nopadding'>{$encerramentoTecnico}</td>";
+    echo "<td>-</td><td>-</td>";
+    $tecOptions = "<td class='wide' id='dono{$rowTec['donoTecnico']}'>";
+    if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
+        if(!$is_selecao){
+            if(!$_SESSION['emTestes']){
+                $tecOptions .= "<a id='proTec".$rowTec['ID']."' title='Fazer Proposta' class='clickable propostaTecnico'><span class='material-symbols-outlined inlineButton'>payment_arrow_down</span></a>";
+            }
+            if($donoLogado){
+              $tecOptions .= "<a id='dem".$rowTec['ID']."' title='Editar técnico' class='clickable editarTecnico'><span class='material-symbols-outlined inlineButton azul'>person_edit</span></a>";
+                $tecOptions .= "<a id='demTec".$rowTec['ID']."' title='Demitir técnico' class='clickable demitirTecnico'><span class='material-symbols-outlined inlineButton vermelho'>contract_delete</span></a>";
+                $tecOptions .= "<a hidden id='sal".$rowTec['ID']."' title='Salvar' class='clickable salvarTecnico'><span class='material-symbols-outlined inlineButton positive'>save</span></a>";
+                $tecOptions .= "<a hidden id='can".$rowTec['ID']."' title='Cancelar' class='clickable cancelarTecnico'><span class='material-symbols-outlined inlineButton vermelho'>cancel</span></a>";
+
+            }
+        } else {
+            $tecOptions .= "<a id='desTec".$rowTec['ID']."' title='Desconvocar técnico' class='clickable desconvocarTecnico'><span class='material-symbols-outlined inlineButton vermelho'>travel</span></a>";
+        }
     }
+
+
+        $tecOptions .= "</td>";
+        if($rowTec['ID'] != 0 && $rowTec['ID'] != null){
+            echo $tecOptions;
+        } else {
+            echo "<td></td>";
+        }
+
+    echo "</tr>";
 }
-
-
-    $tecOptions .= "</td>";
-    if($rowTec['ID'] != 0 && $rowTec['ID'] != null){
-        echo $tecOptions;
-    } else {
-        echo "<td></td>";
-    }
-
-echo "</tr>";
 
 $agora = date('Y-m-d');
 
@@ -729,6 +731,10 @@ if(!isset($meia_direito)){
 if(!isset($meia_esquerdo)){
   $meia_esquerdo[0] = '';
   $meia_esquerdo[1] = "ME";
+}
+
+if(!isset($goleiro)){
+  $goleiro = '';
 }
 
 //pagina da escalacao

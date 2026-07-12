@@ -295,8 +295,9 @@ readfile($zip_name);
 unlink($zip_name);
 foreach($exportFiles as $file)
 {
-    unlink($file[0]);
-    
+    if (file_exists($file[0])) {
+        unlink($file[0]);
+    }
 }
 exit();
 

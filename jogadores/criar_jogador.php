@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -22,13 +22,13 @@ $usuario = new Usuario($db);
 $time = new Time($db);
 
 $page_title = "Criar Jogador";
-$css_filename = "indexRanking";
+$css_filename = "newindex";
 $css_login = 'login';
-$aux_css = 'criar';
+$aux_css = 'area_competicao';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
-echo"<div>";
+
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
@@ -173,24 +173,23 @@ for (i = 0; i < close.length; i++) {
 </script>
 
 
+<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
+<div id='errorbox'></div>
+<div>
+<div id='inscricao'>
+
 <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
 
-    <table class='table table-below float-table'>
+    
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Nome</td>
-            <td class="td_inv input_nome_time"><input type='text' name='nome' id='nomeJogador' class='form-control inputHerdeiro' /></td>
-        </tr>
+        <label for="nomeJogador">Nome</label>
+<input type='text' name='nome' id='nomeJogador' class='form-control inputHerdeiro' />
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Nascimento</td>
-            <td class="td_inv input_nome_time"><input type='date' id='nascimentoJogador' name='nascimento' class='form-control inputHerdeiro' /></td>
-        </tr>
+        <label for="nascimentoJogador">Nascimento</label>
+<input type='date' id='nascimentoJogador' name='nascimento' class='form-control inputHerdeiro' />
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Mentalidade</td>
-            <td class="td_inv input_nome_time">
-                <?php
+        <label for="mentalidade">Mentalidade</label>
+<?php
                 // ler times do banco de dados
                 $stmt = $jogador->listaMentalidade();
 
@@ -204,13 +203,9 @@ for (i = 0; i < close.length; i++) {
 
                 echo "</select>";
                 ?>
-            </td>
-        </tr>
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Cobrador de Falta</td>
-            <td class="td_inv input_nome_time">
-                <?php
+        <label for="cobrador">Cobrador de Falta</label>
+<?php
                 // ler times do banco de dados
                 $stmt = $jogador->listaCobradorFalta();
 
@@ -224,39 +219,24 @@ for (i = 0; i < close.length; i++) {
 
                 echo "</select>";
                 ?>
-            </td>
-        </tr>
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Valor</td>
-            <td class="td_inv input_nome_time"><input type='number' id='valor' name='valor' value='0' min='0' class='form-control inputHerdeiro' /></td>
-        </tr>
+        <label for="valor">Valor</label>
+<input type='number' id='valor' name='valor' value='0' min='0' class='form-control inputHerdeiro' />
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Nivel</td>
-            <td class="td_inv input_nome_time"><input type='number' id='nivel' value='60' max='99' min='1' name='nivel' class='form-control inputHerdeiro' /></td>
-        </tr>
+        <label for="nivel">Nivel</label>
+<input type='number' id='nivel' value='60' max='99' min='1' name='nivel' class='form-control inputHerdeiro' />
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Determinação</td>
-            <td class="td_inv input_nome_time"><input type='number' id='determinacao' max='5' min='1' name='determinacao' class='form-control inputHerdeiro' value='3'/></td>
-        </tr>
+        <label for="determinacao">Determinação</label>
+<input type='number' id='determinacao' max='5' min='1' name='determinacao' class='form-control inputHerdeiro' value='3'/>
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Masc/Fem</td>
-            <td class="td_inv input_nome_time">
-
-                <select class='form-control' id='sexo' name='sexo'>
+        <label for="sexo">Masc/Fem</label>
+<select class='form-control' id='sexo' name='sexo'>
                 <option value='0'>Homem</option>
                 <option value='1'>Mulher</option>
                 </select>
-            </td>
-        </tr>
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Nacionalidade</td>
-            <td class="td_inv input_nome_time">
-                <?php
+        <label for="pais">Nacionalidade</label>
+<?php
                 // ler times do banco de dados
                 $stmt = $pais->read();
 
@@ -271,13 +251,9 @@ for (i = 0; i < close.length; i++) {
 
                 echo "</select>";
                 ?>
-            </td>
-        </tr>
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Time (opcional)</td>
-            <td class="td_inv input_nome_time">
-                <?php
+        <label for="clube">Time (opcional)</label>
+<?php
                 // ler times do banco de dados
                 $stmt = $time->read($_SESSION['user_id'], null);
 
@@ -292,13 +268,9 @@ for (i = 0; i < close.length; i++) {
 
                 echo "</select>";
                 ?>
-            </td>
-        </tr>
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Posições</td>
-            <td class="td_inv input_nome_time">
-                <?php
+        <label for="posicoes">Posições</label>
+<?php
                 // ler times do banco de dados
                 $stmt = $jogador->selectPosicoes();
 
@@ -312,8 +284,6 @@ for (i = 0; i < close.length; i++) {
 
                 echo "</select>";
                 ?>
-            </td>
-        </tr>
 
 <?php
 
@@ -349,15 +319,15 @@ for (i = 0; i < close.length; i++) {
                     $tipoAtributo = "atributo_goleiro";
                 }
 
-                $handlerInsert = '<tr class="tr_inv spec_height row_atributo '.$tipoAtributo.'">
-                <td class="td_inv input_nome_time">'.$inputLabel.'</td>
-                <td class="td_inv input_nome_time slider_container">
+                $handlerInsert = '<div class="row_atributo '.$tipoAtributo.'">
+<label>'.$inputLabel.'</label>
+
                 <div class="slider_itself" id="slider'.$inputName.'">
                     <div id="custom-handle'.$inputName.'" class="ui-slider-handle"></div>
                     <input type="hidden" name="'.strtolower($inputName).'" id="input'.$inputName.'" value=""/>
                 </div>
-                </td>
-                </tr>';
+                
+</div>';
 
                 echo $handlerInsert;
 
@@ -365,17 +335,15 @@ for (i = 0; i < close.length; i++) {
 
         ?>
 
-        <tr class="tr_inv btn_area">
-            <td class="td_inv btn_area"></td>
-            <td class="td_inv btn_area">
-                <button type="submit" name="criar" class="btn">Inserir</button>
+        <div style="margin-top: 15px;">
+<button type="submit" name="criar" class="btn">Inserir</button>
                 <button type="reset" name="reset" class="btn">Limpar</button>
                 <button type='button' id="hexagen" class="btn"><i class="fas fa-dice"></i>&nbsp Hexagen</button>
-            </td>
-        </tr>
+</div>
 
-    </table>
-</form>
+    </form>
+</div>
+</div>
 
   <script>
   $( function() {
@@ -881,7 +849,7 @@ $(document).ready(function(){
 }
 
 
-echo "</div>";
+
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 ?>

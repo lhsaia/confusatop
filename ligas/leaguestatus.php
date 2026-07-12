@@ -1,9 +1,9 @@
+<?php
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
+?>
 <!DOCTYPE html>
 
 <?php
-
-require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
-
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 require($_SERVER['DOCUMENT_ROOT']."/lib/functions.php");
 
@@ -16,7 +16,12 @@ $records_per_page = 40;
 // calculate for the query LIMIT clause
 $from_record_num = ($records_per_page * $page) - $records_per_page;
 
-$idLiga = $_GET['league'];
+$idLiga = $_GET['league'] ?? '';
+
+if (empty($idLiga)) {
+    header('Location: /index.php');
+    exit;
+}
 
 //estabelecer conexão com banco de dados
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -94,7 +99,7 @@ $time_stmt = $time->readAll($from_record_num,$records_per_page,null,$idLiga);
     // count all products in the database to calculate total pages
     $total_rows = $time->countAll(null,$idLiga);
 
-    $perc_estrangeiros = number_format(($estrangeiros / $jogadores)*100,1)."%";
+    $perc_estrangeiros = $jogadores > 0 ? number_format(($estrangeiros / $jogadores)*100,1)."%" : "0%";
 
 echo "<div id='info-jogos'>";
 echo "<div id='times' class='infoblock' title='Quantidade de times'><span class='material-symbols-outlined'>shield</span><span class='informacao'>{$total_rows}</span></div>";

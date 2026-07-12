@@ -412,6 +412,8 @@ class Jogo{
     function maisVitoriasEmpatesDerrotas($id, $resultado){
         $id = htmlspecialchars(strip_tags($id));
         $resultado = htmlspecialchars(strip_tags($resultado));
+        $append_a = " ";
+        $append_b = " ";
         if($id == 0){
             if($resultado == 'V'){
                 $append_a = " ";
@@ -645,7 +647,7 @@ public function getMatchId(){
 		
 		WHERE tb1.id = :idA1 AND tb2.id <> :idA2 
         GROUP BY 1, 2
-		ORDER BY retrospecto DESC, vitorias DESC, saldo_gols DESC, gols_pro DESC";
+		ORDER BY retrospecto DESC, SUM(vitorias ) DESC, (SUM(gols_pro) - SUM(gols_contra)) DESC, SUM(gols_pro) DESC";
 
 		$stmt = $this->conn->prepare( $query );
 

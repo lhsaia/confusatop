@@ -201,7 +201,10 @@ return $stmt;
 
 function readInfo($id){
 
-        $id = htmlspecialchars(strip_tags($id));
+    $id = htmlspecialchars(strip_tags($id));
+    if (!is_numeric($id)) {
+        $id = 0;
+    }
 
     $query = "SELECT
                 a.id, a.Nome, a.TresLetras, e.Nome as Estadio, e.Capacidade as Capacidade, p.Nome as Pais, a.Escudo, a.Uniforme1, a.Uniforme2, l.nome as liga, l.id as liga_id, p.id as pais_id, p.dono as donoPais, a.status, a.Uni1Cor1, a.Uni1Cor2, l.logo as logoLiga, e.foto as fotoEstadio   
@@ -214,33 +217,31 @@ function readInfo($id){
             LEFT JOIN
                 liga l ON l.id = a.liga
             WHERE
-                a.id={$id}";
+                a.id = :id";
 
     $stmt = $this->conn->prepare( $query );
+    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
     $stmt->execute();
     $info1 = $stmt->fetch(PDO::FETCH_ASSOC);
 
     $query = "SELECT avg(DATEDIFF(NOW(), j.Nascimento)/365) as mediaIdade, avg(j.Nivel + c.ModificadorNivel) as mediaNivel, sum(case when c.titularidade > 0 then (j.Nivel + c.ModificadorNivel) else 0 end)/11 as mediaNivelOnze, SUM(j.valor) as valorTotal, sum(case when j.Pais != b.Pais then 1 else 0 end) as estrangeiros, count(*) as jogadores, (SELECT count(*) FROM (SELECT DISTINCT jogador FROM contratos_jogador WHERE tipoContrato > 0) t3
     INNER JOIN
-    (SELECT jogador FROM contratos_jogador WHERE tipoContrato = 0 AND clube = {$id}) t4 USING(jogador)) as emSelecao
+    (SELECT jogador FROM contratos_jogador WHERE tipoContrato = 0 AND clube = :clubeId) t4 USING(jogador)) as emSelecao
     FROM contratos_jogador c
     LEFT JOIN jogador j ON c.jogador = j.id
     LEFT JOIN paises p ON j.Pais = p.id
-LEFT JOIN clube b ON c.clube = b.id
-    WHERE c.clube = {$id}";
+    LEFT JOIN clube b ON c.clube = b.id
+    WHERE c.clube = :clubeId2";
 
     $stmt = $this->conn->prepare( $query );
+    $stmt->bindParam(':clubeId', $id, PDO::PARAM_INT);
+    $stmt->bindParam(':clubeId2', $id, PDO::PARAM_INT);
     $stmt->execute();
     $info2 = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $info = array_merge($info1, $info2);
-
-
+    $info = array_merge((array)$info1, (array)$info2);
 
     return $info;
-
-
-
     }
 
          // used by select drop-down list

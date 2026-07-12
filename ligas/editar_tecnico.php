@@ -2,7 +2,7 @@
 
 ini_set( 'display_errors', true );
 error_reporting( E_ALL );
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
 $localizacao_foto = null;
@@ -162,19 +162,20 @@ $localizacao_foto = null;
           $idDonoTecnico = $_SESSION['user_id'];
           //$idDonoTime = 9;
           $idDonoTime = $tecnico->verificarDonoTimeVinculado($idTecnico);
+          $idDonoPais = $tecnico->verificarDono($idTecnico);
 
           if(is_null($idDonoTime) || $idDonoTime == 0){
               $idDonoTime = $idDonoTecnico;
           }
 
-          if($idDonoTime == $idDonoTecnico){
-              $nomeTecnico = $_POST['nome'];
-              $nacionalidadeTecnico = $_POST['pais'];
-              $nascimentoTecnico = $_POST['nascimento'];
-              $mentalidadeTecnico = $_POST['mentalidade'];
-              $estiloTecnico = $_POST['estilo'];
+          if($idDonoTime == $idDonoTecnico || $idDonoPais == $idDonoTecnico){
+              $nomeTecnico = isset($_POST['nome']) ? $_POST['nome'] : null;
+              $nacionalidadeTecnico = isset($_POST['pais']) ? $_POST['pais'] : null;
+              $nascimentoTecnico = isset($_POST['nascimento']) ? $_POST['nascimento'] : null;
+              $mentalidadeTecnico = isset($_POST['mentalidade']) ? $_POST['mentalidade'] : null;
+              $estiloTecnico = isset($_POST['estilo']) ? $_POST['estilo'] : null;
 
-              $isDono = true;
+              $isDono = (!empty($nomeTecnico)) ? true : false;
           } else {
               $nomeTecnico = null;
               $nacionalidadeTecnico = null;
@@ -195,7 +196,7 @@ $localizacao_foto = null;
         $correct_extensions = array("image/png","image/jpg","image/jpeg", "image/webp");
         $upload_dir = "/images/tecnicos/";
 
-        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 2000000){
+        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 8000000){
 
             $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
             imageImporter($filePath, $upload_path);
@@ -205,8 +206,8 @@ $localizacao_foto = null;
         } else {
 
             $error_msg .= "Não foi possível inserir a foto. ";
-            if($fileSize > 2000000){
-                $error_msg .= "Arquivo deve ser menor que 2Mb.";
+            if($fileSize > 8000000){
+                $error_msg .= "Arquivo deve ser menor que 8Mb.";
             }
             if($filePath == ''){
                 $error_msg .= "Falha no nome do arquivo.";

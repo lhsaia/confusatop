@@ -159,7 +159,19 @@ function readAll($from_record_num, $records_per_page, $dono = null){
         $sub_query_fim = "";
     } else {
         $sub_query_inicio = "SELECT * FROM (";
-        $sub_query_fim = ") t1 WHERE idDonoPais = ? ORDER BY Nome ASC";
+        $sub_query_fim = ") t1 WHERE idDonoPais = ? OR (
+            (idDonoPais IS NULL OR idDonoPais = 0)
+            AND (
+                donoClubeVinculado = ? 
+                OR ID IN (
+                    SELECT cj.jogador 
+                    FROM contratos_jogador cj 
+                    LEFT JOIN clube cl ON cj.clube = cl.id 
+                    LEFT JOIN paises pl ON cl.Pais = pl.id 
+                    WHERE pl.dono = ?
+                )
+            )
+        ) ORDER BY Nome ASC";
 
     }
 
@@ -189,6 +201,8 @@ $stmt = $this->conn->prepare( $query );
 if($dono === null){
 } else {
     $stmt->bindParam(1, $dono);
+    $stmt->bindParam(2, $dono);
+    $stmt->bindParam(3, $dono);
 }
 $stmt->execute();
 
@@ -205,12 +219,19 @@ return $stmt;
            $query = "SELECT id FROM " . $this->table_name . "";
 
         } else {
-
             $query =    "SELECT a.id
                         FROM " . $this->table_name . " a
                          LEFT JOIN paises p ON a.pais = p.id
-                          WHERE p.dono = ".$dono;
-
+                          WHERE p.dono = {$dono} OR (
+                              (p.dono IS NULL OR p.dono = 0)
+                              AND a.id IN (
+                                  SELECT cj.jogador 
+                                  FROM contratos_jogador cj 
+                                  LEFT JOIN clube cl ON cj.clube = cl.id 
+                                  LEFT JOIN paises pl ON cl.Pais = pl.id 
+                                  WHERE pl.dono = {$dono}
+                              )
+                          )";
         }
 
         $stmt = $this->conn->prepare( $query );
@@ -613,12 +634,16 @@ return $stmt;
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $row['data'] = date("d-m-Y", strtotime($row['data']));
-        if($row['Nome']==""){
-            $row['Nome']= "Sem clube";
+        if($row) {
+            $row['data'] = date("d-m-Y", strtotime($row['data']));
+            $nomeClube = isset($row['Nome']) ? $row['Nome'] : '';
+            if($nomeClube == ""){
+                $nomeClube = "Sem clube";
+            }
+            $results = array("Clube" => $nomeClube, "Data" => $row['data'], "ID" => isset($row['ID']) ? $row['ID'] : 0);
+        } else {
+            $results = array("Clube" => "Sem clube", "Data" => "indet.", "ID" => 0);
         }
-
-        $results = array("Clube" => $row['Nome'], "Data" => $row['data'], "ID" => $row['ID']);
 
         return $results;
         }
@@ -659,7 +684,7 @@ return $stmt;
                 $newstmt->execute();
                 $info = $newstmt->fetch(PDO::FETCH_ASSOC);
 
-                return $info['ID'];
+                return isset($info['ID']) ? $info['ID'] : 0;
         }
 
         function posicaoPorCodigo($codigoPosicao){
@@ -669,7 +694,7 @@ return $stmt;
             $newstmt->execute();
             $info = $newstmt->fetch(PDO::FETCH_ASSOC);
 
-            return $info['Sigla'];
+            return isset($info['Sigla']) ? $info['Sigla'] : '';
         }
 
         function nomePosicaoPorCodigo($codigoPosicao){
@@ -679,7 +704,7 @@ return $stmt;
             $newstmt->execute();
             $info = $newstmt->fetch(PDO::FETCH_ASSOC);
 
-            return $info['Nome'];
+            return isset($info['Nome']) ? $info['Nome'] : '';
         }
 
         function lerPropostasPendentes($idUsuario,$admin, $from_record_num,$records_per_page){
@@ -1665,6 +1690,15 @@ return $stmt;
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
             $resultBase = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$resultBase) {
+                $resultBase = [
+                    'nome' => '', 'idPais' => 0, 'nascimento' => '', 'stringPosicoes' => '', 'valor' => 0, 'idade' => 0,
+                    'bandeiraPais' => '', 'Pais' => '', 'Marcacao' => 0, 'Desarme' => 0, 'VisaoJogo' => 0, 'Movimentacao' => 0,
+                    'Cruzamentos' => 0, 'Cabeceamento' => 0, 'Tecnica' => 0, 'ControleBola' => 0, 'Finalizacao' => 0, 'FaroGol' => 0,
+                    'Velocidade' => 0, 'Forca' => 0, 'Reflexos' => 0, 'Seguranca' => 0, 'Saidas' => 0, 'JogoAereo' => 0,
+                    'Lancamentos' => 0, 'DefesaPenaltis' => 0, 'Nivel' => 0, 'foto' => '', 'donoPais' => 0
+                ];
+            }
 
             $queryContrato = "SELECT l.logo as logoLiga, l.tier as tier, l.nome as liga, c.Escudo as escudoTime, j.clube as idTime, c.Nome as time, c.Pais as paisTime, p.nome as nomePaisTime, p.bandeira as bandeiraPaisTime, c.liga as idLiga, j.encerramento as fimContrato, j.salario FROM contratos_jogador j LEFT JOIN clube c ON c.ID = j.clube LEFT JOIN liga l ON c.liga = l.ID LEFT JOIN paises p ON p.id = c.Pais WHERE jogador = ? AND tipoContrato = 0";
             $stmt = $this->conn->prepare($queryContrato);
@@ -1742,10 +1776,20 @@ return $stmt;
             $stmt->execute();
             $resultEscalacaoTime = $stmt->fetch(PDO::FETCH_ASSOC);
 
+            if (!is_array($resultBase)) $resultBase = [];
+            if (!is_array($resultContrato)) $resultContrato = [];
+            if (!is_array($resultTransferencia)) $resultTransferencia = [];
+            if (!is_array($resultGolsSelecao)) $resultGolsSelecao = ['golsSelecao' => 0];
+            if (!is_array($resultGolsTime)) $resultGolsTime = ['golsTime' => 0];
+            if (!is_array($resultAmarelosSelecao)) $resultAmarelosSelecao = ['amarelosSelecao' => 0];
+            if (!is_array($resultAmarelosTime)) $resultAmarelosTime = ['amarelosTime' => 0];
+            if (!is_array($resultVermelhosSelecao)) $resultVermelhosSelecao = ['vermelhosSelecao' => 0];
+            if (!is_array($resultVermelhosTime)) $resultVermelhosTime = ['vermelhosTime' => 0];
+            if (!is_array($resultEscalacaoTime)) $resultEscalacaoTime = ['jogosTime' => 0];
+
             $resultTotal = array_merge($resultBase,$resultContrato,$resultTransferencia,$resultGolsSelecao, $resultAmarelosSelecao, $resultVermelhosSelecao, $resultGolsTime, $resultAmarelosTime, $resultVermelhosTime, $resultEscalacaoTime);
 
             return $resultTotal;
-
         }
 		
 		function avaliarPersonalidade($idJogador){
@@ -1840,7 +1884,7 @@ return $stmt;
         function readTransferencias($from_record_num,$records_per_page,$idJogador){
             $idJogador = htmlspecialchars(strip_tags($idJogador));
 
-        $query = "SELECT o.Nome as nomeOrigem, o.Escudo as escudoOrigem, o.Pais as paisOrigem, o.ID as idOrigem, d.Nome as nomeDestino, d.Escudo as escudoDestino, d.Pais as paisDestino, d.ID as idDestino, t.data, t.valor, l.Nome as nomeLigaOrigem, l.ID as idLigaOrigem, m.Nome as nomeLigaDestino, m.ID as idLigaDestino, p.bandeira as bandeiraOrigem, q.bandeira as bandeiraDestino
+        $query = "SELECT o.Nome as nomeOrigem, o.Escudo as escudoOrigem, o.Pais as paisOrigem, o.ID as idOrigem, d.Nome as nomeDestino, d.Escudo as escudoDestino, d.Pais as paisDestino, d.ID as idDestino, t.data, t.valor, l.Nome as nomeLigaOrigem, l.ID as idLigaOrigem, m.Nome as nomeLigaDestino, m.ID as idLigaDestino, p.bandeira as bandeiraOrigem, q.bandeira as bandeiraDestino, t.emprestimo
         FROM transferencias t
         LEFT JOIN clube o ON t.clubeOrigem = o.ID
         LEFT JOIN liga l ON o.liga = l.ID
@@ -2789,8 +2833,16 @@ return $stmt;
         $nomeClube = $result["Nome"];
         $escudoClube = $result["Escudo"];
         $extEscudoClube = substr($escudoClube, -3, 3);
-        $img = file_get_contents("https://confusa.top/images/escudos/" . urlencode($escudoClube)); 
-        $data = base64_encode($img); 
+        $data = '';
+        if ($escudoClube) {
+            $imgPath = $_SERVER['DOCUMENT_ROOT'] . "/images/escudos/" . $escudoClube;
+            if (file_exists($imgPath)) {
+                $img = @file_get_contents($imgPath);
+                if ($img !== false) {
+                    $data = base64_encode($img);
+                }
+            }
+        }
         
     // informações transferência
         $query = "SELECT valor, emprestimo, encerramento FROM transferencias WHERE ID = ?";
@@ -2815,12 +2867,16 @@ return $stmt;
         }
  
 
-    $subject_old = "Você recebeu uma proposta de transferência no CONFUSA.TOP ";
-    $subject = "[CONFUSA.top] " . $nomeClube . " fez uma proposta por " . $nomeJogador;
-    $body_old = "Foi feita uma nova proposta de transferência para um jogador sob seu controle, acesse o portal para negociar.";
-    $body = "<div style='text-align:center;' width='100%'><img align='middle' height='60' src='https://confusa.top/images/escudos/" . urlencode($escudoClube). "'/><div><br/>O clube "  . $nomeClube . " fez uma proposta de " . $tipoTransferencia . " por " .$nomeJogador . " no valor de F$" . $valor . $finalPeriodo . ". <br/> Acesse o portal para aceitar, rejeitar ou realizar uma contra proposta." ; 
-    
-    //<img height='30' width='30' src='data:image/" . $extEscudoClube . ";base64," .$data . "'/>
+        $subject_old = "Você recebeu uma proposta de transferência no CONFUSA.TOP ";
+        $subject = "[CONFUSA.top] " . $nomeClube . " fez uma proposta por " . $nomeJogador;
+        $body_old = "Foi feita uma nova proposta de transferência para um jogador sob seu controle, acesse o portal para negociar.";
+        
+        if ($data !== '') {
+            $imgHtml = "<img align='middle' height='60' src='data:image/" . $extEscudoClube . ";base64," . $data . "'/>";
+        } else {
+            $imgHtml = "<img align='middle' height='60' src='https://confusa.top/images/escudos/" . urlencode($escudoClube) . "'/>";
+        }
+        $body = "<div style='text-align:center;' width='100%'>" . $imgHtml . "<div><br/>O clube "  . $nomeClube . " fez uma proposta de " . $tipoTransferencia . " por " .$nomeJogador . " no valor de F$" . $valor . $finalPeriodo . ". <br/> Acesse o portal para aceitar, rejeitar ou realizar uma contra proposta." ;
     
     $html_content = ' 
     <html> 
@@ -2832,13 +2888,22 @@ return $stmt;
     </body> 
     </html>';
     
-    // Set content-type header for sending HTML email 
-    $headers = "MIME-Version: 1.0" . "\r\n"; 
-    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n"; 
+    $sendSuccess = false;
+    try {
+        require_once($_SERVER['DOCUMENT_ROOT']."/elements/mail_setup.php");
+        $mail->clearAddresses();
+        $mail->clearReplyTos();
+        $mail->setFrom('no-reply@confusa.top', 'CONFUSA.top');
+        $mail->addAddress($to);
+        $mail->Subject = $subject;
+        $mail->Body    = $html_content;
+        $mail->isHTML(true); // Permitir e-mails em formato HTML
+        $sendSuccess = $mail->send();
+    } catch (Exception $e) {
+        $sendSuccess = false;
+    }
 
-    $headers .= "From: " . $from . "\r\n";
-
-    if(mail($to, $subject, $html_content, $headers, "-f " . $from)){
+    if($sendSuccess){
       return true;
     } else {
       return false;
@@ -2848,23 +2913,50 @@ return $stmt;
 
 // resolver contratos de empréstimo ou tempo determinado
 public function resolverContratosTempo(){
-                $query = "DELETE FROM contratos_jogador WHERE tipoContrato = 0 AND NOT encerramento = '0000-00-00' AND encerramento < CURDATE() AND clubeVinculado = 0";
-            $stmt = $this->conn->prepare($query);
-            if($stmt->execute()){
-                return true;
-            } else {
-                return false;
-            }
+        // Primeiro, registrar a saída na tabela de transferências
+        $query_log = "SELECT jogador, clube FROM contratos_jogador WHERE tipoContrato = 0 AND NOT encerramento = '0000-00-00' AND encerramento < CURDATE() AND clubeVinculado = 0";
+        $stmt_log = $this->conn->prepare($query_log);
+        $stmt_log->execute();
+        
+        while ($row = $stmt_log->fetch(PDO::FETCH_ASSOC)) {
+            $query_insert = "INSERT INTO transferencias SET jogador = :jogador, clubeOrigem = :clubeOrigem, clubeDestino = 0, valor = 0, tipoTransferencia = 0, status_execucao = 1, emprestimo = 4";
+            $stmt_insert = $this->conn->prepare($query_insert);
+            $stmt_insert->bindParam(":jogador", $row['jogador']);
+            $stmt_insert->bindParam(":clubeOrigem", $row['clube']);
+            $stmt_insert->execute();
+        }
+
+        $query = "DELETE FROM contratos_jogador WHERE tipoContrato = 0 AND NOT encerramento = '0000-00-00' AND encerramento < CURDATE() AND clubeVinculado = 0";
+        $stmt = $this->conn->prepare($query);
+        if($stmt->execute()){
+            return true;
+        } else {
+            return false;
+        }
 }
 
 public function resolverEmprestimos(){
-                $query = "UPDATE contratos_jogador SET encerramento = '0000-00-00', clube = clubeVinculado, clubeVinculado = 0, titularidade = -1, capitao = 0, cobrancaPenalti = 0 WHERE tipoContrato = 0 AND NOT encerramento = '0000-00-00' AND encerramento < CURDATE() AND NOT clubeVinculado = 0";
-            $stmt = $this->conn->prepare($query);
-            if($stmt->execute()){
-                return true;
-            } else {
-                return false;
-            }
+        // Primeiro, registrar o retorno na tabela de transferências
+        $query_log = "SELECT jogador, clube, clubeVinculado FROM contratos_jogador WHERE tipoContrato = 0 AND NOT encerramento = '0000-00-00' AND encerramento < CURDATE() AND NOT clubeVinculado = 0";
+        $stmt_log = $this->conn->prepare($query_log);
+        $stmt_log->execute();
+        
+        while ($row = $stmt_log->fetch(PDO::FETCH_ASSOC)) {
+            $query_insert = "INSERT INTO transferencias SET jogador = :jogador, clubeOrigem = :clubeOrigem, clubeDestino = :clubeDestino, valor = 0, tipoTransferencia = 0, status_execucao = 1, emprestimo = 3";
+            $stmt_insert = $this->conn->prepare($query_insert);
+            $stmt_insert->bindParam(":jogador", $row['jogador']);
+            $stmt_insert->bindParam(":clubeOrigem", $row['clube']);
+            $stmt_insert->bindParam(":clubeDestino", $row['clubeVinculado']);
+            $stmt_insert->execute();
+        }
+
+        $query = "UPDATE contratos_jogador SET encerramento = '0000-00-00', clube = clubeVinculado, clubeVinculado = 0, titularidade = -1, capitao = 0, cobrancaPenalti = 0 WHERE tipoContrato = 0 AND NOT encerramento = '0000-00-00' AND encerramento < CURDATE() AND NOT clubeVinculado = 0";
+        $stmt = $this->conn->prepare($query);
+        if($stmt->execute()){
+            return true;
+        } else {
+            return false;
+        }
 }
 
 
@@ -2878,7 +2970,19 @@ public function resolverEmprestimos(){
             $sub_query_fim = ") t1 WHERE (Nome LIKE ?) LIMIT 150";
         } else {
             $sub_query_inicio = "SELECT * FROM (";
-            $sub_query_fim = ") t1 WHERE idDonoPais = ? AND (Nome LIKE ?) ORDER BY Nome ASC LIMIT 150";
+            $sub_query_fim = ") t1 WHERE (idDonoPais = ? OR (
+                (idDonoPais IS NULL OR idDonoPais = 0)
+                AND (
+                    donoClubeVinculado = ? 
+                    OR ID IN (
+                        SELECT cj.jogador 
+                        FROM contratos_jogador cj 
+                        LEFT JOIN clube cl ON cj.clube = cl.id 
+                        LEFT JOIN paises pl ON cl.Pais = pl.id 
+                        WHERE pl.dono = ?
+                    )
+                )
+            )) AND (Nome LIKE ?) ORDER BY Nome ASC LIMIT 150";
 
         } 
 
@@ -2907,7 +3011,9 @@ public function resolverEmprestimos(){
 		$stmt->bindParam(1, $item_pesquisado);
 	} else {
 		$stmt->bindParam(1, $dono);
-		$stmt->bindParam(2, $item_pesquisado);
+		$stmt->bindParam(2, $dono);
+		$stmt->bindParam(3, $dono);
+		$stmt->bindParam(4, $item_pesquisado);
 	} 
 
 	$stmt->execute();

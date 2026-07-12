@@ -1,5 +1,6 @@
 <?php  
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
+ini_set('memory_limit', '512M');
 // ini_set('display_errors', 1);
 // ini_set('display_startup_errors', 1);
 // error_reporting(E_ALL);

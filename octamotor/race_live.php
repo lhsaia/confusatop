@@ -1,9 +1,9 @@
+<?php
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
+?>
 <!DOCTYPE html>
 
 <?php
-
-session_start();
-
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "OctaMotor - Ao Vivo";
@@ -100,7 +100,23 @@ $track_list = $track->getTracksList();
 		$command_center .= "<input type='time' id='race-scheduled-time' name='race-scheduled-time'>";
 		$command_center .= "<button id='resim'>Re-simular</button>";
 		
- }  ?>
+		  //$command_center .= "<button id='bck_lap'><span class='material-symbols-outlined'>skip_previous</span></button><button id='fwd_lap'><span class='material-symbols-outlined'>skip_next</span></button>";
+ } else {
+	 $file = $_GET['file_name'];
+	 $str_file = file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/octamotor/races/' . $file);
+	 $json = json_decode($str_file, true); // decode the JSON into an associative array
+	 $baseTimestamp = $json['INFO']["base_timestamp"];
+	 $time_diff = time() - ($baseTimestamp + 86400);
+	 if($time_diff > 0){
+		  //$command_center .= "<button id='bck_lap'><span class='material-symbols-outlined'>skip_previous</span></button><button id='fwd_lap'><span class='material-symbols-outlined'>skip_next</span></button>";
+		  $command_center .= "<button id='replay-race'><span class='material-symbols-outlined'>play_circle</span></button>";
+	 }
+ }
+
+	 
+
+
+ ?>
     </div>
     <div id="container-live-table">
     </div>
@@ -109,6 +125,8 @@ $track_list = $track->getTracksList();
 
 <script>
 
+  var fakeTimeOffset = 0;
+  var baseTimestamp = "<?php echo (isset($baseTimestamp) ? $baseTimestamp : 0)?>";
   var localTimeOffset = -new Date().getTimezoneOffset()/60;
   var dt = new Date();
   var current_time = dt.getHours().toString().padStart(2,"0") + ":" + dt.getMinutes().toString().padStart(2,"0");
@@ -126,6 +144,26 @@ $("document").ready(function(){
 	var raw_data = [];
 	var bestLapPosition;
   var race_started = 0;
+  
+
+  
+   $("#replay-race").click(function(){
+	  fakeTimeOffset = fakeTimeOffset + 60;
+	  get_ajax_data();
+	  $("#toolbar").html("<button id='bck_lap'><span class='material-symbols-outlined'>skip_previous</span></button><button id='fwd_lap'><span class='material-symbols-outlined'>skip_next</span></button>");
+		  
+		$("#bck_lap").click(function(){
+		  fakeTimeOffset = fakeTimeOffset - 60;
+		  get_ajax_data();
+		});
+	
+		$("#fwd_lap").click(function(){
+		  fakeTimeOffset = fakeTimeOffset + 60;
+		  get_ajax_data();
+		});
+  });
+  
+
 
   $("#race-scheduled-time").val(current_time);
   $("#race-scheduled-date").val(current_date);
@@ -169,11 +207,13 @@ function get_ajax_data(){
   url: 'race_ajax.php',
   type: 'POST',
   dataType: 'json',
-  data: {file_name: file_name}
+  data: {file_name: file_name, fakeTimeOffset: fakeTimeOffset, baseTimestamp: baseTimestamp}
   })
   .done(function(data) {
 	  
 	clearPodium(data);
+	
+	//console.log(data);
 
     var stage_letter = data.current_step.substring(0,1);
     var stage_name = "";
@@ -265,10 +305,10 @@ function get_ajax_data(){
 
     //weather box
     if(stage_code > 0){
-      rain_status = data.rain_status;
-      airTemp = data.air_temp;
-      roadTemp = data.track_temp;
-      day_status = data.race_info.day_night;
+      rain_status = data.rain_status ?? '';
+      airTemp = data.air_temp ?? '';
+      roadTemp = data.track_temp ?? '';
+      day_status = data.race_info.day_night ?? '';
       setWeather();
     } else {
       $("#weather-name").html("");
@@ -411,10 +451,10 @@ if(addedTime == 0){
 
 function bestLap(){
   	$("#drivers-table tbody tr").each(function(){
-  		var positionValue = $(this).find("td:first").text();
+  		var positionValue = $(this).find("td:nth-child(2)").text();
   		positionValue = parseInt(positionValue);
   		if(positionValue == bestLapPosition){
-  			$(this).find("td:nth-child(8)").addClass("best-lap-overall");
+  			$(this).find("td:nth-child(9)").addClass("best-lap-overall");
   		}
   });
 }
@@ -431,6 +471,7 @@ function display_table(raw_data){
 	var tbl = "<table id='drivers-table'>";
 		tbl += "<thead>";
 		tbl += "<tr>";
+		tbl += "<th></th>";
 		tbl += "<th></th>";
 		tbl += "<th class='driver-headers headers-left'>Driver</th>";
 		tbl += "<th></th>";
@@ -459,6 +500,8 @@ function display_table(raw_data){
     var position = 0;
 
     Object.values(raw_data.total_data).forEach(function(row){
+		
+		//console.log(raw_data.total_data);
         position++;
           var outStatus = "OUT".localeCompare(row.gap) ? "" : "out-of-race";
           var bestLap = (convertTimeView(row.best_lap) == convertTimeView(row.last_lap)) ? " best-lap-own " : "";
@@ -497,10 +540,24 @@ function display_table(raw_data){
             } else {
               var outQualiStatus = "";
             }
+			
+			let gain_class = 'no-show';
+		
+if(row.lap != 0){
+				if(row.position_gain > 0){
+				gain_class = 'triangle-up';
+			} else if(row.position_gain < 0){
+				gain_class = 'triangle-down';
+			} 
+} else{
+	gain_class = 'no-show';
+}
+
 
             //console.log(row);
           tbl += "<tr>";
-          tbl += "<td class='driver-position" + outQualiStatus + "'>" + position + "</td>";
+          tbl += "<td class='driver-position-gain "+gain_class+"'>" + Math.abs(row.position_gain) + "</td>";
+		  tbl += "<td class='driver-position" + outQualiStatus + "'>" + position + "</td>";
           tbl += "<td class='driver-name driver-team-names driver-text'>"+ row.name +"</td>";
           tbl += "<td><img class='driver-flag' src='/images/bandeiras/"+ row.nationality +"' /></td>";
           if(row.team_tv_name == ""){
@@ -570,15 +627,15 @@ function tireColor(tire_code){
 function setFlag(flag_type){
   //console.log(flag_type);
   if(flag_type.localeCompare("SC") == 0){
-    var flag_html = "<i class='far fa-flag flag-icon'></i><span class='flag-name'>  Safety Car </span>";
+    var flag_html = "<span class='material-symbols-outlined flag-icon'>flag</span><span class='flag-name'>  Safety Car </span>";
     var flag_class = "safety-car";
   }
   if(flag_type.localeCompare("CF") == 0){
-    var flag_html = "<i class='fas fa-flag-checkered flag-icon'></i><span class='flag-name'> Chequered Flag </span>";
+    var flag_html = "<span class='material-symbols-outlined flag-icon'>sports_score</span><span class='flag-name'> Chequered Flag </span>";
     var flag_class = "chequered-flag";
   }
   if(flag_type.localeCompare("GF") == 0){
-    var flag_html = "<i class='far fa-flag flag-icon'></i><span class='flag-name'>  Race re-start </span>";
+    var flag_html = "<span class='material-symbols-outlined flag-icon'>flag</span><span class='flag-name'>  Race re-start </span>";
     var flag_class = "green-flag";
   }
   if(flag_type.localeCompare("SL") == 0){
@@ -601,16 +658,16 @@ function setFlag(flag_type){
 function setWeather(){
 
   if(rain_status == 1 && day_status == 1){
-    var forecast_modifier = "<i class='fas fa-cloud-showers-heavy'></i> Rain ";
+    var forecast_modifier = "<span class='material-symbols-outlined'>rainy</span> Rain ";
   } else if(rain_status == 1 && day_status == 0){
-    var forecast_modifier = "<i class='fas fa-cloud-moon-rain'></i> Rain ";
+    var forecast_modifier = "<span class='material-symbols-outlined'>rainy</span> Rain ";
   } else if(rain_status == 0 && day_status == 1){
-    var forecast_modifier = "<i class='fas fa-sun'></i> Clear ";
+    var forecast_modifier = "<span class='material-symbols-outlined'>sunny</span> Clear ";
   } else if(rain_status == 0 && day_status == 0){
-    var forecast_modifier = "<i class='fas fa-moon'></i> Clear ";
+    var forecast_modifier = "<span class='material-symbols-outlined'>bedtime</span> Clear ";
   }
 
-  var temperature_modifier = "<i class='fas fa-road'></i> "+roadTemp+"&deg; <i class='fas fa-thermometer-half'></i> "+airTemp+"&deg; <i class='fas fa-wind'></i>";
+  var temperature_modifier = "<span class='material-symbols-outlined'>add_road</span> "+roadTemp+"&deg; <span class='material-symbols-outlined'>thermostat</span> "+airTemp+"&deg; <span class='material-symbols-outlined'>air</span>";
   var weather = forecast_modifier + " <br/> " + temperature_modifier;
   $("#weather-name").html(weather);
 }
@@ -698,7 +755,7 @@ function setTimer(){
 }
 
 function convertGapView(time_in_seconds, position){
-  //console.log(typeof time_in_seconds);
+
 
   var adjustedPosition = parseInt(position);
 	if(isNaN(time_in_seconds)){
@@ -775,6 +832,8 @@ function createPodium(data){
 			data: {podium_drivers: podium_drivers}
 			})
 		.done(function(podium_data) {
+			
+			console.log(podium_data);
 		  
 			$(".first-place").find(".podium-name").html("<span>" + data.total_data[0].tv_name == "" ? data.total_data[0].tv_name : data.total_data[0].name + "</span>");
 			$(".first-place").find(".podium-flag").html("<img src='/images/bandeiras/" + data.total_data[0].nationality + "'/></span>");

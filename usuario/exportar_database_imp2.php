@@ -43,11 +43,22 @@ while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
 
 //remove all user files and create directories only if needed
 function delTree($dir) {
-    $files = array_diff(scandir($dir), array('.','..'));
-     foreach ($files as $file) {
-       (is_dir("$dir/$file")) ? delTree("$dir/$file") : unlink("$dir/$file");
-     }
-   }
+    if (!is_dir($dir)) {
+        return;
+    }
+    $scanned = scandir($dir);
+    if ($scanned === false) {
+        return;
+    }
+    $files = array_diff($scanned, array('.','..'));
+    foreach ($files as $file) {
+        if (is_dir("$dir/$file")) {
+            delTree("$dir/$file");
+        } else if (file_exists("$dir/$file")) {
+            unlink("$dir/$file");
+        }
+    }
+}
    
 
 if (!is_dir('../sqlitedb/'. $userId)) {
@@ -243,6 +254,9 @@ foreach ($dir as $fileinfo) {
         while($tecRow  = $tecStmt->fetch(PDO::FETCH_ASSOC)){
             $elenco[] = $tecRow['tecnico'];
         }
+        while (count($elenco) < 25) {
+            $elenco[] = '0';
+        }
 
         $megaQueryPais .= "INSERT INTO elenco VALUES ('{$elenco[0]}', '{$elenco[1]}', '{$elenco[2]}', '{$elenco[3]}', '{$elenco[4]}', '{$elenco[5]}', '{$elenco[6]}', '{$elenco[7]}', '{$elenco[8]}', '{$elenco[9]}', '{$elenco[10]}', '{$elenco[11]}', '{$elenco[12]}', '{$elenco[13]}', '{$elenco[14]}', '{$elenco[15]}', '{$elenco[16]}', '{$elenco[17]}', '{$elenco[18]}', '{$elenco[19]}', '{$elenco[20]}', '{$elenco[21]}', '{$elenco[22]}', '{$elenco[23]}', '{$elenco[24]}'); ";
 
@@ -341,5 +355,7 @@ readfile($zip_name);
 unlink($zip_name);
 foreach($exportFiles as $file)
 {
-    unlink($file[0]);
+    if (file_exists($file[0])) {
+        unlink($file[0]);
+    }
 }

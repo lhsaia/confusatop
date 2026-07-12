@@ -34,7 +34,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && $pais->checarD
 // if the form was submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
     
-    print_r($POST);
+    // print_r($_POST);
 if(isset($_POST['origem']) && isset($_POST['fatorPercentual']) ){
 
     // set product property values

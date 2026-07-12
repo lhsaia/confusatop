@@ -6,7 +6,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 //die(json_encode([ 'success'=> true, 'errors'=> 'nothing']));
  ini_set( 'display_errors', true );
  error_reporting( E_ALL );
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
   $listaTimes = $_POST['array_times'];
@@ -28,9 +28,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $torneio = new ExportTorneio($db);
     $error_msg = "";
 
-    if($codigo_competicao != 0){
-      $torneio->salvar($codigo_competicao,$codigo_federacao,$codigo_genero,$num_equipes,$listaTimes, $codigo_sede);
-    }
+    // if($codigo_competicao != 0){
+      // $torneio->salvar($codigo_competicao,$codigo_federacao,$codigo_genero,$num_equipes,$listaTimes, $codigo_sede);
+    // }
 
     if($elencoMenor = $time->verificarElencoMenor(null,$listaTimes)){
         $error_msg .= "Há elencos com menos de 11 jogadores. </br>";
