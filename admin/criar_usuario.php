@@ -2,9 +2,11 @@
 
 ini_set( 'display_errors', true );
 error_reporting( E_ALL );
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
+
+require_once($_SERVER['DOCUMENT_ROOT']."/elements/mail_setup.php");
 
 // include database and object files
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -79,20 +81,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
             $novoemail = $usuario->email;
             $novonome = $usuario->nome;
             $nomeusuario = $usuario->nomeusuario;
+            
 
-            $to = $novoemail;
-            $from = "no-reply@confusa.top";
-
-            $headers = "From: " . $from . "\r\n";
-
-            $subject = "Seja bem-vindo ao site CONFUSA.TOP!";
             $body = "Olá " . $novonome . "!\r\n" .
                 "Suas informações para login seguem abaixo:\r\n".
                 "Usuário: " . $nomeusuario . "\r\n" .
                 "Senha: ". $presenha. "\r\n" .
                 "Você conseguirá trocar sua senha escolhendo a opção 'Trocar senha' na barra de tarefas do site";
+                
+                
+            $mail->setFrom('admin@confusa.top', 'Confusa.top');
+            $mail->addAddress($novoemail);               //Name is optional
+            $mail->Subject = "Seja bem-vindo ao site CONFUSA.TOP!";
+            $mail->Body    = $body;
 
-            if (mail($to, $subject, $body, $headers, "-f " . $from))
+            if ($mail->send())
             {
                 $email_success = true;
             }
@@ -106,6 +109,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
 					$paises->vincularUsuario($vincular, $novoIdUsuario);
 				}
 			}
+
+            // Se veio de uma solicitação de inscrição, atualizar o status dela no banco
+            if (isset($_GET['solicitacao_id'])) {
+                try {
+                    $solicitacao_id = (int)$_GET['solicitacao_id'];
+                    $stmt_upd = $db->prepare("UPDATE `solicitacoes_cadastro` SET status = 'aprovado' WHERE id = ?");
+                    $stmt_upd->execute([$solicitacao_id]);
+                    echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Solicitação de cadastro marcada como aprovada!</div>";
+                } catch (PDOException $e) {
+                    // ignora erros silenciosamente
+                }
+            }
 
 
 
@@ -134,19 +149,19 @@ for (i = 0; i < close.length; i++) {
 }
 </script>
 
-        <form method="POST" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
+        <form method="POST" action='<?php echo $_SERVER['PHP_SELF'] . (isset($_GET['solicitacao_id']) ? '?solicitacao_id=' . urlencode($_GET['solicitacao_id']) : ''); ?>'>
             <table class='table table-below float-table'>
                 <tr class="tr_inv">
                     <td class="td_inv input_nome_time">Username:</td>
-                    <td class="td_inv input_nome_time"><input type='text' name='nomeusuario' class='form-control'></td>
+                    <td class="td_inv input_nome_time"><input type='text' name='nomeusuario' value='<?php echo isset($_GET['nomereal']) ? htmlspecialchars(strtolower(str_replace(' ', '', $_GET['nomereal']))) : ''; ?>' class='form-control'></td>
                 </tr>
                 <tr class="tr_inv">
                     <td class="td_inv input_nome_time">Email:</td>
-                    <td class="td_inv input_nome_time"><input type='email' name='email' class='form-control'></td>
+                    <td class="td_inv input_nome_time"><input type='email' name='email' value='<?php echo isset($_GET['email']) ? htmlspecialchars($_GET['email']) : ''; ?>' class='form-control'></td>
                 </tr>
                 <tr class="tr_inv">
-                    <td class="td_inv input_nome_time">Nome:</td>
-                    <td class="td_inv input_nome_time"><input type='text' name='nomereal' class='form-control'></td>
+                    <td class="td_inv input_nome_time">Nome Real:</td>
+                    <td class="td_inv input_nome_time"><input type='text' name='nomereal' value='<?php echo isset($_GET['nomereal']) ? htmlspecialchars($_GET['nomereal']) : ''; ?>' class='form-control'></td>
                 </tr>
 				
         <tr class="tr_inv">
@@ -165,7 +180,7 @@ for (i = 0; i < close.length; i++) {
                     <td class="td_inv input_nome_time">
                 <?php
                     // ler times do banco de dados
-                    $stmt = $paises->read(null,null,false);
+                    $stmt = $paises->read(null,null,null);
 
                     // put them in a select drop-down
                     echo "<select size='15' class='form-control' name='paises_vinculados[]' multiple>";
