@@ -1,5 +1,5 @@
 <?php
-
+ob_start();
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 // ini_set( 'display_errors', true );
 // error_reporting( E_ALL );
@@ -110,7 +110,7 @@ if(isset($_SESSION['jogadorTime'])){
         $j = 0;
         foreach($_FILES['files']['name'] as $fileName){
             $fileName = (string) $fileName;
-            $fileExt = substr($fileName,-3);
+            $fileExt = strtolower(substr($fileName,-3));
             $countOfDots = (int)substr_count($fileName,".");
 
             if($countOfDots>01){
@@ -142,6 +142,141 @@ if(isset($_SESSION['jogadorTime'])){
         }
 
         //libxml_use_internal_errors(true);
+
+        if (isset($_SESSION['jogadorTime']) && $_SESSION['jogadorTime'] == 4) {
+            $parsedGames = [];
+            $countriesList = [];
+            
+            // Buscar todos os países do sistema para o Select2 (sem filtro de ranqueável)
+            $stmtCountries = $pais->read();
+            while ($row = $stmtCountries->fetch(PDO::FETCH_ASSOC)) {
+                $countriesList[] = [
+                    'id' => (int)$row['id'],
+                    'nome' => $row['nome'],
+                    'sigla' => $row['sigla'],
+                    'bandeira' => $row['bandeira']
+                ];
+            }
+
+            for($i = 0; $i <= count($filesToUpload)-1; $i++){
+                $filePath = $filesToUpload[$i][0];
+                $forbidden = $filesToUpload[$i][2];
+                $importExt = $filesToUpload[$i][1];
+                $importSize = $filesToUpload[$i][3];
+                $originalName = $filesToUpload[$i][4];
+                
+                if($filePath != "" && $forbidden == 0 && $importExt == $correct_extension && $importSize <= $max_file_size){
+                    $xml = json_decode(file_get_contents($filePath));
+                    if ($xml === null) {
+                        $parsedGames[] = [
+                            'filename' => $originalName,
+                            'error' => 'Arquivo JSON inválido'
+                        ];
+                        continue;
+                    }
+                    
+                    $nome_pais_A = isset($xml->time1) ? (string)$xml->time1 : '';
+                    $nome_pais_B = isset($xml->time2) ? (string)$xml->time2 : '';
+                    
+                    $timeA_id = $pais->idPorNomeTratado($nome_pais_A);
+                    $timeB_id = $pais->idPorNomeTratado($nome_pais_B);
+                    
+                    $timeA_bandeira = $timeA_id ? $pais->bandeiraPorId($timeA_id) : '-';
+                    $timeB_bandeira = $timeB_id ? $pais->bandeiraPorId($timeB_id) : '-';
+                    
+                    // Extração de data do arquivo
+                    $tempName = substr($originalName, 10);
+                    $explodedName = explode(".", $tempName);
+                    $game_date = date("Y-m-d", strtotime($explodedName[0]));
+                    if ($game_date == '1970-01-01' || !$game_date) {
+                        $explodedName = explode(".", $originalName);
+                        $game_date = date("Y-m-d", strtotime($explodedName[0]));
+                    }
+                    
+                    $is_duplicate = false;
+                    $existing_id = null;
+                    if ($timeA_id && $timeB_id) {
+                        $jogo->timeA_id = $timeA_id;
+                        $jogo->timeB_id = $timeB_id;
+                        $jogo->data = $game_date;
+                        $existing_id = $jogo->getMatchId();
+                        if ($existing_id) {
+                            $is_duplicate = true;
+                        }
+                    }
+                    
+                    $escalacaoTime1 = [];
+                    if (isset($xml->escalacaoTime1) && is_array($xml->escalacaoTime1)) {
+                        foreach ($xml->escalacaoTime1 as $p) {
+                            if (isset($p->id) && isset($p->nome)) {
+                                $escalacaoTime1[] = ['id' => (int)$p->id, 'nome' => (string)$p->nome];
+                            }
+                        }
+                    }
+                    $escalacaoTime2 = [];
+                    if (isset($xml->escalacaoTime2) && is_array($xml->escalacaoTime2)) {
+                        foreach ($xml->escalacaoTime2 as $p) {
+                            if (isset($p->id) && isset($p->nome)) {
+                                $escalacaoTime2[] = ['id' => (int)$p->id, 'nome' => (string)$p->nome];
+                            }
+                        }
+                    }
+                    
+                    $eventos = [];
+                    if (isset($xml->eventos) && is_array($xml->eventos)) {
+                        foreach ($xml->eventos as $ev) {
+                            if (isset($ev->tempo) && isset($ev->minutos) && isset($ev->tipoEvento) && isset($ev->idJogador)) {
+                                $eventos[] = [
+                                    'tempo' => (string)$ev->tempo,
+                                    'minutos' => (int)$ev->minutos,
+                                    'tipoEvento' => (string)$ev->tipoEvento,
+                                    'idJogador' => (int)$ev->idJogador
+                                ];
+                            }
+                        }
+                    }
+                    
+                    $parsedGames[] = [
+                        'filename' => $originalName,
+                        'data' => $game_date,
+                        'estadio' => isset($xml->estadio) ? (string)$xml->estadio : '',
+                        'campeonato' => (int)$campeonato_jogo_import,
+                        'fase' => (int)$fase_jogo_import,
+                        'time1_raw' => $nome_pais_A,
+                        'time2_raw' => $nome_pais_B,
+                        'timeA_id' => $timeA_id ? (int)$timeA_id : null,
+                        'timeA_bandeira' => $timeA_bandeira,
+                        'timeB_id' => $timeB_id ? (int)$timeB_id : null,
+                        'timeB_bandeira' => $timeB_bandeira,
+                        'placarTime1' => isset($xml->placarTime1) ? (int)$xml->placarTime1 : 0,
+                        'placarTime2' => isset($xml->placarTime2) ? (int)$xml->placarTime2 : 0,
+                        'placarProrrogacaoTime1' => isset($xml->placarProrrogacaoTime1) ? (int)$xml->placarProrrogacaoTime1 : -1,
+                        'placarProrrogacaoTime2' => isset($xml->placarProrrogacaoTime2) ? (int)$xml->placarProrrogacaoTime2 : -1,
+                        'placarPenaltisTime1' => isset($xml->placarPenaltisTime1) ? (int)$xml->placarPenaltisTime1 : -1,
+                        'placarPenaltisTime2' => isset($xml->placarPenaltisTime2) ? (int)$xml->placarPenaltisTime2 : -1,
+                        'escalacaoTime1' => $escalacaoTime1,
+                        'escalacaoTime2' => $escalacaoTime2,
+                        'eventos' => $eventos,
+                        'is_duplicate' => $is_duplicate,
+                        'existing_id' => $existing_id
+                    ];
+                } else {
+                    $parsedGames[] = [
+                        'filename' => $originalName,
+                        'error' => 'Arquivo inválido ou excedeu o tamanho máximo.'
+                    ];
+                }
+            }
+            
+            $php_output = ob_get_clean();
+            die(json_encode([
+                'success' => true,
+                'phase' => 1,
+                'games' => $parsedGames,
+                'countries' => $countriesList,
+                'php_output' => $php_output
+            ]));
+        }
 
         $filePath = "";
         for($i = 0;$i <=count($filesToUpload)-1; $i++){
@@ -192,7 +327,8 @@ if(isset($_SESSION['jogadorTime'])){
 
         }
 
-    die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
+    $php_output = ob_get_clean();
+    die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg, 'php_output' => $php_output]));
 
      }
     }

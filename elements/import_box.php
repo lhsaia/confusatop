@@ -13,10 +13,10 @@
             <input type="hidden" name="nacionalidade" id="nacionalidade" value=""/>
             <input type="hidden" name="paisligaselecionada" id="paisligaselecionada" value="" />
             <input type="hidden" name="sexo" id="sexo" value="0" />
-						<input type="hidden" name="campeonato_jogo_import" id="campeonato_jogo_import" value="10" />
-						<input type="hidden" name="fase_jogo_import" id="fase_jogo_import" value="0" />
-						<input type="hidden" name="competicao_tipo" id="competicao_tipo" value="1" />
-			<button type="submit" class="box__button">Carregar</button>
+			<input type="hidden" name="campeonato_jogo_import" id="campeonato_jogo_import" value="10" />
+			<input type="hidden" name="fase_jogo_import" id="fase_jogo_import" value="0" />
+			<input type="hidden" name="competicao_tipo" id="competicao_tipo" value="1" />
+		<button type="submit" class="box__button">Carregar</button>
 		</div>
 
 
@@ -25,6 +25,7 @@
 		<div class="box__error centralize_text">Erro! <span></span>. <a href="" class="box__restart" role="button">Tente novamente!</a></div>
 	</form>
 
-</div>
+</div><!-- /container -->
+</div><!-- /clear:both -->
 
 <script type="text/javascript" src="/js/importar.js?version=<?php echo rand()  ?>"></script>

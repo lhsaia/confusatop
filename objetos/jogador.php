@@ -520,6 +520,24 @@ return $stmt;
 			}
         }
 
+        // Clean and parse stringPosicoes if it's not in standard binary format (e.g. MEC, ME, MD, MC)
+        if ($stringPosicoes !== null && !preg_match('/^[01]+$/', $stringPosicoes)) {
+            $parts = preg_split('/[^A-Z0-9]/i', strtoupper($stringPosicoes));
+            $binary = str_repeat('0', 15);
+            $siglaToIdx = [
+                'G' => 0, 'LD' => 1, 'LE' => 2, 'Z' => 3, 'AD' => 4, 'AE' => 5,
+                'V' => 6, 'MD' => 7, 'ME' => 8, 'MC' => 9, 'MA' => 10, 'MEC' => 11,
+                'PD' => 12, 'PE' => 13, 'CA' => 14
+            ];
+            foreach ($parts as $part) {
+                $part = trim($part);
+                if (isset($siglaToIdx[$part])) {
+                    $binary[$siglaToIdx[$part]] = '1';
+                }
+            }
+            $stringPosicoes = $binary;
+        }
+
         $ajustePorPosicao = array(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);
         $bonusPolivalencia = array(1=>1,2=>1,3=>1,4=>1,5=>1,6=>1,7=>1);
         $bonusCobrancaFalta = 1.08;
@@ -562,11 +580,14 @@ return $stmt;
         //posicoes
         $posicoes = str_split($stringPosicoes, 1);
         $polivalencia = array_sum($posicoes);
+        if ($polivalencia <= 0) {
+            $polivalencia = 1;
+        }
         if($polivalencia > 7){
           $polivalencia = 7;
         }
         foreach($posicoes as $key=>&$posicao_especifica){
-            $posicao_especifica = $posicao_especifica * $ajustePorPosicao[$key];
+            $posicao_especifica = (int)$posicao_especifica * $ajustePorPosicao[$key];
         }
 
         unset($posicao_especifica);
@@ -2693,32 +2714,35 @@ return $stmt;
 
 
   public function idPorNomePais($nomeJogador, $idPais, $tempId){
-    $query = "SELECT nome, id, pais FROM ". $this->table_name . " WHERE id= ?";
+    // Tenta localizar pelo ID direto
+    $query = "SELECT nome, id, pais FROM ". $this->table_name . " WHERE id = ?";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(1, $tempId);
     $stmt->execute();
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    similar_text($result['nome'], $nomeJogador, $perc);
-    if($result['pais'] == $idPais && $perc > 80){
-      return $result['id'];
-    } else {
-      $newquery = "SELECT nome, id FROM ". $this->table_name . " WHERE pais = ? AND nome LIKE ?";
-      $newstmt = $this->conn->prepare($newquery);
-      $newstmt->bindParam(1, $idPais);
-      $nomeLike = "%". $nomeJogador . "%";
-      $newstmt->bindParam(2, $nomeLike);
-      $newstmt->execute();
-      $highest_perc = 0;
-      $likely_id = 0;
-      while($newresult = $newstmt->fetch(PDO::FETCH_ASSOC)){
-        similar_text($newresult['nome'], $nomeJogador, $temp_perc);
-        if($temp_perc > 70 && $temp_perc > $highest_perc){
-          $highest_perc = $temp_perc;
-          $likely_id = $newresult['id'];
-        }
+    if ($result !== false) {
+      similar_text($result['nome'], $nomeJogador, $perc);
+      if ($result['pais'] == $idPais && $perc > 80) {
+        return $result['id'];
       }
-      return $likely_id;
     }
+    // Fallback: busca por nome + país
+    $newquery = "SELECT nome, id FROM ". $this->table_name . " WHERE pais = ? AND nome LIKE ?";
+    $newstmt = $this->conn->prepare($newquery);
+    $newstmt->bindParam(1, $idPais);
+    $nomeLike = "%". $nomeJogador . "%";
+    $newstmt->bindParam(2, $nomeLike);
+    $newstmt->execute();
+    $highest_perc = 0;
+    $likely_id = 0;
+    while ($newresult = $newstmt->fetch(PDO::FETCH_ASSOC)) {
+      similar_text($newresult['nome'], $nomeJogador, $temp_perc);
+      if ($temp_perc > 70 && $temp_perc > $highest_perc) {
+        $highest_perc = $temp_perc;
+        $likely_id = $newresult['id'];
+      }
+    }
+    return $likely_id;
   }
 
   public function idPorNomeClube($nomeJogador, $idTime, $tempId){

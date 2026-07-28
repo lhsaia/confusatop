@@ -142,6 +142,14 @@
             // log data to the console so we can see
             console.log(data); 
             
+            if (data.phase === 1) {
+                form.classList.remove('is-uploading');
+                if (typeof window.renderImportReview === 'function') {
+                    window.renderImportReview(data.games, data.countries);
+                }
+                return;
+            }
+            
                 form.classList.add( data.success == true ? 'is-success' : 'is-error' );
                 form.classList.remove(data.success == true ? 'is-error' : 'is-success');
                 if( !data.success ) errorMsg.textContent = data.error;

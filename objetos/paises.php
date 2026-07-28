@@ -684,18 +684,41 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
           $nomeTratado = $this->removeAccents($nomeTratado);
           $nomeTratado = htmlspecialchars(strip_tags($nomeTratado));
 
-          $query = "SELECT id, nome, bandeira FROM " . $this->table_name;
-          $stmt = $this->conn->prepare( $query );
+          // Carrega todos os países uma única vez
+          $query = "SELECT id, nome, sigla FROM " . $this->table_name;
+          $stmt = $this->conn->prepare($query);
           $stmt->execute();
-          while($results = $stmt->fetch(PDO::FETCH_ASSOC)){
-            $treated_result = $this->removeAccents($results['nome']);
+          $allCountries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            if($treated_result == $nomeTratado){
-              return $results['id'];
+          // Tier 1: igualdade exata de nome (após normalização)
+          foreach ($allCountries as $row) {
+            $treated = $this->removeAccents($row['nome']);
+            if ($treated === $nomeTratado) {
+              return $row['id'];
             }
           }
-          return false;
 
+          // Tier 2: igualdade exata de sigla (ex: "BRA", "FRA", "USA")
+          $nomeMaybeSigna = strtoupper(trim($nomeTratado));
+          foreach ($allCountries as $row) {
+            if (!empty($row['sigla']) && strtoupper(trim($row['sigla'])) === $nomeMaybeSigna) {
+              return $row['id'];
+            }
+          }
+
+          // Tier 3: similaridade de nome >= 70% (similar_text)
+          $bestId   = false;
+          $bestPerc = 0;
+          foreach ($allCountries as $row) {
+            $treated = $this->removeAccents($row['nome']);
+            similar_text($treated, $nomeTratado, $perc);
+            if ($perc >= 70 && $perc > $bestPerc) {
+              $bestPerc = $perc;
+              $bestId   = $row['id'];
+            }
+          }
+          return $bestId;
         }
+
 }
 ?>

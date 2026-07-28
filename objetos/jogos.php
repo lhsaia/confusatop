@@ -566,6 +566,22 @@ public function importar(){
   }
 }
 
+public function atualizarJogo($id){
+  $query = "UPDATE jogos SET timeA_gols=?, timeB_gols=?, timeA_penaltis=?, timeB_penaltis=?, campeonato=?, estadio=?, fase=?, calculado=0 WHERE id=?";
+  $stmt = $this->conn->prepare($query);
+  $stmt->bindParam(1, $this->timeA_gols);
+  $stmt->bindParam(2, $this->timeB_gols);
+  $stmt->bindParam(3, $this->timeA_penaltis);
+  $stmt->bindParam(4, $this->timeB_penaltis);
+  $stmt->bindParam(5, $this->campeonato);
+  $stmt->bindParam(6, $this->estadio);
+  $stmt->bindParam(7, $this->fase);
+  $stmt->bindParam(8, $id);
+  return $stmt->execute();
+}
+
+
+
 public function importarEventos($log_eventos, $idJogo){
   if($idJogo != 0){
     foreach($log_eventos as $single_event){
