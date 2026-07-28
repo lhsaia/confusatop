@@ -15,11 +15,11 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && isset($_SES
     
     $onclick_log = 'document.getElementById("id02").style.display="block"';
     $title_log = "Log-out";
-    $change_pass = "<a class='nav-item' href='/usuario/alterar_senha.php'>Alterar senha</a>";
+    $change_pass = "<a class='nav-item' href='/usuario/alterar_senha.php'>Preferências</a>";
 	$my_menu = "<a class='nav-item' href='/usuario/index.php'>Minha área</a>";
 
     if($_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == false){
-      $admin_btn = "<a class='nav-item' href='/admin/criar_usuario.php'>Criar usuário</a>";
+      $admin_btn = "<a class='nav-item' href='/admin/index.php'>Área do Admin</a>";
       $class_conectado = " admin conectado ";
     } else if($_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == true){
       $class_conectado = " impersonado conectado ";
@@ -78,6 +78,12 @@ $currentPage =  explode('/',strtok($_SERVER['REQUEST_URI'], '?'));
 <script src="/js/jquery.soccerfield.min.js"></script>
 
 <?php
+if (!isset($css_login)) {
+  $css_login = 'login';
+}
+if (!isset($css_versao)) {
+  $css_versao = date('h:i:s');
+}
 if(isset($css_filename)){
   echo '<link type="text/css" href="/css/' . $css_filename . '.css?versao=' . $css_versao .'" rel="stylesheet">';
 }
@@ -102,13 +108,237 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
+<style>
+/* Updates Premium Modal */
+.custom-modal-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(15, 23, 42, 0.6);
+	backdrop-filter: blur(5px);
+	-webkit-backdrop-filter: blur(5px);
+	display: none;
+	justify-content: center;
+	align-items: center;
+	z-index: 999999;
+	opacity: 0;
+	transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.custom-modal-overlay.show {
+	display: flex;
+	opacity: 1;
+}
+.custom-modal-card {
+	background: rgba(30, 41, 59, 0.95);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 16px;
+	padding: 24px;
+	max-width: 500px;
+	width: 90%;
+	box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+	color: #f1f5f9;
+	transform: scale(0.9);
+	transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.custom-modal-overlay.show .custom-modal-card {
+	transform: scale(1);
+}
+.updates-card {
+	max-width: 550px !important;
+}
+.custom-modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	padding-bottom: 12px;
+}
+.custom-modal-header .header-left {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.custom-modal-header .info-icon {
+	color: #38bdf8;
+	font-size: 24px;
+}
+.custom-modal-header h3 {
+	margin: 0;
+	font-size: 1.4rem;
+	font-weight: 700;
+	color: #f1f5f9;
+}
+.custom-modal-header .close-icon {
+	color: #94a3b8;
+	cursor: pointer;
+	transition: color 0.2s;
+}
+.custom-modal-header .close-icon:hover {
+	color: #f1f5f9;
+}
+.custom-modal-body {
+	max-height: 400px;
+	overflow-y: auto;
+	padding-right: 8px;
+	text-align: left;
+}
+.custom-modal-body::-webkit-scrollbar {
+	width: 6px;
+}
+.custom-modal-body::-webkit-scrollbar-track {
+	background: transparent;
+}
+.custom-modal-body::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 4px;
+}
+.custom-modal-body::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.2);
+}
+.update-item {
+	display: flex;
+	gap: 15px;
+	margin-bottom: 20px;
+	align-items: flex-start;
+}
+.update-badge {
+	font-size: 0.75rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	padding: 3px 8px;
+	border-radius: 6px;
+	white-space: nowrap;
+	margin-top: 2px;
+}
+.update-badge.new {
+	background: rgba(16, 185, 129, 0.15);
+	color: #34d399;
+	border: 1px solid rgba(16, 185, 129, 0.2);
+}
+.update-badge.design {
+	background: rgba(168, 85, 247, 0.15);
+	color: #c084fc;
+	border: 1px solid rgba(168, 85, 247, 0.2);
+}
+.update-badge.security {
+	background: rgba(239, 68, 68, 0.15);
+	color: #f87171;
+	border: 1px solid rgba(239, 68, 68, 0.2);
+}
+.update-badge.bugfix {
+	background: rgba(245, 158, 11, 0.15);
+	color: #fbbf24;
+	border: 1px solid rgba(245, 158, 11, 0.2);
+}
+.update-content h4 {
+	margin: 0 0 6px 0;
+	font-size: 1.05rem;
+	font-weight: 600;
+	color: #f8fafc;
+}
+.update-content p {
+	margin: 0;
+	font-size: 0.9rem;
+	line-height: 1.45;
+	color: #94a3b8;
+}
+.custom-modal-footer {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 20px;
+	padding-top: 15px;
+	border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.custom-modal-btn {
+	padding: 10px 20px;
+	border-radius: 8px;
+	font-weight: 600;
+	font-size: 0.95rem;
+	border: none;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+.custom-modal-btn.btn-ok {
+	background: #ffffff;
+	color: #0f172a;
+}
+.custom-modal-btn.btn-ok:hover {
+	background: #f1f5f9;
+	box-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+}
+
+/* Premium Collapsible Timeline */
+.timeline-body {
+	position: relative;
+}
+.timeline-day {
+	position: relative;
+	margin-bottom: 16px;
+	z-index: 2;
+}
+.timeline-day-header {
+	display: flex;
+	align-items: center;
+	padding: 10px 14px;
+	background: rgba(15, 23, 42, 0.3);
+	border: 1px solid rgba(255, 255, 255, 0.04);
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 0.25s;
+	user-select: none;
+}
+.timeline-day-header:hover {
+	background: rgba(255, 255, 255, 0.03);
+	border-color: rgba(255, 255, 255, 0.1);
+}
+.timeline-day.active .timeline-day-header {
+	background: rgba(56, 189, 248, 0.08);
+	border-color: rgba(56, 189, 248, 0.25);
+}
+.timeline-day-header .expand-icon {
+	color: #94a3b8;
+	margin-right: 10px;
+	font-size: 1.2rem;
+	transition: transform 0.25s ease;
+}
+.timeline-day.active .timeline-day-header .expand-icon {
+	transform: rotate(180deg);
+	color: #38bdf8;
+}
+.timeline-day-header .day-date {
+	font-weight: 700;
+	font-size: 0.95rem;
+	color: #e2e8f0;
+	flex-grow: 1;
+}
+.timeline-day.active .timeline-day-header .day-date {
+	color: #38bdf8;
+}
+.timeline-day-content {
+	display: none;
+	padding: 16px 14px 4px 14px;
+	margin-top: 4px;
+	margin-left: 28px;
+}
+.timeline-day.active .timeline-day-content {
+	display: block;
+}
+</style>
 </head>
 
 <body class='loggedout no-capture'>
 <div id="top-bar" class="elementoFixo no-capture">
   <div id="logo-text">
 
-  CONFUSA<span class="orange">.</span>top <span class='beta'></span>
+  <span style="white-space: nowrap; display: inline-block;">
+    CONFUSA<span class="orange">.</span>top <span class='beta'></span>
+    <span onclick="showUpdatesModal()" style="display: inline-flex; vertical-align: middle; cursor: pointer; color: #94a3b8; margin-left: 8px; transition: color 0.2s; user-select: none;" onmouseover="this.style.color='#38bdf8'" onmouseout="this.style.color='#94a3b8'" title="Novidades e Atualizações">
+      <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle;">help</span>
+    </span>
+  </span>
 
   </div>
 
@@ -118,7 +348,11 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <span id="logged-user" class="<?php echo $class_conectado?>">
-  <?php echo $welcometext ?>
+  <?php if(isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == false): ?>
+    <a href="/admin/index.php" style="color: inherit; text-decoration: none; border-bottom: 1px dashed #38bdf8;"><?php echo $welcometext ?></a>
+  <?php else: ?>
+    <?php echo $welcometext ?>
+  <?php endif; ?>
 </span>
 
 
@@ -349,3 +583,149 @@ $(document).ready(function() {
     }
 
     ?>
+
+<?php
+// Load and parse updates.json (relative to root of workspace)
+$json_path = $_SERVER['DOCUMENT_ROOT'] . '/updates.json';
+$updates_data = [];
+if (file_exists($json_path)) {
+	$updates_data = json_decode(file_get_contents($json_path), true);
+}
+
+$up_title = $updates_data['title'] ?? "Novidades e Ajustes";
+$up_btn = $updates_data['btn'] ?? "Legal!";
+$badge_translations = $updates_data['badge_translations'] ?? [
+	"new" => "Novo",
+	"design" => "Design",
+	"security" => "Segurança",
+	"bugfix" => "Ajuste"
+];
+$days = $updates_data['days'] ?? [];
+?>
+
+<div id="custom-updates-modal" class="custom-modal-overlay">
+	<div class="custom-modal-card updates-card">
+		<div class="custom-modal-header">
+			<div class="header-left">
+				<span class="material-symbols-outlined info-icon">auto_awesome</span>
+				<h3 class="custom-modal-title"><?php echo htmlspecialchars($up_title); ?></h3>
+			</div>
+			<span class="material-symbols-outlined close-icon" onclick="closeUpdatesModal()">close</span>
+		</div>
+		
+		<div class="custom-modal-body timeline-body">
+			<?php if (empty($days)): ?>
+				<p style="text-align: center; color: #94a3b8; padding: 20px;">Nenhuma novidade recente encontrada.</p>
+			<?php else: ?>
+				<?php foreach ($days as $index => $day): 
+					$day_id = htmlspecialchars($day['id'] ?? 'day_' . $index);
+					$day_date = htmlspecialchars($day['date'] ?? '');
+					$is_active = ($index === 0); // Open first day by default
+				?>
+					<div class="timeline-day <?php echo $is_active ? 'active' : ''; ?>" data-day="<?php echo $day_id; ?>">
+						<div class="timeline-day-header" onclick="toggleTimelineDay('<?php echo $day_id; ?>')">
+							<span class="material-symbols-outlined expand-icon">expand_more</span>
+							<span class="day-date"><?php echo $day_date; ?></span>
+						</div>
+						<div class="timeline-day-content" style="<?php echo $is_active ? 'display: block;' : 'display: none;'; ?>">
+							<?php 
+							$day_title = htmlspecialchars($day['title'] ?? '');
+							$day_desc = htmlspecialchars($day['description'] ?? '');
+							$items = $day['items'] ?? [];
+							
+							// Se houver título/descrição raiz E não existirem sub-itens (items), renderiza
+							if (empty($items) && (!empty($day_title) || !empty($day_desc))):
+							?>
+								<div class="update-item">
+									<div class="update-badge new">Novo</div>
+									<div class="update-content">
+										<h4><?php echo $day_title; ?></h4>
+										<p><?php echo $day_desc; ?></p>
+									</div>
+								</div>
+							<?php 
+							endif;
+
+							// Se houver sub-itens, renderiza-os
+							foreach ($items as $item): 
+								$badge_key = $item['badge'] ?? 'bugfix';
+								$badge_lbl = htmlspecialchars($badge_translations[$badge_key] ?? '');
+								$item_title = htmlspecialchars($item['title'] ?? '');
+								$item_desc = htmlspecialchars($item['desc'] ?? '');
+							?>
+								<div class="update-item">
+									<div class="update-badge <?php echo htmlspecialchars($badge_key); ?>"><?php echo $badge_lbl; ?></div>
+									<div class="update-content">
+										<h4><?php echo $item_title; ?></h4>
+										<p><?php echo $item_desc; ?></p>
+									</div>
+								</div>
+							<?php endforeach; ?>
+						</div>
+					</div>
+				<?php endforeach; ?>
+			<?php endif; ?>
+		</div>
+		
+		<div class="custom-modal-footer">
+			<button class="custom-modal-btn btn-ok" onclick="closeUpdatesModal()"><?php echo htmlspecialchars($up_btn); ?></button>
+		</div>
+	</div>
+</div>
+
+<script>
+function showUpdatesModal() {
+	openUpdatesModal();
+}
+function openUpdatesModal() {
+	var modal = $("#custom-updates-modal");
+	// Reset accordion to show first day open, others closed
+	modal.find(".timeline-day").removeClass("active");
+	modal.find(".timeline-day-content").hide();
+	
+	var firstDay = modal.find(".timeline-day").first();
+	firstDay.addClass("active");
+	firstDay.find(".timeline-day-content").show();
+	
+	modal.css("display", "flex");
+	setTimeout(function() {
+		modal.addClass("show");
+	}, 10);
+}
+function closeUpdatesModal() {
+	var modal = $("#custom-updates-modal");
+	modal.removeClass("show");
+	setTimeout(function() {
+		modal.css("display", "none");
+	}, 300);
+}
+function toggleTimelineDay(dayId) {
+	var targetDay = $(".timeline-day[data-day='" + dayId + "']");
+	
+	if (targetDay.hasClass("active")) {
+		targetDay.find(".timeline-day-content").slideUp(250, function() {
+			targetDay.removeClass("active");
+		});
+	} else {
+		// Expand target day and collapse all others
+		$(".timeline-day.active").each(function() {
+			var activeDay = $(this);
+			activeDay.find(".timeline-day-content").slideUp(250, function() {
+				activeDay.removeClass("active");
+			});
+		});
+		
+		targetDay.find(".timeline-day-content").slideDown(250, function() {
+			targetDay.addClass("active");
+		});
+	}
+}
+
+// Fechar se clicar fora do modal
+window.addEventListener('click', function(e) {
+    const modal = document.getElementById('custom-updates-modal');
+    if (e.target === modal) {
+        closeUpdatesModal();
+    }
+});
+</script>

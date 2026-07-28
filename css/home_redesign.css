@@ -1,0 +1,468 @@
+/* ==========================================================================
+   CONFUSA.top - Modern Redesign System (CSS)
+   ========================================================================== */
+
+:root {
+  --bg-dark: #1A1469;
+  --bg-card: rgba(15, 23, 42, 0.75);
+  --bg-card-hover: rgba(24, 35, 60, 0.95);
+  --border-card: rgba(255, 255, 255, 0.1);
+  --border-card-hover: rgba(56, 189, 248, 0.4);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --accent-cyan: #38bdf8;
+  --accent-emerald: #34d399;
+  --accent-amber: #fbbf24;
+  --shadow-glow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --font-main: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-heading: 'Kanit', sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: #1A1469;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  padding-top: 60px;
+  background-image: 
+    linear-gradient(180deg, rgba(26, 20, 105, 0.65) 0%, rgba(15, 23, 42, 0.85) 100%),
+    url("/images/confusa-blue.png");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+
+/* ==========================================================================
+   Header do Sistema (Top Bar) Redesenhado
+   ========================================================================== */
+#top-bar {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
+  height: 60px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 1.5rem !important;
+  z-index: 100 !important;
+}
+
+#logo-text {
+  font-family: var(--font-heading) !important;
+  font-weight: 900 !important;
+  font-size: 1.4rem !important;
+  color: var(--text-primary) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+#logo-text .orange {
+  color: var(--accent-cyan) !important;
+}
+
+#logged-user {
+  position: absolute !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  top: 50% !important;
+  margin-top: 0 !important;
+}
+
+#logged-user a {
+  color: var(--accent-cyan) !important;
+  border-bottom: 1px dashed rgba(56, 189, 248, 0.4);
+  transition: color 0.2s;
+}
+
+#logged-user a:hover {
+  color: var(--text-primary) !important;
+}
+
+/* ==========================================================================
+   Menu Hamburguer Ajustado (Alinhado perfeitamente no mesmo lugar do X)
+   ========================================================================== */
+#hamburger-menu {
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
+  position: relative !important;
+}
+
+/* Força os botões a ocuparem exatamente o mesmo pixel de alinhamento */
+#open-menu, #close-menu {
+  position: absolute !important;
+  right: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 8px !important;
+  background: rgba(255,255,255,0.05) !important;
+  color: var(--text-primary) !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s !important;
+  z-index: 10000 !important;
+}
+
+#open-menu:hover, #close-menu:hover {
+  background: rgba(255,255,255,0.15) !important;
+}
+
+#open-menu {
+  display: flex !important;
+}
+
+#close-menu {
+  display: none !important;
+}
+
+/* Sobrescreve as regras forçadas pelo jQuery legados do header.php */
+body #hamburger-menu #open-menu[style*="display: none"] {
+  display: none !important;
+}
+body #hamburger-menu #open-menu[style*="display: block"] {
+  display: flex !important;
+}
+body #hamburger-menu #close-menu[style*="display: none"] {
+  display: none !important;
+}
+body #hamburger-menu #close-menu[style*="display: block"] {
+  display: flex !important;
+}
+
+#nav {
+  position: fixed !important;
+  top: 0 !important;
+  right: -320px !important;
+  width: 300px !important;
+  height: 100vh !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 80px 24px 40px !important;
+  gap: 12px !important;
+  z-index: 9999 !important;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: -10px 0 30px rgba(0,0,0,0.5) !important;
+  overflow-y: auto !important;
+}
+
+#nav:not(.open) {
+  display: none !important;
+}
+
+#nav.open {
+  display: flex !important;
+  right: 0 !important;
+}
+
+.nav-item {
+  color: var(--text-secondary) !important;
+  font-size: 1.05rem !important;
+  font-weight: 500 !important;
+  padding: 12px 16px !important;
+  border-radius: 10px !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.03) !important;
+  transition: all 0.25s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+}
+
+.nav-item:hover {
+  color: var(--text-primary) !important;
+  background: rgba(56, 189, 248, 0.1) !important;
+  border-color: rgba(56, 189, 248, 0.25) !important;
+  transform: translateX(4px) !important;
+}
+
+/* ==========================================================================
+   Footer do Sistema (Bottom Bar) Fixado no Final com Sticky Footer
+   ========================================================================== */
+#bottom-bar {
+  position: relative !important;
+  width: 100% !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  height: 60px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 2rem !important;
+  margin-top: auto !important;
+  z-index: 10 !important;
+}
+
+#bottom-bar #botaoVoltar {
+  display: none !important;
+}
+
+#copyright-text {
+  color: var(--text-secondary) !important;
+  font-size: 0.85rem !important;
+  text-align: center !important;
+}
+
+#copyright-text a {
+  color: var(--accent-cyan) !important;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+#copyright-text a:hover {
+  color: var(--text-primary) !important;
+}
+
+/* ==========================================================================
+   Container Principal e Grid
+   ========================================================================== */
+.redesign-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  flex: 1;
+}
+
+/* Grid de Hub Principal */
+.hub-section-title {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.hub-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.redesign-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.75rem;
+  margin-bottom: 3.5rem;
+}
+
+/* Card Moderno com Imagem na Metade Superior */
+.hub-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-card);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.hub-card:not(.disabled-card):hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-card-hover);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 25px rgba(56, 189, 248, 0.2);
+}
+
+/* Estado desabilitado (grayed-out) para cards */
+.disabled-card {
+  opacity: 0.5;
+  filter: grayscale(1);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.badge-status {
+  font-size: 0.7rem;
+  font-family: var(--font-main);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.hub-card-hero-image {
+  width: 100%;
+  height: 160px;
+  position: relative;
+  background: #0f172a;
+  overflow: hidden;
+  border-radius: 18px 18px 0 0; 
+}
+
+.hub-card-hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.4s ease, filter 0.4s ease;
+  filter: brightness(0.9) contrast(1.05);
+  display: block;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.hub-card:not(.disabled-card):hover .hub-card-hero-image img {
+  transform: scale(1.06);
+  filter: brightness(1) contrast(1.1);
+}
+
+.hub-card-hero-image::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; 
+  left: 0;
+  width: 100%;
+  height: 60%;
+  background: linear-gradient(to top, rgba(15, 23, 42, 1), transparent);
+  pointer-events: none;
+}
+
+.hub-card-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;
+  background-color: rgba(15, 23, 42, 1);
+}
+
+.hub-card-title {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hub-card-desc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.hub-card-arrow {
+  color: var(--text-secondary);
+  opacity: 0.5;
+  transition: all 0.3s ease;
+  font-size: 20px;
+}
+
+.hub-card:hover .hub-card-arrow {
+  opacity: 1;
+  color: var(--accent-cyan);
+  transform: translateX(4px);
+}
+
+/* Seção de Links Especiais/Externos */
+.links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.sub-link-card {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-card);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  transition: all 0.25s ease;
+}
+
+.sub-link-card:hover {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.sub-link-card img {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.sub-link-card span {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  #logged-user {
+    position: relative !important;
+    left: auto !important;
+    transform: none !important;
+    margin-right: 12px;
+  }
+  .redesign-grid {
+    grid-template-columns: 1fr;
+  }
+  .hub-card-hero-image {
+    height: 140px;
+  }
+}
+@media (max-width: 480px) {
+  #top-bar {
+    padding: 0 1rem !important;
+  }
+  #bottom-bar {
+    padding: 0 1rem !important;
+  }
+}
