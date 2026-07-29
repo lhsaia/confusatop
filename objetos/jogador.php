@@ -736,7 +736,7 @@ return $stmt;
 			} else {
 				$admin_query = " 
 				UNION 
-				SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem, d.Nome as clubeDestino, t.valor, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 when t.status_execucao = 3 then 2 end) as precedencia, emprestimo, encerramento 
+				SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem, d.Nome as clubeDestino, t.valor, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 else 2 end) as precedencia, emprestimo, encerramento 
 				FROM transferencias t
 				LEFT JOIN clube c ON t.clubeOrigem = c.id
 				LEFT JOIN jogador j ON t.jogador = j.id
@@ -748,7 +748,7 @@ return $stmt;
 			
 			}
 
-            $query = "SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem, d.Nome as clubeDestino, t.valor, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 when t.status_execucao = 3 then 2 end) as precedencia, emprestimo, encerramento 
+            $query = "SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem, d.Nome as clubeDestino, t.valor, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 else 2 end) as precedencia, emprestimo, encerramento 
             FROM transferencias t
             LEFT JOIN clube c ON t.clubeOrigem = c.id
             LEFT JOIN jogador j ON t.jogador = j.id
@@ -758,7 +758,7 @@ return $stmt;
             LEFT JOIN paises z ON d.Pais = z.id
             WHERE ((p.dono = ? AND (t.status_execucao = 0 OR t.status_execucao = 3)) OR (c.id = 0 AND z.dono <> ? AND q.dono = ? AND (t.status_execucao = 0 OR t.status_execucao = 3)))
             UNION
-            SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem,  d.Nome as clubeDestino, t.valor, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'outbox' as direcao, t.data as data, j.Nivel as nivelJogador, t.status_execucao, t.id as idTransferencia, (case when t.status_execucao = 2 then 1 else 2 end) as precedencia, emprestimo, encerramento 
+            SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem,  d.Nome as clubeDestino, t.valor, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'outbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 OR t.status_execucao = 2 then 1 else 2 end) as precedencia, emprestimo, encerramento 
             FROM transferencias t
             LEFT JOIN clube d ON t.clubeDestino = d.id
             LEFT JOIN jogador j ON t.jogador = j.id
@@ -780,6 +780,86 @@ return $stmt;
 
             return $stmt;
 
+        }
+
+        public function contarPropostasPendentes($idUsuario, $admin) {
+            $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+            
+            if($admin == 0){
+                $admin_query = "";
+            } else {
+                $admin_query = " 
+                UNION 
+                SELECT t.id 
+                FROM transferencias t
+                LEFT JOIN clube c ON t.clubeOrigem = c.id
+                LEFT JOIN jogador j ON t.jogador = j.id
+                LEFT JOIN paises p ON c.Pais = p.id
+                LEFT JOIN clube d ON t.clubeDestino = d.id
+                LEFT JOIN paises q ON j.Pais = q.id
+                LEFT JOIN paises z ON d.Pais = z.id
+                WHERE (p.dono = 0 AND q.dono = 0 AND (t.status_execucao = 0 OR t.status_execucao = 3))";
+            }
+
+            $query = "SELECT t.id 
+            FROM transferencias t
+            LEFT JOIN clube c ON t.clubeOrigem = c.id
+            LEFT JOIN jogador j ON t.jogador = j.id
+            LEFT JOIN paises p ON c.Pais = p.id
+            LEFT JOIN clube d ON t.clubeDestino = d.id
+            LEFT JOIN paises q ON j.Pais = q.id
+            LEFT JOIN paises z ON d.Pais = z.id
+            WHERE ((p.dono = ? AND (t.status_execucao = 0 OR t.status_execucao = 3)) OR (c.id = 0 AND z.dono <> ? AND q.dono = ? AND (t.status_execucao = 0 OR t.status_execucao = 3)))
+            UNION
+            SELECT t.id 
+            FROM transferencias t
+            LEFT JOIN clube d ON t.clubeDestino = d.id
+            LEFT JOIN jogador j ON t.jogador = j.id
+            LEFT JOIN paises p ON d.Pais = p.id
+            LEFT JOIN clube c ON t.clubeOrigem = c.id
+            LEFT JOIN paises q ON j.Pais = q.id
+            WHERE p.dono = ? AND (c.id <> 0 OR q.dono <> ?) ".$admin_query;
+
+            $stmt = $this->conn->prepare( $query );
+            $stmt->bindParam(1,$idUsuario);
+            $stmt->bindParam(2,$idUsuario);
+            $stmt->bindParam(3,$idUsuario);
+            $stmt->bindParam(4,$idUsuario);
+            $stmt->bindParam(5,$idUsuario);
+            $stmt->execute();
+            return $stmt->rowCount();
+        }
+
+        public function contarPropostasAcaoPendente($idUsuario) {
+            $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+            $query = "
+                SELECT t.id 
+                FROM transferencias t
+                LEFT JOIN clube c ON t.clubeOrigem = c.id
+                LEFT JOIN jogador j ON t.jogador = j.id
+                LEFT JOIN paises p ON c.Pais = p.id
+                LEFT JOIN clube d ON t.clubeDestino = d.id
+                LEFT JOIN paises q ON j.Pais = q.id
+                LEFT JOIN paises z ON d.Pais = z.id
+                WHERE ((p.dono = ? AND t.status_execucao = 0) OR (c.id = 0 AND z.dono <> ? AND q.dono = ? AND t.status_execucao = 0))
+                UNION
+                SELECT t.id 
+                FROM transferencias t
+                LEFT JOIN clube d ON t.clubeDestino = d.id
+                LEFT JOIN jogador j ON t.jogador = j.id
+                LEFT JOIN paises p ON d.Pais = p.id
+                LEFT JOIN clube c ON t.clubeOrigem = c.id
+                LEFT JOIN paises q ON j.Pais = q.id
+                WHERE p.dono = ? AND (c.id <> 0 OR q.dono <> ?) AND t.status_execucao = 2";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $idUsuario);
+            $stmt->bindParam(2, $idUsuario);
+            $stmt->bindParam(3, $idUsuario);
+            $stmt->bindParam(4, $idUsuario);
+            $stmt->bindParam(5, $idUsuario);
+            $stmt->execute();
+            return $stmt->rowCount();
         }
 
         public function contarPropostas($idUsuario, $somenteRecebidas = null){
@@ -822,14 +902,14 @@ return $stmt;
             $acao = htmlspecialchars(strip_tags($acao));
 
             if($acao == 'recusar'){
-                $query = "UPDATE transferencias SET status_execucao = 3 WHERE id = ?";
+                $query = "UPDATE transferencias SET status_execucao = 3, dataConclusao = NOW() WHERE id = ?";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(1,$idTransferencia);
 
             }
 
             if($acao == 'contrapropor'){
-                $query = "UPDATE transferencias SET status_execucao = 2, valor = ? WHERE id = ?";
+                $query = "UPDATE transferencias SET status_execucao = 2, valor = ?, dataConclusao = NOW() WHERE id = ?";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(1,$valor);
                 $stmt->bindParam(2,$idTransferencia);
@@ -901,14 +981,14 @@ return $stmt;
                     return false;
                 }
 
-                $newquery = "UPDATE transferencias SET status_execucao = 3 WHERE id <> ? AND jogador = ? AND status_execucao <> 1";
+                $newquery = "UPDATE transferencias SET status_execucao = 3, dataConclusao = NOW() WHERE id <> ? AND jogador = ? AND status_execucao <> 1";
                 $stmt = $this->conn->prepare($newquery);
                 $stmt->bindParam(1,$idTransferencia);
                 $stmt->bindParam(2,$row['jogador']);
                 //$stmt->bindParam(3,$row['clubeDestino']);
                 $stmt->execute();
 
-                $query = "UPDATE transferencias SET status_execucao = 1 WHERE id = ?";
+                $query = "UPDATE transferencias SET status_execucao = 1, dataConclusao = NOW() WHERE id = ?";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(1,$idTransferencia);
 

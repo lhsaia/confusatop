@@ -1,0 +1,98 @@
+/* ==========================================================================
+   CONFUSA.top - Minha Área Redesign Extensions (Vibrant Orange & Burnt Cards)
+   ========================================================================== */
+
+body {
+  /* Restaurado o degradê anterior: Laranja base (#FFA500), degradê para escuro e marca d'água tintada Mango (#F4BB44) */
+  background-image: 
+    linear-gradient(180deg, rgba(244, 187, 68, 0.3) 0%, rgba(15, 23, 42, 0.96) 100%),
+    url("/images/confusa-white.png") !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+  background-color: #FFA500 !important; /* Laranja base */
+  background-blend-mode: color-burn !important; /* Blenda a marca d'água com tom Mango/Laranja */
+}
+
+/* Modificações nos Cards (Hub Cards) */
+.hub-card {
+  background: rgba(108, 34, 11, 0.45) !important; /* Laranja escuro terracota translúcido */
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Fundo da área de texto (Card Body) em Laranja Escuro/Queimado (Burnt Orange) */
+.hub-card-body {
+  background-color: #541a08 !important; /* Laranja profundo e escuro */
+  border-top: 1px solid rgba(255, 95, 31, 0.2) !important;
+}
+
+/* Fontes com melhor legibilidade e contraste premium */
+.hub-card-title span {
+  color: #ffedd5 !important; /* Creme pêssego suave para o título principal */
+}
+
+.hub-card-desc {
+  color: #fed7aa !important; /* Laranja pastel suave para a descrição */
+}
+
+/* Transição de gradiente da imagem para o corpo do card */
+.hub-card-hero-image::after {
+  background: linear-gradient(to top, #541a08, transparent) !important;
+}
+
+/* Hover nos cards com glow âmbar/laranja */
+.hub-card:not(.disabled-card):hover {
+  background: rgba(138, 45, 14, 0.6) !important;
+  border-color: #ffffff !important;
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35), 0 0 25px rgba(255, 95, 31, 0.4) !important;
+}
+
+.hub-card:not(.disabled-card):hover .hub-card-body {
+  background-color: #6a220a !important; /* Laranja escuro um pouco mais aceso no hover */
+}
+
+.hub-card:not(.disabled-card):hover .hub-card-title span {
+  color: #ffffff !important; /* Fica branco puro no hover */
+}
+
+.hub-card:hover .hub-card-arrow {
+  color: var(--accent-amber) !important;
+}
+
+/* Badges e Notificações específicas (Design retangular/quadrado igual ao do HYMT) */
+.badge-status.pending {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  color: #fff !important;
+  border-radius: 4px !important;
+  padding: 2px 8px !important;
+  font-size: 0.75rem !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+}
+
+.badge-status.counter {
+  background: #FF5F1F !important; /* Fundo Laranja Neon */
+  border: 1px solid #FF5F1F !important;
+  color: #ffffff !important; /* Texto branco */
+  border-radius: 4px !important; /* Formato retangular/quadrado */
+  padding: 2px 8px !important;
+  font-size: 0.75rem !important;
+  font-weight: bold !important;
+}
+
+/* Subtítulos de Seções */
+.hub-subsection-title {
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 1.25rem !important;
+  color: #ffedd5 !important; /* Creme pêssego */
+  margin: 2rem 0 1.25rem 0 !important;
+  padding-bottom: 0.5rem !important;
+  border-bottom: 2px solid rgba(255, 95, 31, 0.25) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  width: 100% !important;
+}

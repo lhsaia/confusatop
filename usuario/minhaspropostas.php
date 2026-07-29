@@ -7,8 +7,8 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "Minhas propostas de jogadores - ".($_SESSION['nomereal'] ?? '');
-$css_filename = "indexRanking";
-$aux_css = "usuario";
+$css_filename = "home_redesign";
+$aux_css = "propostas_redesign";
 $css_login = 'login';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
@@ -17,14 +17,12 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 ?>
 
-<div style='clear:both; float:center'></div>
-<div id='errorbox'></div>
+<main class="propostas-container">
+    <div id='errorbox'></div>
 
-<div id="quadro-container">
-<div align="center" id="quadroTimes">
-<h2>Quadro de propostas de jogadores - <?php echo $_SESSION['nomereal']?></h2>
+    <div class="propostas-card">
+        <h2 class="propostas-title">Quadro de propostas de jogadores - <?php echo $_SESSION['nomereal']?></h2>
 
-<hr>
 
 <?php
 
@@ -61,7 +59,7 @@ $num = $stmt->rowCount();
 $page_url = "minhaspropostas.php?";
 
     // count all products in the database to calculate total pages
-    $total_rows = $jogador->contarPropostas($_SESSION['user_id']);
+    $total_rows = $jogador->contarPropostasPendentes($_SESSION['user_id'], $_SESSION['admin_status']);
 
 
     // paging buttons here
@@ -84,6 +82,8 @@ if($num>0){
             echo "<th>Valor</th>";
             echo "<th>Tipo</th>";
             echo "<th>Encerramento</th>";
+            echo "<th>Data Prop.</th>";
+            echo "<th>Data Concl.</th>";
             echo "<th>Opções</th>";
 
         echo "</tr>";
@@ -116,24 +116,27 @@ if($num>0){
             //$escudo2 = explode(".",$escudoDestino);
             $valor = (float)$valor/1000000;
 
-            echo "<tr id='".$idTransferencia."' class='tipo".$status_execucao."'>";
+            $formattedDataProp = date("d/m/Y H:i", strtotime($data));
+            $formattedDataConcl = empty($dataConclusao) ? "" : date("d/m/Y H:i", strtotime($dataConclusao));
+
+             echo "<tr id='".$idTransferencia."' class='tipo".$status_execucao."'>";
                 echo "<td><img src='/images/icons/".$direcao.".png' width='30px' height='30px'/></td>";
-                echo "<td><span class='nomeEditavel'>{$nomeJogador}</span></td>";
-                echo "<td><span class='nomeEditavel'>{$nivelJogador}</span></td>";
-                echo "<td><img class='thumb' src='/images/escudos/".$escudoOrigem . "' />";
+                echo "<td data-label='Jogador'><span class='nomeEditavel'>{$nomeJogador}</span></td>";
+                echo "<td data-label='Nível'><span class='nomeEditavel'>{$nivelJogador}</span></td>";
+                echo "<td data-label='Origem'><img class='thumb' src='/images/escudos/".$escudoOrigem . "' />";
                 if($idClubeOrigem != 0){
-                  echo "<a href='/ligas/teamstatus.php?team={$idClubeOrigem}'>";
+                  echo "<a href='/ligas/teamstatus.php?team={$idClubeOrigem}' class='nomeEditavel'>{$clubeOrigem}</a>";
+                } else {
+                  echo "<span class='nomeEditavel'>{$clubeOrigem}</span>";
                 }
-                echo "<span class='nomeEditavel'> {$clubeOrigem}";
-                if($idClubeOrigem != 0){
-                  echo "</a>";
-                }
-                echo "</span></td>";
-                echo "<td><img class='thumb' src='/images/escudos/".$escudoDestino . "' /><a href='/ligas/teamstatus.php?team={$idClubeDestino}' class='nomeEditavel'>{$clubeDestino}</a></td>";
-                echo "<td><span class='nomeEditavel'>F$ {$valor} M</span></td>";
-                echo "<td><span class='nomeEditavel'>{$tipoTransacao}</span></td>";
-                echo "<td><span class='nomeEditavel'>{$encerramentoContrato}</span></td>";
-                $optionsString = "<td class='wide'>";
+                echo "</td>";
+                echo "<td data-label='Destino'><img class='thumb' src='/images/escudos/".$escudoDestino . "' /><a href='/ligas/teamstatus.php?team={$idClubeDestino}' class='nomeEditavel'>{$clubeDestino}</a></td>";
+                echo "<td data-label='Valor'><span class='nomeEditavel'>F$ {$valor} M</span></td>";
+                echo "<td data-label='Tipo'><span class='nomeEditavel'>{$tipoTransacao}</span></td>";
+                echo "<td data-label='Encerramento'><span class='nomeEditavel'>{$encerramentoContrato}</span></td>";
+                echo "<td data-label='Data Prop.'><span class='nomeEditavel'>{$formattedDataProp}</span></td>";
+                echo "<td data-label='Data Concl.'><span class='nomeEditavel'>{$formattedDataConcl}</span></td>";
+                $optionsString = "<td class='wide' data-label='Opções'>";
 
                 if($direcao == 'inbox' && $status_execucao == 0){
                     $optionsString .= "<a id='acc".$idJogador."' title='Aceitar' class='clickable aceitar'><span class='material-symbols-outlined inlineButton positivo'>check_circle</span></a>";
@@ -164,8 +167,8 @@ else{
     echo "<div class='alert alert-info'>Não há propostas</div>";
 }
 
-echo('</div>');
-echo('</div>');
+echo('</div>'); // Closes .propostas-card
+echo('</main>'); // Closes .propostas-container
 
 ?>
 

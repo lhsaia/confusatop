@@ -7,8 +7,8 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "Minhas propostas de técnicos - ".($_SESSION['nomereal'] ?? '');
-$css_filename = "indexRanking";
-$aux_css = "usuario";
+$css_filename = "home_redesign";
+$aux_css = "propostas_redesign";
 $css_login = 'login';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
@@ -17,14 +17,11 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 ?>
 
-<div style='clear:both; float:center'></div>
-<div id='errorbox'></div>
+<main class="propostas-container">
+    <div id='errorbox'></div>
 
-<div id="quadro-container">
-<div align="center" id="quadroTimes">
-<h2>Quadro de propostas de técnicos - <?php echo $_SESSION['nomereal']?></h2>
-
-<hr>
+    <div class="propostas-card">
+        <h2 class="propostas-title">Quadro de propostas de técnicos - <?php echo $_SESSION['nomereal']?></h2>
 
 <?php
 
@@ -81,6 +78,8 @@ if($num>0){
             echo "<th>Nivel</th>";
             echo "<th>Clube Origem</th>";
             echo "<th>Clube Destino</th>";
+            echo "<th>Data Prop.</th>";
+            echo "<th>Data Concl.</th>";
             echo "<th>Opções</th>";
 
         echo "</tr>";
@@ -99,13 +98,18 @@ if($num>0){
             //$escudo2 = explode(".",$escudoDestino);
             //$valor = (float)$valor/1000000;
 
+            $formattedDataProp = date("d/m/Y H:i", strtotime($data));
+            $formattedDataConcl = empty($dataConclusao) ? "" : date("d/m/Y H:i", strtotime($dataConclusao));
+
             echo "<tr id='".$idTransferencia."' class='tipo".$status_execucao."'>";
                 echo "<td><img src='/images/icons/".$direcao.".png' width='30px' height='30px'/></td>";
-                echo "<td><span class='nomeEditavel'>{$nomeJogador}</span></td>";
-                echo "<td><span class='nomeEditavel'>{$nivelJogador}</span></td>";
-                echo "<td><img class='thumb' src='/images/escudos/".$escudoOrigem . "' /><span class='nomeEditavel'>{$clubeOrigem}</span></td>";
-                echo "<td><img class='thumb' src='/images/escudos/".$escudoDestino . "' /><span class='nomeEditavel'>{$clubeDestino}</span></td>";
-                $optionsString = "<td class='wide'>";
+                echo "<td data-label='Técnico'><span class='nomeEditavel'>{$nomeJogador}</span></td>";
+                echo "<td data-label='Nível'><span class='nomeEditavel'>{$nivelJogador}</span></td>";
+                echo "<td data-label='Origem'><img class='thumb' src='/images/escudos/".$escudoOrigem . "' /><span class='nomeEditavel'>{$clubeOrigem}</span></td>";
+                echo "<td data-label='Destino'><img class='thumb' src='/images/escudos/".$escudoDestino . "' /><span class='nomeEditavel'>{$clubeDestino}</span></td>";
+                echo "<td data-label='Data Prop.'><span class='nomeEditavel'>{$formattedDataProp}</span></td>";
+                echo "<td data-label='Data Concl.'><span class='nomeEditavel'>{$formattedDataConcl}</span></td>";
+                $optionsString = "<td class='wide' data-label='Opções'>";
 
                 if($direcao == 'inbox' && $status_execucao == 0){
                     $optionsString .= "<a id='acc".$idJogador."' title='Aceitar' class='clickable aceitar'><span class='material-symbols-outlined inlineButton positivo'>check_circle</span></a>";
@@ -131,7 +135,7 @@ else{
 }
 
 echo('</div>');
-echo('</div>');
+echo('</main>');
 
 ?>
 

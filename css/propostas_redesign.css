@@ -1,0 +1,368 @@
+/* ==========================================================================
+   CONFUSA.top - Minhas Propostas Redesign (Light Theme System)
+   ========================================================================== */
+
+body {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  display: flex;
+  flex-direction: column;
+  padding-top: 60px;
+  background-image: 
+    linear-gradient(180deg, rgba(248, 250, 252, 0.85) 0%, rgba(226, 232, 240, 0.95) 100%),
+    url("/images/confusa-blue.png") !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+  overflow-x: hidden;
+}
+
+/* Container Principal */
+.propostas-container {
+  width: 100%;
+  max-width: 1400px; /* Aumentado de 1200px para 1400px para dar mais espaço lateral */
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  flex: 1;
+}
+
+/* Card Principal da Tabela */
+.propostas-card {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 18px !important;
+  padding: 2.25rem !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Título */
+.propostas-title {
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1.6rem !important;
+  color: #1e293b !important;
+  margin-bottom: 1.5rem !important;
+  text-align: center;
+}
+
+/* Wrapper de Rolagem Responsiva */
+#tabelaRecebidas {
+  width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  margin-top: 1rem;
+  border-radius: 8px;
+}
+
+/* Estilização da Tabela */
+#tabelaPrincipal {
+  width: 100% !important;
+  min-width: 1050px !important; /* Espaço confortável para todas as colunas sem espremer */
+  border-collapse: separate !important;
+  border-spacing: 0 8px !important;
+}
+
+#tabelaPrincipal th {
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  text-transform: uppercase;
+  font-size: 0.85rem !important;
+  letter-spacing: 0.5px;
+  border: none !important;
+  padding: 12px 14px !important;
+}
+
+#tabelaPrincipal td {
+  padding: 12px 14px !important;
+  vertical-align: middle !important;
+  border: none !important;
+  font-size: 0.9rem !important;
+  color: #334155 !important;
+}
+
+/* Cores das linhas baseadas no status de execução */
+#tabelaPrincipal tbody tr.tipo0 {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-left: 4px solid #94a3b8 !important; /* Neutro */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.25s ease !important;
+}
+#tabelaPrincipal tbody tr.tipo0:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06) !important;
+  background: #ffffff !important;
+}
+
+#tabelaPrincipal tbody tr.tipo1 {
+  background: rgba(16, 185, 129, 0.06) !important; /* Verde claro para Aceito */
+  border-left: 4px solid #10b981 !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.02) !important;
+  transition: all 0.25s ease !important;
+}
+#tabelaPrincipal tbody tr.tipo1:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.1) !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+}
+
+#tabelaPrincipal tbody tr.tipo2 {
+  background: rgba(245, 158, 11, 0.06) !important; /* Laranja/âmbar claro para Contraproposta */
+  border-left: 4px solid #f59e0b !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.02) !important;
+  transition: all 0.25s ease !important;
+}
+#tabelaPrincipal tbody tr.tipo2:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.1) !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+}
+
+#tabelaPrincipal tbody tr.tipo3 {
+  background: rgba(239, 68, 68, 0.06) !important; /* Vermelho claro para Recusado */
+  border-left: 4px solid #ef4444 !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.02) !important;
+  transition: all 0.25s ease !important;
+}
+#tabelaPrincipal tbody tr.tipo3:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.1) !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+}
+
+/* Imagens das bandeiras e escudos */
+.thumb {
+  height: 32px !important;
+  width: auto !important;
+  object-fit: contain !important;
+  margin-right: 8px !important;
+  vertical-align: middle !important;
+  display: inline-block !important;
+}
+
+/* Alinhamento perfeito entre escudo e texto */
+#tabelaPrincipal td img.thumb,
+#tabelaPrincipal td span.nomeEditavel,
+#tabelaPrincipal td a.nomeEditavel {
+  vertical-align: middle !important;
+  display: inline-block !important;
+}
+
+/* Links na tabela */
+#tabelaPrincipal a.nomeEditavel {
+  color: #0284c7 !important;
+  font-weight: 600 !important;
+  transition: color 0.2s;
+}
+
+#tabelaPrincipal a.nomeEditavel:hover {
+  color: #0369a1 !important;
+  text-decoration: underline !important;
+}
+
+/* Botões de Ação na Tabela */
+.inlineButton {
+  margin: 0 4px !important;
+  padding: 8px !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  font-size: 20px !important;
+  color: #fff !important;
+}
+
+.inlineButton.positivo {
+  background-color: #10b981 !important;
+}
+.inlineButton.positivo:hover {
+  background-color: #059669 !important;
+  transform: scale(1.1);
+}
+
+.inlineButton.negativo {
+  background-color: #ef4444 !important;
+}
+.inlineButton.negativo:hover {
+  background-color: #dc2626 !important;
+  transform: scale(1.1);
+}
+
+.inlineButton.amarelo {
+  background-color: #f59e0b !important;
+}
+.inlineButton.amarelo:hover {
+  background-color: #d97706 !important;
+  transform: scale(1.1);
+}
+
+/* Paginador (Paging) */
+.pagination {
+  display: flex !important;
+  list-style: none !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  margin: 1.5rem 0 !important;
+}
+
+.pagination li {
+  display: inline-block !important;
+}
+
+.pagination a, .pagination span {
+  padding: 8px 14px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: #fff !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
+  transition: all 0.2s !important;
+  font-size: 0.85rem !important;
+}
+
+.pagination a:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.pagination li.active a {
+  background: #0284c7 !important;
+  color: #fff !important;
+  border-color: #0284c7 !important;
+}
+
+/* Ocultar texto "(current)" para deficientes visuais sem comprometer semântica */
+.sr-only {
+  display: none !important;
+}
+
+hr {
+  border: 0 !important;
+  height: 1px !important;
+  background: rgba(0, 0, 0, 0.08) !important;
+  margin: 1.5rem 0 !important;
+}
+
+/* ==========================================================================
+   Responsividade Mobile: Transformar Tabela em Lista de Cards
+   ========================================================================== */
+@media (max-width: 768px) {
+  .propostas-container {
+    padding: 1.5rem 0.5rem !important;
+  }
+  
+  .propostas-card {
+    padding: 1.25rem !important;
+    border-radius: 12px !important;
+  }
+  
+  #tabelaRecebidas {
+    overflow-x: visible !important; /* Desativa a barra de rolagem horizontal */
+  }
+  
+  #tabelaPrincipal {
+    min-width: 100% !important;
+    display: block !important;
+    width: 100% !important;
+  }
+  
+  #tabelaPrincipal thead {
+    display: none !important; /* Esconde os cabeçalhos originais */
+  }
+  
+  #tabelaPrincipal tbody {
+    display: block !important;
+    width: 100% !important;
+  }
+  
+  #tabelaPrincipal tbody tr {
+    display: block !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    border-radius: 14px !important;
+    padding: 1rem !important;
+    margin-bottom: 1.25rem !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+    border-left: 6px solid #94a3b8 !important; /* Borda esquerda colorida padrão */
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    box-sizing: border-box !important;
+  }
+  
+  #tabelaPrincipal tbody tr:hover {
+    transform: none !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04) !important;
+  }
+  
+  /* Mantém as cores semânticas nas bordas dos cards */
+  #tabelaPrincipal tbody tr.tipo1 {
+    border-left-color: #10b981 !important;
+    background: rgba(16, 185, 129, 0.03) !important;
+  }
+  #tabelaPrincipal tbody tr.tipo2 {
+    border-left-color: #f59e0b !important;
+    background: rgba(245, 158, 11, 0.03) !important;
+  }
+  #tabelaPrincipal tbody tr.tipo3 {
+    border-left-color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.03) !important;
+  }
+  
+  #tabelaPrincipal tbody tr td {
+    display: block !important;
+    position: relative !important;
+    padding: 10px 0 10px 140px !important; /* Espaço fixo para o rótulo à esquerda */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    font-size: 0.85rem !important;
+    width: 100% !important;
+    text-align: right !important; /* Alinha o conteúdo à direita */
+    box-sizing: border-box !important;
+    min-height: 38px !important;
+  }
+  
+  /* Primeiro td (ícone da direção) compactado à esquerda */
+  #tabelaPrincipal tbody tr td:first-child {
+    border-bottom: none !important;
+    padding: 0 0 10px 0 !important;
+    text-align: left !important;
+    min-height: auto !important;
+  }
+  
+  /* Último td (botões de ação) no rodapé */
+  #tabelaPrincipal tbody tr td:last-child {
+    border-bottom: none !important;
+    padding: 12px 0 0 0 !important;
+    text-align: right !important;
+    margin-top: 5px !important;
+    min-height: auto !important;
+  }
+  
+  /* Insere os cabeçalhos das colunas dinamicamente posicionados à esquerda */
+  #tabelaPrincipal tbody tr td[data-label]::before {
+    content: attr(data-label) ":";
+    position: absolute !important;
+    left: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    text-align: left !important;
+  }
+  
+  /* Ajusta o tamanho dos escudos e imagens no mobile */
+  .thumb {
+    height: 22px !important;
+    margin-right: 4px !important;
+    vertical-align: middle !important;
+  }
+}
