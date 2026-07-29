@@ -78,3 +78,11 @@ refactor.py
 *_forms.py
 *_divs.py
 test_query_*.php
+
+# PHP Compatibility Tool
+phpcs.phar
+CodeSniffer.conf
+PHPCompatibility-master/
+PHPCompatibility-master.zip
+check_php.bat
+compatibilidade_*.txt
