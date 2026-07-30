@@ -1,0 +1,293 @@
+/* ==========================================================================
+   CONFUSA.top - Opções da Competição Redesign (Light Theme System)
+   ========================================================================== */
+
+body {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  display: flex;
+  flex-direction: column;
+  padding-top: 60px;
+  background-image: 
+    linear-gradient(180deg, rgba(248, 250, 252, 0.85) 0%, rgba(226, 232, 240, 0.95) 100%),
+    url("/images/confusa-blue.png") !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+  overflow-x: hidden;
+}
+
+/* Container Principal */
+.propostas-container {
+  width: 100%;
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  flex: 1;
+}
+
+/* Card Principal */
+.propostas-card {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 18px !important;
+  padding: 2.25rem !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+}
+
+.propostas-title {
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1.6rem !important;
+  color: #1e293b !important;
+  margin-bottom: 2rem !important;
+  text-align: center;
+}
+
+#inscricao {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Seções de Opções */
+.opcoes-secao {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 14px !important;
+  padding: 1.75rem !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02) !important;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.opcoes-secao:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04) !important;
+}
+
+.opcoes-secao-titulo {
+  color: #0284c7 !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 1.25rem !important;
+  margin-bottom: 1.25rem !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+  padding-bottom: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  text-shadow: none !important;
+  font-weight: 600;
+}
+
+/* Labels e Form Controls */
+label {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* Estilo para Inputs e Selects Nativos */
+.opcoes-secao input[type="number"],
+.opcoes-secao input[type="date"],
+.opcoes-secao select:not(.select2-multiple) {
+  height: 42px !important;
+  padding: 8px 12px !important;
+  border: 1px solid rgba(0,0,0,0.12) !important;
+  border-radius: 8px !important;
+  background-color: #ffffff !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.88rem !important;
+  color: #334155 !important;
+  outline: none !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.01) !important;
+  transition: all 0.2s ease !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.opcoes-secao input[type="number"]:focus,
+.opcoes-secao input[type="date"]:focus,
+.opcoes-secao select:not(.select2-multiple):focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12) !important;
+}
+
+/* Checkboxes */
+.opcoes-secao label input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  cursor: pointer !important;
+  margin: 0 0 0 8px !important;
+  border-radius: 4px !important;
+  vertical-align: middle !important;
+  display: inline-block !important;
+}
+
+.opcoes-secao label {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  margin-top: 15px !important;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Select2 Light Theme Overrides */
+.select2-container {
+  display: block !important;
+  width: 100% !important;
+  margin: 8px 0 16px 0 !important;
+}
+
+.select2-container .select2-selection--multiple {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.12) !important;
+  border-radius: 8px !important;
+  min-height: 44px !important;
+  padding: 4px 8px !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12) !important;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__rendered {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  width: 100% !important;
+  padding: 0 !important;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+  background-color: rgba(2, 132, 199, 0.08) !important;
+  border: 1px solid rgba(2, 132, 199, 0.18) !important;
+  color: #0284c7 !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.82rem !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-weight: 600;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+  float: none !important;
+  position: static !important;
+  color: #ef4444 !important;
+  margin: 0 !important;
+  font-weight: bold !important;
+  border: none !important;
+  background: none !important;
+  padding: 0 !important;
+  order: 2 !important;
+  cursor: pointer !important;
+  margin-left: 6px !important;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+  color: #b91c1c !important;
+  background: none !important;
+}
+
+.select2-container--default .select2-search--inline .select2-search__field {
+  color: #0f172a !important;
+  font-family: 'Montserrat', sans-serif !important;
+  height: 30px !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Dropdown list customization */
+.select2-dropdown {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+  z-index: 9999 !important;
+  overflow: hidden;
+}
+
+.select2-results__option {
+  padding: 8px 14px !important;
+  color: #334155 !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.88rem !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+.select2-container--default .select2-results__option[aria-selected=true] {
+  background-color: rgba(2, 132, 199, 0.08) !important;
+  color: #0284c7 !important;
+}
+
+/* Botão Salvar */
+#salvar {
+  height: 48px !important;
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25) !important;
+  transition: all 0.2s ease !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+#salvar:hover {
+  background-color: #0369a1 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35) !important;
+}
+
+.bg {
+  display: none !important;
+}
+
+/* Responsividade Mobile */
+@media (max-width: 768px) {
+  .propostas-container {
+    padding: 1.5rem 0.5rem !important;
+  }
+  
+  .propostas-card {
+    padding: 1.25rem !important;
+    border-radius: 12px !important;
+  }
+
+  .opcoes-secao {
+    padding: 1.25rem !important;
+  }
+}

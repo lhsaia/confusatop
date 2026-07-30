@@ -1,0 +1,359 @@
+/* ==========================================================================
+   CONFUSA.top - Competition Status Redesign (Light Theme System)
+   ========================================================================== */
+
+body {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  display: flex;
+  flex-direction: column;
+  padding-top: 60px;
+  background-image: 
+    linear-gradient(180deg, rgba(248, 250, 252, 0.85) 0%, rgba(226, 232, 240, 0.95) 100%),
+    url("/images/confusa-blue.png") !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+  overflow-x: hidden;
+}
+
+/* Container Principal */
+.status-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Hero Card da Competição */
+.competition-hero {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 18px !important;
+  padding: 2rem !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.hero-main-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.hero-logo {
+  height: 90px;
+  width: 90px;
+  object-fit: contain;
+  border-radius: 14px;
+  background: #fff;
+  padding: 6px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.hero-text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.hero-title {
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1.8rem !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+}
+
+.hero-subtitle {
+  font-size: 0.95rem;
+  color: #64748b;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-badge-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.hero-federation-logo {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.05));
+}
+
+.hero-country-flag {
+  height: 24px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.no-fixed-venue {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* Card de Status e Progresso */
+.status-progress-card {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 18px !important;
+  padding: 1.75rem !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.status-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.teams-count-text {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.teams-count-text span:not(.material-symbols-outlined) {
+  font-family: 'Kanit', sans-serif;
+  font-size: 1.2rem;
+  color: #0284c7;
+}
+
+/* Status Badge pílula */
+.status-badge-pill {
+  font-family: 'Kanit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 30px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid transparent;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+}
+
+.status-em-criacao {
+  background-color: rgba(251, 191, 36, 0.1) !important;
+  color: #d97706 !important;
+  border-color: rgba(251, 191, 36, 0.3) !important;
+}
+
+.status-aguardando-times {
+  background-color: rgba(56, 189, 248, 0.1) !important;
+  color: #0284c7 !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+}
+
+.status-pronta-simular {
+  background-color: rgba(52, 211, 153, 0.1) !important;
+  color: #059669 !important;
+  border-color: rgba(52, 211, 153, 0.3) !important;
+}
+
+.status-em-andamento {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  color: #059669 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.status-default {
+  background-color: rgba(148, 163, 184, 0.1) !important;
+  color: #475569 !important;
+  border-color: rgba(148, 163, 184, 0.3) !important;
+}
+
+/* Barra de Progresso */
+.progress-bar-container {
+  width: 100%;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 30px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8 0%, #0284c7 100%);
+  border-radius: 30px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Grid de Módulos (Cards) */
+.redesign-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.hub-card {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 18px !important;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  text-decoration: none !important;
+}
+
+.hub-card:hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+  transform: translateY(-6px) !important;
+  border-color: rgba(56, 189, 248, 0.4) !important;
+  box-shadow: 0 15px 35px rgba(2, 132, 199, 0.1) !important;
+}
+
+.hub-card-hero-image {
+  height: 150px;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  background: #f1f5f9;
+}
+
+.hub-card-hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.hub-card:hover .hub-card-hero-image img {
+  transform: scale(1.06);
+}
+
+.hub-card-body {
+  padding: 1.25rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+  flex: 1 !important;
+  background-color: transparent !important;
+}
+
+.hub-card-title {
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 1.15rem !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+  font-weight: 600 !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hub-card-arrow {
+  color: #0284c7;
+  font-size: 1.25rem !important;
+  transition: transform 0.2s ease;
+}
+
+.hub-card:hover .hub-card-arrow {
+  transform: translateX(4px);
+}
+
+.hub-card-desc {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Estado Desabilitado dos Cards */
+.disabled-card {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  filter: grayscale(80%);
+}
+
+.badge-status {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  padding: 2px 8px !important;
+  border-radius: 30px !important;
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: #64748b !important;
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   Responsividade Mobile
+   ========================================================================== */
+@media (max-width: 768px) {
+  .status-container {
+    padding: 1.5rem 0.5rem !important;
+    gap: 1.5rem;
+  }
+
+  .competition-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.5rem !important;
+  }
+
+  .hero-main-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .hero-logo {
+    height: 70px;
+    width: 70px;
+  }
+
+  .hero-title {
+    font-size: 1.5rem !important;
+  }
+
+  .hero-badge-container {
+    width: 100%;
+    justify-content: space-between;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    padding-top: 1rem;
+  }
+}

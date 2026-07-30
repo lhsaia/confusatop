@@ -1,0 +1,351 @@
+/* ==========================================================================
+   CONFUSA.top - Lista de Times Redesign (Light Theme System)
+   ========================================================================== */
+
+body {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  display: flex;
+  flex-direction: column;
+  padding-top: 60px;
+  background-image: 
+    linear-gradient(180deg, rgba(248, 250, 252, 0.85) 0%, rgba(226, 232, 240, 0.95) 100%),
+    url("/images/confusa-blue.png") !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+  overflow-x: hidden;
+}
+
+/* Container Principal */
+.propostas-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  flex: 1;
+}
+
+/* Card Principal */
+.propostas-card {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 18px !important;
+  padding: 2.25rem !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+}
+
+.propostas-title {
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1.6rem !important;
+  color: #1e293b !important;
+  margin-bottom: 1.5rem !important;
+  text-align: center;
+}
+
+/* Toolbar button redesign (Gerar Tabela) */
+#toolbar {
+  display: flex !important;
+  gap: 10px !important;
+}
+
+#gerar_tabela {
+  border: none !important;
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 6px 14px !important;
+  font-weight: 600 !important;
+  font-family: 'Kanit', sans-serif !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25) !important;
+  transition: all 0.2s ease !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+}
+
+#gerar_tabela:hover {
+  background: #0369a1 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
+}
+
+#gerar_tabela span {
+  padding-left: 0 !important;
+  font-size: 1.15rem !important;
+}
+
+/* Listagem de Vagas / Times */
+#quadro_equipes_torneio {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* Slot / Row Card */
+.par_pais_equipe {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border-left: 5px solid #94a3b8 !important;
+  border-radius: 12px !important;
+  padding: 0.75rem 1.25rem !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.par_pais_equipe:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05) !important;
+  background: #ffffff !important;
+}
+
+/* Slot Badge Number */
+.slot-badge {
+  font-family: 'Kanit', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #64748b;
+  min-width: 75px;
+}
+
+/* Custom Select2 overrides for modern look */
+.select2-container {
+  width: 24% !important;
+  min-width: 200px !important;
+}
+
+.select2-container .select2-selection--single {
+  height: 42px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.12) !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;
+  transition: all 0.2s ease !important;
+}
+
+.select2-container--open .select2-selection--single {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12) !important;
+}
+
+.select2-selection__rendered {
+  height: auto !important;
+  line-height: normal !important;
+  padding-left: 12px !important;
+  padding-right: 28px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.85rem !important;
+  color: #334155 !important;
+  width: 100% !important;
+  text-align: left !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.select2-selection__rendered span {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  justify-content: flex-start !important;
+}
+
+.select2-selection__arrow {
+  height: 42px !important;
+  width: 28px !important;
+  top: 0 !important;
+  right: 2px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  visibility: visible !important;
+}
+
+/* Flags and Badges in Select2 Options */
+.bandeira {
+  height: 16px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.bandeiraSelect {
+  height: 18px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 2px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.opcaoPaisNome {
+  font-size: 0.85rem;
+  font-family: 'Montserrat', sans-serif;
+  color: #334155;
+}
+
+/* Dropdown list customization */
+.select2-dropdown {
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08) !important;
+  overflow: hidden;
+}
+
+.select2-results__option {
+  padding: 8px 12px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.85rem !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+/* Action Buttons in Slots */
+.fileUploader, .update_team {
+  height: 38px !important;
+  padding: 0 14px !important;
+  border-radius: 8px !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.fileUploader {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: #475569 !important;
+}
+
+.fileUploader:hover {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+  color: #0f172a !important;
+}
+
+.update_team {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2) !important;
+}
+
+.update_team:hover:not(:disabled) {
+  background-color: #0369a1 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3) !important;
+}
+
+.update_team:disabled {
+  background-color: #cbd5e1 !important;
+  color: #94a3b8 !important;
+  box-shadow: none !important;
+  cursor: default !important;
+  pointer-events: none !important;
+}
+
+/* Status pill */
+.status_competicao {
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  padding: 4px 10px !important;
+  border-radius: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  height: 26px !important;
+  min-width: 120px !important;
+  text-align: center !important;
+  text-transform: uppercase !important;
+  line-height: 1 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+/* Loader styling overrides */
+#loading {
+  display: none;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+#loading img {
+  height: 50px;
+  width: auto;
+}
+
+#errorbox {
+  margin: 1rem 0;
+}
+
+/* Custom background vectors overrides */
+.bg {
+  display: none !important;
+}
+
+/* ==========================================================================
+   Responsividade Mobile: Transformar Linhas em Mini Cards Verticais
+   ========================================================================== */
+@media (max-width: 768px) {
+  .propostas-container {
+    padding: 1.5rem 0.5rem !important;
+  }
+  
+  .propostas-card {
+    padding: 1.25rem !important;
+    border-radius: 12px !important;
+  }
+
+  .par_pais_equipe {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 1.25rem !important;
+    border-left-width: 6px !important;
+    gap: 0.85rem !important;
+  }
+
+  .slot-badge {
+    text-align: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding-bottom: 0.5rem;
+    width: 100%;
+  }
+
+  .select2-container {
+    width: 100% !important;
+  }
+
+  .fileUploader, .update_team {
+    width: 100% !important;
+  }
+
+  .status_competicao {
+    width: 100% !important;
+    height: 32px !important;
+  }
+}
