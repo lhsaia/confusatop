@@ -14,6 +14,14 @@ vendor/
 node_modules/
 myadmin/
 pngquant/
+java_station/
+hexacolor_repo/
+competicoes/hexacolor/
+lib/jsvectormap-master/
+lib/leaflet-locationpicker/
+lib/htmlpurifier/
+jquery.soccerfield.js
+jquery.soccerfield.min.js
 
 # Data & Exports
 sqlitedb/
@@ -22,6 +30,7 @@ octamotor/races/*.json
 *.exe
 *.db3
 *.db
+session_data/
 
 # Logs & Debugging
 *.log
@@ -70,7 +79,6 @@ images/mascotes/*.JPEG
 images/mascotes/*.webp
 
 # temporary unfinished business
-java_station/
 scratch/
 refactor.py
 *_refactor.py
