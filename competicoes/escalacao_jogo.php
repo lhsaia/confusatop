@@ -8,6 +8,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 
 $idCompeticao = isset($_GET['comp']) ? intval($_GET['comp']) : 0;
 $idTime       = isset($_GET['team']) ? intval($_GET['team']) : 0;
+$idJogo       = isset($_GET['jogo']) ? intval($_GET['jogo']) : 0;
 
 if (!$idCompeticao || !$idTime) {
     die("Competição ou Time não informados.");
@@ -30,6 +31,34 @@ $userLogado = $_SESSION['user_id'];
 $sqliteDb = new SQLiteDatabase();
 $sqliteDb->fileName = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $idCompeticao . "-database.db3";
 $sdb = $sqliteDb->getConnection();
+
+// Garantir que a tabela escalacao_jogo exista neste banco SQLite
+$sdb->exec("CREATE TABLE IF NOT EXISTS `escalacao_jogo` (
+    `Jogo`	int ( 10 ) NOT NULL,
+    `Clube`	int ( 5 ) NOT NULL,
+    `Jogador1`	int ( 5 ) NOT NULL,
+    `Jogador2`	int ( 5 ) NOT NULL,
+    `Jogador3`	int ( 5 ) NOT NULL,
+    `Jogador4`	int ( 5 ) NOT NULL,
+    `Jogador5`	int ( 5 ) NOT NULL,
+    `Jogador6`	int ( 5 ) NOT NULL,
+    `Jogador7`	int ( 5 ) NOT NULL,
+    `Jogador8`	int ( 5 ) NOT NULL,
+    `Jogador9`	int ( 5 ) NOT NULL,
+    `Jogador10`	int ( 5 ) NOT NULL,
+    `Jogador11`	int ( 5 ) NOT NULL,
+    `Capitao`	int ( 5 ) NOT NULL,
+    `Penalti1`	int ( 5 ) DEFAULT NULL,
+    `Penalti2`	int ( 5 ) DEFAULT NULL,
+    `Penalti3`	int ( 5 ) DEFAULT NULL,
+    `Indisponiveis`	text,
+    `PosicoesEscolhidas`	text,
+    PRIMARY KEY(`Jogo`,`Clube`)
+);");
+
+try {
+    $sdb->exec("ALTER TABLE `escalacao_jogo` ADD COLUMN `PosicoesEscolhidas` text;");
+} catch (Exception $e) {}
 
 // Obter o Nome do Time e o dono do País diretamente do MariaDB principal
 $donoTime = 0;
@@ -65,12 +94,16 @@ if (!$isAdmin && $userLogado != $donoCompeticao && $userLogado != $donoTime) {
 // Processar formulário de escalação (POST)
 $mensagem = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_escalacao'])) {
-    // Salvar indisponíveis manuais na sessão
-    $indisponiveisKey = 'indisponiveis_' . $idCompeticao . '_' . $idTime;
-    $_SESSION[$indisponiveisKey] = isset($_POST['indisponiveis']) ? array_map('intval', $_POST['indisponiveis']) : [];
-    // Salvar posições escolhidas na sessão
-    $posicoesEscolhidasKey = 'posicoes_' . $idCompeticao . '_' . $idTime;
-    $_SESSION[$posicoesEscolhidasKey] = isset($_POST['posicao_jogador']) ? $_POST['posicao_jogador'] : [];
+    // Salvar indisponíveis manuais na sessão apenas se for escalação global (sem idJogo)
+    if ($idJogo === 0) {
+        $indisponiveisKey = 'indisponiveis_' . $idCompeticao . '_' . $idTime;
+        $_SESSION[$indisponiveisKey] = isset($_POST['indisponiveis']) ? array_map('intval', $_POST['indisponiveis']) : [];
+    }
+    // Salvar posições escolhidas na sessão apenas se for escalação global (sem idJogo)
+    if ($idJogo === 0) {
+        $posicoesEscolhidasKey = 'posicoes_' . $idCompeticao . '_' . $idTime;
+        $_SESSION[$posicoesEscolhidasKey] = isset($_POST['posicao_jogador']) ? $_POST['posicao_jogador'] : [];
+    }
 
     $titulares = isset($_POST['titulares']) ? $_POST['titulares'] : array();
     $capitao = isset($_POST['capitao']) ? intval($_POST['capitao']) : 0;
@@ -115,15 +148,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_escalacao'])) 
             while ($row = $stmtPos->fetch(PDO::FETCH_ASSOC)) {
                 $pId = (int)$row['Jogador'];
                 $playersPositions[$pId] = [];
-                if ($row['Goleiro'] == 1) $playersPositions[$pId][] = 'Goleiro';
-                if ($row['Zagueiro'] == 1) $playersPositions[$pId][] = 'Zagueiro';
-                if ($row['LateralDireito'] == 1) $playersPositions[$pId][] = 'LateralDireito';
-                if ($row['LateralEsquerdo'] == 1) $playersPositions[$pId][] = 'LateralEsquerdo';
-                if ($row['Volante'] == 1) $playersPositions[$pId][] = 'Volante';
-                if ($row['MeiaCentral'] == 1) $playersPositions[$pId][] = 'MeiaCentral';
-                if ($row['MeiaDireita'] == 1) $playersPositions[$pId][] = 'MeiaDireita';
-                if ($row['MeiaEsquerda'] == 1) $playersPositions[$pId][] = 'MeiaEsquerda';
-                if ($row['Atacante'] == 1) $playersPositions[$pId][] = 'Atacante';
+                if (isset($row['G']) && $row['G'] == 1) $playersPositions[$pId][] = 'Goleiro';
+                if (isset($row['Z']) && $row['Z'] == 1) $playersPositions[$pId][] = 'Zagueiro';
+                if ((isset($row['LD']) && $row['LD'] == 1) || (isset($row['AD']) && $row['AD'] == 1)) $playersPositions[$pId][] = 'LateralDireito';
+                if ((isset($row['LE']) && $row['LE'] == 1) || (isset($row['AE']) && $row['AE'] == 1)) $playersPositions[$pId][] = 'LateralEsquerdo';
+                if (isset($row['V']) && $row['V'] == 1) $playersPositions[$pId][] = 'Volante';
+                if ((isset($row['MC']) && $row['MC'] == 1) || (isset($row['MA']) && $row['MA'] == 1)) $playersPositions[$pId][] = 'MeiaCentral';
+                if (isset($row['MD']) && $row['MD'] == 1) $playersPositions[$pId][] = 'MeiaDireita';
+                if (isset($row['ME']) && $row['ME'] == 1) $playersPositions[$pId][] = 'MeiaEsquerda';
+                if ((isset($row['PD']) && $row['PD'] == 1) || (isset($row['PE']) && $row['PE'] == 1) || (isset($row['Am']) && $row['Am'] == 1) || (isset($row['Aa']) && $row['Aa'] == 1)) $playersPositions[$pId][] = 'Atacante';
             }
 
             // Garantir que todos tenham alguma entrada no array
@@ -190,26 +223,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_escalacao'])) 
             $pen2 = isset($currentEsc['Penalti2']) && in_array($currentEsc['Penalti2'], $titulares) ? $currentEsc['Penalti2'] : $capitao;
             $pen3 = isset($currentEsc['Penalti3']) && in_array($currentEsc['Penalti3'], $titulares) ? $currentEsc['Penalti3'] : $capitao;
 
-            // Construir e executar o UPDATE na tabela escalacao do SQLite
-            $updateFields = [];
-            for ($i = 1; $i <= 11; $i++) {
-                $updateFields[] = "Jogador{$i} = :jog{$i}";
-            }
-            $updateFields[] = "Capitao = :capitao";
-            $updateFields[] = "Penalti1 = :pen1";
-            $updateFields[] = "Penalti2 = :pen2";
-            $updateFields[] = "Penalti3 = :pen3";
+            if ($idJogo > 0) {
+                // Obter a lista de desfalques manuais de $_POST['indisponiveis']
+                $indispPost = isset($_POST['indisponiveis']) ? array_map('intval', $_POST['indisponiveis']) : [];
+                $indispStr = implode(',', $indispPost);
 
-            $stmtUpdate = $sdb->prepare("UPDATE escalacao SET " . implode(', ', $updateFields) . " WHERE Clube = :clube");
-            for ($i = 1; $i <= 11; $i++) {
-                $stmtUpdate->bindValue(':jog' . $i, $assigned[$i], PDO::PARAM_INT);
+                $insertFields = [
+                    'Jogo', 'Clube', 'Jogador1', 'Jogador2', 'Jogador3', 'Jogador4', 'Jogador5',
+                    'Jogador6', 'Jogador7', 'Jogador8', 'Jogador9', 'Jogador10', 'Jogador11',
+                    'Capitao', 'Penalti1', 'Penalti2', 'Penalti3', 'Indisponiveis', 'PosicoesEscolhidas'
+                ];
+                $placeholders = array_map(function($f) { return ':' . strtolower($f); }, $insertFields);
+                $stmtSave = $sdb->prepare("INSERT OR REPLACE INTO escalacao_jogo (" . implode(', ', $insertFields) . ") VALUES (" . implode(', ', $placeholders) . ")");
+                $stmtSave->bindValue(':jogo', $idJogo, PDO::PARAM_INT);
+                $stmtSave->bindValue(':clube', $idTime, PDO::PARAM_INT);
+                for ($i = 1; $i <= 11; $i++) {
+                    $stmtSave->bindValue(':jogador' . $i, $assigned[$i], PDO::PARAM_INT);
+                }
+                $stmtSave->bindValue(':capitao', $capitao, PDO::PARAM_INT);
+                $stmtSave->bindValue(':penalti1', $pen1, PDO::PARAM_INT);
+                $stmtSave->bindValue(':penalti2', $pen2, PDO::PARAM_INT);
+                $stmtSave->bindValue(':penalti3', $pen3, PDO::PARAM_INT);
+                $stmtSave->bindValue(':indisponiveis', $indispStr, PDO::PARAM_STR);
+                
+                $posPost = isset($_POST['posicao_jogador']) ? $_POST['posicao_jogador'] : [];
+                $posStr = json_encode($posPost);
+                $stmtSave->bindValue(':posicoesescolhidas', $posStr, PDO::PARAM_STR);
+                
+                $stmtSave->execute();
+
+                // Se marcado para salvar em definitivo para o clube, atualizar a tabela escalacao
+                if (isset($_POST['salvar_definitivo']) && $_POST['salvar_definitivo'] == 1) {
+                    $updateFields = [];
+                    for ($i = 1; $i <= 11; $i++) {
+                        $updateFields[] = "Jogador{$i} = :jog{$i}";
+                    }
+                    $updateFields[] = "Capitao = :capitao";
+                    $updateFields[] = "Penalti1 = :pen1";
+                    $updateFields[] = "Penalti2 = :pen2";
+                    $updateFields[] = "Penalti3 = :pen3";
+
+                    $stmtUpdate = $sdb->prepare("UPDATE escalacao SET " . implode(', ', $updateFields) . " WHERE Clube = :clube");
+                    for ($i = 1; $i <= 11; $i++) {
+                        $stmtUpdate->bindValue(':jog' . $i, $assigned[$i], PDO::PARAM_INT);
+                    }
+                    $stmtUpdate->bindValue(':capitao', $capitao, PDO::PARAM_INT);
+                    $stmtUpdate->bindValue(':pen1', $pen1, PDO::PARAM_INT);
+                    $stmtUpdate->bindValue(':pen2', $pen2, PDO::PARAM_INT);
+                    $stmtUpdate->bindValue(':pen3', $pen3, PDO::PARAM_INT);
+                    $stmtUpdate->bindValue(':clube', $idTime, PDO::PARAM_INT);
+                    $stmtUpdate->execute();
+                }
+            } else {
+                // Construir e executar o UPDATE na tabela escalacao do SQLite
+                $updateFields = [];
+                for ($i = 1; $i <= 11; $i++) {
+                    $updateFields[] = "Jogador{$i} = :jog{$i}";
+                }
+                $updateFields[] = "Capitao = :capitao";
+                $updateFields[] = "Penalti1 = :pen1";
+                $updateFields[] = "Penalti2 = :pen2";
+                $updateFields[] = "Penalti3 = :pen3";
+
+                $stmtUpdate = $sdb->prepare("UPDATE escalacao SET " . implode(', ', $updateFields) . " WHERE Clube = :clube");
+                for ($i = 1; $i <= 11; $i++) {
+                    $stmtUpdate->bindValue(':jog' . $i, $assigned[$i], PDO::PARAM_INT);
+                }
+                $stmtUpdate->bindValue(':capitao', $capitao, PDO::PARAM_INT);
+                $stmtUpdate->bindValue(':pen1', $pen1, PDO::PARAM_INT);
+                $stmtUpdate->bindValue(':pen2', $pen2, PDO::PARAM_INT);
+                $stmtUpdate->bindValue(':pen3', $pen3, PDO::PARAM_INT);
+                $stmtUpdate->bindValue(':clube', $idTime, PDO::PARAM_INT);
+                $stmtUpdate->execute();
             }
-            $stmtUpdate->bindValue(':capitao', $capitao, PDO::PARAM_INT);
-            $stmtUpdate->bindValue(':pen1', $pen1, PDO::PARAM_INT);
-            $stmtUpdate->bindValue(':pen2', $pen2, PDO::PARAM_INT);
-            $stmtUpdate->bindValue(':pen3', $pen3, PDO::PARAM_INT);
-            $stmtUpdate->bindValue(':clube', $idTime, PDO::PARAM_INT);
-            $stmtUpdate->execute();
             
             $mensagem = "<div style='color: #10b981; margin-bottom: 15px;'>Escalação salva com sucesso!</div>";
         } catch (Exception $e) {
@@ -233,11 +319,50 @@ if ($elencoRow) {
     }
 }
 
-// 2. Obter titulares e capitão atuais pela tabela escalacao
-$stmtEscalacao = $sdb->prepare("SELECT * FROM escalacao WHERE Clube = :clube LIMIT 1");
-$stmtEscalacao->bindParam(':clube', $idTime);
-$stmtEscalacao->execute();
-$escalacaoRow = $stmtEscalacao->fetch(PDO::FETCH_ASSOC);
+// 2. Obter titulares e capitão atuais pela tabela escalacao ou escalacao_jogo
+$escalacaoRow = null;
+$indisponiveisManual = [];
+$posicoesEscolhidas = [];
+
+if ($idJogo > 0) {
+    $stmtEscalacaoJogo = $sdb->prepare("SELECT * FROM escalacao_jogo WHERE Jogo = :jogo AND Clube = :clube LIMIT 1");
+    $stmtEscalacaoJogo->bindParam(':jogo', $idJogo, PDO::PARAM_INT);
+    $stmtEscalacaoJogo->bindParam(':clube', $idTime, PDO::PARAM_INT);
+    $stmtEscalacaoJogo->execute();
+    $escalacaoRow = $stmtEscalacaoJogo->fetch(PDO::FETCH_ASSOC);
+    if ($escalacaoRow) {
+        $indisponiveisStr = isset($escalacaoRow['Indisponiveis']) ? trim($escalacaoRow['Indisponiveis']) : '';
+        if ($indisponiveisStr !== '') {
+            $indisponiveisManual = array_map('intval', explode(',', $indisponiveisStr));
+        }
+        $posStr = isset($escalacaoRow['PosicoesEscolhidas']) ? trim($escalacaoRow['PosicoesEscolhidas']) : '';
+        if ($posStr !== '') {
+            $posicoesEscolhidas = json_decode($posStr, true);
+            if (!is_array($posicoesEscolhidas)) {
+                $posicoesEscolhidas = [];
+            }
+        }
+    } else {
+        // Se ainda não tem escalação própria para este jogo, busca a escalação padrão do clube
+        $stmtEscalacao = $sdb->prepare("SELECT * FROM escalacao WHERE Clube = :clube LIMIT 1");
+        $stmtEscalacao->bindParam(':clube', $idTime);
+        $stmtEscalacao->execute();
+        $escalacaoRow = $stmtEscalacao->fetch(PDO::FETCH_ASSOC);
+        
+        // E nenhum jogador começa marcado como indisponível para este novo jogo
+        $indisponiveisManual = [];
+        $posicoesEscolhidas = [];
+    }
+} else {
+    // Caso seja escalação global
+    $stmtEscalacao = $sdb->prepare("SELECT * FROM escalacao WHERE Clube = :clube LIMIT 1");
+    $stmtEscalacao->bindParam(':clube', $idTime);
+    $stmtEscalacao->execute();
+    $escalacaoRow = $stmtEscalacao->fetch(PDO::FETCH_ASSOC);
+    
+    $indisponiveisKey = 'indisponiveis_' . $idCompeticao . '_' . $idTime;
+    $indisponiveisManual = isset($_SESSION[$indisponiveisKey]) ? $_SESSION[$indisponiveisKey] : [];
+}
 
 $titularesIds = [];
 $capitaoId = 0;
@@ -298,11 +423,15 @@ if (!empty($playerIds)) {
     unset($row);
 
     // Indisponíveis manuais: vêm do POST ou de cookie de sessão por time
-    $indisponiveisKey = 'indisponiveis_' . $idCompeticao . '_' . $idTime;
-    $indisponiveisManual = isset($_SESSION[$indisponiveisKey]) ? $_SESSION[$indisponiveisKey] : [];
+    if (!isset($indisponiveisManual) || empty($indisponiveisManual)) {
+        $indisponiveisKey = 'indisponiveis_' . $idCompeticao . '_' . $idTime;
+        $indisponiveisManual = isset($_SESSION[$indisponiveisKey]) ? $_SESSION[$indisponiveisKey] : [];
+    }
     // Posições escolhidas manualmente
-    $posicoesEscolhidasKey = 'posicoes_' . $idCompeticao . '_' . $idTime;
-    $posicoesEscolhidas = isset($_SESSION[$posicoesEscolhidasKey]) ? $_SESSION[$posicoesEscolhidasKey] : [];
+    if (!isset($posicoesEscolhidas) || empty($posicoesEscolhidas)) {
+        $posicoesEscolhidasKey = 'posicoes_' . $idCompeticao . '_' . $idTime;
+        $posicoesEscolhidas = isset($_SESSION[$posicoesEscolhidasKey]) ? $_SESSION[$posicoesEscolhidasKey] : [];
+    }
 
     foreach ($elencoRaw as $row) {
         $pId = (int)$row['ID'];
@@ -327,27 +456,28 @@ if (!empty($playerIds)) {
 
 $page_title = "Escalação Pré-Jogo - " . $clube['Nome'];
 $css_filename = "home_redesign";
+$aux_css = "lista_jogos_redesign";
 $css_login = 'login';
 $css_versao = date('h:i:s');
 require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
 ?>
 
-<main style="padding-top: 80px; padding-bottom: 60px; background: linear-gradient(135deg, #0f0f2e 0%, #090d16 100%);">
-<div style="padding: 20px; color: #e2e8f0; max-width: 1100px; margin: 0 auto;">
-    <h2 style="margin-bottom: 5px; font-family: 'Kanit', sans-serif; color: #fff; font-size: 1.6rem;">⚽ Escalação Pré-Jogo: <?php echo htmlspecialchars($clube['Nome']); ?></h2>
-    <p style="color: #94a3b8; margin-bottom: 20px;">Selecione os 11 titulares, o capitão e as posições antes da simulação.</p>
+<main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
+<div class="propostas-card" style="padding: 30px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: left;">
+    <h2 class="propostas-title" style="margin-bottom: 5px; font-family: 'Kanit', sans-serif; text-align: left; font-size: 1.6rem; color: #1e293b;">⚽ Escalação Pré-Jogo: <?php echo htmlspecialchars($clube['Nome']); ?></h2>
+    <p style="color: #64748b; margin-bottom: 25px;">Selecione os 11 titulares, o capitão e as posições antes da simulação.</p>
     
     <?php echo $mensagem; ?>
 
     <form method="POST">
-        <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 20px; margin-bottom: 20px; backdrop-filter: blur(12px); overflow-x: auto;">
+        <div style="background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 20px; margin-bottom: 20px; overflow-x: auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-                <h3 style="margin: 0; color: #fbbf24; font-family: 'Kanit', sans-serif;">Elenco do Clube</h3>
-                <span id="contador-titulares" style="background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); color: #a5b4fc; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">0/11 titulares selecionados</span>
+                <h3 style="margin: 0; color: #1e293b; font-family: 'Kanit', sans-serif;">Elenco do Clube</h3>
+                <span id="contador-titulares" style="background: rgba(2,132,199,0.08); border: 1px solid rgba(2, 132, 199, 0.15); color: #0284c7; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">0/11 titulares selecionados</span>
             </div>
-            <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 700px;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 700px; color: #334155;">
                 <thead>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.12); color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.08); color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
                         <th style="padding: 8px 10px;">Titular</th>
                         <th style="padding: 8px 10px;">Cap.</th>
                         <th style="padding: 8px 10px; min-width: 160px;">Jogador</th>
@@ -370,14 +500,14 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
                             $statusBadge .= "<span style='background: #f59e0b; color: #fff; padding: 2px 7px; border-radius: 4px; font-size: 0.72rem;'>LESIONADO</span>";
                         }
                         if (!$isDesfalqueAuto && !$isIndisp) {
-                            $statusBadge = "<span style='background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); padding: 2px 7px; border-radius: 4px; font-size: 0.72rem;'>DISPONÍVEL</span>";
+                            $statusBadge = "<span style='background: rgba(16,185,129,0.1); color: #047857; border: 1px solid rgba(16,185,129,0.2); padding: 2px 7px; border-radius: 4px; font-size: 0.72rem;'>DISPONÍVEL</span>";
                         }
                         if ($isIndisp && !$isDesfalqueAuto) {
-                            $statusBadge = "<span style='background: rgba(100,116,139,0.3); color: #94a3b8; border: 1px solid rgba(100,116,139,0.4); padding: 2px 7px; border-radius: 4px; font-size: 0.72rem;'>INDISP.</span>";
+                            $statusBadge = "<span style='background: rgba(100,116,139,0.1); color: #475569; border: 1px solid rgba(100,116,139,0.2); padding: 2px 7px; border-radius: 4px; font-size: 0.72rem;'>INDISP.</span>";
                         }
-                        $rowOpacity = $isBloqueado ? 'opacity:0.45;' : '';
+                        $rowOpacity = $isBloqueado ? 'opacity:0.5;' : '';
                     ?>
-                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); <?php echo $rowOpacity; ?>">
+                        <tr style="border-bottom: 1px solid rgba(0,0,0,0.05); <?php echo $rowOpacity; ?>">
                             <td style="padding: 8px 10px; text-align: center;">
                                 <input type="checkbox" name="titulares[]" value="<?php echo $j['ID']; ?>"
                                     <?php echo ($j['Titular'] == 1 && !$isBloqueado) ? 'checked' : ''; ?>
@@ -389,13 +519,13 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
                                     <?php echo ($j['Capitao'] == 1 && !$isBloqueado) ? 'checked' : ''; ?>
                                     <?php echo $isBloqueado ? 'disabled' : ''; ?>>
                             </td>
-                            <td style="padding: 8px 10px; font-weight: 600; color: #e2e8f0;">
+                            <td style="padding: 8px 10px; font-weight: 600; color: #1e293b;">
                                 <?php echo htmlspecialchars($j['Nome']); ?>
                             </td>
                             <td style="padding: 8px 10px;">
                                 <?php if (!$isBloqueado && count($j['PosicoesDisponiveis']) > 1): ?>
                                     <select name="posicao_jogador[<?php echo $j['ID']; ?>]"
-                                        style="background: rgba(30,41,59,0.9); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 4px 8px; font-size: 0.82rem; width: 100%;">
+                                        style="background: #ffffff; color: #1e293b; border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; padding: 4px 8px; font-size: 0.82rem; width: 100%;">
                                         <?php foreach ($j['PosicoesDisponiveis'] as $pos): ?>
                                             <option value="<?php echo $pos; ?>" <?php echo ($j['PosicaoEscolhida'] === $pos) ? 'selected' : ''; ?>>
                                                 <?php echo $pos; ?>
@@ -403,11 +533,11 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
                                         <?php endforeach; ?>
                                     </select>
                                 <?php else: ?>
-                                    <span style="color: #94a3b8; font-size: 0.85rem;"><?php echo htmlspecialchars($j['PosicaoBase']); ?></span>
+                                    <span style="color: #64748b; font-size: 0.85rem;"><?php echo htmlspecialchars($j['PosicaoBase']); ?></span>
                                     <input type="hidden" name="posicao_jogador[<?php echo $j['ID']; ?>]" value="<?php echo htmlspecialchars($j['PosicaoBase']); ?>">
                                 <?php endif; ?>
                             </td>
-                            <td style="padding: 8px 10px; color: #fbbf24; font-weight: bold; text-align: center;">
+                            <td style="padding: 8px 10px; color: #b45309; font-weight: bold; text-align: center;">
                                 <?php echo $j['Nivel']; ?>
                             </td>
                             <td style="padding: 8px 10px; text-align: center;">
@@ -417,7 +547,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
                                         class="chk-indisp" title="Marcar como indisponível para este jogo"
                                         style="cursor:pointer; accent-color: #ef4444;">
                                 <?php else: ?>
-                                    <span style="color: #475569;">—</span>
+                                    <span style="color: #94a3b8;">—</span>
                                 <?php endif; ?>
                             </td>
                             <td style="padding: 8px 10px;">
@@ -429,13 +559,23 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
             </table>
         </div>
 
+        <?php if ($idJogo > 0): ?>
+            <div style="margin-bottom: 20px; background: rgba(2, 132, 199, 0.05); padding: 12px 18px; border-radius: 8px; border: 1px solid rgba(2, 132, 199, 0.15); width: fit-content;">
+                <label style="display: inline-flex; align-items: center; gap: 8px; color: #0369a1; font-weight: 600; font-size: 0.95rem; cursor: pointer; user-select: none;">
+                    <input type="checkbox" name="salvar_definitivo" value="1" style="width: 18px; height: 18px; cursor: pointer; accent-color: #0284c7;">
+                    Salvar esta escalaço também como PADRÃO (definitiva) para o clube na competição
+                </label>
+            </div>
+        <?php endif; ?>
+
         <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 4px;">
             <button type="submit" name="salvar_escalacao"
-                style="width: fit-content; white-space: nowrap; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; padding: 12px 28px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.95rem; letter-spacing: 0.3px;">
+                style="width: fit-content; white-space: nowrap; background: linear-gradient(135deg, #0284c7, #0369a1); color: #fff; border: none; padding: 12px 28px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.95rem; letter-spacing: 0.3px; box-shadow: 0 4px 12px rgba(2,132,199,0.25);">
                 💾 Salvar Escalação
             </button>
             <a href="/competicoes/listajogos.php?id=<?php echo $idCompeticao; ?>"
-                style="display: inline-block; width: fit-content; white-space: nowrap; padding: 12px 20px; background: rgba(255,255,255,0.07); color: #94a3b8; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.95rem;">
+                style="display: inline-block; width: fit-content; white-space: nowrap; padding: 12px 20px; background: rgba(0,0,0,0.03); color: #475569; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: all 0.2s ease;"
+                onmouseover="this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.background='rgba(0,0,0,0.03)'">
                 ← Voltar para Jogos
             </a>
         </div>
@@ -454,9 +594,9 @@ document.addEventListener('DOMContentLoaded', function() {
         var contador = document.getElementById('contador-titulares');
         if (contador) {
             contador.textContent = marcados + '/11 titulares selecionados';
-            contador.style.background = marcados === 11 ? 'rgba(16,185,129,0.2)' : 'rgba(99,102,241,0.2)';
-            contador.style.borderColor = marcados === 11 ? 'rgba(16,185,129,0.4)' : 'rgba(99,102,241,0.4)';
-            contador.style.color = marcados === 11 ? '#6ee7b7' : '#a5b4fc';
+            contador.style.background = marcados === 11 ? 'rgba(16,185,129,0.15)' : 'rgba(2,132,199,0.08)';
+            contador.style.borderColor = marcados === 11 ? 'rgba(16,185,129,0.25)' : 'rgba(2,132,199,0.15)';
+            contador.style.color = marcados === 11 ? '#047857' : '#0284c7';
         }
     }
     document.querySelectorAll('.chk-titular').forEach(function(chk) {
@@ -473,7 +613,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (chkTitular && chkTitular.checked) chkTitular.checked = false;
                 if (chkTitular) { chkTitular.disabled = true; chkTitular.dataset.desfalque = '1'; }
                 if (radioCapitao) radioCapitao.disabled = true;
-                row.style.opacity = '0.45';
+                row.style.opacity = '0.5';
             } else {
                 if (chkTitular) { chkTitular.disabled = false; chkTitular.dataset.desfalque = '0'; }
                 if (radioCapitao) radioCapitao.disabled = false;

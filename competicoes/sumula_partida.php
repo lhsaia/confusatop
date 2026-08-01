@@ -6,6 +6,42 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 $idMatch = $_GET['id'];
 
+// Redirecionamento para a súmula em imagem (Executado antes de enviar qualquer cabeçalho/HTML)
+include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/objetos/competicao_clube.php");
+
+$database = new Database();
+$db = $database->getConnection();
+$competicao = new Competicao_clube($db);
+
+$matchInfo = $competicao->getMatchInfo($idMatch);
+if($matchInfo){
+	$idCompeticao = $matchInfo['competicao'];
+	$competitionInfo = $competicao->readInfo($idCompeticao);
+	if($competitionInfo){
+		$nomeComposto = $competitionInfo['ano'] . " - " . $competitionInfo['nome'];
+		
+		// Encontrar o arquivo PNG dinamicamente em qualquer rodada usando glob
+		$baseDir = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/" . $nomeComposto;
+		// Buscamos em qualquer subdiretório (*º Rodada ou similar) pelo arquivo de imagem correto
+		$files = glob($baseDir . "/*/" . $matchInfo['path'] . ".png");
+		if(empty($files)){
+			// Busca de segurança em todo o diretório de Partidas caso o nome da competição tenha divergência sutil
+			$files = glob($_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/*/*/" . $matchInfo['path'] . ".png");
+		}
+		
+		if(!empty($files)){
+			$filePath = $files[0];
+			header("Content-Type: image/png");
+			header("Content-Length: " . filesize($filePath));
+			readfile($filePath);
+			exit;
+		} else {
+			die("Erro: Arquivo de imagem da súmula nao encontrado no servidor.");
+		}
+	}
+}
+
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "Súmula";
@@ -17,7 +53,6 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	
-	include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 	include_once($_SERVER['DOCUMENT_ROOT']."/config/sqliteDatabase.php");
 	include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
 	//include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
@@ -25,10 +60,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	//include_once($_SERVER['DOCUMENT_ROOT']."/objetos/estadio.php");
 	//include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
 	//include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
-	include_once($_SERVER['DOCUMENT_ROOT']."/objetos/competicao_clube.php");
-	
-	$database = new Database();
-	$db = $database->getConnection();
 	
 	$usuario = new Usuario($db);
 	//$time = new Time($cdb);
@@ -36,21 +67,12 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	//$estadio = new Estadio($cdb);
 	//$jogador = new Jogador($db);
 	//$pais = new Pais($db);
-	$competicao = new Competicao_clube($db);
-	
-	$matchInfo = $competicao->getMatchInfo($idMatch);
-	
-	$idCompeticao = $matchInfo['competicao'];
 	
 	$compDatabase = new SQLiteDatabase();
 	$compDatabase->fileName = $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$idCompeticao."-database.db3";
 	$cdb = $compDatabase->getConnection();
 	
 	$lite_competicao = new Competicao_clube($cdb);
-	
-	$competitionInfo = $competicao->readInfo($idCompeticao);
-	
-	$nomeComposto = $competitionInfo['ano'] . " - " . $competitionInfo['nome'];
 	
 	$path_hyl = "/hexacolor/Partidas/" . $nomeComposto . "/1º Rodada/" . $matchInfo['path'] . ".hyl";
 	$path_hyj = "/hexacolor/Partidas/" . $nomeComposto . "/1º Rodada/" . $matchInfo['path'] . ".hyj";

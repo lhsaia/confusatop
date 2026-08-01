@@ -72,6 +72,57 @@ foreach ($partidas as $matchInfo) {
     $ldb = $liteDatabase->getConnection();
     $liteCompeticao = new Competicao_clube($ldb);
     $timeObj = new Time($ldb);
+
+    // 1. Guardar a escalação original (padrão) na memória para restaurar depois da simulação
+    $originalEscalacoes = [];
+    try {
+        $stmtOrig = $ldb->prepare("SELECT * FROM escalacao WHERE Clube IN (:timeA, :timeB)");
+        $stmtOrig->bindValue(':timeA', $matchInfo['timeA'], PDO::PARAM_INT);
+        $stmtOrig->bindValue(':timeB', $matchInfo['timeB'], PDO::PARAM_INT);
+        $stmtOrig->execute();
+        while ($rowOrig = $stmtOrig->fetch(PDO::FETCH_ASSOC)) {
+            $originalEscalacoes[(int)$rowOrig['Clube']] = $rowOrig;
+        }
+    } catch (Exception $e) {}
+
+    // 2. Criar a tabela escalacao_jogo se não existir e buscar escalações específicas para a partida
+    $ldb->exec("CREATE TABLE IF NOT EXISTS `escalacao_jogo` (
+        `Jogo`	int ( 10 ) NOT NULL,
+        `Clube`	int ( 5 ) NOT NULL,
+        `Jogador1`	int ( 5 ) NOT NULL,
+        `Jogador2`	int ( 5 ) NOT NULL,
+        `Jogador3`	int ( 5 ) NOT NULL,
+        `Jogador4`	int ( 5 ) NOT NULL,
+        `Jogador5`	int ( 5 ) NOT NULL,
+        `Jogador6`	int ( 5 ) NOT NULL,
+        `Jogador7`	int ( 5 ) NOT NULL,
+        `Jogador8`	int ( 5 ) NOT NULL,
+        `Jogador9`	int ( 5 ) NOT NULL,
+        `Jogador10`	int ( 5 ) NOT NULL,
+        `Jogador11`	int ( 5 ) NOT NULL,
+        `Capitao`	int ( 5 ) NOT NULL,
+        `Penalti1`	int ( 5 ) DEFAULT NULL,
+        `Penalti2`	int ( 5 ) DEFAULT NULL,
+        `Penalti3`	int ( 5 ) DEFAULT NULL,
+        `Indisponiveis`	text,
+        PRIMARY KEY(`Jogo`,`Clube`)
+    );");
+
+    $customLineupA = null;
+    $customLineupB = null;
+    try {
+        $stmtCustomA = $ldb->prepare("SELECT * FROM escalacao_jogo WHERE Jogo = :jogo AND Clube = :clube LIMIT 1");
+        $stmtCustomA->bindValue(':jogo', $matchInfo['id'], PDO::PARAM_INT);
+        $stmtCustomA->bindValue(':clube', $matchInfo['timeA'], PDO::PARAM_INT);
+        $stmtCustomA->execute();
+        $customLineupA = $stmtCustomA->fetch(PDO::FETCH_ASSOC);
+
+        $stmtCustomB = $ldb->prepare("SELECT * FROM escalacao_jogo WHERE Jogo = :jogo AND Clube = :clube LIMIT 1");
+        $stmtCustomB->bindValue(':jogo', $matchInfo['id'], PDO::PARAM_INT);
+        $stmtCustomB->bindValue(':clube', $matchInfo['timeB'], PDO::PARAM_INT);
+        $stmtCustomB->execute();
+        $customLineupB = $stmtCustomB->fetch(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {}
     
     // Garantir que as colunas Suspenso e Lesionado existam na tabela jogador do SQLite temporário
     try {
@@ -161,6 +212,56 @@ foreach ($partidas as $matchInfo) {
             $ldb->exec("UPDATE jogador SET Suspenso = 1 WHERE ID IN ($inSus)");
         }
     }
+
+    // 3. Aplicar as escalações temporárias na tabela escalacao do banco temporário
+    try {
+        $updateFields = [];
+        for ($i = 1; $i <= 11; $i++) {
+            $updateFields[] = "Jogador{$i} = :jog{$i}";
+        }
+        $updateFields[] = "Capitao = :capitao";
+        $updateFields[] = "Penalti1 = :pen1";
+        $updateFields[] = "Penalti2 = :pen2";
+        $updateFields[] = "Penalti3 = :pen3";
+        $stmtUp = $ldb->prepare("UPDATE escalacao SET " . implode(', ', $updateFields) . " WHERE Clube = :clube");
+
+        if ($customLineupA) {
+            $stmtUp->bindValue(':clube', $matchInfo['timeA'], PDO::PARAM_INT);
+            for ($i = 1; $i <= 11; $i++) {
+                $stmtUp->bindValue(':jog' . $i, $customLineupA['Jogador' . $i], PDO::PARAM_INT);
+            }
+            $stmtUp->bindValue(':capitao', $customLineupA['Capitao'], PDO::PARAM_INT);
+            $stmtUp->bindValue(':pen1', $customLineupA['Penalti1'], PDO::PARAM_INT);
+            $stmtUp->bindValue(':pen2', $customLineupA['Penalti2'], PDO::PARAM_INT);
+            $stmtUp->bindValue(':pen3', $customLineupA['Penalti3'], PDO::PARAM_INT);
+            $stmtUp->execute();
+
+            if (!empty($customLineupA['Indisponiveis'])) {
+                $indispA = array_map('intval', explode(',', $customLineupA['Indisponiveis']));
+                $outTeam1 = array_merge($outTeam1, $indispA);
+            }
+        }
+
+        if ($customLineupB) {
+            $stmtUp->bindValue(':clube', $matchInfo['timeB'], PDO::PARAM_INT);
+            for ($i = 1; $i <= 11; $i++) {
+                $stmtUp->bindValue(':jog' . $i, $customLineupB['Jogador' . $i], PDO::PARAM_INT);
+            }
+            $stmtUp->bindValue(':capitao', $customLineupB['Capitao'], PDO::PARAM_INT);
+            $stmtUp->bindValue(':pen1', $customLineupB['Penalti1'], PDO::PARAM_INT);
+            $stmtUp->bindValue(':pen2', $customLineupB['Penalti2'], PDO::PARAM_INT);
+            $stmtUp->bindValue(':pen3', $customLineupB['Penalti3'], PDO::PARAM_INT);
+            $stmtUp->execute();
+
+            if (!empty($customLineupB['Indisponiveis'])) {
+                $indispB = array_map('intval', explode(',', $customLineupB['Indisponiveis']));
+                $outTeam2 = array_merge($outTeam2, $indispB);
+            }
+        }
+
+        $outTeam1 = array_values(array_unique($outTeam1));
+        $outTeam2 = array_values(array_unique($outTeam2));
+    } catch (Exception $e) {}
     
     $competitionInfo = $competicaoObj->readInfo($idCompeticao);
     $nomeComposto = $competitionInfo['ano'] . " - " . $competitionInfo['nome'];
@@ -193,6 +294,22 @@ foreach ($partidas as $matchInfo) {
         )]
     );
     
+    $siglaA = $timeObj->getSigla($matchInfo['timeA']);
+    $siglaB = $timeObj->getSigla($matchInfo['timeB']);
+    $path = $siglaA . "x" . $siglaB . " - " . date("j-n-Y", strtotime($matchInfo['data']));
+    $completePath = "/Partidas/" . $nomeComposto . "/" . $matchdayIndex . "º Rodada/" . $path . ".hyl";
+
+    // Fechar todas as referências ao SQLite temporariamente para evitar locks de arquivo (SQLITE_BUSY) durante a simulação
+    $stmtOrig = null;
+    $stmtCustomA = null;
+    $stmtCustomB = null;
+    $stmtOut1 = null;
+    $stmtOut2 = null;
+    $stmtUp = null;
+    $liteCompeticao = null;
+    $timeObj = null;
+    $ldb = null;
+
     $json = json_encode($json_array, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK | JSON_PRETTY_PRINT);
     file_put_contents($hexacolorDir . "/agenda/json.txt", $json);
     
@@ -203,7 +320,7 @@ foreach ($partidas as $matchInfo) {
     if ($isWindows) {
         $jarPath = $dir . "/HexacolorYMTv2.jar";
         $jsonPath = $dir . "/agenda/json.txt";
-        $cmd = "java -jar \"$jarPath\" -m \"$jsonPath\" 2>&1";
+        $cmd = "java -Djava.awt.headless=true -jar \"$jarPath\" -m \"$jsonPath\" 2>&1";
     } else {
         $javaBin = "/java_station/jdk/jdk1.8.0_231/bin/java";
         $libPath = "/competicoes/hexacolor/lib";
@@ -215,16 +332,40 @@ foreach ($partidas as $matchInfo) {
     
     $output = shell_exec($cmd . "\n");
     
+    // Reabrir conexão SQLite temporária para restaurar a escalação e salvar
+    $liteDatabase = new SQLiteDatabase();
+    $liteDatabase->fileName = $targetDbPath;
+    $ldb = $liteDatabase->getConnection();
+
+    // 4. Restaurar a escalação original/padrão no banco temporário antes de salvar de volta
+    try {
+        if (!empty($originalEscalacoes)) {
+            $stmtRestore = $ldb->prepare("UPDATE escalacao SET 
+                Jogador1 = :jog1, Jogador2 = :jog2, Jogador3 = :jog3, Jogador4 = :jog4, Jogador5 = :jog5, 
+                Jogador6 = :jog6, Jogador7 = :jog7, Jogador8 = :jog8, Jogador9 = :jog9, Jogador10 = :jog10, Jogador11 = :jog11, 
+                Capitao = :capitao, Penalti1 = :pen1, Penalti2 = :pen2, Penalti3 = :pen3
+                WHERE Clube = :clube");
+            foreach ($originalEscalacoes as $clubeId => $rowOrig) {
+                $stmtRestore->bindValue(':clube', $clubeId, PDO::PARAM_INT);
+                for ($i = 1; $i <= 11; $i++) {
+                    $stmtRestore->bindValue(':jog' . $i, $rowOrig['Jogador' . $i], PDO::PARAM_INT);
+                }
+                $stmtRestore->bindValue(':capitao', $rowOrig['Capitao'], PDO::PARAM_INT);
+                $stmtRestore->bindValue(':pen1', $rowOrig['Penalti1'], PDO::PARAM_INT);
+                $stmtRestore->bindValue(':pen2', $rowOrig['Penalti2'], PDO::PARAM_INT);
+                $stmtRestore->bindValue(':pen3', $rowOrig['Penalti3'], PDO::PARAM_INT);
+                $stmtRestore->execute();
+            }
+        }
+    } catch (Exception $e) {}
+
+    // Fechar conexão SQLite para evitar locks no Windows
+    $ldb = null;
+
     // 2. Copiar banco SQLite atualizado de volta
     if (file_exists($targetDbPath)) {
         copy($targetDbPath, $sourceDbPath);
     }
-    
-    // Ler gols gravados no arquivo de partida .hyl
-    $siglaA = $timeObj->getSigla($matchInfo['timeA']);
-    $siglaB = $timeObj->getSigla($matchInfo['timeB']);
-    $path = $siglaA . "x" . $siglaB . " - " . date("j-n-Y", strtotime($matchInfo['data']));
-    $completePath = "/Partidas/" . $nomeComposto . "/" . $matchdayIndex . "º Rodada/" . $path . ".hyl";
     
     $hylFile = $hexacolorDir . $completePath;
     $golsTimeA = 0;

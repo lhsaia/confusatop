@@ -17,6 +17,14 @@ $database = new Database();
 $db = $database->getConnection();
 $competicao = new Competicao_clube($db);
 
+$compInfo = $competicao->readInfo($idCompeticao);
+$dono = isset($compInfo['dono']) ? (int)$compInfo['dono'] : 0;
+$isAdmin = (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1);
+
+if (!$isAdmin && $_SESSION['user_id'] != $dono) {
+    die(json_encode(array("success" => false, "error" => "Você não tem permissão para gerar a tabela desta competição.")));
+}
+
 // Clean existing games
 $competicao->limparJogos($idCompeticao);
 

@@ -80,9 +80,9 @@ $clima_read = new Clima($db);
     }
 
 $page_title = "Criar Competição";
-$css_filename = "newIndex";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'area_competicao';
+$aux_css = 'competicoes_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -271,64 +271,180 @@ function readURL(input, target_div) {
    }
 </script>
 
+<style>
+main.redesign-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+}
+
+#inscricao {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 18px !important;
+    padding: 30px !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+    color: #1e293b !important;
+}
+
+#inscricao label {
+    font-family: 'Kanit', sans-serif !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    color: #0284c7 !important;
+    display: block !important;
+    margin-top: 15px !important;
+    margin-bottom: 5px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+#inscricao input[type='text'],
+#inscricao input[type='number'],
+#inscricao select {
+    width: 100% !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    color: #334155 !important;
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 0.95rem !important;
+    outline: none !important;
+    transition: all 0.25s ease !important;
+    box-sizing: border-box !important;
+}
+
+#inscricao input[type='text']:focus,
+#inscricao input[type='number']:focus,
+#inscricao select:focus {
+    border-color: #0284c7 !important;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+}
+
+/* Custom file upload styling */
+.custom-file-upload {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    background: rgba(2, 132, 199, 0.04) !important;
+    border: 1px dashed rgba(2, 132, 199, 0.3) !important;
+    border-radius: 8px !important;
+    padding: 15px !important;
+    cursor: pointer !important;
+    transition: all 0.25s ease !important;
+    margin-top: 15px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    color: #0369a1 !important;
+}
+
+.custom-file-upload:hover {
+    background: rgba(2, 132, 199, 0.08) !important;
+    border-color: #0284c7 !important;
+}
+
+#logo {
+    display: none !important;
+}
+
+#logo-preview {
+    max-height: 40px !important;
+    max-width: 40px !important;
+    object-fit: contain !important;
+    border-radius: 4px !important;
+}
+
+#inscricao input[type='submit'] {
+    width: 100% !important;
+    background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+    border: none !important;
+    color: #fff !important;
+    padding: 12px 20px !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-family: 'Kanit', sans-serif !important;
+    font-size: 1.05rem !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;
+    transition: all 0.25s ease !important;
+    margin-top: 25px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+#inscricao input[type='submit']:hover {
+    background: linear-gradient(135deg, #0369a1, #075985) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(2, 132, 199, 0.45) !important;
+}
+
+.hub-section-title {
+    font-family: 'Kanit', sans-serif !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    text-align: center !important;
+    margin-bottom: 25px !important;
+    font-size: 2rem !important;
+}
+</style>
+
 <div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
-<div id='inscricao'>
-<form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
+
+<main class="redesign-container">
+    <h2 class="hub-section-title">Criar Competição</h2>
+    <div id='inscricao'>
+        <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
 
             <label for='nome'>Nome</label>
-            <input type='text' name='nome' id='nome' class='form-control inputHerdeiro' />
+            <input type='text' name='nome' id='nome' class='form-control inputHerdeiro' required />
 
             <label for='ano'>Ano</label>
-            <input type='number' id='ano' name='ano' value='<?php echo date("Y")?>' min='1900' max='2100' class='form-control inputHerdeiro' />
+            <input type='number' id='ano' name='ano' value='<?php echo date("Y")?>' min='1900' max='2100' class='form-control inputHerdeiro' required />
 
             <label for='federacao'>Federação</label>
             <?php
-                // put them in a select drop-down
                 echo "<select class='form-control' id='federacao' name='federacao'>";
                 echo "<option selected value='0'>Sem federação</option>";
                 echo "<option value='1'>FEASCO</option>";
                 echo "<option value='2'>FEMIFUS</option>";
                 echo "<option value='3'>COMPACTA</option>";
-
                 echo "</select>";
+            ?>
 
-                ?>
-
-            <label class='custom-file-upload' for='logo'><img id='logo-preview'><span id='nomeLogo'>Logo</span></label>
-            <input type="file" id='logo' class='form-control custom-file-upload' name='logo' data-max-size="2048" multiple='false' accept='image/*'  placeholder=''">
+            <label class='custom-file-upload' for='logo'>
+                <img id='logo-preview' style="display:none;">
+                <span id='nomeLogo'>Clique para selecionar a Logo</span>
+            </label>
+            <input type="file" id='logo' class='form-control custom-file-upload' name='logo' data-max-size="2048" multiple='false' accept='image/*' placeholder=''>
 			
             <label for='sede'>País Sede</label>
-                <?php
-                // ler times do banco de dados
+            <?php
                 $stmt = $pais->read(null, null, false);
-
-                // put them in a select drop-down
                 echo "<select class='form-control' id='sede' name='sede'>";
                 echo "<option value='0'>Sem sede fixa</option>";
-
                 while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
                     extract($row_category);
                     echo "<option value='{$id}'>{$nome}</option>";
                 }
-
                 echo "</select>";
-                ?>
+            ?>
 
             <label for='genero'>Masculina/Feminina</label>
             <?php
-                // put them in a select drop-down
-                echo "<select class='form-control'id='genero' name='genero'>";
+                echo "<select class='form-control' id='genero' name='genero'>";
                 echo "<option value='0'>Masculina</option>";
                 echo "<option value='1'>Feminina</option>";
-
-
                 echo "</select>";
+            ?>
 
-                ?>
-
-		<input type="submit" name="criar" value='Inserir' class="btn"/>
-</form>
-</div>
+            <input type="submit" name="criar" value='Inserir Competição' class="btn"/>
+        </form>
+    </div>
+</main>
   <script>
 
 $(document).ready(function(){

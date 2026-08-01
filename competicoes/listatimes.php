@@ -153,7 +153,7 @@ $( document ).ready(function(){
 		echo "false";
 	 };?>';
 	 
-  var admin ='<?php if(isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1){
+  var admin ='<?php if((isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) || (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $dono_competicao)){
 	echo "true";
  } else {
 	echo "false";

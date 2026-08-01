@@ -8,6 +8,24 @@ $db = $database->getConnection();
 $competicao = new Competicao_clube($db);
 
 $idPartida = isset($_POST['idPartida']) ? $_POST['idPartida'] : die();
+
+// Puxar info da partida para saber qual a competição e verificar permissão
+$stmtPartida = $db->prepare("SELECT competicao FROM competicao_jogos WHERE id = :id");
+$stmtPartida->bindParam(':id', $idPartida);
+$stmtPartida->execute();
+$partida = $stmtPartida->fetch(PDO::FETCH_ASSOC);
+if (!$partida) {
+    die(json_encode(array("success" => false, "error" => "Partida não encontrada.")));
+}
+$idCompeticao = $partida['competicao'];
+$compInfo = $competicao->readInfo($idCompeticao);
+$dono = isset($compInfo['dono']) ? (int)$compInfo['dono'] : 0;
+$isAdmin = (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1);
+
+if (!$isAdmin && $_SESSION['user_id'] != $dono) {
+    die(json_encode(array("success" => false, "error" => "Você não tem permissão para editar jogos nesta competição.")));
+}
+
 $arbitro = isset($_POST['arbitro']) ? $_POST['arbitro'] : 0;
 $estadio = isset($_POST['estadio']) ? $_POST['estadio'] : 0;
 $fase = isset($_POST['fase']) ? $_POST['fase'] : 0;

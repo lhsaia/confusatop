@@ -43,6 +43,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	$competicao = new Competicao_clube($db);
 	
 	$options = $competicao->getOptions($idCompeticao);
+	$compInfo = $competicao->readInfo($idCompeticao);
+	$donoCompeticao = isset($compInfo['dono']) ? (int)$compInfo['dono'] : 0;
 	
 	// query caixa de seleção países desse dono
 	$stmtPais = $pais->read();
@@ -105,9 +107,146 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	echo '<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>';
 ?>
 
+<style>
+#toolbar {
+  display: flex !important;
+  gap: 10px !important;
+  align-items: center !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#gerar_tabela, #exportar_excel, #importar_excel {
+  border: none !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 6px 14px !important;
+  font-weight: 600 !important;
+  font-family: 'Kanit', sans-serif !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  transition: all 0.2s ease !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  height: 32px !important;
+  box-sizing: border-box !important;
+  line-height: 1 !important;
+}
+
+/* Estilo do Ícone (tamanho padrão idêntico ao criar competição) */
+#toolbar > div span.material-symbols-outlined {
+  padding-left: 0 !important;
+  font-size: 1.15rem !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+/* Estilo do Texto (tamanho padrão de botão para manter harmonia) */
+#toolbar > div span.btn-text {
+  font-size: 0.85rem !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+#gerar_tabela {
+  background: #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25) !important;
+}
+#gerar_tabela:hover {
+  background: #0369a1 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
+}
+
+#exportar_excel {
+  background: #16a34a !important;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25) !important;
+}
+#exportar_excel:hover {
+  background: #15803d !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35) !important;
+}
+
+#importar_excel {
+  background: #0d9488 !important;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25) !important;
+}
+#importar_excel:hover {
+  background: #0f766e !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35) !important;
+}
+
+/* Responsividade: oculta o texto dos botões em telas menores que 1500px para nunca sobrepor o login */
+@media (max-width: 1500px) {
+  #toolbar > div span.btn-text {
+    display: none !important;
+  }
+  #toolbar > div {
+    padding: 6px 10px !important;
+    width: 32px !important;
+    justify-content: center !important;
+  }
+}
+</style>
+
 <script>
 
 $(document).ready(function($){
+
+	var loadingInterval;
+	function showLoading(isSimulation) {
+		if (isSimulation) {
+			$('#loading-step').show();
+			$('#loading-bar-container').show();
+			$('#loading-title').text("Simulando Partida");
+			startLoadingProgress();
+		} else {
+			$('#loading-step').hide();
+			$('#loading-bar-container').hide();
+			$('#loading-title').text("Carregando Dados");
+		}
+		$('#loading').css('display', 'flex').hide().fadeIn(200);
+	}
+	
+	function hideLoading() {
+		clearInterval(loadingInterval);
+		$('#loading-bar').css('width', '100%');
+		setTimeout(function() {
+			$('#loading').fadeOut(200);
+		}, 200);
+	}
+	
+	function startLoadingProgress() {
+		var steps = [
+			{ time: 0, text: "Preparando conexão com o banco de dados...", progress: 15 },
+			{ time: 1000, text: "Carregando elencos e táticas das equipes...", progress: 30 },
+			{ time: 2200, text: "Verificando departamento médico e suspensões...", progress: 45 },
+			{ time: 3500, text: "Inicializando o motor de simulação Hexacolor...", progress: 65 },
+			{ time: 5500, text: "Processando lances, gols e cartões em tempo real...", progress: 80 },
+			{ time: 7000, text: "Finalizando simulação e consolidando a súmula...", progress: 95 }
+		];
+		
+		var stepIndex = 0;
+		$('#loading-step').text(steps[0].text);
+		$('#loading-bar').css('width', steps[0].progress + '%');
+		
+		clearInterval(loadingInterval);
+		loadingInterval = setInterval(function() {
+			stepIndex++;
+			if (stepIndex < steps.length) {
+				$('#loading-step').text(steps[stepIndex].text);
+				$('#loading-bar').css('width', steps[stepIndex].progress + '%');
+			} else {
+				clearInterval(loadingInterval);
+			}
+		}, 1200);
+	}
 
 	 var listaTimes =  <?php echo json_encode($listaTimes); ?>;
 	 var listaFases =  <?php echo json_encode($listaFases); ?>;
@@ -117,23 +256,69 @@ $(document).ready(function($){
 	 var codigo_competicao = '<?php echo $idCompeticao ?>';
 	 var localData = [];
 	 var logged ='<?php echo (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true) ? "true" : "false"; ?>';
-	 var admin ='<?php echo (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) ? "true" : "false"; ?>';
+	 var admin ='<?php echo ((isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) || (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $donoCompeticao)) ? "true" : "false"; ?>';
 	 var user_id ='<?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0; ?>';
 	 
 	$("#new_match").hide();
+	$('body').append('<input type="file" id="excel_file_input" style="display:none;" accept=".xls,.xlsx"/>');
 	 
-	let btnHtml = '<div id="gerar_tabela"><span class="material-symbols-outlined">grid_view</span><span>Gerar Tabela</span></div>';
+	let btnHtml = '<div id="gerar_tabela"><span class="material-symbols-outlined">grid_view</span><span class="btn-text">Gerar Tabela</span></div>';
+	btnHtml += '<div id="exportar_excel"><span class="material-symbols-outlined">download</span><span class="btn-text">Exportar Excel</span></div>';
+	btnHtml += '<div id="importar_excel"><span class="material-symbols-outlined">upload</span><span class="btn-text">Importar Excel</span></div>';
 	$("#toolbar").html(btnHtml);
+
+	$(document).on('click', '#exportar_excel', function(){
+		window.location.href = 'exportar_excel.php?id=' + codigo_competicao;
+	});
+
+	$(document).on('click', '#importar_excel', function(){
+		$('#excel_file_input').trigger('click');
+	});
+
+	$(document).on('change', '#excel_file_input', function(){
+		var file_data = $('#excel_file_input').prop('files')[0];
+		if (!file_data) return;
+		
+		var form_data = new FormData();
+		form_data.append('planilha_excel', file_data);
+		form_data.append('id', codigo_competicao);
+		
+		showLoading();
+		$.ajax({
+			url: 'importar_excel.php',
+			dataType: 'json',
+			cache: false,
+			contentType: false,
+			processData: false,
+			data: form_data,
+			type: 'post',
+			success: function(response){
+				hideLoading();
+				$('#excel_file_input').val('');
+				if(response.success){
+					alert(response.message);
+					load_data();
+				} else {
+					alert(response.error);
+				}
+			},
+			error: function(xhr, status, error){
+				hideLoading();
+				$('#excel_file_input').val('');
+				alert('Erro ao enviar arquivo para importação: ' + error);
+			}
+		});
+	});
 	 
 	$(document).on('click', '#gerar_tabela', function(){
 		if(confirm("Deseja gerar a tabela de jogos? Isso apagará os jogos atuais desta competição!")){
-			$('#loading').show();
+			showLoading();
 			$.ajax({
 				url: "gerar_tabela.php",
 				method: "POST",
 				data: {id: codigo_competicao, tipo: '<?php echo isset($options['tipocompeticao']) ? (int)$options['tipocompeticao'] : 0; ?>'},
 				success: function(data){
-					$('#loading').hide();
+					hideLoading();
 					try {
 						let res = typeof data === 'object' ? data : JSON.parse(data);
 						if(res.success){
@@ -148,7 +333,7 @@ $(document).ready(function($){
 					}
 				},
 				error: function(xhr, status, error){
-					$('#loading').hide();
+					hideLoading();
 					alert("Erro de conexão ao gerar tabela: " + error);
 				}
 			});
@@ -164,7 +349,7 @@ $(document).ready(function($){
 
 	function load_data(){
 
-	$('#loading').show();  // show loading indicator
+	showLoading();  // show loading indicator
 
 	$.ajax({
 		url:"refresh_match_list.php",
@@ -173,7 +358,7 @@ $(document).ready(function($){
 		data:{codigo_competicao:codigo_competicao},
 		success:function(data){
 			console.log("API de Jogos retornou:", data);
-			$('#loading').hide();
+			hideLoading();
 			try {
 				var ajax_data = JSON.parse(data);
 				console.log("Total de jogos processados:", ajax_data.length);
@@ -293,8 +478,8 @@ $(document).ready(function($){
 				let escLinkA = "";
 				let escLinkB = "";
 				if(logged == "true"){
-					escLinkA = " <a href='/competicoes/escalacao_jogo.php?comp="+codigo_competicao+"&team="+val['timeA_id']+"' title='Escalação "+nomeTimeA+"' class='clickable lineup-btn'><span class='material-symbols-outlined'>assignment</span></a>";
-					escLinkB = " <a href='/competicoes/escalacao_jogo.php?comp="+codigo_competicao+"&team="+val['timeB_id']+"' title='Escalação "+nomeTimeB+"' class='clickable lineup-btn'><span class='material-symbols-outlined'>assignment</span></a>";
+					escLinkA = " <a href='/competicoes/escalacao_jogo.php?comp="+codigo_competicao+"&team="+val['timeA_id']+"&jogo="+val['id']+"' title='Escalação "+nomeTimeA+"' class='clickable lineup-btn'><span class='material-symbols-outlined'>assignment</span></a>";
+					escLinkB = " <a href='/competicoes/escalacao_jogo.php?comp="+codigo_competicao+"&team="+val['timeB_id']+"&jogo="+val['id']+"' title='Escalação "+nomeTimeB+"' class='clickable lineup-btn'><span class='material-symbols-outlined'>assignment</span></a>";
 				}
 
 					// Geração da tabela
@@ -314,7 +499,7 @@ $(document).ready(function($){
 					tbl += "<td data-label='Status'><span class='status-badge "+statusClass+"' id='status"+ val['id']+"'>"+ statusText +"</span></td>";
 
 					let optionsString = "<td class='wide' data-label='Opções'>";
-					if(logged == "true"){
+					if(logged == "true" && val['status'] == 0){
 						if(admin == "true" || user_id === val['idDonoPais']){
 							optionsString += "<a id='edi"+val['id']+"' title='Editar jogo' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
 							optionsString += "<a id='apa"+val['id']+"' title='Apagar jogo' class='clickable apagar'><span class='material-symbols-outlined inlineButton negativo'>delete</span></a>";
@@ -387,14 +572,14 @@ $(document).ready(function($){
         var matchId = tbl_row.prop('id');
         var r = confirm("Você tem certeza que deseja simular manualmente? Essa ação não pode ser desfeita!");
         if (r) {
-			$('#loading').show();
+			showLoading(true);
             $.ajax({
                 type: "POST",
                 url: '/competicoes/hexacolor/simular_partida.php',
                 data: {matchId:matchId},
                 dataType: 'json',
                 success: function(data) {
-					$('#loading').hide();
+					hideLoading();
                   console.log(data.error);
                   if(!data.success){
                     $('#errorbox').append('<div class="alert alert-danger">Não foi possível simular a partida. '+ data.error +'</div>');
@@ -405,7 +590,7 @@ $(document).ready(function($){
 
                 },
                 error: function(data) {
-					$('#loading').hide();
+					hideLoading();
                     successmessage = 'Error';
                     $('#errorbox').append('<div class="alert alert-danger">Não foi possível simular a partida.</div>');
                 }
@@ -661,7 +846,16 @@ $(document).ready(function($){
         <div style='clear:both;'></div>
         
         <?php $random_loader = rand(1,5); ?>
-        <div id='loading' style="display:none;"><img src='/images/loaders/loader_style<?php echo $random_loader; ?>.gif'/></div>
+        <div id='loading' style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(9, 13, 22, 0.85); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:99999; flex-direction:column; justify-content:center; align-items:center; color:#fff; font-family:'Montserrat', sans-serif;">
+            <div style="background:rgba(15, 23, 42, 0.8); padding:35px 40px; border-radius:18px; border:1px solid rgba(255,255,255,0.1); text-align:center; box-shadow:0 15px 35px rgba(0,0,0,0.6); max-width:420px; width:90%; box-sizing:border-box;">
+                <img src="/images/loaders/loader_style<?php echo $random_loader; ?>.gif" style="height:70px; margin-bottom:20px;"/>
+                <h3 id="loading-title" style="font-family:'Kanit', sans-serif; color:#38bdf8; margin:0 0 10px 0; font-size:1.4rem; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Simulando Partida</h3>
+                <p id="loading-step" style="margin:0; font-size:0.95rem; color:#cbd5e1; min-height:24px;">Iniciando...</p>
+                <div id="loading-bar-container" style="width:100%; background:rgba(255,255,255,0.08); height:6px; border-radius:3px; margin-top:20px; overflow:hidden; border:1px solid rgba(255,255,255,0.05);">
+                    <div id="loading-bar" style="width:5%; height:100%; background:linear-gradient(90deg, #38bdf8, #34d399); border-radius:3px; transition:width 0.4s ease-in-out;"></div>
+                </div>
+            </div>
+        </div>
         
         <div class='tbl_user_data'></div>
         

@@ -25,6 +25,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $db = $database->getConnection();
     $competicao = new Competicao_clube($db);
 	
+    $compInfo = $competicao->readInfo($id_competicao);
+    $dono = isset($compInfo['dono']) ? (int)$compInfo['dono'] : 0;
+    $isAdmin = (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1);
+    if(!$isAdmin && $_SESSION['user_id'] != $dono){
+        die(json_encode(array("success" => false, "error" => "Você não tem permissão para inserir jogos nesta competição.")));
+    }
+	
 	$liteDatabase = new SQLiteDatabase();
 	$liteDatabase->fileName = $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$id_competicao."-database.db3";
 	$ldb = $liteDatabase->getConnection();
