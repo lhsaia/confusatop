@@ -70,7 +70,6 @@ images/mascotes/*.JPEG
 images/mascotes/*.webp
 
 # temporary unfinished business
-competicoes/
 java_station/
 scratch/
 refactor.py
