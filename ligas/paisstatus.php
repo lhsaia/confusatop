@@ -13,7 +13,7 @@ $records_per_page = 15;
 // calculate for the query LIMIT clause
 $from_record_num = ($records_per_page * $page) - $records_per_page;
 
-$idPais = $_GET['country'];
+$idPais = $_GET['country'] ?? 0;
 
 //estabelecer conexão com banco de dados
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -35,24 +35,24 @@ $federacao = new Federacao($db);
 
 // query paises
 $stmt = $pais->readInfo($idPais);
-$info = $stmt->fetch(PDO::FETCH_ASSOC);
+$info = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : null;
 $moreInfo = $pais->readMoreInfo($idPais);
-$nome_selecao = $info['nome'];
-$federacao_id = $info['federacao'];
-$pontos = $info['pontos'];
-$bandeira = $info['bandeira'];
-$ativo = ($info['ativo']) ? 'ativo' : 'inativo';
+$nome_selecao = $info['nome'] ?? '';
+$federacao_id = $info['federacao'] ?? 0;
+$pontos = $info['pontos'] ?? 0;
+$bandeira = $info['bandeira'] ?? '';
+$ativo = (!empty($info['ativo'])) ? 'ativo' : 'inativo';
 
 //query federacao
 $stmt = $federacao->selFederacao($federacao_id);
-$info = $stmt->fetch(PDO::FETCH_ASSOC);
-$federacao_selecao = $info['nome'];
+$info = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : null;
+$federacao_selecao = $info['nome'] ?? '';
 
 //outras informações para infoblock
-$mediaIdade = number_format($moreInfo['mediaIdade'],1);
-$estrangeiros = $moreInfo['estrangeiros'];
-$valor_total_clube = number_format($moreInfo['valorTotal']/1000000000,2) . "B";
-$jogadores = $moreInfo['jogadores'];
+$mediaIdade = number_format($moreInfo['mediaIdade'] ?? 0, 1);
+$estrangeiros = $moreInfo['estrangeiros'] ?? 0;
+$valor_total_clube = number_format(($moreInfo['valorTotal'] ?? 0)/1000000000, 2) . "B";
+$jogadores = $moreInfo['jogadores'] ?? 0;
 
 $page_title = "Ligas - ".$nome_selecao;
 $css_filename = "indexRanking";
@@ -83,7 +83,7 @@ $liga_stmt = $liga->readAll($from_record_num,$records_per_page,null,null,$idPais
 
 echo "<div id='info-jogos'>";
 echo "<div id='times' class='infoblock' title='Quantidade de ligas'><span class='material-symbols-outlined'>emoji_events</span><span class='informacao'>{$total_rows}</span></div>";
-echo "<div id='times' class='infoblock' title='Quantidade de times'><span class='material-symbols-outlined'>shield</span><span class='informacao'>{$moreInfo['clubes']}</span></div>";
+echo "<div id='times' class='infoblock' title='Quantidade de times'><span class='material-symbols-outlined'>shield</span><span class='informacao'>".($moreInfo['clubes'] ?? 0)."</span></div>";
 echo "<div id='times' class='infoblock' title='Quantidade de jogadores'><span class='material-symbols-outlined'>groups</span><span class='informacao'>{$jogadores}</span></div>";
 echo "<div id='Idades' class='infoblock' title='Média de idade'><span class='material-symbols-outlined'>person</span><span class='informacao'>{$mediaIdade}</span></div>";
 echo "<div id='Estrangeiros' class='infoblock' title='Estrangeiros'><span class='material-symbols-outlined'>public</span><span class='informacao'>{$estrangeiros}</span><span class='informacao micro'>({$perc_estrangeiros})</span></div>";

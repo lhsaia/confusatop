@@ -61,25 +61,25 @@ while ($row_pos = $stmtPos->fetch(PDO::FETCH_ASSOC)){
 //lista de times da pessoa
 $lista_times = array();
 
-$id = $_GET['team'];
+$id = $_GET['team'] ?? 0;
 $idTime = $id;
 
 // query times
 $info = $time->readInfo($id);
-$nome_time = $info['Nome'];
-$sigla_time = $info['TresLetras'];
-$estadio_time = $info['Estadio'];
-$estadio_capacidade = $info['Capacidade'];
-$escudo_time = $info['Escudo'];
-$foto_estadio = $info['fotoEstadio'];
-$uniforme1_time = $info['Uniforme1'];
-$uniforme2_time = $info['Uniforme2'];
-$pais_time = $info['Pais'];
-$liga_time = $info['liga'];
-$liga_id = $info['liga_id'];
-$pais_id = $info['pais_id'];
-$donoPais = $info['donoPais'];
-$status_time = $info['status'];
+$nome_time = $info['Nome'] ?? '';
+$sigla_time = $info['TresLetras'] ?? '';
+$estadio_time = $info['Estadio'] ?? '';
+$estadio_capacidade = $info['Capacidade'] ?? 0;
+$escudo_time = $info['Escudo'] ?? '';
+$foto_estadio = $info['fotoEstadio'] ?? '';
+$uniforme1_time = $info['Uniforme1'] ?? '';
+$uniforme2_time = $info['Uniforme2'] ?? '';
+$pais_time = $info['Pais'] ?? '';
+$liga_time = $info['liga'] ?? '';
+$liga_id = $info['liga_id'] ?? null;
+$pais_id = $info['pais_id'] ?? null;
+$donoPais = $info['donoPais'] ?? null;
+$status_time = $info['status'] ?? null;
 
 
 if(isset($_SESSION['user_id']) && $donoPais == $_SESSION["user_id"]){

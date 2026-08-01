@@ -64,6 +64,7 @@ $ate_quando = $info['fimContrato'];
 $nome_pais_time = $info['nomePaisTime']; //ok
 $bandeira_pais_time = $info['bandeiraPaisTime']; //ok
 $nivel_jogador = $info['Nivel'];
+$lesionado_ate = $info['lesionado_ate'] ?? null;
 
 
 if(isset($_SESSION['user_id']) && $donoPais == $_SESSION["user_id"]){
@@ -425,7 +426,11 @@ function level_distributor(){
 echo "<div id='quadro-container'>";
 echo "<div id='quadro-superior'>";
 echo "<div id='quadro-nomes'>";
-echo "<h2>" . $nome_jogador ." </h2>";
+echo "<h2>" . $nome_jogador;
+if (!empty($lesionado_ate) && strtotime($lesionado_ate) >= strtotime(date('Y-m-d'))) {
+    echo " <span class='stamp stamp-fim' style='background-color:#d32f2f; color:#fff;'><span class='material-symbols-outlined' style='font-size:0.8rem; vertical-align:middle;'>medical_services</span> Lesionado até " . date('d/m/Y', strtotime($lesionado_ate)) . "</span>";
+}
+echo " </h2>";
 if ($id_time == 0) {
     echo "<h3><span>".$time_jogador."</span></h3>";
 } else {
