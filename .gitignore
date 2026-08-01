@@ -20,8 +20,8 @@ competicoes/hexacolor/
 lib/jsvectormap-master/
 lib/leaflet-locationpicker/
 lib/htmlpurifier/
-jquery.soccerfield.js
-jquery.soccerfield.min.js
+js/jquery.soccerfield.js
+js/jquery.soccerfield.min.js
 
 # Data & Exports
 sqlitedb/
