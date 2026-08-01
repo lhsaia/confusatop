@@ -223,6 +223,7 @@ body {
 
 #tabelaPrincipal td.placar-celula {
   font-weight: 700;
+  white-space: nowrap !important;
 }
 
 /* Link de edição de placar */
@@ -238,6 +239,7 @@ body {
   padding: 4px 10px;
   border-radius: 6px;
   border: 1px solid rgba(2, 132, 199, 0.15);
+  white-space: nowrap !important;
 }
 
 .gameScore:hover {
@@ -256,6 +258,7 @@ body {
   border-radius: 6px !important;
   border: 1px solid rgba(100, 116, 139, 0.15) !important;
   cursor: default !important;
+  white-space: nowrap !important;
 }
 
 /* Badges de Status */
@@ -540,3 +543,70 @@ hr {
     text-align: left !important;
   }
 }
+
+/* ==========================================================================
+   Clickable Elements & Inline Buttons Custom Design (Premium Look)
+   ========================================================================== */
+.clickable {
+  cursor: pointer !important;
+}
+
+.inlineButton {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: rgba(0, 0, 0, 0.05) !important;
+  color: #475569 !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer !important;
+  font-size: 18px !important;
+  vertical-align: middle !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+.inlineButton:hover {
+  background: rgba(0, 0, 0, 0.1) !important;
+  transform: scale(1.1) translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Green style for save/confirm */
+.inlineButton.positive {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #10b981 !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+}
+.inlineButton.positive:hover {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Red style for delete/cancel */
+.inlineButton.negativo, .inlineButton.negative {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+.inlineButton.negativo:hover, .inlineButton.negative:hover {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3) !important;
+}
+
+/* Blue style for simular-btn (soccer ball) */
+.inlineButton.simular-btn {
+  background: rgba(2, 132, 199, 0.1) !important;
+  color: #0284c7 !important;
+  border-color: rgba(2, 132, 199, 0.25) !important;
+}
+.inlineButton.simular-btn:hover {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
+}
+
