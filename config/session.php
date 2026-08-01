@@ -40,6 +40,16 @@ $session_lifetime = 60 * 60 * 24 * 30; // 30 days
 ini_set('session.gc_maxlifetime', $session_lifetime);
 ini_set('session.cookie_lifetime', $session_lifetime);
 
+// Custom Garbage Collection: 1% de chance de limpar arquivos de sessão com mais de 30 dias
+if ($use_custom_path && mt_rand(1, 100) === 1) {
+    $now = time();
+    foreach (glob($session_dir . '/sess_*') as $file) {
+        if (is_file($file) && ($now - filemtime($file) > $session_lifetime)) {
+            @unlink($file);
+        }
+    }
+}
+
 // Retrieve default cookie parameters
 $params = session_get_cookie_params();
 

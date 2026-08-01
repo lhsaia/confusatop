@@ -179,6 +179,29 @@ class SQLiteDatabase{
             PRIMARY KEY(`Clube`)
         );
 
+        CREATE TABLE IF NOT EXISTS `escalacao_jogo` (
+            `Jogo`	int ( 10 ) NOT NULL,
+            `Clube`	int ( 5 ) NOT NULL,
+            `Jogador1`	int ( 5 ) NOT NULL,
+            `Jogador2`	int ( 5 ) NOT NULL,
+            `Jogador3`	int ( 5 ) NOT NULL,
+            `Jogador4`	int ( 5 ) NOT NULL,
+            `Jogador5`	int ( 5 ) NOT NULL,
+            `Jogador6`	int ( 5 ) NOT NULL,
+            `Jogador7`	int ( 5 ) NOT NULL,
+            `Jogador8`	int ( 5 ) NOT NULL,
+            `Jogador9`	int ( 5 ) NOT NULL,
+            `Jogador10`	int ( 5 ) NOT NULL,
+            `Jogador11`	int ( 5 ) NOT NULL,
+            `Capitao`	int ( 5 ) NOT NULL,
+            `Penalti1`	int ( 5 ) DEFAULT NULL,
+            `Penalti2`	int ( 5 ) DEFAULT NULL,
+            `Penalti3`	int ( 5 ) DEFAULT NULL,
+            `Indisponiveis`	text,
+            `PosicoesEscolhidas`	text,
+            PRIMARY KEY(`Jogo`,`Clube`)
+        );
+
         CREATE TABLE IF NOT EXISTS `elenco` (
             `Clube`	int ( 5 ) NOT NULL,
             `Jogador1`	int ( 5 ) NOT NULL,
@@ -321,6 +344,26 @@ class SQLiteDatabase{
 
         $this->conn->exec($query);
     }
+	
+	public function competitionParameters(){
+		
+		$query = "INSERT INTO parametros (ID,Nome,Gols,Faltas,Impedimentos,Cartoes,Chao,Alto,padrao) VALUES (1,'Padrão',10,10,5,5,1.0,1.0,1);
+			INSERT INTO paispadrao (ID_Parametro,PaisPadrao,ExibirBandeiras) VALUES (1,'-',1);
+			INSERT INTO opcoes (parametro,valor,valorLong) VALUES ('mostrarSumula',1,0),
+			 ('limitarLesoes',0,0),
+			 ('tempoLimite',180,0),
+			 ('dataLimite',0,0),
+			 ('VAR',1,0),
+			 ('substituicoes',3,0),
+			 ('paradas',3,0),
+			 ('subExtraProrrogacao',1,0),
+			 ('partidaCor1',-1,0),
+			 ('partidaCor2',-16777216,0),
+			 ('partidaCor3',-16777216,0),
+			 ('partidaData',NULL,1646612137092);";
+ 
+		$this->conn->exec($query);
+	}
 
     public function directRun($queryInsercao){
         $queryInsercao = htmlspecialchars(strip_tags($queryInsercao));
