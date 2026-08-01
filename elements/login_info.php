@@ -45,7 +45,19 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
             $_SESSION['admin_status'] = $admin_status;
             $_SESSION['loggedin'] = true;
 			$_SESSION['impersonated'] = true;
+			$_SESSION['avatar'] = $info_impersonation['avatar'] ?? null;
 			$_SESSION['emTestes'] = $usuario->emTestes($_SESSION['user_id']);
+
+			if (!$_SESSION['emTestes']) {
+				$stmtToken = $db->prepare("SELECT mcp_token FROM usuarios WHERE id = ?");
+				$stmtToken->execute([$_SESSION['user_id']]);
+				$mcpToken = $stmtToken->fetchColumn();
+				if (empty($mcpToken)) {
+					$newToken = bin2hex(random_bytes(16));
+					$stmtUpdateToken = $db->prepare("UPDATE usuarios SET mcp_token = ? WHERE id = ?");
+					$stmtUpdateToken->execute([$newToken, $_SESSION['user_id']]);
+				}
+			}
 
             if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {
     header("Location: " . $_POST['redirect']);
@@ -76,7 +88,19 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
             $_SESSION['admin_status'] = $admin_status;
             $_SESSION['loggedin'] = true;
 			$_SESSION['impersonated'] = false;
+			$_SESSION['avatar'] = $info_usuario['avatar'] ?? null;
 			$_SESSION['emTestes'] = $usuario->emTestes($_SESSION['user_id']);
+
+			if (!$_SESSION['emTestes']) {
+				$stmtToken = $db->prepare("SELECT mcp_token FROM usuarios WHERE id = ?");
+				$stmtToken->execute([$_SESSION['user_id']]);
+				$mcpToken = $stmtToken->fetchColumn();
+				if (empty($mcpToken)) {
+					$newToken = bin2hex(random_bytes(16));
+					$stmtUpdateToken = $db->prepare("UPDATE usuarios SET mcp_token = ? WHERE id = ?");
+					$stmtUpdateToken->execute([$newToken, $_SESSION['user_id']]);
+				}
+			}
 
             if(isset($_POST['remember'])){
 

@@ -357,9 +357,31 @@ if ('serviceWorker' in navigator) {
 
 
 <div id="hamburger-menu" class='no-capture'>
-  <a id="open-menu" class='menu-toggle-button no-capture'><span class="material-symbols-outlined no-capture">menu</span></a>
+  <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true): 
+    $avatar_to_show = !empty($_SESSION['avatar']) ? $_SESSION['avatar'] : '/images/default-user.png';
+  ?>
+    <a id="open-menu" class='menu-toggle-button logged-in no-capture'>
+      <img src="<?php echo htmlspecialchars($avatar_to_show); ?>" alt="Avatar" class="user-avatar-header" />
+      <span class="user-name-header"><?php echo htmlspecialchars($_SESSION['nomereal'] ?? $_SESSION['username'] ?? ''); ?></span>
+    </a>
+  <?php else: ?>
+    <a id="open-menu" class='menu-toggle-button no-capture'><span class="material-symbols-outlined no-capture">menu</span></a>
+  <?php endif; ?>
   <a id="close-menu" class='menu-toggle-button no-capture'><span class="material-symbols-outlined">close</span></a>
   <nav class="nav no-capture" id='nav'>
+    <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true): 
+      $avatar_to_show = !empty($_SESSION['avatar']) ? $_SESSION['avatar'] : '/images/default-user.png';
+      $is_admin = ($_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == false);
+      $role_label = $_SESSION['impersonated'] ? 'Admin impersonando' : ($is_admin ? 'Administrador' : 'Membro');
+    ?>
+      <div class="menu-profile-header">
+        <img src="<?php echo htmlspecialchars($avatar_to_show); ?>" alt="Avatar" class="menu-profile-avatar" />
+        <div class="menu-profile-info">
+          <span class="menu-profile-name"><?php echo htmlspecialchars($_SESSION['nomereal'] ?? $_SESSION['username'] ?? ''); ?></span>
+          <span class="menu-profile-role <?php echo $is_admin ? 'admin' : ''; ?>"><?php echo $role_label; ?></span>
+        </div>
+      </div>
+    <?php endif; ?>
     <a class="nav-item" href="/">Home</a>
 	<?php echo $my_menu ?>
     <?php echo "<a class='nav-item' onclick='{$onclick_log}'>{$title_log}</a>" ?>
