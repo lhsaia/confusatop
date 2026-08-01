@@ -18,7 +18,6 @@ class Estadio{
         $this->conn = $db;
     }
 
-    // criar time
     function create(){
 
         //escrever query
@@ -252,6 +251,66 @@ class Estadio{
 
       return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+	
+	
+	    function createSqlite(){
+
+        //escrever query
+        $query = "INSERT INTO
+                    estadio(ID, Nome, Capacidade, Clima, Altitude, Caldeirao)
+                VALUES 
+                    (:id,:nome,:capacidade,:clima,:altitude,:caldeirao) 
+				ON CONFLICT DO NOTHING";
+
+        $stmt = $this->conn->prepare($query);
+
+        // posted values
+		$this->id=htmlspecialchars(strip_tags($this->id));
+        $this->nome=htmlspecialchars(strip_tags($this->nome));
+        $this->capacidade=htmlspecialchars(strip_tags($this->capacidade));
+        $this->clima=htmlspecialchars(strip_tags($this->clima));
+        $this->altitude=htmlspecialchars(strip_tags($this->altitude));
+        $this->caldeirao=htmlspecialchars(strip_tags($this->caldeirao));
+        
+        if($this->altitude == "false"){
+            $this->altitude = 0;
+        } else if ($this->altitude == "true"){
+            $this->altitude = 1;
+        }
+        
+        if($this->caldeirao == "false"){
+            $this->caldeirao = 0;
+        } else if ($this->caldeirao == "true"){
+            $this->caldeirao = 1;
+        }
+
+
+        // bind values
+		$stmt->bindParam(":id", $this->id);
+        $stmt->bindParam(":nome", $this->nome);
+        $stmt->bindParam(":capacidade", $this->capacidade);
+        $stmt->bindParam(":clima", $this->clima);
+        $stmt->bindParam(":altitude", $this->altitude);
+        $stmt->bindParam(":caldeirao", $this->caldeirao);
+
+        if($stmt->execute()){
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+	
+	function carregarListaEstadiosSqlite(){
+	
+		
+		$query = "SELECT ID, Nome FROM estadio";
+        $stmt = $this->conn->prepare( $query );
+
+        $stmt->execute();
+		return $stmt;
+		
+	}
 
 
 

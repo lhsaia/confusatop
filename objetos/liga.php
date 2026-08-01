@@ -95,33 +95,39 @@ class Liga
     // used for paging products
     public function countAll($idDonoPais = null, $idFederacao = null, $idPais = null)
     {
+        $idDonoPais = !empty($idDonoPais) ? htmlspecialchars(strip_tags($idDonoPais)) : null;
+        $idFederacao = !empty($idFederacao) ? htmlspecialchars(strip_tags($idFederacao)) : null;
+        $idPais = !empty($idPais) ? htmlspecialchars(strip_tags($idPais)) : null;
 
-        $idDonoPais = htmlspecialchars(strip_tags($idDonoPais));
+        $query = "";
+        $params = [];
 
-        if ($idDonoPais == null && $idFederacao == null && $idPais == null) {
-
-            $query = "SELECT id FROM " . $this->table_name . "";
-
-        } else if ($idFederacao == null && $idPais == null) {
-
+        if ($idDonoPais === null && $idFederacao === null && $idPais === null) {
+            $query = "SELECT id FROM " . $this->table_name;
+        } else if ($idFederacao === null && $idPais === null) {
             $query = "SELECT a.id
                      FROM " . $this->table_name . " a
                       LEFT JOIN paises p ON a.pais = p.id
-                       WHERE p.dono =" . $idDonoPais;
-
-        } else if ($idDonoPais == null && $idPais == null) {
+                       WHERE p.dono = :idDonoPais";
+            $params[':idDonoPais'] = $idDonoPais;
+        } else if ($idDonoPais === null && $idPais === null) {
             $query = "SELECT a.id
         FROM " . $this->table_name . " a
          LEFT JOIN paises p ON a.pais = p.id
-          WHERE p.federacao =" . $idFederacao;
-        } else if ($idDonoPais == null && $idFederacao == null) {
+          WHERE p.federacao = :idFederacao";
+            $params[':idFederacao'] = $idFederacao;
+        } else if ($idDonoPais === null && $idFederacao === null) {
             $query = "SELECT a.id
         FROM " . $this->table_name . " a
          LEFT JOIN paises p ON a.pais = p.id
-          WHERE p.id =" . $idPais;
+          WHERE p.id = :idPais";
+            $params[':idPais'] = $idPais;
         }
 
         $stmt = $this->conn->prepare($query);
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val);
+        }
         $stmt->execute();
 
         $num = $stmt->rowCount();

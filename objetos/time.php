@@ -1613,21 +1613,22 @@ function getDono($idClube){
 
 function readExtraInfo($id){
 
-        $id = htmlspecialchars(strip_tags($id));
+    $id = htmlspecialchars(strip_tags($id));
+    if (!is_numeric($id)) {
+        $id = 0;
+    }
 
     $query = "SELECT
                 apelido, fundacao, cidade, patrocinio, material_esportivo, titulos, sobre_titulo, sobre_subtitulo, sobre_texto, mascote    
             FROM
                 " . $this->table_name . " a
             WHERE
-                a.id={$id}";
+                a.id = :id";
 
     $stmt = $this->conn->prepare( $query );
+    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
     $stmt->execute();
     $info = $stmt->fetch(PDO::FETCH_ASSOC);
-
-
-
 
     return $info;
 

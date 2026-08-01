@@ -396,5 +396,104 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
         return $nome . " " . $sobrenome;
         //return $origemNomes . "- " . $origemSobrenomes . "- " . $nomeDuplo;
     }
+	
+	function inserirArbitrosCompeticao($comp_id){
+		
+	}
+	
+	function read($nivelMinimo, $federacao){
+		
+	$nivelMinimo = htmlspecialchars(strip_tags($nivelMinimo));
+	$federacao = htmlspecialchars(strip_tags($federacao));
+	
+	if($federacao != 0){
+		$subquery = "AND p.federacao = :federacao ";
+	} else {
+		$subquery = "";
+	}
+
+    $query = "SELECT
+                a.id, a.nomeArbitro, a.nomeAuxiliarUm, a.nomeAuxiliarDois, a.estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.nivel, a.nascimento, FLOOR((DATEDIFF(CURDATE(), a.nascimento))/365) as idade, a.ativo 
+            FROM
+                " . $this->table_name . " a
+            LEFT JOIN paises p ON a.pais = p.id
+			WHERE a.nivel >= :nivelMinimo AND a.ativo = 1 ".$subquery." AND p.ranqueavel = 0 
+            ORDER BY
+                a.nomeArbitro ASC";
+
+    $stmt = $this->conn->prepare( $query );
+	$stmt->bindParam(":nivelMinimo",$nivelMinimo);
+	if($federacao != 0){
+		$stmt->bindParam(":federacao",$federacao);
+	}
+    $stmt->execute();
+
+    return $stmt;
+    
+	}
+	
+	function createSqlite(){
+
+        //escrever query
+        $query = "INSERT INTO
+                    trioarbitragem(ID, Arbitro, Auxiliar1, Auxiliar2, Estilo)
+                VALUES
+                    (:id,:arbitro,:auxiliar1,:auxiliar2,:estilo)
+					ON CONFLICT DO NOTHING";
+
+        $stmt = $this->conn->prepare($query);
+
+        // posted values
+		$this->id=htmlspecialchars(strip_tags($this->id));
+        //$this->nomeArbitro=htmlspecialchars(strip_tags($this->nomeArbitro));
+        //$this->nomeAuxiliarUm=htmlspecialchars(strip_tags($this->nomeAuxiliarUm));
+        //$this->nomeAuxiliarDois=htmlspecialchars(strip_tags($this->nomeAuxiliarDois));
+        $this->estilo=htmlspecialchars(strip_tags($this->estilo));
+		
+        // bind values
+		$stmt->bindParam(":id", $this->id);
+        $stmt->bindParam(":arbitro", $this->nomeArbitro);
+        $stmt->bindParam(":auxiliar1", $this->nomeAuxiliarUm);
+        $stmt->bindParam(":auxiliar2", $this->nomeAuxiliarDois);
+        $stmt->bindParam(":estilo", $this->estilo);
+
+
+        if($stmt->execute()){
+            return true;
+        } else {
+            return false;
+        }
+
+    
+	}
+	
+	function carregarListaArbitrosSqlite(){
+	
+		
+		$query = "SELECT ID, Arbitro, Auxiliar1, Auxiliar2, Estilo FROM trioarbitragem";
+        $stmt = $this->conn->prepare( $query );
+
+        $stmt->execute();
+		return $stmt;
+		
+	}
+	
+	function getTrioArbitragem($idArbitragem){
+		$idArbitragem = htmlspecialchars(strip_tags($idArbitragem));
+
+    $query = "SELECT
+                nomeArbitro, nomeAuxiliarUm, nomeAuxiliarDois  
+            FROM
+                " . $this->table_name . " 
+			WHERE id = :id";
+
+    $stmt = $this->conn->prepare( $query );
+	$stmt->bindParam(":id",$idArbitragem);
+    $stmt->execute();
+	$result = $stmt->fetch(PDO::FETCH_ASSOC);
+	
+
+    return $result;
+	}
 }
 ?>

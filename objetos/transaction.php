@@ -54,19 +54,19 @@ class Transaction{
 			$out_filters .= " AND data < :endDate3 ";
 		} 
 		
-		$query = "SELECT *, f.nome FROM (SELECT * FROM (SELECT financeiro.id as trans_id, data, tipo_movimentacao, fluxo_caixa, valor, comentario, 'transactions' as tableFrom FROM " . $this->table_name . " WHERE time =:idTime " . $filters .
+		$query = "SELECT *, f.nome FROM (SELECT * FROM (SELECT financeiro.id as trans_id, data, tipo_movimentacao, fluxo_caixa, (CASE WHEN fluxo_caixa = '0' THEN valor * -1 ELSE valor END) as valor, comentario, 'transactions' as tableFrom FROM " . $this->table_name . " WHERE time =:idTime " . $filters .
 		" UNION 
 		SELECT transferencias.ID as trans_id, data, '1' as tipo_movimentacao, '1' as fluxo_caixa, transferencias.valor  , CONCAT('Transferência de ', jogador.Nome, ' (', clube.Nome, '-', paises.sigla , ')') as comentario, 'transferences_in' as tableFrom FROM transferencias 
 		LEFT JOIN clube ON clube.ID = transferencias.clubeDestino 
 		LEFT JOIN jogador ON jogador.ID = transferencias.jogador
 		LEFT JOIN paises ON paises.ID = clube.pais 
-		WHERE clubeDestino <> '0' AND  clubeOrigem = :idTime2 " . $in_filters . 
+		WHERE clubeDestino <> '0' AND status_execucao = 1 AND clubeOrigem = :idTime2 " . $in_filters . 
 		" UNION 
 		SELECT transferencias.ID as trans_id, data, '1' as tipo_movimentacao, '0' as fluxo_caixa, transferencias.valor * -1, CONCAT('Transferência de ', jogador.Nome, ' (', clube.Nome, '-', paises.sigla , ')') as comentario, 'transferences_out' as tableFrom FROM transferencias 
 		LEFT JOIN clube ON clube.ID = transferencias.clubeOrigem
 		LEFT JOIN jogador ON jogador.ID = transferencias.jogador
 		LEFT JOIN paises ON paises.ID = clube.pais 
-		WHERE clubeOrigem <> '0' AND clubeDestino = :idTime3 " . $out_filters .") t1 " . $tr_filters .") t2 LEFT JOIN financeiro_opcoes f ON f.id = t2.tipo_movimentacao ORDER BY data";
+		WHERE clubeOrigem <> '0' AND status_execucao = 1 AND clubeDestino = :idTime3 " . $out_filters .") t1 " . $tr_filters .") t2 LEFT JOIN financeiro_opcoes f ON f.id = t2.tipo_movimentacao ORDER BY data DESC";
 		
 		$stmt = $this->conn->prepare( $query );
 		$stmt->bindParam(":idTime", $teamId);

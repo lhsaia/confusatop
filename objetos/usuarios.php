@@ -38,7 +38,7 @@ class Usuario{
         $name = htmlspecialchars(strip_tags($name));
         //select all data
         $query = "SELECT
-                    senha, nome, admin_status
+                    senha, nome, admin_status, avatar
                 FROM
                     " . $this->table_name . "
                 WHERE

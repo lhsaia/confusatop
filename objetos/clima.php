@@ -23,7 +23,6 @@ class Clima{
         $this->conn = $db;
     }
 
-    // criar time
     function create(){
 
         //escrever query
@@ -128,31 +127,44 @@ return $num;
 
     }
 
-    //alterar jogador
-    function alterar($idRecebida,$nomeJogadorRec,$nomeAux1Rec,$nomeAux2Rec,$cobradorFaltaRec,$paisRec = 0){
+    //alterar clima
+    function alterar($id, $nome, $tempVerao, $estiloVerao, $tempOutono, $estiloOutono, $tempInverno, $estiloInverno, $tempPrimavera, $estiloPrimavera, $hemisferio, $pais){
 
-        // $idRecebida = htmlspecialchars(strip_tags($idRecebida));
-        // $nomeJogadorRec = htmlspecialchars(strip_tags($nomeJogadorRec));
-        // $nomeAux1Rec = htmlspecialchars(strip_tags($nomeAux1Rec));
-        // $nomeAux2Rec = htmlspecialchars(strip_tags($nomeAux2Rec));
-        // $cobradorFaltaRec = htmlspecialchars(strip_tags($cobradorFaltaRec));
-        // $paisRec = htmlspecialchars(strip_tags($paisRec));
+        $id = htmlspecialchars(strip_tags($id));
+        $nome = htmlspecialchars(strip_tags($nome));
+        $tempVerao = htmlspecialchars(strip_tags($tempVerao));
+        $estiloVerao = htmlspecialchars(strip_tags($estiloVerao));
+        $tempOutono = htmlspecialchars(strip_tags($tempOutono));
+        $estiloOutono = htmlspecialchars(strip_tags($estiloOutono));
+        $tempInverno = htmlspecialchars(strip_tags($tempInverno));
+        $estiloInverno = htmlspecialchars(strip_tags($estiloInverno));
+        $tempPrimavera = htmlspecialchars(strip_tags($tempPrimavera));
+        $estiloPrimavera = htmlspecialchars(strip_tags($estiloPrimavera));
+        $hemisferio = htmlspecialchars(strip_tags($hemisferio));
+        $pais = htmlspecialchars(strip_tags($pais));
 
-        // $query = "UPDATE " . $this->table_name . " SET nomeJogador = ?, nascimento = ?, mentalidade = ?, cobradorFalta = ?, pais = ? WHERE id = ?";
-        // $stmt = $this->conn->prepare( $query );
+        $query = "UPDATE " . $this->table_name . " SET Nome=:nome, TempVerao=:tempVerao, EstiloVerao=:estiloVerao, TempOutono=:tempOutono, EstiloOutono=:estiloOutono, TempInverno=:tempInverno, EstiloInverno=:estiloInverno, TempPrimavera=:tempPrimavera, EstiloPrimavera=:estiloPrimavera, Hemisferio=:hemisferio, Pais=:pais WHERE ID=:id";
+        
+        $stmt = $this->conn->prepare($query);
 
-        // $stmt->bindParam(1, $nomeJogadorRec);
-        // $stmt->bindParam(2, $nomeAux1Rec);
-        // $stmt->bindParam(3, $nomeAux2Rec);
-        // $stmt->bindParam(4, $cobradorFaltaRec);
-        // $stmt->bindParam(5, $paisRec);
-        // $stmt->bindParam(6, $idRecebida);
+        $stmt->bindParam(":nome", $nome);
+        $stmt->bindParam(":tempVerao", $tempVerao);
+        $stmt->bindParam(":estiloVerao", $estiloVerao);
+        $stmt->bindParam(":tempOutono", $tempOutono);
+        $stmt->bindParam(":estiloOutono", $estiloOutono);
+        $stmt->bindParam(":tempInverno", $tempInverno);
+        $stmt->bindParam(":estiloInverno", $estiloInverno);
+        $stmt->bindParam(":tempPrimavera", $tempPrimavera);
+        $stmt->bindParam(":estiloPrimavera", $estiloPrimavera);
+        $stmt->bindParam(":hemisferio", $hemisferio);
+        $stmt->bindParam(":pais", $pais);
+        $stmt->bindParam(":id", $id);
 
-        // if($stmt->execute()){
-        //     return true;
-        // } else {
-        //     return false;
-        // }
+        if($stmt->execute()){
+            return true;
+        } else {
+            return false;
+        }
 
     }
 
@@ -238,5 +250,50 @@ return $num;
 
           return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
+		
+		    function createSqlite(){
+
+        //escrever query
+        $query = "INSERT INTO
+                    clima(ID, Nome, TempVerao, EstiloVerao, TempOutono, EstiloOutono, TempInverno, EstiloInverno, TempPrimavera, EstiloPrimavera, Hemisferio)
+                VALUES
+                    (:id,:nome,:tempVerao,:estiloVerao,:tempOutono,:estiloOutono,:tempInverno,:estiloInverno,:tempPrimavera,:estiloPrimavera,:hemisferio)
+					ON CONFLICT DO NOTHING";
+
+        $stmt = $this->conn->prepare($query);
+
+        // posted values
+		$this->id=htmlspecialchars(strip_tags($this->id));
+        $this->nome=htmlspecialchars(strip_tags($this->nome));
+        $this->tempVerao=htmlspecialchars(strip_tags($this->tempVerao));
+        $this->estiloVerao=htmlspecialchars(strip_tags($this->estiloVerao));
+        $this->tempOutono=htmlspecialchars(strip_tags($this->tempOutono));
+        $this->estiloOutono=htmlspecialchars(strip_tags($this->estiloOutono));
+        $this->tempInverno=htmlspecialchars(strip_tags($this->tempInverno));
+        $this->estiloInverno=htmlspecialchars(strip_tags($this->estiloInverno));
+        $this->tempPrimavera=htmlspecialchars(strip_tags($this->tempPrimavera));
+        $this->estiloPrimavera=htmlspecialchars(strip_tags($this->estiloPrimavera));
+        $this->hemisferio=htmlspecialchars(strip_tags($this->hemisferio));
+
+        // bind values
+		$stmt->bindParam(":id", $this->id);
+        $stmt->bindParam(":nome", $this->nome);
+        $stmt->bindParam(":tempVerao", $this->tempVerao);
+        $stmt->bindParam(":estiloVerao", $this->estiloVerao);
+        $stmt->bindParam(":tempOutono", $this->tempOutono);
+        $stmt->bindParam(":estiloOutono", $this->estiloOutono);
+        $stmt->bindParam(":tempInverno", $this->tempInverno);
+        $stmt->bindParam(":estiloInverno", $this->estiloInverno);
+        $stmt->bindParam(":tempPrimavera", $this->tempPrimavera);
+        $stmt->bindParam(":estiloPrimavera", $this->estiloPrimavera);
+        $stmt->bindParam(":hemisferio", $this->hemisferio);
+
+        if($stmt->execute()){
+            return true;
+        } else {
+            return false;
+        }
+
+    }
 }
 ?>

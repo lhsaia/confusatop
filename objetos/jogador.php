@@ -1786,7 +1786,7 @@ return $stmt;
 
             $idJogador = htmlspecialchars(strip_tags($idJogador));
 
-            $queryBase = "SELECT j.Nome as nome, j.Pais as idPais, j.Nascimento as nascimento, j.StringPosicoes as stringPosicoes, j.valor, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as idade, p.bandeira as bandeiraPais, p.nome as Pais, j.Marcacao, j.Desarme, j.VisaoJogo, j.Movimentacao, j.Cruzamentos, j.Cabeceamento, j.Tecnica, j.ControleBola, j.Finalizacao, j.FaroGol, j.Velocidade, j.Forca, j.Reflexos, j.Seguranca, j.Saidas, j.JogoAereo, j.Lancamentos, j.DefesaPenaltis, j.Nivel, j.foto, p.dono as donoPais FROM jogador j LEFT JOIN paises p ON j.Pais = p.id WHERE j.ID = ?";
+            $queryBase = "SELECT j.Nome as nome, j.Pais as idPais, j.Nascimento as nascimento, j.StringPosicoes as stringPosicoes, j.valor, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as idade, p.bandeira as bandeiraPais, p.nome as Pais, j.Marcacao, j.Desarme, j.VisaoJogo, j.Movimentacao, j.Cruzamentos, j.Cabeceamento, j.Tecnica, j.ControleBola, j.Finalizacao, j.FaroGol, j.Velocidade, j.Forca, j.Reflexos, j.Seguranca, j.Saidas, j.JogoAereo, j.Lancamentos, j.DefesaPenaltis, j.Nivel, j.foto, p.dono as donoPais, j.lesionado_ate FROM jogador j LEFT JOIN paises p ON j.Pais = p.id WHERE j.ID = ?";
             $stmt = $this->conn->prepare($queryBase);
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
@@ -1797,7 +1797,7 @@ return $stmt;
                     'bandeiraPais' => '', 'Pais' => '', 'Marcacao' => 0, 'Desarme' => 0, 'VisaoJogo' => 0, 'Movimentacao' => 0,
                     'Cruzamentos' => 0, 'Cabeceamento' => 0, 'Tecnica' => 0, 'ControleBola' => 0, 'Finalizacao' => 0, 'FaroGol' => 0,
                     'Velocidade' => 0, 'Forca' => 0, 'Reflexos' => 0, 'Seguranca' => 0, 'Saidas' => 0, 'JogoAereo' => 0,
-                    'Lancamentos' => 0, 'DefesaPenaltis' => 0, 'Nivel' => 0, 'foto' => '', 'donoPais' => 0
+                    'Lancamentos' => 0, 'DefesaPenaltis' => 0, 'Nivel' => 0, 'foto' => '', 'donoPais' => 0, 'lesionado_ate' => null
                 ];
             }
 
