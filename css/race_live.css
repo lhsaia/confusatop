@@ -847,7 +847,7 @@ body{
   font-weight: bold;
 }
 
-.editable-race{
+.editable-race, .see-race{
   width: 30px;
   height: 30px;
   color:black;
@@ -1115,6 +1115,8 @@ margin-top:15px;
 
 #competition-big-logo{
 	padding:40px;
+	max-height:80%;
+	max-width:100%;
 }
 
 #resim{
@@ -1122,6 +1124,15 @@ margin-top:15px;
 	padding:5px;
 	border-radius:5px;
 	margin:5px;
+}
+
+#bck_lap, #fwd_lap, #replay-race{
+	width:40px;
+	padding:5px;
+	border-radius:5px;
+	margin:5px;
+	background-color:white;
+	color:black;
 }
 
 #circuit-selection, #competition-selection, #race-scheduled-date, #race-scheduled-time {
@@ -1210,3 +1221,39 @@ margin-top:15px;
 	border:dashed 3px black;
 }
 
+#botaoPaginaStressTest{
+	border-radius:5px;
+	background-color: red;
+	color:black;
+	font-size:90%;
+	width: 120px;
+	padding:5px;
+	margin:5px;
+	border:dotted 2px black;
+}
+
+
+.triangle-up {
+	width: 20px;
+    height: 20px;
+    background: conic-gradient(at 50% 10%,transparent 135deg,lightgreen 0,lightgreen 225deg, transparent 0);
+	text-align:center;
+	color:darkgreen;
+	font-weight:bold;
+	vertical-align: bottom;
+}
+
+
+.triangle-down {
+	width: 20px;
+    height: 20px;
+    background: conic-gradient(at 50% 90%,red 45deg,transparent 0, transparent 315deg, red 0);
+	text-align:center;
+	color:darkred;
+	font-weight:bold;
+	vertical-align: top;
+}
+
+.no-show{
+	color:transparent;
+}

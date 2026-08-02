@@ -1,0 +1,194 @@
+/* ==========================================================================
+   CONFUSA.top - Preferências da Conta / Alterar Senha Redesign
+   ========================================================================== */
+
+.pref-card {
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 18px !important;
+  padding: 2.5rem !important;
+  max-width: 650px;
+  margin: 2rem auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.pref-card:hover {
+  border-color: rgba(56, 189, 248, 0.4) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(56, 189, 248, 0.2);
+}
+
+.pref-title {
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 700;
+  font-size: 1.75rem;
+  color: #f8fafc;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+}
+
+/* Alert styling inside preferences */
+.alert {
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.9rem;
+  position: relative;
+}
+
+.alert-success {
+  background: rgba(52, 211, 153, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(52, 211, 153, 0.3) !important;
+}
+
+.alert-danger {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+.alert-btn .closebtn {
+  position: absolute;
+  top: 12px;
+  right: 15px;
+  color: inherit;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.alert-btn .closebtn:hover {
+  color: #fff;
+}
+
+/* Inputs styling */
+.pref-card label {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+  margin-top: 15px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.pref-card input[type="text"],
+.pref-card input[type="password"],
+.pref-card input[type="file"] {
+  width: 100% !important;
+  height: 44px !important;
+  padding: 10px 14px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 8px !important;
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.9rem !important;
+  color: #f8fafc !important;
+  outline: none !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box;
+}
+
+.pref-card input[type="text"]:focus,
+.pref-card input[type="password"]:focus {
+  border-color: #38bdf8 !important;
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15) !important;
+}
+
+.pref-card input[type="text"]:disabled {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+  color: #64748b !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+  cursor: not-allowed;
+}
+
+/* Section dividers */
+.pref-section-title {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-family: 'Kanit', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pref-section-subtitle {
+  font-weight: normal;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-left: auto;
+}
+
+/* Primary Button styling */
+.pref-card .btn-submit {
+  height: 48px !important;
+  background-color: #38bdf8 !important;
+  color: #0f172a !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25) !important;
+  transition: all 0.25s ease !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pref-card .btn-submit:hover {
+  background-color: #7dd3fc !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(56, 189, 248, 0.4) !important;
+}
+
+/* Details and helper text */
+.pref-card details {
+  margin-top: 20px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s;
+}
+
+.pref-card details[open] {
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+.pref-card summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #38bdf8;
+  outline: none;
+  user-select: none;
+}
+
+.pref-card ol {
+  margin: 8px 0 15px 20px;
+  padding: 0;
+}
+
+.pref-card li {
+  margin-bottom: 6px;
+}
+
+/* Hide background animations from old index design */
+.bg {
+  display: none !important;
+}

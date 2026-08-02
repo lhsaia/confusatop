@@ -1,378 +1,380 @@
-h2{
-    padding-left:20px;
+h2 {
+    padding-left: 20px;
 }
 
-.thumb{
-    height:35px;
+.thumb {
+    height: 35px;
 }
 
-.playerThumb{
-	height: 55px;
+.playerThumb {
+    height: 55px;
 }
 
-.stadiumThumb{
-	height: 100px;
+.stadiumThumb {
+    height: 100px;
 }
 
-.inputHerdeiro{
-    color:inherit;
-    font-size:inherit;
-    font-family:inherit;
-    padding-left:3px;
-    background-color:#FFFFE0;
+.inputHerdeiro {
+    color: inherit;
+    font-size: inherit;
+    font-family: inherit;
+    padding-left: 3px;
+    background-color: #FFFFE0;
     border: 1px solid gray;
 }
 
-.capacidade{
-	width: 95px !important;
+.capacidade {
+    width: 95px !important;
 }
 
-.transpBack{
+.transpBack {
     background-color: none;
-    background:none;
-    border:0;
+    background: none;
+    border: 0;
     appearance: none;
-    font-size:inherit;
-    color:inherit;
-    text-align:center;
+    font-size: inherit;
+    color: inherit;
+    text-align: center;
 }
 
-.nascimentoEditavel{
-    font-family:inherit;
-    color:inherit;
-    font-size:inherit;
+.nascimentoEditavel {
+    font-family: inherit;
+    color: inherit;
+    font-size: inherit;
 }
 
-td:nth-child(2){
-    text-align:center;
+td:nth-child(2) {
+    text-align: center;
 }
 
-body{
-    margin-bottom:80px;
+body {
+    margin-bottom: 80px;
 }
 
-fieldset{
+fieldset {
     border: 3px solid navy;
-    border-radius:10px;
-    
+    border-radius: 10px;
+
 }
 
-.chartContainer{
-    width:100%;
-    min-width:150px;
-    height:35px;
-    border:1px solid navy;
-    max-height:35px;
-    max-width:150px;
+.chartContainer {
+    width: 100%;
+    min-width: 150px;
+    height: 35px;
+    border: 1px solid navy;
+    max-height: 35px;
+    max-width: 150px;
 }
 
-tbody tr.tipo-1{
-    background-color:rgba(0, 127, 247, 0.3);
-}
-  
-
-tbody tr.tipo0{
-    background-color:rgba(175, 175, 175, 0.3);
+tbody tr.tipo-1 {
+    background-color: rgba(0, 127, 247, 0.3);
 }
 
-tbody tr.tipo1{
-    background-color:rgba(75, 224, 16, 0.3);
+
+tbody tr.tipo0 {
+    background-color: rgba(175, 175, 175, 0.3);
 }
 
-tbody tr.tipo3{
-    background-color:rgba(253, 52, 52, 0.3);
+tbody tr.tipo1 {
+    background-color: rgba(75, 224, 16, 0.3);
 }
 
-tbody tr.tipo2{
-    background-color:rgba(248, 227, 33, 0.3);
+tbody tr.tipo3 {
+    background-color: rgba(253, 52, 52, 0.3);
 }
 
-.propostaspendentes{
-    position:absolute;
-    height:50px;
-	border-width: 6px;
-    width:50px;
-    border-radius:50%;
-    background-color:white;
+tbody tr.tipo2 {
+    background-color: rgba(248, 227, 33, 0.3);
+}
+
+.propostaspendentes {
+    position: absolute;
+    height: 50px;
+    border-width: 6px;
+    width: 50px;
+    border-radius: 50%;
+    background-color: white;
     border: 1px navy solid;
-    top:20px;
-    left:calc(50% - 25px);
-    color:navy;
-    line-height:50px;
-    font-size:30px;
+    top: 20px;
+    left: calc(50% - 25px);
+    color: navy;
+    line-height: 50px;
+    font-size: 30px;
     font-weight: bold;
-	text-align:center;
+    text-align: center;
 
 }
 
-.inlineButton{
-    margin:2px;
-    padding:10px;
-    width:15px;
-    height:15px;
-    float:left;
+.inlineButton {
+    margin: 2px;
+    padding: 10px;
+    width: 15px;
+    height: 15px;
+    float: left;
     background-color: navy;
-    color:white;
-    border-radius:10px;
+    color: white;
+    border-radius: 10px;
 }
 
-.negative{
-    background-color:red;
+.negative {
+    background-color: red;
 }
 
-.positive{
-    background-color:green;
+.positive {
+    background-color: green;
 }
 
-.editavel{
+.editavel {
     background-color: lightyellow;
     padding: 10px;
     border: 1px solid gray;
 }
 
 
-.minithumb{
-    height:15px;
-    padding-right:5px;
+.minithumb {
+    height: 15px;
+    padding-right: 5px;
 }
 
-.smallthumb{
-    height:25px;
+.smallthumb {
+    height: 25px;
 }
 
 
-#tempoDesatualizado{
-    font-size:30px;
-    position:absolute;
-    height:40px;
-    width:40px;
-    background-color:white;
+#tempoDesatualizado {
+    font-size: 30px;
+    position: absolute;
+    height: 40px;
+    width: 40px;
+    background-color: white;
     border: 3px navy solid;
     outline: 2px white solid;
-    left:calc(50% - 20px);
-	top: 20px;
-    color:navy;
-    line-height:35px;
-    display:flex;
+    left: calc(50% - 20px);
+    top: 20px;
+    color: navy;
+    line-height: 35px;
+    display: flex;
     align-items: center;
     justify-content: center;
 
 }
 
-#tempoDesatualizado i{
-    position:absolute;
-    top:5px;
+#tempoDesatualizado i {
+    position: absolute;
+    top: 5px;
 }
 
-#propostas{
-    position:relative;
+#propostas {
+    position: relative;
 }
 
 
 
-#importar_time{
-    width:150px;
-    height:50px;
+#importar_time {
+    width: 150px;
+    height: 50px;
     border-radius: 10px;
-    background-color:navy;
-    color:white;
-    font-size:110%;
-    float:right;
-    margin:0;
-    text-align:center;
+    background-color: navy;
+    color: white;
+    font-size: 110%;
+    float: right;
+    margin: 0;
+    text-align: center;
     line-height: 50px;
-    padding:0;
-    margin-right:20px;
+    padding: 0;
+    margin-right: 20px;
 }
 
-.quadro{
-    border-radius:10px;
-    height:50px;
-    width:200px;
-    background-color:navy;
-    color:white;
-    margin:20px;
-    line-height:50px;
-    text-align:center;
+.quadro {
+    border-radius: 10px;
+    height: 50px;
+    width: 200px;
+    background-color: navy;
+    color: white;
+    margin: 20px;
+    line-height: 50px;
+    text-align: center;
 }
 
-#quadro-exportar{
-    line-height:50px;
-    position:relative;
+#quadro-exportar {
+    line-height: 50px;
+    position: relative;
 }
 
-.export_denied{
-    background-color:darkred;
+.export_denied {
+    background-color: darkred;
 }
-.export_successful{
-    background-color:darkgreen;
+
+.export_successful {
+    background-color: darkgreen;
 }
 
 
-.hiddenInput{
+.hiddenInput {
     font-size: 100px;
     position: absolute;
     left: 0;
     top: 0;
-    opacity: 0;
+    opacity: 0 !important;
+    display: inline-block;
 }
 
-.editableThumb{
-    background-color:lightyellow;
+.editableThumb {
+    background-color: lightyellow;
     border: 1px gray solid;
 
 }
 
-.imageUpload{
+.imageUpload {
     position: relative;
     overflow: hidden;
     display: inline-block;
 }
 
-.disabled{
-    background-color:gray;
-    color:lightgray;
+.disabled {
+    background-color: gray;
+    color: lightgray;
 }
 
-#quadro-container{
-    position:absolute;
-    left:50%;
-    top:50%;
+#quadro-container {
+    position: absolute;
+    left: 50%;
+    top: 50%;
     transform: translate(-50%, -50%);
 }
 
-.quadrado-uniforme{
-    width:20px;
-    height:20px;
+.quadrado-uniforme {
+    width: 20px;
+    height: 20px;
     border: 1px black solid;
-    margin:1px;
-    position:relative;
+    margin: 1px;
+    position: relative;
     overflow: hidden;
     display: inline-block;
 }
 
-input[type="color"]{
-    opacity:1;
-    width:19px;
-    height:19px;
+input[type="color"] {
+    opacity: 1;
+    width: 19px;
+    height: 19px;
     border: none;
     outline: none;
-    margin:0;
-    padding:0;
+    margin: 0;
+    padding: 0;
 
 }
 
-.celula-uniforme{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
+.celula-uniforme {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
 }
 
-.form-titulo{
+.form-titulo {
     font-weight: bold;
-    font-size:120%;
-    padding-left:20px;
-    padding-top:20px;
+    font-size: 120%;
+    padding-left: 20px;
+    padding-top: 20px;
 
 }
 
-.longdiv{
-    width:100%;
+.longdiv {
+    width: 100%;
 }
 
 .longdiv input {
-    float:left;
-    width:auto;
-    margin:0 50px 0 20px;
+    float: left;
+    width: auto;
+    margin: 0 50px 0 20px;
 }
 
-.table-titulo{
+.table-titulo {
     font-weight: bold;
-    font-size:110%;
-    padding-left:30px;
-    padding-top:10px;
+    font-size: 110%;
+    padding-left: 30px;
+    padding-top: 10px;
 
 }
 
-input[type="checkbox"]{
-    margin-right:20px;
+input[type="checkbox"] {
+    margin-right: 20px;
     transform: scale(1.5);
 }
 
-.bold{
+.bold {
     font-weight: bold;
 }
 
-.centeredCheckbox{
-    
-    position:absolute;
-    top:50%;
-    left:50%;
+.centeredCheckbox {
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
 
 }
 
-#alterarOpcoes{
+#alterarOpcoes {
     width: 100px;
     height: 46px;
-    cursor:pointer;
+    cursor: pointer;
 }
 
-#alterarOpcoes:hover{
+#alterarOpcoes:hover {
     opacity: 0.8;
 }
 
-input[type="number"]{
-    margin-right:1px;
+input[type="number"] {
+    margin-right: 1px;
     border: 1px gray;
-    border-style:groove;
+    border-style: groove;
     width: 35px;
     height: 35px;
 }
 
-#inputTempoLesao{
-    width:100%;
+#inputTempoLesao {
+    width: 100%;
     border: 1px lightgray solid;
-    height:46px;
+    height: 46px;
 }
 
-.clickable{
-    cursor:pointer;
+.clickable {
+    cursor: pointer;
 }
 
-#config{
+#config {
     line-height: 150px;
-    font-size:145px;
+    font-size: 145px;
 }
 
-.inlineButton{
-    margin:2px;
-    padding:10px;
-    width:15px;
-    height:15px;
-    float:left;
-    color:white;
-    border-radius:10px;
-    display:flex;
-    align-items:center;
+.inlineButton {
+    margin: 2px;
+    padding: 10px;
+    width: 15px;
+    height: 15px;
+    float: left;
+    color: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
     justify-content: center;
 }
 
-.positivo{
+.positivo {
     background-color: green;
 }
 
-.negativo{
+.negativo {
     background-color: red;
 }
 
-.amarelo{
+.amarelo {
     background-color: goldenrod;
 }
 
 
 
-.nomeEditavel{
+.nomeEditavel {
     width: 85%;
     padding: 12px 20px;
     margin: 8px 0;
@@ -380,70 +382,71 @@ input[type="number"]{
     box-sizing: border-box;
 }
 
-.novoquadro span{
+.novoquadro span {
     height: 50px;
     line-height: 50px;
-    font-size:1.5rem;
-    width:300px;
-    border-radius:10px;
-    background-color:navy;
-    color:white;
-    position:absolute;
-    top:15px;
-    left:68px;
+    font-size: 1.5rem;
+    width: 300px;
+    border-radius: 10px;
+    background-color: navy;
+    color: white;
+    position: absolute;
+    top: 15px;
+    left: 68px;
 }
 
-a.disabled{
-    pointer-events:none;
-    background-color:gray;
-    box-shadow: 0 0 0  5px gray;
+a.disabled {
+    pointer-events: none;
+    background-color: gray;
+    box-shadow: 0 0 0 5px gray;
     border-color: lightgray;
 }
 
-a.disabled span{
-    pointer-events:none;
-    background-color:gray;
+a.disabled span {
+    pointer-events: none;
+    background-color: gray;
 }
 
 
 
 
-.novoquadro{
-    position:relative;
-    margin:20 300 20 20;
-    float:left;
-    height:75px;
-    width:75px;
-    line-height:75;
-    font-size:300%;
-    background-color:navy;
-    color:darkorange;
-    border-radius:50%;
-    text-align:center;
+.novoquadro {
+    position: relative;
+    margin: 20 300 20 20;
+    float: left;
+    height: 75px;
+    width: 75px;
+    line-height: 75;
+    font-size: 300%;
+    background-color: navy;
+    color: darkorange;
+    border-radius: 50%;
+    text-align: center;
     border: 5px darkorange dashed;
     box-shadow: 0 0 0 5px navy;
 }
 
-.novoquadro i{
-    position:relative;
-    margin:auto;
-    top:10;
-    bottom:0;
-    right:0;
-    left:0;
+.novoquadro i {
+    position: relative;
+    margin: auto;
+    top: 10;
+    bottom: 0;
+    right: 0;
+    left: 0;
 
 }
 
-.meter { 
-	height: 40px;  /* Can be anything */
-	position: relative;
-	background:navy;
-	border-radius: 5px;
+.meter {
+    height: 40px;
+    /* Can be anything */
+    position: relative;
+    background: navy;
+    border-radius: 5px;
     padding: 3px;
 
 }
 
-.meter > .meter-bar {
+.meter>.meter-bar {
     display: block;
     height: 100%;
     border-top-right-radius: 2px;
@@ -451,15 +454,15 @@ a.disabled span{
     border-top-left-radius: 5px;
     border-bottom-left-radius: 5px;
     background-color: darkorange;
-    box-shadow: 
-      inset 0 2px 9px  rgba(255,255,255,0.3),
-      inset 0 -2px 6px rgba(0,0,0,0.4);
+    box-shadow:
+        inset 0 2px 9px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 6px rgba(0, 0, 0, 0.4);
     position: relative;
     overflow: hidden;
-    
-  }
 
-  .meter-split-right {
+}
+
+.meter-split-right {
     display: block;
     height: 100%;
     border-top-right-radius: 2px;
@@ -467,30 +470,30 @@ a.disabled span{
     border-top-left-radius: 5px;
     border-bottom-left-radius: 5px;
     background-color: darkorange;
-    box-shadow: 
-      inset 0 2px 9px  rgba(255,255,255,0.3),
-      inset 0 -2px 6px rgba(0,0,0,0.4);
+    box-shadow:
+        inset 0 2px 9px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 6px rgba(0, 0, 0, 0.4);
     position: relative;
-    
+
     overflow: hidden;
-    
-  }
 
-  .opcoesHYMT{
-    float:left;
-    padding-left:10px;
-    margin:5px;
-    text-align:left;
-    position:relative;
-    height:81.2px;
-    
-  }
+}
 
-  input[id^="sel"]{
-      margin-right:0;
-  }
+.opcoesHYMT {
+    float: left;
+    padding-left: 10px;
+    margin: 5px;
+    text-align: left;
+    position: relative;
+    height: 81.2px;
 
-  .meter-split-left {
+}
+
+input[id^="sel"] {
+    margin-right: 0;
+}
+
+.meter-split-left {
     display: block;
     height: 100%;
     border-top-right-radius: 5px;
@@ -498,236 +501,243 @@ a.disabled span{
     border-top-left-radius: 2px;
     border-bottom-left-radius: 2px;
     background-color: darkorange;
-    box-shadow: 
-      inset 0 2px 9px  rgba(255,255,255,0.3),
-      inset 0 -2px 6px rgba(0,0,0,0.4);
+    box-shadow:
+        inset 0 2px 9px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 6px rgba(0, 0, 0, 0.4);
     position: relative;
-    float:right;
+    float: right;
     overflow: hidden;
-    
-  }
 
-
-.div-chao{
-    height:100%;
-    width:50%;
-    display:inline-block;
-    position:relative;
 }
 
-.div-alto{
-    height:100%;
-    width:50%;
-    display:inline-block;
-    position:relative;
+
+.div-chao {
+    height: 100%;
+    width: 50%;
+    display: inline-block;
+    position: relative;
 }
 
-  .meter-left{
-    position:absolute;
-    line-height:20px;
-    left:4px;
-    z-index:2;
+.div-alto {
+    height: 100%;
+    width: 50%;
+    display: inline-block;
+    position: relative;
+}
+
+.meter-left {
+    position: absolute;
+    line-height: 20px;
+    left: 4px;
+    z-index: 2;
     font-weight: bold;
-    color:rgb(115, 155, 182);
-  }
+    color: rgb(115, 155, 182);
+}
 
-  .displace{
-    margin-left:50%;
-    width:30%;
-    border-radius:10px;
-  }
+.displace {
+    margin-left: 50%;
+    width: 30%;
+    border-radius: 10px;
+}
 
-  .meter-right{
-    position:absolute;
-    line-height:20px;
-    right:4px;
-    z-index:2;
+.meter-right {
+    position: absolute;
+    line-height: 20px;
+    right: 4px;
+    z-index: 2;
     font-weight: bold;
-    color:rgb(115, 155, 182);
-    
-  }
+    color: rgb(115, 155, 182);
 
-  .meter-value{
-      position:absolute;
-      padding:10px 4px;
-      left:0;
-      z-index:2;
-      font-weight: bold;
-      color:navy;
-  }
-
-  #caixa_pesquisa{
-    width:16rem;
-    border:none;
-    margin:0;
-	font-family: Montserrat, sans-serif;
-	height: 50px;
-	border-radius: 10px;
 }
 
-.larger{
-	
-	width: 20rem !important;
-	float: center !important;
+.meter-value {
+    position: absolute;
+    padding: 10px 4px;
+    left: 0;
+    z-index: 2;
+    font-weight: bold;
+    color: navy;
 }
 
-    #info-financeira{
-        display:flex;
-        flex-direction:row;
-        flex-wrap:wrap;
-        justify-content: center;
-        align-items:stretch;
-    }
+#caixa_pesquisa {
+    width: 16rem;
+    border: none;
+    margin: 0;
+    font-family: Montserrat, sans-serif;
+    height: 50px;
+    border-radius: 10px;
+}
 
-#search_wrapper{
-	margin: 0 20px 0 0;
-    float:right;
+.larger {
+
+    width: 20rem !important;
+    float: center !important;
+}
+
+#info-financeira {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+}
+
+#search_wrapper {
+    margin: 0 20px 0 0;
+    float: right;
     border: 0.1rem lightgray inset;
-	border-radius: 10px;
+    border-radius: 10px;
 }
 
-#select_wrapper{
-	margin: 0 20px 0 0;
-    float:right;
+#select_wrapper {
+    margin: 0 20px 0 0;
+    float: right;
     border: 0.1rem lightgray inset;
-	border-radius: 10px;
+    border-radius: 10px;
 }
 
-#select_transaction_type{
-    width:10rem;
-    border:none;
-    margin:0;
-	font-family: Montserrat, sans-serif;
-	height: 50px;
-	border-radius: 10px;
+#select_transaction_type {
+    width: 10rem;
+    border: none;
+    margin: 0;
+    font-family: Montserrat, sans-serif;
+    height: 50px;
+    border-radius: 10px;
 }
 
 .informacao {
-	float:right;
+    float: right;
 }
 
-.infoblock i{
-	float:left;
+.infoblock i {
+    float: left;
 }
 
-.receita{
-	color: green;
+.receita {
+    color: green;
 }
 
-.despesa{
-	color: red;
+.despesa {
+    color: red;
 }
 
 #search_wrapper i {
-    padding:0.2rem;
-    font-size:1.5rem;
+    padding: 0.2rem;
+    font-size: 1.5rem;
     cursor: default;
 }
 
 #select_wrapper i {
-    padding:0.2rem;
-    font-size:1.5rem;
+    padding: 0.2rem;
+    font-size: 1.5rem;
     cursor: default;
 }
 
-#input_inicio, #input_fim{
-	color:gray !important;
-	width:10rem;
-    border:none;
-    margin:0;
-	font-family: Montserrat, sans-serif;
-	height: 50px;
-	border-radius: 10px;
+#input_inicio,
+#input_fim {
+    color: gray !important;
+    width: 10rem;
+    border: none;
+    margin: 0;
+    font-family: Montserrat, sans-serif;
+    height: 50px;
+    border-radius: 10px;
 }
 
-.date_wrapper{
-	margin: 0 20px 0 0;
-    float:right;
+.date_wrapper {
+    margin: 0 20px 0 0;
+    float: right;
     border: 0.1rem lightgray inset;
-	border-radius: 10px;
+    border-radius: 10px;
 }
 
-.pagination_link{
-    background-color:white;
-    color:#808080;
-    font-size:1.25rem;
-    padding:0.5rem;
+.pagination_link {
+    background-color: white;
+    color: #808080;
+    font-size: 1.25rem;
+    padding: 0.5rem;
 
 }
 
-.pagination_link:disabled{
-    color:lightgray;
-    cursor:default;
+.pagination_link:disabled {
+    color: lightgray;
+    cursor: default;
 }
 
-.pagination{
-    display:flex;
-    flex-direction:row;
-    align-items:center;
+.pagination {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
     justify-content: center;
-	visibility: visible;
-	min-height: 50px;
+    visibility: visible;
+    min-height: 50px;
 }
 
 
-.highlighted{
-    color:gray;
-    background-color:#EEEEEE;
+.highlighted {
+    color: gray;
+    background-color: #EEEEEE;
 }
 
-.ascending{
-    color:green;
+.ascending {
+    color: green;
 }
 
-.descending{
-    color:red;
+.descending {
+    color: red;
 }
 
-.hidden{
-    display:none;
+.hidden {
+    display: none;
 }
 
-th i{
-    font-size:200%;
+th i {
+    font-size: 200%;
 }
 
-#paises, #ligas, #opcoes{
-	max-width: 400px;
+#paises,
+#ligas,
+#opcoes {
+    max-width: 400px;
 }
 
-#inputsExportacao{
-	display:flex;
-	flex-direction:column;
-	align-items: center;
+#inputsExportacao {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 
-#inputsExportacao > label{
-	padding:10px;
+#inputsExportacao>label {
+    padding: 10px;
 }
 
-div[id^='mapContainer']{
-	width:200px;
-	height:130px;
-	margin-bottom:10px;
+div[id^='mapContainer'] {
+    width: 200px;
+    height: 130px;
+    margin-bottom: 10px;
+}
+
+input[id^="ano"] {
+    width: 60px;
 }
 
 @media only screen and (min-width: 600px) {
 
-    .quadro{
+    .quadro {
         height: 150px;
         line-height: 150px;
-        font-size:2rem;
-        width:200px;
-        float:left;
+        font-size: 2rem;
+        width: 200px;
+        float: left;
 
     }
 
-    #quadro-container{
-        position:relative;
+    #quadro-container {
+        position: relative;
         transform: none;
-        top:0;
-        left:0;
+        top: 0;
+        left: 0;
     }
 
 

@@ -96,3 +96,10 @@ body {
   letter-spacing: 1px !important;
   width: 100% !important;
 }
+
+/* Forçar Footer no fim do fluxo da página (evitar voando) */
+#bottom-bar {
+  position: relative !important;
+  margin-top: auto !important;
+  bottom: auto !important;
+}

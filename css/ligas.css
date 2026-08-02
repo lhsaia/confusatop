@@ -45,7 +45,7 @@
 }
 
 .small{
-  width:10vw;
+  /* width:10vw; */
   position: relative;
 }
 
@@ -196,17 +196,47 @@ select:disabled {
     width:30vw;
 }
 
+#info-desempenho-selecao {
+    display: grid;
+    /* Define duas colunas de tamanhos iguais */
+    grid-template-columns: repeat(2, 1fr); 
+    /* Espaço entre os blocos */
+    gap: 8px; 
+    width: 100%;
+    max-width: 300px; /* Ajuste conforme necessário para o seu layout */
+}
 
+/* Faz o título ocupar as duas colunas sozinho no topo */
+#info-desempenho-selecao > span {
+    grid-column: 1 / span 2;
+    text-align: left; /* Ou center, se preferir */
+    font-size: 0.9em;
+    margin-bottom: 5px;
+    color: #666;
+}
 
-#info-desempenho-selecao{
-  /* width:10vw; */
-  padding-top:15px;
-  display:flex;
-  flex-direction:column;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: center;
-  flex-basis: 10%;
+/* Ajusta os blocos individuais */
+.infoblock.small {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ccc; /* Mantendo seu estilo de borda */
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.informacao {
+    display: flex;
+    align-items: center;
+    /* width: 100%; */
+    justify-content: space-around;
+}
+
+.informacao_carreira {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-around;
 }
 
 #info-desempenho-selecao > span{

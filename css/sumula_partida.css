@@ -1,0 +1,178 @@
+#quadro_sumula{
+	display:flex;
+	flex-direction:column;
+	width:100%;
+	height:100%;
+}
+
+#faixa_superior{
+	display:flex;
+	flex-direction:row;
+	width:100%;
+	height:25%;
+}
+
+div[id^='imagens_time']{
+	width:11.5%;
+	height:100%;
+	box-sizing:border-box;
+	position:relative;
+}
+
+#x_central{
+	width:6%;
+	height:100%;
+	text-align:center;
+	font-weight:bold;
+	font-size:2.5vw;
+	color:black;
+}
+
+div[id^='score_time']{
+	width:35.5%;
+	height:100%;
+
+}
+
+#bloco_inferior{
+	margin-top:3px;
+	display:flex;
+	flex-direction:row;
+	width:100%;
+	height:75%;
+}
+
+div[id^='estatisticas_time']{
+	width:38.7%;
+	height:100%;
+	background-color:cyan;
+}
+
+#estatisticas_jogo{
+	width:22.6%;
+	height:100%;
+	padding-top: 20px;
+	box-sizing:border-box;
+	
+	
+}
+
+#estatisticas_jogo > table{
+	text-align:center;
+	width:100%;
+	border-collapse: collapse;
+}
+
+#tabela_stats_jogo > tbody > tr{
+	border: 1pt solid;
+	font-size:10;
+	font-weight:bold;
+}
+
+td{
+	padding:3px;
+}
+
+#tabela_stats_times{
+	table-layout: fixed;
+	
+}
+
+#tabela_stats_times > td{
+	width: 33.33%;
+}
+
+#tabela_stats_times > tbody > tr{
+	font-size:10;
+	font-weight:bold;
+}
+
+.bordered_cell{
+	border: 1px solid;
+}
+
+.empty_cell{
+	background-color:white !important;
+	border:0.8px solid white;
+}
+
+.disclaimer{
+	font-size:12;
+	text-align:center;
+	line-height:1.2;
+}
+
+#div_disclaimer{
+	padding:10px;
+	
+}
+
+
+#empty_space{
+	height:20px;
+}
+
+div[id^='barraPrincipal_time']{
+	width:100%;
+	height:25.7%;
+	display:flex;
+	flex-direction:row;
+border: 1px solid black;
+}
+
+div[id^='caixaTexto_time']{
+	width:100%;
+	height:74.3%;
+	border: 1px solid black;
+	display:flex;
+	flex-direction:column;
+}
+
+div[id^='gols_time']{
+	width:15.5%;
+	height:100%;
+	text-align:center;
+	font-weight:bold;
+	font-size:2vw;
+	border: 1px solid black;
+}
+
+div[id^='nome_time']{
+	width:84.5%;
+	height:100%;
+	text-align:center;
+	font-weight:bold;
+	font-size:2vw;
+	
+}
+
+.escudo_sumula{
+	max-height:64%;
+	max-width: 62%;
+	height:auto;
+	width:auto;
+	position:absolute;
+	top:5px;
+	right:5px;
+}
+
+.uniforme_sumula{
+	max-height:76%;
+	max-width: 70%;
+	height:auto;
+	width:auto;
+	position:absolute;
+	bottom:5px;
+	left:10px;
+	z-index:2;
+}
+
+div[id^='caixaTexto_time'] > p{
+	font-size:10;
+	color:black;
+	font-weight:bold;
+	padding:2px;
+	box-sizing:border-box;
+	/* column-count:2; */
+	
+}
