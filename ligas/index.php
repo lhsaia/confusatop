@@ -14,8 +14,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "Federações";
-$css_filename = "indexRanking";
-$aux_css = "ligas";
+$css_filename = "home_redesign";
+$aux_css = "ligas_mapa_redesign";
 $css_login = 'login';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
@@ -48,21 +48,31 @@ $arrayPaises = [];
 
 ?>
 
-<img id='feasco' class='logo' src='/images/feasco.png' alt='Logo da FEASCO' hidden/>
-<img id='femifus' class='logo' src='/images/femifus.png' alt='Logo da FEMIFUS' hidden/>
-<img id='compacta' class='logo' src='/images/compacta.png' alt='Logo da COMPACTA' hidden/>
+<main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
+<div class="propostas-card">
+    <h2 class="propostas-title" style="margin-bottom: 5px; font-family: 'Kanit', sans-serif; text-align: left; font-size: 1.6rem; color: #1e293b;">🗺️ Federações e Países</h2>
+    <p style="color: #64748b; margin-bottom: 25px;">Selecione uma federação no mapa ou um país (marcador) para ver os detalhes.</p>
+    
+    <div id="toolbar-card-container"></div>
+
+    <div id="map-wrapper">
+        <img id='feasco' class='logo' src='/images/feasco.png' alt='Logo da FEASCO' hidden/>
+        <img id='femifus' class='logo' src='/images/femifus.png' alt='Logo da FEMIFUS' hidden/>
+        <img id='compacta' class='logo' src='/images/compacta.png' alt='Logo da COMPACTA' hidden/>
+        <div id="map"></div>
+    </div>
+</div>
+</main>
 
 <link rel="stylesheet" href="/lib/jsvectormap-master/dist/css/jsvectormap.css" />
 <script src="/lib/jsvectormap-master/dist/js/jsvectormap2.js"></script>
-
-<div id="map"></div>
-
 <script src="/lib/jsvectormap-master/dist/maps/world.js"></script>
 
 <script>
 
 $(document).ready(function(){
 	
+	$("#toolbar").appendTo("#toolbar-card-container");
 	$("#toolbar").html('<div id="toggleNC"><span>CONFUSA</span></div>');
 	
 	var baseCountryLink = "/ligas/paisstatus.php?country=";

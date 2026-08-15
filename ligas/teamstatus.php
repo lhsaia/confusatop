@@ -43,7 +43,7 @@ $stmtPais = $pais->read();
 $listaPaises = array();
 while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
     extract($row_pais);
-    $addArray = array($id, $sigla, $bandeira);
+    $addArray = array($id, $sigla, $bandeira, $nome);
     $listaPaises[] = $addArray;
 }
 
@@ -115,60 +115,16 @@ if($liga_time != ''){
 
 
 $page_title = $nome_time;
-$css_filename = "indexRanking";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'ligas';
+$aux_css = 'ligas_team_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
-
-echo "<div style='clear:both; float:center'></div>";
-
-echo "
-<style>
-.jersey-icon {
-    width: 32px;
-    height: 32px;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    background-image: url(\"data:image/svg+xml,%3Csvg width='800px' height='800px' viewBox='0 -63.5 1151 1151' version='1.1' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M902.984598 1024h-653.972493a27.200282 27.200282 0 0 1-27.200282-27.200282v-562.13916l-5.945204 7.16274a27.200282 27.200282 0 0 1-38.300588 3.561942L9.830959 306.184559a27.200282 27.200282 0 0 1-3.561942-38.300587L220.490667 9.831011A27.200282 27.200282 0 0 1 241.421931 0.000052h174.599905a27.200282 27.200282 0 0 1 13.341091 3.497179l146.143229 82.248472L711.002418 3.885806a27.200282 27.200282 0 0 1 14.066431-3.885754H910.56182a27.200282 27.200282 0 0 1 20.931264 9.830959l214.22165 258.052961a27.200282 27.200282 0 0 1-3.561942 38.300587l-167.735072 139.239539a27.200282 27.200282 0 0 1-38.300588-3.561942l-5.945204-7.162741v562.139161a27.200282 27.200282 0 0 1-27.18733 27.161424z m-626.772211-54.400564h599.57193V359.354634A27.200282 27.200282 0 0 1 923.915863 341.946454l36.694476 44.206934 125.872543-104.48794L897.816545 54.400616H732.633118l-142.568335 86.121273a27.200282 27.200282 0 0 1-27.407522 0.427433L408.885 54.400616H254.193111L65.500869 281.704305l125.872543 104.487941L228.08084 341.946454a27.200282 27.200282 0 0 1 48.131547 17.369323z' fill='%23cccccc' /%3E%3Cpath d='M574.54767 144.498312H336.946731a13.600141 13.600141 0 0 1-11.190973-21.31984l72.158462-104.526798a13.600141 13.600141 0 0 1 22.381946 15.45235l-57.431452 83.194006h211.682956a13.600141 13.600141 0 0 1 0 27.200282z' fill='%23cccccc' /%3E%3Cpath d='M802.900513 144.498312H565.312527a13.600141 13.600141 0 0 1 0-27.200282h211.682956l-57.431453-83.194006a13.600141 13.600141 0 0 1 22.381947-15.45235l72.158462 104.526798a13.600141 13.600141 0 0 1-11.190973 21.31984zM366.19351 92.234913H220.853337a13.600141 13.600141 0 0 1 0-27.200282h145.327221a13.600141 13.600141 0 0 1 0 27.200282z' fill='%23cccccc' /%3E%3Cpath d='M922.504039 97.143916H777.150913a13.600141 13.600141 0 0 1 0-27.200282h145.327221a13.600141 13.600141 0 1 1 0 27.200282z' fill='%23cccccc' /%3E%3C/svg%3E\");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    font-size: 13px;
-    font-weight: bold;
-    padding-top: 4px;
-    margin-right: 5px;
-    vertical-align: middle;
-}
-.foto_jogador {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: 5px;
-}
-.jersey-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    margin-left: 5px;
-    min-width: 40px;
-    min-height: 32px;
-}
-.numeroCamisa {
-    width: 60px;
-    text-align: center;
-}
-.inlineButton {
-    font-size: 22px;
-}
-</style>
-";
-
 ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
 
 <script>
+
 
 // on load of the page: switch to the currently selected tab
 var hash = window.location.hash;
@@ -180,13 +136,6 @@ window.onbeforeunload = function(e) {
         return "Você tem alterações não salvas. Deseja realmente sair?";
     }
 };
-
-$("#toolbar").html('<div id="irApresentacao"><span class="material-symbols-outlined">newspaper</span><span>Apresentação</span></div>');
-
-$(document).on("click", "#irApresentacao", function(){
-    if(isDataDirty && !confirm("Você tem alterações não salvas. Deseja sair desta página?")) return;
-    window.location = "/times/team_presentation.php?team=" + <?php echo $idTime ?>;
-});
 
 window.onload = function(e) {
     var hash = window.location.hash;
@@ -207,9 +156,25 @@ window.onload = function(e) {
     }
 }
 
+function showToast(msg, type) {
+    var color = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#0284c7';
+    var icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '⟳';
+    var toast = $('<div>').css({
+        position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999,
+        background: color, color: '#fff',
+        padding: '12px 20px', borderRadius: '10px',
+        fontFamily: 'Kanit, sans-serif', fontWeight: 600, fontSize: '0.95rem',
+        boxShadow: '0 6px 24px rgba(0,0,0,0.2)',
+        display: 'flex', alignItems: 'center', gap: '8px',
+        opacity: 0, transition: 'opacity 0.3s'
+    }).html(icon + ' ' + msg);
+    $('body').append(toast);
+    setTimeout(function() { toast.css('opacity', 1); }, 10);
+    setTimeout(function() { toast.css('opacity', 0); setTimeout(function() { toast.remove(); }, 350); }, 2800);
+}
+
 function reloadPageContent() {
-    // Show some loading indicator if desired
-    $("#errorbox").html('<div class="alert alert-info">Atualizando...</div>');
+    showToast('Atualizando...', 'info');
     
     $.get(window.location.href + "&v=" + new Date().getTime(), function(data) {
         var parser = new DOMParser();
@@ -246,57 +211,134 @@ function reloadPageContent() {
 
 
 <?php
-
-echo "<div id='quadro-container' class='".$idTime."' style='margin-left: 5px; margin-right:5px;'>";
-echo '<img id="bandeiraGrande" class="margin-left" src="/images/escudos/'.$escudo_time.'" height="100px">' ;
-echo '<img class="uniformeGrande" src="/images/uniformes/'.$uniforme2_time.'" height="80px">' ;
-echo '<img class="uniformeGrande" src="/images/uniformes/'.$uniforme1_time.'" height="80px">' ;
-echo "<figure id='estadio'><img class='imagemEstadio' src='/images/estadios/{$foto_estadio}'><figcaption>{$estadio_time}<figcaption></figure>";
-echo "<h2>" . $nome_time ." </h2>";
-if(!$is_selecao){
-    echo "<h3><a href='paisstatus.php?country=".$pais_id."'>" . $pais_time ."</a><a href='leaguestatus.php?league=".$liga_id."'>" . $liga_time ." </a></h3> ";
-} else {
+if ($is_selecao) {
     $stmtInfo = $pais->readInfo($pais_id);
     $resultInfo = $stmtInfo->fetch(PDO::FETCH_ASSOC);
     $federacaoTime = $resultInfo['federacao'];
-  //  echo gettype(tecnico);
     $stmtNome = $federacao2->selFederacao($federacaoTime);
     $nomeFederacao = $stmtNome->fetchColumn();
-    echo "<h3><span>" . $nomeFederacao ."</span></h3> ";
 }
-echo "<hr>";
 
-//query jogos time
+//query elenco
 $time_stmt = $jogador->selecionarElencoTime($id,$from_record_num,$records_per_page);
+$total_rows = $jogador->countAllSingleTeam($id);
+$perc_estrangeiros = $total_rows > 0 ? number_format(($estrangeiros / $total_rows)*100,2)."%" : "0%";
+?>
 
-    // the page where this paging is used
-    //$page_url = "teamstatus.php?team=" . $id . "&";
+<main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
+<div class="propostas-card">
+<div id="quadro-container" class="<?php echo $idTime; ?>">
+    <div class="team-header-flex-wrapper" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
+        <div class="team-header-title-container" style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+            <img id="bandeiraGrande" src="/images/escudos/<?php echo htmlspecialchars($escudo_time); ?>" style="height: 60px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <div>
+                <h2 class="propostas-title" style="margin: 0; text-align: left;"><?php echo htmlspecialchars($nome_time); ?></h2>
+                <h3 style="margin: 4px 0 0 0; font-size: 1rem;">
+                    <?php if(!$is_selecao): ?>
+                        <a href="paisstatus.php?country=<?php echo $pais_id; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars($pais_time); ?></a>
+                        <a href="leaguestatus.php?league=<?php echo $liga_id; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars($liga_time); ?></a>
+                    <?php else: ?>
+                        <span style="color: #64748b; font-weight: 600;"><?php echo htmlspecialchars($nomeFederacao); ?></span>
+                    <?php endif; ?>
+                </h3>
+            </div>
+        </div>
+        
+        <!-- Apresentacao / Uniformes / Estadio container -->
+        <div class="team-header-meta-container" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <!-- Uniformes -->
+            <div style="display: flex; gap: 8px;">
+                <?php if(!empty($uniforme1_time)): ?>
+                    <img src="/images/uniformes/<?php echo htmlspecialchars($uniforme1_time); ?>" height="80px" title="Uniforme 1" style="filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.15));">
+                <?php endif; ?>
+                <?php if(!empty($uniforme2_time)): ?>
+                    <img src="/images/uniformes/<?php echo htmlspecialchars($uniforme2_time); ?>" height="80px" title="Uniforme 2" style="filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.15));">
+                <?php endif; ?>
+            </div>
+            
+            <!-- Estadio Link/Button -->
+            <?php if(!empty($foto_estadio)): ?>
+                <div style="position: relative;" title="<?php echo htmlspecialchars($estadio_time); ?>">
+                    <img src="/images/estadios/<?php echo htmlspecialchars($foto_estadio); ?>" style="height: 80px; width: 120px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1);">
+                </div>
+            <?php endif; ?>
+            
+            <!-- Botão de Apresentação -->
+            <a href="/times/team_presentation.php?team=<?php echo $idTime; ?>" class="btn-apresentacao" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: #0284c7; color: #fff; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 0.9rem; transition: background 0.2s;">
+                <span class="material-symbols-outlined" style="font-size: 1.1rem;">newspaper</span>
+                <span>Apresentação</span>
+            </a>
+        </div>
+    </div>
+    
+    <hr style="border: none; border-bottom: 1px solid rgba(0,0,0,0.08); margin: 20px 0;">
 
-    // count all products in the database to calculate total pages
-    $total_rows = $jogador->countAllSingleTeam($id);
+    <div id="info-jogos">
+        <div class="infoblock" title="Tamanho do elenco">
+            <span class="material-symbols-outlined">groups</span>
+            <div>
+                <span class="informacao"><?php echo $total_rows; ?></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Elenco</span>
+            </div>
+        </div>
+        <div class="infoblock" title="Média de idade">
+            <span class="material-symbols-outlined">elderly</span>
+            <div>
+                <span class="informacao"><?php echo $mediaIdade; ?></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Média Idade</span>
+            </div>
+        </div>
+        <?php if(!$is_selecao): ?>
+            <div class="infoblock" title="Estrangeiros">
+                <span class="material-symbols-outlined">globe_location_pin</span>
+                <div>
+                    <span class="informacao"><?php echo $estrangeiros; ?> <span class="informacao micro">(<?php echo $perc_estrangeiros; ?>)</span></span>
+                    <span style="font-size: 0.75rem; color: #64748b;">Estrangeiros</span>
+                </div>
+            </div>
+            <div class="infoblock" title="Jogadores em seleções nacionais">
+                <span class="material-symbols-outlined">flag</span>
+                <div>
+                    <span class="informacao"><?php echo $jogadores_selecao; ?></span>
+                    <span style="font-size: 0.75rem; color: #64748b;">Na Seleção</span>
+                </div>
+            </div>
+        <?php endif; ?>
+        <div class="infoblock" title="Estádio (capacidade)">
+            <span class="material-symbols-outlined">stadium</span>
+            <div>
+                <span class="informacao menor"><?php echo number_format($estadio_capacidade, 0, ',', '.'); ?></span>
+                <span style="font-size: 0.75rem; color: #64748b;"><?php echo htmlspecialchars($estadio_time); ?></span>
+            </div>
+        </div>
+        <?php if(!$is_selecao): ?>
+            <div class="infoblock clickable" id="Recorde" title="Balanço de caixa (em F$)" style="cursor: pointer;">
+                <span class="material-symbols-outlined">account_balance</span>
+                <div>
+                    <span class="informacao menor"><?php echo $recorde_transferencia; ?></span>
+                    <span style="font-size: 0.75rem; color: #64748b;">Balanço Caixa</span>
+                </div>
+            </div>
+        <?php endif; ?>
+        <div class="infoblock" title="Valor de mercado (em F$)">
+            <span class="material-symbols-outlined">attach_money</span>
+            <div>
+                <span class="informacao menor"><?php echo $valor_total_clube; ?></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Valor total</span>
+            </div>
+        </div>
+        <div class="infoblock" title="Média de Nível (titulares/total)">
+            <span class="material-symbols-outlined">star_half</span>
+            <div>
+                <span class="informacao"><?php echo $nivel_medio_onze; ?> <span class="informacao micro">/ <?php echo $nivel_medio; ?></span></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Nível Tit./Geral</span>
+            </div>
+        </div>
+    </div>
 
-    $perc_estrangeiros = $total_rows > 0 ? number_format(($estrangeiros / $total_rows)*100,2)."%" : "0%";
-
-    echo "<div style='clear:both; float:center'></div>";
-echo "<div id='info-jogos'>";
-echo "<div id='TamElenco' class='infoblock' title='Tamanho do elenco'><span class='material-symbols-outlined'>groups</span><span class='informacao'>{$total_rows}</span></div>";
-echo "<div id='Idades' class='infoblock' title='Média de idade'><span class='material-symbols-outlined'>elderly</span><span class='informacao'>{$mediaIdade}</span></div>";
-if(!$is_selecao){
-    echo "<div id='Estrangeiros' class='infoblock' title='Estrangeiros'><span class='material-symbols-outlined'>globe_location_pin</span><span class='informacao'>{$estrangeiros}</span><span class='informacao micro'>({$perc_estrangeiros})</span></div>";
-echo "<div id='Selecionados' class='infoblock' title='Jogadores em seleções nacionais'><span class='material-symbols-outlined'>flag</span> <span class='informacao'>{$jogadores_selecao}</span></div>";
-}
-echo "<div id='Estádio' class='infoblock' title='Estádio (capacidade)'><span class='material-symbols-outlined'>stadium</span><span class='informacao menor'>{$estadio_capacidade}</span></div>";
-if(!$is_selecao){
-echo "<div id='Recorde' class='infoblock bevel' title='Balanço de caixa (em F$)'><span class='material-symbols-outlined'>account_balance</span><span class='informacao mini'>{$recorde_transferencia}</span></div>";
-}
-echo "<div id='Valor' class='infoblock' title='Valor de mercado (em F$)'><span class='material-symbols-outlined'>attach_money</span><span class='informacao menor'>{$valor_total_clube}</span></div>";
-echo "<div id='MediaNivel' class='infoblock' title='Média de Nível (titulares/total)'><span class='material-symbols-outlined'>star_half</span><span class='informacao mini'> {$nivel_medio_onze}   <span class='informacao mini'> &nbsp {$nivel_medio} </span></span></div>";
-echo "</div>";
-echo "<br>";
-
-echo "<div style='clear:both; float:center'></div>";
-echo "<hr>";
-echo "<div id='errorbox'></div>";
+    <hr style="border: none; border-bottom: 1px solid rgba(0,0,0,0.08); margin: 20px 0;">
+    <div id="errorbox"></div>
+<?php
 if($donoLogado){
 echo '<div class="tab">';
   echo '<a class="tablinks" href="#Jogadores">Jogadores</a>';
@@ -311,13 +353,7 @@ echo '</div>';
 }
 
 echo "<div class='tabcontent' id='Jogadores'>";
-echo "<p align='center'>Jogadores</p>";
-
-    echo "<div style='clear:both; float:center'></div>";
-echo "<hr>";
-
-// display the products if there are any
-
+echo "<div style='overflow-x: auto; width: 100%; margin-top: 15px;'>";
 echo "<table id='tabelaElenco' class='table'>";
 echo "<thead>";
 echo "<tr>";
@@ -350,37 +386,37 @@ if($rowTec) {
     $rowTec['Nascimento'] = date("d-m-Y", strtotime($rowTec['Nascimento']));
 
     echo "<tr id='tec".$rowTec['ID']."' data-sexo='".$rowTec['Sexo']."'>";
-    echo "<td class='nopadding'><div class='foto_jogador'><img src='/images/tecnicos/".$rowTec['foto']."' height='55px'></div></td>";
+    echo "<td class='nopadding'><div class='foto_jogador'><img class='playerThumb' src='/images/tecnicos/".$rowTec['foto']."'></div></td>";
     echo "<td class='nopadding nomeJogador'><span class='nomeEditavel'>{$rowTec['Nome']}</span><br><span class='posicao'>Técnico</span></td>";
-    echo "<td>T</td>";
+    echo "<td data-label='Posições'><span class='cell-value'>T</span></td>";
     if($rowTec['idPais'] != 0){
-        echo "<td class='nopadding'><img src='/images/bandeiras/{$rowTec['bandeiraPais']}' class='bandeira nomePais' id='ban".$rowTec['idPais']."'>  <span class='nomePais' id='pai".$rowTec['idPais']."'>{$rowTec['siglaPais']}</span>";
+        echo "<td class='nopadding' data-label='Nac.'><span class='cell-value'><img src='/images/bandeiras/{$rowTec['bandeiraPais']}' class='bandeira nomePais' id='ban".$rowTec['idPais']."'>  <span class='nomePais' id='pai".$rowTec['idPais']."'>{$rowTec['siglaPais']}</span>";
     } else {
-        echo "<td>";
+        echo "<td data-label='Nac.'><span class='cell-value'>";
     }
-    echo " <select class='comboPais editavel ' id='{$rowTec['idPais']}' hidden>'  ";
-        //echo "<option>Selecione país...</option>";
+    echo " <select class='comboPais editavel ' id='{$rowTec['idPais']}' style='display: none;'>'  ";
         for($i = 0; $i < count($listaPaises);$i++){
-            echo "<option value='{$listaPaises[$i][0]}'>{$listaPaises[$i][1]}</option>";
+            echo "<option value='{$listaPaises[$i][0]}'>{$listaPaises[$i][3]}</option>";
         }
         echo "</select>";
-    echo "</td>";
-    echo "<td class='nopadding'><span class='nascimentoEIdade'>{$rowTec['Nascimento']} (".$rowTec['idade'].")</span><input type='date' class='editavel nascimento' hidden/></td>";
-    echo "<td class='nopadding'><span class='nivel'>{$rowTec['Nivel']}</span></td>";
-    echo "<td class='nopadding'><span class='desdeFixo'>{$transferenciaTecnico["Data"]}</span><input type='date' class='editavel desde' hidden></td>";
-    echo "<td class='nopadding ultimoClube' data-ultimo-clube='{$transferenciaTecnico["ID"]}'>{$transferenciaTecnico["Clube"]}</td>";
-    echo "<td class='nopadding'>{$encerramentoTecnico}</td>";
-    echo "<td>-</td><td>-</td>";
-    $tecOptions = "<td class='wide' id='dono{$rowTec['donoTecnico']}'>";
+    echo "</span></td>";
+    echo "<td class='nopadding' data-label='Idade'><span class='cell-value'><span class='nascimentoEIdade'>{$rowTec['Nascimento']} (".$rowTec['idade'].")</span><input type='date' class='editavel nascimento' style='display: none;'/></span></td>";
+    echo "<td class='nopadding' data-label='Nível'><span class='cell-value'><span class='nivel'>{$rowTec['Nivel']}</span></span></td>";
+    echo "<td class='nopadding' data-label='Desde'><span class='cell-value'><span class='desdeFixo'>{$transferenciaTecnico["Data"]}</span><input type='date' class='editavel desde' style='display: none;'></span></td>";
+    echo "<td class='nopadding ultimoClube' data-label='Origem' data-ultimo-clube='{$transferenciaTecnico["ID"]}'><span class='cell-value'>{$transferenciaTecnico["Clube"]}</span></td>";
+    echo "<td class='nopadding' data-label='Contrato'><span class='cell-value'>{$encerramentoTecnico}</span></td>";
+    echo "<td data-label='Valor'><span class='cell-value'>-</span></td>";
+    echo "<td data-label='Disponível'><span class='cell-value'>-</span></td>";
+    $tecOptions = "<td class='wide' data-label='Opções' id='dono{$rowTec['donoTecnico']}'><span class='cell-value'>";
     if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         if(!$is_selecao){
             if(!$_SESSION['emTestes']){
-                $tecOptions .= "<a id='proTec".$rowTec['ID']."' title='Fazer Proposta' class='clickable propostaTecnico'><span class='material-symbols-outlined inlineButton'>payment_arrow_down</span></a>";
+                $tecOptions .= "<a id='proTec".$rowTec['ID']."' title='Fazer Proposta' class='clickable propostaTecnico' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton'>payment_arrow_down</span></a>";
             }
             if($donoLogado){
-              $tecOptions .= "<a id='dem".$rowTec['ID']."' title='Editar técnico' class='clickable editarTecnico'><span class='material-symbols-outlined inlineButton azul'>person_edit</span></a>";
-                $tecOptions .= "<a id='demTec".$rowTec['ID']."' title='Demitir técnico' class='clickable demitirTecnico'><span class='material-symbols-outlined inlineButton vermelho'>contract_delete</span></a>";
-                $tecOptions .= "<a hidden id='sal".$rowTec['ID']."' title='Salvar' class='clickable salvarTecnico'><span class='material-symbols-outlined inlineButton positive'>save</span></a>";
+                $tecOptions .= "<a id='dem".$rowTec['ID']."' title='Editar técnico' class='clickable editarTecnico' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton azul'>person_edit</span></a>";
+                $tecOptions .= "<a id='demTec".$rowTec['ID']."' title='Demitir técnico' class='clickable demitirTecnico' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton vermelho'>contract_delete</span></a>";
+                $tecOptions .= "<a hidden id='sal".$rowTec['ID']."' title='Salvar' class='clickable salvarTecnico' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton positive'>save</span></a>";
                 $tecOptions .= "<a hidden id='can".$rowTec['ID']."' title='Cancelar' class='clickable cancelarTecnico'><span class='material-symbols-outlined inlineButton vermelho'>cancel</span></a>";
 
             }
@@ -390,11 +426,11 @@ if($rowTec) {
     }
 
 
-        $tecOptions .= "</td>";
+        $tecOptions .= "</span></td>";
         if($rowTec['ID'] != 0 && $rowTec['ID'] != null){
             echo $tecOptions;
         } else {
-            echo "<td></td>";
+            echo "<td data-label='Opções'><span class='cell-value'></span></td>";
         }
 
     echo "</tr>";
@@ -450,7 +486,7 @@ $agora = date('Y-m-d');
                 }
 
                 if($titular == 'titular'){
-                    $lista_titulares[] = ['nome' => $nomeJogador, 'nivel' => $Nivel, 'mod' => $ModificadorNivel, 'posicaoBase' => $posicaoBase, 'stringPosicoes' => $stringPosicoes, 'idJogador' => $idJogador, 'mentalidade' => $mentalidade, 'capitao' => $capitao, 'cobrancaPenalti' => $cobrancaPenalti, 'cobradorFalta' => $cobradorFalta];
+                    $lista_titulares[] = ['nome' => $nomeJogador, 'nivel' => $Nivel, 'mod' => $ModificadorNivel, 'posicaoBase' => $posicaoBase, 'stringPosicoes' => $stringPosicoes, 'idJogador' => $idJogador, 'mentalidade' => $mentalidade, 'capitao' => $capitao, 'cobrancaPenalti' => $cobrancaPenalti, 'cobradorFalta' => $cobradorFalta, 'foto' => $foto];
                 } else if($titular == 'reserva'){
                     $lista_reservas[] = ['nome' => $nomeJogador, 'nivel' => $Nivel, 'mod' => $ModificadorNivel, 'posicaoBase' => $posicaoBase, 'stringPosicoes' => $stringPosicoes, 'idJogador' => $idJogador];
                 } else {
@@ -466,48 +502,46 @@ $agora = date('Y-m-d');
                 </div>
                 </div></td>";
                 echo "<td class='nopadding nomeJogador'><a href='/ligas/playerstatus.php?player={$idJogador}' class='nomeEditavel'>{$nomeJogador}</a><br><span class='posicao'>{$posicaoBase}</span></td>";
-                echo "<td class='nopadding'><span class='posicoesAtuais'>{$stringPosicoes}</span>";
+                echo "<td class='nopadding' data-label='Posições'><span class='cell-value'><span class='posicoesAtuais'>{$stringPosicoes}</span>";
                 echo " <select multiple class='comboPosicoes editavel ' hidden>'  ";
-                //echo "<option>Selecione país...</option>";
                 for($i = 0; $i < count($listaPosicoes);$i++){
                     echo "<option value='{$listaPosicoes[$i][0]}'>{$listaPosicoes[$i][1]}</option>";
                 }
                 echo "</select>";
-                echo "</td>";
+                echo "</span></td>";
                 if($idPais != 0){
-                    echo "<td class='nopadding'><img src='/images/bandeiras/{$bandeiraPais}' class='bandeira nomePais' id='ban".$idPais."'>  <span class='nomePais' id='pai".$idPais."'>{$siglaPais}</span>";
+                    echo "<td class='nopadding' data-label='Nac.'><span class='cell-value'><img src='/images/bandeiras/{$bandeiraPais}' class='bandeira nomePais' id='ban".$idPais."'>  <span class='nomePais' id='pai".$idPais."'>{$siglaPais}</span></span>";
                 } else {
-                    echo "<td>";
+                    echo "<td data-label='Nac.'><span class='cell-value'>";
                 }
-                echo " <select class='comboPais editavel ' id='{$idPais}' hidden>'  ";
-                    //echo "<option>Selecione país...</option>";
+                echo " <select class='comboPais editavel ' id='{$idPais}' style='display: none;'>'  ";
                     for($i = 0; $i < count($listaPaises);$i++){
-                        echo "<option value='{$listaPaises[$i][0]}'> {$listaPaises[$i][1]}</option>";
+                        echo "<option value='{$listaPaises[$i][0]}'> {$listaPaises[$i][3]}</option>";
                     }
                     echo "</select>";
                 echo "</td>";
-                echo "<td class='nopadding'><span class='nascimentoEIdade'>{$Nascimento} (".$Idade.")</span><input type='date' class='editavel nascimento' hidden></td>";
-                echo "<td class='nopadding'><span class='nivelEMod'>{$Nivel} (".$ModificadorNivel.")</span><span class='editavel nivel' hidden></td>";
-                echo "<td class='nopadding'><span class='desdeFixo'>{$dadosTransferencia["Data"]}</span><input type='date' class='editavel desde' hidden></td>";
-                echo "<td class='nopadding ultimoClube' data-ultimo-clube='{$dadosTransferencia["ID"]}'>{$dadosTransferencia["Clube"]}</td>";
-                echo "<td class='nopadding'><span class='encerramentoFixo'>{$encerramento}</span><input type='date' class='editavel encerramento' hidden></td>";
-                echo "<td class='nopadding'><span class='valorEditavel valor'>{$valor}</span></td>";
-                echo "<td class='nopadding'>{$disponibilidade}</td>";
-                $optionsString = "<td class='wide' id='dono{$donoJogador}'>";
+                echo "<td class='nopadding' data-label='Idade'><span class='cell-value'><span class='nascimentoEIdade'>{$Nascimento} (".$Idade.")</span><input type='date' class='editavel nascimento' style='display: none;'></span></td>";
+                echo "<td class='nopadding' data-label='Nível'><span class='cell-value'><span class='nivelEMod'>{$Nivel} (".$ModificadorNivel.")</span><span class='editavel nivel' style='display: none;'></span></span></td>";
+                echo "<td class='nopadding' data-label='Desde'><span class='cell-value'><span class='desdeFixo'>{$dadosTransferencia["Data"]}</span><input type='date' class='editavel desde' style='display: none;'></span></td>";
+                echo "<td class='nopadding ultimoClube' data-label='Origem' data-ultimo-clube='{$dadosTransferencia["ID"]}'><span class='cell-value'>{$dadosTransferencia["Clube"]}</span></td>";
+                echo "<td class='nopadding' data-label='Contrato'><span class='cell-value'><span class='encerramentoFixo'>{$encerramento}</span><input type='date' class='editavel encerramento' style='display: none;'></span></td>";
+                echo "<td class='nopadding' data-label='Valor'><span class='cell-value'><span class='valorEditavel valor'>{$valor}</span></span></td>";
+                echo "<td class='nopadding' data-label='Disponível'><span class='cell-value'>{$disponibilidade}</span></td>";
+                $optionsString = "<td class='wide' data-label='Opções' id='dono{$donoJogador}'><span class='cell-value'>";
                 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
-                  $optionsString .= "<a id='dow".$id."' title='Baixar arquivo .jog' class='clickable exportar'><span class='material-symbols-outlined inlineButton azul'>download</span></a>";
+                  $optionsString .= "<a id='dow".$id."' title='Baixar arquivo .jog' class='clickable exportar' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton azul'>download</span></a>";
 
                     if(!$is_selecao){
 						if(!$_SESSION['emTestes'] || $donoLogado){
-							$optionsString .= "<a id='pro".$idJogador."' title='Fazer Proposta' class='clickable proposta'><span class='material-symbols-outlined inlineButton'>payment_arrow_down</span></a>";
+							$optionsString .= "<a id='pro".$idJogador."' title='Fazer Proposta' class='clickable proposta' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton'>payment_arrow_down</span></a>";
 						}
                         if($donoLogado){
-                            $optionsString .= "<a id='edit".$idJogador."' title='Editar jogador' class='clickable editar'><span class='material-symbols-outlined inlineButton azul'>person_edit</span></a>";
-                            $optionsString .= "<a id='disp".$idJogador."' title='Disponibilizar jogador' class='clickable disponibilizar'><span class='material-symbols-outlined inlineButton azul'>sell</span></a>";
-                            $optionsString .= "<a id='demi".$idJogador."' title='Demitir jogador' class='clickable demitir'><span class='material-symbols-outlined inlineButton vermelho'>contract_delete</span></a>";
-                            $optionsString .= "<a id='apos".$idJogador."' title='Aposentar jogador' class='clickable aposentar'><span class='material-symbols-outlined inlineButton vermelho'>assist_walker</span></a>";
-							$optionsString .= "<a id='expa".$idJogador."' title='Expatriar jogador' class='clickable expatriar'><span class='material-symbols-outlined inlineButton vermelho'>flight_takeoff</span></a>"; 
-                            $optionsString .= "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>save</span></a>";
+                            $optionsString .= "<a id='edit".$idJogador."' title='Editar jogador' class='clickable editar' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton azul'>person_edit</span></a>";
+                            $optionsString .= "<a id='disp".$idJogador."' title='Disponibilizar jogador' class='clickable disponibilizar' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton azul'>sell</span></a>";
+                            $optionsString .= "<a id='demi".$idJogador."' title='Demitir jogador' class='clickable demitir' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton vermelho'>contract_delete</span></a>";
+                            $optionsString .= "<a id='apos".$idJogador."' title='Aposentar jogador' class='clickable aposentar' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton vermelho'>assist_walker</span></a>";
+							$optionsString .= "<a id='expa".$idJogador."' title='Expatriar jogador' class='clickable expatriar' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton vermelho'>flight_takeoff</span></a>"; 
+                            $optionsString .= "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton positive'>save</span></a>";
                             $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton vermelho'>cancel</span></a>";
 
                         }
@@ -517,7 +551,7 @@ $agora = date('Y-m-d');
 
 
 
-                    $optionsString .= "</td>";
+                    $optionsString .= "</span></td>";
                     echo $optionsString;
                 }
             echo "</tr>";
@@ -530,9 +564,7 @@ $agora = date('Y-m-d');
 
 
 echo "</table>";
-
-
-
+echo "</div>"; // close overflow-x auto wrapper
 echo "</div>";
 
 if($donoLogado){
@@ -541,7 +573,7 @@ $drag_players = "draggable";
 
 	
 //pagina do elenco
-echo "<div class='tabcontent' id='Elenco' hidden>";
+echo "<div class='tabcontent' id='Elenco' style='display: none;'>";
 
 echo "<div class='tableHolder'><table id='tabelaTitulares'>";
 echo "<caption>Titulares</caption>";
@@ -550,14 +582,18 @@ echo "<tr>";
 echo "<th>Jogador</th>";
 echo "<th>Nivel (mod)</th>";
 echo "<th>Posições</th>";
+echo "<th>Ações</th>";
 echo "</tr>";
 echo "</thead>";
 echo "<tbody>";
 foreach($lista_titulares as $jogador_tabela){
     echo "<tr class='clickablerow_tit' id='elenco".$jogador_tabela['idJogador']."'>";
     echo "<td class='nopadding nomeJogador'>{$jogador_tabela['nome']}<br><span class='posicao'>{$jogador_tabela['posicaoBase']}</span></td>";
-    echo "<td class='nopadding'>{$jogador_tabela['nivel']} (".$jogador_tabela['mod'].")</td>";
-    echo "<td class='nopadding'>{$jogador_tabela['stringPosicoes']}</td>";
+    echo "<td class='nopadding' data-label='Nível'>{$jogador_tabela['nivel']} (".$jogador_tabela['mod'].")</td>";
+    echo "<td class='nopadding' data-label='Posições'>{$jogador_tabela['stringPosicoes']}</td>";
+    echo "<td class='nopadding actions-cell' data-label='Ações'>";
+    echo "<a href='#' class='quick-move-btn demote-titular-btn' data-action='demote-titular' data-id='".$jogador_tabela['idJogador']."' title='Mover para Reserva'><span class='material-symbols-outlined'>arrow_downward</span></a>";
+    echo "</td>";
     echo "</tr>";
 }
 echo "</tbody>";
@@ -576,14 +612,19 @@ echo "<tr>";
 echo "<th>Nome</th>";
 echo "<th>Nivel (mod)</th>";
 echo "<th>Posições</th>";
+echo "<th>Ações</th>";
 echo "</tr>";
 echo "</thead>";
 echo "<tbody>";
 foreach($lista_reservas as $jogador_tabela){
     echo "<tr class='clickablerow_res' id='elenco".$jogador_tabela['idJogador']."'>";
     echo "<td class='nopadding nomeJogador'>{$jogador_tabela['nome']}<br><span class='posicao'>{$jogador_tabela['posicaoBase']}</span></td>";
-    echo "<td class='nopadding'>{$jogador_tabela['nivel']} (".$jogador_tabela['mod'].")</td>";
-    echo "<td class='nopadding'>{$jogador_tabela['stringPosicoes']}</td>";
+    echo "<td class='nopadding' data-label='Nível'>{$jogador_tabela['nivel']} (".$jogador_tabela['mod'].")</td>";
+    echo "<td class='nopadding' data-label='Posições'>{$jogador_tabela['stringPosicoes']}</td>";
+    echo "<td class='nopadding actions-cell' data-label='Ações'>";
+    echo "<a href='#' class='quick-move-btn promote-reserva-btn' data-action='promote-reserva' data-id='".$jogador_tabela['idJogador']."' title='Promover a Titular' style='margin-right: 5px;'><span class='material-symbols-outlined'>arrow_upward</span></a>";
+    echo "<a href='#' class='quick-move-btn demote-reserva-btn' data-action='demote-reserva' data-id='".$jogador_tabela['idJogador']."' title='Mover para Suplente'><span class='material-symbols-outlined'>arrow_downward</span></a>";
+    echo "</td>";
     echo "</tr>";
 }
 echo "</tbody>";
@@ -602,14 +643,18 @@ echo "<tr>";
 echo "<th>Nome</th>";
 echo "<th>Nivel (mod)</th>";
 echo "<th>Posições</th>";
+echo "<th>Ações</th>";
 echo "</tr>";
 echo "</thead>";
 echo "<tbody>";
 foreach($lista_suplentes as $jogador_tabela){
     echo "<tr class='clickablerow_sup' id='elenco".$jogador_tabela['idJogador']."'>";
     echo "<td class='nopadding nomeJogador'>{$jogador_tabela['nome']}<br><span class='posicao'>{$jogador_tabela['posicaoBase']}</span></td>";
-    echo "<td class='nopadding'>{$jogador_tabela['nivel']} (".$jogador_tabela['mod'].")</td>";
-    echo "<td class='nopadding'>{$jogador_tabela['stringPosicoes']}</td>";
+    echo "<td class='nopadding' data-label='Nível'>{$jogador_tabela['nivel']} (".$jogador_tabela['mod'].")</td>";
+    echo "<td class='nopadding' data-label='Posições'>{$jogador_tabela['stringPosicoes']}</td>";
+    echo "<td class='nopadding actions-cell' data-label='Ações'>";
+    echo "<a href='#' class='quick-move-btn' data-action='promote-suplente' data-id='".$jogador_tabela['idJogador']."' title='Promover a Reserva'><span class='material-symbols-outlined'>arrow_upward</span></a>";
+    echo "</td>";
     echo "</tr>";
 }
 echo "</tbody>";
@@ -643,49 +688,49 @@ foreach($lista_titulares as $jogador){
 	
     switch($jogador['posicaoBase']){
         case "Goleiro":
-            $goleiro = $jogador["nome"];
+            $goleiro = ["<p>".$nome_final."</p>", $jogador["idJogador"], $jogador["foto"]];
             break;
         case "Lateral-direito":
-            $lateral_direito = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
+            $lateral_direito = ["<p>".$nome_final."</p>", $jogador["idJogador"], $jogador["foto"]];
             break;
         case "Lateral-esquerdo":
-            $lateral_esquerdo = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
+            $lateral_esquerdo = ["<p>".$nome_final."</p>", $jogador["idJogador"], $jogador["foto"]];
             break;
         case "Ala direito":
-            $ala_direito = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
+            $ala_direito = ["<p>".$nome_final."</p>", $jogador["idJogador"], $jogador["foto"]];
             break;
         case "Ala esquerdo":
-            $ala_esquerdo = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
+            $ala_esquerdo = ["<p>".$nome_final."</p>", $jogador["idJogador"], $jogador["foto"]];
             break;
         case "Meia direito":
-            $meia_direito = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
+            $meia_direito = ["<p>".$nome_final."</p>", $jogador["idJogador"], $jogador["foto"]];
             break;
         case "Meia esquerdo":
-            $meia_esquerdo = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
+            $meia_esquerdo = ["<p>".$nome_final."</p>", $jogador["idJogador"], $jogador["foto"]];
             break;
         case "Ponta direita":
-            $ponta_direita = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
+            $ponta_direita = ["<p>".$nome_final."</p>", $jogador["idJogador"], $jogador["foto"]];
             break;
         case "Ponta esquerda":
-            $ponta_esquerda = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
+            $ponta_esquerda = ["<p>".$nome_final."</p>", $jogador["idJogador"], $jogador["foto"]];
             break;
         case "Zagueiro":
-            $zagueiro[] = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
+            $zagueiro[] = ["<p>".$nome_final."</p>", $jogador["idJogador"], $jogador["foto"]];
             break;
         case "Volante":
-            $volante[] = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
+            $volante[] = ["<p>".$nome_final."</p>", $jogador["idJogador"], $jogador["foto"]];
             break;
         case "Meia central":
-            $meia[] = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
+            $meia[] = ["<p>".$nome_final."</p>", $jogador["idJogador"], $jogador["foto"]];
             break;
         case "Meia-atacante":
-            $armador[] = ["<p>".$nome_final."</p>",$jogador["idJogador"]];
+            $armador[] = ["<p>".$nome_final."</p>", $jogador["idJogador"], $jogador["foto"]];
             break;
         case "Atacante de movimentação":
-            $atacante[] = ["<p>".$nome_final."</p>",$jogador["idJogador"],"Am"];
+            $atacante[] = ["<p>".$nome_final."</p>", $jogador["idJogador"], "Am", $jogador["foto"]];
             break;
         case "Atacante de área":
-            $atacante[] = ["<p>".$nome_final."</p>",$jogador["idJogador"],"Aa"];
+            $atacante[] = ["<p>".$nome_final."</p>", $jogador["idJogador"], "Aa", $jogador["foto"]];
             break;
         default:
         break;
@@ -696,122 +741,184 @@ foreach($lista_titulares as $jogador){
 if(!isset($ponta_esquerda)){
   $ponta_esquerda[0] = '';
   $ponta_esquerda[1] = "PE";
+  $ponta_esquerda[2] = '';
 }
 
 if(!isset($ponta_direita)){
   $ponta_direita[0] = '';
   $ponta_direita[1] = "PD";
+  $ponta_direita[2] = '';
 }
 
 if(!isset($ala_direito)){
   $ala_direito[0] = '';
   $ala_direito[1] = "AD";
+  $ala_direito[2] = '';
 }
 
 if(!isset($ala_esquerdo)){
   $ala_esquerdo[0] = '';
   $ala_esquerdo[1] = "AE";
+  $ala_esquerdo[2] = '';
 }
 
 if(!isset($lateral_direito)){
   $lateral_direito[0] = '';
   $lateral_direito[1] = "LD";
+  $lateral_direito[2] = '';
 }
 
 if(!isset($lateral_esquerdo)){
   $lateral_esquerdo[0] = '';
   $lateral_esquerdo[1] = "LE";
+  $lateral_esquerdo[2] = '';
 }
 
 if(!isset($meia_direito)){
   $meia_direito[0] = '';
   $meia_direito[1] = "MD";
+  $meia_direito[2] = '';
 }
 
 if(!isset($meia_esquerdo)){
   $meia_esquerdo[0] = '';
   $meia_esquerdo[1] = "ME";
+  $meia_esquerdo[2] = '';
 }
 
 if(!isset($goleiro)){
-  $goleiro = '';
+  $goleiro = ['', 'GK', ''];
 }
 
 //pagina da escalacao
-echo "<div class='tabcontent' id='Posicionamento' hidden>";
+echo "<div class='tabcontent' id='Posicionamento' style='display: none;'>";
+echo '<div class="pitch-scroll-wrapper" style="overflow-x: auto; width: 100%; padding: 10px 0; display: flex; justify-content: center; margin-bottom: 20px;">';
 echo '<div id="sortable" class="ui-state">';
-//echo '<div id= "background-sortable" ></div>';
+
+if (!function_exists('renderPitchPlayer')) {
+    function renderPitchPlayer($drag_players, $playerData, $uniform_image, $default_pos, $className, $photo = '') {
+        $posId = isset($playerData[1]) ? $playerData[1] : $default_pos;
+        $nameHtml = (isset($playerData[0]) && $playerData[0] != '') ? $playerData[0] : '&nbsp;';
+        
+        $html = '<div id="' . $drag_players . $posId . '" class="' . $className . '">';
+        if (isset($playerData[0]) && $playerData[0] != '') {
+            $html .= '<span class="pitch-player-media">';
+            $html .= '<img src="/images/uniformes/' . $uniform_image . '" class="pitch-uniform">';
+            if (!empty($photo)) {
+                $html .= '<img src="/images/jogadores/' . $photo . '" class="pitch-photo" onerror="this.style.display=\'none\'">';
+            }
+            $html .= '</span>';
+        }
+        $html .= '<div class="' . $default_pos . '"></div>';
+        $html .= $nameHtml;
+        $html .= '</div>';
+        return $html;
+    }
+}
 
 // ponta-esquerda
-echo '<div id="'.$drag_players.$ponta_esquerda[1].'" class="pos-ataque">'.($ponta_esquerda[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="PE"></div>'.($ponta_esquerda[0]!=''?$ponta_esquerda[0]:'&nbsp').'</div>';
+echo renderPitchPlayer($drag_players, $ponta_esquerda, $uniforme1_time, 'PE', 'pos-ataque', isset($ponta_esquerda[2]) ? $ponta_esquerda[2] : '');
 
 // atacantes
-echo '<div id="'.$drag_players.(count($atacante)==2 ? $atacante[0][1] : (count($atacante)==3 ? $atacante[0][1] : "AA")).'" class="pos-ataque">'.((count($atacante) == 2 OR count($atacante) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="'.(count($atacante)==2 ? $atacante[0][2] : (count($atacante)==3 ? $atacante[0][2] : "A0")).'" ></div>'.(count($atacante)==2 ? $atacante[0][0] : (count($atacante)==3 ? $atacante[0][0] : "&nbsp")).'</div>';
+$at1 = (count($atacante)==2 ? $atacante[0] : (count($atacante)==3 ? $atacante[0] : ['', 'AA', 'A0', '']));
+$at1_pos = isset($at1[2]) ? $at1[2] : 'A0';
+$at1_photo = isset($at1[3]) ? $at1[3] : '';
+echo renderPitchPlayer($drag_players, $at1, $uniforme1_time, $at1_pos, 'pos-ataque', $at1_photo);
 
-echo '<div id="'.$drag_players.(count($atacante)==1 ? $atacante[0][1] : (count($atacante)==3 ? $atacante[1][1] : "AB")).'" class="pos-ataque">'.((count($atacante) == 1 OR count($atacante) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="'.(count($atacante)==1 ? $atacante[0][2] : (count($atacante)==3 ? $atacante[1][2] : "A0")).'" ></div>'.(count($atacante)==1 ? $atacante[0][0] : (count($atacante)==3 ? $atacante[1][0] : "&nbsp")).'</div>';
+$at2 = (count($atacante)==1 ? $atacante[0] : (count($atacante)==3 ? $atacante[1] : ['', 'AB', 'A0', '']));
+$at2_pos = isset($at2[2]) ? $at2[2] : 'A0';
+$at2_photo = isset($at2[3]) ? $at2[3] : '';
+echo renderPitchPlayer($drag_players, $at2, $uniforme1_time, $at2_pos, 'pos-ataque', $at2_photo);
 
-echo '<div id="'.$drag_players.(count($atacante)==2 ? $atacante[1][1] : (count($atacante)==3 ? $atacante[2][1] : "AC")).'" class="pos-ataque">'.((count($atacante) == 2 OR count($atacante) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="'.(count($atacante)==2 ? $atacante[1][2] : (count($atacante)==3 ? $atacante[2][2] : "A0")).'" ></div>'.(count($atacante)==2 ? $atacante[1][0] : (count($atacante)==3 ? $atacante[2][0] : "&nbsp")).'</div>';
+$at3 = (count($atacante)==2 ? $atacante[1] : (count($atacante)==3 ? $atacante[2] : ['', 'AC', 'A0', '']));
+$at3_pos = isset($at3[2]) ? $at3[2] : 'A0';
+$at3_photo = isset($at3[3]) ? $at3[3] : '';
+echo renderPitchPlayer($drag_players, $at3, $uniforme1_time, $at3_pos, 'pos-ataque', $at3_photo);
 
 // ponta-direita
-echo '<div id="'.$drag_players.$ponta_direita[1].'" class="pos-ataque">'.($ponta_direita[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="PD"></div>'.($ponta_direita[0]!=''?$ponta_direita[0]:'&nbsp').'</div>';
+echo renderPitchPlayer($drag_players, $ponta_direita, $uniforme1_time, 'PD', 'pos-ataque', isset($ponta_direita[2]) ? $ponta_direita[2] : '');
 
 // armadores
 echo '<div id="nondraggable6">&nbsp</div>';
 
-echo '<div id="'.$drag_players.(count($armador)==2 ? $armador[0][1] : (count($armador)==3 ? $armador[0][1] : "AD")).'" class="pos-meio-ataque">'.((count($armador) == 2 OR count($armador) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="MA"></div>'.(count($armador)==2 ? $armador[0][0] : (count($armador)==3 ? $armador[0][0] : "&nbsp")).'</div>';
+$arm1 = (count($armador)==2 ? $armador[0] : (count($armador)==3 ? $armador[0] : ['', 'AD', '']));
+echo renderPitchPlayer($drag_players, $arm1, $uniforme1_time, 'MA', 'pos-meio-ataque', isset($arm1[2]) ? $arm1[2] : '');
 
-echo '<div id="'.$drag_players.(count($armador)==1 ? $armador[0][1] : (count($armador)==3 ? $armador[1][1] : "AE")).'" class="pos-meio-ataque">'.((count($armador) == 1 OR count($armador) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="MA"></div>'.(count($armador)==1 ? $armador[0][0] : (count($armador)==3 ? $armador[1][0] : "&nbsp")).'</div>';
+$arm2 = (count($armador)==1 ? $armador[0] : (count($armador)==3 ? $armador[1] : ['', 'AE', '']));
+echo renderPitchPlayer($drag_players, $arm2, $uniforme1_time, 'MA', 'pos-meio-ataque', isset($arm2[2]) ? $arm2[2] : '');
 
-echo '<div id="'.$drag_players.(count($armador)==2 ? $armador[1][1] : (count($armador)==3 ? $armador[2][1] : "AF")).'" class="pos-meio-ataque">'.((count($armador) == 2 OR count($armador) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="MA"></div>'.(count($armador)==2 ? $armador[1][0] : (count($armador)==3 ? $armador[2][0] : "&nbsp")).'</div>';
+$arm3 = (count($armador)==2 ? $armador[1] : (count($armador)==3 ? $armador[2] : ['', 'AF', '']));
+echo renderPitchPlayer($drag_players, $arm3, $uniforme1_time, 'MA', 'pos-meio-ataque', isset($arm3[2]) ? $arm3[2] : '');
 
 echo '<div id="nondraggable10">&nbsp</div>';
 
 // meia-esquerda
-echo '<div id="'.$drag_players.$meia_esquerdo[1].'" class="pos-meio">'.($meia_esquerdo[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="ME"></div>'.($meia_esquerdo[0]!=''?$meia_esquerdo[0]:'&nbsp').'</div>';
+echo renderPitchPlayer($drag_players, $meia_esquerdo, $uniforme1_time, 'ME', 'pos-meio', isset($meia_esquerdo[2]) ? $meia_esquerdo[2] : '');
 
 // meias-centrais
-echo '<div id="'.$drag_players.(count($meia)==2 ? $meia[0][1] : (count($meia)==3 ? $meia[0][1] : "AG")).'" class="pos-meio">'.((count($meia) == 2 OR count($meia) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="MC"></div>'.(count($meia)==2 ? $meia[0][0] : (count($meia)==3 ? $meia[0][0] : "&nbsp")).'</div>';
+$m1 = (count($meia)==2 ? $meia[0] : (count($meia)==3 ? $meia[0] : ['', 'AG', '']));
+echo renderPitchPlayer($drag_players, $m1, $uniforme1_time, 'MC', 'pos-meio', isset($m1[2]) ? $m1[2] : '');
 
-echo '<div id="'.$drag_players.(count($meia)==1 ? $meia[0][1] : (count($meia)==3 ? $meia[1][1] : "AH")).'" class="pos-meio">'.((count($meia) == 1 OR count($meia) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="MC"></div>'.(count($meia)==1 ? $meia[0][0] : (count($meia)==3 ? $meia[1][0] : "&nbsp")).'</div>';
+$m2 = (count($meia)==1 ? $meia[0] : (count($meia)==3 ? $meia[1] : ['', 'AH', '']));
+echo renderPitchPlayer($drag_players, $m2, $uniforme1_time, 'MC', 'pos-meio', isset($m2[2]) ? $m2[2] : '');
 
-echo '<div id="'.$drag_players.(count($meia)==2 ? $meia[1][1] : (count($meia)==3 ? $meia[2][1] : "AI")).'" class="pos-meio">'.((count($meia) == 2 OR count($meia) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="MC"></div>'.(count($meia)==2 ? $meia[1][0] : (count($meia)==3 ? $meia[2][0] : "&nbsp")).'</div>';
+$m3 = (count($meia)==2 ? $meia[1] : (count($meia)==3 ? $meia[2] : ['', 'AI', '']));
+echo renderPitchPlayer($drag_players, $m3, $uniforme1_time, 'MC', 'pos-meio', isset($m3[2]) ? $m3[2] : '');
 
 // meia-direita
-echo '<div id="'.$drag_players.$meia_direito[1].'" class="pos-meio">'.($meia_direito[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="MD"></div>'.($meia_direito[0]!=''?$meia_direito[0]:'&nbsp').'</div>';
+echo renderPitchPlayer($drag_players, $meia_direito, $uniforme1_time, 'MD', 'pos-meio', isset($meia_direito[2]) ? $meia_direito[2] : '');
 
 // ala-esquerda
-echo '<div id="'.$drag_players.$ala_esquerdo[1].'" class="pos-zaga-meio">'.($ala_esquerdo[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="AE"></div>'.($ala_esquerdo[0]!=''?$ala_esquerdo[0]:'&nbsp').'</div>';
+echo renderPitchPlayer($drag_players, $ala_esquerdo, $uniforme1_time, 'AE', 'pos-zaga-meio', isset($ala_esquerdo[2]) ? $ala_esquerdo[2] : '');
 
 // volantes
-echo '<div id="'.$drag_players.(count($volante)==2 ? $volante[0][1] : (count($volante)==3 ? $volante[0][1] : "AJ")).'" class="pos-zaga-meio">'.((count($volante) == 2 OR count($volante) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="V"></div>'.(count($volante)==2 ? $volante[0][0] : (count($volante)==3 ? $volante[0][0] : "&nbsp")).'</div>';
+$v1 = (count($volante)==2 ? $volante[0] : (count($volante)==3 ? $volante[0] : ['', 'AJ', '']));
+echo renderPitchPlayer($drag_players, $v1, $uniforme1_time, 'V', 'pos-zaga-meio', isset($v1[2]) ? $v1[2] : '');
 
-echo '<div id="'.$drag_players.(count($volante)==1 ? $volante[0][1] : (count($volante)==3 ? $volante[1][1] : "AK")).'" class="pos-zaga-meio">'.((count($volante) == 1 OR count($volante) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="V"></div>'.(count($volante)==1 ? $volante[0][0] : (count($volante)==3 ? $volante[1][0] : "&nbsp")).'</div>';
+$v2 = (count($volante)==1 ? $volante[0] : (count($volante)==3 ? $volante[1] : ['', 'AK', '']));
+echo renderPitchPlayer($drag_players, $v2, $uniforme1_time, 'V', 'pos-zaga-meio', isset($v2[2]) ? $v2[2] : '');
 
-echo '<div id="'.$drag_players.(count($volante)==2 ? $volante[1][1] : (count($volante)==3 ? $volante[2][1] : "AL")).'" class="pos-zaga-meio">'.((count($volante) == 2 OR count($volante) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="V"></div>'.(count($volante)==2 ? $volante[1][0] : (count($volante)==3 ? $volante[2][0] : "&nbsp")).'</div>';
+$v3 = (count($volante)==2 ? $volante[1] : (count($volante)==3 ? $volante[2] : ['', 'AL', '']));
+echo renderPitchPlayer($drag_players, $v3, $uniforme1_time, 'V', 'pos-zaga-meio', isset($v3[2]) ? $v3[2] : '');
 
 // ala-direita
-echo '<div id="'.$drag_players.$ala_direito[1].'" class="pos-zaga-meio">'.($ala_direito[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="AD"></div>'.($ala_direito[0]!=''?$ala_direito[0]:'&nbsp').'</div>';
+echo renderPitchPlayer($drag_players, $ala_direito, $uniforme1_time, 'AD', 'pos-zaga-meio', isset($ala_direito[2]) ? $ala_direito[2] : '');
 
 // lateral-esquerda
-echo '<div id="'.$drag_players.$lateral_esquerdo[1].'" class="pos-zaga">'.($lateral_esquerdo[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="LE"></div>'.($lateral_esquerdo[0]!=''?$lateral_esquerdo[0]:'&nbsp').'</div>';
+echo renderPitchPlayer($drag_players, $lateral_esquerdo, $uniforme1_time, 'LE', 'pos-zaga', isset($lateral_esquerdo[2]) ? $lateral_esquerdo[2] : '');
 
 // zagueiros
-echo '<div id="'.$drag_players.(count($zagueiro)==2 ? $zagueiro[0][1] : (count($zagueiro)==3 ? $zagueiro[0][1] : "AM")).'" class="pos-zaga">'.((count($zagueiro) == 2 OR count($zagueiro) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="Z"></div>'.(count($zagueiro)==2 ? $zagueiro[0][0] : (count($zagueiro)==3 ? $zagueiro[0][0] : "&nbsp")).'</div>';
+$z1 = (count($zagueiro)==2 ? $zagueiro[0] : (count($zagueiro)==3 ? $zagueiro[0] : ['', 'AM', '']));
+echo renderPitchPlayer($drag_players, $z1, $uniforme1_time, 'Z', 'pos-zaga', isset($z1[2]) ? $z1[2] : '');
 
-echo '<div id="'.$drag_players.(count($zagueiro)==1 ? $zagueiro[0][1] : (count($zagueiro)==3 ? $zagueiro[1][1] : "AN")).'" class="pos-zaga">'.((count($zagueiro) == 1 OR count($zagueiro) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="Z"></div>'.(count($zagueiro)==1 ? $zagueiro[0][0] : (count($zagueiro)==3 ? $zagueiro[1][0] : "&nbsp")).'</div>';
+$z2 = (count($zagueiro)==1 ? $zagueiro[0] : (count($zagueiro)==3 ? $zagueiro[1] : ['', 'AN', '']));
+echo renderPitchPlayer($drag_players, $z2, $uniforme1_time, 'Z', 'pos-zaga', isset($z2[2]) ? $z2[2] : '');
 
-echo '<div id="'.$drag_players.(count($zagueiro)==2 ? $zagueiro[1][1] : (count($zagueiro)==3 ? $zagueiro[2][1] : "AO")).'" class="pos-zaga">'.((count($zagueiro) == 2 OR count($zagueiro) == 3) ? '<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">' : "").'<div class="Z"></div>'.(count($zagueiro)==2 ? $zagueiro[1][0] : (count($zagueiro)==3 ? $zagueiro[2][0] : "&nbsp")).'</div>';
+$z3 = (count($zagueiro)==2 ? $zagueiro[1] : (count($zagueiro)==3 ? $zagueiro[2] : ['', 'AO', '']));
+echo renderPitchPlayer($drag_players, $z3, $uniforme1_time, 'Z', 'pos-zaga', isset($z3[2]) ? $z3[2] : '');
 
 // lateral-direita
-echo '<div id="'.$drag_players.$lateral_direito[1].'" class="pos-zaga">'.($lateral_direito[0]!=''?'<img src="/images/uniformes/'.$uniforme1_time. '" height="60px">':'').'<div class="LD"></div>'.($lateral_direito[0]!=''?$lateral_direito[0]:'&nbsp').'</div>';
+echo renderPitchPlayer($drag_players, $lateral_direito, $uniforme1_time, 'LD', 'pos-zaga', isset($lateral_direito[2]) ? $lateral_direito[2] : '');
 
 // goleiro
 echo '<div id="nondraggable26">&nbsp</div>';
 echo '<div id="nondraggable27">&nbsp</div>';
-echo '<div id="nondraggable28" class="goleiro"><img src="/images/uniformes/'.$uniforme2_time. '" height="60px"><p>'.$goleiro.'</p></div>';
+
+$gk = isset($goleiro) ? $goleiro : ['', 'GK', ''];
+echo '<div id="nondraggable28" class="goleiro">';
+echo '<span class="pitch-player-media">';
+echo '<img src="/images/uniformes/' . $uniforme2_time . '" class="pitch-uniform">';
+if (!empty($gk[2])) {
+    echo '<img src="/images/jogadores/' . $gk[2] . '" class="pitch-photo" onerror="this.style.display=\'none\'">';
+}
+echo '</span>';
+echo !empty($gk[0]) ? $gk[0] : '<p>&nbsp;</p>';
+echo '</div>';
+
 echo '<div id="nondraggable29">&nbsp</div>';
 echo '<div id="nondraggable30">&nbsp</div>';
-echo '</div>';
+echo '</div>'; // close #sortable
+echo '</div>'; // close scroll container
 
 if($donoLogado){
 echo '<div id="cobradoresCapitao">';
@@ -921,8 +1028,8 @@ echo $date->format('Y-m-d');
       <button type="submit" name="newsubmit" class="submitbtn">Propor transferência</button>
     </div>
 
-    <div class="container" style="background-color:#f1f1f1">
-      <button type="button" onclick="document.getElementById('modalProposta').style.display='none'" class="cancelbtn">Cancelar</button>
+    <div class="container">
+      <button type="button" onclick="document.getElementById('modalProposta').style.display='none'" class="cancelbtn">✕ Cancelar</button>
     </div>
   </form>
 </div>
@@ -964,7 +1071,7 @@ echo $date->format('Y-m-d');
     </div>
 
     <div class="container" style="background-color:#f1f1f1">
-      <button type="button" onclick="document.getElementById('modalPropostaTecnico').style.display='none'" class="cancelbtn">Cancelar</button>
+      <button type="button" onclick="document.getElementById('modalPropostaTecnico').style.display='none'" class="cancelbtn">✕ Cancelar</button>
     </div>
   </form>
 </div>
@@ -1204,14 +1311,17 @@ $(this).css("background-color", "white");
 <script>
 
 $(document).on("click", '.tablinks', function(event){
+    event.preventDefault(); // impede qualquer navegação/scroll do anchor
 
     var id = $(this).html();
 
-    window.location.hash = '#'+id;
+    // Atualiza a hash na URL sem rolar a página
+    if (history.replaceState) {
+        history.replaceState(null, null, '#' + id);
+    }
 
     $(".tabcontent").each(function(index){
         $(this).hide();
-
     });
 
     $('#'+id).show();
@@ -1220,10 +1330,6 @@ $(document).on("click", '.tablinks', function(event){
         $(this).removeClass("active");
     });
     $(this).addClass("active");
-
-
-
-    event.preventDefault();
 
 });
 
@@ -1593,6 +1699,55 @@ if (! data.success) {
 
 });
 
+$(document).on("click", ".quick-move-btn", function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    var idJogador = $(this).data('id');
+    var action = $(this).data('action');
+    var idTime = $('#quadro-container').prop('class');
+    var total_titular = $('.clickablerow_tit').length;
+    var total_reserva = $('.clickablerow_res').length;
+
+    var tipoAlteracao;
+    if (action === 'promote-suplente') {
+        tipoAlteracao = 2; // Suplente -> Reserva
+    } else if (action === 'demote-reserva') {
+        tipoAlteracao = 3; // Reserva -> Suplente
+    } else if (action === 'promote-reserva') {
+        if (total_titular >= 11) {
+            alert('Já existem 11 jogadores titulares!');
+            return;
+        }
+        tipoAlteracao = 4; // Reserva -> Titular
+    } else if (action === 'demote-titular') {
+        if (total_reserva >= 12) {
+            alert('Já existem 12 jogadores reservas!');
+            return;
+        }
+        tipoAlteracao = 5; // Titular -> Reserva
+    }
+
+    var formData = {
+        'idJogador1': idJogador,
+        'tipoAlteracao': tipoAlteracao,
+        'clube': idTime
+    };
+
+    $.ajax({
+        type: 'POST',
+        url: 'alteracao_elenco.php',
+        data: formData,
+        dataType: 'json',
+        encode: true
+    }).done(function(data) {
+        if (!data.success) {
+            $('#errorbox').append('<div class="alert alert-danger">Não foi possível realizar o pedido, '+data.error+'</div>');
+        } else {
+            reloadPageContent();
+        }
+    });
+});
+
 
 </script>
 
@@ -1601,70 +1756,59 @@ if (! data.success) {
 
 function initDragDrop() {
 
-    $("[id^=draggable]").contextmenu(function(event) {
-        event.preventDefault();
+    function togglePlayerStyle(element) {
+        var idJogador = element.attr('id').replace( /\D/g, '');
+        var idTime = $('#quadro-container').prop('class');
+        var posicao = element.children('div').attr('class');
+        var posJogador;
+        if(posicao == 'Aa'){
+             element.children('div').removeClass('Aa').addClass('Am');
+             posJogador = 'Am';
+        } else if (posicao == 'Am'){
+             element.children('div').removeClass('Am').addClass('Aa');
+             posJogador = 'Aa';
+        }
 
-       var idJogador = $(this).attr('id').replace( /\D/g, '');
-       var idTime = $('#quadro-container').prop('class');
-       var posicao = $(this).children('div').attr('class');
-       var posJogador;
-       if(posicao == 'Aa'){
-            $(this).children('div').removeClass('Aa').addClass('Am');
-            posJogador = 'Am';
-       } else if (posicao == 'Am'){
-            $(this).children('div').removeClass('Am').addClass('Aa');
-            posJogador = 'Aa';
-       }
+        var primeiraLetra = posicao.charAt(0);
 
-       primeiraLetra = posicao.charAt(0);
+        if((idJogador.length > 0) && (primeiraLetra.localeCompare('A') === 0)){
+            var formData = {
+                'idJogador1' : idJogador,
+                'tipoAlteracao' : 7,
+                'posicao1' : posJogador,
+                'clube' : idTime
+            };
 
-       console.log(idJogador.length);
-       console.log(primeiraLetra.localeCompare('A'));
-
-       if((idJogador.length > 0) && (primeiraLetra.localeCompare('A') === 0)){
-
-                  //efetuar a troca por AJAX
-                  var formData = {
-            'idJogador1' : idJogador,
-            'tipoAlteracao' : 7,
-            'posicao1' : posJogador,
-            'clube' : idTime
-        };
-
-        console.log("id1:"+idJogador + "pos" + posJogador);
-
-         $.ajax({
-                type        : 'POST', // define the type of HTTP verb we want to use (POST for our form)
-                url         : 'alteracao_elenco.php', // the url where we want to POST
-                data        : formData, // our data object
-                dataType    : 'json', // what type of data do we expect back from the server
-                encode          : true
+            $.ajax({
+                type        : 'POST',
+                url         : 'alteracao_elenco.php',
+                data        : formData,
+                dataType    : 'json',
+                encode      : true
             })
-
-                        .done(function(data) {
-
-
-    // log data to the console so we can see
-    console.log(data);
-    //window.scrollTo(0, 0);
-
-    if (! data.success) {
-
-         $('#errorbox').append('<div class="alert alert-danger">Não foi possível realizar o pedido, '+data.error+'</div>');
-
-
-    } else {
-
-
-        reloadPageContent();
-
+            .done(function(data) {
+                if (!data.success) {
+                     $('#errorbox').append('<div class="alert alert-danger">Não foi possível realizar o pedido, '+data.error+'</div>');
+                } else {
+                    reloadPageContent();
+                }
+            });
+        }
     }
 
-    // here we will handle errors and validation messages
+    $("[id^=draggable]").contextmenu(function(event) {
+        event.preventDefault();
+        togglePlayerStyle($(this));
     });
-       }
 
-
+    var touchTimer;
+    $("[id^=draggable]").on("touchstart", function(event) {
+        var element = $(this);
+        touchTimer = setTimeout(function() {
+            togglePlayerStyle(element);
+        }, 700);
+    }).on("touchend touchmove", function() {
+        clearTimeout(touchTimer);
     });
     
     // Unbind previous draggable/droppable to avoid memory leaks or double binds if called multiple times?
@@ -1810,6 +1954,7 @@ function swapNodes(a, b) {
 <script>
 
 $(document).on("click", '.disponibilizar', function(event){
+    event.preventDefault();
 
     var idJogador = $(this).closest('tr').prop('id');
 	
@@ -1822,6 +1967,7 @@ $(document).on("click", '.disponibilizar', function(event){
 });
 
 $(document).on("click", '.aposentar', function(event){
+    event.preventDefault();
 
 var idJogador = $(this).closest('tr').prop('id');
 var idTime = $('#quadro-container').prop('class');
@@ -1840,6 +1986,7 @@ if(window.confirm("Deseja mesmo aposentar este jogador?")){
 });
 
 $(document).on("click", '.expatriar', function(event){
+    event.preventDefault();
 
 var idJogador = $(this).closest('tr').prop('id');
 var idTime = $('#quadro-container').prop('class');
@@ -1856,6 +2003,7 @@ if(window.confirm("Deseja mesmo expatriar este jogador?")){
 });
 
 $(document).on("click", '.demitir', function(event){
+    event.preventDefault();
 
     var idJogador = $(this).closest('tr').prop('id');
     var idTime = $('#quadro-container').prop('class');
@@ -1873,6 +2021,7 @@ $(document).on("click", '.demitir', function(event){
 });
 
 $(document).on("click", '.demitirTecnico', function(event){
+    event.preventDefault();
 
 var idTecnico = $(this).closest('tr').prop('id').replace(/\D/g, "");;
 var idTime = $('#quadro-container').prop('class');
@@ -1890,6 +2039,7 @@ ajaxCallTecnico(formData);
 });
 
 $(document).on("click", '.desconvocarTecnico', function(event){
+    event.preventDefault();
 
 var idTecnico = $(this).closest('tr').prop('id').replace(/\D/g, "");;
 var idTime = $('#quadro-container').prop('class');
@@ -1909,6 +2059,7 @@ ajaxCallTecnico(formData);
 });
 
 $(document).on("click", '.desconvocar', function(event){
+    event.preventDefault();
 
 var idJogador = $(this).closest('tr').prop('id');
 var idTime = $('#quadro-container').prop('class');
@@ -1935,13 +2086,9 @@ var tbl_row = $(this).closest('tr');
 
         });
 
+tbl_row.find("td:last-child .cell-value > a").hide();
 tbl_row.find(".salvar").show();
 tbl_row.find(".cancelar").show();
-tbl_row.find(".editar").hide();
-tbl_row.find(".disponibilizar").hide();
-tbl_row.find(".aposentar").hide();
-tbl_row.find(".demitir").hide();
-tbl_row.find(".proposta").hide();
 tbl_row.find('.hiddenInput').show();
 tbl_row.find('.playerThumb').addClass('editableThumb');
 
@@ -2062,13 +2209,9 @@ tbl_row.find(".valor").html(valor);
             isDataDirty = false;
         var tbl_row =  $(this).closest('tr');
         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+        tbl_row.find("td:last-child .cell-value > a").show();
         tbl_row.find(".salvar").hide();
         tbl_row.find(".cancelar").hide();
-        tbl_row.find(".editar").show();
-        tbl_row.find(".disponibilizar").show();
-        tbl_row.find(".demitir").show();
-        tbl_row.find(".aposentar").show();
-        tbl_row.find(".proposta").show();
         tbl_row.find('.posicoesAtuais').show();
         tbl_row.find('.comboPosicoes').hide();
         tbl_row.find('.valorEditavel').attr('contenteditable', 'false').removeClass('editavel');
@@ -2466,11 +2609,9 @@ var tbl_row = $(this).closest('tr');
         });
 
 
+tbl_row.find("td:last-child .cell-value > a").hide();
 tbl_row.find(".salvarTecnico").show();
 tbl_row.find(".cancelarTecnico").show();
-tbl_row.find(".editarTecnico").hide();
-tbl_row.find(".demitirTecnico").hide();
-tbl_row.find(".propostaTecnico").hide();
 
 //garantir que o dono do time está logado e que ele é o dono do jogador também (duplo check, JS e PHP)
 var donoTime = $("tr th:last-child").prop("id").replace(/\D/g, "");
@@ -2546,11 +2687,9 @@ var idTecnico = tbl_row.prop('id');
         tbl_row.find('.comboPais').hide();
         tbl_row.find('.posicao').show();
         tbl_row.find('.nomePais').show();
+        tbl_row.find("td:last-child .cell-value > a").show();
         tbl_row.find('.salvarTecnico').hide();
         tbl_row.find('.cancelarTecnico').hide();
-        tbl_row.find('.editarTecnico').show();
-        tbl_row.find('.propostaTecnico').show();
-        tbl_row.find('.demitirTecnico').show();
 		tbl_row.find('.desdeFixo').show();
 		tbl_row.find('.desde').hide();
 
@@ -2655,8 +2794,10 @@ var idTecnico = tbl_row.prop('id');
 
 </script>
 
+</div> <!-- close #quadro-container -->
+</div> <!-- close .propostas-card -->
+</main> <!-- close .propostas-container -->
+
 <?php
-
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
-
 ?>

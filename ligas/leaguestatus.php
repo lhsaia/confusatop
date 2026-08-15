@@ -71,9 +71,9 @@ $nivel_medio = number_format($info['mediaNivel'], 1);
 $nivel_medio_onze = number_format($info['mediaNivelOnze'],1);
 
 $page_title = $nome_liga;
-$css_filename = "indexRanking";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'ligas';
+$aux_css = 'ligas_status_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -82,16 +82,25 @@ if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais){
 } else {
 	$baseLink = "/times/team_presentation";
 }
+?>
 
+<iframe id="results_sheet" hidden></iframe>
 
-echo "<div id='quadro-container'>";
-echo "<img id='bandeiraGrande' class='margin-left' src='/images/ligas/".$logo_liga."' height='100' alt='Logo da liga ".$nome_liga."'>" ;
-echo "<h2>" . $nome_liga ." </h2>";
-echo "<h3><a href='paisstatus.php?country=".$idPais."'>" . $pais_liga ."</a> - Tier ".$tier_liga." </h3> ";
-echo "<hr>";
+<main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
+<div class="propostas-card">
+    <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
+        <img id="bandeiraGrande" src="/images/ligas/<?php echo htmlspecialchars($logo_liga); ?>" style="height: 60px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <div>
+            <h2 class="propostas-title" style="margin: 0; text-align: left;"><?php echo htmlspecialchars($nome_liga); ?></h2>
+            <h3 style="margin: 4px 0 0 0; font-size: 1rem;"><a href="paisstatus.php?country=<?php echo $idPais; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars($pais_liga); ?></a> - Tier <?php echo $tier_liga; ?></h3>
+        </div>
+    </div>
+    
+    <hr style="border: none; border-bottom: 1px solid rgba(0,0,0,0.08); margin: 20px 0;">
 
-//query jogos time
-$time_stmt = $time->readAll($from_record_num,$records_per_page,null,$idLiga);
+    <?php
+    //query jogos time
+    $time_stmt = $time->readAll($from_record_num,$records_per_page,null,$idLiga);
 
     // the page where this paging is used
     $page_url = "leaguestatus.php?league=" . $idLiga . "&";
@@ -100,122 +109,171 @@ $time_stmt = $time->readAll($from_record_num,$records_per_page,null,$idLiga);
     $total_rows = $time->countAll(null,$idLiga);
 
     $perc_estrangeiros = $jogadores > 0 ? number_format(($estrangeiros / $jogadores)*100,1)."%" : "0%";
+    ?>
 
-echo "<div id='info-jogos'>";
-echo "<div id='times' class='infoblock' title='Quantidade de times'><span class='material-symbols-outlined'>shield</span><span class='informacao'>{$total_rows}</span></div>";
-echo "<div id='jogadores' class='infoblock' title='Quantidade de jogadores'><span class='material-symbols-outlined'>groups</span><span class='informacao'>{$jogadores}</span></div>";
-echo "<div id='Idades' class='infoblock' title='Média de idade'><span class='material-symbols-outlined'>elderly</span><span class='informacao'>{$mediaIdade}</span></div>";
-echo "<div id='Estrangeiros' class='infoblock' title='Estrangeiros'><span class='material-symbols-outlined'>globe_location_pin</span><span class='informacao'>{$estrangeiros}</span><span class='informacao micro'>({$perc_estrangeiros})</span></div>";
-echo "<div id='Valor' class='infoblock' title='Valor de mercado (em F$)'><span class='material-symbols-outlined'>attach_money</span><span class='informacao menor'>{$valor_total_clube}</span></div>";
-echo "<div id='MediaNivel' class='infoblock' title='Média de Nível (titulares/total)'><span class='material-symbols-outlined'>star_half</span><span class='informacao mini'> {$nivel_medio_onze}   <span class='informacao mini'> &nbsp {$nivel_medio} </span></span></div>";
-echo "</div>";
-echo "<br>";
+    <div id="info-jogos">
+        <div class="infoblock" title="Quantidade de times">
+            <span class="material-symbols-outlined">shield</span>
+            <div>
+                <span class="informacao"><?php echo $total_rows; ?></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Times</span>
+            </div>
+        </div>
+        <div class="infoblock" title="Quantidade de jogadores">
+            <span class="material-symbols-outlined">groups</span>
+            <div>
+                <span class="informacao"><?php echo $jogadores; ?></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Jogadores</span>
+            </div>
+        </div>
+        <div class="infoblock" title="Média de idade">
+            <span class="material-symbols-outlined">elderly</span>
+            <div>
+                <span class="informacao"><?php echo $mediaIdade; ?></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Média Idade</span>
+            </div>
+        </div>
+        <div class="infoblock" title="Estrangeiros">
+            <span class="material-symbols-outlined">globe_location_pin</span>
+            <div>
+                <span class="informacao"><?php echo $estrangeiros; ?> <span class="informacao micro">(<?php echo $perc_estrangeiros; ?>)</span></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Estrangeiros</span>
+            </div>
+        </div>
+        <div class="infoblock" title="Valor de mercado (em F$)">
+            <span class="material-symbols-outlined">attach_money</span>
+            <div>
+                <span class="informacao menor"><?php echo $valor_total_clube; ?></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Valor total</span>
+            </div>
+        </div>
+        <div class="infoblock" title="Média de Nível (titulares/total)">
+            <span class="material-symbols-outlined">star_half</span>
+            <div>
+                <span class="informacao"><?php echo $nivel_medio_onze; ?> <span class="informacao micro">/ <?php echo $nivel_medio; ?></span></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Nível Tit./Geral</span>
+            </div>
+        </div>
+    </div>
 
-echo "<div style='clear:both; float:center'></div>";
-echo "<hr>";
-echo "<p align='center'>Times</p>";
+    <hr style="border: none; border-bottom: 1px solid rgba(0,0,0,0.08); margin: 20px 0;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
+        <h3 style="font-family: 'Kanit', sans-serif; color: #1e293b; font-size: 1.2rem; margin: 0;">Times na Liga</h3>
+        <div>
+            <?php include_once($_SERVER['DOCUMENT_ROOT']."/elements/paging.php"); ?>
+        </div>
+    </div>
 
-    // paging buttons here
-    echo "<div style='clear:both; float:center'></div>";
-    echo "<div align='center'>";
-    include_once($_SERVER['DOCUMENT_ROOT']."/elements/paging.php");
-    echo "</div>";
-echo "<hr>";
+    <div style="overflow-x: auto; width: 100%;">
+        <table id="tabelaElenco" class="table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Uniformes</th>
+                    <th>Elenco</th>
+                    <th>Média Idade</th>
+                    <th>Estrangeiros</th>
+                    <th>Nível (geral)</th>
+                    <th>Nível (titulares)</th>
+                    <th>Valor Mercado</th>
+                    <th>Média / Jogador</th>
+                    <?php if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['user_id'] === $idDonoPais): ?>
+                        <th class="wide">Opções</th>
+                    <?php endif; ?>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while ($row = $time_stmt->fetch(PDO::FETCH_ASSOC)):
+                    $idTime = $row['ID'];
+                    $info = $time->readInfo($idTime);
 
-// display the products if there are any
+                    $elencoPorTime = $info['jogadores'];
+                    $mediaIdadePorTime = number_format($info['mediaIdade'],1);
+                    $estrangeirosPorTime = $info['estrangeiros'];
+                    $valorMercadoPorTime = "F$ ". number_format(($info['valorTotal']/1000000),2)."M";
+                    $valorMedioJogador = "F$ ". number_format(($elencoPorTime > 0 ? ($info['valorTotal']/($elencoPorTime*1000000)) : 0),2)."M";
+                    $escudos = $info['Escudo'];
+                    $uniforme1 = $info['Uniforme1'];
+                    $uniforme2 = $info['Uniforme2'];
+                    $nivel_medio = number_format($info['mediaNivel'], 1);
+                    $nivel_medio_onze = number_format($info['mediaNivelOnze'],1);
+                ?>
+                    <tr id="<?php echo $idTime; ?>" class="<?php echo $idLiga; ?>">
+                        <td class="cell-clube">
+                            <img class="logoliga" src="/images/escudos/<?php echo htmlspecialchars($escudos); ?>" height="30px"/>
+                            <a href="<?php echo $baseLink; ?>.php?team=<?php echo $idTime; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars($row['Nome']); ?></a>
+                        </td>
+                        <td data-label="Uniformes">
+                            <span class="cell-value">
+                                <?php if(!empty($uniforme1)): ?>
+                                    <img src="/images/uniformes/<?php echo htmlspecialchars($uniforme1); ?>" height="30px" style="margin-right: 5px;"/>
+                                <?php endif; ?>
+                                <?php if(!empty($uniforme2)): ?>
+                                    <img src="/images/uniformes/<?php echo htmlspecialchars($uniforme2); ?>" height="30px"/>
+                                <?php endif; ?>
+                            </span>
+                        </td>
+                        <td data-label="Elenco">
+                            <span class="cell-value"><?php echo $elencoPorTime; ?></span>
+                        </td>
+                        <td data-label="Média Idade">
+                            <span class="cell-value"><?php echo $mediaIdadePorTime; ?></span>
+                        </td>
+                        <td data-label="Estrangeiros">
+                            <span class="cell-value"><?php echo $estrangeirosPorTime; ?></span>
+                        </td>
+                        <td data-label="Nível Geral">
+                            <span class="cell-value"><?php echo $nivel_medio; ?></span>
+                        </td>
+                        <td data-label="Nível Titulares">
+                            <span class="cell-value"><?php echo $nivel_medio_onze; ?></span>
+                        </td>
+                        <td data-label="Valor Mercado">
+                            <span class="cell-value"><?php echo $valorMercadoPorTime; ?></span>
+                        </td>
+                        <td data-label="Valor Médio">
+                            <span class="cell-value"><?php echo $valorMedioJogador; ?></span>
+                        </td>
+                        <?php if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true): ?>
+                            <td data-label="Opções">
+                                <span class="cell-value">
+                                    <a id="dow<?php echo $idTime; ?>" title="Baixar arquivo .ymt" class="clickable exportar" style="cursor: pointer; margin-right: 8px;">
+                                        <span class="material-symbols-outlined inlineButton azul">download</span>
+                                    </a>
+                                    <?php if($_SESSION['user_id'] === $idDonoPais): ?>
+                                        <a id="mov<?php echo $idTime; ?>" title="Mover" class="clickable mover" style="cursor: pointer; margin-right: 8px;">
+                                            <span class="material-symbols-outlined inlineButton azul">swap_vert</span>
+                                        </a>
+                                        <select id="sel<?php echo $idTime; ?>" title="Selecionar liga" class="selecionar_liga" style="display: none; padding: 4px; border-radius: 4px; margin-right: 8px;">
+                                            <?php for($i = 0; $i < count($listaLigas); $i++): ?>
+                                                <option value="<?php echo $listaLigas[$i][0]; ?>"><?php echo htmlspecialchars($listaLigas[$i][1]); ?></option>
+                                            <?php endfor; ?>
+                                        </select>
+                                        <a style="display: none; cursor: pointer; margin-right: 8px;" id="sal<?php echo $idTime; ?>" title="Salvar" class="clickable salvar">
+                                            <span class="material-symbols-outlined inlineButton" style="color: #10b981;">check</span>
+                                        </a>
+                                        <a style="display: none; cursor: pointer;" id="can<?php echo $idTime; ?>" title="Cancelar" class="clickable cancelar">
+                                            <span class="material-symbols-outlined inlineButton vermelho">close</span>
+                                        </a>
+                                    <?php endif; ?>
+                                </span>
+                            </td>
+                        <?php endif; ?>
+                    </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
 
-echo "<table id='tabelaElenco' class='table'>";
-echo "<thead>";
-echo "<tr>";
-echo "<th>Time</th>";
-echo "<th>Uniformes</th>";
-echo "<th>Elenco</th>";
-echo "<th>Média de idade</th>";
-echo "<th>Estrangeiros</th>";
-echo "<th>Nível (geral)</th>";
-echo "<th>Nível (titulares)</th>";
-echo "<th>Valor de mercado</th>";
-echo "<th>Valor médio (por jogador)</th>";
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['user_id'] === $idDonoPais){
-    echo "<th class='wide'>Opções</th>";
-}
-echo "</tr>";
-echo "</thead>";
-echo "<tbody>";
-
-$agora = date('Y-m-d');
-
-
-
-        while ($row = $time_stmt->fetch(PDO::FETCH_ASSOC)){
-
-            //extract($row);
-
-            $idTime = $row['ID'];
-            $info = $time->readInfo($idTime);
-
-            $elencoPorTime = $info['jogadores'];
-            $mediaIdadePorTime = number_format($info['mediaIdade'],1);
-            $estrangeirosPorTime = $info['estrangeiros'];
-            $valorMercadoPorTime = "F$ ". number_format(($info['valorTotal']/1000000),2)."M";
-            $valorMedioJogador = "F$ ". number_format(($elencoPorTime > 0 ? ($info['valorTotal']/($elencoPorTime*1000000)) : 0),2)."M";
-            $escudos = $info['Escudo'];
-            $uniforme1 = $info['Uniforme1'];
-            $uniforme2 = $info['Uniforme2'];
-			$nivel_medio = number_format($info['mediaNivel'], 1);
-			$nivel_medio_onze = number_format($info['mediaNivelOnze'],1);
-
-
-            echo "<tr id='".$idTime."' class='".$idLiga."'>";
-                echo "<td class='nopadding'><img class='logoliga' src='/images/escudos/".$escudos."' height='30px'/><a href='{$baseLink}.php?team=".$idTime."'>{$row['Nome']}</a></td>";
-                echo "<td class='nopadding'>";
-                if(!empty($uniforme1)){
-                    echo "<img src='/images/uniformes/".$uniforme1."' height='30px' style='margin-right: 5px;'/>";
-                }
-                if(!empty($uniforme2)){
-                    echo "<img src='/images/uniformes/".$uniforme2."' height='30px'/>";
-                }
-                echo "</td>";
-                echo "<td class='nopadding'>{$elencoPorTime}</td>";
-                echo "<td class='nopadding'>{$mediaIdadePorTime}</td>";
-                echo "<td class='nopadding'>{$estrangeirosPorTime}</td>";
-				echo "<td class='nopadding'>{$nivel_medio}</td>";
-				echo "<td class='nopadding'>{$nivel_medio_onze}</td>";
-                echo "<td class='nopadding'>{$valorMercadoPorTime}</td>";
-                echo "<td class='nopadding'>{$valorMedioJogador}</td>";
-                if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
-                    
-                    echo "<td><a id='dow".$id."' title='Baixar arquivo .ymt' class='clickable exportar'><span class='material-symbols-outlined inlineButton azul'>download</span></a>";
-                    if($_SESSION['user_id'] === $idDonoPais){                    
-                    echo "<a id='mov".$id."' title='Mover' class='clickable mover'><span class='material-symbols-outlined inlineButton azul'>swap_vert</span></a>";
-                    echo "<select id='sel".$id."' title='Selecionar liga' class='selecionar_liga' hidden>";
-                    for($i = 0; $i < count($listaLigas);$i++){
-                        echo "<option value='{$listaLigas[$i][0]}'>{$listaLigas[$i][1]}</option>";
-                    }
-                    echo "</select>";
-                    echo "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton'>check</span></a>";
-                    echo "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton vermelho'>close</span></a>";
-                    echo "";
-                    echo "</td>";
-                    }
-                }
-            echo "</tr>";
-
-        }
-
-        echo "</tbody>";
-
-
-
-
-echo "</table>";
-
-
-
-echo "</div>";
-//echo "</div>";
-
-?>
+    <div style="margin-top: 30px;">
+        <a href="paisstatus.php?country=<?php echo $idPais; ?>" style="display: inline-block; padding: 10px 20px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;"
+           onmouseover="this.style.background='rgba(0, 0, 0, 0.06)'" onmouseout="this.style.background='rgba(0, 0, 0, 0.03)'">
+            ← Voltar para País
+        </a>
+    </div>
+</div>
+</main>
 
 <script>
 

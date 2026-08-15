@@ -55,23 +55,30 @@ $valor_total_clube = number_format(($moreInfo['valorTotal'] ?? 0)/1000000000, 2)
 $jogadores = $moreInfo['jogadores'] ?? 0;
 
 $page_title = "Ligas - ".$nome_selecao;
-$css_filename = "indexRanking";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'ligas';
+$aux_css = 'ligas_status_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+?>
 
-echo '<div style="clear:both;"></div>';
-echo '<iframe id="results_sheet" hidden></iframe>';
-echo '<div style="clear:both;"></div>';
-echo "<div id='quadro-container'>";
-echo "<img id='bandeiraGrande' class='margin-left' src='/images/bandeiras/".$bandeira."' height='100px'>" ;
-echo "<h2>" . $nome_selecao ." </h2>";
-echo "<h3><a href='geral.php?fed=g".$federacao_id."'>" . $federacao_selecao ." </a></h3> ";
-echo "<hr>";
+<iframe id="results_sheet" hidden></iframe>
 
-//query ligas
-$liga_stmt = $liga->readAll($from_record_num,$records_per_page,null,null,$idPais);
+<main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
+<div class="propostas-card">
+    <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
+        <img id="bandeiraGrande" src="/images/bandeiras/<?php echo htmlspecialchars($bandeira); ?>" style="height: 60px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <div>
+            <h2 class="propostas-title" style="margin: 0; text-align: left;"><?php echo htmlspecialchars($nome_selecao); ?></h2>
+            <h3 style="margin: 4px 0 0 0; font-size: 1rem;"><a href="geral.php?fed=g<?php echo $federacao_id; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars($federacao_selecao); ?></a></h3>
+        </div>
+    </div>
+    
+    <hr style="border: none; border-bottom: 1px solid rgba(0,0,0,0.08); margin: 20px 0;">
+
+    <?php
+    //query ligas
+    $liga_stmt = $liga->readAll($from_record_num,$records_per_page,null,null,$idPais);
 
     // the page where this paging is used
     $page_url = "leaguestatus.php?country=" . $idPais . "&";
@@ -80,87 +87,131 @@ $liga_stmt = $liga->readAll($from_record_num,$records_per_page,null,null,$idPais
     $total_rows = $liga->countAll(null,null,$idPais);
 
     $perc_estrangeiros = $jogadores > 0 ? number_format(($estrangeiros / $jogadores)*100,1)."%" : "0%";
+    ?>
 
-echo "<div id='info-jogos'>";
-echo "<div id='times' class='infoblock' title='Quantidade de ligas'><span class='material-symbols-outlined'>emoji_events</span><span class='informacao'>{$total_rows}</span></div>";
-echo "<div id='times' class='infoblock' title='Quantidade de times'><span class='material-symbols-outlined'>shield</span><span class='informacao'>".($moreInfo['clubes'] ?? 0)."</span></div>";
-echo "<div id='times' class='infoblock' title='Quantidade de jogadores'><span class='material-symbols-outlined'>groups</span><span class='informacao'>{$jogadores}</span></div>";
-echo "<div id='Idades' class='infoblock' title='Média de idade'><span class='material-symbols-outlined'>person</span><span class='informacao'>{$mediaIdade}</span></div>";
-echo "<div id='Estrangeiros' class='infoblock' title='Estrangeiros'><span class='material-symbols-outlined'>public</span><span class='informacao'>{$estrangeiros}</span><span class='informacao micro'>({$perc_estrangeiros})</span></div>";
-echo "<div id='Valor' class='infoblock' title='Valor de mercado (em F$)'><span class='material-symbols-outlined'>attach_money</span><span class='informacao menor'>{$valor_total_clube}</span></div>";
-echo "</div>";
-echo "<br>";
+    <div id="info-jogos">
+        <div class="infoblock" title="Quantidade de ligas">
+            <span class="material-symbols-outlined">emoji_events</span>
+            <div>
+                <span class="informacao"><?php echo $total_rows; ?></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Ligas</span>
+            </div>
+        </div>
+        <div class="infoblock" title="Quantidade de times">
+            <span class="material-symbols-outlined">shield</span>
+            <div>
+                <span class="informacao"><?php echo ($moreInfo['clubes'] ?? 0); ?></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Times</span>
+            </div>
+        </div>
+        <div class="infoblock" title="Quantidade de jogadores">
+            <span class="material-symbols-outlined">groups</span>
+            <div>
+                <span class="informacao"><?php echo $jogadores; ?></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Jogadores</span>
+            </div>
+        </div>
+        <div class="infoblock" title="Média de idade">
+            <span class="material-symbols-outlined">person</span>
+            <div>
+                <span class="informacao"><?php echo $mediaIdade; ?></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Média Idade</span>
+            </div>
+        </div>
+        <div class="infoblock" title="Estrangeiros">
+            <span class="material-symbols-outlined">public</span>
+            <div>
+                <span class="informacao"><?php echo $estrangeiros; ?> <span class="informacao micro">(<?php echo $perc_estrangeiros; ?>)</span></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Estrangeiros</span>
+            </div>
+        </div>
+        <div class="infoblock" title="Valor de mercado (em F$)">
+            <span class="material-symbols-outlined">attach_money</span>
+            <div>
+                <span class="informacao menor"><?php echo $valor_total_clube; ?></span>
+                <span style="font-size: 0.75rem; color: #64748b;">Valor total</span>
+            </div>
+        </div>
+    </div>
 
-echo "<div style='clear:both; float:center'></div>";
-echo "<hr>";
-echo "<p align='center'>Ligas</p>";
+    <hr style="border: none; border-bottom: 1px solid rgba(0,0,0,0.08); margin: 20px 0;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
+        <h3 style="font-family: 'Kanit', sans-serif; color: #1e293b; font-size: 1.2rem; margin: 0;">Ligas Disponíveis</h3>
+        <div>
+            <?php include_once($_SERVER['DOCUMENT_ROOT']."/elements/paging.php"); ?>
+        </div>
+    </div>
 
-    // paging buttons here
-    echo "<div style='clear:both; float:center'></div>";
-    echo "<div align='center'>";
-     include_once($_SERVER['DOCUMENT_ROOT']."/elements/paging.php");
-    echo "</div>";
-echo "<hr>";
+    <div style="overflow-x: auto; width: 100%;">
+        <table id="tabelaElenco" class="table">
+            <thead>
+                <tr>
+                    <th>Liga</th>
+                    <th>Nº Jogadores</th>
+                    <th>Média Idade</th>
+                    <th>Estrangeiros</th>
+                    <th>Valor Mercado</th>
+                    <th>Média / Jogador</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while ($row = $liga_stmt->fetch(PDO::FETCH_ASSOC)):
+                    extract($row);
+                    $idLiga = $row['id'];
+                    $info = $liga->readInfo($idLiga);
 
-// display the products if there are any
+                    $elencoPorTime = $info['jogadores'];
+                    $mediaIdadePorTime = number_format($info['mediaIdade'],1);
+                    $estrangeirosPorTime = $info['estrangeiros'];
+                    $valorMercadoPorTime = "F$ ". number_format(($info['valorTotal']/1000000),2)."M";
+                    $valorMedioJogador = "F$ ". number_format(($info['valorTotal']/($elencoPorTime*1000000 + 0.0000000001)),2)."M";
+                ?>
+                    <tr>
+                        <td class="cell-liga">
+                            <img class="logoliga" src="/images/ligas/<?php echo htmlspecialchars($logo); ?>" height="30px"/>
+                            <a href="leaguestatus.php?league=<?php echo $idLiga; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars($row['nome']); ?></a>
+                        </td>
+                        <td data-label="Nº Jogadores">
+                            <span class="cell-value"><?php echo $elencoPorTime; ?></span>
+                        </td>
+                        <td data-label="Média Idade">
+                            <span class="cell-value"><?php echo $mediaIdadePorTime; ?></span>
+                        </td>
+                        <td data-label="Estrangeiros">
+                            <span class="cell-value"><?php echo $estrangeirosPorTime; ?></span>
+                        </td>
+                        <td data-label="Valor Mercado">
+                            <span class="cell-value"><?php echo $valorMercadoPorTime; ?></span>
+                        </td>
+                        <td data-label="Média / Jogador">
+                            <span class="cell-value"><?php echo $valorMedioJogador; ?></span>
+                        </td>
+                        <td data-label="Ações">
+                            <span class="cell-value">
+                                <a title="Baixar times para Kitbasher" id="ktb<?php echo $idLiga; ?>" class="clickable exportarKitbasher" style="cursor: pointer;">
+                                    <span class="material-symbols-outlined inlineButton azul">checkroom</span>
+                                </a>
+                            </span>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
 
-echo "<table id='tabelaElenco' class='table'>";
-echo "<thead>";
-echo "<tr>";
-echo "<th>Liga</th>";
-echo "<th>Número de jogadores</th>";
-echo "<th>Média de idade</th>";
-echo "<th>Estrangeiros</th>";
-echo "<th>Valor de mercado</th>";
-echo "<th>Valor médio (por jogador)</th>";
-echo "<th>Opções</th>";
-echo "</tr>";
-echo "</thead>";
-echo "<tbody>";
+    <div style="margin-top: 30px;">
+        <a href="index.php" style="display: inline-block; padding: 10px 20px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;"
+           onmouseover="this.style.background='rgba(0, 0, 0, 0.06)'" onmouseout="this.style.background='rgba(0, 0, 0, 0.03)'">
+            ← Voltar para Federações
+        </a>
+    </div>
+</div>
+</main>
 
-        while ($row = $liga_stmt->fetch(PDO::FETCH_ASSOC)){
-
-            extract($row);
-
-            $idLiga = $row['id'];
-            $info = $liga->readInfo($idLiga);
-
-            $elencoPorTime = $info['jogadores'];
-            $mediaIdadePorTime = number_format($info['mediaIdade'],1);
-            $estrangeirosPorTime = $info['estrangeiros'];
-            $valorMercadoPorTime = "F$ ". number_format(($info['valorTotal']/1000000),2)."M";
-            $valorMedioJogador = "F$ ". number_format(($info['valorTotal']/($elencoPorTime*1000000 + 0.0000000001)),2)."M";
-
-
-            echo "<tr>";
-                echo "<td class='nopadding'><img class='logoliga' src='/images/ligas/".$logo."' height='30px'/><a href='leaguestatus.php?league=".$idLiga."'>{$row['nome']}</a></td>";
-                echo "<td class='nopadding'>{$elencoPorTime}</td>";
-                echo "<td class='nopadding'>{$mediaIdadePorTime}</td>";
-                echo "<td class='nopadding'>{$estrangeirosPorTime}</td>";
-                echo "<td class='nopadding'>{$valorMercadoPorTime}</td>";
-                echo "<td class='nopadding'>{$valorMedioJogador}</td>";
-                //echo "<td><a title='Baixar liga Footscore' id='dfs ".$idLiga."' class='clickable exportarFootscore'><span class='material-symbols-outlined inlineButton azul'>table_view</span></a></td>";
-				echo "<td><a title='Baixar times para Kitbasher' id='ktb".$idLiga."' class = 'clickable exportarKitbasher'><span class='material-symbols-outlined inlineButton azul'>checkroom</span></a></td>";
-			echo "</tr>";
-
-        }
-
-        echo "</tbody>";
-
-
-
-
-echo "</table>";
-
-
-
-echo "</div>";
-echo "</div>";
-
-
-
+<?php
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
-
 ?>
 
 <script>
