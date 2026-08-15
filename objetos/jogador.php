@@ -2895,6 +2895,13 @@ return $stmt;
  }
 
  public function enviarEmailProposta($idJogador, $clubeOrigem, $clubeDestino, $idTransferencia){
+      $isLocalhost = (DIRECTORY_SEPARATOR === '\\')
+          || in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']) 
+          || (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost:') === 0);
+      if ($isLocalhost) {
+          return false;
+      }
+
     $idJogador = htmlspecialchars(strip_tags($idJogador));
     $clubeOrigem = htmlspecialchars(strip_tags($clubeOrigem));
     $clubeDestino = htmlspecialchars(strip_tags($clubeDestino));
