@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
             if ($arbitrosQuery !== "SELECT id, nomeArbitro, nomeAuxiliarUm, nomeAuxiliarDois, estilo FROM arbitros WHERE 0") {
                 $stmtArb = $db->query($arbitrosQuery);
                 if ($stmtArb) {
-                    $stmtInsertArb = $sdb->prepare("INSERT INTO trioarbitragem (ID, NomeArbitro, NomeAuxiliarUm, NomeAuxiliarDois, Estilo) VALUES (:id, :nome, :aux1, :aux2, :estilo)");
+                    $stmtInsertArb = $sdb->prepare("INSERT INTO trioarbitragem (ID, Arbitro, Auxiliar1, Auxiliar2, Estilo) VALUES (:id, :nome, :aux1, :aux2, :estilo)");
                     while ($row = $stmtArb->fetch(PDO::FETCH_ASSOC)) {
                         $stmtInsertArb->bindValue(':id', (int)$row['id'], PDO::PARAM_INT);
                         $stmtInsertArb->bindValue(':nome', $row['nomeArbitro']);

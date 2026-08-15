@@ -15,6 +15,29 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	
+	if (isset($_SESSION['success_message'])) {
+		echo "<div class='alert alert-success alert-btn' id='success-toast'><span class='closebtn'>&times;</span>" . htmlspecialchars($_SESSION['success_message']) . "</div>";
+		echo "<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				var toast = document.getElementById('success-toast');
+				if (toast) {
+					var closeBtn = toast.querySelector('.closebtn');
+					if (closeBtn) {
+						closeBtn.addEventListener('click', function() {
+							toast.classList.add('fade-out');
+							setTimeout(function() { toast.style.display = 'none'; }, 400);
+						});
+					}
+					setTimeout(function() {
+						toast.classList.add('fade-out');
+						setTimeout(function() { toast.style.display = 'none'; }, 400);
+					}, 5000);
+				}
+			});
+		</script>";
+		unset($_SESSION['success_message']);
+	}
+	
 	//estabelecer conexão com banco de dados
 	include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 	include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");

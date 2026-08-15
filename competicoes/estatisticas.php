@@ -70,10 +70,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $stmtJogos->execute();
     $jogos = $stmtJogos->fetchAll(PDO::FETCH_ASSOC);
     
-    // Detectar quais grupos existem na Fase 1
+    // Detectar quais grupos existem na Fase 2
     $gruposDetectados = [];
     foreach ($jogos as $j) {
-        if ($j['fase'] == 1) {
+        if ($j['fase'] == 2) {
             $g = trim($j['grupo']);
             if ($g !== '' && !in_array($g, $gruposDetectados)) {
                 $gruposDetectados[] = $g;
@@ -82,14 +82,14 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     }
     sort($gruposDetectados);
     
-    // Descobrir em qual grupo está cada clube (pelo primeiro jogo de fase 1)
+    // Descobrir em qual grupo está cada clube (pelo primeiro jogo de fase 2)
     $clubeGrupoMap = [];
     foreach ($jogos as $j) {
-        if ($j['fase'] == 1 && trim($j['grupo']) !== '') {
+        if ($j['fase'] == 2 && trim($j['grupo']) !== '') {
             $g = trim($j['grupo']);
             if (!isset($clubeGrupoMap[$j['timeA_id']])) $clubeGrupoMap[$j['timeA_id']] = $g;
             if (!isset($clubeGrupoMap[$j['timeB_id']])) $clubeGrupoMap[$j['timeB_id']] = $g;
-        } elseif ($j['fase'] == 1) {
+        } elseif ($j['fase'] == 2) {
             // Sem grupo definido (pontos corridos)
             if (!isset($clubeGrupoMap[$j['timeA_id']])) $clubeGrupoMap[$j['timeA_id']] = '';
             if (!isset($clubeGrupoMap[$j['timeB_id']])) $clubeGrupoMap[$j['timeB_id']] = '';
@@ -129,7 +129,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             $golsB = (int)$j['timeB_gols'];
             
             // Fase de grupos entra na classificação
-            if ($j['fase'] == 1) {
+            if ($j['fase'] == 2) {
                 $g = $clubeGrupoMap[$idA] ?? '';
                 if (isset($tabelaPorGrupo[$g][$idA]) && isset($tabelaPorGrupo[$g][$idB])) {
                     $tabelaPorGrupo[$g][$idA]['jogos']++;
@@ -158,7 +158,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         }
         
         // Separar jogos de mata-mata
-        if ($j['fase'] > 1) {
+        if ($j['fase'] > 2) {
             $fasesKnockout[$j['fase']][] = $j;
         }
     }
@@ -273,6 +273,28 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                 'nome' => $jogadoresMap[$pid]['Nome'],
                 'clube' => $clubes[$clubeId]['Nome'] ?? 'Sem clube',
                 'escudo' => $clubes[$clubeId]['Escudo'] ?? ''
+            ];
+    }
+    
+    // 8. Consultar Cartões Amarelos Acumulados da Competição no MySQL
+    $stmtAmarelos = $db->prepare("SELECT cs.id_jogador, cs.cartoes_amarelos 
+                                 FROM competicao_suspensos cs 
+                                 WHERE cs.id_competicao = :idComp AND cs.cartoes_amarelos > 0 
+                                 ORDER BY cs.cartoes_amarelos DESC");
+    $stmtAmarelos->bindParam(':idComp', $idCompeticao, PDO::PARAM_INT);
+    $stmtAmarelos->execute();
+    $amarelosRows = $stmtAmarelos->fetchAll(PDO::FETCH_ASSOC);
+    $cartoesAmarelosAcumulados = [];
+    foreach ($amarelosRows as $ar) {
+        $pid = (int)$ar['id_jogador'];
+        if (isset($jogadoresMap[$pid])) {
+            $clubeId = $jogadorClubeMap[$pid] ?? 0;
+            $cartoesAmarelosAcumulados[] = [
+                'id' => $pid,
+                'nome' => $jogadoresMap[$pid]['Nome'],
+                'clube' => $clubes[$clubeId]['Nome'] ?? 'Sem clube',
+                'escudo' => $clubes[$clubeId]['Escudo'] ?? '',
+                'amarelos' => (int)$ar['cartoes_amarelos']
             ];
         }
     }
@@ -479,11 +501,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                     ksort($fasesKnockout);
                     foreach ($fasesKnockout as $faseId => $partidasFase):
                         $nomeFase = "Fase " . $faseId;
-                        if ($faseId == 2) $nomeFase = "Oitavas de Final";
-                        if ($faseId == 3) $nomeFase = "Quartas de Final";
-                        if ($faseId == 4) $nomeFase = "Semifinal";
-                        if ($faseId == 5) $nomeFase = "Final";
+                        if ($faseId == 3) $nomeFase = "Oitavas de Final";
+                        if ($faseId == 4) $nomeFase = "Quartas de Final";
+                        if ($faseId == 5) $nomeFase = "Semifinal";
                         if ($faseId == 6) $nomeFase = "Decisão do 3º Lugar";
+                        if ($faseId == 8) $nomeFase = "Final";
                 ?>
                     <div class="bracket-phase">
                         <h3 class="bracket-phase-title"><?php echo $nomeFase; ?></h3>
@@ -667,9 +689,53 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                         </table>
                     </div>
                 </div>
+
+                <!-- Cartões Amarelos -->
+                <div class="stats-subcard">
+                    <h3 class="stats-subcard-title" style="color: #fbbf24;">
+                        <span class="material-symbols-outlined">warning</span>
+                        Cartões Amarelos
+                    </h3>
+                    <div class="stats-table-wrapper">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">Jogador</th>
+                                    <th>Time</th>
+                                    <th>Cartões</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($cartoesAmarelosAcumulados)): ?>
+                                    <tr><td colspan="3">Nenhum cartão amarelo acumulado.</td></tr>
+                                <?php else: foreach ($cartoesAmarelosAcumulados as $am): ?>
+                                    <tr>
+                                        <td class="player-col"><?php echo htmlspecialchars($am['nome']); ?></td>
+                                        <td style="display:flex; align-items:center; gap:6px;">
+                                            <img class="team-logo" src="/images/escudos/<?php echo $am['escudo'] ? $am['escudo'] : '0.png'; ?>" alt="" />
+                                            <span><?php echo htmlspecialchars($am['clube']); ?></span>
+                                        </td>
+                                        <td>
+                                            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                                <?php for ($i = 0; $i < $am['amarelos']; $i++): ?>
+                                                    <span style="display: inline-block; width: 10px; height: 14px; background: #fbbf24; border-radius: 2px; border: 1px solid rgba(0,0,0,0.2);"></span>
+                                                <?php endfor; ?>
+                                                <span style="font-size: 0.85rem; font-weight: 600; color: #475569; margin-left: 2px;">(<?php echo $am['amarelos']; ?>)</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
-
+        <div style="margin-top: 30px;">
+            <a href="competitionstatus.php?id=<?php echo $idCompeticao; ?>" style="display: inline-block; padding: 10px 20px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(0, 0, 0, 0.06)'" onmouseout="this.style.background='rgba(0, 0, 0, 0.03)'">
+                ← Voltar para a Competição
+            </a>
+        </div>
     </div>
 </main>
 

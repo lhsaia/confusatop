@@ -95,6 +95,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
         <div id='quadro_equipes_torneio'>
             <!-- Vagas carregadas via JS -->
         </div>
+        <div style="margin-top: 30px;">
+            <a href="competitionstatus.php?id=<?php echo $idCompeticao; ?>" style="display: inline-block; padding: 10px 20px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(0, 0, 0, 0.06)'" onmouseout="this.style.background='rgba(0, 0, 0, 0.03)'">
+                ← Voltar para a Competição
+            </a>
+        </div>
     </div>
 </main>
 <?php
@@ -239,7 +244,7 @@ $( document ).ready(function(){
 				});
 			tbl += "</select>";
 
-			let disabledStatus = selectedOwner == user_id ? "" : "disabled";
+			let disabledStatus = (admin === "true" || parseInt(dono_competicao) === parseInt(user_id) || selectedOwner == user_id) ? "" : "disabled";
 			tbl += "<select id='selecaoTime"+i+"' name='equipe"+i+"' class='smallform selecaoTime' placeholder='Equipe...' "+disabledStatus+">";
 				tbl += "<option data-flag='/images/escudos/0.png' value=0>Selecione o time...</option>";
 				$.each(lista_times, function(index, val){
@@ -312,7 +317,7 @@ $(document).on("change", ".selecaoPais", function(e, unlock){
     if(!unlock) tbl_row.find('.update_team').prop("disabled", false);
     
     var donoPais = $(this).find(':selected').data('dono');
-    if(admin === "true" || parseInt(user_id) === parseInt(donoPais)){
+    if(admin === "true" || parseInt(dono_competicao) === parseInt(user_id) || parseInt(user_id) === parseInt(donoPais)){
         tbl_row.find('.selecaoTime').prop("disabled", false);
     } else {
         tbl_row.find('.selecaoTime').prop("disabled", true);

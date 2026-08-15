@@ -92,7 +92,7 @@ $percentual_times = ($total_times > 0) ? min(100, round(($times_inseridos / $tot
 		
 		<div class="hero-badge-container">
 			<?php if($federacao_nome != "" && $federacao_nome != "0"): ?>
-				<img class="hero-federation-logo" src="/images/<?php echo $federacao_nome; ?>.png" alt="Federação" />
+				<img class="hero-federation-logo" src="/images/<?php echo strtolower($federacao_nome); ?>.png" alt="Federação" />
 			<?php else: ?>
 				<img class="hero-federation-logo" src="/images/confusalogo.png" alt="Federação" />
 			<?php endif; ?>
@@ -229,6 +229,12 @@ $percentual_times = ($total_times > 0) ? min(100, round(($times_inseridos / $tot
 		<?php endif; ?>
 
 	</section>
+
+	<div style="margin-top: 30px; text-align: center;">
+		<a href="index.php" style="display: inline-block; padding: 10px 20px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(0, 0, 0, 0.06)'" onmouseout="this.style.background='rgba(0, 0, 0, 0.03)'">
+			← Voltar para Índice de Competições
+		</a>
+	</div>
 
 </main>
 

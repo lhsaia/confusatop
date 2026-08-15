@@ -255,6 +255,7 @@ $(document).ready(function($){
 
 	 var codigo_competicao = '<?php echo $idCompeticao ?>';
 	 var localData = [];
+	 var currentPage = 1;
 	 var logged ='<?php echo (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true) ? "true" : "false"; ?>';
 	 var admin ='<?php echo ((isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) || (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $donoCompeticao)) ? "true" : "false"; ?>';
 	 var user_id ='<?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0; ?>';
@@ -362,7 +363,7 @@ $(document).ready(function($){
 			try {
 				var ajax_data = JSON.parse(data);
 				console.log("Total de jogos processados:", ajax_data.length);
-				updateTable(ajax_data, 1);
+				updateTable(ajax_data, currentPage);
 				localData = ajax_data;
 			} catch(e) {
 				console.error("Erro ao processar JSON de jogos:", e);
@@ -385,8 +386,16 @@ $(document).ready(function($){
 		} else if(current_page == 'inicio'){
 			treated_page = 1;
 		} else {
-			treated_page = current_page;
+			treated_page = parseInt(current_page);
 		}
+
+		if (isNaN(treated_page) || treated_page < 1) {
+			treated_page = 1;
+		}
+		if (total_pages > 0 && treated_page > total_pages) {
+			treated_page = total_pages;
+		}
+		currentPage = treated_page;
 
 		var from_result_num = (results_per_page * treated_page) - results_per_page;
 
@@ -490,7 +499,7 @@ $(document).ready(function($){
 					tbl += "<td class='time-fora' data-label='Time B'><div style='display: inline-flex; align-items: center; justify-content: flex-start; gap: 4px;'><span class='nomeTimeB' id='timeB"+ val['id']+"'>"+ nomeTimeB +"</span>" + escLinkB + "</div><select id='selTimeB"+val['id']+"' class='comboTimeB' style='display:none;'></select></td>";
 					tbl += "<td data-label='Fase'><span class='fase' id='fase"+ val['id']+"'>"+ fase +"</span><select id='selFase"+val['id']+"' class='comboFase editavel' style='display:none;'>"+faseOptions+"</select></td>";
 					tbl += "<td data-label='Grupo'><span class='grupo' id='grupo"+ val['id']+"'>"+ grupo +"</span></td>";
-					tbl += "<td data-label='Árbitro'><span class='arbitro' id='arbitro"+ val['id']+"'>"+ arbitro +"</span><select id='selArbitro"+val['id']+"' class='comboArbitro editavel' style='display:none;'>"+arbOptions+"</select></td>";
+					tbl += "<td data-label='Árbitro'><span class='arbitro' id='arbitro"+ val['id']+"'>"+ arbitro +"</span><select id='selArbitro"+val['id']+"' class='comboArbitro editavel' style='display:none;' disabled>"+arbOptions+"</select></td>";
 					tbl += "<td data-label='Estádio'><span class='estadio' id='estadio"+ val['id']+"'>"+ estadio +"</span><select id='selEstadio"+val['id']+"' class='comboEstadio editavel' style='display:none;'>"+estOptions+"</select></td>";
 					tbl += "<td data-label='Data'><span class='dataPartida' id='dat"+ val['id']+"'>"+ dataDisplay+" </span><input id='selDat"+val['id']+"' class='dataEditavel editavel' type='date' value='"+dateOnly+"' style='display:none;'/></td>";
 					tbl += "<td data-label='Hora'><span class='horaPartida' id='hor"+ val['id']+"'>"+ horaDisplay+" </span><input id='selHor"+val['id']+"' class='horaEditavel editavel' type='time' value='"+hora+"' style='display:none;'/></td>";
@@ -530,7 +539,7 @@ $(document).ready(function($){
 		
 		let href = "./sumula_partida.php?id=" + matchId;
 		
-		window.location = href;
+		window.open(href, '_blank');
 	
 	});
 
@@ -818,7 +827,7 @@ $(document).ready(function($){
                 <?php endforeach; ?>
             </select>
             
-            <select id="new_arbitro">
+            <select id="new_arbitro" disabled>
                 <option value="0">Auto Árbitro</option>
                 <?php foreach($listaArbitros as $arbitro): ?>
                     <option value='<?php echo $arbitro[0]; ?>'><?php echo $arbitro[1]; ?></option>
@@ -860,6 +869,11 @@ $(document).ready(function($){
         <div class='tbl_user_data'></div>
         
         <div style='height: 50px; clear: both;'></div>
+        <div style="margin-top: 30px;">
+            <a href="competitionstatus.php?id=<?php echo $idCompeticao; ?>" style="display: inline-block; padding: 10px 20px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(0, 0, 0, 0.06)'" onmouseout="this.style.background='rgba(0, 0, 0, 0.03)'">
+                ← Voltar para a Competição
+            </a>
+        </div>
     </div>
 </main>
 

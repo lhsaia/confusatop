@@ -63,6 +63,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 				$lite_database = new SQLiteDatabase();
 				$lite_database->fileName = $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$idCompeticao . "-database.db3";
 				$lite_database->getConnection();
+				// Garante que as tabelas existam (para competições novas ou banco vazio)
+				if($lite_database->conn !== null){
+					$lite_database->prepareTables();
+				}
 
 					$megaQuery = "BEGIN TRANSACTION; ";
 

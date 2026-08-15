@@ -310,7 +310,12 @@ require_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
     <input type='submit' value='Salvar Configurações' id='salvar' />
 </div>
-
+</div>
+        <div style="margin-top: 30px;">
+            <a href="competitionstatus.php?id=<?php echo $idCompeticao; ?>" style="display: inline-block; padding: 10px 20px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(0, 0, 0, 0.06)'" onmouseout="this.style.background='rgba(0, 0, 0, 0.03)'">
+                ← Voltar para a Competição
+            </a>
+        </div>
 </div>
 </main>
 

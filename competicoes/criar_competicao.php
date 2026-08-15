@@ -1,9 +1,5 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
-?>
-<!DOCTYPE HTML>
-
-<?php
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 // include database and object files
@@ -29,56 +25,189 @@ $arbitro_read = new TrioArbitragem($db);
 $estadio_read = new Estadio($db);
 $clima_read = new Clima($db);
 
-	function imageImporter($file_name, $target_filename){
-      $maxDim = 180;
-      list($width, $height, $type, $attr) = getimagesize( $file_name );
-      if ( $width > $maxDim || $height > $maxDim ) {
-      //  $target_filename = $file_name;
-        $ratio = $width/$height;
-        if( $ratio > 1) {
-          $new_width = $maxDim;
-          $new_height = $maxDim/$ratio;
-        } else {
-          $new_width = $maxDim*$ratio;
-          $new_height = $maxDim;
-        }
+$error_msg = '';
+$alert_html = '';
+
+function imageImporter($file_name, $target_filename){
+  $maxDim = 180;
+  list($width, $height, $type, $attr) = getimagesize( $file_name );
+  if ( $width > $maxDim || $height > $maxDim ) {
+    $ratio = $width/$height;
+    if( $ratio > 1) {
+      $new_width = $maxDim;
+      $new_height = $maxDim/$ratio;
     } else {
-      $new_width = $width;
-      $new_height = $height;
+      $new_width = $maxDim*$ratio;
+      $new_height = $maxDim;
     }
-        //$save_to_path = "uploads/compressed_file.png";
-        if($type == "image/png"){
-			$compressed_png_content = compress_png($file_name);
-			$src = imagecreatefromstring($compressed_png_content);
-        } else if ($type == 18 || $type == "") {
-			$src = imagecreatefromwebp($file_name);
-		} else {
-        			
-            try {
-                $src = imagecreatefromstring( file_get_contents( $file_name ) );
-            } catch (Exception $e) {
-                $src = imagecreatefromwebp($file_name);
+  } else {
+    $new_width = $width;
+    $new_height = $height;
+  }
+  if($type == "image/png"){
+    $compressed_png_content = compress_png($file_name);
+    $src = imagecreatefromstring($compressed_png_content);
+  } else if ($type == 18 || $type == "") {
+    $src = imagecreatefromwebp($file_name);
+  } else {
+    try {
+      $src = imagecreatefromstring( file_get_contents( $file_name ) );
+    } catch (Exception $e) {
+      $src = imagecreatefromwebp($file_name);
+    }
+  }
+  $dst = imagecreatetruecolor( $new_width, $new_height );
+  $background = imagecolorallocate($dst , 0, 0, 0);
+  imagecolortransparent($dst, $background);
+  imagealphablending($dst, false);
+  imagesavealpha($dst, true);
+  imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, $width, $height );
+  imagedestroy( $src );
+  imagewebp($dst, $target_filename);
+  imagedestroy( $dst );
+}
+
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
+        if(isset($_POST['nome']) && isset($_POST['ano']) ){
+            $competicao->nome = $_POST['nome'];
+            $competicao->ano = $_POST['ano'];
+            $competicao->federacao = $_POST['federacao'];
+            $competicao->sede = $_POST['sede'];
+            $competicao->genero = $_POST['genero'];
+            $competicao->dono = $_SESSION['user_id'];
+            
+            if($competicao->federacao != 0){
+                $nivelCompeticao = 1;
+            } else {
+                $nivelCompeticao = 2;
             }
-			
-			
+            
+            $stmt = $arbitro_read->read($nivelCompeticao, $competicao->federacao);
+            $listaArbitros = array();
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+                extract($row);
+                $addArray = array($id, $nomeArbitro, $nomeAuxiliarUm, $nomeAuxiliarDois, $estilo, $siglaPais);
+                $listaArbitros[] = $addArray;
+            }
+            
+            if($competicao->sede != 0){
+                $stmt = $clima_read->exportacao($competicao->sede);
+                $listaClimas = array();
+                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+                    extract($row);
+                    $addArray = array($idClima, $nomeClima, $TempVerao, $EstiloVerao, $TempOutono, $EstiloOutono, $TempInverno, $EstiloInverno, $TempPrimavera, $EstiloPrimavera, $Hemisferio);
+                    $listaClimas[] = $addArray;
+                }
+                
+                $stmt = $estadio_read->exportacao($competicao->sede);
+                $listaEstadios = array();
+                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+                    extract($row);
+                    $addArray = array($ID, $Nome, $Capacidade, $Clima, $Altitude, $Caldeirao);
+                    $listaEstadios[] = $addArray;
+                }
+            }
+            
+            if(isset($_FILES['logo']) && !empty($_FILES['logo']['name'])){
+                $fileName = $_FILES['logo']['name'];
+                $fileExplode = explode(".",$fileName);
+                $fileName = $fileExplode[0] . mt_rand(1,10000).".webp";
+                $fileSize = $_FILES['logo']['size'];
+                $filePath = $_FILES['logo']['tmp_name'];
+                $fileType = $_FILES['logo']['type'];
+                $fileExt = strtolower( end($fileExplode));
+                $correct_extensions = array("image/png","image/jpg","image/jpeg", "image/webp");
+                $upload_dir = "/images/competicoes/";
+
+                if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 2000000){
+                    $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
+                    imageImporter($filePath, $upload_path);
+                    $localizacao_foto = $_SESSION['user_id'] ."-" .$fileName;
+                    $competicao->logo = $localizacao_foto;
+                } else {
+                    $error_msg .= "Não foi possível inserir o logo. ";
+                    if($fileSize > 2000000){
+                        $error_msg .= "Arquivo deve ser menor que 2Mb.";
+                    }
+                    if($filePath == ''){
+                        $error_msg .= "Falha no nome do arquivo.";
+                    }
+                    if(in_array($fileType,$correct_extensions) == false){
+                        $error_msg .= "Extensão não é permitida.";
+                    }
+                }
+            } 
+
+            if($error_msg == ''){
+                if($competicao->inserir(true)){
+                    $sqlite = new SQLiteDatabase();
+                    $comp_id = $db->lastInsertId();
+                    $sqlite->fileName = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/".$comp_id."-database.db3";
+                    $ldb= $sqlite->getConnection();
+                    $sqlite->prepareTables();
+                    $sqlite->initialMainValues();
+                    $sqlite->competitionParameters();
+                    
+                    $competicao->inserirOpcoes($comp_id);
+
+                    $arbitro = new TrioArbitragem($ldb);
+                    foreach($listaArbitros as $novoArbitro){
+                        $arbitro->id = $novoArbitro[0];
+                        $arbitro->nomeArbitro = $novoArbitro[1] . " [" .$novoArbitro[5] ."]";
+                        $arbitro->nomeAuxiliarUm = $novoArbitro[2]. " [" .$novoArbitro[5] ."]";
+                        $arbitro->nomeAuxiliarDois = $novoArbitro[3]. " [" .$novoArbitro[5] ."]";
+                        $arbitro->estilo = $novoArbitro[4];
+                        $arbitro->createSqlite();
+                    }
+                    
+                    if($competicao->sede != 0){
+                        $clima = new Clima($ldb);
+                        foreach($listaClimas as $novoClima){
+                            $clima->id = $novoClima[0];
+                            $clima->nome = $novoClima[1];
+                            $clima->tempVerao = $novoClima[2];
+                            $clima->estiloVerao = $novoClima[3];
+                            $clima->tempOutono=$novoClima[4];
+                            $clima->estiloOutono=$novoClima[5];
+                            $clima->tempInverno=$novoClima[6];
+                            $clima->estiloInverno=$novoClima[7];
+                            $clima->tempPrimavera=$novoClima[8];
+                            $clima->estiloPrimavera=$novoClima[9];
+                            $clima->hemisferio=$novoClima[10];
+                            $clima->createSqlite();
+                        }
+                        
+                        $estadio = new Estadio($ldb);
+                        foreach($listaEstadios as $novoEstadio){
+                            $estadio->id = $novoEstadio[0];
+                            $estadio->nome = $novoEstadio[1];
+                            $estadio->capacidade = $novoEstadio[2];
+                            $estadio->clima = $novoEstadio[3];
+                            $estadio->altitude = $novoEstadio[4];
+                            $estadio->caldeirao = $novoEstadio[5];
+                            $estadio->createSqlite();
+                        }
+                    }
+                    
+                    $_SESSION['success_message'] = "Competição inserida com sucesso!";
+                    header("Location: /competicoes/index.php");
+                    exit();
+                } else{
+                    $alert_html = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve um erro ao inserir a competição!</div>";
+                }
+            } else {
+                $alert_html = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>" . $error_msg . "</div>";
+            }
+        }  else {
+            $alert_html = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve um erro ao inserir a competição, campos em branco!</div>";
         }
-
-        //file_put_contents($save_to_path, $compressed_png_content);
-        $dst = imagecreatetruecolor( $new_width, $new_height );
-        //start changes
-        $background = imagecolorallocate($dst , 0, 0, 0);
-        imagecolortransparent($dst, $background);
-        imagealphablending($dst, false);
-        imagesavealpha($dst, true);
-        //end changes
-        imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, $width, $height );
-        imagedestroy( $src );
-        //imagepng( $dst, $target_filename ); // adjust format as needed
-		imagewebp($dst, $target_filename);
-        imagedestroy( $dst );
-
     }
+}
+?>
+<!DOCTYPE HTML>
 
+<?php
 $page_title = "Criar Competição";
 $css_filename = "home_redesign";
 $css_login = 'login';
@@ -89,156 +218,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 echo"<div>";
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
-
-    $error_msg = '';
-
-
-// se jogador foi submetido
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
-if(isset($_POST['nome']) && isset($_POST['ano']) ){
-	
-    $competicao->nome = $_POST['nome'];
-    $competicao->ano = $_POST['ano'];
-    $competicao->federacao = $_POST['federacao'];
-    $competicao->sede = $_POST['sede'];
-    $competicao->genero = $_POST['genero'];
-	$competicao->dono = $_SESSION['user_id'];
-	
-	//ler arbitros e estádios
-	if($competicao->federacao != 0){
-		$nivelCompeticao = 1;
-	} else {
-		$nivelCompeticao = 2;
-	}
-	
-	$stmt = $arbitro_read->read($nivelCompeticao, $competicao->federacao);
-	$listaArbitros = array();
-	while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-		extract($row);
-		$addArray = array($id, $nomeArbitro, $nomeAuxiliarUm, $nomeAuxiliarDois, $estilo, $siglaPais);
-		$listaArbitros[] = $addArray;
-	}
-	
-	if($competicao->sede != 0){
-		$stmt = $clima_read->exportacao($competicao->sede);
-		$listaClimas = array();
-		while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-			extract($row);
-			$addArray = array($idClima, $nomeClima, $TempVerao, $EstiloVerao, $TempOutono, $EstiloOutono, $TempInverno, $EstiloInverno, $TempPrimavera, $EstiloPrimavera, $Hemisferio);
-			$listaClimas[] = $addArray;
-		}
-		
-		$stmt = $estadio_read->exportacao($competicao->sede);
-		$listaEstadios = array();
-		while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-			extract($row);
-			$addArray = array($ID, $Nome, $Capacidade, $Clima, $Altitude, $Caldeirao);
-			$listaEstadios[] = $addArray;
-		}
-	}
-	
-	  
-	
-			if(isset($_FILES['logo']) && !empty($_FILES['logo'])){
-			$fileName = $_FILES['logo']['name'];
-			$fileExplode = explode(".",$fileName);
-			$fileName = $fileExplode[0] . mt_rand(1,10000).".webp";// .$fileExplode[1];
-			$fileSize = $_FILES['logo']['size'];
-			$filePath = $_FILES['logo']['tmp_name'];
-			$fileType = $_FILES['logo']['type'];
-			$fileExt = strtolower( end($fileExplode));
-			$correct_extensions = array("image/png","image/jpg","image/jpeg", "image/webp");
-			$upload_dir = "/images/competicoes/";
-
-			if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 2000000){
-
-				$upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-				imageImporter($filePath, $upload_path);
-				$localizacao_foto = $_SESSION['user_id'] ."-" .$fileName;
-				
-				$competicao->logo = $localizacao_foto;
-
-
-			} else {
-
-				$error_msg .= "Não foi possível inserir o logo. ";
-				if($fileSize > 2000000){
-					$error_msg .= "Arquivo deve ser menor que 2Mb.";
-				}
-				if($filePath == ''){
-					$error_msg .= "Falha no nome do arquivo.";
-				}
-				if(in_array($fileType,$correct_extensions) == false){
-					$error_msg .= "Extensão ".$fileExt." não é permitida.";
-				}
-			}
-		
-
-} 
-
-    if($competicao->inserir(true)){
-		$sqlite = new SQLiteDatabase();
-		$comp_id = $db->lastInsertId();
-		$sqlite->fileName = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/".$comp_id."-database.db3";
-		$ldb= $sqlite->getConnection();
-		$sqlite->prepareTables();
-		$sqlite->initialMainValues();
-		$sqlite->competitionParameters();
-		
-		$competicao->inserirOpcoes($comp_id);
-
-		$arbitro = new TrioArbitragem($ldb);
-		foreach($listaArbitros as $novoArbitro){
-			$arbitro->id = $novoArbitro[0];
-			$arbitro->nomeArbitro = $novoArbitro[1] . " [" .$novoArbitro[5] ."]";
-			$arbitro->nomeAuxiliarUm = $novoArbitro[2]. " [" .$novoArbitro[5] ."]";
-			$arbitro->nomeAuxiliarDois = $novoArbitro[3]. " [" .$novoArbitro[5] ."]";
-			$arbitro->estilo = $novoArbitro[4];
-			$arbitro->createSqlite();
-		}
-		
-		
-		if($competicao->sede != 0){
-			
-			$clima = new Clima($ldb);
-			foreach($listaClimas as $novoClima){
-				$clima->id = $novoClima[0];
-				$clima->nome = $novoClima[1];
-				$clima->tempVerao = $novoClima[2];
-				$clima->estiloVerao = $novoClima[3];
-				$clima->tempOutono=$novoClima[4];
-				$clima->estiloOutono=$novoClima[5];
-				$clima->tempInverno=$novoClima[6];
-				$clima->estiloInverno=$novoClima[7];
-				$clima->tempPrimavera=$novoClima[8];
-				$clima->estiloPrimavera=$novoClima[9];
-				$clima->hemisferio=$novoClima[10];
-				$clima->createSqlite();
-			}
-			
-			
-			$estadio = new Estadio($ldb);
-			foreach($listaEstadios as $novoEstadio){
-				$estadio->id = $novoEstadio[0];
-				$estadio->nome = $novoEstadio[1];
-				$estadio->capacidade = $novoEstadio[2];
-				$estadio->clima = $novoEstadio[3];
-				$estadio->altitude = $novoEstadio[4];
-				$estadio->caldeirao = $novoEstadio[5];
-				$estadio->createSqlite();
-			}
-		}
-		
-		echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Competição inserida com sucesso!</div>";
-    } else{
-       echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve um erro ao inserir a competição!</div>";
-    }
-	
-}  else {
-
-    echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve um erro ao inserir a competição, campos em branco!</div>";
-}
-}
+    echo $alert_html;
 ?>
 
 <script type="application/javascript">
@@ -248,8 +228,8 @@ var i;
 for (i = 0; i < close.length; i++) {
     close[i].onclick = function(){
         var div = this.parentElement;
-        div.style.opacity = "0";
-        setTimeout(function(){ div.style.display = "none"; }, 600);
+        div.classList.add('fade-out');
+        setTimeout(function(){ div.style.display = "none"; }, 400);
     }
 }
 

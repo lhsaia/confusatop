@@ -128,37 +128,77 @@ $currentDate = date("Y-m-d H:i:s");
 
 if($tipo == 2) { // Round-robin (Pontos Corridos)
     $numTeams = count($teams);
-    if ($numTeams % 2 != 0) {
-        $teams[] = null; // Bye
-        $numTeams++;
+    
+    // Berger Algorithm implementation from Hexacolor Scheduler 1.2
+    // Sort array randomly/uniformly first to map double sort
+    shuffle($teams);
+    
+    $pivot = null;
+    $teamsToDraw = $teams;
+    if ($numTeams % 2 == 0) {
+        $pivot = array_shift($teamsToDraw);
     }
-
-    $rounds = $numTeams - 1;
-    $matchesPerRound = $numTeams / 2;
-
-    for ($r = 0; $r < $rounds; $r++) {
-        for ($m = 0; $m < $matchesPerRound; $m++) {
-            $home = $teams[$m];
-            $away = $teams[$numTeams - 1 - $m];
-
-            if ($home !== null && $away !== null) {
-                if ($m == 0 && $r % 2 == 1) {
-                    $temp = $home;
-                    $home = $away;
-                    $away = $temp;
+    
+    $matchdays = ($numTeams % 2 == 0) ? $numTeams - 1 : $numTeams;
+    $baseSchedule = [];
+    
+    for ($i = 0; $i < $matchdays; $i++) {
+        $matchday = [];
+        $size = count($teamsToDraw);
+        $half = (int)($size / 2);
+        
+        for ($j = 0; $j <= $half; $j++) {
+            if ($numTeams % 2 == 1 && $j == $half) {
+                continue; // Bye
+            }
+            $team1 = $teamsToDraw[$j];
+            if ($numTeams % 2 == 0 && $j == $half) {
+                if ($i % 2 == 1) {
+                    $team2 = $pivot;
+                } else {
+                    $team2 = $team1;
+                    $team1 = $pivot;
                 }
-
+            } else {
+                $team2 = $teamsToDraw[$size - 1 - $j];
+            }
+            $matchday[] = ['home' => $team1, 'away' => $team2];
+        }
+        $baseSchedule[] = $matchday;
+        
+        // Rotate (deslocar N/2 elementos para o final)
+        $rotationFactor = (int)($numTeams / 2);
+        if ($numTeams % 2 == 1) {
+            $rotationFactor++;
+        }
+        for ($r = 0; $r < $rotationFactor; $r++) {
+            $temp = array_shift($teamsToDraw);
+            array_push($teamsToDraw, $temp);
+        }
+    }
+    
+    // Inserir jogos no banco. Supondo 2 turnos (Ida e Volta) se configurado ou 1 turno.
+    // Vamos ler a opção de ida e volta do banco de dados (golfora / finalunica indicam se há ida e volta em competições,
+    // mas por padrão para pontos corridos vamos gerar Ida e Volta)
+    $roundsLimit = 2; // Ida e Volta padrão para Pontos Corridos no portal
+    
+    $totalRoundIndex = 0;
+    for ($r = 1; $r <= $roundsLimit; $r++) {
+        $shouldInvert = ($r % 2 == 0);
+        foreach ($baseSchedule as $mdayIndex => $matchdayMatches) {
+            foreach ($matchdayMatches as $match) {
+                $home = $shouldInvert ? $match['away'] : $match['home'];
+                $away = $shouldInvert ? $match['home'] : $match['away'];
+                
                 $arbId = count($arbitros) > 0 ? $arbitros[array_rand($arbitros)]['ID'] : 0;
                 $estId = getStadiumForMatch($ldb, $home, $estadios_times, $estadios);
                 
-                $dateMatch = date("Y-m-d 16:00:00", strtotime($currentDate . " +" . ($r * 3) . " days"));
+                $dateMatch = date("Y-m-d 16:00:00", strtotime($currentDate . " +" . ($totalRoundIndex * 3) . " days"));
                 
-                // Fase 2: Fase Única / Rodadas
                 $competicao->inserirJogo($idCompeticao, $home, $away, 2, $arbId, $estId, $dateMatch, "false", null);
             }
+            $totalRoundIndex++;
         }
-        $lastTeam = array_pop($teams);
-        array_splice($teams, 1, 0, [$lastTeam]);
     }
 } else if ($tipo == 1) { // Mata-mata
     shuffle($teams);
@@ -193,44 +233,61 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
         $n = count($groupTeams);
         if($n < 2) continue;
         
-        // Round robin dentro de cada grupo com espaçamento correto de rodadas
-        // Em um grupo de 4 times, temos 3 rodadas.
-        // Rodada 1: 1 v 2, 3 v 4
-        // Rodada 2: 1 v 3, 2 v 4
-        // Rodada 3: 1 v 4, 2 v 3
-        // Cada rodada com 3 dias de diferença.
-        if ($n == 4) {
-            $rodadas = [
-                1 => [[0, 1], [2, 3]],
-                2 => [[0, 2], [1, 3]],
-                3 => [[0, 3], [1, 2]]
-            ];
-            foreach ($rodadas as $rNum => $confrontos) {
-                foreach ($confrontos as $cIdx => $pair) {
-                    $home = $groupTeams[$pair[0]];
-                    $away = $groupTeams[$pair[1]];
-                    $arbId = count($arbitros) > 0 ? $arbitros[array_rand($arbitros)]['ID'] : 0;
-                    $estId = getStadiumForMatch($ldb, $home, $estadios_times, $estadios);
-                    // 3 dias de intervalo por rodada
-                    $dateMatch = date("Y-m-d 16:00:00", strtotime($currentDate . " +" . (($rNum - 1) * 3) . " days"));
-                    
-                    $competicao->inserirJogo($idCompeticao, $home, $away, 1, $arbId, $estId, $dateMatch, "false", $groupName);
+        // Berger para grupos de qualquer tamanho
+        $pivot = null;
+        $teamsToDraw = $groupTeams;
+        if ($n % 2 == 0) {
+            $pivot = array_shift($teamsToDraw);
+        }
+        
+        $matchdays = ($n % 2 == 0) ? $n - 1 : $n;
+        $groupSchedule = [];
+        
+        for ($i = 0; $i < $matchdays; $i++) {
+            $matchday = [];
+            $size = count($teamsToDraw);
+            $half = (int)($size / 2);
+            
+            for ($j = 0; $j <= $half; $j++) {
+                if ($n % 2 == 1 && $j == $half) {
+                    continue; // Bye
                 }
+                $team1 = $teamsToDraw[$j];
+                if ($n % 2 == 0 && $j == $half) {
+                    if ($i % 2 == 1) {
+                        $team2 = $pivot;
+                    } else {
+                        $team2 = $team1;
+                        $team1 = $pivot;
+                    }
+                } else {
+                    $team2 = $teamsToDraw[$size - 1 - j];
+                }
+                $matchday[] = ['home' => $team1, 'away' => $team2];
             }
-        } else {
-            // Fallback genérico se o grupo não tiver exatamente 4 times
-            $matchCount = 0;
-            for($i = 0; $i < $n; $i++){
-                for($j = $i + 1; $j < $n; $j++){
-                    $matchCount++;
-                    $home = $groupTeams[$i];
-                    $away = $groupTeams[$j];
-                    $arbId = count($arbitros) > 0 ? $arbitros[array_rand($arbitros)]['ID'] : 0;
-                    $estId = getStadiumForMatch($ldb, $home, $estadios_times, $estadios);
-                    $dateMatch = date("Y-m-d 16:00:00", strtotime($currentDate . " +" . ($matchCount * 3) . " days"));
-                    
-                    $competicao->inserirJogo($idCompeticao, $home, $away, 1, $arbId, $estId, $dateMatch, "false", $groupName);
-                }
+            $groupSchedule[] = $matchday;
+            
+            // Rotate
+            $rotationFactor = (int)($n / 2);
+            if ($n % 2 == 1) {
+                $rotationFactor++;
+            }
+            for ($r = 0; $r < $rotationFactor; $r++) {
+                $temp = array_shift($teamsToDraw);
+                array_push($teamsToDraw, $temp);
+            }
+        }
+        
+        // Inserir jogos do grupo (1 turno simples por padrão em fase de grupos)
+        foreach ($groupSchedule as $mdayIndex => $matchdayMatches) {
+            foreach ($matchdayMatches as $match) {
+                $home = $match['home'];
+                $away = $match['away'];
+                $arbId = count($arbitros) > 0 ? $arbitros[array_rand($arbitros)]['ID'] : 0;
+                $estId = getStadiumForMatch($ldb, $home, $estadios_times, $estadios);
+                $dateMatch = date("Y-m-d 16:00:00", strtotime($currentDate . " +" . ($mdayIndex * 3) . " days"));
+                
+                $competicao->inserirJogo($idCompeticao, $home, $away, 2, $arbId, $estId, $dateMatch, "false", $groupName);
             }
         }
     }

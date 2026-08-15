@@ -445,11 +445,26 @@ if (!empty($playerIds)) {
         $elenco[] = $row;
     }
 
-    // Ordenar elenco: Titular primeiro, depois por Nível decrescente
+    // Ordenar elenco: Titular primeiro, depois por posição (GK -> DF -> MF -> FW), depois por Nível decrescente
     usort($elenco, function($a, $b) {
         if ($a['Titular'] != $b['Titular']) {
             return $b['Titular'] - $a['Titular'];
         }
+
+        $posOrder = function($pos) {
+            if ($pos === 'G') return 1; // GK
+            if (in_array($pos, ['Z', 'LD', 'LE', 'AD', 'AE'])) return 2; // DF
+            if (in_array($pos, ['V', 'MC', 'MD', 'ME', 'MA'])) return 3; // MF
+            return 4; // FW
+        };
+
+        $pA = $posOrder($a['PosicaoEscolhida']);
+        $pB = $posOrder($b['PosicaoEscolhida']);
+
+        if ($pA != $pB) {
+            return $pA - $pB;
+        }
+
         return $b['Nivel'] - $a['Nivel'];
     });
 }
@@ -461,6 +476,7 @@ $css_login = 'login';
 $css_versao = date('h:i:s');
 require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
 ?>
+<link rel="stylesheet" href="/css/escalacao_jogo.css?versao=<?php echo $css_versao; ?>">
 
 <main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
 <div class="propostas-card" style="padding: 30px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: left;">
@@ -470,12 +486,12 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
     <?php echo $mensagem; ?>
 
     <form method="POST">
-        <div style="background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 20px; margin-bottom: 20px; overflow-x: auto;">
+        <div class="table-container" style="background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 20px; margin-bottom: 20px; overflow-x: auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
                 <h3 style="margin: 0; color: #1e293b; font-family: 'Kanit', sans-serif;">Elenco do Clube</h3>
                 <span id="contador-titulares" style="background: rgba(2,132,199,0.08); border: 1px solid rgba(2, 132, 199, 0.15); color: #0284c7; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">0/11 titulares selecionados</span>
             </div>
-            <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 700px; color: #334155;">
+            <table class="escalacao-table">
                 <thead>
                     <tr style="border-bottom: 1px solid rgba(0,0,0,0.08); color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
                         <th style="padding: 8px 10px;">Titular</th>
@@ -506,52 +522,75 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
                             $statusBadge = "<span style='background: rgba(100,116,139,0.1); color: #475569; border: 1px solid rgba(100,116,139,0.2); padding: 2px 7px; border-radius: 4px; font-size: 0.72rem;'>INDISP.</span>";
                         }
                         $rowOpacity = $isBloqueado ? 'opacity:0.5;' : '';
+                        
+                        $posBase = $j['PosicaoEscolhida'];
+                        $posClass = "pos-fw"; // default Atacante
+                        if ($posBase === 'G') {
+                            $posClass = "pos-gk";
+                        } elseif (in_array($posBase, ['Z', 'LD', 'LE', 'AD', 'AE'])) {
+                            $posClass = "pos-df";
+                        } elseif (in_array($posBase, ['V', 'MC', 'MD', 'ME', 'MA'])) {
+                            $posClass = "pos-mf";
+                        }
                     ?>
-                        <tr style="border-bottom: 1px solid rgba(0,0,0,0.05); <?php echo $rowOpacity; ?>">
-                            <td style="padding: 8px 10px; text-align: center;">
-                                <input type="checkbox" name="titulares[]" value="<?php echo $j['ID']; ?>"
-                                    <?php echo ($j['Titular'] == 1 && !$isBloqueado) ? 'checked' : ''; ?>
-                                    <?php echo $isBloqueado ? 'disabled' : ''; ?>
-                                    class="chk-titular" data-desfalque="<?php echo $isBloqueado ? '1' : '0'; ?>">
+                        <tr class="<?php echo $posClass; ?>" style="border-bottom: 1px solid rgba(0,0,0,0.05); <?php echo $rowOpacity; ?>">
+                            <td data-label="Titular" style="padding: 8px 10px; text-align: center;">
+                                <span class="cell-value">
+                                    <input type="checkbox" name="titulares[]" value="<?php echo $j['ID']; ?>"
+                                        <?php echo ($j['Titular'] == 1 && !$isBloqueado) ? 'checked' : ''; ?>
+                                        <?php echo $isBloqueado ? 'disabled' : ''; ?>
+                                        class="chk-titular" data-desfalque="<?php echo $isBloqueado ? '1' : '0'; ?>">
+                                </span>
                             </td>
-                            <td style="padding: 8px 10px; text-align: center;">
-                                <input type="radio" name="capitao" value="<?php echo $j['ID']; ?>"
-                                    <?php echo ($j['Capitao'] == 1 && !$isBloqueado) ? 'checked' : ''; ?>
-                                    <?php echo $isBloqueado ? 'disabled' : ''; ?>>
+                            <td data-label="Capitão" style="padding: 8px 10px; text-align: center;">
+                                <span class="cell-value">
+                                    <input type="radio" name="capitao" value="<?php echo $j['ID']; ?>"
+                                        <?php echo ($j['Capitao'] == 1 && !$isBloqueado) ? 'checked' : ''; ?>
+                                        <?php echo $isBloqueado ? 'disabled' : ''; ?>>
+                                </span>
                             </td>
-                            <td style="padding: 8px 10px; font-weight: 600; color: #1e293b;">
-                                <?php echo htmlspecialchars($j['Nome']); ?>
+                            <td data-label="Jogador" class="cell-jogador" style="padding: 8px 10px; font-weight: 600; color: #1e293b;">
+                                <span class="jogador-name"><?php echo htmlspecialchars($j['Nome']); ?></span>
                             </td>
-                            <td style="padding: 8px 10px;">
-                                <?php if (!$isBloqueado && count($j['PosicoesDisponiveis']) > 1): ?>
-                                    <select name="posicao_jogador[<?php echo $j['ID']; ?>]"
-                                        style="background: #ffffff; color: #1e293b; border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; padding: 4px 8px; font-size: 0.82rem; width: 100%;">
-                                        <?php foreach ($j['PosicoesDisponiveis'] as $pos): ?>
-                                            <option value="<?php echo $pos; ?>" <?php echo ($j['PosicaoEscolhida'] === $pos) ? 'selected' : ''; ?>>
-                                                <?php echo $pos; ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                <?php else: ?>
-                                    <span style="color: #64748b; font-size: 0.85rem;"><?php echo htmlspecialchars($j['PosicaoBase']); ?></span>
-                                    <input type="hidden" name="posicao_jogador[<?php echo $j['ID']; ?>]" value="<?php echo htmlspecialchars($j['PosicaoBase']); ?>">
-                                <?php endif; ?>
+                            <td data-label="Posição" style="padding: 8px 10px;">
+                                <span class="cell-value">
+                                    <?php if (!$isBloqueado && count($j['PosicoesDisponiveis']) > 1): ?>
+                                        <select name="posicao_jogador[<?php echo $j['ID']; ?>]"
+                                            style="background: #ffffff; color: #1e293b; border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; padding: 4px 8px; font-size: 0.82rem; width: 100%;">
+                                            <?php foreach ($j['PosicoesDisponiveis'] as $pos): ?>
+                                                <option value="<?php echo $pos; ?>" <?php echo ($j['PosicaoEscolhida'] === $pos) ? 'selected' : ''; ?>>
+                                                    <?php echo $pos; ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    <?php else: ?>
+                                        <span style="color: #64748b; font-size: 0.85rem;"><?php echo htmlspecialchars($j['PosicaoBase']); ?></span>
+                                        <input type="hidden" name="posicao_jogador[<?php echo $j['ID']; ?>]" value="<?php echo htmlspecialchars($j['PosicaoBase']); ?>">
+                                    <?php endif; ?>
+                                </span>
                             </td>
-                            <td style="padding: 8px 10px; color: #b45309; font-weight: bold; text-align: center;">
-                                <?php echo $j['Nivel']; ?>
+                            <td data-label="Nível" style="padding: 8px 10px; color: #b45309; font-weight: bold; text-align: center;">
+                                <span class="cell-value">
+                                    <?php echo $j['Nivel']; ?>
+                                </span>
                             </td>
-                            <td style="padding: 8px 10px; text-align: center;">
-                                <?php if (!$isDesfalqueAuto): ?>
-                                    <input type="checkbox" name="indisponiveis[]" value="<?php echo $j['ID']; ?>"
-                                        <?php echo $isIndisp ? 'checked' : ''; ?>
-                                        class="chk-indisp" title="Marcar como indisponível para este jogo"
-                                        style="cursor:pointer; accent-color: #ef4444;">
-                                <?php else: ?>
-                                    <span style="color: #94a3b8;">—</span>
-                                <?php endif; ?>
+                            <td data-label="Indisp." style="padding: 8px 10px; text-align: center;">
+                                <span class="cell-value">
+                                    <?php if (!$isDesfalqueAuto): ?>
+                                        <input type="checkbox" name="indisponiveis[]" value="<?php echo $j['ID']; ?>"
+                                            <?php echo $isIndisp ? 'checked' : ''; ?>
+                                            class="chk-indisp" title="Marcar como indisponível para este jogo"
+                                            style="cursor:pointer; accent-color: #ef4444;">
+                                    <?php else: ?>
+                                        <span style="color: #94a3b8;">—</span>
+                                        <input type="checkbox" style="display:none;" class="chk-indisp">
+                                    <?php endif; ?>
+                                </span>
                             </td>
-                            <td style="padding: 8px 10px;">
-                                <?php echo $statusBadge; ?>
+                            <td data-label="Status" class="cell-status" style="padding: 8px 10px;">
+                                <span class="cell-value">
+                                    <?php echo $statusBadge; ?>
+                                </span>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -563,12 +602,12 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
             <div style="margin-bottom: 20px; background: rgba(2, 132, 199, 0.05); padding: 12px 18px; border-radius: 8px; border: 1px solid rgba(2, 132, 199, 0.15); width: fit-content;">
                 <label style="display: inline-flex; align-items: center; gap: 8px; color: #0369a1; font-weight: 600; font-size: 0.95rem; cursor: pointer; user-select: none;">
                     <input type="checkbox" name="salvar_definitivo" value="1" style="width: 18px; height: 18px; cursor: pointer; accent-color: #0284c7;">
-                    Salvar esta escalaço também como PADRÃO (definitiva) para o clube na competição
+                    Salvar esta escalação também como PADRÃO (definitiva) para o clube na competição
                 </label>
             </div>
         <?php endif; ?>
 
-        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 4px;">
+        <div class="escalacao-actions" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 4px;">
             <button type="submit" name="salvar_escalacao"
                 style="width: fit-content; white-space: nowrap; background: linear-gradient(135deg, #0284c7, #0369a1); color: #fff; border: none; padding: 12px 28px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.95rem; letter-spacing: 0.3px; box-shadow: 0 4px 12px rgba(2,132,199,0.25);">
                 💾 Salvar Escalação
@@ -577,6 +616,11 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
                 style="display: inline-block; width: fit-content; white-space: nowrap; padding: 12px 20px; background: rgba(0,0,0,0.03); color: #475569; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: all 0.2s ease;"
                 onmouseover="this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.background='rgba(0,0,0,0.03)'">
                 ← Voltar para Jogos
+            </a>
+            <a href="competitionstatus.php?id=<?php echo $idCompeticao; ?>"
+                style="display: inline-block; width: fit-content; white-space: nowrap; padding: 12px 20px; background: rgba(0,0,0,0.03); color: #475569; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: all 0.2s ease;"
+                onmouseover="this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.background='rgba(0,0,0,0.03)'">
+                ← Voltar para a Competição
             </a>
         </div>
     </form>

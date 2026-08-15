@@ -17,13 +17,14 @@ $database = new Database();
 $db = $database->getConnection();
 $competicaoObj = new Competicao_clube($db);
 
-// Selecionar jogos pendentes (status = 0) agendados para amanhã
-$amanhaInicio = date('Y-m-d 00:00:00', strtotime('+1 day'));
-$amanhaFim    = date('Y-m-d 23:59:59', strtotime('+1 day'));
+// Selecionar jogos pendentes (status = 0) agendados para as próximas 24 horas
+$inicioBusca = date('Y-m-d H:i:s'); // Momento atual
+$fimBusca    = date('Y-m-d H:i:s', strtotime('+24 hours')); // 24 horas à frente
 
-echo "[" . date('Y-m-d H:i:s') . "] Iniciando Cron de Simulação para partidas entre {$amanhaInicio} e {$amanhaFim}...\n";
+echo "[" . date('Y-m-d H:i:s') . "] Iniciando Cron de Simulação para partidas entre {$inicioBusca} e {$fimBusca}...\n";
 
-$query = "SELECT id, competicao, timeA, timeB, estadio, neutro, data 
+// Buscar jogos programados para as próximas X horas
+$query = "SELECT id, competicao, timeA_id AS timeA, timeB_id AS timeB, estadio, neutro, fase, data 
           FROM competicao_jogos 
           WHERE status = 0 
             AND data >= :inicio 
@@ -31,14 +32,14 @@ $query = "SELECT id, competicao, timeA, timeB, estadio, neutro, data
           ORDER BY data ASC";
 
 $stmt = $db->prepare($query);
-$stmt->bindParam(':inicio', $amanhaInicio);
-$stmt->bindParam(':fim', $amanhaFim);
+$stmt->bindParam(':inicio', $inicioBusca);
+$stmt->bindParam(':fim', $fimBusca);
 $stmt->execute();
 
 $partidas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if (empty($partidas)) {
-    echo "[" . date('Y-m-d H:i:s') . "] Nenhuma partida pendente encontrada para amanhã.\n";
+    echo "[" . date('Y-m-d H:i:s') . "] Nenhuma partida pendente encontrada nas próximas 24 horas.\n";
     exit(0);
 }
 
@@ -72,6 +73,24 @@ foreach ($partidas as $matchInfo) {
     $ldb = $liteDatabase->getConnection();
     $liteCompeticao = new Competicao_clube($ldb);
     $timeObj = new Time($ldb);
+
+    // Garantir tabela de compatibilidade com as versões necessárias
+    try {
+        $ldb->exec("CREATE TABLE IF NOT EXISTS `compatibilidade` (`versao` TEXT)");
+        $stmtCheck = $ldb->query("SELECT `versao` FROM `compatibilidade`");
+        $existingVersions = $stmtCheck->fetchAll(PDO::FETCH_COLUMN);
+        
+        $requiredVersions = ['2.8', '2.9.1', '2.10', '2.13'];
+        $stmtInsert = $ldb->prepare("INSERT INTO `compatibilidade` (`versao`) VALUES (:versao)");
+        foreach ($requiredVersions as $v) {
+            if (!in_array($v, $existingVersions)) {
+                $stmtInsert->bindValue(':versao', $v, PDO::PARAM_STR);
+                $stmtInsert->execute();
+            }
+        }
+    } catch (Exception $e) {
+        error_log("Erro ao aplicar compatibilidade no SQLite: " . $e->getMessage());
+    }
 
     // 1. Guardar a escalação original (padrão) na memória para restaurar depois da simulação
     $originalEscalacoes = [];
@@ -271,6 +290,25 @@ foreach ($partidas as $matchInfo) {
     $fullDate = strtotime(date("j-n-Y", strtotime($matchInfo['data']))) * 1000 + 5*60*60*1000;
     $matchdayIndex = 1;
     
+    // Obter as opções de desempate da competição
+    $options = $competicaoObj->getOptions($idCompeticao);
+    $faseJogo = isset($matchInfo['fase']) ? intval($matchInfo['fase']) : 0;
+    
+    $knockoutTiebraker = 0;
+    $knockoutAwayGoals = false;
+    
+    if ($faseJogo > 2) {
+        if ($faseJogo == 8) { // Final
+            $tieOption = isset($options['criteriodesempatefinal']) ? intval($options['criteriodesempatefinal']) : 0;
+            $knockoutTiebraker = ($tieOption === 0) ? 1 : 2;
+            $knockoutAwayGoals = false;
+        } else { // Outras fases de mata-mata
+            $tieOption = isset($options['criteriodesempate']) ? intval($options['criteriodesempate']) : 0;
+            $knockoutTiebraker = ($tieOption === 0) ? 1 : 2;
+            $knockoutAwayGoals = isset($options['golfora']) && $options['golfora'] == 1;
+        }
+    }
+
     $json_array = array(
         'calendarName' => $nomeComposto,
         'color1' => isset($cores['partidaCor1']) ? $cores['partidaCor1'] : '#000000',
@@ -289,8 +327,8 @@ foreach ($partidas as $matchInfo) {
             'neutralGround' => boolval($matchInfo['neutro']),
             'outTeam1' => $outTeam1,
             'outTeam2' => $outTeam2,
-            'knockoutTiebraker' => 0,
-            'knockoutAwayGoals' => false,
+            'knockoutTiebraker' => $knockoutTiebraker,
+            'knockoutAwayGoals' => $knockoutAwayGoals,
         )]
     );
     
@@ -320,17 +358,22 @@ foreach ($partidas as $matchInfo) {
     if ($isWindows) {
         $jarPath = $dir . "/HexacolorYMTv2.jar";
         $jsonPath = $dir . "/agenda/json.txt";
-        $cmd = "java -Djava.awt.headless=true -jar \"$jarPath\" -m \"$jsonPath\" 2>&1";
+        $cmd = "java -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.awt.headless=true -jar \"$jarPath\" -m \"$jsonPath\" 2>&1";
     } else {
-        $javaBin = "/java_station/jdk/jdk1.8.0_231/bin/java";
-        $libPath = "/competicoes/hexacolor/lib";
-        $tmpDir = "/java_station/tmp";
-        $jarPath = "/competicoes/hexacolor/HexacolorLite.jar";
-        $jsonPath = "/competicoes/hexacolor/agenda/json.txt";
-        $cmd = "export DISPLAY=:0.0; $javaBin -Djava.library.path=$libPath -Djava.io.tmpdir=$tmpDir -jar $jarPath -m $jsonPath 2>&1";
+        $docRoot = dirname(__DIR__);
+        $javaBin = $docRoot . "/java_station/jdk/jdk1.8.0_231/bin/java";
+        $libPath = $hexacolorDir . "/lib";
+        $tmpDir = $docRoot . "/java_station/tmp";
+        $jarPath = $hexacolorDir . "/HexacolorYMTv2.jar";
+        $jsonPath = $hexacolorDir . "/agenda/json.txt";
+        $cmd = "export LANG=en_US.UTF-8; export LC_ALL=en_US.UTF-8; $javaBin -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.awt.headless=true -Djava.library.path=$libPath -Djava.io.tmpdir=$tmpDir -jar $jarPath -m $jsonPath 2>&1";
     }
     
     $output = shell_exec($cmd . "\n");
+    
+    // Geração de LOG para debug do motor de simulação
+    $logMessage = "[" . date('Y-m-d H:i:s') . "] CMD: " . $cmd . "\nOUTPUT:\n" . $output . "\n----------------------------------------\n";
+    file_put_contents($hexacolorDir . "/simulation_debug.log", $logMessage, FILE_APPEND);
     
     // Reabrir conexão SQLite temporária para restaurar a escalação e salvar
     $liteDatabase = new SQLiteDatabase();
@@ -368,18 +411,33 @@ foreach ($partidas as $matchInfo) {
     }
     
     $hylFile = $hexacolorDir . $completePath;
+    
+    if (!file_exists($hylFile)) {
+        error_log("PHP Simulador: [ERRO] Cron falhou na partida #{$idPartida}. Comando: " . $cmd . " | Output: " . trim($output));
+        echo "   [ERRO] A simulação da Partida #{$idPartida} falhou. O arquivo .hyl não foi gerado. Pulando...\n";
+        continue;
+    }
+    
     $golsTimeA = 0;
     $golsTimeB = 0;
-    if (file_exists($hylFile)) {
-        $xml = json_decode(file_get_contents($hylFile));
-        if ($xml) {
-            $golsTimeA = (int)$xml->placarTime1;
-            $golsTimeB = (int)$xml->placarTime2;
-        }
+    $xml = json_decode(file_get_contents($hylFile));
+    if ($xml) {
+        $golsTimeA = (int)$xml->placarTime1;
+        $golsTimeB = (int)$xml->placarTime2;
+    } else {
+        error_log("PHP Simulador: [ERRO] Cron gerou súmula vazia/corrompida na partida #{$idPartida}. Output: " . trim($output));
+        echo "   [ERRO] O arquivo .hyl para a Partida #{$idPartida} foi gerado mas está corrompido ou vazio. Pulando...\n";
+        continue;
     }
     
     // Atualizar resultado no MariaDB
     $competicaoObj->uploadMatchResults($idPartida, $golsTimeA, $golsTimeB, $path);
+
+    // Processar desfalques pós jogo (cartões, lesões, suspensões) no MariaDB
+    require_once __DIR__ . '/hexacolor/processar_desfalques.php';
+    $hyjFile = str_replace('.hyl', '.hyj', $hylFile);
+    processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $suspensos);
+
     echo "   [SUCESSO] Partida #{$idPartida} simulada! Placar: {$siglaA} {$golsTimeA} x {$golsTimeB} {$siglaB}\n";
 }
 
