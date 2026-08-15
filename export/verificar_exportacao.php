@@ -4,12 +4,16 @@
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 //die(json_encode([ 'success'=> true, 'errors'=> 'nothing']));
- ini_set( 'display_errors', true );
- error_reporting( E_ALL );
+//ini_set( 'display_errors', true );
+//error_reporting( E_ALL );
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
+if(session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
   $listaTimes = $_POST['array_times'];
+  // Garante que $listaTimes é sempre um array
+  if (!is_array($listaTimes)) {
+      $listaTimes = array_filter(array_map('trim', explode(',', $listaTimes)));
+  }
   $num_equipes = $_POST['num_equipes'];
   $codigo_genero = $_POST['codigo_genero'];
   $codigo_competicao = $_POST['codigo_competicao'];
@@ -92,6 +96,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
 
 } else {
+    error_log("Falha na autenticação da sessão: " . session_status());
     $error_msg = "Usuário não tem acesso para realizar essa ação";
 }
 
