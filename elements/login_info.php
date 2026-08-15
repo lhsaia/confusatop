@@ -171,13 +171,14 @@ if( filter_var($_POST['newemail'], FILTER_VALIDATE_EMAIL) )
             require_once($_SERVER['DOCUMENT_ROOT']."/elements/mail_setup.php");
             $mail->clearAddresses();
             $mail->clearReplyTos();
-            $mail->setFrom('no-reply@confusa.top', 'CONFUSA.top');
+            $mail->setFrom(getenv('SMTP_USER'), 'CONFUSA.top');
             $mail->addReplyTo($novoemail, $novonome);
             $mail->addAddress($to);
             $mail->Subject = $subject;
             $mail->Body    = $body;
             $sendSuccess = $mail->send();
         } catch (\Throwable $e) {
+            error_log("Erro ao enviar email de login: " . $e->getMessage() . " / Mailer Error: " . ($mail->ErrorInfo ?? ''));
             $sendSuccess = false;
         }
 
@@ -208,7 +209,7 @@ if(isset($_POST['forgetsubmit'])){
 
 //nova senha temporária
 
-function random_str($length, $keyspace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./-?#*=+_')
+function random_str($length, $keyspace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
 {
     $pieces = [];
     $max = mb_strlen($keyspace, '8bit') - 1;
@@ -242,13 +243,13 @@ if($idUsuario){
 
 
 $to = $emailEsqueceuSenha;
-$from = "no-reply@confusa.top";
+$from = getenv('SMTP_USER');
 
 $headers = "From: " . $from . "\r\n";
 
-$subject = "Sua nova senha temporária para o CONFUSA.TOP";
-$body = "Sua nova senha temporária é: " . $presenhaTemp . "\r\n" .
-        "Altere assim que possível no menu do usuário do site.";
+$subject = "Sua nova senha temporaria para o CONFUSA.TOP";
+$body = "Sua nova senha temporaria e: " . $presenhaTemp . "\r\n" .
+        "Altere assim que possivel no menu do usuario do site.";
 
 
 
@@ -259,12 +260,13 @@ if( filter_var($_POST['forgetemail'], FILTER_VALIDATE_EMAIL) && $change_success)
         require_once($_SERVER['DOCUMENT_ROOT']."/elements/mail_setup.php");
         $mail->clearAddresses();
         $mail->clearReplyTos();
-        $mail->setFrom('no-reply@confusa.top', 'CONFUSA.top');
+        $mail->setFrom(getenv('SMTP_USER'), 'CONFUSA.top');
         $mail->addAddress($to);
         $mail->Subject = $subject;
         $mail->Body    = $body;
         $sendSuccess = $mail->send();
     } catch (\Throwable $e) {
+        error_log("Erro ao enviar email de esqueci senha: " . $e->getMessage() . " / Mailer Error: " . ($mail->ErrorInfo ?? ''));
         $sendSuccess = false;
     }
 
