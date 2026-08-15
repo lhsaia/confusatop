@@ -25,11 +25,13 @@ $dono_time = $time->getDono($team_id);
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "Resumo Financeiro - " . $nome_time["Nome"];
-$css_filename = "indexRanking";
-$aux_css = "usuario";
+$css_filename = "home_redesign";
+$aux_css = "propostas_redesign";
 $css_login = 'login';
+$extra_css = 'financeiro_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+
 
 //if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	
@@ -72,6 +74,7 @@ var totais = 0;
 	echo "-1";
  };?>';
 
+
 $(document).ready(function($){
 	
 	$("#select_transaction_type").change(function(){
@@ -91,9 +94,18 @@ $(document).ready(function($){
 	});
 	
 	function calculo_financeiro(){
-		$("#Receitas .informacao").html("F$ " + receitas.toLocaleString('pt-BR'));
-		$("#Gastos .informacao").html("F$" + despesas.toLocaleString('pt-BR'));
-		$("#Balanco .informacao").html("F$" + totais.toLocaleString('pt-BR'));
+		var recVal = receitas.toLocaleString('pt-BR');
+		var desVal = Math.abs(despesas).toLocaleString('pt-BR');
+		var totVal = totais.toLocaleString('pt-BR');
+
+		$("#kpi-receitas").text("F$ " + recVal);
+		$("#kpi-gastos").text("F$ " + desVal);
+		$("#kpi-balanco").text("F$ " + totVal);
+
+		// cor do balanço
+		$("#kpi-balanco-card").removeClass('positivo negativo');
+		if (totais > 0) $("#kpi-balanco-card").addClass('positivo');
+		else if (totais < 0) $("#kpi-balanco-card").addClass('negativo');
 	}
 	
 	
@@ -230,25 +242,23 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 				
 			fluxo_caixa = (val['fluxo_caixa'] == 1? "receita" : "despesa");
 			
-			//console.log(val);
-			
 			// geração da tabela
 			tbl += "<tr id='"+val['trans_id']+"' >";
-				tbl +=  "<td><span class='dataEditavel' id='dat"+val['trans_id']+"'>"+val['data']+"</span></td>";
-				tbl +=  "<td><span class='tipoTransacao' id='tip"+val['trans_id']+"'>"+val['nome']+"</span></td>";
-				tbl +=  "<td><span class='fluxoCaixa' id='flx"+val['trans_id']+"'>"+fluxo_caixa.charAt(0).toUpperCase() + fluxo_caixa.slice(1);+"</span></td>";
-				tbl +=  "<td><span class='valor "+fluxo_caixa+"' id='val"+val['trans_id']+"'> F$ "+parseInt(val['valor']).toLocaleString('pt-BR')+"</span></td>";
-				tbl +=  "<td><span class='comentario' id='com"+val['trans_id']+"'>"+val['comentario']+"</span></td>";
-                let optionsString = "<td class='wide'>";
+				tbl +=  "<td data-label='Data'><span class='cell-value'><span class='dataEditavel' id='dat"+val['trans_id']+"'>"+val['data']+"</span></span></td>";
+				tbl +=  "<td data-label='Tipo'><span class='cell-value'><span class='tipoTransacao' id='tip"+val['trans_id']+"'>"+val['nome']+"</span></span></td>";
+				tbl +=  "<td data-label='Fluxo'><span class='cell-value'><span class='fluxoCaixa' id='flx"+val['trans_id']+"'>"+fluxo_caixa.charAt(0).toUpperCase() + fluxo_caixa.slice(1)+"</span></span></td>";
+				tbl +=  "<td data-label='Valor'><span class='cell-value'><span class='valor "+fluxo_caixa+"' id='val"+val['trans_id']+"'> F$ "+parseInt(val['valor']).toLocaleString('pt-BR')+"</span></span></td>";
+				tbl +=  "<td data-label='Comentário'><span class='cell-value'><span class='comentario' id='com"+val['trans_id']+"'>"+val['comentario']+"</span></span></td>";
+                let optionsString = "<td data-label='Opções' class='wide'><span class='cell-value'>";
 
                 if(logged == "true"){
-                    if( (admin == "true" ||user_id === donoTime) && val['tableFrom'] == "transactions"){
+                    if( (admin == "true" || user_id == donoTime) && val['tableFrom'] == "transactions"){
                         // optionsString += "<a id='edi"+val['id']+"' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
                         // optionsString += "<a hidden id='sal"+val['id']+"' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
                         // optionsString += "<a hidden id='can"+val['id']+"' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
-                        optionsString += "<a id='apa"+val['trans_id']+"' title='Apagar' class='clickable apagar'><span class='material-symbols-outlined negative inlineButton'>delete</span></a>";
+                        optionsString += "<a id='apa"+val['trans_id']+"' title='Apagar' class='clickable apagar'><span class='material-symbols-outlined negativo inlineButton'>delete</span></a>";
                     }
-                    optionsString += "</td>";
+                    optionsString += "</span></td>";
                     tbl += optionsString;
                 }
 
@@ -677,8 +687,6 @@ if(prop == 'pontos'){
         }
     );
 }
-
-
     updateTable(localData, 1,prop,0);
 
     }
@@ -687,56 +695,74 @@ if(prop == 'pontos'){
 
 </script>
 
-<div id="quadro-container">
-<div align="center" id="quadroTimes">
-<div id='datas'>
-<div class='date_wrapper'><input type="date" id="input_fim" name="fim"></div>
-<div class='date_wrapper'><input type="date" id="input_inicio" name="inicio"></div>
+<main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
+<div class="propostas-card">
+
+    <div class="fin-header-row">
+        <h2 class="propostas-title">Resumo Financeiro &mdash; <?php echo htmlspecialchars($nome_time["Nome"]); ?></h2>
+        <?php if($dono_time["dono"] == (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : -1) || (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1)): ?>
+        <a id="btn-criar-transacao" href="/finance/create_transaction.php?team=<?php echo $team_id ?>">
+            <span class="material-symbols-outlined">add_circle</span> Criar Transação
+        </a>
+        <?php endif; ?>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="fin-kpi-grid">
+        <div class="fin-kpi-card receitas">
+            <div class="kpi-label"><span class="material-symbols-outlined">trending_up</span> Receitas</div>
+            <div class="kpi-value" id="kpi-receitas">F$ 0</div>
+        </div>
+        <div class="fin-kpi-card gastos">
+            <div class="kpi-label"><span class="material-symbols-outlined">trending_down</span> Gastos</div>
+            <div class="kpi-value" id="kpi-gastos">F$ 0</div>
+        </div>
+        <div class="fin-kpi-card balanco" id="kpi-balanco-card">
+            <div class="kpi-label"><span class="material-symbols-outlined">balance</span> Balanço</div>
+            <div class="kpi-value" id="kpi-balanco">F$ 0</div>
+        </div>
+    </div>
+
+    <hr class="fin-divider">
+
+    <!-- Filtros -->
+    <div class="fin-filters">
+        <div class="filter-group">
+            <label for="input_inicio">Data Início</label>
+            <input type="date" id="input_inicio" name="inicio">
+        </div>
+        <div class="filter-group">
+            <label for="input_fim">Data Fim</label>
+            <input type="date" id="input_fim" name="fim">
+        </div>
+        <div class="filter-group">
+            <label for="select_transaction_type">Tipo de Transação</label>
+            <select id="select_transaction_type">
+                <option value="0">Ver tudo</option>
+                <?php
+                    $opcoes_transacao = $transaction->getOptions();
+                    while ($row = $opcoes_transacao->fetch(PDO::FETCH_ASSOC)){
+                        extract($row);
+                        echo "<option value='{$id}' data-icon='{$icone}'>{$nome}</option>";
+                    }
+                ?>
+            </select>
+        </div>
+    </div>
+
+    <hr class="fin-divider">
+
+    <div id="error_box"></div>
+    <div class="tbl_user_data"><img id="loading" src="/images/icons/ajax-loader.gif"></div>
+
+    <div style="margin-top: 30px;">
+        <a href="/ligas/teamstatus.php?team=<?php echo $team_id; ?>" style="display: inline-block; padding: 10px 20px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;"
+           onmouseover="this.style.background='rgba(0, 0, 0, 0.06)'" onmouseout="this.style.background='rgba(0, 0, 0, 0.03)'">
+            ← Voltar para a Tela do Time
+        </a>
+    </div>
 
 </div>
-<div id='select_wrapper'><select id='select_transaction_type'>
-<option value='0'>Ver tudo</option>
-<?php
-	$opcoes_transacao = $transaction->getOptions();
-	while ($row = $opcoes_transacao->fetch(PDO::FETCH_ASSOC)){
-		extract($row);
-		echo "<option value='{$id}' data-icon='{$icone}'>{$nome}</option>";
-	}
+</main>
 
-?>
-</select><i id='transaction_type_icon' class=''></i></div>
-<!--<div id='search_wrapper'><input type=text id='caixa_pesquisa' placeholder='Pesquisar...'><span class='material-symbols-outlined'>search</span></div> -->
-<button id='importar_time' onclick="window.location='/finance/create_transaction.php?team=<?php echo $team_id ?>';">Criar transação</button>
-<h2>Resumo Financeiro - <?php echo $nome_time["Nome"]?></h2>
-<hr>
-<?php
-echo "<div style='clear:both; float:center'></div>";
-echo "<div id='info-financeira'>";
-echo "<div id='Receitas' class='infoblock vitoria larger' title='Receitas'><span class='material-symbols-outlined'>login</span><span class='informacao'></span></div>";
-echo "<div id='Gastos' class='infoblock derrota larger' title='Gastos'><span class='material-symbols-outlined'>logout</span><span class='informacao'></span></div>";
-echo "<div id='Balanco' class='infoblock larger' title='Balanço'><span class='material-symbols-outlined'>balance</span><span class='informacao'></span></div>";
-echo "</div>";
-echo "<br>";
-echo "<div style='clear:both;'></div>";
-?>
-<hr>
-<div id='error_box'></div>
-
-<?php
-
-echo "<div style='clear:both;'></div>";
-echo "<hr>";
-echo "<div class='tbl_user_data'><img id='loading' src='/images/icons/ajax-loader.gif'></div>";
-
-// echo "<div class='alert alert-info'>Não há times</div>";
-
-echo('</div>');
-echo('</div>');
-
-//} else {
-//    echo "Usuário, por favor refaça o login.";
-//}
-
-include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
-
-?>
+<?php include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php"); ?>
