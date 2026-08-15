@@ -124,7 +124,7 @@ $query_count_fichas = "
     INNER JOIN paises p ON ct.pais_time = p.id
     WHERE p.dono = ? 
       AND (ct.has_team IS NULL OR ct.has_team <> '1')
-      AND co.limite_fichas >= CURDATE()
+      AND (co.limite_fichas >= CURDATE() OR co.limite_fichas IS NULL OR co.limite_fichas = '0000-00-00' OR co.limite_fichas = '')
 ";
 $stmt_count_fichas = $db->prepare($query_count_fichas);
 $stmt_count_fichas->execute([$idUsuario]);

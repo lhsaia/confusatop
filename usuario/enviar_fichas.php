@@ -39,8 +39,8 @@ $query_pending_rosters = "
     INNER JOIN paises p ON ct.pais_time = p.id
     WHERE p.dono = ? 
       AND (ct.has_team IS NULL OR ct.has_team <> '1')
-      AND co.limite_fichas >= CURDATE()
-    ORDER BY co.limite_fichas ASC
+      AND (co.limite_fichas >= CURDATE() OR co.limite_fichas IS NULL OR co.limite_fichas = '0000-00-00' OR co.limite_fichas = '')
+    ORDER BY co.limite_fichas IS NULL ASC, co.limite_fichas ASC
 ";
 $stmt_pending = $db->prepare($query_pending_rosters);
 $stmt_pending->execute([$idUsuario]);
@@ -71,9 +71,14 @@ if (!empty($countries_with_pending)) {
             <div class="pending-rosters-list">
                 <?php foreach ($pending_rosters as $pr): ?>
                     <?php 
-                    $is_urgent = ($pr['dias_restantes'] < 7);
-                    $dias_text = $pr['dias_restantes'] == 1 ? "1 dia" : $pr['dias_restantes'] . " dias";
-                    if ($pr['dias_restantes'] == 0) $dias_text = "Hoje!";
+                    $has_deadline = !empty($pr['limite_fichas']) && $pr['limite_fichas'] !== '0000-00-00';
+                    $is_urgent = $has_deadline && ($pr['dias_restantes'] < 7);
+                    if ($has_deadline) {
+                        $dias_text = $pr['dias_restantes'] == 1 ? "1 dia" : $pr['dias_restantes'] . " dias";
+                        if ($pr['dias_restantes'] == 0) $dias_text = "Hoje!";
+                    } else {
+                        $dias_text = "Sem prazo";
+                    }
                     ?>
                     <div class="pending-roster-item <?php echo $is_urgent ? 'item-urgent' : ''; ?>" data-comp-id="<?php echo $pr['competicao_id']; ?>" data-slot-id="<?php echo $pr['codigo_time']; ?>" data-pais-id="<?php echo $pr['pais_id']; ?>">
                         <div class="roster-info">
@@ -87,10 +92,18 @@ if (!empty($countries_with_pending)) {
                             </div>
                         </div>
                         <div class="roster-deadline">
-                            <span class="deadline-label">Prazo: <?php echo date('d/m/Y', strtotime($pr['limite_fichas'])); ?></span>
-                            <span class="days-remaining <?php echo $is_urgent ? 'text-urgent' : ''; ?>">
-                                <?php echo $dias_text; ?> restante<?php echo $pr['dias_restantes'] != 1 ? 's' : ''; ?>
+                            <span class="deadline-label">
+                                <?php if ($has_deadline): ?>
+                                    Prazo: <?php echo date('d/m/Y', strtotime($pr['limite_fichas'])); ?>
+                                <?php else: ?>
+                                    Sem prazo
+                                <?php endif; ?>
                             </span>
+                            <?php if ($has_deadline): ?>
+                                <span class="days-remaining <?php echo $is_urgent ? 'text-urgent' : ''; ?>">
+                                    <?php echo $dias_text; ?> restante<?php echo $pr['dias_restantes'] != 1 ? 's' : ''; ?>
+                                </span>
+                            <?php endif; ?>
                         </div>
                         <div class="roster-actions">
                             <div class="action-select-container">
