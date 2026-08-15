@@ -1,6 +1,21 @@
 <?php
 // lib/functions.php
 
+// Polyfill para servidores sem a extensão mbstring ativa
+if (!function_exists('mb_substr')) {
+    function mb_substr($str, $start, $length = null, $encoding = null) {
+        if ($length === null) {
+            return substr($str, $start);
+        }
+        return substr($str, $start, $length);
+    }
+}
+if (!function_exists('mb_strtoupper')) {
+    function mb_strtoupper($str, $encoding = null) {
+        return strtoupper($str);
+    }
+}
+
 // attribute handling function
 function adjustAttributes($isGoleiro, $nivelJogador, $marcacao, $desarme, $visaoJogo, $movimentacao, $cruzamentos, $cabeceamento, $tecnica, $controleBola, $finalizacao, $faroGol, $velocidade, $forca, $reflexos, $seguranca, $saidas, $jogoAereo, $lancamentos, $defesaPenaltis){
     
