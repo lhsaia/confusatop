@@ -85,6 +85,20 @@ h1 {
             <span style="display: inline-block; margin-top: 16px; color: #10b981; font-weight: 600; font-size: 14px;">Criar novo usuário &rarr;</span>
         </a>
 
+        <!-- Card 4: PoltronaScore Scraper -->
+        <a href="/admin/poltronascore.php" style="text-decoration: none; display: flex; flex-direction: column; background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 24px; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; color: inherit; cursor: pointer;"
+           onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='#e9d5ff'; this.style.boxShadow='0 10px 15px -3px rgba(233, 213, 255, 0.15)';" 
+           onmouseout="this.style.transform='none'; this.style.borderColor='#334155'; this.style.boxShadow='none';">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <span class="material-symbols-outlined" style="font-size: 32px; color: #c084fc;">sync_alt</span>
+                <h2 style="margin: 0; font-size: 20px; color: #f8fafc; font-weight: 600;">PoltronaScore Scraper</h2>
+            </div>
+            <p style="margin: 0; font-size: 14px; color: #94a3b8; line-height: 1.5; flex-grow: 1;">
+                Gerencie o processo de captura automática de partidas (scraper), acompanhe logs de execução e force atualizações manuais do placar.
+            </p>
+            <span style="display: inline-block; margin-top: 16px; color: #c084fc; font-weight: 600; font-size: 14px;">Gerenciar Scraper &rarr;</span>
+        </a>
+
     </div>
     
     <div style="margin-top: 40px; text-align: center; border-top: 1px solid #334155; padding-top: 20px;">

@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
          *                         to select from
          * @return string
          */
-        function random_str($length, $keyspace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./-?#*=+_')
+        function random_str($length, $keyspace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
         {
             $pieces = [];
             $max = mb_strlen($keyspace, '8bit') - 1;
@@ -94,10 +94,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
             $mail->addAddress($novoemail);               //Name is optional
             $mail->Subject = "Seja bem-vindo ao site CONFUSA.TOP!";
             $mail->Body    = $body;
-
-            if ($mail->send())
-            {
-                $email_success = true;
+            try {
+                if ($mail->send())
+                {
+                    $email_success = true;
+                }
+            } catch (\Throwable $e) {
+                error_log("Erro ao enviar email de criar usuario: " . $e->getMessage() . " / Mailer Error: " . ($mail->ErrorInfo ?? ''));
+                $email_success = false;
             }
 
             //Pesquisar usuário e vincular países
