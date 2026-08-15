@@ -1,7 +1,7 @@
 # Secrets & Configuration
 config/database.php
 config/databasePitor.php
-octamotor/config/database.php
+octamotor/config/
 cron/backup_db.php
 .env
 .env.local
