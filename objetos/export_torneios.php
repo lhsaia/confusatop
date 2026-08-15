@@ -57,6 +57,9 @@ function salvar($codigo,$federacao,$genero,$num_equipes,$listaTimes,$sede){
   $num_equipes = htmlspecialchars(strip_tags($num_equipes));
   $sede = htmlspecialchars(strip_tags($sede));
 
+  if (!is_array($listaTimes)) {
+      $listaTimes = array_filter(array_map('trim', explode(',', $listaTimes)));
+  }
   $listaFinal = implode(',', $listaTimes);
 
   $query = "UPDATE " .$this->table_name . " SET Federacao = :federacao, NumParticipantes = :numParticipantes, Genero = :genero, Participantes = :listaParticipantes, Sede = :sede WHERE ID = :id";

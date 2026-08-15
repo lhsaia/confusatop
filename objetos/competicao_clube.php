@@ -201,6 +201,7 @@ class Competicao_clube{
 			$db3File = $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$id."-database.db3";
 			if(file_exists($db3File)){
 				try {
+					include_once($_SERVER['DOCUMENT_ROOT']."/config/sqliteDatabase.php");
 					$sqliteDb = new SQLiteDatabase();
 					$sqliteDb->fileName = $db3File;
 					$sdb = $sqliteDb->getConnection();
@@ -376,12 +377,14 @@ class Competicao_clube{
 		// Busca se já existe um time portal ou se é apenas troca de país
 		$query = "REPLACE INTO competicao_times (id_competicao, codigo_time, pais_time, id_time_portal, has_team) 
 				  SELECT :id_competicao, :codigo_time, :id_pais, id_time_portal, has_team 
-				  FROM (SELECT :id_competicao as id_c, :codigo_time as cod_t) AS tmp
+				  FROM (SELECT :id_competicao2 as id_c, :codigo_time2 as cod_t) AS tmp
 				  LEFT JOIN competicao_times ON id_competicao = id_c AND codigo_time = cod_t";
 		$stmt = $this->conn->prepare($query);
 		$stmt->bindParam(':id_competicao', $id_competicao);
 		$stmt->bindParam(':codigo_time', $codigo_time);
 		$stmt->bindParam(':id_pais', $id_pais);
+		$stmt->bindParam(':id_competicao2', $id_competicao);
+		$stmt->bindParam(':codigo_time2', $codigo_time);
 		return $stmt->execute();
 	}
 	
