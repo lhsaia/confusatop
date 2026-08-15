@@ -1,0 +1,532 @@
+{
+  "title": "Novidades e Ajustes",
+  "btn": "Legal!",
+  "badge_translations": {
+    "new": "Novo",
+    "design": "Design",
+    "security": "Segurança",
+    "bugfix": "Ajuste"
+  },
+  "days": [
+    {
+      "date": "14/08/2026",
+      "title": "Ativação da COISO TV",
+      "description": "Habilitada a área da COISO TV na página inicial com link direto para coisotv.libracromos.site."
+    },
+    {
+      "date": "14/08/2026",
+      "title": "Gitignore Atualizado",
+      "description": "Adicionada a pasta 'full hexa suite' no .gitignore para evitar commits acidentais de arquivos locais."
+    },
+    {
+      "id": "14_08_2026",
+      "date": "14/08/2026",
+      "title": "Ajuste no Notificador do Discord",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Filtro de Notificações de Transferências",
+          "desc": "Ajustado o fluxo para notificar apenas transferências legítimas de clube para clube, ignorando contratações de agentes livres (sem clube) ou importações automáticas de jogadores."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Links e Tipagem no Notificador do Discord",
+          "desc": "Remoção de marcações Markdown que quebravam links de escudos, correção do caminho absoluto da bandeira do país do jogador e mapeamento amigável dos tipos de transferência para exibir nomes em vez de IDs numéricos."
+        },
+        {
+          "badge": "new",
+          "title": "CI/CD com GitHub Actions e FTP",
+          "desc": "Criação do fluxo de deploy automático para sincronizar apenas arquivos modificados na produção via FTP a cada novo push no branch master."
+        }
+      ]
+    },
+    {
+      "id": "12_08_2026",
+      "date": "12/08/2026",
+      "title": "Ajustes no Envio de E-mails",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Configuração SMTP do PHPMailer",
+          "desc": "Configurado o SMTPOptions para contornar problemas de verificação de SSL/TLS com o hostname, resolvendo a falha no envio do e-mail de Boas-vindas e Recuperação de Senha."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Prevenção de Fatal Error no Cadastro",
+          "desc": "Adicionado tratamento de exceção com try-catch ao enviar o e-mail de boas-vindas no cadastro de usuários, evitando que a tela trave caso ocorra um erro de SMTP."
+        }
+      ]
+    },
+    {
+      "id": "11_08_2026",
+      "date": "11/08/2026",
+      "title": "Prevenção de Travamentos no Banco de Dados",
+      "description": "Configurado o busy_timeout de 5 segundos e o modo de gravação WAL no SQLite para evitar o erro de banco travado (database is locked), otimizando a concorrência e compatibilidade com pastas sincronizadas."
+    },
+    {
+      "id": "10_08_2026",
+      "date": "10/08/2026",
+      "title": "Correções e Ajustes Gerais",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Compatibilidade com PHP Legado em Propostas",
+          "desc": "Removida a tipagem de propriedades e métodos nas classes Transfer e TransferNotifier para garantir compatibilidade completa com versões do PHP anteriores à 7.4, resolvendo o erro de sintaxe ao aceitar propostas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção do Service Worker (PWA)",
+          "desc": "Migrado o Service Worker raiz para uma estratégia Network-First limpa e segura. Isso garante que os usuários sempre carreguem os estilos e ícones mais recentes direto da rede ao estarem online, mantendo a instalação do PWA funcionando."
+        }
+      ]
+    },
+    {
+      "id": "09_08_2026",
+      "date": "09/08/2026",
+      "title": "Redesign do Painel do Clube e Melhorias de Campinho",
+      "items": [
+        {
+          "badge": "design",
+          "title": "Cards de Jogadores no Elenco",
+          "desc": "Eliminada a tabela legada da aba Elenco, substituída por grade de cards modernos com bordas coloridas por titularidade (verde = Titular, azul = Reserva, cinza = Suplente), glassmorphism e hover com elevação."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Troca de Elenco (Internal Server Error)",
+          "desc": "Corrigido bug crítico onde a classe CSS do card invadia a div #quadro-container, corrompendo o ID do time enviado via AJAX e causando erro 500 nas trocas."
+        },
+        {
+          "badge": "design",
+          "title": "Uniformes e Fotos dos Jogadores no Campinho",
+          "desc": "Adicionada a foto circular do jogador ao lado do uniforme em cada posição no campo tático. O goleiro também passou a exibir seu uniforme (camisa 2) e foto. Cores do campinho agora são sólidas por linha (Goleiro=Amarelo, Defesa=Azul, Volante=Teal, Meia=Verde, Armador=Roxo, Atacante=Vermelho)."
+        },
+        {
+          "badge": "design",
+          "title": "Badges de Atacante (Am / Aa) Visíveis",
+          "desc": "As siglas de estilo de jogo dos atacantes (Am = Movimentação, Aa = Área) agora aparecem como badges coloridos no canto superior do card do campinho e continuam alternando corretamente ao clicar com o botão direito."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Arrastamento sem Rolar a Página",
+          "desc": "Adicionado touch-action: none nos blocos do campinho para impedir que o arrasto de jogadores role a página em dispositivos touchscreen."
+        },
+        {
+          "badge": "design",
+          "title": "Toast de Atualização Flutuante",
+          "desc": "O aviso 'Atualizando...' que deslocava o layout da página ao aparecer foi substituído por um toast flutuante no canto inferior direito, que aparece e desaparece automaticamente sem mexer no conteúdo."
+        },
+        {
+          "badge": "design",
+          "title": "Botão e Formulário de Capitão/Cobradores Redesenhados",
+          "desc": "O painel de seleção de Capitão e Cobradores de Pênalti foi reformulado com tipografia Kanit, campos estilizados e botão de envio centralizado com gradiente esmeralda e micro-animação. Campos sem seleção continuam sendo destacados em vermelho (lightcoral)."
+        },
+        {
+          "badge": "design",
+          "title": "Redesign das Telas Financeiras",
+          "desc": "Padronização das telas de resumo financeiro e de inserção de transações com o Light Theme padrão do site (fundo claro com gradiente e glassmorphism), inputs e selects modernos, além da inclusão de tags data-label e wrappers cell-value para responsividade mobile e botões de retorno unificados."
+        },
+        {
+          "badge": "design",
+          "title": "Ajustes de Layout e Usabilidade Mobile no Painel do Time",
+          "desc": "Centralização dos uniformes, estádio e botão de apresentação no mobile. Correção de colisão de dados e ocultação definitiva de elementos fantasma na listagem de jogadores. Implementação de botões de ação rápidos inline na aba de elenco e inclusão da biblioteca Touch Punch para habilitar drag-and-drop por toque no campinho tático simplificado no mobile."
+        }
+      ]
+    },
+
+    {
+      "id": "08_08_2026",
+
+      "date": "08/08/2026",
+      "title": "Desativação Temporária do Seletor de Árbitro",
+      "description": "Desabilitado e estilizado (grayed out) o seletor de árbitros na lista de jogos por se tratar de uma funcionalidade ainda não implementada."
+    },
+    {
+      "date": "05/08/2026",
+      "title": "Melhorias de Simulação e Algoritmo de Tabela",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Algoritmo Berger de Tabela",
+          "desc": "Implementado o algoritmo oficial de Berger do Hexacolor Scheduler v1.2 na geração de tabelas de pontos corridos e mistas, assegurando a rotação ideal de equipes e alternância correta de mandos de campo."
+        },
+        {
+          "badge": "new",
+          "title": "Análise Tática Comparativa de Seleções",
+          "desc": "Desenvolvido o relatório de avaliação e previsão tática para o confronto Polusca vs Orion com base nos parâmetros .ymt importados, detalhando estilos e mentalidades de técnicos, goleiros e punição de formação."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Regras do Mata-mata",
+          "desc": "Corrigida a opção de pênaltis e prorrogação no mata-mata e na final, carregando as regras dinâmicas no JSON de simulação. Corrigido o bug que exibia a fase de pontos corridos como Oitavas de Final e impedia a exibição da classificação única. Ajustamos a fase de grupos do formato Misto para fase 2 (fase de grupos) e corrigimos o mapeamento de rótulos do mata-mata no painel de estatísticas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Desativação de Logs Excessivos",
+          "desc": "Comentado o log temporário do arquivo config/session.php que escrevia continuamente no arquivo debug_session.txt em cada requisição de página para evitar consumo excessivo de disco (estava acumulando até 84MB)."
+        }
+      ],
+      "id": "05_08_2026"
+    },
+    {
+      "date": "03/08/2026",
+      "title": "Ajuste na Simulação Headless e Cron",
+      "description": "Adicionado parâmetro -Djava.awt.headless=true para corrigir erros de AWTError no servidor Linux. O cron foi configurado para buscar partidas das próximas 24h a partir do momento de execução. Além disso, criamos uma validação para impedir que falhas na simulação salvem um placar falso de 0x0 no banco de dados, um injetor automático das versões de compatibilidade requeridas pela engine no SQLite temporário (2.8, 2.9.1, 2.10, 2.13), e desenvolvemos um script utilitário (/competicoes/hexacolor/reset_failed_simulations.php) para varrer e resetar automaticamente os jogos que ficaram travados em 0x0 sem arquivo de súmula.",
+      "id": "03_08_2026"
+    },
+    {
+      "id": "02_08_2026",
+      "date": "02/08/2026",
+      "title": "Melhorias, Correções e Redesign",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Navegação Padronizada em Competições",
+          "desc": "Adicionado um botão padronizado de 'Voltar para a Competição' no rodapé de todas as subpáginas de gerenciamento (Estatísticas, Jogos, Equipes, Opções e Escalação), facilitando o retorno rápido à tela principal do torneio."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Motor de Simulação",
+          "desc": "Corrigido erro que impedia a simulação correta das partidas no ambiente de produção (jogos 0x0) e consequentemente não gerava a imagem da súmula. Ajuste nos caminhos absolutos do servidor Linux e unificação para utilização da versão V2 do motor de simulação (HexacolorYMTv2.jar) em todos os ambientes."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Layout Mobile em Competições",
+          "desc": "Corrigido o layout quebrado da listagem de competições no celular, organizando a exibição em cards e centralizando as informações de destaque."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Privilégios na Impersonação",
+          "desc": "Ajustado o sistema para que, ao impersonar um usuário (login via Admin%Usuario), a sessão assuma corretamente os mesmos privilégios e permissões do usuário destino, permitindo testes mais precisos sem manter status de administrador, mas preservando o selo visual de impersonação."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção: Erro ao Salvar Árbitros nas Opções da Competição",
+          "desc": "Corrigido erro fatal (PDOException) que impedia salvar as configurações de árbitros de uma competição. O INSERT na tabela SQLite 'trioarbitragem' usava nomes de colunas incorretos (NomeArbitro, NomeAuxiliarUm, NomeAuxiliarDois) em vez dos nomes reais do schema (Arbitro, Auxiliar1, Auxiliar2)."
+        }
+      ]
+    },
+    {
+      "id": "01_08_2026",
+      "date": "01/08/2026",
+      "title": "Módulo de Envio de Fichas, Ajustes e Redesign Geral",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção: Erro ao Inserir Times na Competição",
+          "desc": "Corrigidos múltiplos bugs que impediam a inserção de times em competições: (1) Parâmetros PDO duplicados na query SQL de alterarPaisTime causavam erro fatal; (2) O método directRun do SQLite aplicava htmlspecialchars na query SQL, corrompendo os dados antes da execução; (3) getConnection do SQLite fazia echo do erro quebrando respostas JSON; (4) Tabelas SQLite não eram inicializadas em competições novas."
+        },
+        {
+          "badge": "new",
+          "title": "Adição de COISO TV (Em Breve) na Home",
+          "desc": "Alterado o antigo link do Portal COISO para COISO TV e sinalizado como 'Em Breve' (desabilitado) na página inicial."
+        },
+        {
+          "badge": "new",
+          "title": "Módulo de Envio de Fichas na Área do Usuário",
+          "desc": "Adicionado novo card e gaveta de ações para 'Envio de Fichas' diretamente na tela inicial do usuário. Permite enviar times do portal ou importar arquivos .ymt para competições ativas dentro do prazo de envio de forma totalmente inline, com sinalização de urgência quando restarem menos de 7 dias."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste na Criação de Competição e Notificações Toast",
+          "desc": "Redirecionamento automático para a tela de índice de competições após criar uma competição com sucesso. Correção do posicionamento dos alertas (toasts) para que flutuem no topo direito (estilo toast moderno) sem entrar atrás do cabeçalho da página, com suporte a auto-ocultação após 5 segundos. Correção do erro fatal de classe 'SQLiteDatabase' ausente ao abrir competições recém-criadas. Correção da chamada da imagem da federação para letras minúsculas para compatibilidade com sistemas Linux (ex: feasco.png)."
+        },
+        {
+          "badge": "design",
+          "title": "Redesign da Página de Jogos Ativos",
+          "desc": "Migrada a página de jogos ativos para o padrão estético de tema claro (estilo branco) consistente com as demais páginas redesenhadas (como Minhas Propostas e Competições), ajustando o contraste de textos, botões e elementos informativos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção Global do Rodapé Flutuante (Footer Sticky)",
+          "desc": "Implementada detecção ultra-robusta via $_SERVER['REQUEST_URI'] no arquivo elements/footer.php para aplicar os estilos de rodapé sticky ('position: relative !important') nas páginas redesenhadas. Corrigido o colapso de layout removendo dinamicamente 'margin-bottom: 50px' de html/body nessas páginas para evitar que o conteúdo transborde, e mapeado o aprendizado de fluxo de diagnóstico nas diretrizes gerais do projeto (.agents/AGENTS.md)."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Duplicidade de Perfil em Páginas Antigas",
+          "desc": "Ajustada a visibilidade do cabeçalho em páginas antigas (sem CSS redesign): ocultados o avatar e nome redundantes no botão do menu (exibindo o ícone tradicional de três linhas) e mantido apenas o identificador padrão para evitar poluição visual."
+        },
+        {
+          "badge": "new",
+          "title": "Notificador de Transferências no Discord",
+          "desc": "Finalizada a integração do notificador de transferências com o Discord. Corrigida a formatação de imagens usando caminhos absolutos e adicionado suporte para exibição estilizada de valores e data da transferência."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste de Escala dos Avatares no Cabeçalho",
+          "desc": "Adicionado estilo global de fallback para os avatares do usuário no cabeçalho e menu lateral, impedindo que imagens grandes fiquem gigantescas em áreas ainda não repaginadas do site."
+        },
+        {
+          "badge": "design",
+          "title": "Redesign da Tela de Preferências e Alterar Senha",
+          "desc": "Repaginada a tela de alterar senha e preferências de conta com base nas novas diretrizes de design system, implementando glassmorphism real e corrigindo o conflito de cabeçalho e rodapé antigos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção e Ajuste Layout em Jogos Ativos",
+          "desc": "Corrigido o erro Fatal PDOException 'Invalid parameter number' na tela de jogos ativos do usuário, separando os placeholders nomeados na consulta. Ajustado o layout do container para usar 'redesign-container', resolvendo o footer flutuante e adicionando espaçamento superior para não cortar no cabeçalho."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Páginas de Erro Personalizadas",
+          "desc": "Criação de páginas de erro estilizadas (400, 403, 404, 500 e 503) com layout de glassmorphism, suporte responsivo e imagens divertidas fornecidas pelo usuário."
+        },
+        {
+          "badge": "new",
+          "title": "Refatoração do Módulo de Competições",
+          "desc": "Renomeado o arquivo principal de índice de competições (de indice_competicoes.php para index.php) visando simplificação de rotas e consistência de padrões de URL do projeto."
+        },
+        {
+          "badge": "new",
+          "title": "Integração de Perfil no Menu Sanduíche e Upload de Avatar",
+          "desc": "Incorporado o crachá de perfil do usuário (nome e avatar/foto) diretamente no botão acionador do menu sanduíche, ocultando a barra de texto central no topo do site para uma navegação mais limpa. Adicionado suporte a banco de dados e upload de avatar personalizado na página de preferências, além de um banner de perfil detalhado com etiqueta/badge especial de Administrador no topo do menu lateral."
+        },
+        {
+          "badge": "new",
+          "title": "Escalações Centralizadas, Exportação Excel de Tabela e Salvar Definitivo",
+          "desc": "Adicionado painel de próximos jogos de times do usuário na área de membros com realce e contador de desfalques ativos. Criada exportação e importação via Excel (.xlsx) das tabelas de jogos das competições com validação de escopo. Implementada a opção de salvar a escalação modificada em jogo de forma definitiva para o clube. Realizado rebranding da tela de criação de competições com Glassmorphism e botões da barra de ferramentas. Implementado mecanismo de fila de espera (lock de concorrência com timeout de 45s) na simulação de partidas para evitar conflitos de simulação concorrente no servidor e garantir atualização automática da tela do usuário quando liberado."
+        },
+        {
+          "badge": "design",
+          "title": "Melhorias de Permissões, Visual de Lesões e Loader de Simulação",
+          "desc": "Implementada tela de carregamento (loader) em tela cheia com progresso detalhado dinâmico durante a simulação de jogos. Adicionada badge visual destacando lesões ativas na página do jogador. Concedidos privilégios de gerenciador/administrador das competições para seus criadores correspondentes."
+        }
+      ]
+    },
+    {
+      "date": "31/07/2026",
+      "title": "Correção de Simulação Travada e Streaming de Súmula",
+      "description": "Corrigido o travamento (loop infinito) ao simular partidas definindo como null todas as declarações PDO ativas antes de fechar a conexão SQLite, liberando totalmente o banco database.db3. Impedida a edição/exclusão de partidas já simuladas. Configurado o streaming dinâmico da imagem PNG da súmula em qualquer rodada usando glob via PHP para contornar erros 404 e problemas de caracteres especiais no Windows.",
+      "id": "31_07_2026"
+    },
+    {
+      "id": "30_07_2026",
+      "date": "30/07/2026",
+      "title": "Melhorias, Correções e Redesign",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Suporte a Escalação por Jogo Específico",
+          "desc": "Implementada a possibilidade de salvar escalações e desfalques manuais específicos para cada partida. O sistema agora carrega e aplica essas alterações temporariamente durante a simulação do jogo sem sobrescrever de forma definitiva a escalação padrão do clube."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Salvamento de Escalação",
+          "desc": "Corrigido o erro de índices indefinidos (Undefined index) ao salvar a escalação pré-jogo, mapeando corretamente as colunas de posições no banco de dados SQLite."
+        }
+      ]
+    },
+    {
+      "id": "29_07_2026",
+      "date": "29/07/2026",
+      "title": "Configuração de Competições, Redesign de Telas e Desfalques",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Melhorias na Tela de Escalação Pré-Jogo",
+          "desc": "Corrigido erro fatal ao carregar a escalação. Adicionado seletor de posição por jogador com base nas posições disponíveis, opção de marcar jogador como indisponível manualmente e limite visual de 11 titulares com contador em tempo real. Layout reformulado com tema escuro e botões corrigidos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste de Layout e Paginação na Lista de Jogos",
+          "desc": "Corrigida a importação dupla de cabeçalho que quebrava os estilos na página de confrontos e refatorado o visual dos botões de paginação ativa para evitar textos desbotados."
+        },
+        {
+          "badge": "new",
+          "title": "Criação da Tela de Estatísticas da Competição",
+          "desc": "Desenvolvido o painel completo de estatísticas do torneio contendo tabela de classificação de grupos, chaves de mata-mata, artilharia, assistências, cartões, suspensões e departamento médico."
+        },
+        {
+          "badge": "new",
+          "title": "Prioridade de Desempate na Fase de Grupos",
+          "desc": "Adicionado seletor de prioridade de desempate para a fase de grupos nas configurações da competição, permitindo ordernar os critérios de Saldo de Gols, Gols Pró, Vitórias e Confronto Direto."
+        },
+        {
+          "badge": "design",
+          "title": "Redesign da Tela de Opções da Competição",
+          "desc": "Atualizada a tela de opções e configurações com cartões translúcidos integrados ao tema claro, novos controles de inputs e Select2 múltiplos totalmente estilizados no padrão CONFUSA 2.0."
+        },
+        {
+          "badge": "new",
+          "title": "Seleção de Árbitros e Estádios",
+          "desc": "Adicionado painel de configuração de arbitragem (específicos, país ou federação) e estádios (da sede, com opção de desativar os estádios padrões de mandantes) na tela de opções da competição."
+        },
+        {
+          "badge": "design",
+          "title": "Redesign da Tela de Lista de Jogos",
+          "desc": "Removidos estilos inline e reestruturada a página de lista de confrontos da competição com cards responsivos no mobile, formulário de novos jogos e placares modernos."
+        },
+        {
+          "badge": "design",
+          "title": "Redesign da Tela de Lista de Times",
+          "desc": "Atualizada a tela de gerenciamento de equipes participantes da competição com cards responsivos de vagas, customização moderna para Select2 e botões de ação estilizados."
+        },
+        {
+          "badge": "new",
+          "title": "Migração de Desfalques para MySQL",
+          "desc": "Migrado o controle de desfalques do SQLite para o banco central MariaDB: adicionada coluna lesionado_ate (data limite) na tabela jogador e criada tabela competicao_suspensos (por torneio), com sincronização dinâmica no simulador."
+        },
+        {
+          "badge": "design",
+          "title": "Redesign da Tela de Status da Competição",
+          "desc": "Reestruturada a página principal de status de competições com visual moderno, banner da competição em glassmorphism, barra de progresso de equipes inseridas e grid de ações estilo home hub."
+        },
+        {
+          "badge": "design",
+          "title": "Redesign do Índice de Competições",
+          "desc": "Aplicadas melhorias visuais e estilização responsiva na página do índice de competições para alinhar-se com o layout premium e cores das telas de propostas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste na Escalação Pré-Jogo do SQLite",
+          "desc": "Corrigido erro no carregamento e salvamento de escalações onde colunas como Titular, Capitao e Clube eram lidas diretamente do jogador ao invés de usar as tabelas elenco/escalacao."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Buscador de Competições",
+          "desc": "Corrigido erro 500 no endpoint de busca de competições adicionando tratamento de exceções robusto e mantendo compatibilidade de parsing no frontend."
+        },
+        {
+          "badge": "new",
+          "title": "Correções de Estabilidade e Índices no Site",
+          "desc": "Corrigidos avisos de índice indefinido para o parâmetro de time nas ligas e ranking (teamstatus.php). Adicionado tratamento global amigável para falhas de conexão com o banco de dados (database.php) para evitar Fatal Errors."
+        }
+      ]
+    },
+    {
+      "id": "28_07_2026",
+      "date": "28/07/2026",
+      "title": "Redesign de Telas de Propostas, Painel de Membros e Importador",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Configuração do Gitignore para Ferramenta de Compatibilidade",
+          "desc": "Atualizado o arquivo .gitignore para ignorar arquivos locais e relatórios gerados pela ferramenta de compatibilidade de PHP (PHPCS e PHPCompatibility)."
+        },
+        {
+          "badge": "new",
+          "title": "Datas de Envio e Conclusão nas Propostas",
+          "desc": "Adicionada a exibição das colunas de Data de Proposta e Data de Conclusão (exibida em branco se não houve ação) nas tabelas de jogadores e técnicos. O banco de dados agora atualiza a data de conclusão (dataConclusao) automaticamente ao aceitar, recusar ou contrapropor."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste na Contagem de Propostas e Redesign de Técnicos",
+          "desc": "Ajuste na contagem de propostas ativas da Minha Área para focar somente em ações pendentes (recebidas e contrapropostas) e redesign da tela de propostas de técnicos no mesmo estilo visual moderno."
+        },
+        {
+          "badge": "design",
+          "title": "Redesign da Tela de Propostas de Jogadores",
+          "desc": "Atualização da tela de Minhas Propostas de Jogadores para um design limpo e moderno. A página conta com um fundo cinza claro premium e marca d'água azul da CONFUSA, com as propostas exibidas em linhas coloridas de acordo com o status (verde para aceitas, vermelho para recusadas, amarelo para contrapropostas), botões de ação e paginação moderna sem textos auxiliares redundantes."
+        },
+        {
+          "badge": "design",
+          "title": "Redesign Moderno da Minha Área",
+          "desc": "Atualização da página de Minha Área para o novo sistema visual 2.0 com um tema exclusivo em tons de laranja e âmbar, incluindo marca d'água integrada em laranja e fundo dos cartões em tom terracota escuro. Os links agora são exibidos em cards modernos no estilo glassmorphism, com imagens superiores dinâmicas e novos indicadores em tempo real para propostas de transferências pendentes e status de sincronização com o simulador HYMT."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Erro 500 na Confirmação de Importação",
+          "desc": "Corrigido um erro fatal que ocorria ao tentar confirmar a importação de jogos duplicados/existentes, direcionando a chamada para o método correto de atualização de placar no banco de dados."
+        },
+        {
+          "badge": "design",
+          "title": "Tela de Importação de Jogos: Visual e UX Aprimorados",
+          "desc": "A tabela de revisão de jogos agora utiliza o mesmo estilo visual do restante do site (fundo branco, bordas suaves, cores laranja e azul escuro). O box de upload e os seletores de campeonato/fase ficam ocultos durante a revisão, evitando poluição visual. Linhas fantasmas (sem arquivo válido) são filtradas automaticamente. Adicionado botão 'Nova importação' para reiniciar o fluxo sem recarregar a página."
+        }
+      ]
+    },
+    {
+      "date": "27/07/2026",
+      "title": "Importação de Jogos do Ranking em Duas Etapas e Correção com Select2",
+      "description": "Criado um fluxo de validação intermediário para arquivos .hyl. Agora, o usuário visualiza uma tabela de revisão com o status dos jogos, mapeamento automático de países/bandeiras e pode corrigir divergências usando seletores dinâmicos (Select2) antes de confirmar a importação do lote todo de uma só vez.",
+      "id": "27_07_2026"
+    },
+    {
+      "date": "26/07/2026",
+      "title": "Redesign 2.0 e Refatoração de Simulação & Cron",
+      "items": [
+        {
+          "badge": "design",
+          "title": "Redesign 2.0 da Página Inicial (Home Hub)",
+          "desc": "Criado o novo layout e estilo da home (index_v2.php e css/home_redesign.css) com base nas diretrizes de alta fidelidade visual. O novo hub conta com glassmorphism real, grid responsiva moderna, tipografia limpa e links sanitizados."
+        },
+        {
+          "badge": "new",
+          "title": "Refatoração de Simulação & Cron",
+          "desc": "Criado o script Cron para simulação automática diária das partidas agendadas. Implementado o controle de suspensões e lesões no JAR, a padronização em data/database.db3, a tela de escalação pré-jogo (escalacao_jogo.php) com consulta ao dono da equipe pela MariaDB e obtenção de PosicaoBase via JOIN na tabela posicaojogador, agendador com rodadas espaçadas em 3 dias para torneios mistos e ícone de escalação ao lado dos times."
+        }
+      ],
+      "id": "26_07_2026"
+    },
+    {
+      "date": "18/07/2026",
+      "title": "Correção na Aprovação de Transferências",
+      "description": "Corrigida falha na aprovação de propostas de transferências para jogadores com siglas de posições textuais (caso do Jogador 51276). Corrigido erro de chamada estática inexistente na classe Transfer e adicionado bloco try-catch capturando Throwable para registro detalhado de erros no servidor.",
+      "id": "18_07_2026"
+    },
+    {
+      "id": "14_07_2026",
+      "date": "14/07/2026",
+      "title": "Correção de Erros e Avisos no Painel do Time e Ligas",
+      "description": "Corrigidos múltiplos avisos de índices indefinidos (Undefined index) na página de apresentação do time (team_presentation.php) e no status do país (paisstatus.php), um erro de sintaxe SQL (PDOException) em Time::readExtraInfo, e um erro de coluna não encontrada (PDOException) no método countAll da classe Liga através da parametrização de consultas SQL e validação de parâmetros."
+    },
+    {
+      "id": "12_07_2026",
+      "date": "12/07/2026",
+      "title": "Integração MCP Híbrida e Melhorias no Mercado e Painel",
+      "description": "Finalizada a infraestrutura do assistente de IA via MCP, corrigido o layout do painel de alteração de senha e expandidos os filtros de busca de mercado e informações de clubes.",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Infraestrutura de Assistente de IA (MCP) Híbrida",
+          "desc": "Criação do servidor MCP nativo híbrido (SSE e POST) sem dependências. Suporta autenticação automática por tokens gerados na conta, buscas por nome do clube, ferramenta para comparação de elencos e filtros inteligentes de mercado (como posições, nacionalidade do jogador e dono do time)."
+        },
+        {
+          "badge": "design",
+          "title": "Painel de Preferências da Conta",
+          "desc": "Redesenhada a antiga página de alteração de senha para um painel completo de Preferências. Permite editar o Nome Real de exibição separadamente da senha, traz o link do MCP parametrizado com manual passo a passo explicativo (@ChatGPT) e o download do ícone oficial."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Compatibilidade PHP e Correções de Bugs",
+          "desc": "Desenvolvimento do script check_php, inclusão do polyfill mbstring, correção de divisão por zero no status da liga, tratamento de erro de tipo de dados nos técnicos e limpeza de avisos de chaves indefinidas no status do time."
+        },
+        {
+          "badge": "new",
+          "title": "Garbage Collection de Sessões",
+          "desc": "Implementada limpeza assíncrona automática de sessões locais expiradas (com mais de 30 dias) para controlar o crescimento do diretório no servidor compartilhado."
+        }
+      ]
+    },
+    {
+      "id": "11_07_2026",
+      "date": "11/07/2026",
+      "items": [
+        {
+          "badge": "design",
+          "title": "Otimização Mobile da Área do Usuário",
+          "desc": "Ajustado o layout da Área do Usuário (Painel) para ser totalmente responsivo em dispositivos móveis, adaptando os quadros de opções de forma idêntica à página principal."
+        },
+        {
+          "badge": "security",
+          "title": "Prevenção de Injeção SQL",
+          "desc": "Corrigidas vulnerabilidades de injeção de SQL em diversas consultas do sistema (classes Clube, Liga, Paises, Competicao_clube) migrando para Prepared Statements com bindParam e validação numérica rigorosa para neutralizar entradas maliciosas."
+        },
+        {
+          "badge": "new",
+          "title": "Infraestrutura e Performance",
+          "desc": "Aumentado o limite de uploads simultâneos (max_file_uploads = 300) em php.ini, ampliada a memória do script de busca (memory_limit = 512M) para evitar erros de estouro de RAM e adicionado suporte a variáveis de ambiente (.env)."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Erros Críticos",
+          "desc": "Implementada compactação recursiva segura (addDirToZip) no ZipArchive para evitar erros de pastas tratadas como arquivos, adicionado tratamento robusto com Throwable no envio de e-mails via PHPMailer e validações de existência de arquivos temporários antes de excluir."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Avisos do PHP",
+          "desc": "Corrigidos múltiplos avisos de variáveis, offsets e índices indefinidos na navegação de usuários deslogados, no gerador de elencos (tamanho mínimo 25) e em páginas como alterar_atributos.php, criar_demografia.php, listajogos.php, match_info.php e alterar_time.php."
+        }
+      ]
+    }
+  ]
+}

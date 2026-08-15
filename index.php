@@ -188,10 +188,9 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
             <img src="/images/confusopedia.png?1" alt="Confusopédia" />
             <span>Confusopédia</span>
         </a>
-        <a href="http://52.203.150.214:8080/Portal_COISO_v3" target="_blank" rel="noopener noreferrer"
-            class="sub-link-card">
-            <img src="/images/portalcoiso.png?1" alt="Portal COISO" />
-            <span>Portal COISO</span>
+        <a href="https://coisotv.libracromos.site" target="_blank" rel="noopener noreferrer" class="sub-link-card">
+            <img src="/images/portalcoiso.png?1" alt="COISO TV" />
+            <span>COISO TV</span>
         </a>
     </section>
 
