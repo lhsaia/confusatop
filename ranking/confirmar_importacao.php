@@ -95,7 +95,7 @@ try {
         if ($isDuplicate) {
             // Atualizar jogo existente
             $idJogo = (int)$game['existing_id'];
-            $jogoObj->atualizarJogo($idJogo);
+            $jogoObj->atualizarPlacarJogo($idJogo);
             $actionLabel = 'Atualizado';
         } else {
             // Inserir novo jogo

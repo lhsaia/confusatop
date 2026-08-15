@@ -10,6 +10,31 @@
   "days": [
     {
       "date": "14/08/2026",
+      "title": "Limpeza do .htaccess de Erros",
+      "description": "Removidas as diretivas locais de ErrorDocument do .htaccess principal, delegando o tratamento de páginas de erro ao servidor LiteSpeed."
+    },
+    {
+      "date": "14/08/2026",
+      "title": "Gitignore Atualizado (Octamotor)",
+      "description": "Adicionado o diretório de configurações do Octamotor no .gitignore para evitar o envio de credenciais e backups de banco locais."
+    },
+    {
+      "date": "14/08/2026",
+      "title": "Contador e Lista de Enviar Fichas",
+      "description": "Adicionado um contador dinâmico de fichas pendentes no card do painel, e corrigida a exibição de competições sem prazo definido na lista."
+    },
+    {
+      "date": "14/08/2026",
+      "title": "Correção de Erro nas Opções de Competição",
+      "description": "Corrigido erro 500 ao salvar opções de competição, garantindo a criação das tabelas no SQLite, adicionando tratamento de exceções robusto e validando conexões nulas na classe SQLiteDatabase."
+    },
+    {
+      "date": "14/08/2026",
+      "title": "Restauração do Quadro de Fichas",
+      "description": "Restaurado o card para 'Enviar Fichas' na página inicial do painel de usuário."
+    },
+    {
+      "date": "14/08/2026",
       "title": "Ativação da COISO TV",
       "description": "Habilitada a área da COISO TV na página inicial com link direto para coisotv.libracromos.site."
     },

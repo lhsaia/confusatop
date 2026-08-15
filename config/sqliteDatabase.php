@@ -19,7 +19,8 @@ class SQLiteDatabase{
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         }catch(PDOException $exception){
-            echo "Erro de conexão: " . $exception->getMessage();
+            // Não fazer echo aqui — isso quebraria respostas JSON em chamadas AJAX
+            error_log("SQLiteDatabase::getConnection erro: " . $exception->getMessage());
         }
 
         return $this->conn;
@@ -28,6 +29,9 @@ class SQLiteDatabase{
 
 
     public function prepareTables(){
+        if ($this->conn === null) {
+            return;
+        }
 
         //trio de arbitragem
         $query =
@@ -310,6 +314,7 @@ class SQLiteDatabase{
     }
 
     public function initialMainValues(){
+        if ($this->conn === null) return;
 
         $query =
         "INSERT INTO `perfiljogador` VALUES (1,'Lateral Defensivo',6,7,5,5,7,5,4,5,4,3,4,5);
@@ -346,6 +351,7 @@ class SQLiteDatabase{
     }
 	
 	public function competitionParameters(){
+        if ($this->conn === null) return;
 		
 		$query = "INSERT INTO parametros (ID,Nome,Gols,Faltas,Impedimentos,Cartoes,Chao,Alto,padrao) VALUES (1,'Padrão',10,10,5,5,1.0,1.0,1);
 			INSERT INTO paispadrao (ID_Parametro,PaisPadrao,ExibirBandeiras) VALUES (1,'-',1);
@@ -366,10 +372,7 @@ class SQLiteDatabase{
 	}
 
     public function directRun($queryInsercao){
-        $queryInsercao = htmlspecialchars(strip_tags($queryInsercao));
-
-        $queryInsercao = html_entity_decode($queryInsercao);
-
+        if($this->conn === null) return;
         $this->conn->exec($queryInsercao);
     }
 
