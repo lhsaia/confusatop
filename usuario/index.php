@@ -67,6 +67,54 @@ $propostasPendentesTecnico = (int)($res_tecnicos['total'] ?? 0);
 $tempoDesatualizado = $usuario->alteracoesPosteriores($_SESSION['user_id']);
 $horas = round($tempoDesatualizado/3600,1);
 
+// Consulta para contar partidas ativas e desfalques de times do usuário
+$query_count_jogos_ativos = "
+    SELECT j.id, j.competicao,
+           
+           -- Check if time A has injured or suspended players
+           (SELECT COUNT(*) FROM contratos_jogador cj 
+            INNER JOIN jogador jog ON cj.jogador = jog.ID 
+            LEFT JOIN competicao_suspensos cs ON cs.id_jogador = jog.ID AND cs.id_competicao = j.competicao AND cs.suspenso = 1
+            WHERE cj.clube = j.timeA_id AND cj.tipoContrato = 0 
+              AND ((jog.lesionado_ate IS NOT NULL AND jog.lesionado_ate >= CURDATE()) OR cs.suspenso = 1)
+           ) as desfalques_timeA,
+           
+           -- Check if time B has injured or suspended players
+           (SELECT COUNT(*) FROM contratos_jogador cj 
+            INNER JOIN jogador jog ON cj.jogador = jog.ID 
+            LEFT JOIN competicao_suspensos cs ON cs.id_jogador = jog.ID AND cs.id_competicao = j.competicao AND cs.suspenso = 1
+            WHERE cj.clube = j.timeB_id AND cj.tipoContrato = 0 
+              AND ((jog.lesionado_ate IS NOT NULL AND jog.lesionado_ate >= CURDATE()) OR cs.suspenso = 1)
+           ) as desfalques_timeB,
+           
+           pA.dono as donoA, pB.dono as donoB
+
+    FROM competicao_jogos j
+    INNER JOIN clube cA ON j.timeA_id = cA.ID
+    INNER JOIN paises pA ON cA.Pais = pA.id
+    INNER JOIN clube cB ON j.timeB_id = cB.ID
+    INNER JOIN paises pB ON cB.Pais = pB.id
+    WHERE j.status = 0
+      AND (pA.dono = ? OR pB.dono = ?)
+";
+$stmt_count_jogos_ativos = $db->prepare($query_count_jogos_ativos);
+$stmt_count_jogos_ativos->execute([$idUsuario, $idUsuario]);
+$jogos_ativos = $stmt_count_jogos_ativos->fetchAll(PDO::FETCH_ASSOC);
+
+$jogosComDesfalque = 0;
+foreach ($jogos_ativos as $ja) {
+    $temDesfalque = false;
+    if ($ja['donoA'] == $idUsuario && $ja['desfalques_timeA'] > 0) {
+        $temDesfalque = true;
+    }
+    if ($ja['donoB'] == $idUsuario && $ja['desfalques_timeB'] > 0) {
+        $temDesfalque = true;
+    }
+    if ($temDesfalque) {
+        $jogosComDesfalque++;
+    }
+}
+
 ?>
 
 <main class="redesign-container">
@@ -75,7 +123,7 @@ $horas = round($tempoDesatualizado/3600,1);
     <h2 class="hub-section-title">Minha Área</h2>
 
     <!-- Seção: Propostas -->
-    <h3 class="hub-subsection-title">Propostas</h3>
+    <h3 class="hub-subsection-title">Propostas & Escalações</h3>
     <section class="redesign-grid">
         <!-- Propostas de Jogadores -->
         <a href='minhaspropostas.php' id="propostas" class='hub-card'>
@@ -110,6 +158,24 @@ $horas = round($tempoDesatualizado/3600,1);
                     <?php endif; ?>
                 </h3>
                 <p class="hub-card-desc">Gerencie propostas recebidas por treinadores.</p>
+            </div>
+        </a>
+
+        <!-- Jogos Ativos e Escalacões -->
+        <a href='jogos_ativos.php' id="jogosAtivos" class='hub-card'>
+            <div class="hub-card-hero-image">
+                <img src="/images/jogos_ativos.webp" alt="Jogos Ativos" />
+            </div>
+            <div class="hub-card-body">
+                <h3 class="hub-card-title">
+                    <span>Próximos Jogos & Escalações</span>
+                    <?php if ($jogosComDesfalque > 0): ?>
+                        <span class="badge-status counter" style="background-color: #ef4444 !important; color: #fff !important;"><?php echo $jogosComDesfalque; ?></span>
+                    <?php else: ?>
+                        <span class="material-symbols-outlined hub-card-arrow">arrow_forward</span>
+                    <?php endif; ?>
+                </h3>
+                <p class="hub-card-desc">Escalar equipes e gerenciar desfalques ativos nos seus confrontos.</p>
             </div>
         </a>
     </section>

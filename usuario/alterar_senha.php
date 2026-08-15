@@ -18,9 +18,9 @@ $db = $database->getConnection();
 $usuario = new Usuario($db);
 
 $page_title = "Preferências da Conta";
-$css_filename = "newindex";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'area_competicao';
+$aux_css = 'alterar_senha_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -163,16 +163,14 @@ $(document).ready(function($){
 });
 </script>
 
-<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
-<div id='errorbox'></div>
-<div>
-    <div id='inscricao'>
-        <h2 style="color: #f8fafc; font-size: 24px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px;">Preferências da Conta</h2>
+<main class="redesign-container">
+    <div class="pref-card">
+        <h2 class="pref-title">Preferências da Conta</h2>
         
         <form method="POST" action='<?php echo $_SERVER['PHP_SELF']; ?>' enctype="multipart/form-data">
             
             <label for='username_display'>Nome de usuário (Login)</label>
-            <input type='text' id='username_display' class='form-control' value='<?php echo htmlspecialchars($nomeUsuario); ?>' disabled style="background: #0f172a; opacity: 0.7;" />
+            <input type='text' id='username_display' value='<?php echo htmlspecialchars($nomeUsuario); ?>' disabled />
 
             <div style="margin-top: 15px; margin-bottom: 15px;">
                 <label>Avatar Atual</label>
@@ -183,30 +181,29 @@ $(document).ready(function($){
             </div>
 
             <label for='avatar'>Enviar Novo Avatar</label>
-            <input type='file' name='avatar' id='avatar' class='form-control' accept="image/*" style="padding: 6px;" />
+            <input type='file' name='avatar' id='avatar' accept="image/*" />
 
             <label for='nome_real'>Nome Real (Nome de Exibição)</label>
-            <input type='text' name='nome_real' id='nome_real' class='form-control' value='<?php echo htmlspecialchars($realName); ?>' required />
+            <input type='text' name='nome_real' id='nome_real' value='<?php echo htmlspecialchars($realName); ?>' required />
 
-            <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #334155;">
-                <h4 style="margin: 0 0 10px 0; color: #94a3b8; font-size: 14px; font-weight: 700;">Alterar Senha <span style="font-weight: normal; font-size: 11px; color: #64748b;">(Opcional - preencha apenas se desejar alterar)</span></h4>
+            <div class="pref-section-title">
+                <span>Alterar Senha</span>
+                <span class="pref-section-subtitle">(Opcional - preencha apenas se desejar alterar)</span>
             </div>
 
             <label for='senha_atual'>Senha atual</label>
-            <input type='password' name='senha_atual' id='senha_atual' class='form-control' />
+            <input type='password' name='senha_atual' id='senha_atual' />
 
             <label for='senha_nova'>Nova senha</label>
-            <input type='password' id='senha_nova' name='senha_nova' class='form-control' 
+            <input type='password' id='senha_nova' name='senha_nova' 
                    title='Senha deve conter:&#10; - Pelo menos 8 caracteres&#10; - Pelo menos um número&#10; - Pelo menos uma letra minúscula&#10; - Pelo menos uma letra maiúscula' 
                    pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" />
 
             <label for='confirmacao_senha_nova'>Confirmação senha</label>
-            <input type='password' id='confirmacao_senha_nova' name='confirmacao_senha_nova' class='form-control' 
+            <input type='password' id='confirmacao_senha_nova' name='confirmacao_senha_nova' 
                    pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" />
 
-            <div style="margin-top: 20px; margin-bottom: 20px;">
-                <button type="submit" name="salvar_preferencias" class="btn" style="width: 100%; padding: 12px; font-weight: bold;">Salvar Preferências</button>
-            </div>
+            <button type="submit" name="salvar_preferencias" class="btn-submit">Salvar Preferências</button>
         </form>
 
         <?php
@@ -220,23 +217,23 @@ $(document).ready(function($){
 
             if ($emTeste === 0):
         ?>
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #334155; color: #cbd5e1; font-family: 'Outfit', 'Inter', sans-serif;">
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1; font-family: 'Outfit', 'Inter', sans-serif;">
                 <h3 style="margin: 0 0 10px 0; color: #38bdf8; font-size: 18px; font-weight: 700;">Integração MCP (Assistente de IA)</h3>
                 <p style="font-size: 13px; color: #94a3b8; margin: 0 0 15px 0; line-height: 1.5;">Conecte o ChatGPT/Claude via MCP para consultar e analisar táticas, elencos e pesquisar no mercado. No campo de autenticação (Authentication), selecione <strong>None</strong> (sem autenticação) e use o link completo com o seu token embutido abaixo.</p>
                 
                 <div style="margin-top: 12px; font-size: 11px; color: #64748b; display: flex; flex-direction: column; gap: 8px;">
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <input type="text" id="mcp_url_input" readonly value="https://<?php echo $_SERVER['HTTP_HOST']; ?>/mcp_server.php?token=<?php echo urlencode($mcpToken ?? ''); ?>" 
-                               style="flex-grow: 1; padding: 10px; background: #0f172a; border: 1px solid #334155; color: #38bdf8; font-family: monospace; font-size: 13px; border-radius: 6px; outline: none; width: 100%;" />
+                               style="flex-grow: 1; padding: 10px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); color: #38bdf8; font-family: monospace; font-size: 13px; border-radius: 6px; outline: none; width: 100%;" />
                         <button onclick="navigator.clipboard.writeText(document.getElementById('mcp_url_input').value); alert('Link copiado!');" 
-                                class="btn" style="padding: 10px 18px; font-size: 13px; margin: 0; min-width: auto; font-weight: 700; height: auto; cursor: pointer;">Copiar Link</button>
+                                class="btn-submit" style="padding: 10px 18px; font-size: 13px; margin: 0; min-width: auto; font-weight: 700; height: auto; cursor: pointer; max-width: fit-content;">Copiar Link</button>
                     </div>
                 </div>
 
-                <details style="margin-top: 20px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 10px;">
+                <details style="margin-top: 20px; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 10px;">
                     <summary style="cursor: pointer; font-size: 13px; font-weight: 700; color: #38bdf8; outline: none; user-select: none;">Como configurar no ChatGPT? (Passo a Passo)</summary>
                     <div style="margin-top: 10px; font-size: 12px; color: #cbd5e1; line-height: 1.6;">
-                        <strong style="color: #f59e0b;">Primeira vez (Habilitar modo desenvolvedor):</strong>
+                        <strong style="color: #fbbf24;">Primeira vez (Habilitar modo desenvolvedor):</strong>
                         <ol style="margin: 5px 0 15px 20px; padding: 0;">
                             <li>Abra o ChatGPT no navegador.</li>
                             <li>Clique no seu <strong>Avatar</strong> (canto inferior esquerdo ou superior direito).</li>
@@ -244,7 +241,7 @@ $(document).ready(function($){
                             <li>Acesse a aba <strong>Security and login</strong> (ou Developer) e ative a opção <strong>Developer mode</strong> (Modo Desenvolvedor).</li>
                         </ol>
 
-                        <strong style="color: #f59e0b;">Adicionando o Plugin:</strong>
+                        <strong style="color: #fbbf24;">Adicionando o Plugin:</strong>
                         <ol style="margin: 5px 0 10px 20px; padding: 0;">
                             <li>Ainda em <strong>Settings</strong>, clique na aba <strong>Plugins</strong>.</li>
                             <li>Clique em <strong>Browse Plugins</strong> (Navegar pelos Plugins).</li>
@@ -268,7 +265,7 @@ $(document).ready(function($){
             endif;
         ?>
     </div>
-</div>
+</main>
 
 <?php
 } else {
