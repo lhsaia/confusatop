@@ -9,6 +9,7 @@ $logPath = $isLocalhost
 
 ini_set('log_errors', '1');
 ini_set('error_log', $logPath);
+ini_set('display_errors', '0'); // NUNCA exibir erros no output — quebra respostas JSON
 error_reporting(E_ALL);
 
 // Set session save path to a local directory within the project to avoid shared hosting GC purging it
@@ -101,6 +102,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+/*
 // Temporary debug logging to understand exactly what is happening for the failing user
 $log_file = dirname(__DIR__) . '/debug_session.txt';
 $log_data = [
@@ -116,6 +118,7 @@ $log_data = [
     'is_writable' => is_writable(session_save_path()),
 ];
 @file_put_contents($log_file, json_encode($log_data) . "\n", FILE_APPEND);
+*/
 
 
 
