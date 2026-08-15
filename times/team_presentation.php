@@ -61,36 +61,36 @@ while ($row_pos = $stmtPos->fetch(PDO::FETCH_ASSOC)){
 //lista de times da pessoa
 $lista_times = array();
 
-$id = $_GET['team'];
+$id = $_GET['team'] ?? 0;
 $idTime = $id;
 
 // query times
 $info = $time->readInfo($id);
-$nome_time = $info['Nome'];
-$sigla_time = $info['TresLetras'];
-$estadio_time = $info['Estadio'];
-$estadio_capacidade = $info['Capacidade'];
-$escudo_time = $info['Escudo'];
-$foto_estadio = $info['fotoEstadio'];
-$uniforme1_time = $info['Uniforme1'];
-$uniforme2_time = $info['Uniforme2'];
-$pais_time = $info['Pais'];
-$liga_time = $info['liga'];
-$liga_id = $info['liga_id'];
-$pais_id = $info['pais_id'];
-$donoPais = $info['donoPais'];
-$status_time = $info['status'];
+$nome_time = $info['Nome'] ?? '';
+$sigla_time = $info['TresLetras'] ?? '';
+$estadio_time = $info['Estadio'] ?? '';
+$estadio_capacidade = $info['Capacidade'] ?? 0;
+$escudo_time = $info['Escudo'] ?? '';
+$foto_estadio = $info['fotoEstadio'] ?? '';
+$uniforme1_time = $info['Uniforme1'] ?? '';
+$uniforme2_time = $info['Uniforme2'] ?? '';
+$pais_time = $info['Pais'] ?? '';
+$liga_time = $info['liga'] ?? '';
+$liga_id = $info['liga_id'] ?? null;
+$pais_id = $info['pais_id'] ?? null;
+$donoPais = $info['donoPais'] ?? null;
+$status_time = $info['status'] ?? null;
 
 $extra_info = $time->readExtraInfo($id);
-$apelido_time = $extra_info['apelido'];
-$fundacao_time = $extra_info['fundacao'];
-$cidade_time = $extra_info['cidade'];
-$patrocinio_time = $extra_info['patrocinio'];
-$material_esportivo_time = $extra_info['material_esportivo'];
-$titulos_time = $extra_info['titulos'];
-$sobre_titulo = $extra_info['sobre_titulo'];
-$sobre_subtitulo = $extra_info['sobre_subtitulo'];
-$sobre_texto = $extra_info['sobre_texto'];
+$apelido_time = $extra_info['apelido'] ?? '';
+$fundacao_time = $extra_info['fundacao'] ?? '';
+$cidade_time = $extra_info['cidade'] ?? '';
+$patrocinio_time = $extra_info['patrocinio'] ?? '';
+$material_esportivo_time = $extra_info['material_esportivo'] ?? '';
+$titulos_time = $extra_info['titulos'] ?? '';
+$sobre_titulo = $extra_info['sobre_titulo'] ?? '';
+$sobre_subtitulo = $extra_info['sobre_subtitulo'] ?? '';
+$sobre_texto = $extra_info['sobre_texto'] ?? '';
 
 if(empty($titulos_time)){
 	$titulos_time = "14x Campeonato Nacional Serie A, 2x Campeonato Nacional Serie B, 3x Taça Nacional, 1x Campeonato Continental";
@@ -126,14 +126,14 @@ if($status_time > 0){
 }
 
 //outras informações para infoblock
-$mediaIdade = number_format($info['mediaIdade'],1);
-$estrangeiros = $info['estrangeiros'];
-$jogadores_selecao = $info['emSelecao'];
-$valor_total_clube = number_format($info['valorTotal']/1000000,1) . "M";
+$mediaIdade = number_format($info['mediaIdade'] ?? 0, 1);
+$estrangeiros = $info['estrangeiros'] ?? 0;
+$jogadores_selecao = $info['emSelecao'] ?? 0;
+$valor_total_clube = number_format(($info['valorTotal'] ?? 0)/1000000,1) . "M";
 $recorde_transferencia = $time->balancoTransferencias($idTime);
 $recorde_transferencia = number_format($recorde_transferencia/1000000,1) . "M";
-$nivel_medio = number_format($info['mediaNivel'], 1);
-$nivel_medio_onze = number_format($info['mediaNivelOnze'],1);
+$nivel_medio = number_format($info['mediaNivel'] ?? 0, 1);
+$nivel_medio_onze = number_format($info['mediaNivelOnze'] ?? 0,1);
 
 
 if($liga_time != ''){
@@ -190,7 +190,9 @@ $time_stmt = $jogador->selecionarElencoTime($id,$from_record_num,$records_per_pa
  echo "<div id='nomeTime' style='background: ".$color1."'><h3 style='color: ".$color2."'>". $nome_time ."</h3></div>";
  echo "<div id='barraVertical' style='border-color: ".$color2."'></div>";
  echo "<div id='escudoTime' ><img src='/images/escudos/".$escudo_time."'></div>";
- echo "<div id='simboloLiga'><img id='' src='/images/ligas/".$info["logoLiga"]."' height='120px'><span>".$info["liga"]." ".date("Y")." </span></div>";
+ $logo_liga = $info["logoLiga"] ?? '';
+ $nome_liga = $info["liga"] ?? '';
+ echo "<div id='simboloLiga'><img id='' src='/images/ligas/".$logo_liga."' height='120px'><span>".$nome_liga." ".date("Y")." </span></div>";
  echo "<div id='quadroInformacoes'><div id='colorFilter' style='background-color: rgb(".substr($uni1cor1,0,3).",".substr($uni1cor1,3,3).",".substr($uni1cor1,6,3).",0.6)'></div> </div>";
  echo "<div id='quadrosPrincipais'>";
  echo "<div id='quadroEsquerdo'>";
@@ -203,13 +205,13 @@ $time_stmt = $jogador->selecionarElencoTime($id,$from_record_num,$records_per_pa
 		 <div id='titulosTime'> <span class='material-symbols-outlined' style='color: ".$color1."'>emoji_events</span><span class='infos_time' contenteditable={$editable}> {$titulos_time}</span></div>
 		 <div id='nomeEstadio'><span class='material-symbols-outlined' style='color: ".$color1."'>stadium</span><span class='infos_time'> ".$estadio_time." (" .$estadio_capacidade .")</span></div>
  </div>";
- $mascote_time = $extra_info['mascote'] && $extra_info['mascote'] != 'null' ? '/images/mascotes/' . $extra_info['mascote'] : '/images/mascotes/placeholder.png';
+ $mascote_time = (!empty($extra_info['mascote']) && $extra_info['mascote'] != 'null') ? '/images/mascotes/' . $extra_info['mascote'] : '/images/mascotes/placeholder.png';
 
  echo "<div id='imagensEstadioUniformes'>";
  echo "<div id='fotoEstadio'><img src='/images/estadios/{$foto_estadio}'></div>";
  echo "<div id='mascoteTime'><img src='{$mascote_time}'></div>";
- echo '<div id="uniforme1"><img src="/images/uniformes/'.$info["Uniforme1"].'"></div>';
- echo '<div id="uniforme2"><img src="/images/uniformes/'.$info["Uniforme2"].'"></div>';
+ echo '<div id="uniforme1"><img src="/images/uniformes/'.$uniforme1_time.'"></div>';
+ echo '<div id="uniforme2"><img src="/images/uniformes/'.$uniforme2_time.'"></div>';
  echo "</div>";
  echo "<div id='sobreTime'><h2 contenteditable={$editable} >{$sobre_titulo}</h2><h3  contenteditable={$editable} style='color: ".$color1."'>{$sobre_subtitulo}</h3><div id='aboutTeam' contenteditable={$editable} >{$sobre_texto}</div></div>";
   echo "</div>";
@@ -299,27 +301,30 @@ $lista_reservas = array();
 		$stmtTec = $tecnico->infoTecnico($idTime);
 		$rowTec = $stmtTec->fetch(PDO::FETCH_ASSOC);
 
-		$transferenciaTecnico = $tecnico->ultimaTransferencia($rowTec['ID'], $idTime);
-		
-		if(strlen($rowTec['Nome'])>16){
-			$temp_nome = explode(" ", $rowTec["Nome"]);
-			$sobrenome_jogador = end($temp_nome);
-			$primeira_letra = mb_substr($temp_nome[0], 0,1);
-			$nomeAbreviado = $primeira_letra . ". " . $sobrenome_jogador;
-		} else {
-			$nomeAbreviado = $rowTec['Nome'];
+		if ($rowTec && is_array($rowTec)) {
+			$transferenciaTecnico = $tecnico->ultimaTransferencia($rowTec['ID'], $idTime);
+			
+			if(strlen($rowTec['Nome'])>16){
+				$temp_nome = explode(" ", $rowTec["Nome"]);
+				$sobrenome_jogador = end($temp_nome);
+				$primeira_letra = mb_substr($temp_nome[0], 0,1);
+				$nomeAbreviado = $primeira_letra . ". " . $sobrenome_jogador;
+			} else {
+				$nomeAbreviado = $rowTec['Nome'];
+			}
+			
+			echo "<div class='ficha_individual' style='border-color: {$color1}'>";
+			echo "<div class='nomeBandeira'><span class='nome_individual'>".mb_strtoupper($nomeAbreviado)."</span><img class='bandeiraIndividual' src='/images/bandeiras/{$rowTec['bandeiraPais']}'></div>";
+			echo "<div class='outras_infos'>";
+			echo "<div class='infos_individuais'>";
+			echo "<span class='nascimento_individual'>".$rowTec['Nascimento']."</span>";
+			echo "<span class='posicao_individual'>Técnico</span>";
+			$desde = isset($transferenciaTecnico["Data"]) ? substr($transferenciaTecnico["Data"], -4) : "N/A";
+			echo "<span class='desde_individual'>No clube desde: ".$desde."</span>";
+			echo "</div>";
+			echo "<div class='foto_individual'><img src='/images/tecnicos/{$rowTec['foto']}'></div>";
+			echo "</div></div>";
 		}
-		
-		echo "<div class='ficha_individual' style='border-color: {$color1}'>";
-		echo "<div class='nomeBandeira'><span class='nome_individual'>".mb_strtoupper($nomeAbreviado)."</span><img class='bandeiraIndividual' src='/images/bandeiras/{$rowTec['bandeiraPais']}'></div>";
-		echo "<div class='outras_infos'>";
-		echo "<div class='infos_individuais'>";
-		echo "<span class='nascimento_individual'>".$rowTec['Nascimento']."</span>";
-		echo "<span class='posicao_individual'>Técnico</span>";
-		echo "<span class='desde_individual'>No clube desde: ".substr($transferenciaTecnico["Data"],-4)."</span>";
-		echo "</div>";
-		echo "<div class='foto_individual'><img src='/images/tecnicos/{$rowTec['foto']}'></div>";
-		echo "</div></div>";
 		
 		
 	
