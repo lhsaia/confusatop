@@ -1,0 +1,289 @@
+body {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding-top: 60px !important;
+  background-image: 
+    linear-gradient(180deg, rgba(248, 250, 252, 0.85) 0%, rgba(226, 232, 240, 0.95) 100%),
+    url("/images/confusa-blue.png") !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+  overflow-x: hidden !important;
+}
+
+/* Container Principal */
+.propostas-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+    flex: 1;
+}
+
+.propostas-card {
+    background: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 18px !important;
+    padding: 2.25rem !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+}
+
+.propostas-title {
+    font-family: 'Kanit', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 1.6rem !important;
+    color: #1e293b !important;
+    margin-bottom: 0.5rem !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Informações do País (infoblock) */
+#info-jogos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 20px 0 30px 0;
+}
+
+.infoblock {
+    flex: 1;
+    min-width: 160px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.infoblock:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+    border-color: rgba(56, 189, 248, 0.3) !important;
+}
+
+.infoblock .material-symbols-outlined {
+    font-size: 1.8rem;
+    color: #0284c7;
+    background: rgba(2, 132, 199, 0.08);
+    padding: 8px;
+    border-radius: 50%;
+}
+
+.infoblock .informacao {
+    font-family: 'Kanit', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1e293b;
+    display: block;
+}
+
+.infoblock .informacao.menor {
+    font-size: 1.1rem;
+}
+
+.infoblock .informacao.micro {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: normal;
+    margin-left: 4px;
+    display: inline-block;
+}
+
+/* Tabela de Ligas */
+#tabelaElenco {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    color: #334155;
+    margin-top: 20px;
+}
+
+#tabelaElenco th {
+    padding: 12px 10px;
+    font-family: 'Kanit', sans-serif;
+    color: #64748b;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+#tabelaElenco tr {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    transition: background 0.2s ease;
+}
+
+#tabelaElenco tr:hover {
+    background: rgba(0, 0, 0, 0.01);
+}
+
+#tabelaElenco td {
+    padding: 12px 10px;
+    vertical-align: middle;
+}
+
+#tabelaElenco td.cell-liga,
+#tabelaElenco td.cell-clube {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+}
+
+.logoliga {
+    border-radius: 4px;
+    object-fit: contain;
+}
+
+/* Estilo do botão de baixar para Kitbasher */
+.azul {
+    color: #0284c7 !important;
+    transition: color 0.2s ease;
+}
+.azul:hover {
+    color: #0369a1 !important;
+}
+
+/* Responsividade Mobile */
+@media (max-width: 768px) {
+    .propostas-container {
+        padding: 1.5rem 1rem !important;
+    }
+    
+    .propostas-card {
+        padding: 1.5rem !important;
+    }
+    
+    #tabelaElenco thead {
+        display: none;
+    }
+    
+    #tabelaElenco {
+        display: block;
+        width: 100% !important;
+    }
+    
+    #tabelaElenco tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    #tabelaElenco tr {
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        position: relative;
+        gap: 0;
+    }
+    
+    #tabelaElenco td {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 10px 0 !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+        width: 100% !important;
+        text-align: left !important;
+        background: transparent !important;
+    }
+    
+    #tabelaElenco td .cell-value {
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        flex: 1 !important;
+        text-align: right !important;
+        color: #1e293b;
+        font-weight: 500;
+    }
+    
+    /* Liga/Nome é o cabeçalho do card */
+    #tabelaElenco tr td.cell-liga,
+    #tabelaElenco tr td.cell-clube {
+        order: -2;
+        display: flex !important;
+        border-bottom: 2px solid #38bdf8 !important;
+        padding-bottom: 12px !important;
+        margin-bottom: 8px;
+        justify-content: flex-start !important;
+    }
+    
+    #tabelaElenco tr td.cell-liga::before,
+    #tabelaElenco tr td.cell-clube::before {
+        display: none !important;
+    }
+    
+    #tabelaElenco tr td:last-child {
+        border-bottom: none !important;
+    }
+    
+    #tabelaElenco td::before {
+        content: attr(data-label);
+        font-family: 'Montserrat', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+}
+
+/* Paginador (Paging) */
+.pagination {
+  display: flex !important;
+  list-style: none !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  margin: 1.5rem 0 !important;
+}
+
+.pagination li {
+  display: inline-block !important;
+}
+
+.pagination a, .pagination span {
+  padding: 8px 14px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: #fff !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
+  transition: all 0.2s !important;
+  font-size: 0.85rem !important;
+}
+
+.pagination a:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.pagination li.active a {
+  background: #0284c7 !important;
+  color: #fff !important;
+  border-color: #0284c7 !important;
+}
+
+.sr-only {
+  display: none !important;
+}

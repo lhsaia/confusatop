@@ -610,3 +610,13 @@ hr {
   box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
 }
 
+#new_match select:disabled,
+#tabelaPrincipal select.editavel:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  background-color: rgba(226, 232, 240, 0.5) !important;
+  color: #94a3b8 !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+

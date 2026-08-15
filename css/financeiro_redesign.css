@@ -1,0 +1,334 @@
+/* ============================================================
+   financeiro_redesign.css — Redesign do Resumo Financeiro
+   Segue o Light Theme padrão das subpáginas do CONFUSA.top
+   ============================================================ */
+
+/* KPI Cards de Topo */
+.fin-kpi-grid {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+
+.fin-kpi-card {
+    flex: 1 1 160px;
+    min-width: 150px;
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 14px;
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.fin-kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.fin-kpi-card .kpi-label {
+    font-family: 'Kanit', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.fin-kpi-card .kpi-label .material-symbols-outlined {
+    font-size: 1rem;
+}
+
+.fin-kpi-card .kpi-value {
+    font-family: 'Kanit', sans-serif;
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.1;
+}
+
+.fin-kpi-card.receitas .kpi-label { color: #059669; }
+.fin-kpi-card.receitas .kpi-value { color: #059669; }
+.fin-kpi-card.receitas { border-left: 4px solid #059669; }
+
+.fin-kpi-card.gastos .kpi-label { color: #dc2626; }
+.fin-kpi-card.gastos .kpi-value { color: #dc2626; }
+.fin-kpi-card.gastos { border-left: 4px solid #dc2626; }
+
+.fin-kpi-card.balanco { border-left: 4px solid #0284c7; }
+.fin-kpi-card.balanco .kpi-label { color: #0284c7; }
+.fin-kpi-card.balanco.positivo .kpi-value { color: #059669; }
+.fin-kpi-card.balanco.negativo .kpi-value { color: #dc2626; }
+.fin-kpi-card.balanco .kpi-value { color: #1e293b; }
+
+/* Barra de filtros */
+.fin-filters {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 20px;
+}
+
+.fin-filters .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.fin-filters label {
+    font-family: 'Kanit', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.fin-filters input[type="date"],
+.fin-filters select {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.88rem;
+    color: #1e293b;
+    background: #f8fafc;
+    border: 1.5px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-width: 140px;
+}
+
+.fin-filters input[type="date"]:focus,
+.fin-filters select:focus {
+    border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2,132,199,0.1);
+}
+
+/* Botão Criar Transação */
+#btn-criar-transacao {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    background: linear-gradient(135deg, #059669, #047857);
+    color: #ffffff;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.2s;
+    white-space: nowrap;
+}
+
+#btn-criar-transacao:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+#btn-criar-transacao .material-symbols-outlined {
+    font-size: 1.1rem;
+}
+
+/* Separador */
+.fin-divider {
+    border: none;
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+    margin: 0 0 20px 0;
+}
+
+/* Loading */
+#loading {
+    display: block;
+    margin: 20px auto;
+}
+
+/* Tabela */
+#tabelaPrincipal {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.875rem;
+}
+
+#tabelaPrincipal thead th {
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 2px solid rgba(0,0,0,0.07);
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+}
+
+#tabelaPrincipal thead th:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+#tabelaPrincipal tbody tr {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    transition: background 0.15s;
+}
+
+#tabelaPrincipal tbody tr:hover {
+    background: #f8fafc;
+}
+
+#tabelaPrincipal tbody td {
+    padding: 10px 12px;
+    color: #334155;
+    vertical-align: middle;
+}
+
+/* Valores */
+.valor.receita {
+    color: #059669;
+    font-weight: 700;
+}
+
+.valor.despesa {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+/* Badge de fluxo */
+.fluxoCaixa {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* Paginação */
+.pagination {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.pagination li button {
+    padding: 5px 11px;
+    border: 1.5px solid rgba(0,0,0,0.12);
+    border-radius: 6px;
+    background: #ffffff;
+    color: #475569;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.pagination li button:hover:not(:disabled) {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+}
+
+.pagination li button:disabled {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+    cursor: default;
+}
+
+/* Cabeçalho de título + botão em linha */
+.fin-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.fin-header-row h2.propostas-title {
+    margin: 0;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .fin-kpi-grid {
+        flex-direction: column;
+    }
+
+    .fin-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .fin-filters input[type="date"],
+    .fin-filters select {
+        width: 100%;
+    }
+
+    #tabelaPrincipal thead { display: none; }
+
+    #tabelaPrincipal tbody tr {
+        display: block;
+        margin-bottom: 12px;
+        border: 1px solid rgba(0,0,0,0.08);
+        border-radius: 10px;
+        padding: 10px;
+    }
+
+    #tabelaPrincipal tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 4px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    #tabelaPrincipal tbody td:last-child {
+        border-bottom: none;
+    }
+
+    #tabelaPrincipal tbody td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        font-size: 0.75rem;
+        color: #64748b;
+        text-transform: uppercase;
+        flex-shrink: 0;
+        margin-right: 15px;
+    }
+
+    #tabelaPrincipal tbody td .cell-value {
+        flex: 1;
+        justify-content: flex-end;
+        text-align: right;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    #tabelaPrincipal tbody tr td:first-child {
+        text-align: right !important;
+        padding: 10px 0 10px 140px !important;
+        min-height: 38px !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    }
+}

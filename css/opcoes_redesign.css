@@ -1,6 +1,7 @@
-/* ==========================================================================
-   CONFUSA.top - Opções da Competição Redesign (Light Theme System)
-   ========================================================================== */
+html {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
 
 body {
   font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
