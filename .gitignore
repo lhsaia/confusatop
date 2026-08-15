@@ -97,3 +97,4 @@ check_php.bat
 compatibilidade_*.txt
 config/setup_poltronascore_db.php
 admin/New Text Document.txt
+octamotor/config/database.php
