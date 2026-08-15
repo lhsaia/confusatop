@@ -1,4 +1,7 @@
 <?php
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
 
 echo "<html class='no-capture' lang='pt-br' xmlns='http://www.w3.org/1999/xhtml' xml:lang='pt-br'>";
 echo "<head>";
@@ -21,7 +24,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && isset($_SES
     if($_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == false){
       $admin_btn = "<a class='nav-item' href='/admin/index.php'>Área do Admin</a>";
       $class_conectado = " admin conectado ";
-    } else if($_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == true){
+    } else if($_SESSION['impersonated'] == true){
       $class_conectado = " impersonado conectado ";
 	  $admin_btn = "";
 	} else {
@@ -94,6 +97,9 @@ if(isset($css_filename)){
 if(isset($aux_css)){
     echo "<link type='text/css' href='/css/".$aux_css.".css?versao=".$css_versao."' rel='stylesheet'>";
 }
+if(isset($extra_css)){
+    echo "<link type='text/css' href='/css/".$extra_css.".css?versao=".$css_versao."' rel='stylesheet'>";
+}
 ?>
 
 <script>
@@ -101,6 +107,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('/sw.js').then(function(registration) {
       console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      registration.update();
     }, function(err) {
       console.log('ServiceWorker registration failed: ', err);
     });
@@ -326,6 +333,37 @@ if ('serviceWorker' in navigator) {
 .timeline-day.active .timeline-day-content {
 	display: block;
 }
+
+/* Fallback styles for user avatars and navigation on old layout pages */
+<?php 
+$is_redesigned = (isset($css_filename) && $css_filename === 'home_redesign') || (isset($aux_css) && $aux_css === 'home_redesign');
+if (!$is_redesigned): 
+?>
+.user-avatar-header,
+.user-name-header,
+.menu-profile-header {
+	display: none !important;
+}
+.hamburger-icon-fallback {
+	display: inline-block !important;
+}
+<?php else: ?>
+.hamburger-icon-fallback {
+	display: none !important;
+}
+<?php endif; ?>
+.user-avatar-header {
+	width: 28px !important;
+	height: 28px !important;
+	border-radius: 50% !important;
+	object-fit: cover !important;
+}
+.menu-profile-avatar {
+	width: 56px !important;
+	height: 56px !important;
+	border-radius: 50% !important;
+	object-fit: cover !important;
+}
 </style>
 </head>
 
@@ -361,6 +399,7 @@ if ('serviceWorker' in navigator) {
     $avatar_to_show = !empty($_SESSION['avatar']) ? $_SESSION['avatar'] : '/images/default-user.png';
   ?>
     <a id="open-menu" class='menu-toggle-button logged-in no-capture'>
+      <span class="material-symbols-outlined no-capture hamburger-icon-fallback">menu</span>
       <img src="<?php echo htmlspecialchars($avatar_to_show); ?>" alt="Avatar" class="user-avatar-header" />
       <span class="user-name-header"><?php echo htmlspecialchars($_SESSION['nomereal'] ?? $_SESSION['username'] ?? ''); ?></span>
     </a>
