@@ -3,19 +3,22 @@ class Transfer {
 
     private $conn;
 
-    public string $jogadorNome;
-    public string $fotoJogador;
-    public string $bandeiraPng;
+    public $origemId;
+    public $destinoId;
 
-    public string $origemNome;
-    public string $origemEscudo;
+    public $jogadorNome;
+    public $fotoJogador;
+    public $bandeiraPng;
 
-    public string $destinoNome;
-    public string $destinoEscudo;
+    public $origemNome;
+    public $origemEscudo;
 
-    public string $valor;
-    public string $tipo;
-    public string $data;
+    public $destinoNome;
+    public $destinoEscudo;
+
+    public $valor;
+    public $tipo;
+    public $data;
 
     public function __construct($db){
         $this->conn = $db;
@@ -29,14 +32,17 @@ class Transfer {
                 j.foto AS jogador_foto,
                 p.bandeira AS bandeira_png,
 
+                t.clubeOrigem AS clube_origem_id,
                 co.Nome AS origem_nome,
                 co.Escudo AS origem_escudo,
 
+                t.clubeDestino AS clube_destino_id,
                 cd.Nome AS destino_nome,
-                cd.Escudo AS destino_escudo,
+                CD.Escudo AS destino_escudo,
 
                 t.valor,
-                t.tipoTransferência as tipo,
+                t.tipoTransferencia as tipo,
+                t.emprestimo,
                 t.dataConclusao as data_confirmacao
             FROM transferencias t
             JOIN jogador j ON j.ID = t.jogador
@@ -58,18 +64,45 @@ class Transfer {
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        $this->origemId      = (int)$row['clube_origem_id'];
+        $this->destinoId     = (int)$row['clube_destino_id'];
+
         $this->jogadorNome   = $row['jogador_nome'];
         $this->fotoJogador   = $row['jogador_foto'];
-        $this->bandeiraPng   = $row['bandeira_png'];
+        
+        $bandeira = $row['bandeira_png'];
+        if ($bandeira && strpos($bandeira, '/images/bandeiras/') !== 0) {
+            $bandeira = '/images/bandeiras/' . $bandeira;
+        }
+        $this->bandeiraPng   = $bandeira;
 
         $this->origemNome    = $row['origem_nome'];
-        $this->origemEscudo  = $row['origem_escudo'];
+        $origemEscudo = $row['origem_escudo'];
+        if ($origemEscudo && strpos($origemEscudo, '/images/escudos/') !== 0) {
+            $origemEscudo = '/images/escudos/' . $origemEscudo;
+        }
+        $this->origemEscudo  = $origemEscudo;
 
         $this->destinoNome   = $row['destino_nome'];
-        $this->destinoEscudo = $row['destino_escudo'];
+        $destinoEscudo = $row['destino_escudo'];
+        if ($destinoEscudo && strpos($destinoEscudo, '/images/escudos/') !== 0) {
+            $destinoEscudo = '/images/escudos/' . $destinoEscudo;
+        }
+        $this->destinoEscudo = $destinoEscudo;
 
         $this->valor         = $row['valor'];
-        $this->tipo          = $row['tipo'];
+        
+        // Mapeamento do tipo de transferência
+        $emprestimo = (int)$row['emprestimo'];
+        $val = (float)$row['valor'];
+        if ($emprestimo == 1 || $emprestimo == 2) {
+            $this->tipo = "Empréstimo";
+        } elseif ($val == 0 || $emprestimo == 4) {
+            $this->tipo = "Sem custo";
+        } else {
+            $this->tipo = "Permanente";
+        }
+
         $this->data          = $row['data_confirmacao'];
 
         return true;

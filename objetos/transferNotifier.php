@@ -1,13 +1,13 @@
 <?php
 class TransferNotifier {
 
-    private string $webhookUrl;
+    private $webhookUrl;
 
-    public function __construct(string $webhookUrl) {
+    public function __construct($webhookUrl) {
         $this->webhookUrl = $webhookUrl;
     }
 
-    public function notify(array $data): void {
+    public function notify(array $data) {
 
         $cores = [
             'Empréstimo'      => hexdec('3B82F6'),
@@ -19,22 +19,22 @@ class TransferNotifier {
             'embeds' => [[
                 'author' => [
                     'name' => $data['nome'],
-                    'icon_url' => $data['bandeira_png']
+                    'icon_url' => $this->escapeUrl($data['bandeira_png'])
                 ],
                 'title' => 'Transferência Confirmada',
                 'color' => $cores[$data['tipo_transferencia']] ?? hexdec('64748B'),
                 'thumbnail' => [
-                    'url' => $data['foto']
+                    'url' => $this->escapeUrl($data['foto'])
                 ],
                 'fields' => [
                     [
                         'name' => '⬅️ De',
-                        'value' => "**{$data['origem']}**\n[ ]({$data['origem_escudo_png']})",
+                        'value' => "**{$data['origem']}**",
                         'inline' => true
                     ],
                     [
                         'name' => '➡️ Para',
-                        'value' => "**{$data['destino']}**\n[ ]({$data['destino_escudo_png']})",
+                        'value' => "**{$data['destino']}**",
                         'inline' => true
                     ],
                     [
@@ -62,11 +62,18 @@ class TransferNotifier {
             CURLOPT_POST => true,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
             CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            CURLOPT_RETURNTRANSFER => true
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false
         ]);
 
         curl_exec($ch);
         curl_close($ch);
+    }
+
+    private function escapeUrl($url) {
+        if (empty($url)) return '';
+        return str_replace(' ', '%20', $url);
     }
 }
 
