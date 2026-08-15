@@ -31,12 +31,47 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $usuario->atualizarAlteracao($_SESSION['user_id']);
 		
 		    // 🔔 Notificação Discord
-		if ($acao === 'aceitar') {
-			$transfer = Transfer::fromId($idTransferencia);
-			
-			$notifier = new TransferNotifier($_ENV['DISCORD_WEBHOOK']);
-			$notifier->notify($transfer);
-		}
+            if ($acao === 'aceitar') {
+                $transfer = new Transfer($db);
+                if ($transfer->carregarPorId($idTransferencia)) {
+                    // Envia apenas se for transferência de clube para clube (ignora jogadores sem clube / livres)
+                    if ($transfer->origemId > 0 && $transfer->destinoId > 0) {
+                        $siteUrl = getenv('SITE_URL') ?: '';
+                        $baseSiteUrl = rtrim($siteUrl, '/');
+                        
+                        $valorInt = (int)$transfer->valor;
+                        if ($valorInt >= 1000000) {
+                            $valorFormatado = "F$ " . number_format($valorInt, 0, ',', '.') . " (" . round($valorInt / 1000000, 1) . " M)";
+                        } else {
+                            $valorFormatado = "F$ " . number_format($valorInt, 0, ',', '.');
+                        }
+
+                        $bandeira_png = $transfer->bandeiraPng ? $baseSiteUrl . $transfer->bandeiraPng : '';
+                        $foto = $transfer->fotoJogador ? $baseSiteUrl . '/images/jogadores/' . $transfer->fotoJogador : '';
+                        $origem_escudo_png = $transfer->origemEscudo ? $baseSiteUrl . $transfer->origemEscudo : '';
+                        $destino_escudo_png = $transfer->destinoEscudo ? $baseSiteUrl . $transfer->destinoEscudo : '';
+
+                        $transferData = [
+                            'nome' => $transfer->jogadorNome,
+                            'bandeira_png' => $bandeira_png,
+                            'tipo_transferencia' => $transfer->tipo,
+                            'foto' => $foto,
+                            'origem' => $transfer->origemNome,
+                            'origem_escudo_png' => $origem_escudo_png,
+                            'destino' => $transfer->destinoNome,
+                            'destino_escudo_png' => $destino_escudo_png,
+                            'valor' => $valorFormatado,
+                            'data' => date('d/m/Y', strtotime($transfer->data))
+                        ];
+                        
+                        $webhook = getenv('DISCORD_WEBHOOK');
+                        if (!empty($webhook)) {
+                            $notifier = new TransferNotifier($webhook);
+                            $notifier->notify($transferData);
+                        }
+                    }
+                }
+            }
 	
     } else {
         $is_success = false;
