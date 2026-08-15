@@ -41,58 +41,65 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         $sdb = $sqliteDb->getConnection();
 
         if ($sdb) {
-            // --- 1. Sincronizar Árbitros ---
-            $sdb->exec("DELETE FROM trioarbitragem");
+            try {
+                // Garantir que as tabelas existam no SQLite
+                $sqliteDb->prepareTables();
 
-            $arbitroIds = isset($_POST['arbitros']) ? array_map('intval', $_POST['arbitros']) : [];
-            $arbitroPais = isset($_POST['arbitros_pais']) ? intval($_POST['arbitros_pais']) : 0;
-            $arbitroFed = isset($_POST['arbitros_federacao']) ? $_POST['arbitros_federacao'] : '';
+                // --- 1. Sincronizar Árbitros ---
+                $sdb->exec("DELETE FROM trioarbitragem");
 
-            $arbitrosQuery = "SELECT id, nomeArbitro, nomeAuxiliarUm, nomeAuxiliarDois, estilo FROM arbitros WHERE 0";
-            if (!empty($arbitroIds)) {
-                $arbitrosQuery .= " OR id IN (" . implode(',', $arbitroIds) . ")";
-            }
-            if ($arbitroPais > 0) {
-                $arbitrosQuery .= " OR pais = " . $arbitroPais;
-            }
-            if (!empty($arbitroFed) && $arbitroFed !== "0") {
-                $arbitrosQuery .= " OR pais IN (SELECT id FROM paises WHERE federacao = " . $db->quote($arbitroFed) . ")";
-            }
+                $arbitroIds = isset($_POST['arbitros']) ? array_map('intval', $_POST['arbitros']) : [];
+                $arbitroPais = isset($_POST['arbitros_pais']) ? intval($_POST['arbitros_pais']) : 0;
+                $arbitroFed = isset($_POST['arbitros_federacao']) ? $_POST['arbitros_federacao'] : '';
 
-            if ($arbitrosQuery !== "SELECT id, nomeArbitro, nomeAuxiliarUm, nomeAuxiliarDois, estilo FROM arbitros WHERE 0") {
-                $stmtArb = $db->query($arbitrosQuery);
-                if ($stmtArb) {
-                    $stmtInsertArb = $sdb->prepare("INSERT INTO trioarbitragem (ID, Arbitro, Auxiliar1, Auxiliar2, Estilo) VALUES (:id, :nome, :aux1, :aux2, :estilo)");
-                    while ($row = $stmtArb->fetch(PDO::FETCH_ASSOC)) {
-                        $stmtInsertArb->bindValue(':id', (int)$row['id'], PDO::PARAM_INT);
-                        $stmtInsertArb->bindValue(':nome', $row['nomeArbitro']);
-                        $stmtInsertArb->bindValue(':aux1', $row['nomeAuxiliarUm']);
-                        $stmtInsertArb->bindValue(':aux2', $row['nomeAuxiliarDois']);
-                        $stmtInsertArb->bindValue(':estilo', (int)$row['estilo'], PDO::PARAM_INT);
-                        $stmtInsertArb->execute();
+                $arbitrosQuery = "SELECT id, nomeArbitro, nomeAuxiliarUm, nomeAuxiliarDois, estilo FROM arbitros WHERE 0";
+                if (!empty($arbitroIds)) {
+                    $arbitrosQuery .= " OR id IN (" . implode(',', $arbitroIds) . ")";
+                }
+                if ($arbitroPais > 0) {
+                    $arbitrosQuery .= " OR pais = " . $arbitroPais;
+                }
+                if (!empty($arbitroFed) && $arbitroFed !== "0") {
+                    $arbitrosQuery .= " OR pais IN (SELECT id FROM paises WHERE federacao = " . $db->quote($arbitroFed) . ")";
+                }
+
+                if ($arbitrosQuery !== "SELECT id, nomeArbitro, nomeAuxiliarUm, nomeAuxiliarDois, estilo FROM arbitros WHERE 0") {
+                    $stmtArb = $db->query($arbitrosQuery);
+                    if ($stmtArb) {
+                        $stmtInsertArb = $sdb->prepare("INSERT INTO trioarbitragem (ID, Arbitro, Auxiliar1, Auxiliar2, Estilo) VALUES (:id, :nome, :aux1, :aux2, :estilo)");
+                        while ($row = $stmtArb->fetch(PDO::FETCH_ASSOC)) {
+                            $stmtInsertArb->bindValue(':id', (int)$row['id'], PDO::PARAM_INT);
+                            $stmtInsertArb->bindValue(':nome', $row['nomeArbitro']);
+                            $stmtInsertArb->bindValue(':aux1', $row['nomeAuxiliarUm']);
+                            $stmtInsertArb->bindValue(':aux2', $row['nomeAuxiliarDois']);
+                            $stmtInsertArb->bindValue(':estilo', (int)$row['estilo'], PDO::PARAM_INT);
+                            $stmtInsertArb->execute();
+                        }
                     }
                 }
-            }
 
-            // --- 2. Sincronizar Estádios ---
-            $sdb->exec("DELETE FROM estadio");
+                // --- 2. Sincronizar Estádios ---
+                $sdb->exec("DELETE FROM estadio");
 
-            $estadioIds = isset($_POST['estadios']) ? array_map('intval', $_POST['estadios']) : [];
-            if (!empty($estadioIds)) {
-                $estadiosQuery = "SELECT id, Nome, Capacidade, Clima, Altitude, Caldeirao FROM estadio WHERE id IN (" . implode(',', $estadioIds) . ")";
-                $stmtEst = $db->query($estadiosQuery);
-                if ($stmtEst) {
-                    $stmtInsertEst = $sdb->prepare("INSERT INTO estadio (ID, Nome, Capacidade, Clima, Altitude, Caldeirao) VALUES (:id, :nome, :cap, :clima, :alt, :cald)");
-                    while ($row = $stmtEst->fetch(PDO::FETCH_ASSOC)) {
-                        $stmtInsertEst->bindValue(':id', (int)$row['id'], PDO::PARAM_INT);
-                        $stmtInsertEst->bindValue(':nome', $row['Nome']);
-                        $stmtInsertEst->bindValue(':cap', (int)$row['Capacidade'], PDO::PARAM_INT);
-                        $stmtInsertEst->bindValue(':clima', (int)$row['Clima'], PDO::PARAM_INT);
-                        $stmtInsertEst->bindValue(':alt', (int)$row['Altitude'], PDO::PARAM_INT);
-                        $stmtInsertEst->bindValue(':cald', (int)$row['Caldeirao'], PDO::PARAM_INT);
-                        $stmtInsertEst->execute();
+                $estadioIds = isset($_POST['estadios']) ? array_map('intval', $_POST['estadios']) : [];
+                if (!empty($estadioIds)) {
+                    $estadiosQuery = "SELECT id, Nome, Capacidade, Clima, Altitude, Caldeirao FROM estadio WHERE id IN (" . implode(',', $estadioIds) . ")";
+                    $stmtEst = $db->query($estadiosQuery);
+                    if ($stmtEst) {
+                        $stmtInsertEst = $sdb->prepare("INSERT INTO estadio (ID, Nome, Capacidade, Clima, Altitude, Caldeirao) VALUES (:id, :nome, :cap, :clima, :alt, :cald)");
+                        while ($row = $stmtEst->fetch(PDO::FETCH_ASSOC)) {
+                            $stmtInsertEst->bindValue(':id', (int)$row['id'], PDO::PARAM_INT);
+                            $stmtInsertEst->bindValue(':nome', $row['Nome']);
+                            $stmtInsertEst->bindValue(':cap', (int)$row['Capacidade'], PDO::PARAM_INT);
+                            $stmtInsertEst->bindValue(':clima', (int)$row['Clima'], PDO::PARAM_INT);
+                            $stmtInsertEst->bindValue(':alt', (int)$row['Altitude'], PDO::PARAM_INT);
+                            $stmtInsertEst->bindValue(':cald', (int)$row['Caldeirao'], PDO::PARAM_INT);
+                            $stmtInsertEst->execute();
+                        }
                     }
                 }
+            } catch (Exception $e) {
+                error_log("Erro no SQLite Sync em alteraropcoes: " . $e->getMessage());
             }
         }
     }
