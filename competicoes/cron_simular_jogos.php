@@ -76,6 +76,7 @@ foreach ($partidas as $matchInfo) {
 
     // Garantir tabela de compatibilidade com as versões necessárias
     try {
+        $ldb->exec("DROP TABLE IF EXISTS `comp10_temp_table`");
         $ldb->exec("CREATE TABLE IF NOT EXISTS `compatibilidade` (`versao` TEXT)");
         $stmtCheck = $ldb->query("SELECT `versao` FROM `compatibilidade`");
         $existingVersions = $stmtCheck->fetchAll(PDO::FETCH_COLUMN);
