@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html class="no-capture" lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <title>Erro 500 - Erro Interno do Servidor - CONFUSA.top</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, viewport-fit=cover, maximum-scale=1.0, user-scalable=0">
+  
+  <!-- Fontes e Ícones -->
+  <link href="https://fonts.googleapis.com/css?family=Kanit:400,600,900" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,600" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
+  
+  <!-- Estilos Globais e Específicos -->
+  <link type="text/css" href="/css/home_redesign.css" rel="stylesheet">
+  <link type="text/css" href="/css/error_pages.css" rel="stylesheet">
+  
+  <style>
+    body {
+      padding-top: 60px;
+    }
+    #bottom-bar {
+      height: 60px !important;
+      flex-shrink: 0 !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar Estático -->
+  <header id="top-bar">
+    <a href="/" id="logo-text">CONFUSA<span class="orange">.top</span></a>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="redesign-container">
+    <div class="error-container">
+      <div class="error-card">
+        <div class="error-image-wrapper">
+          <img src="/errors/500.png" alt="Erro 500" class="error-image">
+        </div>
+        <div class="error-content">
+          <div class="error-code">500</div>
+          <h1 class="error-title">Erro Interno do Servidor</h1>
+          <p class="error-description">O servidor encontrou um erro interno e não pôde concluir sua solicitação. Nossos técnicos solitários já foram acionados.</p>
+          <div class="error-actions">
+            <a href="/" class="btn-error btn-primary-error">
+              <span class="material-symbols-outlined">home</span> Voltar ao Início
+            </a>
+            <button onclick="window.history.back()" class="btn-error btn-secondary-error">
+              <span class="material-symbols-outlined">arrow_back</span> Voltar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Estático -->
+  <footer id="bottom-bar">
+    <a id="botaoVoltar" href="javascript:history.go(-1)" title="Voltar para página anterior">
+      <span class="material-symbols-outlined">arrow_circle_left</span>
+    </a>
+    <div id="copyright-text">
+      &copy;2018-2026 website by <a href="https://lhsaia.github.io/"><span class="material-symbols-outlined" style="font-size: 1em; vertical-align: middle;">link</span> Luis Cereda</a>
+    </div>
+  </footer>
+
+</body>
+</html>

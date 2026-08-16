@@ -149,9 +149,11 @@ body {
   transform: translateY(0);
 }
 
-/* Garante o posicionamento correto do bottom-bar */
+/* Garante o posicionamento correto e melhor altura do bottom-bar */
 #bottom-bar {
   position: relative !important;
   margin-top: auto !important;
   bottom: 0 !important;
+  height: 60px !important;
+  flex-shrink: 0 !important;
 }

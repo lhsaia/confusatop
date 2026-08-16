@@ -298,6 +298,7 @@ body #hamburger-menu #close-menu[style*="display: block"] {
   margin-top: auto !important;
   bottom: auto !important;
   z-index: 10 !important;
+  flex-shrink: 0 !important;
 }
 
 #bottom-bar #botaoVoltar {
