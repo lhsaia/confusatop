@@ -9,6 +9,16 @@
   },
   "days": [
     {
+      "date": "15/08/2026",
+      "title": "Ativação do Deploy Automático via FTP",
+      "description": "Removido o modo dry-run para ativação do deploy contínuo via GitHub Actions, com exclusões de segurança ativas."
+    },
+    {
+      "date": "15/08/2026",
+      "title": "Ajuste na Validação de Redirect URI no Confusauth",
+      "description": "Ajustada a comparação de redirect_uri no fluxo OAuth para ignorar a porta quando o host for localhost, permitindo o desenvolvimento local flexível."
+    },
+    {
       "date": "14/08/2026",
       "title": "Limpeza do .htaccess de Erros",
       "description": "Removidas as diretivas locais de ErrorDocument do .htaccess principal, delegando o tratamento de páginas de erro ao servidor LiteSpeed."
