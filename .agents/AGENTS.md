@@ -19,13 +19,19 @@ Sempre que você realizar alterações de novas funcionalidades, melhorias de la
 
 Sempre que criar novas páginas ou atualizar layouts existentes no CONFUSA.top, você **deve** seguir a especificação abaixo para manter consistência visual e estética premium:
 
-### 1. Paleta de Cores e Tokens CSS
-Use as seguintes variáveis CSS definidas no tema global para toda e qualquer interface:
-* **Fundo do Site:** `#1A1469` (azul clássico do CONFUSA) combinado com um gradiente escuro de leitura `#090d16`.
-* **Cor de Fundo dos Cards:** `rgba(15, 23, 42, 0.75)` (fundo escuro translúcido com glassmorphism real).
-* **Bordas dos Cards:** Borda muito fina e translúcida `1px solid rgba(255, 255, 255, 0.1)`.
-* **Hover dos Cards:** Ganha brilho ciano `rgba(56, 189, 248, 0.4)` e elevação física (`transform: translateY(-6px)`).
-* **Acentos:** Ciano (`#38bdf8`), Esmeralda (`#34d399`) e Âmbar (`#fbbf24`).
+### 1. Paleta de Cores e Temas CSS
+Use os seguintes tokens e estilos conforme a área do site:
+* **Tema Escuro (Exclusivo da Home Hub):**
+  - **Fundo do Site:** `#1A1469` (azul clássico do CONFUSA) combinado com um gradiente escuro de leitura `#090d16`.
+  - **Cor de Fundo dos Cards:** `rgba(15, 23, 42, 0.75)` (fundo escuro translúcido com glassmorphism real).
+  - **Bordas dos Cards:** Borda muito fina e translúcida `1px solid rgba(255, 255, 255, 0.1)`.
+* **Tema Claro (Padrão para Ligas, Competições, Clubes e Detalhes do Jogador):**
+  - **Fundo do Site:** `#f1f5f9` (cinza-azulado claro) com gradiente suave (`rgba(248, 250, 252, 0.85)` a `rgba(226, 232, 240, 0.95)`).
+  - **Cor do Texto:** `#0f172a` (azul escuro/slate) para ótima legibilidade.
+  - **Cor de Fundo dos Cards:** `rgba(255, 255, 255, 0.8)` (branco translúcido com desfoque de fundo/backdrop-filter).
+  - **Bordas dos Cards:** Borda leve `1px solid rgba(0, 0, 0, 0.08)`.
+* **Hover dos Cards:** Ganha brilho ciano (`rgba(56, 189, 248, 0.4)` no escuro ou `rgba(56, 189, 248, 0.2)` no claro) e elevação física (`transform: translateY(-6px)`).
+* **Acentos:** Ciano (`#38bdf8` / `#0284c7`), Esmeralda (`#34d399`) e Âmbar (`#fbbf24`).
 * **Tipografia:** `Kanit` para títulos principais e `Montserrat` para textos corridos e legibilidade da interface.
 
 ### 2. Padrão de Cards e Hubs
@@ -41,6 +47,13 @@ Use as seguintes variáveis CSS definidas no tema global para toda e qualquer in
 ### 4. Boas Práticas e Arquitetura de Código
 * **Estilos Separados:** Evite ao máximo colocar tags `<style>` embutidas no meio dos arquivos HTML/PHP. Toda regra visual nova deve ser modularizada e adicionada em arquivos `.css` externos específicos do layout (ex: `css/home_redesign.css`).
 
+### 5. Layouts de Tabelas, Ações e Paginação
+* **Ações Inline na Tabela (Modo de Edição):** Ao clicar em editar uma linha de tabela, oculte todos os botões de ação secundários da linha (ex: alterar demografia, ir para seleções, importação/exportação de planilhas). Mantenha visíveis apenas os botões de **Salvar** e **Cancelar** para focar a atenção do usuário no preenchimento dos dados. Restaure a visibilidade de todos os botões ao cancelar ou concluir a edição.
+* **Botão de Ação do Cabeçalho:** Botões de criação ou ação primária (como "Criar país", "Criar competição") devem ser alinhados inline no canto direito do título principal utilizando um contêiner flex (`.header-actions-container`) com largura automática (`width: auto`), e nunca ocupar 100% da largura do card.
+* **Estilização de Paginação Ativa:** Sempre aplique a estilização de página ativa no item da lista correspondente (`.pagination li.active a`) utilizando a cor de destaque azul (`#0284c7`) e texto branco. Além disso, certifique-se de incluir a classe `.sr-only { display: none !important; }` no CSS específico para ocultar o texto de acessibilidade `(current)` e evitar que ele distorça o tamanho dos botões.
+
 ## Diretrizes de Escopo e Modificação Segura
 * **Foco no Pedido:** Você **não deve** fazer qualquer tipo de alteração em trechos de código, textos, traduções ou arquivos que não tenham sido explicitamente solicitados pelo usuário.
 * **Preservação de Layouts Estáveis:** Elementos que já foram validados e aprovados pelo usuário não devem sofrer novas modificações ou reestruturações desnecessárias ao implementar novas demandas.
+* **Case-Sensitivity em Consultas SQL:** Como o servidor de produção (Linux) diferencia maiúsculas de minúsculas em apelidos (aliases) e nomes de tabelas, garanta que todas as referências SQL usem exatamente a mesma caixa da declaração (ex: se declarou `cd`, use `cd`, nunca `CD`).
+* **Fallback de Comandos de Sistema:** Chamadas a comandos de sistema/executáveis via `shell_exec` (como o otimizador `pngquant`) devem sempre possuir tratamento de erro e fallback nativo em PHP (ex: retornar o arquivo sem compressão) para evitar erros fatais se o utilitário estiver ausente ou desativado no servidor.
