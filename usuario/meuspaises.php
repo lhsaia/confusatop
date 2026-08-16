@@ -10,8 +10,8 @@ if(isset($_SESSION['nomereal'])){
 	$page_title = "Meus paises";
 }
 
-$css_filename = "indexRanking";
-$aux_css = "usuario";
+$css_filename = "home_redesign";
+$aux_css = "meuspaises_redesign";
 $css_login = 'login';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
@@ -22,8 +22,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 <div style="clear:both;"></div>
 <iframe id="results_sheet" hidden></iframe>
 <div style="clear:both;"></div>
-<div id="quadro-container">
-<div align="center" id="quadroTimes">
+<div class="propostas-container">
+<div class="propostas-card">
 
 <?php
 
@@ -55,21 +55,17 @@ $liga = new Liga($db);
 
 //query de ligas
 $stmt = $pais->readAll($from_record_num, $records_per_page, $_SESSION['user_id']);
-
 $num = $stmt->rowCount();
-
-
-if(!$_SESSION['emTestes'] || $num < 1){
-	$onclick = "window.location='/ligas/criar_pais.php";
-	echo "<button id='importar_time' onclick=".$onclick."'>Criar país</button>";
-}
-
-
 ?>
-<h2>Quadro de países - <?php echo $_SESSION['nomereal']?></h2>
-
-<hr>
-
+<div class="header-actions-container">
+    <h2 class="propostas-title">Quadro de países - <?php echo $_SESSION['nomereal']?></h2>
+    <?php
+    if(!$_SESSION['emTestes'] || $num < 1){
+        $onclick = "window.location='/ligas/criar_pais.php'";
+        echo "<button id='importar_time' class='btn-action-primary' onclick=\"".$onclick."\">Criar país</button>";
+    }
+    ?>
+</div>
 <?php
 
 
@@ -91,6 +87,7 @@ echo "<hr>";
 if($num>0){
 
   echo "<div id='errorbox'></div>";
+  echo "<div class='tbl_user_data'>";
     echo "<table id='tabelaPrincipal' class='table'>";
     echo "<thead>";
         echo "<tr>";
@@ -161,6 +158,7 @@ if($num>0){
 
     echo "</tbody>";
     echo "</table>";
+    echo "</div>";
 
 }
 
@@ -345,6 +343,10 @@ echo('</div>');
         tbl_row.find('.salvar').show();
         tbl_row.find('.cancelar').show();
         tbl_row.find('.editar').hide();
+        tbl_row.find('.demografia').hide();
+        tbl_row.find('.selecoes').hide();
+        tbl_row.find('.exportarplanilha').hide();
+        tbl_row.find('.importarplanilha').hide();
         tbl_row.find('.fedPais').hide();
         tbl_row.find('.newlogoedit').show();
         tbl_row.find('.logoimage').hide();
@@ -352,12 +354,8 @@ echo('</div>');
 		tbl_row.find(".example").show();
 		tbl_row.find(".coordenadas").hide();
         var inputranking = tbl_row.find('.inputranking');
-        if(inputranking.prop("checked") == false){
-            inputranking.prop("disabled", false);
-            inputranking.prop("data-original", false);
-        } else {
-            inputranking.prop("data-original", true);
-        }
+        inputranking.prop("disabled", false);
+        inputranking.prop("data-original", inputranking.prop("checked"));
 
         var paisId = tbl_row.find('.comboPais').attr('id');
         tbl_row.find('.comboPais').show().val(paisId);
@@ -374,16 +372,18 @@ echo('</div>');
         tbl_row.find('.salvar').hide();
         tbl_row.find('.cancelar').hide();
         tbl_row.find('.editar').show();
+        tbl_row.find('.demografia').show();
+        tbl_row.find('.selecoes').show();
+        tbl_row.find('.exportarplanilha').show();
+        tbl_row.find('.importarplanilha').show();
         tbl_row.find('.newlogoedit').hide();
         tbl_row.find('.logoimage').show();
 		tbl_row.find("[id^='mapContainer']").hide();
 		tbl_row.find(".example").hide();
 		tbl_row.find(".coordenadas").show();
         var inputranking = tbl_row.find('.inputranking');
-        if(inputranking.prop("data-original") == false){
-            inputranking.prop("checked", false);
-            inputranking.prop("disabled", true);
-        }
+        inputranking.prop("checked", inputranking.prop("data-original"));
+        inputranking.prop("disabled", true);
 
         tbl_row.find('span').each(function(index, val){
             $(this).html($(this).attr('original_entry'));
@@ -412,11 +412,7 @@ echo('</div>');
         var federacaoPais = tbl_row.find('.comboPais').val();
         var rank = tbl_row.find('#chk'+id).prop("checked");
         var inputranking = tbl_row.find('.inputranking');
-
-        if(inputranking.prop("data-original") == false){
-            inputranking.prop("checked", false);
-            inputranking.prop("disabled", true);
-        }
+        inputranking.prop("disabled", true);
 
         if (rank == true){
             ranqueavel = 0;
