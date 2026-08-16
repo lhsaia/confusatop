@@ -10,8 +10,8 @@
   "days": [
     {
       "date": "15/08/2026",
-      "title": "Ativação do Deploy Automático via FTP",
-      "description": "Removido o modo dry-run para ativação do deploy contínuo via GitHub Actions, com exclusões de segurança, suporte a arquivo de estado personalizado sem ponto para compatibilidade e regras no .gitignore."
+      "title": "Desativação do Deploy via GitHub Actions",
+      "description": "Desativado o fluxo de deploy automático via FTP no GitHub Actions devido a problemas de leitura do arquivo de estado no servidor."
     },
     {
       "date": "15/08/2026",
