@@ -20,7 +20,52 @@ $stmt = $pdo->prepare("SELECT * FROM clients WHERE id = ?");
 $stmt->execute([$client_id]);
 $client = $stmt->fetch();
 
-if (!$client || $client['redirect_uri'] !== $redirect_uri) {
+function isRedirectUriAllowed($db_uri, $req_uri) {
+    if ($db_uri === $req_uri) {
+        return true;
+    }
+
+    $db_parsed = parse_url($db_uri);
+    $req_parsed = parse_url($req_uri);
+
+    if (!$db_parsed || !$req_parsed) {
+        return false;
+    }
+
+    $db_path = rtrim($db_parsed['path'] ?? '/', '/');
+    $req_path = rtrim($req_parsed['path'] ?? '/', '/');
+    if ($db_path !== $req_path) {
+        return false;
+    }
+
+    $db_host = $db_parsed['host'] ?? '';
+    $req_host = $req_parsed['host'] ?? '';
+    if ($db_host !== $req_host) {
+        return false;
+    }
+
+    $db_scheme = $db_parsed['scheme'] ?? '';
+    $req_scheme = $req_parsed['scheme'] ?? '';
+    if ($db_scheme !== $req_scheme) {
+        return false;
+    }
+
+    $db_query = $db_parsed['query'] ?? '';
+    $req_query = $req_parsed['query'] ?? '';
+    if ($db_query !== $req_query) {
+        return false;
+    }
+
+    if ($db_host === 'localhost') {
+        return true;
+    }
+
+    $db_port = $db_parsed['port'] ?? null;
+    $req_port = $req_parsed['port'] ?? null;
+    return $db_port === $req_port;
+}
+
+if (!$client || !isRedirectUriAllowed($client['redirect_uri'], $redirect_uri)) {
     http_response_code(400);
     exit("invalid client");
 }
