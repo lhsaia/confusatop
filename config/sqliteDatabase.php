@@ -14,6 +14,10 @@ class SQLiteDatabase{
         try{
             $this->conn = new PDO('sqlite:'.$this->fileName);
 
+            // Set journal mode to WAL and busy_timeout to 5000ms to prevent database locks
+            $this->conn->exec("PRAGMA journal_mode=WAL;");
+            $this->conn->exec("PRAGMA busy_timeout=5000;");
+
             //verificar se os dois itens abaixo não vão gerar problemas.
             $this->conn->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
