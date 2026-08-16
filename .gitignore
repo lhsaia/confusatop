@@ -16,7 +16,9 @@ myadmin/
 pngquant/
 java_station/
 hexacolor_repo/
-competicoes/hexacolor/
+competicoes/hexacolor/**
+!competicoes/hexacolor/**/
+!competicoes/hexacolor/**/*.php
 lib/jsvectormap-master/
 lib/leaflet-locationpicker/
 lib/htmlpurifier/
