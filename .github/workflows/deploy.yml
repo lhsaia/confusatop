@@ -35,3 +35,12 @@ jobs:
           **/scratch/**
           README.md
           sitelookup_update07062019.sh
+          **/.vscode/**
+          **/hexacolor_repo/**
+          **/PHPCompatibility-master/**
+          **/full hexa suite/**
+          **/sqlitedb/**
+          **/session_data/**
+          **/pngquant/**
+          **/java_station/**
+          **/myadmin/**
