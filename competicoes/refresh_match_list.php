@@ -24,10 +24,12 @@
     $stmt = $competicao->carregarListaJogos($idCompeticao);
     $return_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
+    /*
     if(count($return_arr) == 0){
         // Log para debug se retornar vazio
         error_log("refresh_match_list: Nenhum jogo encontrado para competicao ID " . $idCompeticao);
     }
+    */
 
     // Encoding array in JSON format
     echo json_encode($return_arr);
