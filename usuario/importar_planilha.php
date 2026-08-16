@@ -34,7 +34,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
         $sheetData = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
 
         $cell_scan = 2;
-        $index_data = (integer)$sheetData[$cell_scan]["A"];
+        $index_data = isset($sheetData[$cell_scan]["A"]) ? $sheetData[$cell_scan]["A"] : "";
 
         while( $index_data != ""){
           $player_index = $index_data;
@@ -60,7 +60,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
           }
 
           $cell_scan = $cell_scan + 1;
-          $index_data = $sheetData[$cell_scan]["A"];
+          $index_data = isset($sheetData[$cell_scan]["A"]) ? $sheetData[$cell_scan]["A"] : "";
         }
 
         if($error_count == 0){
