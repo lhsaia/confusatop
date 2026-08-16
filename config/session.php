@@ -10,6 +10,7 @@ $logPath = $isLocalhost
 ini_set('log_errors', '1');
 ini_set('error_log', $logPath);
 ini_set('display_errors', '0'); // NUNCA exibir erros no output — quebra respostas JSON
+ini_set('memory_limit', '256M');
 error_reporting(E_ALL);
 
 // Set session save path to a local directory within the project to avoid shared hosting GC purging it

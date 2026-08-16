@@ -60,7 +60,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
       $new_height = $height;
     }
         //$save_to_path = "uploads/compressed_file.png";
-        if($type != "image/png"){
+        if($type != IMAGETYPE_PNG){
           $src = imagecreatefromstring( file_get_contents( $file_name ) );
         } else {
           $compressed_png_content = compress_png($file_name);
@@ -98,13 +98,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
             $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
             imageImporter($filePath, $upload_path);
-            //$result = move_uploaded_file($filePath, $upload_path);
-              //  if (!$result) {
-                //    $error_msg .= "Não foi possível inserir o escudo, erro na inserção.";
-
-              //  } else {
-                    $time->escudo = $_SESSION['user_id'] ."-" .$fileName;
-              //  }
 
             //$fileData = file_get_contents($filePath);
             //$time->escudo = base64_encode($fileData).".".$fileExt;
@@ -220,7 +213,7 @@ function imageImporterWebP($file_name, $target_filename){
       $new_width = $width;
       $new_height = $height;
     }
-        if($type == "image/png"){
+        if($type == IMAGETYPE_PNG){
 			$compressed_png_content = compress_png($file_name);
 			$src = imagecreatefromstring($compressed_png_content);
         } else if ($type == 18 || $type == "") {
