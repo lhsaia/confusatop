@@ -285,26 +285,56 @@ foreach($masterLista as $paisSelecionado => $ligasSelecionadas){
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
 
         //tratar uniforme e simbolo
-        $escudoArray = explode(".",$row['Escudo']);
-        $uni1Array = explode(".",$row['Uniforme1']);
-        $uni2Array = explode(".",$row['Uniforme2']);
+        $rawEscudo = $row['Escudo'];
+        $escudoPath = $_SERVER['DOCUMENT_ROOT'].'/images/escudos/'.$rawEscudo;
+        if (!file_exists($escudoPath) && !empty($rawEscudo)) {
+            $decoded = html_entity_decode(html_entity_decode($rawEscudo, ENT_QUOTES | ENT_HTML5), ENT_QUOTES | ENT_HTML5);
+            if (file_exists($_SERVER['DOCUMENT_ROOT'].'/images/escudos/'.$decoded)) {
+                $escudoPath = $_SERVER['DOCUMENT_ROOT'].'/images/escudos/'.$decoded;
+            }
+        }
+
+        $rawUni1 = $row['Uniforme1'];
+        $uni1Path = $_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$rawUni1;
+        if (!file_exists($uni1Path) && !empty($rawUni1)) {
+            $decoded = html_entity_decode(html_entity_decode($rawUni1, ENT_QUOTES | ENT_HTML5), ENT_QUOTES | ENT_HTML5);
+            if (file_exists($_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$decoded)) {
+                $uni1Path = $_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$decoded;
+            }
+        }
+
+        $rawUni2 = $row['Uniforme2'];
+        $uni2Path = $_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$rawUni2;
+        if (!file_exists($uni2Path) && !empty($rawUni2)) {
+            $decoded = html_entity_decode(html_entity_decode($rawUni2, ENT_QUOTES | ENT_HTML5), ENT_QUOTES | ENT_HTML5);
+            if (file_exists($_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$decoded)) {
+                $uni2Path = $_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$decoded;
+            }
+        }
+
+        $escudoExt = pathinfo($escudoPath, PATHINFO_EXTENSION) ?: 'png';
+        $uni1Ext = pathinfo($uni1Path, PATHINFO_EXTENSION) ?: 'png';
+        $uni2Ext = pathinfo($uni2Path, PATHINFO_EXTENSION) ?: 'png';
+
         $baseFileName = "team" . $row['ID'];
-        $escudoTratado = "Escudos/" . $baseFileName . "." .$escudoArray[1];
-        $uni1Tratado = "Uniformes/1-" . $baseFileName . "." .$uni1Array[1];
-        $uni2Tratado = "Uniformes/2-" . $baseFileName . "." .$uni2Array[1];
+        $escudoTratado = "Escudos/" . $baseFileName . "." . $escudoExt;
+        $uni1Tratado = "Uniformes/1-" . $baseFileName . "." . $uni1Ext;
+        $uni2Tratado = "Uniformes/2-" . $baseFileName . "." . $uni2Ext;
 
 		if($opcaoPrincipal < 2){
-        copy($_SERVER['DOCUMENT_ROOT'].'/images/escudos/'.$row['Escudo'] , $_SERVER['DOCUMENT_ROOT'].'/sqlitedb/'.$userId.'/'.$nomePais.'/'. $escudoTratado);
-        copy($_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$row['Uniforme1'] , $_SERVER['DOCUMENT_ROOT'].'/sqlitedb/'.$userId.'/'.$nomePais.'/'. $uni1Tratado);
-        copy($_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$row['Uniforme2'] , $_SERVER['DOCUMENT_ROOT'].'/sqlitedb/'.$userId.'/'.$nomePais.'/'. $uni2Tratado);
-		
-        //$txt .= $escudoTratado . "\n";
-        $exportFiles[] = [$_SERVER['DOCUMENT_ROOT']."/sqlitedb/".$userId."/".$nomePais."/".$escudoTratado, $nomePais."/".$escudoTratado];
-        //$txt .= $uni1Tratado . "\n";
-        $exportFiles[] = [$_SERVER['DOCUMENT_ROOT']."/sqlitedb/".$userId."/".$nomePais."/".$uni1Tratado, $nomePais."/".$uni1Tratado];
-        //$txt .= $uni2Tratado . "\n";
-        $exportFiles[] = [$_SERVER['DOCUMENT_ROOT']."/sqlitedb/".$userId."/".$nomePais."/".$uni2Tratado, $nomePais."/".$uni2Tratado];
-}
+            if (file_exists($escudoPath)) {
+                copy($escudoPath, $_SERVER['DOCUMENT_ROOT'].'/sqlitedb/'.$userId.'/'.$nomePais.'/'. $escudoTratado);
+                $exportFiles[] = [$_SERVER['DOCUMENT_ROOT']."/sqlitedb/".$userId."/".$nomePais."/".$escudoTratado, $nomePais."/".$escudoTratado];
+            }
+            if (file_exists($uni1Path)) {
+                copy($uni1Path, $_SERVER['DOCUMENT_ROOT'].'/sqlitedb/'.$userId.'/'.$nomePais.'/'. $uni1Tratado);
+                $exportFiles[] = [$_SERVER['DOCUMENT_ROOT']."/sqlitedb/".$userId."/".$nomePais."/".$uni1Tratado, $nomePais."/".$uni1Tratado];
+            }
+            if (file_exists($uni2Path)) {
+                copy($uni2Path, $_SERVER['DOCUMENT_ROOT'].'/sqlitedb/'.$userId.'/'.$nomePais.'/'. $uni2Tratado);
+                $exportFiles[] = [$_SERVER['DOCUMENT_ROOT']."/sqlitedb/".$userId."/".$nomePais."/".$uni2Tratado, $nomePais."/".$uni2Tratado];
+            }
+		}
         if($time->verificarHomonimo($row['Nome'],$paisSelecionado) && $row['Sexo'] == '1'){
             $nomeExportado = $row['Nome'] . " (F)";
         } else {
