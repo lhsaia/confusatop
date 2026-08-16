@@ -25,6 +25,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         server-dir: ${{ secrets.FTP_SERVER_DIR }} # Exemplo: public_html/ ou /home/lhsaia/confusa.top/
+        state-name: ftp-deploy-sync-state.json
         # Lista de exclusão para arquivos que não devem ser enviados para a produção
         exclude: |
           **/.git*

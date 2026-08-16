@@ -98,3 +98,6 @@ compatibilidade_*.txt
 config/setup_poltronascore_db.php
 admin/New Text Document.txt
 octamotor/config/database.php
+
+# GitHub Actions deployment state files
+*ftp-deploy-sync-state.json
