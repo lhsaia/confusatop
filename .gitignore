@@ -106,3 +106,5 @@ octamotor/config/database.php
 .htaccess
 .ftp-deploy-sync-state.json
 octamotor/config/database.php
+.ftp-deploy-sync-state.json
+octamotor/config/database.php
