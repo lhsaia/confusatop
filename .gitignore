@@ -103,3 +103,6 @@ octamotor/config/database.php
 
 # GitHub Actions deployment state files
 *ftp-deploy-sync-state.json
+.htaccess
+.ftp-deploy-sync-state.json
+octamotor/config/database.php
