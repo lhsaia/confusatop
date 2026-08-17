@@ -9,6 +9,76 @@
   },
   "days": [
     {
+      "date": "16/08/2026",
+      "title": "Edição e Exclusão de Transferências Históricas",
+      "description": "Adicionado recurso para donos de jogadores editarem e excluírem qualquer registro do histórico de transferências do jogador diretamente através da tabela de transferências. Reposicionadas as marcas de carreira gerais para uma barra horizontal abaixo das informações gerais com cores corretas para os cartões. Adicionado suporte e exibição garantida de desempenho por clube na tabela e botões de ação padronizados. Aplicada otimização responsiva completa para dispositivos móveis, garantindo o tamanho fixo do campo tático para perfeito alinhamento, movendo o botão de salvar atributos para dentro do card e corrigindo uma tag HTML de fechamento extra (stray div) que causava espaçamento indesejado abaixo do rodapé no servidor."
+    },
+    {
+      "date": "16/08/2026",
+      "title": "Redesign da Tela de Detalhes do Jogador (Light Theme)",
+      "description": "Modernizada a página de visualização do jogador aplicando o layout Light Theme (padrão das páginas internas do site), integrando desfoque de fundo (backdrop-filter) e ajustando o gráfico Plotly para o tema claro. Corrigido o alinhamento de blocos, sobreposições e alinhamento das colunas da tabela de transferências; removida tag PHP perdida na página."
+    },
+    {
+      "date": "16/08/2026",
+      "title": "Registro de Transferências Históricas de Jogadores",
+      "description": "Adicionado recurso para donos de jogadores registrarem transferências do passado diretamente no histórico do jogador através de um novo modal na tela de detalhes do jogador, sem alterar o contrato ou clube atual."
+    },
+    {
+      "date": "16/08/2026",
+      "title": "Atualização das regras do projeto para o Agent",
+      "description": "Adicionadas regras específicas no AGENTS.md sobre tratamento case-sensitive em SQL e fallback para comandos executados via shell_exec."
+    },
+    {
+      "date": "16/08/2026",
+      "title": "Correção de erro de sintaxe SQL em transferências",
+      "description": "Corrigida a caixa (case-sensitivity) do alias da tabela clube (CD.Escudo para cd.Escudo) na consulta de transferências, resolvendo o erro de prepare no banco de dados em ambientes Linux."
+    },
+    {
+      "date": "16/08/2026",
+      "title": "Ajuste na compressão de PNG com pngquant",
+      "description": "Implementado fallback automático para carregar a imagem original caso o otimizador pngquant falhe ou não esteja disponível no servidor, evitando erros fatais durante o upload de escudos e imagens."
+    },
+    {
+      "date": "15/08/2026",
+      "title": "Criação de Páginas de Erro Estáticas SHTML",
+      "description": "Criadas as versões .shtml estáticas das páginas de erro (400, 403, 404, 500 e 503) livres de PHP, prontas para serem copiadas e configuradas diretamente no servidor Web (Apache/Nginx). Adicionado flex-shrink: 0 ao rodapé (footer) para manter a altura padrão de 60px sem sofrer compressão flexbox."
+    },
+    {
+      "date": "15/08/2026",
+      "title": "Correção de Falha Crítica na Simulação de Partidas (Motor Java)",
+      "description": "Corrigido o erro que interrompia a simulação de partidas com a mensagem 'Erro ao criar compatibilidade com a versão 2.10'. A limpeza de tabelas temporárias residuais foi aplicada tanto na simulação manual (simular_partida.php) quanto na simulação automática (cron_simular_jogos.php)."
+    },
+    {
+      "date": "15/08/2026",
+      "title": "Prevenção de Travamentos no SQLite (WAL &amp; Busy Timeout)",
+      "description": "Ativado o modo de gravação WAL (Write-Ahead Logging) e configurado o busy_timeout de 5 segundos nas conexões SQLite para evitar erros de banco travado (database is locked)."
+    },
+    {
+      "date": "15/08/2026",
+      "title": "Ajuste na Exportação do Banco (Tratamento de Caracteres Especiais)",
+      "description": "Corrigido erro que interrompia a exportação de banco de dados do país devido a nomes de escudos com caracteres especiais/entidades HTML duplicadas (como '&amp;amp;'). Agora os caminhos são limpos e testados antes da cópia."
+    },
+    {
+      "date": "15/08/2026",
+      "title": "Limpeza de Logs de Depuração na Listagem de Jogos",
+      "description": "Comentado o log de aviso de nenhum jogo encontrado para uma competição no refresh_match_list.php para evitar a poluição do arquivo php_errors.log."
+    },
+    {
+      "date": "15/08/2026",
+      "title": "Ajuste de Limite de Memória e Correção no Upload de Escudos",
+      "description": "Aumentado o limite de memória global para 256M a fim de evitar estouros no processamento de imagens, e corrigida a verificação do formato PNG na função de importação."
+    },
+    {
+      "date": "15/08/2026",
+      "title": "Correção no Importador de Planilha de Elenco",
+      "description": "Corrigido erro 'Undefined offset' que ocorria ao finalizar a leitura de linhas na importação de planilha de jogadores."
+    },
+    {
+      "date": "15/08/2026",
+      "title": "Liberação de Edição de Países e Novo Design",
+      "description": "Habilitada a opção para mover países para fora da CONFUSA no Quadro de Países, e a tela foi completamente redesenhada com o novo design system Light Theme premium."
+    },
+    {
       "date": "15/08/2026",
       "title": "Desativação do Deploy via GitHub Actions",
       "description": "Desativado o fluxo de deploy automático via FTP no GitHub Actions devido a problemas de leitura do arquivo de estado no servidor."
