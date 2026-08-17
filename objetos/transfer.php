@@ -38,7 +38,7 @@ class Transfer {
 
                 t.clubeDestino AS clube_destino_id,
                 cd.Nome AS destino_nome,
-                CD.Escudo AS destino_escudo,
+                cd.Escudo AS destino_escudo,
 
                 t.valor,
                 t.tipoTransferencia as tipo,
