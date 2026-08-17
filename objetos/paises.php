@@ -414,7 +414,7 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
             $subquery = "";
         }
 
-        $query = "UPDATE " . $this->table_name . " SET nome=:nome, sigla=:sigla, federacao=:federacao, ranqueavel= (ranqueavel * :ranqueavel), latitude = :latitude, longitude =:longitude ".$subquery." WHERE id=:id";
+        $query = "UPDATE " . $this->table_name . " SET nome=:nome, sigla=:sigla, federacao=:federacao, ranqueavel= :ranqueavel, latitude = :latitude, longitude =:longitude ".$subquery." WHERE id=:id";
         $stmt = $this->conn->prepare( $query );
 
         $stmt->bindParam(":nome", $nomePais);
