@@ -1985,7 +1985,7 @@ return $stmt;
         function readTransferencias($from_record_num,$records_per_page,$idJogador){
             $idJogador = htmlspecialchars(strip_tags($idJogador));
 
-        $query = "SELECT o.Nome as nomeOrigem, o.Escudo as escudoOrigem, o.Pais as paisOrigem, o.ID as idOrigem, d.Nome as nomeDestino, d.Escudo as escudoDestino, d.Pais as paisDestino, d.ID as idDestino, t.data, t.valor, l.Nome as nomeLigaOrigem, l.ID as idLigaOrigem, m.Nome as nomeLigaDestino, m.ID as idLigaDestino, p.bandeira as bandeiraOrigem, q.bandeira as bandeiraDestino, t.emprestimo
+        $query = "SELECT t.ID as id, o.Nome as nomeOrigem, o.Escudo as escudoOrigem, o.Pais as paisOrigem, o.ID as idOrigem, d.Nome as nomeDestino, d.Escudo as escudoDestino, d.Pais as paisDestino, d.ID as idDestino, t.data, t.valor, l.Nome as nomeLigaOrigem, l.ID as idLigaOrigem, m.Nome as nomeLigaDestino, m.ID as idLigaDestino, p.bandeira as bandeiraOrigem, q.bandeira as bandeiraDestino, t.emprestimo
         FROM transferencias t
         LEFT JOIN clube o ON t.clubeOrigem = o.ID
         LEFT JOIN liga l ON o.liga = l.ID
@@ -2027,6 +2027,141 @@ return $stmt;
             } else {
                 return false;
             }
+        }
+
+        function adicionarTransferenciaHistorica($idJogador, $clubeOrigem, $clubeDestino, $valor, $data, $emprestimo){
+            $idJogador = htmlspecialchars(strip_tags($idJogador));
+            $clubeOrigem = htmlspecialchars(strip_tags($clubeOrigem));
+            $clubeDestino = htmlspecialchars(strip_tags($clubeDestino));
+            $valor = htmlspecialchars(strip_tags($valor));
+            $data = htmlspecialchars(strip_tags($data));
+            $emprestimo = htmlspecialchars(strip_tags($emprestimo));
+
+            $query = "INSERT INTO transferencias SET
+                        jogador = :jogador,
+                        clubeOrigem = :clubeOrigem,
+                        clubeDestino = :clubeDestino,
+                        valor = :valor,
+                        data = :data,
+                        dataConclusao = :dataConclusao,
+                        status_execucao = 1,
+                        emprestimo = :emprestimo,
+                        tipoTransferencia = 0,
+                        encerramento = '0000-00-00'";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':jogador', $idJogador);
+            $stmt->bindParam(':clubeOrigem', $clubeOrigem);
+            $stmt->bindParam(':clubeDestino', $clubeDestino);
+            $stmt->bindParam(':valor', $valor);
+            $stmt->bindParam(':data', $data);
+            $stmt->bindParam(':dataConclusao', $data);
+            $stmt->bindParam(':emprestimo', $emprestimo);
+
+            if($stmt->execute()){
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        function deletarTransferenciaHistorica($idTransferencia, $idJogador){
+            $idTransferencia = htmlspecialchars(strip_tags($idTransferencia));
+            $idJogador = htmlspecialchars(strip_tags($idJogador));
+
+            $query = "DELETE FROM transferencias WHERE ID = :id AND jogador = :jogador";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $idTransferencia);
+            $stmt->bindParam(':jogador', $idJogador);
+
+            if($stmt->execute()){
+                return true;
+            }
+            return false;
+        }
+
+        function atualizarTransferenciaHistorica($idTransferencia, $idJogador, $clubeOrigem, $clubeDestino, $valor, $data, $emprestimo){
+            $idTransferencia = htmlspecialchars(strip_tags($idTransferencia));
+            $idJogador = htmlspecialchars(strip_tags($idJogador));
+            $clubeOrigem = htmlspecialchars(strip_tags($clubeOrigem));
+            $clubeDestino = htmlspecialchars(strip_tags($clubeDestino));
+            $valor = htmlspecialchars(strip_tags($valor));
+            $data = htmlspecialchars(strip_tags($data));
+            $emprestimo = htmlspecialchars(strip_tags($emprestimo));
+
+            $query = "UPDATE transferencias SET
+                        clubeOrigem = :clubeOrigem,
+                        clubeDestino = :clubeDestino,
+                        valor = :valor,
+                        data = :data,
+                        dataConclusao = :dataConclusao,
+                        emprestimo = :emprestimo
+                      WHERE ID = :id AND jogador = :jogador";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':clubeOrigem', $clubeOrigem);
+            $stmt->bindParam(':clubeDestino', $clubeDestino);
+            $stmt->bindParam(':valor', $valor);
+            $stmt->bindParam(':data', $data);
+            $stmt->bindParam(':dataConclusao', $data);
+            $stmt->bindParam(':emprestimo', $emprestimo);
+            $stmt->bindParam(':id', $idTransferencia);
+            $stmt->bindParam(':jogador', $idJogador);
+
+            if($stmt->execute()){
+                return true;
+            }
+            return false;
+        }
+
+        function obterEstatisticasPorClube($idJogador){
+            $idJogador = htmlspecialchars(strip_tags($idJogador));
+            $estats = [];
+
+            // Query games played per club
+            $queryJogos = "SELECT id_time, COUNT(id_partida) as jogos 
+                           FROM jogos_clube_escalacao 
+                           WHERE id_jogador = ? AND (titular = 1 OR entrada_tempo IS NOT NULL OR entrada_minuto IS NOT NULL)
+                           GROUP BY id_time";
+            $stmt = $this->conn->prepare($queryJogos);
+            $stmt->bindParam(1, $idJogador);
+            $stmt->execute();
+            while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+                $estats[$row['id_time']] = [
+                    'jogos' => (int)$row['jogos'],
+                    'gols' => 0,
+                    'amarelos' => 0,
+                    'vermelhos' => 0
+                ];
+            }
+
+            // Query events (goals, cards) per club
+            $queryEventos = "SELECT id_time, tipo, COUNT(id_evento) as qtd 
+                             FROM jogos_clube_eventos 
+                             WHERE id_jogador = ? 
+                             GROUP BY id_time, tipo";
+            $stmt = $this->conn->prepare($queryEventos);
+            $stmt->bindParam(1, $idJogador);
+            $stmt->execute();
+            while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+                $tipo = (int)$row['tipo']; // 1 = goal, 2 = yellow, 3 = red
+                $id_time = $row['id_time'];
+                
+                if (!isset($estats[$id_time])) {
+                    $estats[$id_time] = [
+                        'jogos' => 0,
+                        'gols' => 0,
+                        'amarelos' => 0,
+                        'vermelhos' => 0
+                    ];
+                }
+                
+                if($tipo == 1) $estats[$id_time]['gols'] = (int)$row['qtd'];
+                if($tipo == 2) $estats[$id_time]['amarelos'] = (int)$row['qtd'];
+                if($tipo == 3) $estats[$id_time]['vermelhos'] = (int)$row['qtd'];
+            }
+
+            return $estats;
         }
 
         function desconvocarSub21ForaIdade(){

@@ -73,8 +73,7 @@ if(isset($_SESSION['user_id']) && $donoPais == $_SESSION["user_id"]){
     $donoLogado = false;
 }
 
-
-
+$estatisticas_clube = $jogador->obterEstatisticasPorClube($id_jogador);
 $personalidade = $jogador->avaliarPersonalidade($id_jogador);
 
 if($isGoleiro){
@@ -85,9 +84,9 @@ if($isGoleiro){
 
 
 $page_title = $nome_jogador;
-$css_filename = "indexRanking";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'ligas';
+$aux_css = 'playerstatus_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 ?>
@@ -109,7 +108,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 .stamp-retorno { background-color: #f57c00; color: white; }
 .stamp-fim { background-color: #c62828; color: white; }
 </style>
-?>
+
 
 <script>
 
@@ -128,14 +127,13 @@ $("document").ready(function(){
 		
 		
 		if(donoLogado){
-		$("#toolbar").append('<div id="salvarDados"><span class="material-symbols-outlined">save</span><span>Salvar</span></div>');
-		$("#toolbar").hide();
+		// Botão inline agora, não precisa colocar no toolbar
 		}
 	
 	  $("#form-atributos :input").change(function() {
 
     level_distributor();
-	$("#toolbar").show();
+	$("#container-salvar-atributos").show();
     });
 	
 function update_personality(personalidade){
@@ -199,7 +197,7 @@ if(isGoleiro){
   paper_bgcolor: 'rgba(0,0,0,0)',
   plot_bgcolor: 'rgba(0,0,0,0)',
   font: {
-    color:"#ffffff"
+    color:"#334155"
   },
   gridshape: "linear"
 
@@ -229,7 +227,7 @@ if(isGoleiro){
 
 }
 
-Plotly.newPlot("attribute-chart", data, layout, {staticPlot: true},
+Plotly.newPlot("attribute-chart", data, layout, {staticPlot: true, responsive: true},
 {displayModeBar: false});
 
 }
@@ -402,7 +400,7 @@ function level_distributor(){
 						  if(data.error != ''){
 							alert(data.error)
 						  }
-						  $("#toolbar").hide();
+						  $("#container-salvar-atributos").hide();
 						    attribute_chart(data.attributeArray, isGoleiro);
 							update_personality (data.personalidade);
 						  
@@ -423,6 +421,8 @@ function level_distributor(){
 
 <?php
 
+echo "<main class='propostas-container' style='padding-top: 80px; padding-bottom: 60px;'>";
+echo "<div class='propostas-card'>";
 echo "<div id='quadro-container'>";
 echo "<div id='quadro-superior'>";
 echo "<div id='quadro-nomes'>";
@@ -437,26 +437,6 @@ if ($id_time == 0) {
     echo "<h3><a href='paisstatus.php?country=".$pais_time."'><img class='smallthumb' src='/images/bandeiras/{$bandeira_pais_time}'>&nbsp" . $nome_pais_time ."</a><a href='leaguestatus.php?league=".$id_liga."'> - <img class='smallthumb' src='/images/ligas/{$logo_liga}'>&nbsp" . $liga_time ." (tier {$tier_liga})</a><a href='teamstatus.php?team=".$id_time."'> - <img class='smallthumb' src='/images/escudos/{$escudo_time}'>&nbsp".$time_jogador." </a></h3> ";
 }
 echo "</div>";
- echo "<div id='info-desempenho-selecao'>";
- if($info['golsSelecao'] + $info['amarelosSelecao'] + $info['vermelhosSelecao'] +$info['golsTime'] + $info['amarelosTime'] + $info['vermelhosTime'] + $info['jogosTime'] > 0){
-	 
-	 $golsTotais = $info['golsTime'] + $info['golsSelecao'];
-	 $amarelosTotais = $info['amarelosTime'] + $info['amarelosSelecao'];
-	 $vermelhosTotais = $info['vermelhosTime'] + $info['vermelhosSelecao'];
-	 
-   echo "<span>Marcas na carreira</span>";
-   echo "<div id='jogosSelecao' class='infoblock small' title='Jogos'><span class='informacao_carreira'><span class='floatleft material-symbols-outlined'>calendar_check</span>{$info['jogosTime']}</span></div>";
-   echo "<div id='golsSelecao' class='infoblock small' title='Gols'><span class='informacao_carreira'><span class='floatleft material-symbols-outlined'>sports_and_outdoors</span>{$golsTotais}</span></div>";
-   echo "<div id='amarelosSelecao' class='infoblock small' title='Amarelos'><span class='informacao_carreira'><span class='floatleft material-symbols-outlined' style='font-variation-settings: \"FILL\" 1; color: yellow;'>crop_portrait</span>{$amarelosTotais}</span></div>";
-echo "<div id='vermelhosSelecao' class='infoblock small' title='Vermelhos'>
-        <span class='informacao_carreira'>
-            <span class='floatleft material-symbols-outlined' style='font-variation-settings: \"FILL\" 1; color: red;'>
-                crop_portrait
-            </span>
-            {$vermelhosTotais}
-        </span>
-      </div>"; }
-  echo "</div>";
 echo "<div id='quadro-foto'><img id='bandeiraGrande' class='margin-left' src='/images/jogadores/".$foto_jogador."' height='100px'></div>";
 echo "</div>";
 echo "<hr>";
@@ -491,12 +471,12 @@ if(empty($desde_quando)){
 
 echo "<div id='info_geral'>";
  echo "<div id='info-jogos' class='info_jogador'>";
- echo "<div id='nacionalidade' class='infoblock large' title='Nacionalidade'><span class='informacao'><span class='floatleft material-symbols-outlined'>flag</span>{$pais_jogador}&nbsp<img class='smallthumb' src='/images/bandeiras/{$bandeira_pais}'></span></div>";
- echo "<div id='idade' class='infoblock large' title='Nascimento (idade)'><span class='informacao'><span class='floatleft material-symbols-outlined'>cake</span>{$nascimento_jogador} ({$idade_jogador} anos)</span></div>";
- echo "<div id='valor' class='infoblock large' title='Valor (em F$)'><span class='informacao'><span class='floatleft material-symbols-outlined'>price_change</span>{$valor_jogador} k</span></div>";
- echo "<div id='salario' class='infoblock large' title='Salário (em F$)'><span class='informacao'><span class='floatleft material-symbols-outlined'>paid</span>{$salario_jogador} k</span></div>";
- echo "<div id='inicioContrato' class='infoblock large' title='Início do contrato'><span class='informacao'><span class='floatleft material-symbols-outlined'>contract_edit</span>{$desde_quando}</span></div>";
- echo "<div id='fimContrato' class='infoblock large' title='Fim do contrato'><span class='informacao'><span class='floatleft material-symbols-outlined'>contract_delete</span>{$ate_quando}</span></div>";
+  echo "<div id='nacionalidade' class='infoblock large' title='Nacionalidade'><span class='material-symbols-outlined'>flag</span><div><span class='informacao'>{$pais_jogador}&nbsp<img class='smallthumb' src='/images/bandeiras/{$bandeira_pais}'></span><span style='font-size: 0.75rem; color: #64748b;'>Nacionalidade</span></div></div>";
+  echo "<div id='idade' class='infoblock large' title='Nascimento (idade)'><span class='material-symbols-outlined'>cake</span><div><span class='informacao'>{$nascimento_jogador} ({$idade_jogador} anos)</span><span style='font-size: 0.75rem; color: #64748b;'>Nascimento (idade)</span></div></div>";
+  echo "<div id='valor' class='infoblock large' title='Valor (em F$)'><span class='material-symbols-outlined'>price_change</span><div><span class='informacao'>{$valor_jogador} k</span><span style='font-size: 0.75rem; color: #64748b;'>Valor de Mercado</span></div></div>";
+  echo "<div id='salario' class='infoblock large' title='Salário (em F$)'><span class='material-symbols-outlined'>paid</span><div><span class='informacao'>{$salario_jogador} k</span><span style='font-size: 0.75rem; color: #64748b;'>Salário</span></div></div>";
+  echo "<div id='inicioContrato' class='infoblock large' title='Início do contrato'><span class='material-symbols-outlined'>contract_edit</span><div><span class='informacao'>{$desde_quando}</span><span style='font-size: 0.75rem; color: #64748b;'>Início do Contrato</span></div></div>";
+  echo "<div id='fimContrato' class='infoblock large' title='Fim do contrato'><span class='material-symbols-outlined'>contract_delete</span><div><span class='informacao'>{$ate_quando}</span><span style='font-size: 0.75rem; color: #64748b;'>Fim do Contrato</span></div></div>";
  echo "</div>";
 
  echo "<div id='info_posicionamento'>";
@@ -516,6 +496,19 @@ echo "<div id='info_geral'>";
  echo "<div ".($posicoes_jogador[10] == '1'?"":" hidden ")." class='posicaoCampao posPD'></div>";
  echo "<div ".($posicoes_jogador[11] == '1'?"":" hidden ")." class='posicaoCampao posPE'></div>";
  echo "</div>";
+  $golsTotais = $info['golsTime'] + $info['golsSelecao'];
+  $amarelosTotais = $info['amarelosTime'] + $info['amarelosSelecao'];
+  $vermelhosTotais = $info['vermelhosTime'] + $info['vermelhosSelecao'];
+  echo "<div class='carreira-secao'>";
+  echo "  <span class='carreira-titulo'>Marcas na carreira</span>";
+  echo "  <div class='carreira-grid'>";
+  echo "    <div id='jogosSelecao' class='infoblock small' title='Jogos'><span class='material-symbols-outlined'>calendar_check</span><div><span class='informacao_carreira'>{$info['jogosTime']}</span><span style='font-size:0.65rem; color:#64748b;'>Jogos</span></div></div>";
+  echo "    <div id='golsSelecao' class='infoblock small' title='Gols'><span class='material-symbols-outlined'>sports_and_outdoors</span><div><span class='informacao_carreira'>{$golsTotais}</span><span style='font-size:0.65rem; color:#64748b;'>Gols</span></div></div>";
+  echo "    <div id='amarelosSelecao' class='infoblock small' title='Amarelos'><span class='material-symbols-outlined' style='font-variation-settings: \"FILL\" 1; color: #fbbf24;'>crop_portrait</span><div><span class='informacao_carreira'>{$amarelosTotais}</span><span style='font-size:0.65rem; color:#64748b;'>Amarelos</span></div></div>";
+  echo "    <div id='vermelhosSelecao' class='infoblock small' title='Vermelhos'><span class='material-symbols-outlined' style='font-variation-settings: \"FILL\" 1; color: #ef4444;'>crop_portrait</span><div><span class='informacao_carreira'>{$vermelhosTotais}</span><span style='font-size:0.65rem; color:#64748b;'>Vermelhos</span></div></div>";
+  echo "  </div>";
+  echo "</div>";
+  echo "<div id='secao-atributos'>";
  if($donoLogado){
 	 
  ?>
@@ -616,6 +609,9 @@ echo "<div id='info_geral'>";
 
 			
      echo "</div>";
+     echo "<div id='container-salvar-atributos' style='display:none; text-align:right; margin-top:20px;'>";
+     echo "  <button type='button' id='salvarDados' class='btn-historico'><span class='material-symbols-outlined' style='font-size:1.1rem; vertical-align:middle; color:#fff !important; background:none !important; padding:0 !important;'>save</span> Salvar Atributos</button>";
+     echo "</div>";
 	 echo "</form>";
 	 
  }
@@ -627,7 +623,8 @@ echo "<div id='info_geral'>";
 		echo "<div class='fundo-barra'><div class='barra-cheia' style='width:" . array_values($personalidade)[1]. "%'></div><p class='texto-barra'>".array_keys($personalidade)[1]." (".array_values($personalidade)[1]."%)"."</p></div>";
 		echo "<div class='fundo-barra'><div class='barra-cheia' style='width:" . array_values($personalidade)[2]. "%'></div><p class='texto-barra'>".array_keys($personalidade)[2]." (".array_values($personalidade)[2]."%)"."</p></div>";
 	 echo "</div>";
-echo "</div>";
+ echo "</div>";
+ echo "</div>";
  echo "</div>";
 
  echo "<br>";
@@ -644,6 +641,11 @@ $transferencias_stmt = $jogador->readTransferencias($from_record_num,$records_pe
 echo "<div style='clear:both; float:center'></div>";
 echo "<hr>";
 echo "<p align='center'>Transferências</p>";
+if ($donoLogado) {
+    echo "<div align='center' style='margin-bottom: 15px;'>";
+    echo "<button type='button' onclick='abrirModalNovo()' class='btn-historico'>+ Adicionar Transferência Histórica</button>";
+    echo "</div>";
+}
 
     // paging buttons here
     echo "<div style='clear:both; float:center'></div>";
@@ -661,6 +663,9 @@ echo "<th>Data</th>";
 echo "<th>Saiu de</th>";
 echo "<th>Foi para</th>";
 echo "<th>Valor</th>";
+if ($donoLogado) {
+    echo "<th>Ações</th>";
+}
 echo "</tr>";
 echo "</thead>";
 echo "<tbody>";
@@ -720,11 +725,30 @@ echo "<tbody>";
                 if($idDestino != 0){
                     echo "</a>";
                     echo "<br/><a class='posicao' href='/ligas/leaguestatus.php?league=".$idLigaDestino."'><img src='/images/bandeiras/{$bandeiraDestino}' class='minithumb' id='ban".$paisDestino."'/>{$nomeLigaDestino}</a>";
+                    $jogos_cl = 0;
+                    $gols_cl = 0;
+                    $amarelos_cl = 0;
+                    $vermelhos_cl = 0;
+                    if (isset($estatisticas_clube[$idDestino])) {
+                        $clStats = $estatisticas_clube[$idDestino];
+                        $jogos_cl = $clStats['jogos'];
+                        $gols_cl = $clStats['gols'];
+                        $amarelos_cl = $clStats['amarelos'];
+                        $vermelhos_cl = $clStats['vermelhos'];
+                    }
+                    echo "<br/><span class='performance-clube-tabela' title='Jogos / Gols / Amarelos / Vermelhos no clube'><span class='material-symbols-outlined' style='font-size:0.75rem; vertical-align:middle; margin-right:2px;'>sports_soccer</span><b>{$jogos_cl}</b>j <b>{$gols_cl}</b>g <b>{$amarelos_cl}</b>CA <b>{$vermelhos_cl}</b>CV</span>";
                 } else {
                     echo "</span>";
                 }
                 echo "</td>";
                 echo "<td class='nopadding'>F$ {$valor} k</td>";
+                if ($donoLogado) {
+                    $data_input = explode(" ", $row['data'])[0];
+                    echo "<td class='nopadding' style='white-space: nowrap;'>";
+                    echo "  <button type='button' class='btn-tabela-editar btn-tabela-acao' data-id='{$id}' data-origem='{$idOrigem}' data-destino='{$idDestino}' data-valor='{$valor_raw}' data-data='{$data_input}' data-tipo='{$emprestimo}' title='Editar'><span class='material-symbols-outlined' style='font-size:1.1rem; vertical-align:middle;'>edit</span></button>";
+                    echo "  <button type='button' class='btn-tabela-excluir btn-tabela-acao' data-id='{$id}' title='Excluir'><span class='material-symbols-outlined' style='font-size:1.1rem; vertical-align:middle;'>delete</span></button>";
+                    echo "</td>";
+                }
 
             echo "</tr>";
 
@@ -741,8 +765,177 @@ echo "</table>";
 
 echo "</div>";
 echo "</div>";
+echo "</main>";
 
+if ($donoLogado) {
+    ?>
+    <div id="modalHistorico" class="modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); overflow-y:auto; padding-top:60px;">
+      <form id="formHistorico" method="POST" class="modal-content animate larger" style="background-color:#ffffff; border: 1px solid rgba(0, 0, 0, 0.1); color:#0f172a; border-radius:12px; padding:20px; max-width:500px; margin:0 auto;">
+        <input type="hidden" id="idTransferenciaHist" name="idTransferencia" value="">
+        <div class="container" style="padding: 10px;">
+          <h3 id="modalHistoricoTitulo" style="margin-top:0; color:#0284c7;">Adicionar Transferência Histórica</h3>
+          <p style="font-size:0.9rem; opacity:0.8; margin-bottom:20px;">Isso registrará a transferência no histórico do jogador, sem alterar seu clube ou contrato atual.</p>
+          
+          <div class="form-group" style="margin-bottom:15px;">
+              <label for="clubeOrigemHist" style="display:block; margin-bottom:5px; font-weight:bold;">Clube de Origem</label>
+              <select id="clubeOrigemHist" name="clubeOrigem" class="form-control" required style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; width:100%; padding:8px; border-radius:4px;">
+                  <option value="0">Sem clube / Livre</option>
+                  <?php
+                  $times_origem = $time->read();
+                  while ($row_t = $times_origem->fetch(PDO::FETCH_ASSOC)) {
+                      echo "<option value='{$row_t['id']}'>{$row_t['nome']}</option>";
+                  }
+                  ?>
+              </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom:15px;">
+              <label for="clubeDestinoHist" style="display:block; margin-bottom:5px; font-weight:bold;">Clube de Destino</label>
+              <select id="clubeDestinoHist" name="clubeDestino" class="form-control" required style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; width:100%; padding:8px; border-radius:4px;">
+                  <option value="0">Sem clube / Livre</option>
+                  <?php
+                  $times_destino = $time->read();
+                  while ($row_t = $times_destino->fetch(PDO::FETCH_ASSOC)) {
+                      echo "<option value='{$row_t['id']}'>{$row_t['nome']}</option>";
+                  }
+                  ?>
+              </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom:15px;">
+              <label for="valorHist" style="display:block; margin-bottom:5px; font-weight:bold;">Valor (F$)</label>
+              <input id="valorHist" type="number" name="valor" class="form-control" required style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; width:100%; padding:8px; border-radius:4px;" placeholder="Ex: 5000000">
+          </div>
+
+          <div class="form-group" style="margin-bottom:15px;">
+              <label for="dataHist" style="display:block; margin-bottom:5px; font-weight:bold;">Data da Transferência</label>
+              <input id="dataHist" type="date" name="data" class="form-control" required style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; width:100%; padding:8px; border-radius:4px;">
+          </div>
+
+          <div class="form-group" style="margin-bottom:20px;">
+              <label for="tipoHist" style="display:block; margin-bottom:5px; font-weight:bold;">Tipo de Negócio</label>
+              <select id="tipoHist" name="emprestimo" class="form-control" required style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; width:100%; padding:8px; border-radius:4px;">
+                  <option value="0">Permanente</option>
+                  <option value="1">Empréstimo</option>
+                  <option value="3">Retorno / Fim de Empréstimo</option>
+                  <option value="4">Sem custo / Fim de Contrato</option>
+              </select>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; gap:10px;">
+              <button type="button" onclick="document.getElementById('modalHistorico').style.display='none'" class="btn-modal-cancelar">Cancelar</button>
+              <button type="submit" class="btn-modal-salvar">Salvar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <script>
+    function abrirModalNovo() {
+        document.getElementById('formHistorico').reset();
+        document.getElementById('idTransferenciaHist').value = '';
+        document.getElementById('modalHistoricoTitulo').innerText = 'Adicionar Transferência Histórica';
+        document.getElementById('modalHistorico').style.display = 'block';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.btn-tabela-editar').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var id = this.getAttribute('data-id');
+                var origem = this.getAttribute('data-origem');
+                var destino = this.getAttribute('data-destino');
+                var valor = this.getAttribute('data-valor');
+                var data = this.getAttribute('data-data');
+                var tipo = this.getAttribute('data-tipo');
+
+                document.getElementById('idTransferenciaHist').value = id;
+                document.getElementById('clubeOrigemHist').value = origem;
+                document.getElementById('clubeDestinoHist').value = destino;
+                document.getElementById('valorHist').value = valor;
+                document.getElementById('dataHist').value = data;
+                document.getElementById('tipoHist').value = tipo;
+
+                document.getElementById('modalHistoricoTitulo').innerText = 'Editar Transferência Histórica';
+                document.getElementById('modalHistorico').style.display = 'block';
+            });
+        });
+
+        document.querySelectorAll('.btn-tabela-excluir').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                if (confirm('Deseja realmente apagar esta transferência do histórico? Esta ação é irreversível e não afetará o contrato atual.')) {
+                    var idTransferencia = this.getAttribute('data-id');
+                    var idJogador = <?php echo (int)$id_jogador; ?>;
+
+                    var formData = new FormData();
+                    formData.append('idJogador', idJogador);
+                    formData.append('alteracao', 12);
+                    formData.append('idTransferencia', idTransferencia);
+
+                    fetch('/jogadores/editar_jogador.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Erro: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Erro ao processar requisição.');
+                    });
+                }
+            });
+        });
+    });
+
+    document.getElementById('formHistorico').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        var idJogador = <?php echo (int)$id_jogador; ?>;
+        var idTransferencia = document.getElementById('idTransferenciaHist').value;
+        var alteracao = idTransferencia ? 13 : 11;
+        var clubeOrigem = document.getElementById('clubeOrigemHist').value;
+        var clubeDestino = document.getElementById('clubeDestinoHist').value;
+        var valor = document.getElementById('valorHist').value;
+        var data = document.getElementById('dataHist').value;
+        var emprestimo = document.getElementById('tipoHist').value;
+        
+        var formData = new FormData();
+        formData.append('idJogador', idJogador);
+        formData.append('alteracao', alteracao);
+        if (idTransferencia) {
+            formData.append('idTransferencia', idTransferencia);
+        }
+        formData.append('clubeOrigem', clubeOrigem);
+        formData.append('clubeDestino', clubeDestino);
+        formData.append('valor', valor);
+        formData.append('data', data);
+        formData.append('emprestimo', emprestimo);
+        
+        fetch('/jogadores/editar_jogador.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao enviar requisição.');
+        });
+    });
+    </script>
+    <?php
+}
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
-
 ?>

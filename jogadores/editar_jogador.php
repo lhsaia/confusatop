@@ -329,6 +329,66 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             $is_success = false;
             $error_msg = "Falha ao adicionar link de referência.";
         }
+    } else if($tipo == 11){
+        // Adicionar transferência histórica
+        $clubeOrigem = isset($_POST['clubeOrigem']) ? (int)$_POST['clubeOrigem'] : 0;
+        $clubeDestino = isset($_POST['clubeDestino']) ? (int)$_POST['clubeDestino'] : 0;
+        $valor = isset($_POST['valor']) ? (float)$_POST['valor'] : 0.0;
+        $data = isset($_POST['data']) ? trim($_POST['data']) : '';
+        $emprestimo = isset($_POST['emprestimo']) ? (int)$_POST['emprestimo'] : 0;
+
+        $idDonoJogador = $jogador->verificarDono($idJogador);
+        if ($idDonoJogador == $_SESSION['user_id'] || $idDonoJogador == 0) {
+            if ($jogador->adicionarTransferenciaHistorica($idJogador, $clubeOrigem, $clubeDestino, $valor, $data, $emprestimo)) {
+                $is_success = true;
+                $error_msg = "";
+            } else {
+                $is_success = false;
+                $error_msg = "Falha ao registrar transferência histórica no banco de dados.";
+            }
+        } else {
+            $is_success = false;
+            $error_msg = "Você não tem permissão para alterar o histórico deste jogador.";
+        }
+    } else if($tipo == 12){
+        // Deletar transferência histórica
+        $idTransferencia = isset($_POST['idTransferencia']) ? (int)$_POST['idTransferencia'] : 0;
+
+        $idDonoJogador = $jogador->verificarDono($idJogador);
+        if ($idDonoJogador == $_SESSION['user_id'] || $idDonoJogador == 0) {
+            if ($jogador->deletarTransferenciaHistorica($idTransferencia, $idJogador)) {
+                $is_success = true;
+                $error_msg = "";
+            } else {
+                $is_success = false;
+                $error_msg = "Falha ao apagar transferência histórica do banco de dados.";
+            }
+        } else {
+            $is_success = false;
+            $error_msg = "Você não tem permissão para alterar o histórico deste jogador.";
+        }
+    } else if($tipo == 13){
+        // Editar transferência histórica
+        $idTransferencia = isset($_POST['idTransferencia']) ? (int)$_POST['idTransferencia'] : 0;
+        $clubeOrigem = isset($_POST['clubeOrigem']) ? (int)$_POST['clubeOrigem'] : 0;
+        $clubeDestino = isset($_POST['clubeDestino']) ? (int)$_POST['clubeDestino'] : 0;
+        $valor = isset($_POST['valor']) ? (float)$_POST['valor'] : 0.0;
+        $data = isset($_POST['data']) ? trim($_POST['data']) : '';
+        $emprestimo = isset($_POST['emprestimo']) ? (int)$_POST['emprestimo'] : 0;
+
+        $idDonoJogador = $jogador->verificarDono($idJogador);
+        if ($idDonoJogador == $_SESSION['user_id'] || $idDonoJogador == 0) {
+            if ($jogador->atualizarTransferenciaHistorica($idTransferencia, $idJogador, $clubeOrigem, $clubeDestino, $valor, $data, $emprestimo)) {
+                $is_success = true;
+                $error_msg = "";
+            } else {
+                $is_success = false;
+                $error_msg = "Falha ao atualizar transferência histórica no banco de dados.";
+            }
+        } else {
+            $is_success = false;
+            $error_msg = "Você não tem permissão para alterar o histórico deste jogador.";
+        }
     }
 
 
