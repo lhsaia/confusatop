@@ -53,8 +53,10 @@ if ($federacao) {
 }
 
 if ($status !== '') {
-    $where[] = "p.ativo = :status";
-    $params[':status'] = $status;
+    if ($status == 0) {
+        $where[] = "p.ativo = 1";
+    }
+    // Se status for 1, traz tanto ativos quanto inativos, portanto não aplicamos filtro de ativo.
 }
 
 if ($dono) {
