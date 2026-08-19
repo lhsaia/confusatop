@@ -7,8 +7,8 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "Quadro de árbitros - CONFUSA";
-$css_filename = "indexRanking";
-$aux_css = "arbitro";
+$css_filename = "home_redesign";
+$aux_css = "arbitros_redesign";
 $css_login = 'login';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
@@ -19,23 +19,19 @@ if(isset($_GET['fed'])){
     $federacion = null;
 }
 
-echo '<div id="quadro-container">
-<div align="center" id="quadroArbitro">
-<h2>Quadro de árbitros <span id="nomeFederacao"></h2>
-<hr>
-<div id="federation-select">';
-
-
-
-echo '<a href="/arbitros">Geral</a>
-<span>  /  </span>';
-echo '<a href="/arbitros?fed=1">FEASCO</a>
-<span>  /  </span>';
-echo '<a href="/arbitros?fed=2">FEMIFUS</a>
-<span>  /  </span>';
-echo '<a href="/arbitros?fed=3">COMPACTA</a>
-</div>
-<hr>';
+echo '<main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
+<div id="errorbox"></div>
+<div class="propostas-card">
+    <div class="header-actions-container" style="margin-bottom: 25px;">
+        <h2 class="propostas-title">📣 Quadro de árbitros<span id="nomeFederacao"></span></h2>
+        <div id="federation-select" style="display: flex; gap: 8px;">
+            <a href="/arbitros" class="btn-action-primary" style="background: ' . ($federacion === null ? '#0284c7' : '#94a3b8') . ' !important; font-size: 0.9rem; padding: 6px 12px;">Geral</a>
+            <a href="/arbitros?fed=1" class="btn-action-primary" style="background: ' . ($federacion == 1 ? '#0284c7' : '#94a3b8') . ' !important; font-size: 0.9rem; padding: 6px 12px;">FEASCO</a>
+            <a href="/arbitros?fed=2" class="btn-action-primary" style="background: ' . ($federacion == 2 ? '#0284c7' : '#94a3b8') . ' !important; font-size: 0.9rem; padding: 6px 12px;">FEMIFUS</a>
+            <a href="/arbitros?fed=3" class="btn-action-primary" style="background: ' . ($federacion == 3 ? '#0284c7' : '#94a3b8') . ' !important; font-size: 0.9rem; padding: 6px 12px;">COMPACTA</a>
+        </div>
+        <div id="toolbar-card-container"></div>
+    </div>';
 
 
 
@@ -47,7 +43,8 @@ echo '<a href="/arbitros?fed=3">COMPACTA</a>
 	 
 	 <?php
 	 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
-		 echo "$('#toolbar').html('<div id=\"criar_arbitro\"><span style=\"font-size:16px !important\" class=\"material-symbols-outlined\">add_circle</span><span>Criar</span></div><div id=\"importar_arbitro\"><span  style=\"font-size:16px !important\" class=\"material-symbols-outlined\">upload_file</span><span>Importar</span></div>')";
+		 echo "$('#toolbar').html('<div id=\"criar_arbitro\"><span style=\"font-size:16px !important\" class=\"material-symbols-outlined\">add_circle</span><span>Criar</span></div><div id=\"importar_arbitro\"><span  style=\"font-size:16px !important\" class=\"material-symbols-outlined\">upload_file</span><span>Importar</span></div>');";
+		 echo "$('#toolbar').appendTo('#toolbar-card-container');";
 	 }
     
 	?>
@@ -76,7 +73,46 @@ echo '<a href="/arbitros?fed=3">COMPACTA</a>
 	$("#importar_arbitro").click(function(){
 		window.location.href= '/arbitros/importar_arbitro.php';
 	});
- });
+
+	function loadRefereesPage(url) {
+		$.ajax({
+			url: url,
+			success: function(response) {
+				var parser = new DOMParser();
+				var doc = parser.parseFromString(response, 'text/html');
+				
+				// Extract and update components
+				var newTable = $(doc).find('#referees-table-container').html();
+				$('#referees-table-container').html(newTable);
+				
+				var newFedSelect = $(doc).find('#federation-select').html();
+				$('#federation-select').html(newFedSelect);
+
+				var newNomeFed = $(doc).find('#nomeFederacao').html();
+				$('#nomeFederacao').html(newNomeFed);
+				
+				history.pushState(null, '', url);
+			},
+			error: function() {
+				alert('Erro ao carregar dados. Tente novamente.');
+			}
+		});
+	}
+
+	$(document).on('click', '#federation-select a', function(e) {
+		e.preventDefault();
+		var url = $(this).attr('href');
+		loadRefereesPage(url);
+	});
+
+	$(document).on('click', '.pagination a', function(e) {
+		e.preventDefault();
+		var href = $(this).attr('href');
+		if (href && href !== '#') {
+			loadRefereesPage(href);
+		}
+	});
+  });
 </script>
 
 
@@ -130,9 +166,9 @@ $number_of_referees = $stmt->rowCount();
 
     // the page where this paging is used
     if($federacion != null && $federacion != 0){
-        $page_url = "index.php?fed=" .$federacion . "&";
+        $page_url = "/arbitros/index.php?fed=" .$federacion . "&";
     } else {
-        $page_url = "index.php?";
+        $page_url = "/arbitros/index.php?";
     }
 
 
@@ -144,6 +180,7 @@ $number_of_referees = $stmt->rowCount();
 
 
     // paging buttons here
+    echo "<div id='referees-table-container'>";
     echo "<div style='clear:both;'></div>";
     include_once($_SERVER['DOCUMENT_ROOT']."/elements/paging.php");
 
@@ -152,6 +189,7 @@ echo "<hr>";
 // display the products if there are any
 if($number_of_referees>0){
 
+    echo "<div class='tbl_user_data'>";
     echo "<table id='tabelaPrincipal' class='table'>";
     echo "<thead>";
         echo "<tr>";
@@ -291,6 +329,7 @@ if($number_of_referees>0){
 
     echo "</tbody>";
     echo "</table>";
+    echo "</div>";
 
 }
 
@@ -299,8 +338,9 @@ else{
     echo "<div class='alert alert-info'>Não há árbitros no quadro</div>";
 }
 
-echo('</div>');
-echo('</div>');
+echo '</div>'; // Closes #referees-table-container
+echo('</div>'); // Closes .propostas-card
+echo('</main>');
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 
@@ -319,7 +359,7 @@ window.onscroll = function(ev) {
 
         //Exportar árbitro
 
-    $('.exportar').click(function(){
+    $(document).on('click', '.exportar', function(){
 
         var digitosId = ($(this).attr('id')).length;
         var arbitroId = ($(this).attr('id')).substring(3,digitosId);
@@ -362,14 +402,14 @@ window.onscroll = function(ev) {
         download(fileName,xmlData);
     });
 
-    $('.deletar').click(function(){
+    $(document).on('click', '.deletar', function(){
         var digitosId = ($(this).attr('id')).length;
         var arbitroId = ($(this).attr('id')).substring(3,digitosId);
         var r = confirm("Você tem certeza que deseja apagar esse trio?");
         if (r) {
             $.ajax({
                 type: "POST",
-                url: 'apagar_arbitro.php',
+                url: '/arbitros/apagar_arbitro.php',
                 data: {arbitroId:arbitroId},
                 success: function(data) {
                     successmessage = 'Deu certo'; // modificar depois
@@ -386,7 +426,7 @@ window.onscroll = function(ev) {
 
     });
 
-    $('.editar').click(function(){
+    $(document).on('click', '.editar', function(){
         var tbl_row =  $(this).closest('tr');
         tbl_row.find('span').each(function(index, val){
             $(this).attr('original_entry', $(this).html());
@@ -419,7 +459,7 @@ window.onscroll = function(ev) {
 
     });
 
-    $('.cancelar').click(function(){
+    $(document).on('click', '.cancelar', function(){
         var tbl_row =  $(this).closest('tr');
         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
         tbl_row.find('.comboEstilo').hide();
@@ -443,7 +483,7 @@ window.onscroll = function(ev) {
         });
     });
 
-    $('.salvar').click(function(){
+    $(document).on('click', '.salvar', function(){
         var tbl_row =  $(this).closest('tr');
         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
         tbl_row.find('.comboEstilo').hide();
@@ -477,7 +517,7 @@ window.onscroll = function(ev) {
 
         $.ajax({
             type: "POST",
-            url: 'alterar_arbitro.php',
+            url: '/arbitros/alterar_arbitro.php',
             data: {data:data},
                  success: function(data) {
                      successmessage = 'Deu certo'; // modificar depois

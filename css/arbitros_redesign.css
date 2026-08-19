@@ -1,0 +1,342 @@
+@import url("meuspaises_redesign.css");
+@import url("main.css");
+
+/* Adaptations for arbitros/index.php */
+
+.bandeira {
+  height: 24px;
+  width: auto;
+  border-radius: 4px;
+  vertical-align: middle;
+  margin-right: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.nomePais {
+  font-family: 'Montserrat', sans-serif !important;
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.nomeEditavel {
+  color: #1e293b !important;
+  font-weight: 600 !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 0.85rem !important;
+  transition: all 0.2s ease !important;
+  text-decoration: none !important;
+  white-space: normal !important;
+  display: inline-block !important;
+}
+
+/* Optimize propostas-card padding for referees page */
+.propostas-card {
+  padding: 1.5rem 1rem !important;
+}
+
+/* Toolbar card container */
+#toolbar-card-container {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* Toolbar button styles */
+#toolbar {
+  display: flex !important;
+  gap: 12px !important;
+}
+
+#criar_arbitro, #importar_arbitro, #hexagen_new {
+  border: none !important;
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 6px 14px !important;
+  font-weight: 600 !important;
+  font-family: 'Kanit', sans-serif !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25) !important;
+  transition: all 0.2s ease !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+}
+
+#criar_arbitro:hover, #importar_arbitro:hover, #hexagen_new:hover {
+  background: #0369a1 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
+}
+
+#criar_arbitro span, #importar_arbitro span, #hexagen_new span {
+  font-size: 18px !important;
+}
+
+/* Compact styling for inputs and selects during inline editing to avoid wide table blowout */
+#tabelaPrincipal select.editavel,
+#tabelaPrincipal input.editavel,
+#tabelaPrincipal .comboEstilo,
+#tabelaPrincipal .comboPais,
+#tabelaPrincipal .comboNivel,
+#tabelaPrincipal .comboStatus,
+#tabelaPrincipal .nascimentoEditavel {
+  max-width: 90px !important;
+  width: auto !important;
+  font-size: 0.75rem !important;
+  padding: 2px 4px !important;
+  height: auto !important;
+  border-radius: 4px !important;
+  box-sizing: border-box !important;
+}
+
+#tabelaPrincipal th {
+  font-size: 0.8rem !important;
+  padding: 8px 6px !important;
+}
+
+#tabelaPrincipal td {
+  font-size: 0.8rem !important;
+  padding: 6px 8px !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+/* Keep critical cells that should not wrap compact and nowrap */
+#tabelaPrincipal td:nth-child(5), /* País */
+#tabelaPrincipal td:nth-child(6), /* Nível */
+#tabelaPrincipal td:nth-child(7), /* Nascimento */
+#tabelaPrincipal td:nth-child(8), /* Status */
+#tabelaPrincipal td:nth-child(9), /* Opções */
+#tabelaPrincipal td.wide {
+  white-space: nowrap !important;
+}
+
+/* Style for inline editing date input */
+.nascimentoEditavel {
+  width: 100%;
+  max-width: 90px !important;
+  font-family: 'Montserrat', sans-serif !important;
+}
+
+/* Forms layout inside inserir_arbitro.php */
+#inscricao {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+#inscricao label {
+  display: block;
+  font-family: 'Kanit', sans-serif;
+  font-weight: 600;
+  color: #475569;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  text-align: left;
+}
+
+#inscricao .form-control {
+  width: 100%;
+  padding: 10px 12px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  color: #1e293b;
+  background-color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#inscricao .form-control:focus {
+  outline: none;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+#inscricao .btn {
+  background: #0284c7;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: 'Kanit', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-right: 10px;
+}
+
+#inscricao .btn:hover {
+  background: #0369a1;
+}
+
+#inscricao .btn[type="reset"] {
+  background: #64748b;
+}
+
+#inscricao .btn[type="reset"]:hover {
+  background: #475569;
+}
+
+/* Responsividade de tabelas para celular */
+@media (max-width: 768px) {
+  #tabelaPrincipal thead {
+    display: none;
+  }
+  
+  #tabelaPrincipal {
+    display: block;
+    width: 100% !important;
+  }
+  
+  #tabelaPrincipal tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100% !important;
+  }
+  
+  #tabelaPrincipal tr {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    position: relative;
+    gap: 0;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  #tabelaPrincipal td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 10px 0 !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    width: 100% !important;
+    text-align: left !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+  }
+  
+  #tabelaPrincipal td:first-child {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-left: none !important;
+    border-bottom: 2px solid #38bdf8 !important;
+    padding-bottom: 12px !important;
+    margin-bottom: 8px !important;
+  }
+  
+  #tabelaPrincipal td:last-child {
+    border-bottom: none !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+  
+  /* Add labels on mobile */
+  #tabelaPrincipal td:nth-child(1)::before {
+    content: "Árbitro";
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  #tabelaPrincipal td:nth-child(2)::before {
+    content: "Auxiliar 1";
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  #tabelaPrincipal td:nth-child(3)::before {
+    content: "Auxiliar 2";
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  #tabelaPrincipal td:nth-child(4)::before {
+    content: "Estilo";
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  #tabelaPrincipal td:nth-child(5)::before {
+    content: "País";
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  #tabelaPrincipal td:nth-child(6)::before {
+    content: "Nível";
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  #tabelaPrincipal td:nth-child(7)::before {
+    content: "Nascimento";
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  #tabelaPrincipal td:nth-child(8)::before {
+    content: "Status";
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  #tabelaPrincipal td:nth-child(9)::before {
+    content: "Opções";
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+/* Narrow container for forms to prevent too much white space */
+.narrow-container {
+  max-width: 650px !important;
+}

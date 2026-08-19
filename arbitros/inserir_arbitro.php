@@ -22,9 +22,9 @@ $arbitro = new TrioArbitragem($db);
 $usuario = new Usuario($db);
 
 $page_title = "Inserir árbitro";
-$css_filename = "newindex";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'area_competicao';
+$aux_css = 'arbitros_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -65,6 +65,7 @@ if(isset($_POST['nome_arbitro']) && !empty($_POST['nome_aux2']) && !empty($_POST
  $(document).ready(function($){
 	 
 	$('#toolbar').html("<div id='hexagen_new' style='cursor:pointer;'><span style=\"font-size:16px !important\" class='material-symbols-outlined'>casino</span><span style='font-weight:bold;'> Hexagen</span></div>");
+	$("#toolbar").appendTo("#toolbar-card-container");
 
 	var close = document.getElementsByClassName("closebtn");
 	var i;
@@ -125,9 +126,16 @@ $("#hexagen_new").on("click",function(){
 </script>
 
 
-<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
+<main class="propostas-container narrow-container" style="padding-top: 80px; padding-bottom: 60px;">
 <div id='errorbox'></div>
-<div>
+<div class="propostas-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 1rem; width: 100%;">
+        <h2 class="propostas-title" style="margin: 0; font-family: 'Kanit', sans-serif; font-size: 1.6rem; color: #1e293b;">➕ Inserir árbitro</h2>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <div id="toolbar-card-container"></div>
+            <a href="/arbitros" style="display: inline-block; padding: 8px 16px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(0, 0, 0, 0.06)'" onmouseout="this.style.background='rgba(0, 0, 0, 0.03)'">Voltar</a>
+        </div>
+    </div>
 <div id='inscricao'>
 
 <form method="POST" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
@@ -193,13 +201,13 @@ $("#hexagen_new").on("click",function(){
 </form>
 </div>
 </div>
+</main>
 
 <?php
 
     } else {
 		echo "Usuário sem permissão para inserir árbitros, por favor faça o login.";
 	}
-echo "</div>";
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 echo "</body>";
