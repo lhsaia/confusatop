@@ -274,6 +274,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                 'clube' => $clubes[$clubeId]['Nome'] ?? 'Sem clube',
                 'escudo' => $clubes[$clubeId]['Escudo'] ?? ''
             ];
+        }
     }
     
     // 8. Consultar Cartões Amarelos Acumulados da Competição no MySQL
