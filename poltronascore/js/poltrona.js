@@ -165,10 +165,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function renderGroups(groupedMatches, type) {
         let html = '';
-        for (const [championship, matches] of Object.entries(groupedMatches)) {
+        for (const [groupKey, matches] of Object.entries(groupedMatches)) {
+            const headerTitle = type === 'previous' ? `Jogos em ${groupKey}` : groupKey;
+            
             html += `
                 <div class="championship-group">
-                    <div class="championship-header">${championship}</div>
+                    <div class="championship-header">${headerTitle}</div>
             `;
             
             matches.forEach(match => {
@@ -181,12 +183,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const timeStatusHtml = type === 'live'
                     ? `<span class="badge-live">AO VIVO</span>`
-                    : `<span>${match.match_date} às ${match.match_time}</span>`;
+                    : (type === 'previous'
+                        ? `<span>${match.match_time}</span>`
+                        : `<span>${match.match_date} às ${match.match_time}</span>`);
+                
+                const champLabel = match.championship
+                    ? `<span style="color: var(--accent-cyan); font-weight: 600; text-transform: uppercase; font-size: 10px; margin-right: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;" title="${match.championship}${match.rodada ? ' - ' + match.rodada : ''}">${match.championship}${match.rodada ? ' - ' + match.rodada : ''}</span>`
+                    : '';
                 
                 html += `
                     <div class="match-card" data-id="${match.id}">
                         <div class="match-top">
                             <div class="match-time-status">
+                                ${champLabel}
                                 ${timeStatusHtml}
                             </div>
                             <div class="match-stadium">${match.stadium || 'Local não informado'}</div>

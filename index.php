@@ -122,6 +122,20 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
             </div>
         </a>
 
+        <!-- Poltrona Score -->
+        <a href="/poltronascore/" class="hub-card">
+            <div class="hub-card-hero-image">
+                <img src="/poltronascore/logo.png" alt="Poltrona Score" style="object-position: center;" />
+            </div>
+            <div class="hub-card-body">
+                <h3 class="hub-card-title">
+                    <span>Poltrona Score</span>
+                    <span class="material-symbols-outlined hub-card-arrow">arrow_forward</span>
+                </h3>
+                <p class="hub-card-desc">Acompanhe os placares e lances dos jogos em tempo real.</p>
+            </div>
+        </a>
+
     </section>
 
     <!-- Modalidades & Ferramentas Secundárias -->
