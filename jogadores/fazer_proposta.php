@@ -87,6 +87,47 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
         die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
     }
 	
+    // Verificar janela de transferência para o país de origem e destino
+    $paisOrigem = 0;
+    if ($clubeOrigem != 0) {
+        $query_pais_origem = "SELECT Pais FROM clube WHERE ID = ?";
+        $stmt_pais_origem = $db->prepare($query_pais_origem);
+        $stmt_pais_origem->execute([$clubeOrigem]);
+        $row_pais_origem = $stmt_pais_origem->fetch(PDO::FETCH_ASSOC);
+        if ($row_pais_origem) {
+            $paisOrigem = (int)$row_pais_origem['Pais'];
+        }
+    }
+
+    $paisDestino = 0;
+    if ($clubeDestino != 0) {
+        $query_pais_destino = "SELECT Pais FROM clube WHERE ID = ?";
+        $stmt_pais_destino = $db->prepare($query_pais_destino);
+        $stmt_pais_destino->execute([$clubeDestino]);
+        $row_pais_destino = $stmt_pais_destino->fetch(PDO::FETCH_ASSOC);
+        if ($row_pais_destino) {
+            $paisDestino = (int)$row_pais_destino['Pais'];
+        }
+    }
+
+    $verificarJanelaFechada = function($idPais, $db) {
+        if ($idPais == 0) return false;
+        $query_janela = "SELECT CASE WHEN padraoAbertura IS NULL THEN 1 ELSE CAST(SUBSTR(padraoAbertura, MONTH(NOW()), 1) AS UNSIGNED) END as statusAtual FROM janelas WHERE pais = ?";
+        $stmt_janela = $db->prepare($query_janela);
+        $stmt_janela->execute([$idPais]);
+        $row_janela = $stmt_janela->fetch(PDO::FETCH_ASSOC);
+        if ($row_janela) {
+            return (int)$row_janela['statusAtual'] === 0;
+        }
+        return false;
+    };
+
+    if ($verificarJanelaFechada($paisOrigem, $db) || $verificarJanelaFechada($paisDestino, $db)) {
+        $is_success = false;
+        $error_msg = "janela de transferencia fechada";
+        die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
+    }
+
     //criar transferencia pendente
     if($jogador->proporTransferencia($idJogador, $clubeOrigem, $clubeDestino, $valor, 0, $tipoTransacao, $fimContrato)){
 

@@ -20,6 +20,7 @@ $pageType = $_GET['type'];
 $page = isset($_GET['page']) ? $_GET['page'] : 1;
 $records_per_page = 18;
 $from_record_num = ($records_per_page * $page) - $records_per_page;
+$isAjax = (isset($_GET['ajax']) && $_GET['ajax'] == 1);
 
 switch($pageType){
     case 'maiores':
@@ -71,22 +72,23 @@ switch($pageType){
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = $nomePagina;
-$css_filename = "indexRanking";
-$aux_css = "ligas";
+$css_filename = "home_redesign";
+$aux_css = "transferencias_redesign";
 $css_login = 'login';
 $css_versao = date('h:i:s');
-include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+if (!$isAjax) {
+    include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+}
 
 ?>
 
-
-
-
-<div id="quadro-container">
-<div align="center" id="quadroTimes">
-<h2><?php echo $nomePagina?></h2>
-
-<hr>
+<?php if (!$isAjax): ?>
+<main class="propostas-container">
+    <div class="propostas-card">
+<?php endif; ?>
+        <div class="header-actions-container">
+            <h2 class="propostas-title"><?php echo $nomePagina; ?></h2>
+        </div>
 
 <?php
 
@@ -114,7 +116,7 @@ if($num>0){
 
 //tabela transferencias (maiores e últimas)
 if($pageType == 'maiores' || $pageType == 'ultimas'){
-
+    echo "<div class='tbl_user_data'>";
     echo "<table id='tabelaPrincipal' class='table'>";
     echo "<thead>";
         echo "<tr>";
@@ -201,11 +203,12 @@ if($pageType == 'maiores' || $pageType == 'ultimas'){
 
     echo "</tbody>";
     echo "</table>";
+    echo "</div>";
 
     }
 
     if($pageType == 'jogadores'){
-
+        echo "<div class='tbl_user_data'>";
         echo "<table id='tabelaPrincipal' class='table'>";
         echo "<thead>";
             echo "<tr>";
@@ -276,17 +279,17 @@ if($pageType == 'maiores' || $pageType == 'ultimas'){
 
         echo "</tbody>";
         echo "</table>";
+        echo "</div>";
 
         }
 
         if($pageType == 'janelas'){
-
+            echo "<div class='tbl_user_data'>";
             echo "<table id='tabelaPrincipal' class='table'>";
             echo "<thead>";
                 echo "<tr>";
                     echo "<th>País</th>";
                     echo "<th>Status</th>";
-                    echo "<th>Transferências atuais</th>";
                     echo "<th>JAN</th>";
                     echo "<th>FEV</th>";
                     echo "<th>MAR</th>";
@@ -331,7 +334,6 @@ if($pageType == 'maiores' || $pageType == 'ultimas'){
                     echo "<td class='leftalign nopadding";
                     echo "'><a href='/ligas/paisstatus.php?country=".$idPais."'><img src='/images/bandeiras/{$bandeira}' class='paddingright bandeira nomePais' id='ban".$idPais."'/>{$nome}</a>";
                     echo "<td class='nopadding mercado".$statusAtual."'>{$statusAtual}</td>";
-                    echo "<td class='nopadding'>{$contagem}</td>";
                     foreach($calendario as $index => $mes){
                         if($mes == 1){
                             $statusMes = 'Aberto';
@@ -358,6 +360,7 @@ if($pageType == 'maiores' || $pageType == 'ultimas'){
 
             echo "</tbody>";
             echo "</table>";
+            echo "</div>";
 
             }
 
@@ -396,37 +399,40 @@ else{
 <br>
   <fieldset>
     <legend> Posições: </legend>
-    <label for="checkbox-1">G</label>
-    <input type="checkbox" name="1" id="checkbox-1">
-    <label for="checkbox-2">LD</label>
-    <input type="checkbox" name="2" id="checkbox-2">
-    <label for="checkbox-3">LE</label>
-    <input type="checkbox" name="3" id="checkbox-3">
-    <label for="checkbox-4">Z</label>
-    <input type="checkbox" name="4" id="checkbox-4">
-    <label for="checkbox-5">AD</label>
-    <input type="checkbox" name="5" id="checkbox-5">
-    <label for="checkbox-6">AE</label>
-    <input type="checkbox" name="6" id="checkbox-6">
-    <label for="checkbox-7">V</label>
-    <input type="checkbox" name="7" id="checkbox-7">
-    <label for="checkbox-8">MD</label>
-    <input type="checkbox" name="8" id="checkbox-8">
-    <label for="checkbox-9">ME</label>
-    <input type="checkbox" name="9" id="checkbox-9">
-    <label for="checkbox-10">MC</label>
-    <input type="checkbox" name="10" id="checkbox-10">
-    <label for="checkbox-11">PD</label>
-    <input type="checkbox" name="11" id="checkbox-11">
-    <label for="checkbox-12">PE</label>
-    <input type="checkbox" name="12" id="checkbox-12">
-    <label for="checkbox-13">MA</label>
-    <input type="checkbox" name="13" id="checkbox-13">
-    <label for="checkbox-14">Am</label>
-    <input type="checkbox" name="14" id="checkbox-14">
-    <label for="checkbox-15">Aa</label>
-    <input type="checkbox" name="15" id="checkbox-15">
-
+    <div class="form-row">
+        <label for="checkbox-1">G</label>
+        <input type="checkbox" name="1" id="checkbox-1">
+        <label for="checkbox-2">LD</label>
+        <input type="checkbox" name="2" id="checkbox-2">
+        <label for="checkbox-3">LE</label>
+        <input type="checkbox" name="3" id="checkbox-3">
+        <label for="checkbox-4">Z</label>
+        <input type="checkbox" name="4" id="checkbox-4">
+        <label for="checkbox-5">AD</label>
+        <input type="checkbox" name="5" id="checkbox-5">
+        <label for="checkbox-6">AE</label>
+        <input type="checkbox" name="6" id="checkbox-6">
+        <label for="checkbox-7">V</label>
+        <input type="checkbox" name="7" id="checkbox-7">
+        <label for="checkbox-8">MD</label>
+        <input type="checkbox" name="8" id="checkbox-8">
+        <label for="checkbox-9">ME</label>
+        <input type="checkbox" name="9" id="checkbox-9">
+    </div>
+    <div class="form-row">
+        <label for="checkbox-10">MC</label>
+        <input type="checkbox" name="10" id="checkbox-10">
+        <label for="checkbox-11">PD</label>
+        <input type="checkbox" name="11" id="checkbox-11">
+        <label for="checkbox-12">PE</label>
+        <input type="checkbox" name="12" id="checkbox-12">
+        <label for="checkbox-13">MA</label>
+        <input type="checkbox" name="13" id="checkbox-13">
+        <label for="checkbox-14">Am</label>
+        <input type="checkbox" name="14" id="checkbox-14">
+        <label for="checkbox-15">Aa</label>
+        <input type="checkbox" name="15" id="checkbox-15">
+    </div>
   </fieldset>
 
   <?php
@@ -437,72 +443,93 @@ else{
 <fieldset>
     <legend>Outros requisitos:</legend>
 
-    <?php if($pageType === 'busca'){?>
-    <label for="checkbox-16">Cobrador de Falta</label>
-    <input type="checkbox" name="cfalta" id="checkbox-16">
-    <label for="checkbox-17">Disponível</label>
-    <input type="checkbox" name="disponivel" id="checkbox-17">
-    <?php } ?>
-    <label for="checkbox-18">Sem Clube</label>
-    <input type="checkbox" name="semclube" id="checkbox-18">
-    <label for='input_nome'>Nome:</label>
-    <input type='text' id='input_nome' name='nomejogador' class='smallform'/>
-    <br>
-    <label for='input_nacionalidade'>Nacionalidade:</label>
-    <select name='nacionalidade' id='input_nacionalidade' class='smallform'>
-        <option selected value='0'>Qualquer uma</option>
-        <?php
-        // query caixa de seleção países desse dono
-        $stmtPais = $pais->read();
-        while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
-            extract($row_pais);
-            echo "<option value='".$id."'>".$nome."</option>";
-        }
-        ?>
-    </select>
-    <label for='input_mentalidade'>Mentalidade:</label>
-    <select id='input_mentalidade' name='mentalidade' class='smallform'>
-        <option selected value='0'>Qualquer uma</option>
+    <div class="form-row">
         <?php if($pageType === 'busca'){?>
-        <option value='1'>Mascarado</option>
-        <option value='2'>Sangue Frio</option>
-        <option value='3'>Pacificador</option>
-        <option value='4'>Neutro</option>
-        <option value='5'>Lider</option>
-        <option value='6'>Provocador</option>
-        <option value='7'>Explosivo</option>
-        <?php } else if ($pageType === 'buscaTecnico'){ ?>
-            <option value='1'>Retranca</option>
-            <option value='2'>Defensiva</option>
-            <option value='3'>Balanceada</option>
-            <option value='4'>Ofensiva</option>
-            <option value='5'>Ataque Total</option>
+        <span class="form-group-inline">
+            <label for="checkbox-16">Cobrador de Falta</label>
+            <input type="checkbox" name="cfalta" id="checkbox-16">
+        </span>
+        <span class="form-group-inline">
+            <label for="checkbox-17">Disponível</label>
+            <input type="checkbox" name="disponivel" id="checkbox-17">
+        </span>
+        <?php } ?>
+        <span class="form-group-inline">
+            <label for="checkbox-18">Sem Clube</label>
+            <input type="checkbox" name="semclube" id="checkbox-18">
+        </span>
+    </div>
+
+    <div class="form-row">
+        <span class="form-group-inline">
+            <label for='input_nome'>Nome:</label>
+            <input type='text' id='input_nome' name='nomejogador' class='smallform'/>
+        </span>
+        <span class="form-group-inline">
+            <label for='input_nacionalidade'>Nacionalidade:</label>
+            <select name='nacionalidade' id='input_nacionalidade' class='smallform'>
+                <option selected value='0'>Qualquer uma</option>
+                <?php
+                // query caixa de seleção países desse dono
+                $stmtPais = $pais->read();
+                while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
+                    extract($row_pais);
+                    echo "<option value='".$id."'>".$nome."</option>";
+                }
+                ?>
             </select>
-
-            <label for='input_estilo'>Estilo:</label>
-            <select id='input_estilo' name='estilo' class='smallform'>
-        <option selected value='0'>Qualquer um</option>
-            <option value='1'>Explorar contra-ataques</option>
-            <option value='2'>Cadenciar o jogo</option>
-            <option value='3'>Neutro</option>
-            <option value='4'>Atacar pelas laterais</option>
-            <option value='5'>Impôr ritmo ofensivo</option>
-
-        <?php }?>
-    </select>
-	
-	<label for='input_liga'>Liga:</label>
-	    <select name='liga' id='input_liga' class='smallform'>
-        <option selected value='0'>Qualquer uma</option>
-        <?php
-        // query caixa de seleção países desse dono
-        $stmtLiga = $liga->readAll(0,10000);
-        while ($row_liga = $stmtLiga->fetch(PDO::FETCH_ASSOC)){
-            extract($row_liga);
-            echo "<option value='".$id."'>".$nomePais . " - " . $nome."</option>";
-        }
-        ?>
-    </select>
+        </span>
+    </div>
+    
+    <div class="form-row">
+        <span class="form-group-inline">
+            <label for='input_mentalidade'>Mentalidade:</label>
+            <select id='input_mentalidade' name='mentalidade' class='smallform'>
+                <option selected value='0'>Qualquer uma</option>
+                <?php if($pageType === 'busca'){?>
+                <option value='1'>Mascarado</option>
+                <option value='2'>Sangue Frio</option>
+                <option value='3'>Pacificador</option>
+                <option value='4'>Neutro</option>
+                <option value='5'>Lider</option>
+                <option value='6'>Provocador</option>
+                <option value='7'>Explosivo</option>
+                <?php } else if ($pageType === 'buscaTecnico'){ ?>
+                    <option value='1'>Retranca</option>
+                    <option value='2'>Defensiva</option>
+                    <option value='3'>Balanceada</option>
+                    <option value='4'>Ofensiva</option>
+                    <option value='5'>Ataque Total</option>
+                    </select>
+        </span>
+        <span class="form-group-inline">
+                    <label for='input_estilo'>Estilo:</label>
+                    <select id='input_estilo' name='estilo' class='smallform'>
+                <option selected value='0'>Qualquer um</option>
+                    <option value='1'>Explorar contra-ataques</option>
+                    <option value='2'>Cadenciar o jogo</option>
+                    <option value='3'>Neutro</option>
+                    <option value='4'>Atacar pelas laterais</option>
+                    <option value='5'>Impôr ritmo ofensivo</option>
+        
+                <?php }?>
+            </select>
+        </span>
+        <span class="form-group-inline">
+            <label for='input_liga'>Liga:</label>
+                <select name='liga' id='input_liga' class='smallform'>
+                <option selected value='0'>Qualquer uma</option>
+                <?php
+                // query caixa de seleção países desse dono
+                $stmtLiga = $liga->readAll(0,10000);
+                while ($row_liga = $stmtLiga->fetch(PDO::FETCH_ASSOC)){
+                    extract($row_liga);
+                    echo "<option value='".$id."'>".$nomePais . " - " . $nome."</option>";
+                }
+                ?>
+            </select>
+        </span>
+    </div>
 
   </fieldset>
   <br>
@@ -527,9 +554,10 @@ else{
 
     <input type='hidden' name='tipoBusca' id='tipoBusca' value='<?php echo $pageType?>'>
 
-    <input type='submit' value='Buscar' class='ui-button ui-widget ui-corner-all'/>
-    <input type='reset' value='Limpar' class='ui-button ui-widget ui-corner-all'/>
-
+    <div class="form-actions">
+        <input type='submit' value='Buscar' class='ui-button ui-widget ui-corner-all'/>
+        <input type='reset' value='Limpar' class='ui-button ui-widget ui-corner-all'/>
+    </div>
 </form>
 <div id='errorbox'></div>
 <img id='loading' src='/images/icons/ajax-loader.gif' hidden>
@@ -542,8 +570,12 @@ else{
 
 <?php
 }
-echo('</div>');
-echo('</div>');
+if (!$isAjax) {
+    echo('</div>'); // Closes propostas-card
+    echo('</main>'); // Closes propostas-container
+} else {
+    exit;
+}
 
 
 
@@ -582,33 +614,34 @@ echo $date->format('Y-m-d');
 
       <label for="valorJogadorTransf"><b>Proposta de transferência</b></label>
       <input id="valorJogadorTransf" type="number" name="valorJogadorTransf" class='form-control' required>
-
       <label for="clubeDestinoTransf"><b>Clube de destino</b></label>
       <select id="clubeDestinoTransf"  name="clubeDestinoTransf" class="form-control" required>
-    
-    
           <?php
-      // ler times do banco de dados
-      if(isset($_SESSION['user_id']) && $_SESSION['user_id'] != null){
+          if(isset($_SESSION['user_id']) && $_SESSION['user_id'] != null){
+              $stmt = $time->read($_SESSION['user_id']);
 
-            $stmt = $time->read($_SESSION['user_id']);
+              $closed_countries = [];
+              $query_closed = "SELECT pais FROM janelas WHERE CASE WHEN padraoAbertura IS NULL THEN 1 ELSE CAST(SUBSTR(padraoAbertura, MONTH(NOW()), 1) AS UNSIGNED) END = 0";
+              $stmt_closed = $db->prepare($query_closed);
+              $stmt_closed->execute();
+              while ($row_closed = $stmt_closed->fetch(PDO::FETCH_ASSOC)) {
+                  $closed_countries[] = (int)$row_closed['pais'];
+              }
 
+              echo "<option value=''>Selecione time...</option>";
 
-        echo "<option value=''>Selecione time...</option>";
-
-        while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
-            extract($row_category);
-            //if($id != $idTime){
-            echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}</option>";
-            //}
-        }
-      } else{
-        echo "<option value='erro'>Usuário não logado</option>";
-      }
-                ?>
-
+              while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
+                  extract($row_category);
+                  if (in_array((int)$paisTime, $closed_countries)) {
+                      continue; // Não exibir times de países com janela fechada no período
+                  }
+                  echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}</option>";
+              }
+          } else{
+              echo "<option value='erro'>Usuário não logado</option>";
+          }
+          ?>
       </select>
-
       <input type="hidden" value="" name="idJogadorTransf" id="idJogadorTransf" required>
       <input type="hidden" value="" name="clubeOrigemTransf" id="clubeOrigemTransf" required>
       <input type="hidden" value="" name="isLoanedTransf" id="isLoanedTransf">
@@ -710,7 +743,7 @@ echo $date->format('Y-m-d');
     </div>
 
     <div class="container" style="background-color:#f1f1f1">
-      <button type="button" onclick="document.getElementById('modalProposta').style.display='none'" class="cancelbtn">Cancelar</button>
+      <button type="button" onclick="document.getElementById('modalConvocacao').style.display='none'" class="cancelbtn">Cancelar</button>
     </div>
   </form>
 </div>
@@ -726,7 +759,29 @@ var emTestes = <?php
 
 $(document).ready(function(){
 
-$('.editar').on("click",function(event){
+$(document).on('click', '.pagination a', function(e) {
+    e.preventDefault();
+    var url = $(this).attr('href');
+    if (url && url !== '#') {
+        $('.propostas-card').css('opacity', 0.5);
+        var ajaxUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'ajax=1';
+        $.ajax({
+            url: ajaxUrl,
+            type: 'GET',
+            success: function(data) {
+                $('.propostas-card').html(data);
+                $('.propostas-card').css('opacity', 1);
+                window.history.pushState({path: url}, '', url);
+            },
+            error: function() {
+                $('.propostas-card').css('opacity', 1);
+                alert('Erro ao carregar os dados.');
+            }
+        });
+    }
+});
+
+$(document).on("click", '.editar', function(event){
     var tbl_row = $(this).closest('tr');
     var idPais = tbl_row.attr('id');
 
@@ -748,7 +803,7 @@ $('.editar').on("click",function(event){
 
 });
 
-$('.cancelar').on("click",function(event){
+$(document).on("click", '.cancelar', function(event){
     var tbl_row = $(this).closest('tr');
     var idPais = tbl_row.attr('id');
 
@@ -765,7 +820,7 @@ $('.cancelar').on("click",function(event){
 
 });
 
-$('.salvar').on("click",function(event){
+$(document).on("click", '.salvar', function(event){
     var tbl_row = $(this).closest('tr');
     var idPais = tbl_row.attr('id');
     var codeArray = [];
@@ -997,10 +1052,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
     }
 
     var from_result_num = (results_per_page * treated_page) - results_per_page;
-
-    var pgn = pagination(treated_page,total_pages);
-
-    //criar tabela dinamicamente
+    var pgn = pagination(treated_page, total_pages);
     var tbl = '';
     tbl += pgn;
     tbl += "<hr>";
@@ -1008,23 +1060,14 @@ function updateTable(ajax_data, current_page, highlighted, direction){
         tbl += "<thead id='headings'>";
             tbl += "<tr>";
             if(tipoPagina.localeCompare('busca') == 0){
-                tbl += "<th asc='' id='nomeJogador' class='headings'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspJogador</th>";
+                tbl += "<th asc='' id='nomeJogador' class='headings'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspJogador / Clube</th>";
             }  if(tipoPagina.localeCompare('buscaTecnico') == 0){
-                tbl += "<th asc='' id='nomeJogador' class='headings'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspTécnico</th>";
+                tbl += "<th asc='' id='nomeJogador' class='headings'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspTécnico / Clube</th>";
             }
-                tbl +=  "<th asc='' id='posicoes' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspPosições</th>";
                 tbl +=  "<th asc='' id='idadeJogador' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspIdade</th>";
-                tbl +=  "<th asc='' id='bandeira' class='headings'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspNacionalidade</th>";
-                tbl +=  "<th asc='' id='nivel' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspNivel</th>";
-                tbl +=  "<th asc='' id='mentalidade' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspMentalidade</th>";
+                tbl +=  "<th asc='' id='bandeira' class='headings'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspNac.</th>";
+                tbl +=  "<th asc='' id='nivel' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspNível</th>";
                 if(tipoPagina.localeCompare('busca') == 0){
-                tbl +=  "<th asc='' id='cobrancaFalta' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspCobrança de Falta</th>";
-                } else if(tipoPagina.localeCompare('buscaTecnico') == 0){
-                    tbl +=  "<th asc='' id='cobrancaFalta' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspEstilo</th>";
-                }
-                tbl +=  "<th asc='' id='nomeClube' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspClube</th>";
-                if(tipoPagina.localeCompare('busca') == 0){
-                tbl +=  "<th asc='' id='disponibilidade' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspDisp.</th>";
                 tbl +=  "<th asc='' id='valor' class='headings' ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspValor</th>";
                 }
                 tbl += "<th asc=''  ><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspOpções</td>";
@@ -1037,22 +1080,66 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 
             if(index>=(from_result_num-1) && index<=(from_result_num+results_per_page-2)){
 
-                // if(val['escudoClube'] != null){
-                //     var escudo = val['escudoClube'].split(".");
-                //     var escudoExt = escudo[1];
-                //     var escudoImg = escudo[0];
-                // }
-
                 var valor = "F$ " + Math.round(parseFloat(val['valor']/10000))/100 + " M";
-
 
             tbl += "<tr id='"+val['idJogador']+"'>";
                 if(tipoPagina.localeCompare('busca') == 0){
-                    tbl += "<td class='nopadding nomeJogador'><a href='/ligas/playerstatus.php?player="+val['idJogador']+"'>"+val['nomeJogador']+"</a><br><span class='posicao'>"+val['posicaoBaseJogador']+"</span></td>";
-                    tbl += "<td class='nopadding'>"+val['posicoes'].slice(0,-1)+"</td>";
+                    tbl += "<td class='nopadding nomeJogador'>";
+                    // Player Link
+                    tbl += "<a href='/ligas/playerstatus.php?player="+val['idJogador']+"'>"+val['nomeJogador']+"</a>";
+                    
+                    // Main Position (only show if set)
+                    if(val['posicaoBaseJogador'] && val['posicaoBaseJogador'].trim() !== ''){
+                        tbl += " <span class='posicao' style='display:inline-block !important;'>("+val['posicaoBaseJogador']+")</span>";
+                    }
+                    
+                    // Disponibilidade Badge
+                    if(val['disponibilidade'] && (val['disponibilidade'] === 'Sim' || val['disponibilidade'] === '1')){
+                        tbl += " <span style='background-color: rgba(52, 211, 153, 0.15); color: #059669; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; display: inline-block; vertical-align: middle; margin-left: 6px;'>DISP.</span>";
+                    }
+                    
+                    // Other Positions
+                    var outrasPos = val['posicoes'] ? val['posicoes'].slice(0,-1) : '';
+                    if(outrasPos && outrasPos.trim() !== '' && outrasPos.trim() !== val['posicaoBaseJogador']){
+                        tbl += "<br><span style='font-size:0.7rem; color:#64748b; font-weight: 500;'>Outras posições: " + outrasPos + "</span>";
+                    }
+                    
+                    // Club & League
+                    tbl += "<br><span class='sub-info' style='font-size: 0.72rem; color: #64748b; font-weight: 500;'>";
+                    if(val['idClube'] != 0){
+                        tbl += "<a href='/ligas/teamstatus.php?team="+val['idClube']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/escudos/"+val['escudoClube']+"' class='minithumb'/>"+val['nomeClube']+"</a>";
+                        tbl += " | <a href='/ligas/leaguestatus.php?league="+val['idLiga']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/bandeiras/"+val['bandeiraClube']+"' class='minithumb' id='ban"+val['paisClube']+"'/>"+val['ligaClube']+"</a>";
+                    } else {
+                        tbl += "Sem Clube";
+                    }
+                    tbl += "</span>";
+
+                    // Mentalidade & Falta Info
+                    tbl += "<br><span class='sub-info-meta' style='font-size: 0.72rem; color: #475569; display: block; margin-top: 2px; font-weight: 500;'>Mentalidade: <span style='color:#0f172a;'>"+val['mentalidade']+"</span> | Falta: <span style='color:#0284c7;'>"+val['cobrancaFalta']+"</span></span>";
+                    
+                    tbl += "</td>";
                 } else  if(tipoPagina.localeCompare('buscaTecnico') == 0){
-                    tbl += "<td class='nopadding nomeJogador'>"+val['nomeJogador']+"<br><span class='posicao'>Técnico</span></td>";
-                    tbl += "<td class='nopadding'>T</td>";
+                    tbl += "<td class='nopadding nomeJogador'>";
+                    // Coach name
+                    tbl += val['nomeJogador'];
+                    
+                    // Label
+                    tbl += " <span class='posicao' style='display:inline-block !important;'>(Técnico)</span>";
+                    
+                    // Club & League
+                    tbl += "<br><span class='sub-info' style='font-size: 0.72rem; color: #64748b; font-weight: 500;'>";
+                    if(val['idClube'] != 0){
+                        tbl += "<a href='/ligas/teamstatus.php?team="+val['idClube']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/escudos/"+val['escudoClube']+"' class='minithumb'/>"+val['nomeClube']+"</a>";
+                        tbl += " | <a href='/ligas/leaguestatus.php?league="+val['idLiga']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/bandeiras/"+val['bandeiraClube']+"' class='minithumb' id='ban"+val['paisClube']+"'/>"+val['ligaClube']+"</a>";
+                    } else {
+                        tbl += "Sem Clube";
+                    }
+                    tbl += "</span>";
+
+                    // Mentalidade & Estilo Info
+                    tbl += "<br><span class='sub-info-meta' style='font-size: 0.72rem; color: #475569; display: block; margin-top: 2px; font-weight: 500;'>Postura: <span style='color:#0f172a;'>"+val['mentalidade']+"</span> | Estilo: <span style='color:#0284c7;'>"+val['estilo']+"</span></span>";
+
+                    tbl += "</td>";
                 }
                 tbl += "<td class='nopadding'>"+val['idadeJogador']+"</td>";
                 if(val['nacionalidade'] != 0){
@@ -1062,33 +1149,10 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                 }
                 tbl += "</td>";
                 tbl +=  "<td class='nopadding'>"+val['nivel']+"</td>";
-                tbl +=  "<td class='nopadding'>"+val['mentalidade']+"</td>";
                 if(tipoPagina.localeCompare('busca') == 0){
-                tbl +=  "<td class='nopadding'>"+val['cobrancaFalta']+"</td>";
-                } else if(tipoPagina.localeCompare('buscaTecnico') == 0){
-                    tbl +=  "<td class='nopadding'>"+val['estilo']+"</td>";
+                    tbl +=  "<td class='nopadding'>"+valor+"</td>";
                 }
-                tbl += "<td class='nopadding'>";
-            if(val['idClube'] != 0){
-                tbl += "<a href='/ligas/teamstatus.php?team="+val['idClube']+"'>";
-            } else {
-                tbl += "<span>";
-            }
-            tbl += "<img src='/images/escudos/"+val['escudoClube']+"' class='minithumb'/>"+val['nomeClube'];
-            if(val['idClube'] != 0){
-            tbl += "</a>";
-            tbl += "<br/><a class='posicao' href='/ligas/leaguestatus.php?league="+val['idLiga']+"'><img src='/images/bandeiras/"+val['bandeiraClube']+"' class='minithumb' id='ban"+val['paisClube']+"'/>"+val['ligaClube']+"</a>";
-            } else {
-            tbl += "</span>";
-            }
-            tbl += "</td>";
-            if(tipoPagina.localeCompare('busca') == 0){
-                tbl +=  "<td class='nopadding'>"+val['disponibilidade']+"</td>";
-                tbl +=  "<td class='nopadding'>"+valor+"</td>";
-
-            }
                 tbl +=  "<td class='nopadding'>";
-
 
                 if((tipoPagina.localeCompare('busca') == 0 && !emTestes) || (tipoPagina.localeCompare('busca') == 0 && emTestes && val['donoJogador'] == 1) ){
                     tbl += "<a id='pro"+val['idJogador']+"' title='Fazer Proposta' class='clickable proposta'><span class='material-symbols-outlined inlineButton'>payments</span></a>";

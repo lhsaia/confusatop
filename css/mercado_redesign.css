@@ -1,0 +1,76 @@
+/* ==========================================================================
+   CONFUSA.top - Mercado Redesign Extensions (Vibrant Green & Emerald Cards)
+   ========================================================================== */
+
+body {
+  /* Degradê verde base (#10b981), degradê para escuro e marca d'água confusa */
+  background-image: 
+    linear-gradient(180deg, rgba(52, 211, 153, 0.3) 0%, rgba(15, 23, 42, 0.96) 100%),
+    url("/images/confusa-white.png") !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+  background-color: #10b981 !important; /* Verde base */
+  background-blend-mode: color-burn !important;
+}
+
+/* Modificações nos Cards (Hub Cards) */
+.hub-card {
+  background: rgba(6, 78, 59, 0.45) !important; /* Verde escuro translúcido */
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Fundo da área de texto (Card Body) em Verde Escuro (Deep Green) */
+.hub-card-body {
+  background-color: #062f21 !important; /* Verde profundo e escuro */
+  border-top: 1px solid rgba(52, 211, 153, 0.2) !important;
+}
+
+/* Fontes com melhor legibilidade e contraste premium */
+.hub-card-title span {
+  color: #ecfdf5 !important; /* Creme esmeralda suave para o título principal */
+}
+
+.hub-card-desc {
+  color: #a7f3d0 !important; /* Verde esmeralda pastel suave para a descrição */
+}
+
+/* Transição de gradiente da imagem para o corpo do card */
+.hub-card-hero-image::after {
+  background: linear-gradient(to top, #062f21, transparent) !important;
+}
+
+/* Hover nos cards com glow ciano/esmeralda */
+.hub-card:not(.disabled-card):hover {
+  background: rgba(4, 120, 87, 0.6) !important;
+  border-color: #ffffff !important;
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35), 0 0 25px rgba(52, 211, 153, 0.4) !important;
+}
+
+.hub-card:not(.disabled-card):hover .hub-card-body {
+  background-color: #064e3b !important; /* Verde escuro um pouco mais aceso no hover */
+}
+
+.hub-card:not(.disabled-card):hover .hub-card-title span {
+  color: #ffffff !important; /* Fica branco puro no hover */
+}
+
+.hub-card:hover .hub-card-arrow {
+  color: var(--accent-emerald) !important;
+}
+
+/* Estilo para links do ecossistema se houver */
+.hub-subsection-title {
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 1.25rem !important;
+  color: #ecfdf5 !important;
+  margin: 2rem 0 1.25rem 0 !important;
+  padding-bottom: 0.5rem !important;
+  border-bottom: 2px solid rgba(52, 211, 153, 0.25) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  width: 100% !important;
+}

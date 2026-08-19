@@ -1,0 +1,741 @@
+@import url("meuspaises_redesign.css");
+
+/* Custom style adaptations for transferencias.php list pages (Light Theme) */
+
+.genderSign {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  margin-left: 8px !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+.genderMas {
+  background-color: rgba(2, 132, 199, 0.1) !important;
+  color: #0284c7 !important;
+}
+
+.genderFem {
+  background-color: rgba(236, 72, 153, 0.1) !important;
+  color: #ec4899 !important;
+}
+
+.bandeira {
+  height: 24px;
+  width: auto;
+  border-radius: 4px;
+  vertical-align: middle;
+  margin-right: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.minithumb, .smallthumb {
+  height: 24px;
+  width: auto;
+  border-radius: 4px;
+  vertical-align: middle;
+  margin-right: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.nomeJogador {
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  color: #1e293b !important;
+}
+
+.posicao {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.8rem !important;
+  color: #64748b !important;
+  font-weight: 500 !important;
+  display: block;
+  margin-top: 4px !important;
+}
+
+/* Custom design modifications for search panel in transferencias.php */
+#painel_busca_jogador {
+  margin-bottom: 20px;
+}
+
+
+.mostrador_range {
+  border: 0 !important;
+  color: #0284c7 !important;
+  font-weight: bold !important;
+  background: transparent !important;
+  font-family: 'Montserrat', sans-serif !important;
+}
+/* Compact wrapper padding and narrower width for Mercado */
+.propostas-container {
+  padding: 1.5rem 1.5rem !important;
+  max-width: 1020px !important;
+}
+
+.propostas-card {
+  padding: 1.5rem !important;
+  text-align: center !important;
+}
+
+.header-actions-container {
+  justify-content: center !important;
+  text-align: center !important;
+  margin-bottom: 1rem !important;
+  padding-bottom: 0.75rem !important;
+}
+
+.propostas-title {
+  text-align: center !important;
+  width: 100% !important;
+}
+
+#form_busca_jogador {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 18px !important;
+  padding: 1.25rem !important;
+  margin: 0 auto 1.5rem auto !important;
+  max-width: 750px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center !important;
+  text-align: center !important;
+}
+
+#form_busca_jogador fieldset {
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border-radius: 12px !important;
+  padding: 0.75rem 1.25rem !important;
+  background: rgba(248, 250, 252, 0.5) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  text-align: center !important;
+}
+
+#form_busca_jogador legend {
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  font-size: 1.1rem !important;
+  padding: 0 10px !important;
+}
+
+#form_busca_jogador p {
+  margin: 6px 0 !important;
+}
+
+#form_busca_jogador label {
+  font-family: 'Montserrat', sans-serif !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  font-size: 0.9rem !important;
+  margin-right: 8px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+#form_busca_jogador input[type="text"].smallform {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.85rem !important;
+  color: #334155 !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  background-color: #fff !important;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: auto !important;
+  min-width: 200px !important;
+  max-width: 280px !important;
+  margin: 6px 12px 6px 0 !important;
+  display: inline-block !important;
+}
+
+#form_busca_jogador input[type="text"].smallform:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1) !important;
+}
+
+/* Customizando o botão gerado pelo jQuery UI Selectmenu */
+#form_busca_jogador .ui-selectmenu-button.ui-button {
+  width: auto !important;
+  min-width: 200px !important;
+  max-width: 300px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 8px 12px !important;
+  margin: 6px 12px 6px 0 !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.85rem !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  background-image: none !important;
+  color: #334155 !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+  vertical-align: middle !important;
+}
+
+#form_busca_jogador .ui-selectmenu-button.ui-button:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1) !important;
+}
+
+/* Checkbox do jQuery UI checkboxradio para posições e requisitos */
+#form_busca_jogador .ui-checkboxradio-label.ui-button {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.8rem !important;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  background: #f8fafc !important;
+  color: #475569 !important;
+  margin: 4px 6px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  box-shadow: none !important;
+}
+
+#form_busca_jogador .ui-checkboxradio-label.ui-button.ui-state-active {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+}
+
+#form_busca_jogador .ui-checkboxradio-label.ui-button:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+#form_busca_jogador .ui-checkboxradio-label.ui-button.ui-state-active:hover {
+  background-color: #0369a1 !important;
+  color: #ffffff !important;
+}
+
+/* jQuery UI Sliders adjustments */
+#form_busca_jogador p {
+  margin: 6px auto 2px auto !important;
+  text-align: center !important;
+  width: 100% !important;
+  max-width: 500px !important;
+}
+
+#form_busca_jogador p label {
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 0.95rem !important;
+  color: #475569 !important;
+  vertical-align: middle !important;
+  display: inline-block !important;
+  width: auto !important;
+}
+
+.mostrador_range {
+  font-size: 0.95rem !important;
+  color: #0284c7 !important;
+  font-weight: 700 !important;
+  margin-left: 6px !important;
+  vertical-align: middle !important;
+  display: inline-block !important;
+  width: auto !important;
+  max-width: 120px !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.ui-slider {
+  height: 8px !important;
+  background: #cbd5e1 !important;
+  border: none !important;
+  border-radius: 4px !important;
+  margin: 8px auto 18px auto !important;
+  width: 100% !important;
+  max-width: 500px !important;
+  box-sizing: border-box !important;
+  display: block !important;
+}
+
+.ui-slider-range {
+  background: #0284c7 !important;
+  border-radius: 4px !important;
+}
+
+.ui-slider-handle {
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 50% !important;
+  background: #0284c7 !important;
+  border: 2px solid #fff !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+  cursor: grab !important;
+  top: -5px !important;
+  outline: none !important;
+  transition: transform 0.1s ease-in-out;
+}
+
+.ui-slider-handle:hover {
+  transform: scale(1.1);
+  background: #0369a1 !important;
+}
+
+.ui-slider-handle:active {
+  cursor: grabbing !important;
+  transform: scale(0.95);
+}
+
+/* Action Buttons style and grouping */
+#form_busca_jogador br {
+  display: none !important;
+}
+
+#form_busca_jogador .form-actions {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  margin-top: 0.5rem !important;
+}
+
+#form_busca_jogador input[type="submit"] {
+  border: none !important;
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 10px 24px !important;
+  font-weight: 600 !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 0.95rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25) !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+}
+
+#form_busca_jogador input[type="submit"]:hover {
+  background: #0369a1 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
+}
+
+#form_busca_jogador input[type="reset"] {
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  background: #f8fafc !important;
+  color: #475569 !important;
+  border-radius: 8px !important;
+  padding: 10px 24px !important;
+  font-weight: 600 !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 0.95rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+}
+
+#form_busca_jogador input[type="reset"]:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+/* Responsive Table styling for search and listing pages if columns mismatch */
+@media (max-width: 768px) {
+  /* Let .tbl_user_data handle horizontal scrolling cleanly as specified in the rules */
+  .tbl_user_data {
+    margin-top: 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+}
+
+#tabelaPrincipal td.mercadoAberto {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #065f46 !important;
+  font-weight: 600;
+}
+
+#tabelaPrincipal td.mercadoFechado {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  color: #991b1b !important;
+  font-weight: 600;
+}
+
+#form_busca_jogador .form-group-inline {
+  display: inline-block !important;
+  white-space: nowrap !important;
+  margin: 4px 10px !important;
+  vertical-align: middle !important;
+}
+
+#form_busca_jogador .form-group-inline label {
+  margin-right: 6px !important;
+  margin-bottom: 0 !important;
+  vertical-align: middle !important;
+}
+
+#form_busca_jogador .form-group-inline .ui-selectmenu-button,
+#form_busca_jogador .form-group-inline input {
+  margin: 0 !important;
+  vertical-align: middle !important;
+}
+
+#form_busca_jogador .form-row {
+  display: block !important;
+  width: 100% !important;
+  margin: 6px 0 !important;
+  text-align: center !important;
+}
+
+/* Center ajax loader spinner (allowing jQuery to control display) */
+#loading {
+  display: none;
+  margin: 20px auto !important;
+}
+
+#loading:not([hidden]) {
+  display: block;
+}
+
+/* Mirror meuspaises_redesign.css #tabelaPrincipal styles to #tabelajogos */
+#tabelajogos {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 8px !important;
+  margin-top: 1rem !important;
+}
+
+#tabelajogos th {
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  text-transform: uppercase;
+  font-size: 0.8rem !important;
+  letter-spacing: 0.5px;
+  border: none !important;
+  padding: 8px 10px !important;
+  vertical-align: middle !important;
+  text-align: center !important;
+}
+
+#tabelajogos th:first-child {
+  text-align: left !important;
+}
+
+#tabelajogos td {
+  padding: 8px 10px !important;
+  vertical-align: middle !important;
+  border: none !important;
+  font-size: 0.8rem !important;
+  color: #334155 !important;
+  text-align: center !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+#tabelajogos td:first-child {
+  text-align: left !important;
+}
+
+#tabelajogos tbody tr {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.25s ease !important;
+}
+
+#tabelajogos tbody tr:hover td {
+  background: #ffffff !important;
+}
+
+#tabelajogos tbody tr:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06) !important;
+}
+
+#tabelajogos tbody tr td:first-child {
+  border-top-left-radius: 8px !important;
+  border-bottom-left-radius: 8px !important;
+  border-left: 4px solid #0284c7 !important;
+}
+
+#tabelajogos tbody tr td:last-child {
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
+}
+
+/* Optional styling inside table cells */
+#tabelajogos td a {
+  color: #0284c7 !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  transition: color 0.2s !important;
+}
+
+#tabelajogos td a:hover {
+  color: #0369a1 !important;
+}
+
+/* Helpers & Sorting Icons */
+.hidden {
+  display: none !important;
+}
+
+#tabelajogos th .material-symbols-outlined {
+  vertical-align: middle !important;
+  font-size: 1.1rem !important;
+  color: #0284c7 !important;
+}
+
+/* Modais de Proposta e Contratação (Modern Premium Style) */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1050 !important;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(9, 13, 22, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.modal-content {
+  background-color: #ffffff !important;
+  margin: 6% auto !important;
+  padding: 24px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  width: 90% !important;
+  max-width: 480px !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  color: #0f172a !important;
+  font-family: 'Montserrat', sans-serif !important;
+  box-sizing: border-box;
+}
+
+.modal-content label {
+  display: block !important;
+  text-align: left !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  color: #475569 !important;
+  margin-top: 12px !important;
+  margin-bottom: 4px !important;
+}
+
+.modal-content .container {
+  padding: 0 !important;
+  background-color: transparent !important;
+}
+
+.modal-content .form-control,
+.modal-content input[type="text"],
+.modal-content input[type="number"],
+.modal-content input[type="date"],
+.modal-content select {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 10px 14px !important;
+  font-size: 0.9rem !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  border-radius: 8px !important;
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  font-family: 'Montserrat', sans-serif !important;
+  margin-bottom: 8px !important;
+  outline: none;
+  transition: all 0.2s !important;
+}
+
+.modal-content .form-control:focus,
+.modal-content input[type="text"]:focus,
+.modal-content input[type="number"]:focus,
+.modal-content input[type="date"]:focus,
+.modal-content select:focus {
+  background-color: #ffffff !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1) !important;
+}
+
+.modal-content .close {
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s !important;
+  line-height: 1;
+}
+
+.modal-content .close:hover {
+  color: #0f172a;
+}
+
+.modal-content .submitbtn {
+  width: 100% !important;
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2) !important;
+  transition: all 0.2s !important;
+  margin-top: 14px !important;
+}
+
+.modal-content .submitbtn:hover {
+  background: #0369a1 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.3) !important;
+}
+
+.modal-content .cancelbtn {
+  width: 100% !important;
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 8px !important;
+  padding: 10px 24px !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+
+.modal-content .cancelbtn:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Responsive Table-to-Cards styling for #tabelajogos on mobile */
+@media (max-width: 768px) {
+  #tabelajogos, #tabelajogos tbody, #tabelajogos tr, #tabelajogos td, #tabelajogos th {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  #tabelajogos thead {
+    display: none !important;
+  }
+  
+  #tabelajogos tbody tr {
+    margin-bottom: 1.25rem !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 14px !important;
+    padding: 12px !important;
+    background: #ffffff !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+  }
+  
+  #tabelajogos td {
+    padding: 6px 8px !important;
+    text-align: left !important;
+    background: transparent !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+    border-radius: 0 !important;
+  }
+
+  #tabelajogos td:last-child {
+    border-bottom: none !important;
+    justify-content: center !important;
+    padding-top: 10px !important;
+  }
+  
+  #tabelajogos td.nomeJogador {
+    display: block !important;
+    text-align: center !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+    padding-bottom: 8px !important;
+  }
+  
+  #tabelajogos td.nomeJogador a {
+    font-size: 1.1rem !important;
+    display: block;
+  }
+
+  /* Add column indicators on mobile */
+  #tabelajogos td:nth-child(2)::before { content: "Idade: "; font-weight: 600; color: #64748b; }
+  #tabelajogos td:nth-child(3)::before { content: "Nac.: "; font-weight: 600; color: #64748b; }
+  #tabelajogos td:nth-child(4)::before { content: "Nível: "; font-weight: 600; color: #64748b; }
+  #tabelajogos td:nth-child(5)::before { content: "Valor: "; font-weight: 600; color: #64748b; }
+}
+
+/* Floating Toast Glassmorphism for Notifications */
+#errorbox {
+  position: fixed !important;
+  top: 80px !important;
+  right: 24px !important;
+  z-index: 2000 !important;
+  max-width: 350px !important;
+  width: 90% !important;
+  pointer-events: none !important;
+}
+
+#errorbox .alert {
+  pointer-events: auto !important;
+  margin-bottom: 10px !important;
+  padding: 14px 20px !important;
+  border-radius: 12px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+  animation: slideInToast 6s ease-in-out forwards !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+#errorbox .alert-danger {
+  background-color: rgba(254, 226, 226, 0.85) !important;
+  color: #991b1b !important;
+  border: 1px solid rgba(248, 113, 113, 0.3) !important;
+}
+
+#errorbox .alert-success {
+  background-color: rgba(209, 250, 229, 0.85) !important;
+  color: #065f46 !important;
+  border: 1px solid rgba(52, 211, 153, 0.3) !important;
+}
+
+@keyframes slideInToast {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  8% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  92% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}

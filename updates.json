@@ -9,125 +9,202 @@
   },
   "days": [
     {
-      "date": "16/08/2026",
-      "title": "Edição e Exclusão de Transferências Históricas",
-      "description": "Adicionado recurso para donos de jogadores editarem e excluírem qualquer registro do histórico de transferências do jogador diretamente através da tabela de transferências. Reposicionadas as marcas de carreira gerais para uma barra horizontal abaixo das informações gerais com cores corretas para os cartões. Adicionado suporte e exibição garantida de desempenho por clube na tabela e botões de ação padronizados. Aplicada otimização responsiva completa para dispositivos móveis, garantindo o tamanho fixo do campo tático para perfeito alinhamento, movendo o botão de salvar atributos para dentro do card e corrigindo uma tag HTML de fechamento extra (stray div) que causava espaçamento indesejado abaixo do rodapé no servidor."
-    },
-    {
-      "date": "16/08/2026",
-      "title": "Redesign da Tela de Detalhes do Jogador (Light Theme)",
-      "description": "Modernizada a página de visualização do jogador aplicando o layout Light Theme (padrão das páginas internas do site), integrando desfoque de fundo (backdrop-filter) e ajustando o gráfico Plotly para o tema claro. Corrigido o alinhamento de blocos, sobreposições e alinhamento das colunas da tabela de transferências; removida tag PHP perdida na página."
-    },
-    {
-      "date": "16/08/2026",
-      "title": "Registro de Transferências Históricas de Jogadores",
-      "description": "Adicionado recurso para donos de jogadores registrarem transferências do passado diretamente no histórico do jogador através de um novo modal na tela de detalhes do jogador, sem alterar o contrato ou clube atual."
-    },
-    {
-      "date": "16/08/2026",
-      "title": "Atualização das regras do projeto para o Agent",
-      "description": "Adicionadas regras específicas no AGENTS.md sobre tratamento case-sensitive em SQL e fallback para comandos executados via shell_exec."
-    },
-    {
-      "date": "16/08/2026",
-      "title": "Correção de erro de sintaxe SQL em transferências",
-      "description": "Corrigida a caixa (case-sensitivity) do alias da tabela clube (CD.Escudo para cd.Escudo) na consulta de transferências, resolvendo o erro de prepare no banco de dados em ambientes Linux."
-    },
-    {
-      "date": "16/08/2026",
-      "title": "Ajuste na compressão de PNG com pngquant",
-      "description": "Implementado fallback automático para carregar a imagem original caso o otimizador pngquant falhe ou não esteja disponível no servidor, evitando erros fatais durante o upload de escudos e imagens."
-    },
-    {
-      "date": "15/08/2026",
-      "title": "Criação de Páginas de Erro Estáticas SHTML",
-      "description": "Criadas as versões .shtml estáticas das páginas de erro (400, 403, 404, 500 e 503) livres de PHP, prontas para serem copiadas e configuradas diretamente no servidor Web (Apache/Nginx). Adicionado flex-shrink: 0 ao rodapé (footer) para manter a altura padrão de 60px sem sofrer compressão flexbox."
-    },
-    {
-      "date": "15/08/2026",
-      "title": "Correção de Falha Crítica na Simulação de Partidas (Motor Java)",
-      "description": "Corrigido o erro que interrompia a simulação de partidas com a mensagem 'Erro ao criar compatibilidade com a versão 2.10'. A limpeza de tabelas temporárias residuais foi aplicada tanto na simulação manual (simular_partida.php) quanto na simulação automática (cron_simular_jogos.php)."
-    },
-    {
-      "date": "15/08/2026",
-      "title": "Prevenção de Travamentos no SQLite (WAL &amp; Busy Timeout)",
-      "description": "Ativado o modo de gravação WAL (Write-Ahead Logging) e configurado o busy_timeout de 5 segundos nas conexões SQLite para evitar erros de banco travado (database is locked)."
-    },
-    {
-      "date": "15/08/2026",
-      "title": "Ajuste na Exportação do Banco (Tratamento de Caracteres Especiais)",
-      "description": "Corrigido erro que interrompia a exportação de banco de dados do país devido a nomes de escudos com caracteres especiais/entidades HTML duplicadas (como '&amp;amp;'). Agora os caminhos são limpos e testados antes da cópia."
-    },
-    {
-      "date": "15/08/2026",
-      "title": "Limpeza de Logs de Depuração na Listagem de Jogos",
-      "description": "Comentado o log de aviso de nenhum jogo encontrado para uma competição no refresh_match_list.php para evitar a poluição do arquivo php_errors.log."
-    },
-    {
-      "date": "15/08/2026",
-      "title": "Ajuste de Limite de Memória e Correção no Upload de Escudos",
-      "description": "Aumentado o limite de memória global para 256M a fim de evitar estouros no processamento de imagens, e corrigida a verificação do formato PNG na função de importação."
-    },
-    {
-      "date": "15/08/2026",
-      "title": "Correção no Importador de Planilha de Elenco",
-      "description": "Corrigido erro 'Undefined offset' que ocorria ao finalizar a leitura de linhas na importação de planilha de jogadores."
-    },
-    {
-      "date": "15/08/2026",
-      "title": "Liberação de Edição de Países e Novo Design",
-      "description": "Habilitada a opção para mover países para fora da CONFUSA no Quadro de Países, e a tela foi completamente redesenhada com o novo design system Light Theme premium."
-    },
-    {
-      "date": "15/08/2026",
-      "title": "Desativação do Deploy via GitHub Actions",
-      "description": "Desativado o fluxo de deploy automático via FTP no GitHub Actions devido a problemas de leitura do arquivo de estado no servidor."
-    },
-    {
-      "date": "15/08/2026",
-      "title": "Ajuste na Validação de Redirect URI no Confusauth",
-      "description": "Ajustada a comparação de redirect_uri no fluxo OAuth para ignorar a porta quando o host for localhost, permitindo o desenvolvimento local flexível."
-    },
-    {
-      "date": "14/08/2026",
-      "title": "Limpeza do .htaccess de Erros",
-      "description": "Removidas as diretivas locais de ErrorDocument do .htaccess principal, delegando o tratamento de páginas de erro ao servidor LiteSpeed."
-    },
-    {
-      "date": "14/08/2026",
-      "title": "Gitignore Atualizado (Octamotor)",
-      "description": "Adicionado o diretório de configurações do Octamotor no .gitignore para evitar o envio de credenciais e backups de banco locais."
-    },
-    {
-      "date": "14/08/2026",
-      "title": "Contador e Lista de Enviar Fichas",
-      "description": "Adicionado um contador dinâmico de fichas pendentes no card do painel, e corrigida a exibição de competições sem prazo definido na lista."
-    },
-    {
-      "date": "14/08/2026",
-      "title": "Correção de Erro nas Opções de Competição",
-      "description": "Corrigido erro 500 ao salvar opções de competição, garantindo a criação das tabelas no SQLite, adicionando tratamento de exceções robusto e validando conexões nulas na classe SQLiteDatabase."
-    },
-    {
-      "date": "14/08/2026",
-      "title": "Restauração do Quadro de Fichas",
-      "description": "Restaurado o card para 'Enviar Fichas' na página inicial do painel de usuário."
-    },
-    {
-      "date": "14/08/2026",
-      "title": "Ativação da COISO TV",
-      "description": "Habilitada a área da COISO TV na página inicial com link direto para coisotv.libracromos.site."
-    },
-    {
-      "date": "14/08/2026",
-      "title": "Gitignore Atualizado",
-      "description": "Adicionada a pasta 'full hexa suite' no .gitignore para evitar commits acidentais de arquivos locais."
-    },
-    {
-      "id": "14_08_2026",
-      "date": "14/08/2026",
-      "title": "Ajuste no Notificador do Discord",
+      "id": "day_18_08_2026",
+      "date": "18/08/2026",
       "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção de Erro 500 nas Estatísticas de Competições",
+          "desc": "Corrigido um erro de sintaxe (chave não fechada no loop de jogadores suspensos) que causava erro 500 ao carregar a página de estatísticas de competições."
+        },
+        {
+          "badge": "new",
+          "title": "Ativação das Janelas de Transferência e Redesenho de Buscas",
+          "desc": "Restaurada a cor de destaque (verde/vermelha) na listagem de janelas e removida a coluna legada. Redesenhados os formulários e filtros de busca avançada de jogadores e técnicos no padrão Light Theme com sliders e seletores modernos. Implementado bloqueio de propostas em janelas fechadas."
+        },
+        {
+          "badge": "new",
+          "title": "Redesenho e Paginação AJAX das Listagens do Mercado",
+          "desc": "Atualização das listagens de Últimas e Maiores Transferências, Jogadores mais Valiosos e Janelas de Transferência no Mercado (/mercado/transferencias.php) para o novo Light Theme visual padrão, com paginação reativa via AJAX e melhor espaçamento entre clubes e ligas."
+        },
+        {
+          "badge": "new",
+          "title": "Redesenho do Mercado (Green Theme)",
+          "desc": "Atualização da página principal do Mercado (/mercado/) para o novo layout baseado em cards e grid, com o tema visual verde (esmeralda e deep green)."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Importação de .ymt e Desfalques Externos",
+          "desc": "Corrigido o botão de importação de arquivo .ymt em competições e implementado o controle de lesões e cartões para times externos (não cadastrados no portal) por meio da tabela de status do torneio."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste no Processamento de Lesões",
+          "desc": "Correção de erro de propriedade indefinida ao processar a duração de lesões de jogadores a partir do arquivo de partida."
+        },
+        {
+          "badge": "new",
+          "title": "Redesenho do Quadro de Árbitros",
+          "desc": "Atualização das páginas de listagem, inserção e importação de árbitros para o novo layout (Light Theme), melhorando a responsividade e consistência visual do site."
+        },
+        {
+          "badge": "new",
+          "title": "Integração do Poltrona Score e Melhoria de Cronologia",
+          "desc": "Adicionado card de atalho na Home para o Poltrona Score. Ajustada a aba de resultados anteriores para agrupar as partidas por data em ordem cronológica decrescente, com identificação das competições direto nos cards."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste na Posição dos Marcadores no Mapa de Países",
+          "desc": "Ajustado o alinhamento do texto dos marcadores de países (ligas/mapa) para o lado esquerdo caso estejam localizados muito próximos da borda direita do mapa, evitando que o texto ultrapasse a tela ou quebre o layout."
+        }
+      ]
+    },
+    {
+      "id": "day_16_08_2026",
+      "date": "16/08/2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Nova Regra de Status na API de Países",
+          "desc": "Alterada a lógica do filtro de status na API de busca de países: 0 agora filtra apenas países ativos e 1 traz tanto ativos quanto inativos (sem aplicar filtro de atividade)."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Remoção de País da CONFUSA",
+          "desc": "Corrigida a lógica de atualização no banco de dados que impedia a desmarcação da opção 'CONFUSA?' ao salvar as alterações do país na área do usuário."
+        },
+        {
+          "badge": "design",
+          "title": "Redesign da Tela de Quadro de Ligas (Light Theme)",
+          "desc": "Atualizado o quadro de ligas (geral.php) para o novo padrão visual Light Theme do site, com contêineres e cards translúcidos, tabelas modernas responsivas adaptadas para celulares e tipografia premium."
+        },
+        {
+          "badge": "new",
+          "title": "Edição e Exclusão de Transferências Históricas",
+          "desc": "Adicionado recurso para donos de jogadores editarem e excluírem qualquer registro do histórico de transferências do jogador diretamente através da tabela de transferências. Reposicionadas as marcas de carreira gerais para uma barra horizontal abaixo das informações gerais com cores corretas para os cartões. Adicionado suporte e exibição garantida de desempenho por clube na tabela e botões de ação padronizados. Aplicada otimização responsiva completa para dispositivos móveis, garantindo o tamanho fixo do campo tático para perfeito alinhamento, movendo o botão de salvar atributos para dentro do card e corrigindo uma tag HTML de fechamento extra (stray div) que causava espaçamento indesejado abaixo do rodapé no servidor."
+        },
+        {
+          "badge": "design",
+          "title": "Redesign da Tela de Detalhes do Jogador (Light Theme)",
+          "desc": "Modernizada a página de visualização do jogador aplicando o layout Light Theme (padrão das páginas internas do site), integrando desfoque de fundo (backdrop-filter) e ajustando o gráfico Plotly para o tema claro. Corrigido o alinhamento de blocos, sobreposições e alinhamento das colunas da tabela de transferências; removida tag PHP perdida na página."
+        },
+        {
+          "badge": "new",
+          "title": "Registro de Transferências Históricas de Jogadores",
+          "desc": "Adicionado recurso para donos de jogadores registrarem transferências do passado diretamente no histórico do jogador através de um novo modal na tela de detalhes do jogador, sem alterar o contrato ou clube atual."
+        },
+        {
+          "badge": "new",
+          "title": "Atualização das regras do projeto para o Agent",
+          "desc": "Adicionadas regras específicas no AGENTS.md sobre tratamento case-sensitive em SQL e fallback para comandos executados via shell_exec."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de erro de sintaxe SQL em transferências",
+          "desc": "Corrigida a caixa (case-sensitivity) do alias da tabela clube (CD.Escudo para cd.Escudo) na consulta de transferências, resolvendo o erro de prepare no banco de dados em ambientes Linux."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste na compressão de PNG com pngquant",
+          "desc": "Implementado fallback automático para carregar a imagem original caso o otimizador pngquant falhe ou não esteja disponível no servidor, evitando erros fatais durante o upload de escudos e imagens."
+        }
+      ]
+    },
+    {
+      "id": "day_15_08_2026",
+      "date": "15/08/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Criação de Páginas de Erro Estáticas SHTML",
+          "desc": "Criadas as versões .shtml estáticas das páginas de erro (400, 403, 404, 500 e 503) livres de PHP, prontas para serem copiadas e configuradas diretamente no servidor Web (Apache/Nginx). Adicionado flex-shrink: 0 ao rodapé (footer) para manter a altura padrão de 60px sem sofrer compressão flexbox."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Falha Crítica na Simulação de Partidas (Motor Java)",
+          "desc": "Corrigido o erro que interrompia a simulação de partidas com a mensagem 'Erro ao criar compatibilidade com a versão 2.10'. A limpeza de tabelas temporárias residuais foi aplicada tanto na simulação manual (simular_partida.php) quanto na simulação automática (cron_simular_jogos.php)."
+        },
+        {
+          "badge": "new",
+          "title": "Prevenção de Travamentos no SQLite (WAL &amp; Busy Timeout)",
+          "desc": "Ativado o modo de gravação WAL (Write-Ahead Logging) e configurado o busy_timeout de 5 segundos nas conexões SQLite para evitar erros de banco travado (database is locked)."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste na Exportação do Banco (Tratamento de Caracteres Especiais)",
+          "desc": "Corrigido erro que interrompia a exportação de banco de dados do país devido a nomes de escudos com caracteres especiais/entidades HTML duplicadas (como '&amp;amp;'). Agora os caminhos são limpos e testados antes da cópia."
+        },
+        {
+          "badge": "new",
+          "title": "Limpeza de Logs de Depuração na Listagem de Jogos",
+          "desc": "Comentado o log de aviso de nenhum jogo encontrado para uma competição no refresh_match_list.php para evitar a poluição do arquivo php_errors.log."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste de Limite de Memória e Correção no Upload de Escudos",
+          "desc": "Aumentado o limite de memória global para 256M a fim de evitar estouros no processamento de imagens, e corrigida a verificação do formato PNG na função de importação."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Importador de Planilha de Elenco",
+          "desc": "Corrigido erro 'Undefined offset' que ocorria ao finalizar a leitura de linhas na importação de planilha de jogadores."
+        },
+        {
+          "badge": "new",
+          "title": "Liberação de Edição de Países e Novo Design",
+          "desc": "Habilitada a opção para mover países para fora da CONFUSA no Quadro de Países, e a tela foi completamente redesenhada com o novo design system Light Theme premium."
+        },
+        {
+          "badge": "new",
+          "title": "Desativação do Deploy via GitHub Actions",
+          "desc": "Desativado o fluxo de deploy automático via FTP no GitHub Actions devido a problemas de leitura do arquivo de estado no servidor."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste na Validação de Redirect URI no Confusauth",
+          "desc": "Ajustada a comparação de redirect_uri no fluxo OAuth para ignorar a porta quando o host for localhost, permitindo o desenvolvimento local flexível."
+        }
+      ]
+    },
+    {
+      "id": "day_14_08_2026",
+      "date": "14/08/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Limpeza do .htaccess de Erros",
+          "desc": "Removidas as diretivas locais de ErrorDocument do .htaccess principal, delegando o tratamento de páginas de erro ao servidor LiteSpeed."
+        },
+        {
+          "badge": "new",
+          "title": "Gitignore Atualizado (Octamotor)",
+          "desc": "Adicionado o diretório de configurações do Octamotor no .gitignore para evitar o envio de credenciais e backups de banco locais."
+        },
+        {
+          "badge": "new",
+          "title": "Contador e Lista de Enviar Fichas",
+          "desc": "Adicionado um contador dinâmico de fichas pendentes no card do painel, e corrigida a exibição de competições sem prazo definido na lista."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Erro nas Opções de Competição",
+          "desc": "Corrigido erro 500 ao salvar opções de competição, garantindo a criação das tabelas no SQLite, adicionando tratamento de exceções robusto e validando conexões nulas na classe SQLiteDatabase."
+        },
+        {
+          "badge": "new",
+          "title": "Restauração do Quadro de Fichas",
+          "desc": "Restaurado o card para 'Enviar Fichas' na página inicial do painel de usuário."
+        },
+        {
+          "badge": "new",
+          "title": "Ativação da COISO TV",
+          "desc": "Habilitada a área da COISO TV na página inicial com link direto para coisotv.libracromos.site."
+        },
+        {
+          "badge": "new",
+          "title": "Gitignore Atualizado",
+          "desc": "Adicionada a pasta 'full hexa suite' no .gitignore para evitar commits acidentais de arquivos locais."
+        },
         {
           "badge": "bugfix",
           "title": "Filtro de Notificações de Transferências",
@@ -146,9 +223,8 @@
       ]
     },
     {
-      "id": "12_08_2026",
+      "id": "day_12_08_2026",
       "date": "12/08/2026",
-      "title": "Ajustes no Envio de E-mails",
       "items": [
         {
           "badge": "bugfix",
@@ -163,15 +239,19 @@
       ]
     },
     {
-      "id": "11_08_2026",
+      "id": "day_11_08_2026",
       "date": "11/08/2026",
-      "title": "Prevenção de Travamentos no Banco de Dados",
-      "description": "Configurado o busy_timeout de 5 segundos e o modo de gravação WAL no SQLite para evitar o erro de banco travado (database is locked), otimizando a concorrência e compatibilidade com pastas sincronizadas."
+      "items": [
+        {
+          "badge": "new",
+          "title": "Prevenção de Travamentos no Banco de Dados",
+          "desc": "Configurado o busy_timeout de 5 segundos e o modo de gravação WAL no SQLite para evitar o erro de banco travado (database is locked), otimizando a concorrência e compatibilidade com pastas sincronizadas."
+        }
+      ]
     },
     {
-      "id": "10_08_2026",
+      "id": "day_10_08_2026",
       "date": "10/08/2026",
-      "title": "Correções e Ajustes Gerais",
       "items": [
         {
           "badge": "bugfix",
@@ -186,9 +266,8 @@
       ]
     },
     {
-      "id": "09_08_2026",
+      "id": "day_09_08_2026",
       "date": "09/08/2026",
-      "title": "Redesign do Painel do Clube e Melhorias de Campinho",
       "items": [
         {
           "badge": "design",
@@ -237,17 +316,20 @@
         }
       ]
     },
-
     {
-      "id": "08_08_2026",
-
+      "id": "day_08_08_2026",
       "date": "08/08/2026",
-      "title": "Desativação Temporária do Seletor de Árbitro",
-      "description": "Desabilitado e estilizado (grayed out) o seletor de árbitros na lista de jogos por se tratar de uma funcionalidade ainda não implementada."
+      "items": [
+        {
+          "badge": "new",
+          "title": "Desativação Temporária do Seletor de Árbitro",
+          "desc": "Desabilitado e estilizado (grayed out) o seletor de árbitros na lista de jogos por se tratar de uma funcionalidade ainda não implementada."
+        }
+      ]
     },
     {
+      "id": "day_05_08_2026",
       "date": "05/08/2026",
-      "title": "Melhorias de Simulação e Algoritmo de Tabela",
       "items": [
         {
           "badge": "new",
@@ -269,19 +351,22 @@
           "title": "Desativação de Logs Excessivos",
           "desc": "Comentado o log temporário do arquivo config/session.php que escrevia continuamente no arquivo debug_session.txt em cada requisição de página para evitar consumo excessivo de disco (estava acumulando até 84MB)."
         }
-      ],
-      "id": "05_08_2026"
+      ]
     },
     {
+      "id": "day_03_08_2026",
       "date": "03/08/2026",
-      "title": "Ajuste na Simulação Headless e Cron",
-      "description": "Adicionado parâmetro -Djava.awt.headless=true para corrigir erros de AWTError no servidor Linux. O cron foi configurado para buscar partidas das próximas 24h a partir do momento de execução. Além disso, criamos uma validação para impedir que falhas na simulação salvem um placar falso de 0x0 no banco de dados, um injetor automático das versões de compatibilidade requeridas pela engine no SQLite temporário (2.8, 2.9.1, 2.10, 2.13), e desenvolvemos um script utilitário (/competicoes/hexacolor/reset_failed_simulations.php) para varrer e resetar automaticamente os jogos que ficaram travados em 0x0 sem arquivo de súmula.",
-      "id": "03_08_2026"
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Ajuste na Simulação Headless e Cron",
+          "desc": "Adicionado parâmetro -Djava.awt.headless=true para corrigir erros de AWTError no servidor Linux. O cron foi configurado para buscar partidas das próximas 24h a partir do momento de execução. Além disso, criamos uma validação para impedir que falhas na simulação salvem um placar falso de 0x0 no banco de dados, um injetor automático das versões de compatibilidade requeridas pela engine no SQLite temporário (2.8, 2.9.1, 2.10, 2.13), e desenvolvemos um script utilitário (/competicoes/hexacolor/reset_failed_simulations.php) para varrer e resetar automaticamente os jogos que ficaram travados em 0x0 sem arquivo de súmula."
+        }
+      ]
     },
     {
-      "id": "02_08_2026",
+      "id": "day_02_08_2026",
       "date": "02/08/2026",
-      "title": "Melhorias, Correções e Redesign",
       "items": [
         {
           "badge": "new",
@@ -311,9 +396,8 @@
       ]
     },
     {
-      "id": "01_08_2026",
+      "id": "day_01_08_2026",
       "date": "01/08/2026",
-      "title": "Módulo de Envio de Fichas, Ajustes e Redesign Geral",
       "items": [
         {
           "badge": "bugfix",
@@ -398,15 +482,19 @@
       ]
     },
     {
+      "id": "day_31_07_2026",
       "date": "31/07/2026",
-      "title": "Correção de Simulação Travada e Streaming de Súmula",
-      "description": "Corrigido o travamento (loop infinito) ao simular partidas definindo como null todas as declarações PDO ativas antes de fechar a conexão SQLite, liberando totalmente o banco database.db3. Impedida a edição/exclusão de partidas já simuladas. Configurado o streaming dinâmico da imagem PNG da súmula em qualquer rodada usando glob via PHP para contornar erros 404 e problemas de caracteres especiais no Windows.",
-      "id": "31_07_2026"
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção de Simulação Travada e Streaming de Súmula",
+          "desc": "Corrigido o travamento (loop infinito) ao simular partidas definindo como null todas as declarações PDO ativas antes de fechar a conexão SQLite, liberando totalmente o banco database.db3. Impedida a edição/exclusão de partidas já simuladas. Configurado o streaming dinâmico da imagem PNG da súmula em qualquer rodada usando glob via PHP para contornar erros 404 e problemas de caracteres especiais no Windows."
+        }
+      ]
     },
     {
-      "id": "30_07_2026",
+      "id": "day_30_07_2026",
       "date": "30/07/2026",
-      "title": "Melhorias, Correções e Redesign",
       "items": [
         {
           "badge": "new",
@@ -421,9 +509,8 @@
       ]
     },
     {
-      "id": "29_07_2026",
+      "id": "day_29_07_2026",
       "date": "29/07/2026",
-      "title": "Configuração de Competições, Redesign de Telas e Desfalques",
       "items": [
         {
           "badge": "new",
@@ -498,9 +585,8 @@
       ]
     },
     {
-      "id": "28_07_2026",
+      "id": "day_28_07_2026",
       "date": "28/07/2026",
-      "title": "Redesign de Telas de Propostas, Painel de Membros e Importador",
       "items": [
         {
           "badge": "new",
@@ -540,14 +626,19 @@
       ]
     },
     {
+      "id": "day_27_07_2026",
       "date": "27/07/2026",
-      "title": "Importação de Jogos do Ranking em Duas Etapas e Correção com Select2",
-      "description": "Criado um fluxo de validação intermediário para arquivos .hyl. Agora, o usuário visualiza uma tabela de revisão com o status dos jogos, mapeamento automático de países/bandeiras e pode corrigir divergências usando seletores dinâmicos (Select2) antes de confirmar a importação do lote todo de uma só vez.",
-      "id": "27_07_2026"
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Importação de Jogos do Ranking em Duas Etapas e Correção com Select2",
+          "desc": "Criado um fluxo de validação intermediário para arquivos .hyl. Agora, o usuário visualiza uma tabela de revisão com o status dos jogos, mapeamento automático de países/bandeiras e pode corrigir divergências usando seletores dinâmicos (Select2) antes de confirmar a importação do lote todo de uma só vez."
+        }
+      ]
     },
     {
+      "id": "day_26_07_2026",
       "date": "26/07/2026",
-      "title": "Redesign 2.0 e Refatoração de Simulação & Cron",
       "items": [
         {
           "badge": "design",
@@ -559,26 +650,33 @@
           "title": "Refatoração de Simulação & Cron",
           "desc": "Criado o script Cron para simulação automática diária das partidas agendadas. Implementado o controle de suspensões e lesões no JAR, a padronização em data/database.db3, a tela de escalação pré-jogo (escalacao_jogo.php) com consulta ao dono da equipe pela MariaDB e obtenção de PosicaoBase via JOIN na tabela posicaojogador, agendador com rodadas espaçadas em 3 dias para torneios mistos e ícone de escalação ao lado dos times."
         }
-      ],
-      "id": "26_07_2026"
+      ]
     },
     {
+      "id": "day_18_07_2026",
       "date": "18/07/2026",
-      "title": "Correção na Aprovação de Transferências",
-      "description": "Corrigida falha na aprovação de propostas de transferências para jogadores com siglas de posições textuais (caso do Jogador 51276). Corrigido erro de chamada estática inexistente na classe Transfer e adicionado bloco try-catch capturando Throwable para registro detalhado de erros no servidor.",
-      "id": "18_07_2026"
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção na Aprovação de Transferências",
+          "desc": "Corrigida falha na aprovação de propostas de transferências para jogadores com siglas de posições textuais (caso do Jogador 51276). Corrigido erro de chamada estática inexistente na classe Transfer e adicionado bloco try-catch capturando Throwable para registro detalhado de erros no servidor."
+        }
+      ]
     },
     {
-      "id": "14_07_2026",
+      "id": "day_14_07_2026",
       "date": "14/07/2026",
-      "title": "Correção de Erros e Avisos no Painel do Time e Ligas",
-      "description": "Corrigidos múltiplos avisos de índices indefinidos (Undefined index) na página de apresentação do time (team_presentation.php) e no status do país (paisstatus.php), um erro de sintaxe SQL (PDOException) em Time::readExtraInfo, e um erro de coluna não encontrada (PDOException) no método countAll da classe Liga através da parametrização de consultas SQL e validação de parâmetros."
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção de Erros e Avisos no Painel do Time e Ligas",
+          "desc": "Corrigidos múltiplos avisos de índices indefinidos (Undefined index) na página de apresentação do time (team_presentation.php) e no status do país (paisstatus.php), um erro de sintaxe SQL (PDOException) em Time::readExtraInfo, e um erro de coluna não encontrada (PDOException) no método countAll da classe Liga através da parametrização de consultas SQL e validação de parâmetros."
+        }
+      ]
     },
     {
-      "id": "12_07_2026",
+      "id": "day_12_07_2026",
       "date": "12/07/2026",
-      "title": "Integração MCP Híbrida e Melhorias no Mercado e Painel",
-      "description": "Finalizada a infraestrutura do assistente de IA via MCP, corrigido o layout do painel de alteração de senha e expandidos os filtros de busca de mercado e informações de clubes.",
       "items": [
         {
           "badge": "new",
@@ -603,7 +701,7 @@
       ]
     },
     {
-      "id": "11_07_2026",
+      "id": "day_11_07_2026",
       "date": "11/07/2026",
       "items": [
         {

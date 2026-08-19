@@ -388,14 +388,16 @@ class Competicao_clube{
 		return $stmt->execute();
 	}
 	
-	function gravarImportacao($id_competicao, $codigo_time){
-		// Garante que a linha existe e marca como has_team = 1
-		$query = "INSERT INTO competicao_times (id_competicao, codigo_time, has_team) 
-				  VALUES (:id_competicao, :codigo_time, '1') 
-				  ON DUPLICATE KEY UPDATE has_team = '1'";
+	function gravarImportacao($id_competicao, $codigo_time, $pais_time){
+		// Garante que a linha existe, marca como has_team = 1 e id_time_portal = NULL
+		$query = "INSERT INTO competicao_times (id_competicao, codigo_time, pais_time, id_time_portal, has_team) 
+				  VALUES (:id_competicao, :codigo_time, :pais_time, NULL, '1') 
+				  ON DUPLICATE KEY UPDATE pais_time = :pais_time2, id_time_portal = NULL, has_team = '1'";
 		$stmt = $this->conn->prepare($query);
 		$stmt->bindParam(':id_competicao', $id_competicao);
 		$stmt->bindParam(':codigo_time', $codigo_time);
+		$stmt->bindParam(':pais_time', $pais_time);
+		$stmt->bindParam(':pais_time2', $pais_time);
 		return $stmt->execute();
 	}
 	
