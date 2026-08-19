@@ -192,7 +192,7 @@ if (!empty($_FILES['files'])) {
 		 } else {
 			 $is_success = false;
 			 $error_msg .= 'Houve erros durante a inserção do time, possivelmente duplicado.';
-			 die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
+			 die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg, 'errors'=> $error_msg ]));
 
 		 }
 
@@ -439,10 +439,10 @@ if (!empty($_FILES['files'])) {
 		}
 		
 if($is_success){
-	$competicao->gravarImportacao($idCompeticao, $codigo_time);
+	$competicao->gravarImportacao($idCompeticao, abs($codigo_time), $pais_time);
 }
 
-die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
+die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg, 'errors'=> $error_msg ]));
 
  }
 

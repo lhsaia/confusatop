@@ -190,14 +190,19 @@ foreach ($partidas as $matchInfo) {
     if (!empty($allMatchPlayers)) {
         $inClause = implode(',', $allMatchPlayers);
         // Consultar status dinâmicos no MariaDB principal
-        $querySt = "SELECT j.ID, 
-                           IF(j.lesionado_ate IS NOT NULL AND j.lesionado_ate >= CURDATE(), 1, 0) as lesionado,
-                           COALESCE(cs.suspenso, 0) as suspenso 
-                    FROM jogador j 
-                    LEFT JOIN competicao_suspensos cs ON j.ID = cs.id_jogador AND cs.id_competicao = :comp
-                    WHERE j.ID IN ($inClause)";
+        $querySt = "SELECT val.ID,
+                           IF((cs.lesionado_ate IS NOT NULL AND cs.lesionado_ate >= CURDATE()) OR (j.lesionado_ate IS NOT NULL AND j.lesionado_ate >= CURDATE()), 1, 0) as lesionado,
+                           COALESCE(cs.suspenso, 0) as suspenso
+                    FROM (
+                        SELECT ID FROM jogador WHERE ID IN ($inClause)
+                        UNION
+                        SELECT id_jogador AS ID FROM competicao_suspensos WHERE id_competicao = :comp AND id_jogador IN ($inClause)
+                    ) val
+                    LEFT JOIN jogador j ON val.ID = j.ID
+                    LEFT JOIN competicao_suspensos cs ON val.ID = cs.id_jogador AND cs.id_competicao = :comp2";
         $stmtSt = $db->prepare($querySt);
         $stmtSt->bindValue(':comp', $idCompeticao, PDO::PARAM_INT);
+        $stmtSt->bindValue(':comp2', $idCompeticao, PDO::PARAM_INT);
         $stmtSt->execute();
         while ($rowSt = $stmtSt->fetch(PDO::FETCH_ASSOC)) {
             $pId = (int)$rowSt['ID'];

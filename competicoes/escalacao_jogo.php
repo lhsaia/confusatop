@@ -379,14 +379,19 @@ if ($escalacaoRow) {
 $statusMaria = [];
 if (!empty($playerIds)) {
     $inClause = implode(',', array_map('intval', $playerIds));
-    $queryStatus = "SELECT j.ID, 
-                           IF(j.lesionado_ate IS NOT NULL AND j.lesionado_ate >= CURDATE(), 1, 0) as lesionado,
+    $queryStatus = "SELECT val.ID, 
+                           IF((cs.lesionado_ate IS NOT NULL AND cs.lesionado_ate >= CURDATE()) OR (j.lesionado_ate IS NOT NULL AND j.lesionado_ate >= CURDATE()), 1, 0) as lesionado,
                            COALESCE(cs.suspenso, 0) as suspenso 
-                    FROM jogador j 
-                    LEFT JOIN competicao_suspensos cs ON j.ID = cs.id_jogador AND cs.id_competicao = :comp
-                    WHERE j.ID IN ($inClause)";
+                    FROM (
+                        SELECT ID FROM jogador WHERE ID IN ($inClause)
+                        UNION
+                        SELECT id_jogador AS ID FROM competicao_suspensos WHERE id_competicao = :comp AND id_jogador IN ($inClause)
+                    ) val
+                    LEFT JOIN jogador j ON val.ID = j.ID
+                    LEFT JOIN competicao_suspensos cs ON val.ID = cs.id_jogador AND cs.id_competicao = :comp2";
     $stmtStatus = $db->prepare($queryStatus);
     $stmtStatus->bindParam(':comp', $idCompeticao, PDO::PARAM_INT);
+    $stmtStatus->bindParam(':comp2', $idCompeticao, PDO::PARAM_INT);
     $stmtStatus->execute();
     while ($row = $stmtStatus->fetch(PDO::FETCH_ASSOC)) {
         $statusMaria[(int)$row['ID']] = [
