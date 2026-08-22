@@ -18,9 +18,10 @@ $liga = new Liga($db);
 $pais = new Pais($db);
 
 $page_title = "Inserir liga";
-$css_filename = "newindex";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'area_competicao';
+$aux_css = 'home_redesign';
+$extra_css = 'ligas_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -97,99 +98,90 @@ if(isset($_POST['nome']) && !empty($_POST['pais']) && !empty($_POST['nome']) && 
 }
 ?>
 
-<script type="application/javascript">
-var close = document.getElementsByClassName("closebtn");
-var i;
+<main class="propostas-container">
+    <div class="propostas-card">
+        <h2 class="propostas-title">Criar Liga</h2>
+        <div id='inscricao'>
+            <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
+                
+                <label for="nome">Nome</label>
+                <input type='text' name='nome' id="nome" class='form-control' required />
 
-for (i = 0; i < close.length; i++) {
-    close[i].onclick = function(){
-        var div = this.parentElement;
-        div.style.opacity = "0";
-        setTimeout(function(){ div.style.display = "none"; }, 600);
-    }
-}
-</script>
+                <label for="sexo">Masculina/Feminina</label>
+                <select class='form-control' id="sexo" name='sexo'>
+                    <option value='0'>Masculina</option>
+                    <option value='1'>Feminina</option>
+                </select>
 
+                <label for="tier">Tier</label>
+                <select class='form-control' id="tier" name='tier' required>
+                    <option value="">Selecione tier...</option>
+                    <option value='1'>1 (primeira divisão)</option>
+                    <option value='2'>2 (segunda divisão)</option>
+                    <option value='3'>3 (terceira divisão)</option>
+                    <option value='4'>4 (quarta divisão)</option>
+                    <option value='5'>5 (quinta divisão)</option>
+                    <option value='6'>6 (sexta divisão)</option>
+                </select>
 
-<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
-<div id='errorbox'></div>
-<div>
-<div id='inscricao'>
-
-<form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
-
-    
-
-        <label>Nome</label>
-<input type='text' name='nome' class='form-control' />
-
-        <label>Masculina/Feminina</label>
-<?php
-                // put them in a select drop-down
-                echo "<select class='form-control' name='sexo'>";
-                echo "<option value='0'>Masculina</option>";
-                echo "<option value='1'>Feminina</option>";
-
-
-                echo "</select>";
-
-                ?>
-
-        <label>Tier</label>
-<?php
-                // put them in a select drop-down
-                echo "<select class='form-control' name='tier'>";
-                echo "<option>Selecione tier...</option>";
-
-                echo "<option value='1'>1 (primeira divisão)</option>";
-                echo "<option value='2'>2 (segunda divisão)</option>";
-                echo "<option value='3'>3 (terceira divisão)</option>";
-                echo "<option value='4'>4 (quarta divisão)</option>";
-                echo "<option value='5'>5 (quinta divisão)</option>";
-                echo "<option value='6'>6 (sexta divisão)</option>";
-
-                echo "</select>";
-
-                ?>
-
-
-        <label>País</label>
-<?php
+                <label for="pais">País</label>
+                <?php
                 // ler times do banco de dados
                 $stmt = $pais->read($_SESSION['user_id']);
-
-                // put them in a select drop-down
-                echo "<select class='form-control' name='pais'>";
-                echo "<option>Selecione país...</option>";
-
+                echo "<select class='form-control' id='pais' name='pais' required>";
+                echo "<option value=''>Selecione país...</option>";
                 while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
                     extract($row_category);
                     echo "<option value='{$id}'>{$nome}</option>";
                 }
-
                 echo "</select>";
                 ?>
 
-        <label>Logo</label>
-<input type="file" class='form-control custom-file-upload' name='logo' accept=".jpg,.png,.jpeg">
+                <label>Logo</label>
+                <label class='custom-file-upload' for='logo'>
+                    <img id='logo-preview' style="display:none; max-height:40px; max-width:60px; object-fit:contain; border-radius:4px;">
+                    <span id='nomeLogo'>Clique para selecionar a Logo</span>
+                </label>
+                <input type="file" id='logo' class='form-control' name='logo' accept=".jpg,.png,.jpeg" style="display: none !important;">
 
-        <div style="margin-top: 15px;">
-<button type="submit" name="criar" class="btn">Inserir</button>
-</div>
+                <div style="margin-top: 15px;">
+                    <button type="submit" name="criar" class="btn">Inserir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
 
-    </form>
-</div>
-</div>
+<script type="application/javascript">
+$(document).ready(function(){
+    $(document).on('click', '.closebtn', function(){
+        var div = $(this).parent();
+        div.addClass('fade-out');
+        setTimeout(function(){ div.hide(); }, 400);
+    });
+    
+    function readURL(input, target_div) {
+       if (input.files && input.files[0]) {
+           var reader = new FileReader();
+           reader.onload = function (e) {
+               $('#'+target_div + "-preview")
+                   .attr('src', e.target.result).show();
+           };
+           reader.readAsDataURL(input.files[0]);
+       }
+    }
+   
+    $('#logo').change(function(){
+        $("#nomeLogo").text("");
+        readURL(this, 'logo');
+    });
+});
+</script>
 
 <?php
-
     } else {
-
-    echo "Usuário sem permissão para editar ligas, por favor faça o login.";
-}
-
-
-
+        echo "<main class='propostas-container'><div class='propostas-card'><h2 class='propostas-title'>Criar Liga</h2><p>Usuário sem permissão para editar ligas, por favor faça o login.</p></div></main>";
+    }
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 ?>

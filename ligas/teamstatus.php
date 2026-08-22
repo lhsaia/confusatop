@@ -262,10 +262,9 @@ $perc_estrangeiros = $total_rows > 0 ? number_format(($estrangeiros / $total_row
                     <img src="/images/estadios/<?php echo htmlspecialchars($foto_estadio); ?>" style="height: 80px; width: 120px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1);">
                 </div>
             <?php endif; ?>
-            
             <!-- Botão de Apresentação -->
-            <a href="/times/team_presentation.php?team=<?php echo $idTime; ?>" class="btn-apresentacao" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: #0284c7; color: #fff; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 0.9rem; transition: background 0.2s;">
-                <span class="material-symbols-outlined" style="font-size: 1.1rem;">newspaper</span>
+            <a href="/times/team_presentation_magazine.php?team=<?php echo $idTime; ?>" class="btn-apresentacao" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: #0284c7; color: #fff; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 0.9rem; transition: background 0.2s;">
+                <span class="material-symbols-outlined" style="font-size: 1.1rem;">auto_stories</span>
                 <span>Apresentação</span>
             </a>
         </div>

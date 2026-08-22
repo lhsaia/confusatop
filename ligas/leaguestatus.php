@@ -80,7 +80,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais){     
 	$baseLink = "/ligas/teamstatus";
 } else {
-	$baseLink = "/times/team_presentation";
+	$baseLink = "/times/team_presentation_magazine";
 }
 ?>
 
