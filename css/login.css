@@ -858,3 +858,271 @@ nav.open {
 #toolbar div span{
 	padding-left: 5px;
 }
+
+/* ==========================================
+   MODAIS MODERNIZADOS (Novo Tema dos Modais)
+   ========================================== */
+
+/* Background Overlay */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 99999 !important;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(15, 23, 42, 0.6) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    padding-top: 0 !important;
+}
+
+/* Modais center flex layout */
+.modal[style*="display: block"],
+.modal[style*="display:block"] {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Modal Content Card */
+.modal-content {
+    background-color: rgba(255, 255, 255, 0.96) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    margin: auto !important;
+    padding: 28px !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.05) !important;
+    box-sizing: border-box;
+    width: 92% !important;
+    position: relative;
+    font-family: 'Montserrat', sans-serif !important;
+    text-align: left !important;
+}
+
+/* Width classes overriding old inline or fixed styles */
+.modal-content.larger {
+    max-width: 480px !important;
+    width: 92% !important;
+}
+
+.modal-content.smaller {
+    max-width: 340px !important;
+    width: 92% !important;
+    text-align: center !important;
+}
+
+/* Close icon */
+.close {
+    position: absolute !important;
+    right: 20px !important;
+    top: 15px !important;
+    color: #64748b !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    line-height: 1;
+    z-index: 10;
+}
+
+.close:hover {
+    color: #ef4444 !important;
+}
+
+/* Containers within form */
+.modal-content .container {
+    padding: 0 !important;
+    background-color: transparent !important;
+}
+
+/* Separator between form fields and actions container */
+.modal-content .container + .container {
+    margin-top: 20px !important;
+    padding-top: 16px !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.06) !important;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Form Elements styling */
+.modal-content label {
+    display: block !important;
+    font-family: 'Kanit', sans-serif !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    margin-bottom: 6px !important;
+    font-size: 0.95rem !important;
+    text-transform: none !important;
+}
+
+.modal-content input[type=text],
+.modal-content input[type=password],
+.modal-content input[type=email],
+.modal-content textarea {
+    width: 100% !important;
+    padding: 12px 14px !important;
+    margin: 4px 0 16px 0 !important;
+    display: block !important;
+    border: 1px solid rgba(0, 0, 0, 0.12) !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 0.95rem !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    outline: none !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.modal-content input[type=text]:focus,
+.modal-content input[type=password]:focus,
+.modal-content input[type=email]:focus,
+.modal-content textarea:focus {
+    border-color: #0284c7 !important;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+}
+
+.modal-content textarea.areapais {
+    height: 90px !important;
+    resize: none !important;
+}
+
+/* Buttons style */
+.modal-content .submitbtn {
+    display: block !important;
+    width: 100% !important;
+    padding: 12px !important;
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    font-family: 'Kanit', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    border: none !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    transition: background 0.2s ease, transform 0.1s ease !important;
+    text-align: center !important;
+    margin: 8px 0 !important;
+}
+
+.modal-content .submitbtn:hover {
+    background: #0369a1 !important;
+}
+
+.modal-content .cancelbtn {
+    display: block !important;
+    width: 100% !important;
+    padding: 11px !important;
+    background: transparent !important;
+    color: #64748b !important;
+    font-family: 'Kanit', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    border: 1.5px solid rgba(0, 0, 0, 0.15) !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    text-align: center !important;
+    margin: 0 !important;
+}
+
+.modal-content .cancelbtn:hover {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+    border-color: rgba(220, 38, 38, 0.4) !important;
+}
+
+.modal-content .newbtn {
+    display: block !important;
+    width: 100% !important;
+    padding: 11px !important;
+    background: transparent !important;
+    color: #0284c7 !important;
+    font-family: 'Kanit', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    border: 1.5px solid rgba(2, 132, 199, 0.3) !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    text-align: center !important;
+    margin: 0 !important;
+}
+
+.modal-content .newbtn:hover {
+    background: rgba(2, 132, 199, 0.08) !important;
+    border-color: #0284c7 !important;
+}
+
+/* Remember me checkbox container */
+.modal-content label:has(input[type="checkbox"]) {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    margin-top: 10px !important;
+    cursor: pointer;
+}
+
+.modal-content input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+    cursor: pointer;
+}
+
+/* Forgot password link container */
+.modal-content .psw {
+    display: block !important;
+    text-align: center !important;
+    margin-top: 12px !important;
+    font-size: 0.9rem !important;
+    color: #64748b !important;
+    float: none !important;
+    padding-top: 0 !important;
+}
+
+.modal-content .psw a {
+    color: #0284c7 !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+}
+
+.modal-content .psw a:hover {
+    text-decoration: underline !important;
+}
+
+/* Image container */
+.imgcontainer {
+    margin: 0 0 15px 0 !important;
+}
+
+/* Text elements inside card */
+.modal-content p {
+    font-size: 1.1rem !important;
+    color: #0f172a !important;
+    font-weight: 500 !important;
+    margin-bottom: 20px !important;
+    margin-top: 0 !important;
+}
+
+/* Responsive adjustment */
+@media only screen and (max-width: 55rem) {
+    .modal-content {
+        width: 92% !important;
+        height: auto !important;
+        position: relative !important;
+        margin: auto !important;
+        top: unset !important;
+        border-radius: 18px !important;
+        padding: 24px !important;
+        z-index: 120 !important;
+    }
+}

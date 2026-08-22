@@ -453,12 +453,10 @@ if (!$is_redesigned):
 <div style="clear:both;"></div>
 
 <div id='id01' class="modal">
-
   <form method="POST" class="modal-content animate larger" action="<?php echo htmlspecialchars($_SERVER['REQUEST_URI']);?>">
-    <!-- <div class="imgcontainer">
+    <div class="imgcontainer">
       <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
-      <img src="/images/default-user.png" alt="Avatar" class="avatar">
-    </div> -->
+    </div>
 
     <div class="container">
       <label for="username"><b>Nome de usuário ou email</b></label>
