@@ -121,7 +121,7 @@ if(!$results) {
                 <div class="team-name">
                     <?php 
                     if($results['timeA_id']) {
-                        echo '<a href="/times/team_presentation.php?team='.$results['timeA_id'].'" style="text-decoration:none; color:inherit;">'.$results['timeA_nome'].'</a>';
+                        echo '<a href="/times/team_presentation_magazine.php?team='.$results['timeA_id'].'" style="text-decoration:none; color:inherit;">'.$results['timeA_nome'].'</a>';
                     } else {
                         echo $results['timeA_nome'];
                     }
@@ -139,7 +139,7 @@ if(!$results) {
                 <div class="team-name">
                     <?php 
                     if($results['timeB_id']) {
-                        echo '<a href="/times/team_presentation.php?team='.$results['timeB_id'].'" style="text-decoration:none; color:inherit;">'.$results['timeB_nome'].'</a>';
+                        echo '<a href="/times/team_presentation_magazine.php?team='.$results['timeB_id'].'" style="text-decoration:none; color:inherit;">'.$results['timeB_nome'].'</a>';
                     } else {
                         echo $results['timeB_nome'];
                     }

@@ -385,3 +385,12 @@
   min-width: 150px !important;
   text-align: left !important;
 }
+
+#tabelaPrincipal select.editavel,
+#tabelaPrincipal input.editavel,
+#tabelaPrincipal .valorEditavel.editavel,
+#tabelaPrincipal .nivelEditavel.editavel {
+  max-width: 110px !important;
+  box-sizing: border-box !important;
+}
+

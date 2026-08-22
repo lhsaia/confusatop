@@ -268,6 +268,10 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
 
 $megaQuery .= "COMMIT; ";
 $database->directRun($megaQuery);
+if ($database->conn !== null) {
+    $database->conn->exec("PRAGMA wal_checkpoint(TRUNCATE);");
+    $database->conn = null;
+}
 
 //outros arquivos do pacote
 
