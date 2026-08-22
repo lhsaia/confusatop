@@ -61,68 +61,46 @@ if(isset($_POST['nome_arbitro']) && !empty($_POST['nome_aux2']) && !empty($_POST
 ?>
 
 <script type="application/javascript">
-
  $(document).ready(function($){
-	 
-	$('#toolbar').html("<div id='hexagen_new' style='cursor:pointer;'><span style=\"font-size:16px !important\" class='material-symbols-outlined'>casino</span><span style='font-weight:bold;'> Hexagen</span></div>");
-	$("#toolbar").appendTo("#toolbar-card-container");
+    $('#toolbar').html("<div id='hexagen' style='cursor:pointer; display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.2); border-radius: 8px; color: #0284c7; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;' onmouseover=\"this.style.background='rgba(2, 132, 199, 0.15)'\" onmouseout=\"this.style.background='rgba(2, 132, 199, 0.08)'\"><span style=\"font-size:18px !important\" class='material-symbols-outlined'>casino</span><span>Hexagen</span></div>");
+    $("#toolbar").appendTo("#toolbar-card-container");
 
-	var close = document.getElementsByClassName("closebtn");
-	var i;
+    $(document).on('click', '.closebtn', function(){
+        var div = $(this).parent();
+        div.addClass('fade-out');
+        setTimeout(function(){ div.hide(); }, 400);
+    });
 	
-	
+    $(document).on("click", "#hexagen", function(){
+        var nacionalidade = $("#pais_arbitro").val();
+        var sexo = $("#genero_arbitro").val();
 
-	for (i = 0; i < close.length; i++) {
-		close[i].onclick = function(){
-			var div = this.parentElement;
-			div.style.opacity = "0";
-			setTimeout(function(){ div.style.display = "none"; }, 600);
-		}
-	}
-	
-	
-$("#hexagen_new").on("click",function(){
-    var nacionalidade = $("#pais_arbitro").val();
-    var sexo = $("#genero_arbitro").val();
+        var formData = {
+            'nacionalidade' : nacionalidade,
+            'sexo' : sexo
+        }
 
-    var formData = {
-        'nacionalidade' : nacionalidade,
-        'sexo' : sexo
-    }
-
-     $.ajax({
-            type        : 'POST', // define the type of HTTP verb we want to use (POST for our form)
-            url         : '/arbitros/hexagen_arbitro.php', // the url where we want to POST
-            data        : formData, // our data object
-            dataType    : 'json', // what type of data do we expect back from the server
-                        encode          : true
-            })
-
-                    .done(function(data) {
-
+        $.ajax({
+            type        : 'POST',
+            url         : '/arbitros/hexagen_arbitro.php',
+            data        : formData,
+            dataType    : 'json',
+            encode      : true
+        })
+        .done(function(data) {
             if (data.success) {
-                //preencher campos
                 $("#nome_arbitro").val(data.arb_info.nomeArbitro);
                 $("#nome_aux1").val(data.arb_info.nomeAuxiliarUm);
                 $("#nome_aux2").val(data.arb_info.nomeAuxiliarDois);
                 $("#estilo_arbitro").val(data.arb_info.estilo);
                 $("#pais_arbitro").val(data.arb_info.pais);
-				$("#nascimento_arbitro").val(data.arb_info.nascimento);
-
+                $("#nascimento_arbitro").val(data.arb_info.nascimento);
             }
-
-            // here we will handle errors and validation messages
-            }).fail(function(jqXHR, textStatus, errorThrown ){
+        }).fail(function(jqXHR, textStatus, errorThrown ){
             console.log("Erro");
-            console.log(jqXHR);
-            console.log(textStatus);
-            console.log(errorThrown);
-            });
-
-});
-
-
-});
+        });
+    });
+ });
 </script>
 
 
@@ -194,9 +172,9 @@ $("#hexagen_new").on("click",function(){
 	<input type='date' id='nascimento_arbitro' name='nascimento_arbitro' class='form-control inputHerdeiro' /></td>
 		
 	    <div style="margin-top: 15px;">
-<button type="submit" name="criar" id="salvar" class="btn">Inserir</button>
-<button type="reset" name="reset" class="btn">Limpar</button>
-</div>
+            <button type="submit" name="criar" id="salvar" class="btn">Inserir</button>
+            <button type="reset" name="reset" class="btn">Limpar</button>
+        </div>
 
 </form>
 </div>

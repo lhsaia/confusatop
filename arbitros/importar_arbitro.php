@@ -27,6 +27,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+echo '<link rel="stylesheet" href="/css/importacao_moderna.css?v=' . $css_versao . '">';
 
 echo '<main class="propostas-container narrow-container" style="padding-top: 80px; padding-bottom: 60px;">';
 echo '<div class="propostas-card">';
