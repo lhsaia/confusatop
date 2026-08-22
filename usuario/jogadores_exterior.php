@@ -203,19 +203,27 @@ echo('</div>');
       <label for="clubeDestinoTransf"><b>Clube de destino</b></label>
       <select id="clubeDestinoTransf"  name="clubeDestinoTransf" class="form-control" required>
           <?php
-      // ler times do banco de dados
-                $stmt = $time->read($_SESSION['user_id']);
+                 $stmt = $time->read($_SESSION['user_id']);
 
-                echo "<option value=''>Selecione time...</option>";
+                 $closed_countries = [];
+                 $query_closed = "SELECT pais FROM janelas WHERE CASE WHEN padraoAbertura IS NULL THEN 1 ELSE CAST(SUBSTR(padraoAbertura, MONTH(NOW()), 1) AS UNSIGNED) END = 0";
+                 $stmt_closed = $db->prepare($query_closed);
+                 $stmt_closed->execute();
+                 while ($row_closed = $stmt_closed->fetch(PDO::FETCH_ASSOC)) {
+                     $closed_countries[] = (int)$row_closed['pais'];
+                 }
 
-                while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
-                    extract($row_category);
-                    //if($id != $idTime){
-                    echo "<option value='{$id}'>{$nome}</option>";
-                    //}
-                }
+                 echo "<option value=''>Selecione time...</option>";
 
-                ?>
+                 while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
+                     extract($row_category);
+                     if (in_array((int)$paisTime, $closed_countries)) {
+                         continue; // Não exibir times de países com janela fechada no período
+                     }
+                     echo "<option value='{$id}'>{$nome}</option>";
+                 }
+
+                 ?>
 
       </select>
 

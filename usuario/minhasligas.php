@@ -5,159 +5,26 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "Minhas ligas - ".($_SESSION['nomereal'] ?? '');
-$css_filename = "indexRanking";
-$aux_css = "usuario";
-$css_login = 'login';
+$css_filename = "home_redesign";
+$aux_css = "home_redesign";
+$extra_css = "ligas_redesign";
 $css_versao = date('h:i:s');
-?>
-
-<style>
-    #ranking-container {
-        padding: 40px 20px;
-        background: #f4f7f6;
-        min-height: 100vh;
-    }
-    
-    #quadroTimes {
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-    
-    h2 {
-        font-family: 'Outfit', 'Inter', sans-serif;
-        font-weight: 700 !important;
-        color: #1a1469 !important;
-        margin-bottom: 30px;
-        position: relative;
-        padding-bottom: 15px;
-        letter-spacing: -0.5px;
-        text-align: left;
-    }
-    
-    h2::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 60px;
-        height: 4px;
-        background: linear-gradient(90deg, #1a1469, #4c41d1);
-        border-radius: 2px;
-    }
-    
-    .header-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
-    }
-    
-    .card {
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        overflow: hidden;
-        background: #fff;
-        padding: 20px;
-    }
-    
-    .table thead th {
-        background: #f8fafc;
-        border-bottom: 2px solid #edf2f7;
-        color: #718096;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.85em;
-        letter-spacing: 0.5px;
-    }
-    
-    .table td {
-        vertical-align: middle;
-        color: #2d3748;
-    }
-    
-    .btn-action {
-        padding: 8px 20px;
-        font-weight: 600;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        border: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none !important;
-    }
-    
-    .btn-create {
-        background: #4c41d1;
-        color: #fff !important;
-    }
-    
-    .btn-create:hover {
-        background: #3a32a8;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(76, 65, 209, 0.3);
-    }
-    
-    .btn-nav {
-        background: #1a1469;
-        color: #fff !important;
-    }
-    
-    .btn-nav:hover {
-        background: #2a228a;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(26, 20, 105, 0.3);
-    }
-    
-    .genderSign {
-        font-size: 0.75em;
-        padding: 2px 6px;
-        border-radius: 4px;
-        margin-left: 8px;
-        font-weight: 700;
-    }
-    
-    .genderMas { background: #e0f2fe; color: #0369a1; }
-    .genderFem { background: #fce7f3; color: #be185d; }
-    
-    .logoimage {
-        border-radius: 4px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    .tier-badge {
-        background: #f1f5f9;
-        color: #475569;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.9em;
-    }
-</style>
-
-<?php
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 ?>
 
-
-<div id="ranking-container">
-    <div id="quadroTimes">
-        <div class="header-actions">
-            <h2>Quadro de Ligas</h2>
+<main class="propostas-container">
+    <div class="propostas-card">
+        <div class="header-actions-container">
+            <h2 class="propostas-title">Quadro de Ligas</h2>
             <div class="d-flex" style="gap: 10px;">
-                <a href="/ligas/gerenciador/gerenciar_competicoes.php" class="btn-action btn-nav"><span class="material-symbols-outlined">trophy</span> Minhas Copas</a>
-                <a href="/ligas/criar_liga.php" class="btn-action btn-create"><span class="material-symbols-outlined">add_circle</span> Criar Liga</a>
+                <a href="/ligas/gerenciador/gerenciar_competicoes.php" class="btn-action-primary"><span class="material-symbols-outlined">trophy</span> Minhas Copas</a>
+                <a href="/ligas/criar_liga.php" class="btn-action-primary"><span class="material-symbols-outlined">add_circle</span> Criar Liga</a>
             </div>
         </div>
         
         <div id='error_box'></div>
-        
-        <div class="card">
-
-
 <?php
 
 // page given in URL parameter, default page is one
@@ -212,10 +79,9 @@ $page_url = "minhasligas.php?";
     include_once($_SERVER['DOCUMENT_ROOT']."/elements/paging.php");
     echo "</div>";
 
-// display the products if there are any
 if($num>0){
 
-
+    echo "<div class='tbl_user_data'>";
     echo "<table id='tabelaPrincipal' class='table'>";
     echo "<thead>";
         echo "<tr>";
@@ -247,7 +113,7 @@ if($num>0){
 
             echo "<tr id='".$id."' data-sexo='".$sexo."'>";
                 //echo "<td><span id=".$id.">{$id}</span></td>";
-                echo "<td><span class='nomeEditavel' id='nom".$id."'><a class='nomeLiga fw-bold' href='../ligas/leaguestatus.php?league=".$id."' style='text-decoration:none; color:#1a1469;'>{$nome}</a></span><span class=' {$genderClass} genderSign'>{$genderCode}</span></td>";
+                echo "<td><span class='nomeEditavel' id='nom".$id."'><a class='nomeLiga fw-bold' href='../ligas/leaguestatus.php?league=".$id."' style='text-decoration:none;'>{$nome}</a></span><span class=' {$genderClass} genderSign'>{$genderCode}</span></td>";
                 echo "<td><img class='logoimage' id='log".$id."' src='../images/ligas/".$logo."' height='35px'/><div class='newlogoedit' hidden> <input type='file' id='newlogo".$id."' class=' custom-file-upload' name='file' accept='.jpg,.png,.jpeg'/></div></td>";
                 echo "<td><span class='tier-badge nomeEditavel' id='tie".$id."'>{$tier}</span></td>";
                 if($idPais != 0){
@@ -278,6 +144,7 @@ if($num>0){
 
     echo "</tbody>";
     echo "</table>";
+    echo "</div>";
 
 }
 
@@ -286,9 +153,8 @@ else{
     echo "<div class='alert alert-info'>Não há ligas</div>";
 }
 
-        echo "</div>";
-    echo "</div>";
-echo "</div>";
+echo "</div>"; // closes propostas-card
+echo "</main>"; // closes propostas-container
 
 ?>
 
@@ -310,6 +176,7 @@ echo "</div>";
         tbl_row.find('.cancelar').show();
         tbl_row.find('.editar').hide();
         tbl_row.find('.deletar').hide();
+        tbl_row.find('.draftar').hide();
         tbl_row.find('.nomePais').hide();
         tbl_row.find('.newlogoedit').show();
         tbl_row.find('.logoimage').hide();
@@ -330,6 +197,7 @@ echo "</div>";
         tbl_row.find('.cancelar').hide();
         tbl_row.find('.editar').show();
         tbl_row.find('.deletar').show();
+        tbl_row.find('.draftar').show();
         tbl_row.find('.newlogoedit').hide();
         tbl_row.find('.logoimage').show();
 
@@ -349,6 +217,7 @@ echo "</div>";
         tbl_row.find('.cancelar').hide();
         tbl_row.find('.editar').show();
         tbl_row.find('.deletar').show();
+        tbl_row.find('.draftar').show();
         tbl_row.find('.newlogoedit').hide();
         tbl_row.find('.logoimage').show();
 

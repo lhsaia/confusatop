@@ -7,9 +7,9 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "Meus jogadores - ".($_SESSION['nomereal'] ?? '');
-$css_filename = "indexRanking";
-$aux_css = "usuario";
-$css_login = 'login';
+$css_filename = "home_redesign";
+$aux_css = "home_redesign";
+$extra_css = "ligas_redesign";
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -414,6 +414,8 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 	tbl_row.find(".cancelar").show();
 	tbl_row.find(".editar").hide();
 	tbl_row.find(".apagar").hide();
+	tbl_row.find(".add-referencia").hide();
+	tbl_row.find("a[id^='ref']").hide();
 	tbl_row.find('.hiddenInput').show();
 	tbl_row.find('.playerThumb').addClass('editableThumb');
 
@@ -503,6 +505,8 @@ $('.cancelar').click(function(){
         tbl_row.find(".cancelar").hide();
         tbl_row.find(".editar").show();
         tbl_row.find(".apagar").show();
+        tbl_row.find(".add-referencia").show();
+        tbl_row.find("a[id^='ref']").show();
         tbl_row.find('.linkNome').css("cursor","pointer");
         tbl_row.find('.linkNome').css("pointer-events","auto");
 
@@ -574,6 +578,8 @@ $('.cancelar').click(function(){
         tbl_row.find(".cancelar").hide();
         tbl_row.find(".editar").show();
         tbl_row.find(".apagar").show();
+        tbl_row.find(".add-referencia").show();
+        tbl_row.find("a[id^='ref']").show();
         tbl_row.find('.linkNome').css("cursor","pointer");
         tbl_row.find('.linkNome').css("pointer-events","auto");
         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
@@ -868,29 +874,29 @@ $.ajax({
 </script>
 
 
-<div id="quadro-container">
-<div align="center" id="quadroTimes">
-<div id='search_wrapper'><input type=text id='caixa_pesquisa' placeholder='Pesquisar...'><i class='fas fa-search'></i></div>
-<button id='importar_time' onclick="window.location='/jogadores/criar_jogador.php';">Criar jogador</button>
-<button id='importar_time' onclick="window.location='/jogadores/importar_jogador.php';">Importar jogador</button>
-<h2>Quadro de jogadores - <?php echo $_SESSION['nomereal']?></h2>
-<hr>
-<div id='errorbox'></div>
+<main class="propostas-container">
+    <div class="propostas-card">
+        <div class="header-actions-container">
+            <h2 class="propostas-title">Quadro de jogadores - <?php echo $_SESSION['nomereal']?></h2>
+            <div class="d-flex" style="gap: 10px; flex-wrap: wrap; align-items: center;">
+                <div id='search_wrapper'><input type='text' id='caixa_pesquisa' placeholder='Pesquisar...'><span class="material-symbols-outlined">search</span></div>
+                <button class='btn-action-primary' onclick="window.location='/jogadores/criar_jogador.php';"><span class="material-symbols-outlined">person_add</span> Criar jogador</button>
+                <button class='btn-action-primary' onclick="window.location='/jogadores/importar_jogador.php';"><span class="material-symbols-outlined">upload</span> Importar jogador</button>
+            </div>
+        </div>
+        
+        <div id='errorbox'></div>
+
+        <div class='tbl_user_data'>
+            <div style="text-align:center; padding: 20px;"><img id='loading' src='/images/icons/ajax-loader.gif' style="display:none;"></div>
+        </div>
+    </div>
+</main>
 
 <?php
 
-
-
-
-    // paging buttons here
-echo "<div style='clear:both;'></div>";
-echo "<div class='tbl_user_data'><img id='loading' src='/images/icons/ajax-loader.gif'></div>";
-
-echo('</div>');
-echo('</div>');
-
 } else {
-    echo "Usuário, por favor refaça o login.";
+    echo "<main class='propostas-container'><div class='propostas-card'><p>Usuário, por favor refaça o login.</p></div></main>";
 }
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");

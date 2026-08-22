@@ -400,7 +400,14 @@ foreach($masterLista as $paisSelecionado => $ligasSelecionadas){
 
 try {
     $database->directRun($megaQueryPais);
+    if ($database->conn !== null) {
+        $database->conn->exec("PRAGMA wal_checkpoint(TRUNCATE);");
+        $database->conn = null;
+    }
 } catch (Exception $e) {
+    if ($database->conn !== null) {
+        $database->conn = null;
+    }
     echo 'Exceção capturada: ',  $e->getMessage(), "\n";
     echo $megaQueryPais;
     die();
