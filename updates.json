@@ -10,6 +10,11 @@
   "days": [
     {
       "date": "22/08/2026",
+      "title": "Configuração do Git para Database do Octamotor",
+      "description": "Removido o arquivo de configuração octamotor/config/database.php do rastreamento do Git para que seja devidamente ignorado localmente."
+    },
+    {
+      "date": "22/08/2026",
       "title": "Acesso Restrito ao Assistente de Associação",
       "description": "Restringida a funcionalidade de associação/atualização inteligente de importados exclusivamente a administradores do site. Usuários regulares importam diretamente como novos por padrão."
     },
