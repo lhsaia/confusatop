@@ -149,3 +149,239 @@
     letter-spacing: 0.5px;
   }
 }
+
+/* Form inputs and buttons inside redesign cards */
+.propostas-card label {
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  color: #0284c7 !important;
+  display: block !important;
+  margin-top: 15px !important;
+  margin-bottom: 5px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.propostas-card input[type='text'],
+.propostas-card input[type='number'],
+.propostas-card input[type='date'],
+.propostas-card select {
+  width: 100% !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  color: #334155 !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.95rem !important;
+  outline: none !important;
+  transition: all 0.25s ease !important;
+  box-sizing: border-box !important;
+}
+
+.propostas-card input[type='text']:focus,
+.propostas-card input[type='number']:focus,
+.propostas-card input[type='date']:focus,
+.propostas-card select:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+}
+
+.propostas-card button.btn:not([type='reset']),
+.propostas-card button[type='submit'],
+.propostas-card .btn-primary {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  border: none !important;
+  color: #fff !important;
+  padding: 10px 20px !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 1rem !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25) !important;
+  transition: all 0.25s ease !important;
+  margin-top: 15px !important;
+  margin-right: 0 !important;
+  display: block !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+}
+
+.propostas-card button.btn:not([type='reset']):hover,
+.propostas-card button[type='submit']:hover,
+.propostas-card .btn-primary:hover {
+  background: linear-gradient(135deg, #0369a1, #075985) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35) !important;
+}
+
+.propostas-card button[type='reset'] {
+  background: #64748b !important;
+  border: none !important;
+  color: #fff !important;
+  padding: 10px 20px !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 1rem !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.25) !important;
+  transition: all 0.25s ease !important;
+  margin-top: 15px !important;
+  margin-right: 0 !important;
+  display: block !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+}
+
+.propostas-card button[type='reset']:hover {
+  background: #475569 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(100, 116, 139, 0.35) !important;
+}
+
+.propostas-card-subtitle {
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 1.15rem !important;
+  color: #0284c7 !important;
+  margin-bottom: 1.25rem !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+  padding-bottom: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-weight: 600;
+  text-shadow: none !important;
+}
+
+/* Custom file upload styling for forms inside ligas cards */
+.custom-file-upload:not(.hiddenInput) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  background: rgba(2, 132, 199, 0.04) !important;
+  border: 1px dashed rgba(2, 132, 199, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 15px !important;
+  cursor: pointer !important;
+  transition: all 0.25s ease !important;
+  margin-top: 12px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  color: #0369a1 !important;
+}
+
+.custom-file-upload:not(.hiddenInput):hover {
+  background: rgba(2, 132, 199, 0.08) !important;
+  border-color: #0284c7 !important;
+}
+
+#logo-preview {
+  max-height: 40px !important;
+  max-width: 60px !important;
+  object-fit: contain !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Player thumbnail dimensions */
+.playerThumb {
+  height: 55px !important;
+  width: auto !important;
+  object-fit: contain !important;
+  border-radius: 6px !important;
+}
+
+/* Minithumbs for clubs/stadiums */
+.minithumb {
+  height: 15px !important;
+  padding-right: 5px !important;
+  vertical-align: middle !important;
+  display: inline-block !important;
+}
+
+.smallthumb {
+  height: 25px !important;
+  vertical-align: middle !important;
+  display: inline-block !important;
+}
+
+/* Overlay style for transparent file inputs over player photos during edit */
+.hiddenInput {
+  font-size: 100px !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  opacity: 0 !important;
+  cursor: pointer !important;
+  display: inline-block !important;
+}
+
+.imageUpload {
+  position: relative !important;
+  overflow: hidden !important;
+  display: inline-block !important;
+}
+
+.editableThumb {
+  background-color: lightyellow !important;
+  border: 1px gray solid !important;
+}
+
+/* Search wrapper redesign for ligas/jogadores cards */
+#search_wrapper {
+  display: inline-flex !important;
+  align-items: center !important;
+  background: #fff !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  border-radius: 10px !important;
+  padding: 4px 12px !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
+  transition: all 0.25s ease !important;
+  margin: 0 !important;
+  float: none !important;
+  box-sizing: border-box !important;
+}
+
+#search_wrapper:focus-within {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+}
+
+#caixa_pesquisa {
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  padding: 6px 4px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.9rem !important;
+  color: #334155 !important;
+  width: 220px !important;
+  box-sizing: border-box !important;
+}
+
+#search_wrapper span.material-symbols-outlined {
+  color: #64748b !important;
+  font-size: 1.3rem !important;
+  cursor: pointer !important;
+}
+
+/* Utility classes */
+.hidden {
+  display: none !important;
+}
+
+/* Prevent name from wrapping when editing in the table row */
+.nomeEditavel.editavel {
+  display: inline-block !important;
+  white-space: nowrap !important;
+  min-width: 150px !important;
+  text-align: left !important;
+}
