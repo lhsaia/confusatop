@@ -63,6 +63,9 @@ class Time{
         $this->fidelidade=htmlspecialchars(strip_tags($this->fidelidade));
         $this->pais=htmlspecialchars(strip_tags($this->pais));
         $this->liga=htmlspecialchars(strip_tags($this->liga));
+        if ($this->liga === '') {
+            $this->liga = null;
+        }
         $this->sexo=htmlspecialchars(strip_tags($this->sexo));
         $this->status=htmlspecialchars(strip_tags($this->status));
 
@@ -1207,6 +1210,9 @@ function readInfo($id){
         $this->fidelidade=htmlspecialchars(strip_tags($this->fidelidade));
         $this->pais=htmlspecialchars(strip_tags($this->pais));
         $this->liga=htmlspecialchars(strip_tags($this->liga));
+        if ($this->liga === '') {
+            $this->liga = null;
+        }
         $this->id=htmlspecialchars(strip_tags($this->id));
 
         // bind values
@@ -1619,7 +1625,7 @@ function readExtraInfo($id){
     }
 
     $query = "SELECT
-                apelido, fundacao, cidade, patrocinio, material_esportivo, titulos, sobre_titulo, sobre_subtitulo, sobre_texto, mascote    
+                apelido, fundacao, cidade, patrocinio, material_esportivo, titulos, sobre_titulo, sobre_subtitulo, sobre_texto, mascote, foto_destaque    
             FROM
                 " . $this->table_name . " a
             WHERE
@@ -1772,9 +1778,9 @@ function readExtraInfo($id){
 			$lastOne++;
 		}
 		
-		if($lastOne<23){
-			$paramBinder = ":jogador" . $lastOne;
-			$stmt->bindParam($paramBinder, '0');
+		for ($i = $lastOne; $i <= 23; $i++) {
+			$paramBinder = ":jogador" . $i;
+			$stmt->bindValue($paramBinder, 0, PDO::PARAM_INT);
 		}
         
 
@@ -1888,6 +1894,72 @@ function readExtraInfo($id){
 	$sigla = $result['TresLetras'];
 	
     return $sigla;
+		
+	}
+
+	function alterarSobreMagazine($idTime,$cidade,$fundacao,$apelido,$patrocinio,$material_esportivo,$titulos,$sobre_titulo,$sobre_subtitulo,$sobre_texto,$foto_destaque=null){
+		
+			$idTime = htmlspecialchars(strip_tags($idTime));
+			$cidade = trim(htmlspecialchars(strip_tags($cidade)));
+			$fundacao = trim(htmlspecialchars(strip_tags($fundacao)));
+			$apelido = trim(htmlspecialchars(strip_tags($apelido)));
+			$patrocinio = trim(htmlspecialchars(strip_tags($patrocinio)));
+			$material_esportivo = trim(htmlspecialchars(strip_tags($material_esportivo)));
+			$titulos = trim(htmlspecialchars(strip_tags($titulos)));
+			$sobre_titulo = trim(htmlspecialchars(strip_tags($sobre_titulo)));
+			$sobre_subtitulo = trim(htmlspecialchars(strip_tags($sobre_subtitulo)));
+			$sobre_texto = trim($sobre_texto);
+		
+		if($foto_destaque !== null){
+			$foto_destaque = trim(htmlspecialchars(strip_tags($foto_destaque)));
+			$query = "UPDATE " . $this->table_name . " SET 
+						cidade=:cidade,  
+						fundacao=:fundacao,
+						apelido=:apelido,
+						patrocinio=:patrocinio,
+						material_esportivo=:material_esportivo,
+						titulos=:titulos,
+						sobre_titulo=:sobre_titulo,
+						sobre_subtitulo=:sobre_subtitulo,
+						sobre_texto=:sobre_texto,
+						foto_destaque=:foto_destaque
+						WHERE ID=:idTime";
+		} else {
+			$query = "UPDATE " . $this->table_name . " SET 
+						cidade=:cidade,  
+						fundacao=:fundacao,
+						apelido=:apelido,
+						patrocinio=:patrocinio,
+						material_esportivo=:material_esportivo,
+						titulos=:titulos,
+						sobre_titulo=:sobre_titulo,
+						sobre_subtitulo=:sobre_subtitulo,
+						sobre_texto=:sobre_texto 
+						WHERE ID=:idTime";
+		}
+
+        $stmt = $this->conn->prepare($query);
+
+        // bind values
+        $stmt->bindParam(":cidade", $cidade);
+        $stmt->bindParam(":fundacao", $fundacao);
+        $stmt->bindParam(":apelido", $apelido);
+        $stmt->bindParam(":patrocinio", $patrocinio);
+        $stmt->bindParam(":material_esportivo", $material_esportivo);
+        $stmt->bindParam(":titulos", $titulos);
+        $stmt->bindParam(":sobre_titulo", $sobre_titulo);
+        $stmt->bindParam(":sobre_subtitulo", $sobre_subtitulo);
+        $stmt->bindParam(":sobre_texto", $sobre_texto);
+        $stmt->bindParam(":idTime", $idTime);
+		if($foto_destaque !== null){
+			$stmt->bindParam(":foto_destaque", $foto_destaque);
+		}
+
+        if($stmt->execute()){
+            return true;
+        } else {
+            return false;
+        }
 		
 	}
 

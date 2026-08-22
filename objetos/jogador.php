@@ -150,6 +150,100 @@ class Jogador{
 
     }
 
+    function updateImported($idJogador, $fromScratch = null){
+        $subquery = ", Valor=:valor";
+        $this->valor=htmlspecialchars(strip_tags($this->valor));
+        $this->condicao = "true";
+
+        $query = "UPDATE " . $this->table_name . "
+                SET
+                    Nome=:nomeJogador, Nascimento=:nascimento, Mentalidade=:mentalidade, CobradorFalta=:cobradorFalta, Pais=:pais, Condicao=:condicao, StringPosicoes=:stringPosicoes, Nivel=:nivel, Marcacao=:marcacao, Desarme=:desarme, VisaoJogo=:visaoJogo, Movimentacao=:movimentacao, Cruzamentos=:cruzamentos, Cabeceamento=:cabeceamento, Tecnica=:tecnica, ControleBola=:controleBola, Finalizacao=:finalizacao, FaroGol=:faroGol, Velocidade=:velocidade, Forca=:forca, Reflexos=:reflexos, Seguranca=:seguranca, Saidas=:saidas, JogoAereo=:jogoAereo, Lancamentos=:lancamentos, DefesaPenaltis=:defesaPenaltis, Determinacao=:determinacao, DeterminacaoOriginal=:determinacaoOriginal, Sexo=:sexo " . $subquery . "
+                WHERE ID = :idJogador";
+
+        $stmt = $this->conn->prepare($query);
+
+        $this->nomeJogador=htmlspecialchars(strip_tags($this->nomeJogador));
+        $this->nascimento=htmlspecialchars(strip_tags($this->nascimento));
+        $this->mentalidade=htmlspecialchars(strip_tags($this->mentalidade));
+        $this->cobradorFalta=htmlspecialchars(strip_tags($this->cobradorFalta));
+        $this->pais=htmlspecialchars(strip_tags($this->pais));
+        $this->condicao=htmlspecialchars(strip_tags($this->condicao));
+        $this->stringPosicoes=htmlspecialchars(strip_tags($this->stringPosicoes));
+        $this->nivel=htmlspecialchars(strip_tags($this->nivel));
+        $this->sexo=htmlspecialchars(strip_tags($this->sexo));
+
+        $this->marcacao=htmlspecialchars(strip_tags($this->marcacao));
+        $this->desarme=htmlspecialchars(strip_tags($this->desarme));
+        $this->visaoJogo=htmlspecialchars(strip_tags($this->visaoJogo));
+        $this->movimentacao=htmlspecialchars(strip_tags($this->movimentacao));
+        $this->cruzamentos=htmlspecialchars(strip_tags($this->cruzamentos));
+        $this->cabeceamento=htmlspecialchars(strip_tags($this->cabeceamento));
+        $this->tecnica=htmlspecialchars(strip_tags($this->tecnica));
+        $this->controleBola=htmlspecialchars(strip_tags($this->controleBola));
+        $this->finalizacao=htmlspecialchars(strip_tags($this->finalizacao));
+        $this->faroGol=htmlspecialchars(strip_tags($this->faroGol));
+        $this->velocidade=htmlspecialchars(strip_tags($this->velocidade));
+        $this->forca=htmlspecialchars(strip_tags($this->forca));
+
+        $this->reflexos=htmlspecialchars(strip_tags($this->reflexos));
+        $this->seguranca=htmlspecialchars(strip_tags($this->seguranca));
+        $this->saidas=htmlspecialchars(strip_tags($this->saidas));
+        $this->jogoAereo=htmlspecialchars(strip_tags($this->jogoAereo));
+        $this->lancamentos=htmlspecialchars(strip_tags($this->lancamentos));
+        $this->defesaPenaltis=htmlspecialchars(strip_tags($this->defesaPenaltis));
+
+        $this->determinacao=htmlspecialchars(strip_tags($this->determinacao));
+        $this->determinacaoOriginal=htmlspecialchars(strip_tags($this->determinacaoOriginal));
+
+        if($this->valor == 0){
+            $stmt->bindValue(":valor", $this->calcularPasse());
+        } else {
+            $stmt->bindValue(":valor", $this->valor);
+        }
+
+        $stmt->bindParam(":idJogador", $idJogador);
+        $stmt->bindParam(":nomeJogador", $this->nomeJogador);
+        if($fromScratch != null){
+            $stmt->bindValue(":nascimento", $this->nascimento);
+        } else {
+            $stmt->bindValue(":nascimento", $this->aniversario_reverso($this->nascimento));
+        }
+
+        $stmt->bindParam(":mentalidade", $this->mentalidade);
+        $stmt->bindParam(":cobradorFalta", $this->cobradorFalta);
+        $stmt->bindParam(":pais", $this->pais);
+        $stmt->bindParam(":condicao", $this->condicao);
+        $stmt->bindParam(":stringPosicoes", $this->stringPosicoes);
+        $stmt->bindParam(":nivel", $this->nivel);
+        $stmt->bindParam(":marcacao", $this->marcacao);
+        $stmt->bindParam(":desarme", $this->desarme);
+        $stmt->bindParam(":visaoJogo", $this->visaoJogo);
+        $stmt->bindParam(":movimentacao", $this->movimentacao);
+        $stmt->bindParam(":cruzamentos", $this->cruzamentos);
+        $stmt->bindParam(":cabeceamento", $this->cabeceamento);
+        $stmt->bindParam(":tecnica", $this->tecnica);
+        $stmt->bindParam(":controleBola", $this->controleBola);
+        $stmt->bindParam(":finalizacao", $this->finalizacao);
+        $stmt->bindParam(":faroGol", $this->faroGol);
+        $stmt->bindParam(":velocidade", $this->velocidade);
+        $stmt->bindParam(":forca", $this->forca);
+        $stmt->bindParam(":reflexos", $this->reflexos);
+        $stmt->bindParam(":seguranca", $this->seguranca);
+        $stmt->bindParam(":saidas", $this->saidas);
+        $stmt->bindParam(":jogoAereo", $this->jogoAereo);
+        $stmt->bindParam(":lancamentos", $this->lancamentos);
+        $stmt->bindParam(":defesaPenaltis", $this->defesaPenaltis);
+        $stmt->bindParam(":determinacao", $this->determinacao);
+        $stmt->bindParam(":determinacaoOriginal", $this->determinacaoOriginal);
+        $stmt->bindParam(":sexo", $this->sexo);
+
+        if($stmt->execute()){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     //ler todos os jogadores para o quadro
 function readAll($from_record_num, $records_per_page, $dono = null){
 
@@ -272,6 +366,12 @@ return $stmt;
 
     //transferir jogador
     function transferir($idJogador,$idClubeDestino,$isCapitao = 0,$isPenalti = 0,$titularidade = 0, $posicaoBase = 0, $tipoTransferencia = 0,$prazo = 0,$valor = null){
+        if (empty($prazo) || $prazo === 0 || $prazo === "0") {
+            $prazo = '0000-00-00';
+        }
+        if (empty($posicaoBase) || $posicaoBase === '') {
+            $posicaoBase = 0;
+        }
 
         //sistema F+
         if($valor === null){
@@ -286,6 +386,16 @@ return $stmt;
             $alterarPasse = false;
             $querySalario = "";
             $querySalario2 = "";
+            $passeJogador = !empty($this->valor) ? $this->valor : 0;
+            if ($passeJogador == 0) {
+                $stmt_val = $this->conn->prepare("SELECT valor FROM jogador WHERE ID = ?");
+                $stmt_val->execute([$idJogador]);
+                $passeJogador = (float)$stmt_val->fetchColumn();
+            }
+            if ($passeJogador == 0) {
+                $passeJogador = $this->calcularPasse($idJogador);
+            }
+            $salario = $this->calcularSalario($passeJogador);
         } else {
             $preco = $valor;
             $passeJogador = $valor;
@@ -318,18 +428,19 @@ return $stmt;
         $query_contrato = "INSERT INTO
                     contratos_jogador
                 SET
-                    jogador=:jogador, clube=:clube, encerramento=:encerramento, tipoContrato=:tipoContrato, ".$querySalario2." capitao=:capitao, cobrancaPenalti=:cobrancaPenalti, titularidade=:titularidade, posicaoBase=:posicaoBase
+                    jogador=:jogador, clube=:clube, encerramento=:encerramento, tipoContrato=:tipoContrato, salario=:salario, capitao=:capitao, cobrancaPenalti=:cobrancaPenalti, titularidade=:titularidade, posicaoBase=:posicaoBase, ModificadorNivel=0, clubeVinculado=:clubeVinculado
                 ON DUPLICATE KEY UPDATE
                     ".$querySalario." clube=:clubeNovo, encerramento=:encerramentoNovo, capitao=:capitaoNovo, cobrancaPenalti=:cobrancaPenaltiNovo, titularidade=:titularidadeNovo, posicaoBase=:posicaoBaseNovo";
         $stmt = $this->conn->prepare( $query_contrato );
         $stmt->bindParam(":jogador", $idJogador);
         $stmt->bindParam(":tipoContrato", $tipoTransferencia);
         $stmt->bindParam(":clube", $idClubeDestino);
+        $stmt->bindParam(":clubeVinculado", $idClubeDestino);
         $stmt->bindParam(":encerramento", $prazo);
         $stmt->bindParam(":clubeNovo", $idClubeDestino);
         $stmt->bindParam(":encerramentoNovo", $prazo);
+        $stmt->bindParam(":salario",$salario);
         if($valor !== 0){
-            $stmt->bindParam(":salario",$salario);
             $stmt->bindParam(":salarioNovo",$salario);
         }
         $stmt->bindParam(":capitao", $isCapitao);
@@ -346,19 +457,21 @@ return $stmt;
             $error_count++;
         }
 
-        $query_transferencia = "INSERT INTO transferencias
-                            SET
-                                jogador=:jogador, clubeOrigem=:clubeOrigem, clubeDestino=:clube, valor=:valor, tipoTransferencia=:tipoTransferencia, status_execucao=1";
-        $stmt = $this->conn->prepare( $query_transferencia );
-        $stmt->bindParam(":jogador", $idJogador);
-        $stmt->bindParam(":tipoTransferencia", $tipoTransferencia);
-        $stmt->bindParam(":clube", $idClubeDestino);
-        $stmt->bindParam(":valor", $preco);
-        $stmt->bindParam(":clubeOrigem", $origemJogador);
-        if($stmt->execute()){
+        if ((int)$origemJogador !== (int)$idClubeDestino) {
+            $query_transferencia = "INSERT INTO transferencias
+                                SET
+                                    jogador=:jogador, clubeOrigem=:clubeOrigem, clubeDestino=:clube, valor=:valor, tipoTransferencia=:tipoTransferencia, status_execucao=1, emprestimo=0, encerramento='0000-00-00'";
+            $stmt = $this->conn->prepare( $query_transferencia );
+            $stmt->bindParam(":jogador", $idJogador);
+            $stmt->bindParam(":tipoTransferencia", $tipoTransferencia);
+            $stmt->bindParam(":clube", $idClubeDestino);
+            $stmt->bindParam(":valor", $preco);
+            $stmt->bindParam(":clubeOrigem", $origemJogador);
+            if($stmt->execute()){
 
-        } else {
-            $error_count++;
+            } else {
+                $error_count++;
+            }
         }
 
         if($alterarPasse){

@@ -204,7 +204,7 @@ class Tecnico{
         $query_contrato = "INSERT INTO
                     contratos_tecnico
                 SET
-                    tecnico=:tecnico, clube=:clube, prazo=:prazo, tipoContrato=:tipoContrato
+                    tecnico=:tecnico, clube=:clube, prazo=:prazo, tipoContrato=:tipoContrato, modificadorNivel=0, salario=0
                 ON DUPLICATE KEY UPDATE
                     clube=:clubeNovo, prazo=:prazoNovo";
         $stmt = $this->conn->prepare( $query_contrato );
@@ -221,19 +221,21 @@ class Tecnico{
 
         }
 
-        $query_transferencia = "INSERT INTO transferencias_tecnico
-        SET
-            tecnico=:tecnico, clubeOrigem=:clubeOrigem, clubeDestino=:clube, tipoTransferencia=:tipoTransferencia, status_execucao=1";
-        $stmt = $this->conn->prepare( $query_transferencia );
-        $stmt->bindParam(":tecnico", $idTecnico);
-        $stmt->bindParam(":tipoTransferencia", $tipoTransferencia);
-        $stmt->bindParam(":clube", $idClubeDestino);
-        $stmt->bindParam(":clubeOrigem", $origemJogador);
-        if($stmt->execute()){
+        if ((int)$origemJogador !== (int)$idClubeDestino) {
+            $query_transferencia = "INSERT INTO transferencias_tecnico
+            SET
+                tecnico=:tecnico, clubeOrigem=:clubeOrigem, clubeDestino=:clube, tipoTransferencia=:tipoTransferencia, status_execucao=1";
+            $stmt = $this->conn->prepare( $query_transferencia );
+            $stmt->bindParam(":tecnico", $idTecnico);
+            $stmt->bindParam(":tipoTransferencia", $tipoTransferencia);
+            $stmt->bindParam(":clube", $idClubeDestino);
+            $stmt->bindParam(":clubeOrigem", $origemJogador);
+            if($stmt->execute()){
 
-        } else {
-            $error_count++;
+            } else {
+                $error_count++;
 
+            }
         }
 
         if($error_count == 0){
