@@ -7,14 +7,17 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "CONFUSA.top - Sobre";
-$css_filename = "mainindex";
+$css_filename = "home_redesign";
+$aux_css = "home_redesign";
+$extra_css = "sobre_redesign";
 $css_login = 'login';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
 ?>
 
-<nav class='sidenav'>
+<div class="sobre-wrapper">
+    <nav class='sobre-sidebar'>
 
         <ul>
 
@@ -37,7 +40,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
     </nav>
 
 
-<div id="textoSobre">
+<div class="sobre-content">
 
 <div class='anchor' id='oque'></div>
 <h1 class='headerSobre' id=''>O que é o CONFUSA.top?</h1>
@@ -53,25 +56,26 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 <li>Importar trios de arbitragem em formato .tda</li>
 <li>Criar países de confederações paralelas (NC-Board, COPACCHAI, etc.)</li>
 <li>Criar ligas, tanto masculinas quanto femininas</li>
-<li>Criar times, com opção de geração automática de jogadores</li>
+<li>Criar times, com opção de geração automática de jogadores (Hexagen)</li>
 <li>Criar jogadores, com opção de geração automática de informações</li>
 <li>Criar técnicos, com opção de geração automática de informações</li>
-<li>Criar estádios</li>
-<li>Criar climas</li>
-<li>Criar trios de arbitragem</li>
-<li>Manipular elencos com número ilimtado de jogadores, alternando titulares, reservas e suplentes</li>
-<li>Manipular posicionamento tático, cobradores e capitão das equipes</li>
+<li>Criar estádios e climas customizados</li>
+<li>Criar e gerenciar trios de arbitragem</li>
+<li>Manipular elencos com número ilimitado de jogadores, alternando titulares, reservas e suplentes</li>
+<li>Manipular posicionamento tático através de arrastar e soltar (campinho interativo), cobradores e capitão das equipes</li>
 <li>Rebaixar e promover equipes</li>
 <li>Promover jogadores aleatórios da base (time) ou para draft (liga)</li>
-<li>Editar times, jogadores, técnicos, ligas, países e trios de arbitragem</li>
-<li>Criar demografia para países, para a geração de nomes</li>
+<li>Editar times, jogadores, técnicos, ligas, países e trios de arbitragem com rolagem e inputs modernos</li>
+<li>Criar demografia detalhada para países (para a geração de nomes realistas)</li>
 <li>Criar seleções (principal, sub-21, sub-20, sub-18)</li>
-<li>Buscar jogadores e fazer propostas e convocações</li>
-<li>Rejeitar, aprovar ou contrapropor propostas recebidas</li>
-<li>Ver listagem das maiores transferências e jogadores mais valiosos</li>
+<li>Buscar jogadores e fazer propostas e convocações em tempo real</li>
+<li>Rejeitar, aprovar ou contrapropor propostas recebidas de transferência</li>
+<li>Ver listagem das maiores transferências, jogadores mais valiosos e histórico financeiro</li>
+<li>Gerenciar o módulo **Octamotor**, controlando pilotos, escuderias e resultados de corridas solitárias</li>
 <li>Verificar lista de jogadores no exterior, com opção para repatriar em caso de inatividade</li>
-<!-- <li>Determinar idades para aposentadoria automática de jogadores</li> -->
-<li>Exportar banco de dados completo para uso direto no Hexacolor YMT</li>
+<li>Acompanhar estatísticas avançadas e gráficos dinâmicos de competições gerados com Plotly e Chart.js</li>
+<li>Participar ativamente da comunidade enviando bugs e votando em sugestões no painel de melhorias</li>
+<li>Exportar banco de dados completo (database.db3) para uso direto no Hexacolor YMT</li>
 </ul>
 
 
@@ -94,13 +98,13 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
 <p class='paragrafoSobre'>A integração com o Hexacolor YMT é indireta: o portal gera um arquivo database.db3 em SQLite a partir do banco de dados central em MySQL e o usuário faz o download desse arquivo pronto juntamente com as imagens de escudos, uniformes e novas bandeiras, tudo já em um arquivo .zip já na estrutura de pastas do Hexacolor YMT para permitir download, extração e uso direto.</p>
 
-<p class='paragrafoSobre'>Por fim, algumas áreas do site já apresentam compatibilidade com celulares (ranking e árbitros), mas o restante das áreas terá os ajustes de compatibilidade em uma data futura apenas.</p>
+<p class='paragrafoSobre'>Atualmente, todas as áreas do site contam com um design responsivo e moderno (Mobile First), garantindo compatibilidade total com celulares, tablets e desktops, além de rolagem horizontal segura em tabelas de edição.</p>
 
 
 <div class='anchor' id='ultimaatualizacao'></div>
 <h1 class='headerSobre' id=''>Última Atualização</h1>
 
-<p class='paragrafoSobre'>Na data de 20/12/2018 o site encontra-se em versão beta do primeiro lançamento, com 5 usuários cadastrados. Últimos detalhes da primeira fase estão sendo ajustados, e a segunda fase se iniciará na sequência.</p>
+<p class='paragrafoSobre'>Em agosto de 2026, o portal completou sua migração para a versão 2.0 com um Redesenho Premium Responsivo completo (Brand Kit & UI System), integrando controle financeiro moderno, central de sugestões e centralização do ranking.</p>
 
 <div class='anchor' id='tutorial'></div>
 <h1 class='headerSobre' id=''>Tutorial</h1>
@@ -209,8 +213,9 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
 <div class='anchor' id='novidades'></div>
 <h1 class='headerSobre' id=''>O que vem por aí?</h1>
-<p class='paragrafoSobre'>Muitas novidades podem surgir no portal, mas no momento a prioridade é correção de bugs e melhorias do código. Em termos de novidades, a principal novidade da fase 2 serão as áreas de federação, com a possibilidade de classificar times para competições continentais com um clique, e a exportação do pacote Hexacolor das competições da federação com mais um clique apenas.</p>
+<p class='paragrafoSobre'>Novas melhorias continuam sendo planejadas para o portal! O foco atual do site está em expandir a automação de torneios da federação, aprimorar a visualização de estatísticas das ligas e consolidar o novo padrão de design premium responsivo em todas as demais páginas.</p>
 
+</div>
 </div>
 
 

@@ -4,7 +4,9 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "CONFUSA - CONFUSA.top";
-$css_filename = "newindex";
+$css_filename = "home_redesign";
+$aux_css = "home_redesign";
+$extra_css = "newindex";
 $css_login = 'login';
 $css_versao = date('h:i:s');
 

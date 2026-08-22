@@ -5,7 +5,7 @@ $isRedesigned = false;
 $uri = $_SERVER['REQUEST_URI'] ?? '';
 
 // Check if the current page URI belongs to a redesigned module
-$redesignPaths = ['/usuario', '/competicoes', '/mercado', '/ligas', '/ranking', '/sugestoes'];
+$redesignPaths = ['/usuario', '/competicoes', '/mercado', '/ligas', '/ranking', '/sugestoes', '/apenas_membros.php'];
 foreach ($redesignPaths as $path) {
     if (strpos($uri, $path) !== false) {
         $isRedesigned = true;

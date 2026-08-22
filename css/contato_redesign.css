@@ -1,0 +1,124 @@
+/* Style for Contato/Email page redesign */
+
+body {
+    background-color: #f1f5f9 !important;
+    background-image: 
+      linear-gradient(135deg, rgba(248, 250, 252, 0.85) 0%, rgba(226, 232, 240, 0.95) 100%),
+      url("/images/confusa-blue.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    background-size: cover !important;
+    background-attachment: fixed !important;
+    color: #0f172a !important;
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+.contato-container {
+    max-width: 500px;
+    margin: 60px auto;
+    padding: 36px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    box-sizing: border-box;
+}
+
+.contato-title {
+    font-family: 'Kanit', sans-serif;
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 1.8rem;
+    margin-top: 0;
+    margin-bottom: 24px;
+    text-align: center;
+    border-bottom: 2px solid rgba(2, 132, 199, 0.15);
+    padding-bottom: 10px;
+}
+
+.contato-form .form-group {
+    margin-bottom: 20px;
+}
+
+.contato-form label {
+    display: block;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+}
+
+.contato-form .form-control {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    background: #ffffff;
+    color: #0f172a;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contato-form .form-control:focus {
+    border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.contato-form textarea.form-control {
+    height: 120px;
+    resize: none;
+}
+
+.form-group-confirm {
+    display: none !important;
+}
+
+.contato-form .submitbtn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: #0284c7;
+    color: #ffffff;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.contato-form .submitbtn:hover {
+    background: #0369a1;
+}
+
+/* Alert styles for email send page */
+.alert {
+    padding: 20px;
+    border-radius: 10px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    margin: 40px auto;
+    max-width: 500px;
+    text-align: center;
+}
+
+.alert-success {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}

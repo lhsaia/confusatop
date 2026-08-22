@@ -23,7 +23,7 @@ class Suggestion{
 	  $user = htmlspecialchars(strip_tags($user));
 	  $search_term = "%" . $search_term . "%";
 		
-	  $query = "SELECT a.*, count(b.suggestion) as vote_count, SUM(case when b.user = ? then 1 else 0 end) as voted_by_user FROM   " . $this->table_name . " a LEFT JOIN suggestions_votes b ON b.suggestion = a.id WHERE (title LIKE ? OR description LIKE ?) GROUP BY a.id ORDER BY vote_count DESC";
+	  $query = "SELECT a.*, count(b.suggestion) as vote_count, SUM(case when b.user = ? then 1 else 0 end) as voted_by_user FROM   " . $this->table_name . " a LEFT JOIN suggestions_votes b ON b.suggestion = a.id WHERE (title LIKE ? OR description LIKE ?) GROUP BY a.id ORDER BY (a.status = 0) DESC, vote_count DESC";
 	  
       $stmt = $this->conn->prepare($query);
 	  $stmt->bindParam(1, $user );
@@ -58,17 +58,19 @@ class Suggestion{
 	  $user = htmlspecialchars(strip_tags($user));
 	  $suggestion = htmlspecialchars(strip_tags($suggestion));
 		
-	  $query = "CALL toggleVote(?, ?)";
-      $stmt = $this->conn->prepare($query);
-      $stmt->bindParam(1,$user);
-      $stmt->bindParam(2,$suggestion);
-
-	  if($stmt->execute()){
-        return true;
-      } else {
-        return false;
-      }
+	  $checkQuery = "SELECT ID FROM suggestions_votes WHERE user = ? AND suggestion = ?";
+	  $stmtCheck = $this->conn->prepare($checkQuery);
+	  $stmtCheck->execute([$user, $suggestion]);
 	  
+	  if ($stmtCheck->fetchColumn()) {
+	      $query = "DELETE FROM suggestions_votes WHERE user = ? AND suggestion = ?";
+	      $stmt = $this->conn->prepare($query);
+	      return $stmt->execute([$user, $suggestion]);
+	  } else {
+	      $query = "INSERT INTO suggestions_votes (user, suggestion) VALUES (?, ?)";
+	      $stmt = $this->conn->prepare($query);
+	      return $stmt->execute([$user, $suggestion]);
+	  }
 	}
 	
 	public function toggleStatus(){

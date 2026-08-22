@@ -7,9 +7,10 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "CONFUSA.top - Sugestões / Bugs";
-$css_filename = "indexRanking";
+$css_filename = "home_redesign";
+$aux_css = "home_redesign";
+$extra_css = "sugestoes_redesign";
 $css_login = 'login';
-$aux_css = 'melhorias';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -19,7 +20,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 var localData = [];
 var asc = true;
 var activeSort = '';
-var show_all = true;
+var show_all = false;
 
 $(document).ready(function($){
 
@@ -93,6 +94,19 @@ $('#confirm-new-suggestion').click(function(){
 });
 
 
+$(document).on('click', '.toggle_like', function(){
+	let id = $(this).closest("tr").attr("id");
+	$.ajax({
+		url:"toggle_like.php",
+		method:"POST",
+		cache:false,
+		data:{id:id},
+		success:function(data){
+			load_data();
+		}
+	});
+});
+
 $('#caixa_pesquisa').keyup(function(){load_data()});
 
 function load_data(){
@@ -109,27 +123,21 @@ $.ajax({
         $('#loading').hide();  // hide loading indicator
         updateTable(JSON.parse(data),1,0,0);
         localData = JSON.parse(data);
-		
-		$('.toggle_like').click(function(){
-			let id = $(this).closest("tr").attr("id");
-			$.ajax({
-				url:"toggle_like.php",
-				method:"POST",
-				cache:false,
-				data:{id:id},
-				success:function(data){
-					load_data();
-			}
-			});
-		});
     }
 });
 }
 
 function updateTable(ajax_data, current_page, highlighted, direction){
 
+    var filtered_data = [];
+    $.each(ajax_data, function(index, val){
+        if(show_all || (!show_all && val['status'] == 0)){
+            filtered_data.push(val);
+        }
+    });
+
     var results_per_page = 17;
-    var total_results = ajax_data.length;
+    var total_results = filtered_data.length;
     var total_pages = Math.ceil(total_results/results_per_page);
 
     var treated_page;
@@ -165,46 +173,43 @@ function updateTable(ajax_data, current_page, highlighted, direction){
         tbl +=  "<tbody>";
 
         // criar linhas
-        $.each(ajax_data, function(index, val){
+        $.each(filtered_data, function(index, val){
 			
-			if(show_all || (!show_all && val['status'] == 0)){
-				
-				
-            if(index>=(from_result_num-1) && index<=(from_result_num+results_per_page-2)){
+            if(index>=(from_result_num) && index<=(from_result_num+results_per_page-1)){
 				
 			//status
 			let status = "";
 			if(val['status'] == 0){
 				// pendente
-				status = "<p class='pending icon_box'><i class='fas fa-hourglass-start'></i> Pendente</p>";
+				status = "<p class='pending icon_box'><span class='material-symbols-outlined' style='font-size: 1.1rem; vertical-align: middle;'>hourglass_empty</span> Pendente</p>";
 			} else if(val['status'] == 1){
 				// em processo
-				status = "<p class='processing icon_box'><i class='fas fa-spinner'></i> Em processo</p>";
+				status = "<p class='processing icon_box'><span class='material-symbols-outlined animate-spin' style='font-size: 1.1rem; vertical-align: middle;'>sync</span> Em processo</p>";
 			} else if(val['status'] == 2){
 				// concluido
-				status = "<p class='complete icon_box'><i class='fas fa-check-circle'></i> Completo</p>";
+				status = "<p class='complete icon_box'><span class='material-symbols-outlined' style='font-size: 1.1rem; vertical-align: middle;'>check_circle</span> Completo</p>";
 			} else {
 				// cancelado
-				status = "<p class='cancelled icon_box'><i class='fas fa-times-circle'></i> Cancelado</p>";
+				status = "<p class='cancelled icon_box'><span class='material-symbols-outlined' style='font-size: 1.1rem; vertical-align: middle;'>cancel</span> Cancelado</p>";
 			}
 			
 			//tipo
 			let type = "";
 			if(val['type'] == 1){
 				// sugestão
-				type = "<p class='suggestion icon_box'><i class='far fa-lightbulb'></i> Sugestão</p>";
+				type = "<p class='suggestion icon_box'><span class='material-symbols-outlined' style='font-size: 1.1rem; vertical-align: middle;'>lightbulb</span> Sugestão</p>";
 			} else {
 				// bug
-				type = "<p class='bug icon_box'><i class='fas fa-bug'></i> Bug</p>";
+				type = "<p class='bug icon_box'><span class='material-symbols-outlined' style='font-size: 1.1rem; vertical-align: middle;'>bug_report</span> Bug</p>";
 			} 
 			
 			// votado pelo usuário
 			let voted_by_user = val['voted_by_user'];
 			let button_class = "";
 			if(voted_by_user == 1){
-				button_class = "<button class='icon_box toggle_like toggled'><i class='fas fa-check'></i></button>";
+				button_class = "<button class='toggle_like toggled'><span class='material-symbols-outlined' style='font-size: 1.1rem;'>check</span></button>";
 			} else {
-				button_class = "<button class='icon_box toggle_like'><i class='fas fa-thumbs-up'></i></button>";
+				button_class = "<button class='toggle_like'><span class='material-symbols-outlined' style='font-size: 1.1rem;'>thumb_up</span></button>";
 			}
 
             tbl += "<tr id='"+val['id']+"' >";
@@ -218,10 +223,6 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                 tbl += "<td>"+val['vote_count']+"</td>";
             tbl +=  "</tr>";
             }
-        
-				
-			}
-
 		});
 		
 
@@ -332,6 +333,8 @@ if(prop == 'pontos'){
 
     localData = localData.sort(
         function(a,b){
+            if (a.status == 0 && b.status != 0) return -1;
+            if (a.status != 0 && b.status == 0) return 1;
             if (asc) return a[prop] - b[prop];
             if (!asc) return b[prop] - a[prop];
             else return 0;
@@ -340,6 +343,8 @@ if(prop == 'pontos'){
 } else {
     localData = localData.sort(
         function(a, b) {
+            if (a.status == 0 && b.status != 0) return -1;
+            if (a.status != 0 && b.status == 0) return 1;
             if (((a[prop] < b[prop]) && (!asc))||((a[prop] > b[prop]) && (asc))) return 1;
             else if (((a[prop] > b[prop]) && (!asc))||((a[prop] < b[prop]) && (asc))) return -1;
             else return 0;
@@ -364,9 +369,7 @@ echo "<div id='melhorias-header'>
 	if(isset($_SESSION['user_id'])){
 		echo "<button id='add-new-suggestion'>+ Adicionar sugestão</button>";
 	}
-	echo "<label for='checkbox-21' id='filter-pending'><span>Mostrar apenas pendentes</span>";
-    echo "<input type='checkbox' id='checkbox-21' name='apenasConfusa'>";
-    echo "</label>";
+	echo "<button id='filter-pending'><span>Mostrar todos</span></button>";
 	echo "</div>";
 
 //query informacoes
@@ -390,8 +393,10 @@ echo "<div id='newSuggestionWrapper'><div id='newSuggestion'>
 <option value='1'>Sugestão</option>
 <option value='2'>Bug</option>
 </select>
+<div class='suggestion-actions'>
 <button class='newSuggestionItem' id='confirm-new-suggestion'>Inserir</button>
 <button class='newSuggestionItem' id='cancel-new-suggestion'>Cancelar</button>
+</div>
 </div></div>";
 
 //echo "<div style='clear:both; float:center'></div>";
