@@ -1,6 +1,16 @@
 <div style="clear:both;">
 <div class="container" role="main">
 
+	<?php
+	if (isset($_SESSION['import_message'])) {
+		$class = $_SESSION['import_status'] === 'success' ? 'box__success' : 'box__error';
+		$display = $_SESSION['import_status'] === 'success' ? 'Feito! ' : 'Erro! ';
+		echo "<div style='margin-bottom: 20px; text-align: center;'><div class='{$class}' style='display: block; padding: 15px; border-radius: 8px;'>{$display}" . htmlspecialchars($_SESSION['import_message']) . "</div></div>";
+		unset($_SESSION['import_message']);
+		unset($_SESSION['import_status']);
+	}
+	?>
+
 	<form id="importForm" enctype="multipart/form-data" novalidate class="box">
 
 		<div class="box__input centralize_text">

@@ -100,7 +100,23 @@
                 evt.preventDefault();
 
 				// preventing the duplicate submissions if the current one is in progress
-				if( form.classList.contains( 'is-uploading' ) ) return false;
+                 if( form.classList.contains( 'is-uploading' ) ) return false;
+
+                 if (document.getElementById('selecaoligas') && document.getElementById('selecaoligas').value === '') {
+                     form.classList.add('is-error');
+                     errorMsg.textContent = 'Por favor, selecione uma liga antes de enviar o arquivo!';
+                     input.value = '';
+                     droppedFiles = false;
+                     return false;
+                 }
+
+                 if (document.getElementById('selecaoTime') && document.getElementById('selecaoTime').value === '') {
+                     form.classList.add('is-error');
+                     errorMsg.textContent = 'Por favor, selecione um time antes de enviar o arquivo!';
+                     input.value = '';
+                     droppedFiles = false;
+                     return false;
+                 }
 
 				form.classList.add( 'is-uploading' );
 				form.classList.remove( 'is-error' );
@@ -141,6 +157,11 @@
             
             // log data to the console so we can see
             console.log(data); 
+            
+            if (data.require_association) {
+                window.location.href = data.redirect;
+                return;
+            }
             
             if (data.phase === 1) {
                 form.classList.remove('is-uploading');

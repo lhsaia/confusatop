@@ -5,6 +5,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     die("Acesso negado.");
 }
 
+$is_admin = (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == false);
+if (!$is_admin) {
+    die("Acesso negado. Apenas administradores podem processar associações.");
+}
+
 if (!isset($_SESSION['pending_import']) || empty($_SESSION['pending_import'])) {
     header("Location: /jogadores/importar_jogador.php");
     exit;

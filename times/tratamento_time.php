@@ -94,15 +94,20 @@ if(!function_exists('changeName')){
                 $estadio->caldeirao = (string)$xml->estadio->Caldeirao;
                 $estadio->clima = $codigo_clima;       
                 
-                if($estadio->verificar()==0){
-                    if($estadio->create()){
-                        $codigo_estadio = $db->lastInsertId();
-                    } else {
-                        $error_msg .= 'Houve erros durante a inserção do estádio. ';
-                        $codigo_estadio = 0;
+                $assoc_estadio = isset($team_associations['estadio']) ? $team_associations['estadio'] : null;
+                if ($assoc_estadio && $assoc_estadio['action'] === 'match' && !empty($assoc_estadio['player_id'])) {
+                    $codigo_estadio = $assoc_estadio['player_id'];
+                } else {
+                    if($estadio->verificar()==0){
+                        if($estadio->create()){
+                            $codigo_estadio = $db->lastInsertId();
+                        } else {
+                            $error_msg .= 'Houve erros durante a inserção do estádio. ';
+                            $codigo_estadio = 0;
+                        }
+                    } else { 
+                        $codigo_estadio = $estadio->codigoPorNomeEPais();
                     }
-                } else { 
-                    $codigo_estadio = $estadio->codigoPorNomeEPais();
                 }
                 
 
@@ -175,31 +180,77 @@ if(!function_exists('changeName')){
                 $time->maxTorcedores = (string)$xml->clube->MaxTorcedores;
                 $time->fidelidade = (string)$xml->clube->Fidelidade;
                 $time->estadio = $codigo_estadio;
-                $time->liga = $ligaSelecionada;
+                $time->liga = !empty($ligaSelecionada) ? (int)$ligaSelecionada : 0;
                 $time->sexo = $sexo;
 
-			 if($time->create()){
-                 $is_success = true;
-                 $codigo_time = $db->lastInsertId();
-			 } else {
-                 $is_success = false;
-                 $error_msg .= 'Houve erros durante a inserção do time, possivelmente duplicado. O processo para os times que viriam na sequência foi interrompido';
-                 die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
-
+             $assoc_clube = isset($team_associations['clube']) ? $team_associations['clube'] : null;
+             if ($assoc_clube && $assoc_clube['action'] === 'match' && !empty($assoc_clube['player_id'])) {
+                 $codigo_time = $assoc_clube['player_id'];
+                 $time->id = $codigo_time;
+                 if (empty($ligaSelecionada)) {
+                     $stmt_current_liga = $db->prepare("SELECT liga FROM clube WHERE id = ?");
+                     $stmt_current_liga->execute([$codigo_time]);
+                     $liga_db = $stmt_current_liga->fetchColumn();
+                     if ($liga_db) {
+                         $time->liga = (int)$liga_db;
+                     }
+                 }
+                 if ($time->alterar()) {
+                     $is_success = true;
+                 } else {
+                     $is_success = false;
+                     $error_msg .= 'Houve erros ao atualizar o time existente.';
+                     die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
+                 }
+             } else {
+                 $existing_time_id = $time->idPorNome($time->nome);
+                 if ($existing_time_id) {
+                     $codigo_time = $existing_time_id;
+                     $time->id = $existing_time_id;
+                     if (empty($ligaSelecionada)) {
+                         $stmt_current_liga = $db->prepare("SELECT liga FROM clube WHERE id = ?");
+                         $stmt_current_liga->execute([$codigo_time]);
+                         $liga_db = $stmt_current_liga->fetchColumn();
+                         if ($liga_db) {
+                             $time->liga = (int)$liga_db;
+                         }
+                     }
+                     if ($time->alterar()) {
+                         $is_success = true;
+                     } else {
+                         $is_success = false;
+                         $error_msg .= 'Houve erros ao atualizar o time existente.';
+                         die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
+                     }
+                 } else {
+                     if($time->create()){
+                         $is_success = true;
+                         $codigo_time = $db->lastInsertId();
+                     } else {
+                         $is_success = false;
+                         $error_msg .= 'Houve erros durante a inserção do time, possivelmente duplicado. O processo para os times que viriam na sequência foi interrompido';
+                         die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
+                     }
+                 }
              }
 
-            //importar tecnico
-            $tecnico->nome = (string)$xml->tecnico->Nome;
-            $tecnico->nascimento = (int)$xml->tecnico->Idade;
-            $tecnico->nivel = (int)$xml->tecnico->Nivel;
-            $tecnico->mentalidade = (int)$xml->tecnico->Mentalidade;
-            $tecnico->estilo = (int)$xml->tecnico->Estilo;
+             //importar tecnico
+             $tecnico->nome = trim(preg_replace('/\s*\[.*?\]\s*$/', '', (string)$xml->tecnico->Nome));
+             $tecnico->nascimento = (int)$xml->tecnico->Idade;
+             $tecnico->nivel = (int)$xml->tecnico->Nivel;
+             $tecnico->mentalidade = (int)$xml->tecnico->Mentalidade;
+             $tecnico->estilo = (int)$xml->tecnico->Estilo;
 
-            if($tecnico->create()){
-               $codigo_tecnico = $db->lastInsertId();
-            } else {
-                $error_msg .= 'Houve erros durante a inserção do tecnico. ';
-            }
+             $assoc_tecnico = isset($team_associations['tecnico']) ? $team_associations['tecnico'] : null;
+             if ($assoc_tecnico && $assoc_tecnico['action'] === 'match' && !empty($assoc_tecnico['player_id'])) {
+                 $codigo_tecnico = $assoc_tecnico['player_id'];
+             } else {
+                 if($tecnico->create()){
+                    $codigo_tecnico = $db->lastInsertId();
+                 } else {
+                     $error_msg .= 'Houve erros durante a inserção do tecnico. ';
+                 }
+             }
 
             $tecnico->transferir($codigo_tecnico,$codigo_time);
 
@@ -272,11 +323,23 @@ if(!function_exists('changeName')){
                 $titularesId[] = $idTitular;
             }
             
-             foreach($array_jogadores as $xmlIterator){
+             foreach($array_jogadores as $index => $xmlIterator){
 
-                 $xml = $xmlIterator;
-                 include($_SERVER['DOCUMENT_ROOT']."/jogadores/tratamento_jogador.php");
-                 $codigo_jogador = $db->lastInsertId();
+         $xml = $xmlIterator;
+         
+         if (isset($associations[$index])) {
+             $assoc = $associations[$index];
+             if ($assoc['action'] === 'match' && !empty($assoc['player_id'])) {
+                 $id_jogador_existente = $assoc['player_id'];
+             } else {
+                 unset($id_jogador_existente);
+             }
+         } else {
+             unset($id_jogador_existente);
+         }
+         
+         include($_SERVER['DOCUMENT_ROOT']."/jogadores/tratamento_jogador.php");
+         $codigo_jogador = (isset($id_jogador_existente) && $id_jogador_existente > 0) ? $id_jogador_existente : $db->lastInsertId();
 
                  //verificar se é capitao ou penaltis (+ posicao base)
                 $idVerificacao = $xml->jogador->ID;

@@ -301,7 +301,190 @@ if (isset($_POST['ajax'])) {
                     $usuario->atualizarAlteracao($_SESSION['user_id']);
                 }
 
-                include($_SERVER['DOCUMENT_ROOT'] . $arquivo_tratamento);
+                $is_admin = (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == false);
+                if ($is_admin && ($_SESSION['jogadorTime'] == 1 || $_SESSION['jogadorTime'] == 2)) {
+                    // Parse players and build matching list
+                    $players_to_match = [];
+                    
+                    // Determine players list based on import type
+                    $imported_players = [];
+                    if ($_SESSION['jogadorTime'] == 1) {
+                        $imported_players[] = [
+                            'xml_index' => 0,
+                            'nome' => (string)$xml->jogador->Nome,
+                            'idade' => (int)$xml->jogador->Idade,
+                            'nivel' => (int)$xml->jogador->Nivel
+                        ];
+                    } else {
+                        $total_de_jogadores = $xml->elenco->Jogador->int->count();
+                        for ($j = 0; $j < $total_de_jogadores; $j++) {
+                            $imported_players[] = [
+                                'xml_index' => $j,
+                                'nome' => (string)$xml->jogadores->jogador[$j]->Nome,
+                                'idade' => (int)$xml->jogadores->jogador[$j]->Idade,
+                                'nivel' => (int)$xml->jogadores->jogador[$j]->Nivel
+                            ];
+                        }
+                    }
+
+                    // Get country_id
+                    $country_id = null;
+                    if ($_SESSION['jogadorTime'] == 1) {
+                        if ($timeSelecionado) {
+                            $stmt_time = $db->prepare("SELECT Pais FROM clube WHERE ID = ?");
+                            $stmt_time->execute([$timeSelecionado]);
+                            $country_id = $stmt_time->fetchColumn();
+                        }
+                    } else {
+                        if (isset($paisLigaSelecionada) && $paisLigaSelecionada != 0) {
+                            $country_id = $paisLigaSelecionada;
+                        } else {
+                            $teste_pais = array();
+                            if (isset($xml->nacionalidades->string)) {
+                                foreach($xml->nacionalidades->string as $pais_provavel){
+                                    $teste_pais[] = (string)$pais_provavel;
+                                }
+                            }
+                            if (!empty($teste_pais)) {
+                                $pais_recorrente = array_count_values($teste_pais);
+                                arsort($pais_recorrente);
+                                $pais_real = array_slice(array_keys($pais_recorrente),0,1,true);
+                                if (isset($pais_real[0])) {
+                                    $bandeiraImport = explode(".",$pais_real[0])[0];
+                                    if($bandeiraImport <> '-'){
+                                        $country_id = $pais->idPorBandeira($bandeiraImport);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Find potential matches for each player
+                    foreach ($imported_players as $ip) {
+                        $words = explode(' ', $ip['nome']);
+                        $clauses = [];
+                        $params = [];
+                        
+                        if ($country_id) {
+                            $clauses[] = "Pais = ?";
+                            $params[] = $country_id;
+                        }
+                        
+                        $name_clauses = [];
+                        $params_similar = [];
+                        foreach ($words as $w) {
+                            $w = trim($w);
+                            if (strlen($w) > 2) {
+                                $name_clauses[] = "Nome LIKE ?";
+                                $params_similar[] = '%' . $w . '%';
+                            }
+                        }
+                        
+                        $matches = [];
+                        
+                        // 1. Search for exact name match
+                        $sql_exact = "SELECT j.ID, j.Nome, j.Nivel, j.Nascimento, p.Bandeira, p.Nome AS NomePais FROM jogador j LEFT JOIN paises p ON j.Pais = p.id WHERE j.Nome = ?";
+                        $params_exact = [$ip['nome']];
+                        $stmt_exact = $db->prepare($sql_exact);
+                        $stmt_exact->execute($params_exact);
+                        $exact_matches = $stmt_exact->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        // 2. Search for similar names (fuzzy LIKE)
+                        $similar_matches = [];
+                        if (!empty($name_clauses)) {
+                            // Map "Nome LIKE ?" to "j.Nome LIKE ?"
+                            $j_name_clauses = array_map(function($clause) {
+                                return "j." . $clause;
+                            }, $name_clauses);
+                            $sql_similar = "SELECT j.ID, j.Nome, j.Nivel, j.Nascimento, p.Bandeira, p.Nome AS NomePais FROM jogador j LEFT JOIN paises p ON j.Pais = p.id WHERE " . implode(' OR ', $j_name_clauses) . " LIMIT 10";
+                            $stmt_similar = $db->prepare($sql_similar);
+                            $stmt_similar->execute($params_similar);
+                            $similar_matches = $stmt_similar->fetchAll(PDO::FETCH_ASSOC);
+                        }
+                        
+                        // Merge and keep unique players (exact first)
+                        $merged = array_merge($exact_matches, $similar_matches);
+                        $seen_ids = [];
+                        foreach ($merged as $m) {
+                            if (!in_array($m['ID'], $seen_ids)) {
+                                $seen_ids[] = $m['ID'];
+                                $matches[] = $m;
+                            }
+                        }
+                        
+                        // Limit to top 5
+                        $matches = array_slice($matches, 0, 5);
+                        
+                        $players_to_match[] = [
+                            'xml_index' => $ip['xml_index'],
+                            'nome' => $ip['nome'],
+                            'idade' => $ip['idade'],
+                            'nivel' => $ip['nivel'],
+                            'matches' => $matches
+                        ];
+                    }
+
+                    // Find potential matches for team, coach, and stadium (only for team imports, type == 2)
+                    $team_matches_data = null;
+                    if ($_SESSION['jogadorTime'] == 2) {
+                        // Team matches
+                        $t_name = (string)$xml->clube->Nome;
+                        $t_sigla = (string)$xml->clube->TresLetras;
+                        $stmt_t = $db->prepare("SELECT ID, Nome FROM clube WHERE Nome = ? OR TresLetras = ?");
+                        $stmt_t->execute([$t_name, $t_sigla]);
+                        $t_matches = $stmt_t->fetchAll(PDO::FETCH_ASSOC);
+
+                        // Coach matches
+                        $c_name = trim(preg_replace('/\s*\[.*?\]\s*$/', '', (string)$xml->tecnico->Nome));
+                        $stmt_c_exact = $db->prepare("SELECT ID, Nome FROM tecnico WHERE Nome = ?");
+                        $stmt_c_exact->execute([$c_name]);
+                        $c_exact = $stmt_c_exact->fetchAll(PDO::FETCH_ASSOC);
+                        $stmt_c_fuzzy = $db->prepare("SELECT ID, Nome FROM tecnico WHERE Nome LIKE ?");
+                        $stmt_c_fuzzy->execute(['%' . $c_name . '%']);
+                        $c_fuzzy = $stmt_c_fuzzy->fetchAll(PDO::FETCH_ASSOC);
+                        $c_matches = array_slice(array_unique(array_merge($c_exact, $c_fuzzy), SORT_REGULAR), 0, 5);
+
+                        // Stadium matches
+                        $s_name = (string)$xml->estadio->Nome;
+                        $stmt_s_exact = $db->prepare("SELECT ID, Nome FROM estadio WHERE Nome = ?");
+                        $stmt_s_exact->execute([$s_name]);
+                        $s_exact = $stmt_s_exact->fetchAll(PDO::FETCH_ASSOC);
+                        $stmt_s_fuzzy = $db->prepare("SELECT ID, Nome FROM estadio WHERE Nome LIKE ?");
+                        $stmt_s_fuzzy->execute(['%' . $s_name . '%']);
+                        $s_fuzzy = $stmt_s_fuzzy->fetchAll(PDO::FETCH_ASSOC);
+                        $s_matches = array_slice(array_unique(array_merge($s_exact, $s_fuzzy), SORT_REGULAR), 0, 5);
+
+                        $team_matches_data = [
+                            'clube' => ['nome' => $t_name, 'matches' => $t_matches],
+                            'tecnico' => ['nome' => $c_name, 'matches' => $c_matches],
+                            'estadio' => ['nome' => $s_name, 'matches' => $s_matches]
+                        ];
+                    }
+
+                    // Save to session
+                    $_SESSION['pending_import'] = [
+                        'xml_content' => file_get_contents($filePath),
+                        'type' => $_SESSION['jogadorTime'],
+                        'liga' => $ligaSelecionada,
+                        'time' => $timeSelecionado,
+                        'sexo' => $sexo,
+                        'nacionalidade' => $nacionalidadeSelecionada,
+                        'pais_liga_selecionada' => isset($paisLigaSelecionada) ? $paisLigaSelecionada : null,
+                        'players' => $players_to_match,
+                        'team_matches' => $team_matches_data
+                    ];
+
+                    $is_success = true;
+                    $php_output = ob_get_clean();
+                    die(json_encode([
+                        'success' => true,
+                        'require_association' => true,
+                        'redirect' => '/jogadores/associar_importados.php',
+                        'php_output' => $php_output
+                    ]));
+                } else {
+                    include($_SERVER['DOCUMENT_ROOT'] . $arquivo_tratamento);
+                }
 
                 if ($xml === false) {
                     foreach (libxml_get_errors() as $error) {

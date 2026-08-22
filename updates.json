@@ -9,9 +9,121 @@
   },
   "days": [
     {
+      "date": "22/08/2026",
+      "title": "Acesso Restrito ao Assistente de Associação",
+      "description": "Restringida a funcionalidade de associação/atualização inteligente de importados exclusivamente a administradores do site. Usuários regulares importam diretamente como novos por padrão."
+    },
+    {
+      "date": "22/08/2026",
+      "title": "Limitação de Largura na Edição de Jogadores",
+      "description": "Ajustado o tamanho máximo dos campos de input e select durante a edição inline na página 'Meus Jogadores' para evitar o estouro horizontal do layout e garantir melhor responsividade."
+    },
+    {
+      "date": "22/08/2026",
+      "title": "Ajuste na Exibição e Ordenação de Sugestões",
+      "description": "Configurada a página de sugestões para exibir apenas as pendentes por padrão ao carregar, e ajustadas as consultas e algoritmos de ordenação (JS e Banco de Dados) para que itens pendentes sempre apareçam no topo."
+    },
+    {
+      "date": "22/08/2026",
+      "title": "Correção no Voto de Sugestões (toggleVote)",
+      "description": "Corrigido erro 500 ao votar em sugestões. A lógica de curtir/votar foi portada de stored procedure do banco para consultas puras em PHP/PDO, eliminando dependências que causavam falhas se a procedure estivesse ausente."
+    },
+    {
+      "date": "22/08/2026",
+      "title": "Redesenho das Páginas de Contato e Sugestões",
+      "description": "Remodeladas as páginas de Contato, Envio de E-mail e Sugestões/Bugs com o novo design responsivo Light Theme, tabelas com badges de status e formulários com visual premium."
+    },
+    {
+      "date": "22/08/2026",
+      "title": "Redesenho e Atualização da Página Sobre",
+      "description": "Remodelada a página Sobre / Tutorial com o novo design responsivo Light Theme, organizando o índice lateral e atualizando o conteúdo explicativo com os novos recursos do site (como Finanças e Estatísticas)."
+    },
+    {
+      "date": "22/08/2026",
+      "title": "Renovação do Cabeçalho e Rodapé de Apenas Membros",
+      "description": "Renovados o cabeçalho e rodapé da página apenas_membros.php para utilizar o layout moderno e o novo padrão de navegação com menu lateral."
+    },
+    {
+      "date": "22/08/2026",
+      "title": "Ajuste de Layout dos Modais de Login",
+      "description": "Atualizados os modais de login, logout, novo usuário e recuperação de senha com o novo padrão estético (layout centralizado com desfoque de fundo e visual premium)."
+    },
+    {
+      "date": "22/08/2026",
+      "title": "Redesenho Premium da Área de Admin",
+      "description": "Atualizadas todas as telas da Área de Admin para o Premium Dark Theme 2.0. Corrigido problema de tipo de dado no admin_status que causava redirecionamento incorreto no localhost, bug visual de tags PHP no visualizador de logs, e erro fatal de redeclaração da função random_str no cadastro de usuários."
+    },
+    {
+      "date": "21/08/2026",
+      "title": "Padronização do Botão Hexagen",
+      "description": "Alinhada a posição e o estilo visual do gerador automático 'Hexagen' nas telas de inserção de jogadores e árbitros, movendo-o para o container de ações no rodapé dos formulários."
+    },
+    {
+      "date": "21/08/2026",
+      "title": "Redesenho do Quadro de Jogadores",
+      "description": "Modernizadas as telas 'Meus Jogadores' e 'Criar Jogador' com o novo layout responsivo Light Theme, cabeçalhos, formulários alinhados e ocultação inteligente dos botões secundários durante a edição da linha."
+    },
+    {
+      "date": "21/08/2026",
+      "title": "Redesenho de Ligas e Campeonatos",
+      "description": "Modernizadas as telas 'Minhas Ligas', 'Gerenciar Campeonatos' (Minhas Copas) e 'Criar Liga' com a nova identidade visual Light Theme e layouts responsivos premium."
+    },
+    {
+      "date": "21/08/2026",
+      "title": "Redesenho da Inserção de Países",
+      "description": "Aplicado o novo layout moderno no padrão Light Theme para a página de criação de países, incluindo upload de bandeiras com visualização prévia, conversão automática para WebP e bloqueio dinâmico do campo de Federação (só habilitado ao marcar que o país é membro da CONFUSA)."
+    },
+    {
+      "date": "21/08/2026",
+      "title": "Substituição do Botão de Apresentação",
+      "description": "Definido o novo modelo Placar como a visualização oficial e única de apresentação do time ao clicar no botão 'Apresentação' ou ao acessar o time deslogado/visitante."
+    },
+    {
+      "id": "day_21_08_2026",
+      "date": "21/08/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Evitar Histórico de Autotransferência",
+          "desc": "Impedido o registro de log de transferência no histórico de jogadores e técnicos quando o clube de origem é o mesmo do clube de destino."
+        }
+      ]
+    },
+    {
+      "date": "19/08/2026",
+      "title": "Apresentação Estilo Revista Placar",
+      "description": "Nova apresentação oficial de clubes inspirada no design editorial clássico da revista Placar dos anos 90/00, incluindo foto portrait de destaque e cards de jogadores estilo figurinha colecionável."
+    },
+    {
+      "id": "day_19_08_2026",
+      "date": "19/08/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção de Erro 500 na Associação de Importados",
+          "desc": "Corrigidos conflitos de campos obrigatórios sem valor padrão (como ModificadorNivel, salario e clubeVinculado) em bancos MySQL em modo estrito ao salvar contratos de técnicos e jogadores."
+        },
+        {
+          "badge": "new",
+          "title": "Assistente de Importação e Associação de Jogadores",
+          "desc": "Implementado assistente inteligente na importação de times (.ymt) e elencos (.jog) para associar jogadores aos registros existentes e preservar o histórico. Modernizado visualmente o dropzone e o layout de todas as páginas de importação (jogadores, times e árbitros) no padrão Visual Guidelines 2.0."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste na Exportação de Pacotes",
+          "desc": "Corrigida a exportação do banco de dados SQLite (database.db3) que saía vazio ao adicionar um checkpoint de gravação WAL e fechar a conexão de forma segura antes de realizar a compressão ZIP."
+        }
+      ]
+    },
+    {
       "id": "day_18_08_2026",
       "date": "18/08/2026",
       "items": [
+        {
+          "badge": "bugfix",
+          "title": "Importação de .ymt e Desfalques Externos",
+          "desc": "Corrigido o botão de importação .ymt (ajuste de delegação de eventos e filtro de extensão do arquivo) e adicionado suporte para controle de lesões/cartões de equipes importadas."
+        },
         {
           "badge": "bugfix",
           "title": "Correção de Erro 500 nas Estatísticas de Competições",
