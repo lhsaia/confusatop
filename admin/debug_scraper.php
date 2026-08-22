@@ -6,7 +6,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/login_info.php';
 
 // Apenas administradores
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || $_SESSION['admin_status'] !== '1') {
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || (int)$_SESSION['admin_status'] !== 1) {
     header('Location: /index.php');
     exit;
 }

@@ -21,15 +21,27 @@ $paises = new Pais($db);
 
 
 $page_title = "Inserir usuário";
-$css_filename = "indexRanking";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'criar';
+$aux_css = 'home_redesign';
+$extra_css = 'admin_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
-echo"<div>";
+echo "<div class='criar-usuario-container'>";
+?>
+<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; margin-bottom: 25px;">
+    <div>
+        <h1 class="admin-gradient-title">Criar Novo Usuário</h1>
+        <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Cadastre administradores ou membros no banco de dados</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="/admin/index.php" class="admin-btn admin-btn-secondary">Voltar ao Painel</a>
+    </div>
+</div>
+<?php
 
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && $_SESSION['admin_status']=='1'){
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && (int)$_SESSION['admin_status']===1){
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
     if ( isset( $_POST['nomeusuario'] ) && !empty( $_POST['nomeusuario'] ) && !empty ( $_POST['email'] ) ) {
@@ -37,27 +49,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
 
 
 
-        // criando uma nova senha aleatória
-        /**
-         * Generate a random string, using a cryptographically secure
-         * pseudorandom number generator (random_int)
-         *
-         * For PHP 7, random_int is a PHP core function
-         * For PHP 5.x, depends on https://github.com/paragonie/random_compat
-         *
-         * @param int $length      How many characters do we want?
-         * @param string $keyspace A string of all possible characters
-         *                         to select from
-         * @return string
-         */
-        function random_str($length, $keyspace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-        {
-            $pieces = [];
-            $max = mb_strlen($keyspace, '8bit') - 1;
-            for ($i = 0; $i < $length; ++$i) {
-                $pieces []= $keyspace[random_int(0, $max)];
+        if (!function_exists('random_str')) {
+            function random_str($length, $keyspace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+            {
+                $pieces = [];
+                $max = mb_strlen($keyspace, '8bit') - 1;
+                for ($i = 0; $i < $length; ++$i) {
+                    $pieces []= $keyspace[random_int(0, $max)];
+                }
+                return implode('', $pieces);
             }
-            return implode('', $pieces);
         }
 
         //senha hash
@@ -157,38 +158,35 @@ for (i = 0; i < close.length; i++) {
             <table class='table table-below float-table'>
                 <tr class="tr_inv">
                     <td class="td_inv input_nome_time">Username:</td>
-                    <td class="td_inv input_nome_time"><input type='text' name='nomeusuario' value='<?php echo isset($_GET['nomereal']) ? htmlspecialchars(strtolower(str_replace(' ', '', $_GET['nomereal']))) : ''; ?>' class='form-control'></td>
+                    <td class="td_inv input_nome_time"><input type='text' name='nomeusuario' value='<?php echo isset($_GET['nomereal']) ? htmlspecialchars(strtolower(str_replace(' ', '', $_GET['nomereal']))) : ''; ?>' class='admin-input'></td>
                 </tr>
                 <tr class="tr_inv">
                     <td class="td_inv input_nome_time">Email:</td>
-                    <td class="td_inv input_nome_time"><input type='email' name='email' value='<?php echo isset($_GET['email']) ? htmlspecialchars($_GET['email']) : ''; ?>' class='form-control'></td>
+                    <td class="td_inv input_nome_time"><input type='email' name='email' value='<?php echo isset($_GET['email']) ? htmlspecialchars($_GET['email']) : ''; ?>' class='admin-input'></td>
                 </tr>
                 <tr class="tr_inv">
                     <td class="td_inv input_nome_time">Nome Real:</td>
-                    <td class="td_inv input_nome_time"><input type='text' name='nomereal' value='<?php echo isset($_GET['nomereal']) ? htmlspecialchars($_GET['nomereal']) : ''; ?>' class='form-control'></td>
+                    <td class="td_inv input_nome_time"><input type='text' name='nomereal' value='<?php echo isset($_GET['nomereal']) ? htmlspecialchars($_GET['nomereal']) : ''; ?>' class='admin-input'></td>
                 </tr>
 				
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">É membro da CONFUSA?</td>
-            <td class="td_inv input_nome_time checkbox_container">
-
-            <input type="checkbox" class='custom-file-upload' name='membro'>
-
-
-            </td>
-        </tr>
+                <tr class="tr_inv">
+                    <td class="td_inv input_nome_time">É membro da CONFUSA?</td>
+                    <td class="td_inv input_nome_time checkbox_container" style="padding-top: 15px;">
+                        <input type="checkbox" name='membro' style="transform: scale(1.3); margin-left: 5px; cursor: pointer;">
+                    </td>
+                </tr>
 				
                 <!--vinculação de países inicio -->
                 <tr class="tr_inv">
-                    <td class="td_inv input_nome_time">Países vinculados</td>
-                    <td class="td_inv input_nome_time">
+                    <td class="td_inv input_nome_time" style="padding-top: 15px;">Países vinculados:</td>
+                    <td class="td_inv input_nome_time" style="padding-top: 15px;">
                 <?php
                     // ler times do banco de dados
                     $stmt = $paises->read(null,null,null);
 
                     // put them in a select drop-down
-                    echo "<select size='15' class='form-control' name='paises_vinculados[]' multiple>";
-                    echo "<option>Selecione país...</option>";
+                    echo "<select size='15' class='admin-select' name='paises_vinculados[]' multiple style='min-height: 220px;'>";
+                    echo "<option disabled>Selecione os países (Ctrl + clique para múltiplos)...</option>";
 
                     while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
                         extract($row_category);
@@ -202,7 +200,7 @@ for (i = 0; i < close.length; i++) {
                 <!--vinculação de países fim -->
                 <tr class="tr_inv">
                     <td class="td_inv input_nome_time"></td>
-                    <td class="td_inv input_nome_time"><input type=submit name="criar" id="inserir" class="btn"/></td>
+                    <td class="td_inv input_nome_time" style="padding-top: 25px;"><input type="submit" name="criar" id="inserir" class="admin-btn admin-btn-primary" value="Inserir Usuário"/></td>
                 </tr>
 
 

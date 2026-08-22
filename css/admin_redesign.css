@@ -1,0 +1,289 @@
+/* ==========================================================================
+   CONFUSA.top - Admin Redesign System (CSS)
+   ========================================================================== */
+
+:root {
+  --admin-font-heading: 'Kanit', sans-serif;
+  --admin-font-body: 'Montserrat', sans-serif;
+  --admin-accent-cyan: #38bdf8;
+  --admin-accent-indigo: #818cf8;
+  --admin-accent-emerald: #10b981;
+  --admin-accent-amber: #f59e0b;
+  --admin-accent-rose: #ef4444;
+}
+
+/* Reset de H1, H2, H3 para evitar conflitos de indexRanking.css */
+.admin-dashboard-container h1,
+.logs-container h1,
+.inscricoes-container h1,
+.criar-usuario-container h1,
+.admin-dashboard-container h2,
+.logs-container h2,
+.inscricoes-container h2,
+.criar-usuario-container h2,
+.admin-dashboard-container h3,
+.logs-container h3,
+.inscricoes-container h3,
+.criar-usuario-container h3 {
+  float: none !important;
+  position: static !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  font-family: var(--admin-font-heading) !important;
+  letter-spacing: -0.5px;
+}
+
+/* Containers da Área de Admin */
+.admin-dashboard-container,
+.logs-container,
+.inscricoes-container,
+.criar-usuario-container {
+  max-width: 1100px !important;
+  margin: 80px auto 40px auto !important;
+  padding: 30px !important;
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45) !important;
+  font-family: var(--admin-font-body) !important;
+  color: #e2e8f0 !important;
+}
+
+/* Títulos com Gradiente */
+.admin-gradient-title {
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  background: linear-gradient(to right, var(--admin-accent-cyan), var(--admin-accent-indigo)) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  display: inline-block !important;
+}
+
+.admin-gradient-title-amber {
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  background: linear-gradient(to right, var(--admin-accent-amber), #fbbf24) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  display: inline-block !important;
+}
+
+/* Grid de Cards do Dashboard */
+.admin-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 20px !important;
+  margin-top: 20px !important;
+}
+
+.admin-card {
+  text-decoration: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+  padding: 24px !important;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+  color: inherit !important;
+  cursor: pointer !important;
+}
+
+.admin-card:hover {
+  transform: translateY(-6px) !important;
+  border-color: rgba(56, 189, 248, 0.4) !important;
+  box-shadow: 0 10px 20px rgba(56, 189, 248, 0.15) !important;
+}
+
+.admin-card h2 {
+  font-size: 20px !important;
+  color: #f8fafc !important;
+  font-weight: 600 !important;
+}
+
+.admin-card p {
+  margin: 8px 0 0 0 !important;
+  font-size: 14px !important;
+  color: #94a3b8 !important;
+  line-height: 1.6 !important;
+  flex-grow: 1 !important;
+}
+
+/* Botões do Sistema Redesenhados */
+.admin-btn {
+  font-family: var(--admin-font-body) !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  padding: 10px 20px !important;
+  border-radius: 6px !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 14px !important;
+}
+
+.admin-btn-primary {
+  background: linear-gradient(to right, var(--admin-accent-cyan), var(--admin-accent-indigo)) !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.admin-btn-primary:hover {
+  opacity: 0.9 !important;
+  transform: translateY(-2px) !important;
+}
+
+.admin-btn-secondary {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+
+.admin-btn-secondary:hover {
+  background: #475569 !important;
+}
+
+.admin-btn-danger {
+  background: var(--admin-accent-rose) !important;
+  color: white !important;
+}
+
+.admin-btn-danger:hover {
+  background: #dc2626 !important;
+}
+
+.admin-btn-success {
+  background: var(--admin-accent-emerald) !important;
+  color: white !important;
+}
+
+.admin-btn-success:hover {
+  background: #059669 !important;
+}
+
+/* Tabelas Premium */
+.admin-table-container {
+  overflow-x: auto !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  background: rgba(15, 23, 42, 0.4) !important;
+  margin-bottom: 30px !important;
+}
+
+.admin-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  text-align: left !important;
+  font-size: 14px !important;
+}
+
+.admin-table th {
+  background: rgba(15, 23, 42, 0.8) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #94a3b8 !important;
+  padding: 12px 16px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  font-size: 12px !important;
+}
+
+.admin-table td {
+  padding: 12px 16px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #cbd5e1 !important;
+  background: transparent !important;
+}
+
+.admin-table tr {
+  background: transparent !important;
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Badges e Status */
+.admin-badge {
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  display: inline-block !important;
+  text-transform: uppercase !important;
+}
+
+.admin-badge-success {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+.admin-badge-danger {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+  color: #fca5a5 !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+.admin-badge-warning {
+  background-color: rgba(245, 158, 11, 0.2) !important;
+  color: #fbd38d !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Formulários e Inputs */
+.admin-form-group {
+  margin-bottom: 20px !important;
+}
+
+.admin-form-label {
+  display: block !important;
+  font-size: 14px !important;
+  color: #cbd5e1 !important;
+  margin-bottom: 8px !important;
+  font-weight: 600 !important;
+}
+
+.admin-input,
+.admin-select {
+  width: 100% !important;
+  padding: 10px 14px !important;
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 6px !important;
+  color: #f8fafc !important;
+  font-family: var(--admin-font-body) !important;
+  font-size: 14px !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+
+.admin-input:focus,
+.admin-select:focus {
+  border-color: var(--admin-accent-cyan) !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15) !important;
+  outline: none !important;
+}
+
+/* Prevenção de quebra de layout na tabela de criação de usuário */
+.table-below {
+  width: 100% !important;
+  border-collapse: collapse !important;
+}
+
+.table-below td {
+  padding: 12px !important;
+  vertical-align: top !important;
+}
+
+.table-below .input_nome_time {
+  color: #cbd5e1 !important;
+  font-size: 14px !important;
+}
+
+.table-below select[multiple] {
+  min-height: 250px !important;
+}

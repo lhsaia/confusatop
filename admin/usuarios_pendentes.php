@@ -6,7 +6,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/login_info.php';
 
 // Apenas administradores
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || $_SESSION['admin_status'] !== '1') {
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || (int)$_SESSION['admin_status'] !== 1) {
     header('Location: /index.php');
     exit;
 }
@@ -63,40 +63,22 @@ try {
 }
 
 $page_title = "Solicitações de Inscrição";
-$css_filename = "indexRanking";
+$css_filename = "home_redesign";
 $css_login = 'login';
+$aux_css = 'home_redesign';
+$extra_css = 'admin_redesign';
 $css_versao = date('h:i:s');
 include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
 ?>
 
-<style>
-body, html {
-    background-color: #0f172a !important;
-    background-image: none !important;
-    color: #e2e8f0 !important;
-}
-/* Resetar estilos globais de h1 herdados do indexRanking.css */
-h1 {
-    float: none !important;
-    position: static !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    display: block !important;
-}
-/* Resetar cores zebradas de tabelas herdadas do indexRanking.css */
-table tbody tr {
-    background-color: transparent !important;
-}
-</style>
-
-<div class="inscricoes-container" style="max-width: 1100px; margin: 80px auto 40px auto; padding: 25px; font-family: 'Outfit', 'Inter', sans-serif; color: #e2e8f0; background: #1e293b; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); border: 1px solid #334155;">
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 20px; margin-bottom: 25px;">
+<div class="inscricoes-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; margin-bottom: 25px;">
         <div>
-            <h1 style="margin: 0; font-size: 28px; color: #f8fafc; font-weight: 700; background: linear-gradient(to right, #f59e0b, #eab308); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Solicitações de Inscrição</h1>
+            <h1 class="admin-gradient-title-amber">Solicitações de Inscrição</h1>
             <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Aprove novos membros e gerencie solicitações pendentes</p>
         </div>
         <div style="display: flex; gap: 10px;">
-            <a href="/admin/index.php" style="background: #334155; color: #f8fafc; text-decoration: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; text-align: center; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#475569'" onmouseout="this.style.background='#334155'">Voltar ao Painel</a>
+            <a href="/admin/index.php" class="admin-btn admin-btn-secondary">Voltar ao Painel</a>
         </div>
     </div>
 
@@ -112,15 +94,15 @@ table tbody tr {
         Novas Solicitações (Aguardando Aprovação)
     </h2>
 
-    <div style="overflow-x: auto; border: 1px solid #334155; border-radius: 8px; background: #1e293b; margin-bottom: 40px;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+    <div class="admin-table-container">
+        <table class="admin-table">
             <thead>
-                <tr style="background: #0f172a; border-bottom: 1px solid #334155; color: #94a3b8;">
-                    <th style="padding: 12px 16px;">Data da Solicitação</th>
-                    <th style="padding: 12px 16px;">Nome</th>
-                    <th style="padding: 12px 16px;">E-mail</th>
-                    <th style="padding: 12px 16px;">Países Informados</th>
-                    <th style="padding: 12px 16px; text-align: center; width: 220px;">Ações</th>
+                <tr>
+                    <th style="width: 200px;">Data da Solicitação</th>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Países Informados</th>
+                    <th style="text-align: center; width: 220px;">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -130,30 +112,28 @@ table tbody tr {
                     </tr>
                 <?php else: ?>
                     <?php foreach ($pendentes as $req): ?>
-                        <tr style="border-bottom: 1px solid #334155; transition: background 0.15s;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background='transparent'">
-                            <td style="padding: 12px 16px; color: #94a3b8; font-family: monospace; white-space: nowrap;">
+                        <tr>
+                            <td style="color: #94a3b8; font-family: monospace; white-space: nowrap;">
                                 <?= htmlspecialchars(date('d/m/Y H:i', strtotime($req['data_solicitacao']))) ?>
                             </td>
-                            <td style="padding: 12px 16px; font-weight: 600; color: #f8fafc;">
+                            <td style="font-weight: 600; color: #f8fafc;">
                                 <?= htmlspecialchars($req['nome']) ?>
                             </td>
-                            <td style="padding: 12px 16px; color: #38bdf8;">
+                            <td style="color: #38bdf8;">
                                 <?= htmlspecialchars($req['email']) ?>
                             </td>
-                            <td style="padding: 12px 16px; color: #cbd5e1;">
+                            <td style="color: #cbd5e1;">
                                 <?= htmlspecialchars($req['paises']) ?>
                             </td>
                             <!-- Ações -->
-                            <td style="padding: 12px 16px; display: flex; gap: 8px; justify-content: center; align-items: center;">
+                            <td style="display: flex; gap: 8px; justify-content: center; align-items: center;">
                                 <a href="/admin/criar_usuario.php?solicitacao_id=<?= $req['id'] ?>&nomereal=<?= urlencode($req['nome']) ?>&email=<?= urlencode($req['email']) ?>" 
-                                   style="background: #10b981; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 13px; transition: background 0.2s;"
-                                   onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">Aprovar</a>
+                                   class="admin-btn admin-btn-success" style="padding: 6px 12px !important; font-size: 13px !important;">Aprovar</a>
                                 
                                 <form method="POST" style="margin: 0;" onsubmit="return confirm('Tem certeza que deseja reprovar a inscrição de <?= htmlspecialchars($req['nome']) ?>?');">
                                     <input type="hidden" name="action" value="reprovar">
                                     <input type="hidden" name="id" value="<?= $req['id'] ?>">
-                                    <button type="submit" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 13px; cursor: pointer; transition: background 0.2s;"
-                                            onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">Reprovar</button>
+                                    <button type="submit" class="admin-btn admin-btn-danger" style="padding: 6px 12px !important; font-size: 13px !important;">Reprovar</button>
                                 </form>
                             </td>
                         </tr>
@@ -168,14 +148,14 @@ table tbody tr {
         Histórico Recente (Aprovados / Reprovados)
     </h2>
 
-    <div style="overflow-x: auto; border: 1px solid #334155; border-radius: 8px; background: #111827; opacity: 0.85;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+    <div class="admin-table-container" style="opacity: 0.85;">
+        <table class="admin-table" style="font-size: 13px !important;">
             <thead>
-                <tr style="background: #0b0f19; border-bottom: 1px solid #334155; color: #64748b;">
-                    <th style="padding: 10px 14px;">Data</th>
-                    <th style="padding: 10px 14px;">Nome</th>
-                    <th style="padding: 10px 14px;">E-mail</th>
-                    <th style="padding: 10px 14px; text-align: center; width: 120px;">Status</th>
+                <tr style="color: #64748b;">
+                    <th>Data</th>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th style="text-align: center; width: 120px;">Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -185,28 +165,25 @@ table tbody tr {
                     </tr>
                 <?php else: ?>
                     <?php foreach ($historico as $req): 
-                        $statusColor = '#64748b';
-                        $statusBg = '#334155';
+                        $statusClass = 'admin-badge-secondary';
                         if ($req['status'] === 'aprovado') {
-                            $statusColor = '#a7f3d0';
-                            $statusBg = '#064e3b';
+                            $statusClass = 'admin-badge-success';
                         } elseif ($req['status'] === 'reprovado') {
-                            $statusColor = '#fca5a5';
-                            $statusBg = '#7f1d1d';
+                            $statusClass = 'admin-badge-danger';
                         }
                     ?>
-                        <tr style="border-bottom: 1px solid #1f2937;">
-                            <td style="padding: 10px 14px; color: #64748b; font-family: monospace;">
+                        <tr>
+                            <td style="color: #64748b; font-family: monospace;">
                                 <?= htmlspecialchars(date('d/m/Y H:i', strtotime($req['data_solicitacao']))) ?>
                             </td>
-                            <td style="padding: 10px 14px; color: #94a3b8; font-weight: 500;">
+                            <td style="color: #94a3b8; font-weight: 500;">
                                 <?= htmlspecialchars($req['nome']) ?>
                             </td>
-                            <td style="padding: 10px 14px; color: #475569;">
+                            <td style="color: #475569;">
                                 <?= htmlspecialchars($req['email']) ?>
                             </td>
-                            <td style="padding: 10px 14px; text-align: center; white-space: nowrap;">
-                                <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: <?= $statusColor ?>; background: <?= $statusBg ?>;">
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span class="admin-badge <?= $statusClass ?>">
                                     <?= htmlspecialchars($req['status']) ?>
                                 </span>
                             </td>

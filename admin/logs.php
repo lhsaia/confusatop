@@ -6,7 +6,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/login_info.php';
 
 // Apenas administradores
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || $_SESSION['admin_status'] !== '1') {
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || (int)$_SESSION['admin_status'] !== 1) {
     header('Location: /index.php');
     exit;
 }
@@ -238,53 +238,35 @@ function parseLogLine(string $entry): array {
 
 // Títulos e estilos
 $page_title = "Agregador de Logs de Erros";
-$css_filename = "indexRanking"; // Reaproveita estilos base se necessário
+$css_filename = "home_redesign";
 $css_login = 'login';
+$aux_css = 'home_redesign';
+$extra_css = 'admin_redesign';
 $css_versao = date('h:i:s');
 include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
 ?>
 
-<style>
-body, html {
-    background-color: #0f172a !important;
-    background-image: none !important;
-    color: #e2e8f0 !important;
-}
-/* Resetar estilos globais de h1 herdados do indexRanking.css */
-h1 {
-    float: none !important;
-    position: static !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    display: block !important;
-}
-/* Resetar cores zebradas de tabelas herdadas do indexRanking.css */
-table tbody tr {
-    background-color: transparent !important;
-}
-</style>
-
-<div class="logs-container" style="max-width: 1200px; margin: 80px auto 40px auto; padding: 20px; font-family: 'Outfit', 'Inter', sans-serif; color: #e2e8f0; background: #1e293b; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); border: 1px solid #334155;">
-    <div class="logs-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 20px; margin-bottom: 20px;">
+<div class="logs-container">
+    <div class="logs-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; margin-bottom: 20px;">
         <div>
-            <h1 style="margin: 0; font-size: 28px; color: #f8fafc; font-weight: 700; background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Central de Logs de Erros</h1>
+            <h1 class="admin-gradient-title">Central de Logs de Erros</h1>
             <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Monitoramento e depuração centralizada do site Confusa.top</p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
             <form method="POST" onsubmit="return confirm('Tem certeza que deseja apagar todos os registros do arquivo de log?');" style="margin: 0;">
                 <input type="hidden" name="action" value="clear">
-                <button type="submit" style="background: #ef4444; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s; font-family: inherit;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">Limpar Logs</button>
+                <button type="submit" class="admin-btn admin-btn-danger">Limpar Logs</button>
             </form>
-            <a href="/admin/index.php" style="background: #334155; color: #f8fafc; text-decoration: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; text-align: center; font-size: 14px; transition: background 0.2s; font-family: inherit; display: inline-block;" onmouseover="this.style.background='#475569'" onmouseout="this.style.background='#334155'">Voltar ao Painel</a>
+            <a href="/admin/index.php" class="admin-btn admin-btn-secondary">Voltar ao Painel</a>
         </div>
     </div>
 
     <!-- Status e Informações -->
-    <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: center;">
+    <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: center;">
         <div>
             <span style="color: #94a3b8;">Caminho do Arquivo:</span> 
-            <code style="background: #0f172a; padding: 3px 8px; border-radius: 4px; color: #38bdf8; font-size: 13px; font-family: monospace;"><?= htmlspecialchars($logPath) ?></code>
-            <span style="margin: 0 10px; color: #475569;">|</span>
+            <code style="background: #0f172a; padding: 3px 8px; border-radius: 4px; color: #38bdf8; font-size: 13px; font-family: monospace; border: 1px solid rgba(255,255,255,0.05);"><?= htmlspecialchars($logPath) ?></code>
+            <span style="margin: 0 10px; color: rgba(255,255,255,0.1);">|</span>
             <span style="color: #94a3b8;">Status:</span> 
             <?php if (file_exists($logPath)): ?>
                 <span style="color: #10b981; font-weight: bold;">● Ativo</span> (<?= round(filesize($logPath) / 1024, 2) ?> KB)
@@ -304,28 +286,28 @@ table tbody tr {
     <?php endif; ?>
 
     <!-- Barra de Filtros e Busca -->
-    <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+    <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
         <div style="flex: 1; min-width: 250px;">
-            <input type="text" id="logSearch" placeholder="Pesquisar por erro, arquivo ou código..." style="width: 100%; padding: 10px 15px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: #f8fafc; font-size: 14px; box-sizing: border-box;" onkeyup="filterLogs()">
+            <input type="text" id="logSearch" placeholder="Pesquisar por erro, arquivo ou código..." class="admin-input" onkeyup="filterLogs()">
         </div>
         <div style="display: flex; gap: 8px;">
-            <button onclick="filterType('ALL')" class="btn-filter active" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #334155; background: #334155; color: white; font-weight: 600; cursor: pointer;">Todos</button>
-            <button onclick="filterType('FATAL')" class="btn-filter" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #ef4444; background: transparent; color: #fca5a5; font-weight: 600; cursor: pointer;">Fatais</button>
-            <button onclick="filterType('WARNING')" class="btn-filter" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #f97316; background: transparent; color: #ffedd5; font-weight: 600; cursor: pointer;">Warnings</button>
-            <button onclick="filterType('NOTICE')" class="btn-filter" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #eab308; background: transparent; color: #fef9c3; font-weight: 600; cursor: pointer;">Notices</button>
+            <button onclick="filterType('ALL')" class="btn-filter active" style="padding: 8px 16px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: #334155; color: white; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s;">Todos</button>
+            <button onclick="filterType('FATAL')" class="btn-filter" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #ef4444; background: transparent; color: #fca5a5; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s;">Fatais</button>
+            <button onclick="filterType('WARNING')" class="btn-filter" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #f97316; background: transparent; color: #ffedd5; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s;">Warnings</button>
+            <button onclick="filterType('NOTICE')" class="btn-filter" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #eab308; background: transparent; color: #fef9c3; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s;">Notices</button>
         </div>
     </div>
 
     <!-- Tabela de Logs -->
-    <div style="overflow-x: auto; border: 1px solid #334155; border-radius: 8px; background: #1e293b;">
-        <table id="logTable" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+    <div class="admin-table-container">
+        <table id="logTable" class="admin-table">
             <thead>
-                <tr style="background: #0f172a; border-bottom: 1px solid #334155; color: #94a3b8;">
-                    <th style="padding: 12px 16px; width: 180px;">Data/Hora (UTC)</th>
-                    <th style="padding: 12px 16px; width: 140px;">Tipo de Erro</th>
-                    <th style="padding: 12px 16px;">Detalhes e Mensagem</th>
-                    <th style="padding: 12px 16px; width: 220px;">Arquivo / Linha</th>
-                    <th style="padding: 12px 16px; width: 80px; text-align: center;">Ações</th>
+                <tr>
+                    <th style="width: 180px;">Data/Hora (UTC)</th>
+                    <th style="width: 140px;">Tipo de Erro</th>
+                    <th>Detalhes e Mensagem</th>
+                    <th style="width: 220px;">Arquivo / Linha</th>
+                    <th style="width: 80px; text-align: center;">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -341,49 +323,47 @@ table tbody tr {
                         
                         // Determinar a gravidade para cores e filtros
                         $severity = 'other';
-                        $badgeColor = '#64748b'; // default
-                        $badgeBg = '#334155';
+                        $badgeClass = 'admin-badge-secondary';
+                        $badgeBg = 'rgba(255, 255, 255, 0.1)';
+                        $badgeColor = '#cbd5e1';
                         
                         $typeLower = strtolower($parsed['type']);
                         if (strpos($typeLower, 'fatal') !== false || strpos($typeLower, 'error') !== false || strpos($typeLower, 'parse') !== false || strpos($typeLower, 'exception') !== false) {
                             $severity = 'fatal';
-                            $badgeColor = '#fca5a5';
-                            $badgeBg = '#7f1d1d';
+                            $badgeClass = 'admin-badge-danger';
                         } elseif (strpos($typeLower, 'warning') !== false) {
                             $severity = 'warning';
-                            $badgeColor = '#ffedd5';
-                            $badgeBg = '#7c2d12';
+                            $badgeClass = 'admin-badge-warning';
                         } elseif (strpos($typeLower, 'notice') !== false || strpos($typeLower, 'deprecated') !== false) {
                             $severity = 'notice';
-                            $badgeColor = '#fef9c3';
-                            $badgeBg = '#713f12';
+                            $badgeClass = 'admin-badge-warning';
                         }
                     ?>
-                        <tr class="log-row" data-severity="<?= $severity ?>" style="border-bottom: 1px solid #334155; transition: background 0.15s;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background='transparent'">
+                        <tr class="log-row" data-severity="<?= $severity ?>">
                             <!-- Data/Hora -->
-                            <td style="padding: 12px 16px; color: #94a3b8; font-family: monospace; white-space: nowrap;">
+                            <td style="font-family: monospace; white-space: nowrap;">
                                 <?= htmlspecialchars($parsed['datetime']) ?>
                             </td>
                             <!-- Badge de Tipo -->
-                            <td style="padding: 12px 16px; white-space: nowrap;">
-                                <span style="display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: <?= $badgeColor ?>; background: <?= $badgeBg ?>;">
+                            <td style="white-space: nowrap;">
+                                <span class="admin-badge <?= $badgeClass ?>">
                                     <?= htmlspecialchars($parsed['type']) ?>
                                 </span>
                             </td>
                             <!-- Mensagem -->
-                            <td style="padding: 12px 16px; word-break: break-word; color: #e2e8f0; font-family: 'Consolas', 'Courier New', monospace; font-size: 13px;">
+                            <td style="word-break: break-word; font-family: 'Consolas', 'Courier New', monospace; font-size: 13px;">
                                 <?= nl2br(htmlspecialchars($parsed['message'])) ?>
                                 <?php if ($parsed['stack'] !== ''): ?>
                                     <details style="margin-top: 8px; color: #94a3b8; font-size: 12px; cursor: pointer;">
                                         <summary style="font-weight: 600; outline: none; user-select: none; color: #38bdf8;">Ver Stack Trace</summary>
-                                        <pre style="margin-top: 5px; background: #0f172a; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 11px; color: #cbd5e1; border: 1px solid #334155; line-height: 1.4; font-family: monospace; white-space: pre-wrap;"><?= htmlspecialchars($parsed['stack']) ?></pre>
+                                        <pre style="margin-top: 5px; background: #0f172a; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 11px; color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); line-height: 1.4; font-family: monospace; white-space: pre-wrap;"><?= htmlspecialchars($parsed['stack']) ?></pre>
                                     </details>
                                 <?php endif; ?>
                             </td>
                             <!-- Arquivo e Linha -->
-                            <td style="padding: 12px 16px; color: #94a3b8; word-break: break-all; font-size: 12px;">
+                            <td style="word-break: break-all; font-size: 12px;">
                                 <?php if ($parsed['file'] !== ''): ?>
-                                    <span style="color: #38bdf8;"><?= htmlspecialchars(basename($parsed['file'])) ?></span>
+                                    <span style="color: #38bdf8; font-weight: 600;"><?= htmlspecialchars(basename($parsed['file'])) ?></span>
                                     <div style="font-size: 11px; color: #64748b; margin-top: 3px; font-family: monospace;"><?= htmlspecialchars($parsed['file']) ?></div>
                                     <div style="font-size: 11px; color: #f59e0b; margin-top: 2px;">Linha: <strong><?= htmlspecialchars($parsed['line']) ?></strong></div>
                                 <?php else: ?>
@@ -391,11 +371,11 @@ table tbody tr {
                                 <?php endif; ?>
                             </td>
                             <!-- Ações -->
-                            <td style="padding: 12px 16px; text-align: center; vertical-align: middle;">
+                            <td style="text-align: center; vertical-align: middle;">
                                 <form method="POST" style="margin: 0; display: inline;" onsubmit="return confirm('Deseja realmente excluir este registro de erro específico?');">
                                     <input type="hidden" name="action" value="delete_single">
                                     <input type="hidden" name="entry_hash" value="<?= $originalIdx ?>">
-                                    <button type="submit" style="background: transparent; color: #ef4444; border: none; cursor: pointer; padding: 4px; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#7f1d1d'" onmouseout="this.style.background='transparent'" title="Excluir este erro">
+                                    <button type="submit" style="background: transparent; color: #ef4444; border: none; cursor: pointer; padding: 4px; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.15)'" onmouseout="this.style.background='transparent'" title="Excluir este erro">
                                         <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle;">delete</span>
                                     </button>
                                 </form>
