@@ -91,11 +91,21 @@
                 $jogador->valor = $jogador->calcularPasse();
                 
                     
-			 if($jogador->create()){
-                 
-                 
+             $already_exists = false;
+             if (isset($id_jogador_existente) && $id_jogador_existente > 0) {
+                 $already_exists = true;
+             }
+
+             $success_action = false;
+             if ($already_exists) {
+                 $success_action = $jogador->updateImported($id_jogador_existente);
+             } else {
+                 $success_action = $jogador->create();
+             }
+
+             if($success_action){
                  if(isset($timeSelecionado) && $timeSelecionado != 0){
-                    $codigo_jogador = $db->lastInsertId();
+                    $codigo_jogador = $already_exists ? $id_jogador_existente : $db->lastInsertId();
                     if($jogador->transferir($codigo_jogador,$timeSelecionado,0,0,-1)){
                         $is_success = true;  
                     } else {
@@ -105,8 +115,8 @@
                     
                     $is_success = true;
                  }
-			 } else {
-                 $error_msg .= 'Não foi possível inserir o jogador';
+             } else {
+                 $error_msg .= 'Não foi possível inserir ou atualizar o jogador';
              }
 
 ?>

@@ -22,9 +22,10 @@ $usuario = new Usuario($db);
 $time = new Time($db);
 
 $page_title = "Criar Jogador";
-$css_filename = "newindex";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'area_competicao';
+$aux_css = 'home_redesign';
+$extra_css = 'ligas_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -160,25 +161,27 @@ if(isset($_POST['nome']) && isset($_POST['nascimento']) && $_POST['pais'] != 0 &
 ?>
 
 <script type="application/javascript">
-var close = document.getElementsByClassName("closebtn");
-var i;
-
-for (i = 0; i < close.length; i++) {
-    close[i].onclick = function(){
-        var div = this.parentElement;
-        div.style.opacity = "0";
-        setTimeout(function(){ div.style.display = "none"; }, 600);
-    }
-}
+$(document).ready(function(){
+    $(document).on('click', '.closebtn', function(){
+        var div = $(this).parent();
+        div.addClass('fade-out');
+        setTimeout(function(){ div.hide(); }, 400);
+    });
+});
 </script>
 
-
-<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
-<div id='errorbox'></div>
-<div>
-<div id='inscricao'>
-
-<form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
+<main class="propostas-container">
+    <div class="propostas-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 1rem; width: 100%;">
+            <h2 class="propostas-title" style="margin: 0; font-family: 'Kanit', sans-serif; font-size: 1.6rem; color: #1e293b;">➕ Criar Jogador</h2>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <div id="toolbar-card-container"></div>
+                <a href="/usuario/meusjogadores.php" style="display: inline-block; padding: 8px 16px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(0, 0, 0, 0.06)'" onmouseout="this.style.background='rgba(0, 0, 0, 0.03)'">Voltar</a>
+            </div>
+        </div>
+        <div id='errorbox'></div>
+        <div id='inscricao'>
+            <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
 
     
 
@@ -336,14 +339,14 @@ for (i = 0; i < close.length; i++) {
         ?>
 
         <div style="margin-top: 15px;">
-<button type="submit" name="criar" class="btn">Inserir</button>
-                <button type="reset" name="reset" class="btn">Limpar</button>
-                <button type='button' id="hexagen" class="btn"><i class="fas fa-dice"></i>&nbsp Hexagen</button>
-</div>
+            <button type="submit" name="criar" class="btn">Inserir</button>
+            <button type="reset" name="reset" class="btn">Limpar</button>
+        </div>
 
     </form>
-</div>
-</div>
+        </div>
+    </div>
+</main>
 
   <script>
   $( function() {
@@ -719,13 +722,16 @@ for (i = 0; i < close.length; i++) {
     else
       $(this).val($(this).data("old"));
   });
+  
+  $('#toolbar').html("<div id='hexagen' style='cursor:pointer; display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.2); border-radius: 8px; color: #0284c7; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;' onmouseover=\"this.style.background='rgba(2, 132, 199, 0.15)'\" onmouseout=\"this.style.background='rgba(2, 132, 199, 0.08)'\"><span style=\"font-size:18px !important\" class='material-symbols-outlined'>casino</span><span>Hexagen</span></div>");
+  $("#toolbar").appendTo("#toolbar-card-container");
 });
 
 
 $("#cobrador").val(0);
 $("#mentalidade").val(4);
 
-$("#hexagen").on("click",function(){
+$(document).on("click", "#hexagen", function(){
     var nacionalidade = $("#pais").val();
     var codigoPosicao = $("#posicoes option:selected").first().val();
     var sexo = $("#sexo").val();
