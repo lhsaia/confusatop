@@ -31,6 +31,13 @@
 
     $info = $time->encontrarTimeExterno($codigo_time);
 	
+	$escudo = $info['Escudo'];
+	if (strpos($escudo, '../temp_escudos/') === 0) {
+		$escudo = '/images/escudos/' . basename($escudo);
+	} else {
+		$escudo = '/images/escudos/' . ($escudo ?: '0.png');
+	}
+	
     // Encoding array in JSON format
-    die(json_encode([ 'success'=> true, 'Nome'=> $info['Nome'], 'Escudo'=> $info['Escudo']]));
+    die(json_encode([ 'success'=> true, 'Nome'=> $info['Nome'], 'Escudo'=> $escudo]));
  ?>

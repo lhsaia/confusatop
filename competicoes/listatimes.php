@@ -265,7 +265,7 @@ $( document ).ready(function(){
 				}
 			tbl += "</select>";
   
-			tbl += "<span class='fileUploader ui-button ui-widget'>Importar .ymt temporário</span><input id='import_team"+i+"' type='file' value='Importar .ymt temporário' hidden class='hiddenInput import_team' />";
+			tbl += "<span class='fileUploader ui-button ui-widget'>Importar .ymt temporário</span><input id='import_team"+i+"' type='file' accept='.ymt' value='Importar .ymt temporário' hidden class='hiddenInput import_team' />";
 			tbl += "<input id='update_team"+i+"' type='submit' value='Salvar' class='ui-button ui-widget update_team' disabled/>";
 			tbl += "<span class='status_competicao' style='background-color:"+cor_status+" !important; color:"+font_status+" !important; border: 1px solid "+font_status+"20 !important;'>" +status_time + "</span>";
 			
@@ -458,69 +458,62 @@ $(document).on("click", ".update_team", function(e){
 		}
 	});
 	
-	$(".fileUploader").click(function() {
+	$(document).on("click", ".fileUploader", function() {
 		alert('Ao importar arquivo .ymt e não usar time do portal, as estatísticas do time não serão computadas no histórico geral, apenas na competição.');
 		var tbl_row =  $(this).closest('.par_pais_equipe');
 		tbl_row.find('.import_team').click();
 	});
 	
-			$(".import_team").on("change", function (e) {
+	$(document).on("change", ".import_team", function (e) {
 
-				$('#loading').show(); 
-				var codigo_time = parseInt($(this).attr('id').replace( /^\D+/g, ''));
-				var tbl_row =  $(this).closest('.par_pais_equipe');
-				var pais_time = tbl_row.find('.selecaoPais').val();
-				
-				var inputFile = $(this)[0];
-				var file;
-
-				if (inputFile.files.length > 0) {
-				   file = inputFile.files[0];
-				} else {
-				   file = null;
-				}
-				
-
-				formData = new FormData();
-				formData.append('files',file);
-				formData.append('codigo_time',codigo_time);
-				formData.append('id_competicao',codigo_competicao);
-				formData.append('pais_time',pais_time);
-			
-			// for (var key of formData.entries()) {
-				// console.log(key[0] + ', ' + key[1]);
-			// }
-			
-						$.ajax({
-                type        : 'POST', // define the type of HTTP verb we want to use (POST for our form)
-                url         : 'importar_time_ymt.php', // the url where we want to POST
-                data        : formData, // our data object
-                dataType    : 'json', // what type of data do we expect back from the server
-                processData: false,
-                contentType: false,
-                cache: false
-            }).done(function(new_response) {
-                if(new_response.success){
-				
-							load_data();
-							update_table();
-							
-						} else {
-							$('#loading').hide();
-							$('#errorbox').html("<div class='alert alert-danger'>Não foi possível inserir o time pelos seguintes motivos:</br>"+new_response.errors+"</div>");
-							
-						}
-					}).fail(function(new_response) {
-						  $('#errorbox').html("<div class='alert alert-danger'>Houve um erro não esperado, por favor contacte o admin.<div>");
-						});
-			
+		$('#loading').show(); 
+		var codigo_time = parseInt($(this).attr('id').replace( /^\D+/g, ''));
+		var tbl_row =  $(this).closest('.par_pais_equipe');
+		var pais_time = tbl_row.find('.selecaoPais').val();
 		
+		var inputFile = $(this)[0];
+		var file;
+
+		if (inputFile.files.length > 0) {
+		   file = inputFile.files[0];
+		} else {
+		   file = null;
+		}
+		
+
+		formData = new FormData();
+		formData.append('files',file);
+		formData.append('codigo_time',codigo_time);
+		formData.append('id_competicao',codigo_competicao);
+		formData.append('pais_time',pais_time);
+	
+	// for (var key of formData.entries()) {
+		// console.log(key[0] + ', ' + key[1]);
+	// }
+	
+				$.ajax({
+        type        : 'POST', // define the type of HTTP verb we want to use (POST for our form)
+        url         : 'importar_time_ymt.php', // the url where we want to POST
+        data        : formData, // our data object
+        dataType    : 'json', // what type of data do we expect back from the server
+        processData: false,
+        contentType: false,
+        cache: false
+    }).done(function(new_response) {
+        if(new_response.success){
+			load_data();
+			update_table();
+		} else {
+			$('#loading').hide();
+			$('#errorbox').html("<div class='alert alert-danger'>Não foi possível inserir o time pelos seguintes motivos:</br>"+new_response.errors+"</div>");
+		}
+	}).fail(function(new_response) {
+		$('#errorbox').html("<div class='alert alert-danger'>Houve um erro não esperado, por favor contacte o admin.<div>");
+	});
+
 	});
 
 });
-
-
-
 </script>
 
 <?php

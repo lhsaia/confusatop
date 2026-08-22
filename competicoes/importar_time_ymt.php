@@ -137,18 +137,19 @@ if (!empty($_FILES['files'])) {
 			$time->uniforme2cor2 = (string)$xml->clube->Uni2Cor2;
 			$time->uniforme2cor3 = (string)$xml->clube->Uni2Cor3;
 
-			$upload_dir = "/competicoes/temp_escudos/";
+			$upload_dir = "/images/escudos/";
 			$formato_arquivo = (string)$xml->formatoEscudoBase64[0];
 			$conferencia_arquivo = (string)$xml->escudoBase64[0];
 
 			if($formato_arquivo !== "null" && strlen($conferencia_arquivo) > 0){
-				$output_file = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $time->nome . "." . $formato_arquivo;
+				$escudo_nome = "externo-" . $idCompeticao . "-" . abs($codigo_time) . "." . $formato_arquivo;
+				$output_file = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $escudo_nome;
 				$preEscudo = (string)$xml->escudoBase64[0];
 				$preEscudoDecoded = base64_decode($preEscudo);
 				$escudo_file = fopen($output_file, "wb");
 				fwrite($escudo_file, $preEscudoDecoded);
 				fclose($escudo_file);
-				$time->escudo = "../temp_escudos/" . $_SESSION['user_id']. "-". $time->nome. "." . $formato_arquivo;
+				$time->escudo = $escudo_nome;
 			} else {
 				$time->escudo = $time->escudoPadrao();
 			}
