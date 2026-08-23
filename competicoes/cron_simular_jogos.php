@@ -188,33 +188,45 @@ foreach ($partidas as $matchInfo) {
     $suspensos = [];
 
     if (!empty($allMatchPlayers)) {
-        $inClause = implode(',', $allMatchPlayers);
-        // Consultar status dinâmicos no MariaDB principal
-        $querySt = "SELECT val.ID,
-                           IF((cs.lesionado_ate IS NOT NULL AND cs.lesionado_ate >= CURDATE()) OR (j.lesionado_ate IS NOT NULL AND j.lesionado_ate >= CURDATE()), 1, 0) as lesionado,
-                           COALESCE(cs.suspenso, 0) as suspenso
-                    FROM (
-                        SELECT ID FROM jogador WHERE ID IN ($inClause)
-                        UNION
-                        SELECT id_jogador AS ID FROM competicao_suspensos WHERE id_competicao = :comp AND id_jogador IN ($inClause)
-                    ) val
-                    LEFT JOIN jogador j ON val.ID = j.ID
-                    LEFT JOIN competicao_suspensos cs ON val.ID = cs.id_jogador AND cs.id_competicao = :comp2";
-        $stmtSt = $db->prepare($querySt);
-        $stmtSt->bindValue(':comp', $idCompeticao, PDO::PARAM_INT);
-        $stmtSt->bindValue(':comp2', $idCompeticao, PDO::PARAM_INT);
-        $stmtSt->execute();
-        while ($rowSt = $stmtSt->fetch(PDO::FETCH_ASSOC)) {
-            $pId = (int)$rowSt['ID'];
-            if ($rowSt['lesionado'] == 1) {
-                $lesionados[] = $pId;
-                if (in_array($pId, $team1Players)) $outTeam1[] = $pId;
-                if (in_array($pId, $team2Players)) $outTeam2[] = $pId;
-            }
-            if ($rowSt['suspenso'] == 1) {
-                $suspensos[] = $pId;
-                if (in_array($pId, $team1Players)) $outTeam1[] = $pId;
-                if (in_array($pId, $team2Players)) $outTeam2[] = $pId;
+        $validPlayerIds = array_filter(array_map('intval', $allMatchPlayers), function($id) { return $id > 0; });
+        if (!empty($validPlayerIds)) {
+            $inClause = implode(',', array_unique($validPlayerIds));
+            // Garantir que a coluna lesionado_ate exista no MariaDB competicao_suspensos
+            try {
+                $db->exec("ALTER TABLE competicao_suspensos ADD COLUMN lesionado_ate DATE DEFAULT NULL");
+            } catch (Exception $e) {}
+
+            // Consultar status dinâmicos no MariaDB principal (inclui checagem para jogadores de times importados .ymt)
+            try {
+                $querySt = "SELECT val.ID,
+                                   IF((cs.lesionado_ate IS NOT NULL AND cs.lesionado_ate >= CURDATE()) OR (j.lesionado_ate IS NOT NULL AND j.lesionado_ate >= CURDATE()), 1, 0) as lesionado,
+                                   COALESCE(cs.suspenso, 0) as suspenso
+                            FROM (
+                                SELECT ID FROM jogador WHERE ID IN ($inClause)
+                                UNION
+                                SELECT id_jogador AS ID FROM competicao_suspensos WHERE id_competicao = :comp AND id_jogador IN ($inClause)
+                            ) val
+                            LEFT JOIN jogador j ON val.ID = j.ID
+                            LEFT JOIN competicao_suspensos cs ON val.ID = cs.id_jogador AND cs.id_competicao = :comp2";
+                $stmtSt = $db->prepare($querySt);
+                $stmtSt->bindValue(':comp', $idCompeticao, PDO::PARAM_INT);
+                $stmtSt->bindValue(':comp2', $idCompeticao, PDO::PARAM_INT);
+                $stmtSt->execute();
+                while ($rowSt = $stmtSt->fetch(PDO::FETCH_ASSOC)) {
+                    $pId = (int)$rowSt['ID'];
+                    if ($rowSt['lesionado'] == 1) {
+                        $lesionados[] = $pId;
+                        if (in_array($pId, $team1Players)) $outTeam1[] = $pId;
+                        if (in_array($pId, $team2Players)) $outTeam2[] = $pId;
+                    }
+                    if ($rowSt['suspenso'] == 1) {
+                        $suspensos[] = $pId;
+                        if (in_array($pId, $team1Players)) $outTeam1[] = $pId;
+                        if (in_array($pId, $team2Players)) $outTeam2[] = $pId;
+                    }
+                }
+            } catch (Exception $e) {
+                error_log("Erro ao consultar status de desfalques no MariaDB: " . $e->getMessage());
             }
         }
 
@@ -227,13 +239,13 @@ foreach ($partidas as $matchInfo) {
 
         // Atualizar lesionados no SQLite temporário
         if (!empty($lesionados)) {
-            $inLes = implode(',', $lesionados);
+            $inLes = implode(',', array_map('intval', $lesionados));
             $ldb->exec("UPDATE jogador SET Lesionado = 1 WHERE ID IN ($inLes)");
         }
 
         // Atualizar suspensos no SQLite temporário
         if (!empty($suspensos)) {
-            $inSus = implode(',', $suspensos);
+            $inSus = implode(',', array_map('intval', $suspensos));
             $ldb->exec("UPDATE jogador SET Suspenso = 1 WHERE ID IN ($inSus)");
         }
     }
