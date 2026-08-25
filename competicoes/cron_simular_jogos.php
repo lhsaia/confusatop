@@ -389,6 +389,14 @@ foreach ($partidas as $matchInfo) {
     
     $output = shell_exec($cmd . "\n");
     
+    // Caso o motor execute apenas a rotina de compatibilidade/migração no primeiro disparo, reenviar a simulação
+    $tentativas = 1;
+    while ($tentativas < 3 && stripos($output, 'compatibilidade com o portal web') !== false) {
+        $outputRetry = shell_exec($cmd . "\n");
+        $output .= "\n[REENVIO AUTOMÁTICO #" . $tentativas . "]:\n" . $outputRetry;
+        $tentativas++;
+    }
+    
     // Geração de LOG para debug do motor de simulação
     $logMessage = "[" . date('Y-m-d H:i:s') . "] CMD: " . $cmd . "\nOUTPUT:\n" . $output . "\n----------------------------------------\n";
     file_put_contents($hexacolorDir . "/simulation_debug.log", $logMessage, FILE_APPEND);
