@@ -4,15 +4,27 @@
 
 Sempre que você realizar alterações de novas funcionalidades, melhorias de layout ou correções solicitadas pelo usuário neste ambiente:
 1. Você **deve** atualizar o arquivo `/updates.json` na raiz do projeto.
-2. Adicione uma nova entrada no topo do array JSON (mantendo a ordem da mais recente para a mais antiga) com o seguinte formato:
+2. Verifique se já existe um bloco `{ "id": "day_DD_MM_AAAA", ... }` para a data de hoje no topo do array `"days"`. Se existir, **adicione** seus itens dentro do array `"items"` desse bloco. Se não existir, **crie** um novo bloco no topo com o seguinte formato:
    ```json
    {
+     "id": "day_DD_MM_AAAA",
      "date": "DD/MM/AAAA",
-     "title": "Título Curto e Direto da Melhoria",
-     "description": "Uma explicação concisa sobre o que mudou e qual o benefício para o usuário do site."
+     "items": [
+       {
+         "badge": "TIPO",
+         "title": "Título Curto e Direto",
+         "desc": "Explicação concisa do que mudou e qual o benefício para o usuário."
+       }
+     ]
    }
    ```
-3. Certifique-se de que a sintaxe JSON permaneça perfeitamente válida.
+3. **Regras de badge** — escolha o tipo correto para cada item:
+   - `"design"` → para qualquer alteração **puramente visual**: redesenhos de página, migração de layout, ajuste de estilo, troca de tema, padronização de componentes visuais. **NÃO use `"new"` para redesenhos.**
+   - `"new"` → para funcionalidades **realmente novas**: recursos, fluxos ou dados que antes não existiam no sistema.
+   - `"bugfix"` → para correções de erros ou comportamentos incorretos.
+   - `"security"` → para alterações de segurança, permissões ou autenticação.
+4. Certifique-se de que a sintaxe JSON permaneça perfeitamente válida.
+
 
 
 ## Diretrizes de Design Visual 2.0 (Brand Kit & UI System)
