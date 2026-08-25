@@ -261,7 +261,7 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
                         $team1 = $pivot;
                     }
                 } else {
-                    $team2 = $teamsToDraw[$size - 1 - j];
+                    $team2 = $teamsToDraw[$size - 1 - $j];
                 }
                 $matchday[] = ['home' => $team1, 'away' => $team2];
             }
