@@ -1,0 +1,471 @@
+﻿/* ==========================================================================
+   CONFUSA.top - Quadro de Estádios Redesign (Light Theme System)
+   ========================================================================== */
+
+body {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  display: flex;
+  flex-direction: column;
+  padding-top: 60px;
+  background-image: 
+    linear-gradient(180deg, rgba(248, 250, 252, 0.85) 0%, rgba(226, 232, 240, 0.95) 100%),
+    url("/images/confusa-blue.png") !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+  overflow-x: hidden;
+}
+
+html body #logged-user {
+  display: none !important;
+}
+
+.bg {
+  display: none !important;
+}
+
+/* Container Principal */
+.propostas-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  flex: 1;
+}
+
+/* Card Principal */
+.propostas-card {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 18px !important;
+  padding: 2.25rem !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+}
+
+.propostas-title {
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1.6rem !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+}
+
+.header-actions-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  padding-bottom: 1rem;
+  width: 100%;
+}
+
+.header-buttons-wrapper {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.header-buttons-wrapper button,
+.btn-action-primary,
+.btn-action-secondary {
+  width: auto !important;
+  max-width: fit-content !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+}
+
+/* Campo de busca moderno */
+#search_wrapper {
+  display: inline-flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 6px 12px;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  transition: all 0.2s ease;
+}
+
+#search_wrapper:focus-within {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+#caixa_pesquisa {
+  border: none !important;
+  outline: none !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.85rem !important;
+  color: #334155 !important;
+  width: 180px;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#search_wrapper .material-symbols-outlined {
+  color: #64748b;
+  font-size: 20px;
+}
+
+/* Botões de Ação */
+.btn-action-primary {
+  border: none !important;
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-weight: 600 !important;
+  font-family: 'Kanit', sans-serif !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25) !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+}
+
+.btn-action-primary:hover {
+  background: #0369a1 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
+}
+
+.btn-action-secondary {
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  background: #ffffff !important;
+  color: #334155 !important;
+  border-radius: 8px !important;
+  padding: 8px 14px !important;
+  font-weight: 600 !important;
+  font-family: 'Kanit', sans-serif !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+}
+
+.btn-action-secondary:hover {
+  background: #f8fafc !important;
+  border-color: #0284c7 !important;
+  color: #0284c7 !important;
+}
+
+/* Tabela e Células */
+.tbl_user_data {
+  width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  margin-top: 1rem;
+  border-radius: 8px;
+}
+
+#tabelaPrincipal {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 8px !important;
+}
+
+#tabelaPrincipal th {
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  text-transform: uppercase;
+  font-size: 0.8rem !important;
+  letter-spacing: 0.5px;
+  border: none !important;
+  padding: 12px 10px !important;
+  vertical-align: middle !important;
+  text-align: center !important;
+}
+
+#tabelaPrincipal th.headings {
+  cursor: pointer !important;
+  user-select: none;
+  white-space: nowrap;
+}
+
+#tabelaPrincipal th span.material-symbols-outlined {
+  font-size: 16px;
+  vertical-align: middle;
+  margin-right: 2px;
+}
+
+#tabelaPrincipal th:first-child {
+  text-align: left !important;
+}
+
+#tabelaPrincipal td {
+  padding: 10px 10px !important;
+  vertical-align: middle !important;
+  border: none !important;
+  font-size: 0.85rem !important;
+  color: #334155 !important;
+  text-align: center !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+#tabelaPrincipal td:first-child {
+  text-align: left !important;
+}
+
+#tabelaPrincipal tbody tr {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.25s ease !important;
+}
+
+#tabelaPrincipal tbody tr:hover td {
+  background: #ffffff !important;
+}
+
+#tabelaPrincipal tbody tr:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06) !important;
+}
+
+#tabelaPrincipal tbody tr td:first-child {
+  border-top-left-radius: 8px !important;
+  border-bottom-left-radius: 8px !important;
+  border-left: 4px solid #0284c7 !important;
+}
+
+#tabelaPrincipal tbody tr td:last-child {
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
+}
+
+/* Thumbs de Estádio */
+.stadiumThumb {
+  width: 44px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.03);
+  padding: 1px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+.imageUpload {
+  display: inline-block !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.hiddenInput {
+  font-size: 100px !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  opacity: 0 !important;
+  cursor: pointer !important;
+}
+
+.bandeira {
+  height: 16px;
+  width: auto;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 4px;
+  border-radius: 2px;
+}
+
+/* Botões Inline */
+.inlineButton {
+  margin: 0 4px !important;
+  padding: 6px !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  font-size: 18px !important;
+  color: #64748b !important;
+  background-color: rgba(0,0,0,0.03) !important;
+  border: 1px solid rgba(0,0,0,0.05) !important;
+}
+
+.inlineButton:hover {
+  color: #0f172a !important;
+  background-color: rgba(0,0,0,0.08) !important;
+}
+
+.inlineButton.positive {
+  background-color: #10b981 !important;
+  color: #fff !important;
+  border-color: #10b981 !important;
+}
+.inlineButton.positive:hover {
+  background-color: #059669 !important;
+  transform: scale(1.1);
+}
+
+.inlineButton.negative {
+  background-color: #ef4444 !important;
+  color: #fff !important;
+  border-color: #ef4444 !important;
+}
+.inlineButton.negative:hover {
+  background-color: #dc2626 !important;
+  transform: scale(1.1);
+}
+
+/* Inputs de Edição */
+.editavel {
+  border: 1px dashed #0284c7 !important;
+  padding: 4px 6px !important;
+  background: rgba(2, 132, 199, 0.05) !important;
+  outline: none !important;
+  border-radius: 4px !important;
+  max-width: 110px !important;
+  box-sizing: border-box;
+}
+
+.nomeEstadio {
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  color: #1e293b !important;
+}
+
+.nomeEditavel.editavel {
+  max-width: 250px !important;
+  display: inline-block !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.capacidade {
+  width: 90px !important;
+  max-width: 110px !important;
+  height: 30px !important;
+  border: 1px dashed #0284c7 !important;
+  background: rgba(2, 132, 199, 0.05) !important;
+  border-radius: 6px !important;
+  padding: 4px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.85rem !important;
+  box-sizing: border-box;
+}
+
+.comboPais, .comboClima {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.8rem !important;
+  color: #334155 !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  background-color: #fff !important;
+  max-width: 110px !important;
+}
+
+/* Ocultação de elementos */
+.hidden,
+#tabelaPrincipal th span.material-symbols-outlined.hidden {
+  display: none !important;
+}
+
+/* Paginação */
+.pagination {
+  display: flex !important;
+  list-style: none !important;
+  list-style-type: none !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  margin: 1.5rem 0 !important;
+}
+
+.pagination li {
+  display: inline-block !important;
+  list-style: none !important;
+  list-style-type: none !important;
+}
+
+.pagination a, .pagination span, .pagination button {
+  padding: 8px 14px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: #fff !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
+  transition: all 0.2s !important;
+  font-size: 0.85rem !important;
+  cursor: pointer;
+  text-decoration: none !important;
+}
+
+.pagination a:hover, .pagination button:hover:not(:disabled) {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.pagination button:disabled {
+  background: #0284c7 !important;
+  color: #fff !important;
+  border-color: #0284c7 !important;
+  cursor: default;
+}
+
+.pagination li.active a {
+  background: #0284c7 !important;
+  color: #fff !important;
+  border-color: #0284c7 !important;
+  cursor: default;
+}
+
+.sr-only {
+  display: none !important;
+}
+
+/* Loader */
+#loading {
+  text-align: center;
+  margin: 2rem 0;
+}
+#loading img {
+  height: 40px;
+  width: auto;
+}
+
+/* Responsividade Mobile */
+@media (max-width: 768px) {
+  .propostas-container {
+    padding: 1.5rem 0.5rem !important;
+  }
+  .propostas-card {
+    padding: 1.25rem !important;
+    border-radius: 12px !important;
+  }
+  .header-actions-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .header-buttons-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  #search_wrapper {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #caixa_pesquisa {
+    width: 100%;
+  }
+}
