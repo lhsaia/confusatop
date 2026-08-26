@@ -14,8 +14,8 @@ $team_name = $_POST["team_name"];
 if($team_name != ""){
 
 
-require_once "/home/lhsaia/confusa.top/config/database.php";
-require_once "/home/lhsaia/confusa.top/objetos/escudos_pop.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . "/config/database.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . "/objetos/escudos_pop.php";
 
 $database = new Database();
 $db = $database->getConnection();

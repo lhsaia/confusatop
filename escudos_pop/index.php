@@ -9,9 +9,10 @@ $user_id = (isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : "");
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "Escudos Pops - CONFUSA.top";
-$css_filename = "escudos_pop";
+$css_filename = "home_redesign";
+$aux_css = 'home_redesign';
+$extra_css = 'escudos_pop';
 $css_login = 'login';
-$aux_css = 'indexRanking';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/escudos_pop.php");
@@ -20,29 +21,33 @@ $escudos_pop = new EscudosPop($db);
 $team_data = $escudos_pop->loadTeams();
 $team_ids = $escudos_pop->loadTeamIds();
 
+echo "<div id='main-wrapper'>";
+
 echo "<div id='escudos-pop-header'>
-<div>
-    <h2>Escudos Pops CONFUSA</h2>
-    <h3> Redesenhamos <span id='contagem_escudos'>". count($team_ids). "</span> escudos CONFUSA de maneira minimalista.</h3>
-    <h3>Você consegue adivinhar a quais clubes pertencem?</h3></div>
-	<div>";
-	echo "<label for='checkbox-21' id='filter-pending'><span>Incluir fase 1</span>";
-    echo "<input type='checkbox' id='checkbox-21' name='apenasConfusa'>";
-    echo "</label>";
-	echo "</div>
-
-
+  <div class='header-title-container'>
+    <h2><span class='material-symbols-outlined icon-header'>shield</span> Escudos Pops CONFUSA</h2>
+    <h3>Redesenhamos <span id='contagem_escudos' class='count-badge'>". count($team_ids). "</span> escudos CONFUSA de maneira minimalista.</h3>
+    <h3>Você consegue adivinhar a quais clubes pertencem?</h3>
+  </div>
+  <div class='header-filter-container'>
+    <label for='checkbox-21' id='filter-pending' class='btn-filter'>
+      <span class='material-symbols-outlined icon-toggle'>filter_list</span>
+      <span id='filter-pending-text'>Incluir fase 1</span>
+      <input type='checkbox' id='checkbox-21' name='apenasConfusa'>
+    </label>
+  </div>
 </div>";
 
 echo "<div id='tabela-escudos'>";
 
 foreach($team_ids as $single_team){
   echo "<div class='conjunto-escudo' data-team='{$single_team['team_id']}'>";
-  echo "<img class='escudo-time' src='/escudos_pop/images/{$single_team['team_id']}.png?v=3'/>";
-  echo "<input type='text' class='adivinhador-nome' data-id='{$single_team['team_id']}'/>";
+  echo "<div class='escudo-img-wrap'><img class='escudo-time' src='/escudos_pop/images/{$single_team['team_id']}.png?v=3' alt='Escudo Pop' loading='lazy'/></div>";
+  echo "<input type='text' class='adivinhador-nome' data-id='{$single_team['team_id']}' placeholder='Nome do time' autocomplete='off' spellcheck='false'/>";
   echo "</div>";
-
 }
+
+echo "</div>";
 
 echo "</div>";
 
@@ -66,25 +71,20 @@ var check_guess = (function () {
       data: {user_id: user_id}
     })
     .done(function(data) {
-      //console.log("loading success");
       var return_data = data.return_data;
-      Object.values(return_data).forEach(function(item){
-        // populate screen
-        $("input[data-id='"+item.team_id+"']").val(item.team_name).addClass("palpite-correto").prop("disabled", "disabled");
-        if(item.team_name.length > 14){
-
-          $("input[data-id='"+item.team_id+"']").addClass("smaller-font");
-        }
-        //console.log(item.team_id);
-      });
-
-
-
+      if(return_data) {
+        Object.values(return_data).forEach(function(item){
+          var $input = $("input[data-id='"+item.team_id+"']");
+          $input.val(item.team_name).addClass("palpite-correto").prop("disabled", "disabled");
+          if(item.team_name.length > 14){
+            $input.addClass("smaller-font");
+          }
+        });
+      }
     })
     .fail(function() {
       console.log("loading error");
     });
-
   }
 
   return function (target) {
@@ -132,43 +132,53 @@ var check_guess = (function () {
 })();
 
 $(document).ready(function() {
-	$('.conjunto-escudo').hide();
-	$('.conjunto-escudo:gt(63)').show();
-	let n = $( ".conjunto-escudo:visible").length;
-	$("#contagem_escudos").text(n);
-	
-	    $('#filter-pending').click(function (e) {
-		e.preventDefault();
-		show_all = !show_all;
-		let new_text = (show_all ? 'Incluir fase 1' : 'Apenas fase 2');
+  $('.conjunto-escudo').hide();
+  $('.conjunto-escudo:gt(63)').show();
+  let n = $( ".conjunto-escudo:visible").length;
+  $("#contagem_escudos").text(n);
+  
+  $('#filter-pending').click(function (e) {
+    e.preventDefault();
+    show_all = !show_all;
+    let new_text = (show_all ? 'Incluir fase 1' : 'Apenas fase 2');
 
-		$('#filter-pending span').text(new_text);
-		
-		$('.conjunto-escudo:lt(64)').toggle();
-		
-		let n = $( ".conjunto-escudo:visible").length;
-		console.log(n);
-		$("#contagem_escudos").text(n);
+    $('#filter-pending-text').text(new_text);
+    
+    $('.conjunto-escudo:lt(64)').toggle();
+    
+    let n = $( ".conjunto-escudo:visible").length;
+    $("#contagem_escudos").text(n);
+  });
 
-		
-    });
+  $(".adivinhador-nome").on("keypress", function(e) {
+    if(e.which === 13) {
+      $(this).blur();
+    }
+  });
 
   $(".adivinhador-nome").focusout(function(){
+    var self = this;
+    var val = $(self).val().trim();
+    if(!val) {
+      $(self).removeClass("palpite-incorreto");
+      return;
+    }
 
-    if(team_name = check_guess(this)){
-      $(this).val(team_name);
+    var team_name = check_guess(self);
+    if(team_name){
+      $(self).val(team_name);
       if(team_name.length > 14){
-        $(this).addClass("smaller-font");
+        $(self).addClass("smaller-font");
       }
-      $(this).addClass("palpite-correto");
-      $(this).prop("disabled", "disabled");
-      //console.log(true);
+      $(self).removeClass("palpite-incorreto").addClass("palpite-correto");
+      $(self).prop("disabled", "disabled");
     } else {
-      //console.log(false);
-      $(this).addClass("palpite-incorreto");
+      $(self).addClass("palpite-incorreto");
+      setTimeout(function() {
+        $(self).removeClass("palpite-incorreto");
+      }, 1500);
     }
   });
 });
-
 
 </script>
