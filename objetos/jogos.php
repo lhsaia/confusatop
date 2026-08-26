@@ -566,8 +566,61 @@ public function importar(){
   }
 }
 
+public function getSingleMatchLineup($match_id){
+  $query = "SELECT je.*, j.StringPosicoes as posicoes_jogador, pos.ID as ordem_posicao
+            FROM jogos_escalacao je
+            LEFT JOIN jogador j ON je.id_jogador = j.ID
+            LEFT JOIN posicoes pos ON je.posicao = pos.Sigla
+            WHERE je.id_jogo = :id_jogo
+            ORDER BY je.id_time ASC, je.titular DESC, pos.ID ASC, je.numero ASC, je.id ASC";
+  $stmt = $this->conn->prepare($query);
+  $stmt->bindParam(':id_jogo', $match_id, PDO::PARAM_INT);
+  $stmt->execute();
+  return $stmt;
+}
+
+public function limparEscalacao($match_id){
+  $query = "DELETE FROM jogos_escalacao WHERE id_jogo = ?";
+  $stmt = $this->conn->prepare($query);
+  return $stmt->execute([$match_id]);
+}
+
+public function limparEventos($match_id){
+  $query = "DELETE FROM jogos_eventos WHERE id_jogo = ?";
+  $stmt = $this->conn->prepare($query);
+  return $stmt->execute([$match_id]);
+}
+
+public function atualizar(){
+  $query = "UPDATE jogos SET 
+              timeA_id = :timeA_id,
+              timeA_gols = :timeA_gols,
+              timeB_id = :timeB_id,
+              timeB_gols = :timeB_gols,
+              timeA_penaltis = :timeA_penaltis,
+              timeB_penaltis = :timeB_penaltis,
+              data = :data,
+              campeonato = :campeonato,
+              fase = :fase,
+              estadio = :estadio
+            WHERE id = :id";
+  $stmt = $this->conn->prepare($query);
+  $stmt->bindParam(":timeA_id", $this->timeA_id);
+  $stmt->bindParam(":timeA_gols", $this->timeA_gols);
+  $stmt->bindParam(":timeB_id", $this->timeB_id);
+  $stmt->bindParam(":timeB_gols", $this->timeB_gols);
+  $stmt->bindParam(":timeA_penaltis", $this->timeA_penaltis);
+  $stmt->bindParam(":timeB_penaltis", $this->timeB_penaltis);
+  $stmt->bindParam(":data", $this->data);
+  $stmt->bindParam(":campeonato", $this->campeonato);
+  $stmt->bindParam(":fase", $this->fase);
+  $stmt->bindParam(":estadio", $this->estadio);
+  $stmt->bindParam(":id", $this->id);
+  return $stmt->execute();
+}
+
 public function atualizarPlacarJogo($id){
-  $query = "UPDATE jogos SET timeA_gols=?, timeB_gols=?, timeA_penaltis=?, timeB_penaltis=?, campeonato=?, estadio=?, fase=?, calculado=0 WHERE id=?";
+  $query = "UPDATE jogos SET timeA_gols=?, timeB_gols=?, timeA_penaltis=?, timeB_penaltis=?, campeonato=?, estadio=?, fase=? WHERE id=?";
   $stmt = $this->conn->prepare($query);
   $stmt->bindParam(1, $this->timeA_gols);
   $stmt->bindParam(2, $this->timeB_gols);
@@ -580,47 +633,54 @@ public function atualizarPlacarJogo($id){
   return $stmt->execute();
 }
 
-
-
 public function importarEventos($log_eventos, $idJogo){
-  if($idJogo != 0){
+  if($idJogo != 0 && is_array($log_eventos)){
     foreach($log_eventos as $single_event){
-      $query = "INSERT INTO jogos_eventos (id_jogo, tempo, minutos, tipo, id_jogador, nome_jogador, id_time) VALUES (?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id_evento = id_evento";
+      $query = "INSERT INTO jogos_eventos (id_jogo, tempo, minutos, tipo, id_jogador, nome_jogador, id_time) VALUES (?,?,?,?,?,?,?)";
       $stmt = $this->conn->prepare( $query );
       $stmt->bindParam(1, $idJogo);
       $stmt->bindParam(2, $single_event['tempo']);
       $stmt->bindParam(3, $single_event['minutos']);
       $stmt->bindParam(4, $single_event['tipo']);
       $stmt->bindParam(5, $single_event['idJogador']);
-      $nomeJogador = addslashes($single_event['nomeJogador']);
+      $nomeJogador = $single_event['nomeJogador'];
       $stmt->bindParam(6, $nomeJogador);
       $stmt->bindParam(7, $single_event['idTime']);
       $stmt->execute();
-
     }
   }
-
   return true;
 }
 
 public function importarEscalacao($log_escalacao, $idJogo){
-  if($idJogo != 0){
-    foreach($log_escalacao as $single_player){
-      $query = "INSERT INTO jogos_escalacao (id_jogo, id_jogador, nome_jogador, id_time, iniciou, saiu, posicao_jogador) VALUES (?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id_escalacao = id_escalacao";
-      $stmt = $this->conn->prepare( $query );
-      $stmt->bindParam(1, $idJogo);
-      $stmt->bindParam(2, $single_player['idJogador']);
-	  $nomeJogador = addslashes($single_event['nomeJogador']);
-	  $stmt->bindParam(3, $nomeJogador);
-      $stmt->bindParam(4, $single_player['idTime']);
-      $stmt->bindParam(5, $single_player['iniciou']);
-      $stmt->bindParam(6, $single_player['saiu']);
-      $stmt->bindParam(7, $single_player['posicaoJogador']);
-      $stmt->execute();
+  if($idJogo != 0 && is_array($log_escalacao)){
+    $query = "INSERT INTO jogos_escalacao (id_jogo, id_time, nome_time, posicao, numero, id_jogador, nome_jogador, titular, entrada_minuto, saida_minuto) VALUES (?,?,?,?,?,?,?,?,?,?)";
+    $stmt = $this->conn->prepare($query);
+    foreach($log_escalacao as $p){
+      $idTime = $p['idTime'] ?? ($p['id_time'] ?? null);
+      $nomeTime = $p['nomeTime'] ?? ($p['nome_time'] ?? null);
+      $pos = $p['posicao'] ?? ($p['pos'] ?? null);
+      $num = isset($p['numero']) && is_numeric($p['numero']) ? (int)$p['numero'] : (isset($p['num']) && is_numeric($p['num']) ? (int)$p['num'] : null);
+      $idJogador = isset($p['idJogador']) ? (int)$p['idJogador'] : (isset($p['id_jogador']) ? (int)$p['id_jogador'] : null);
+      $nomeJogador = $p['nomeJogador'] ?? ($p['nome_jogador'] ?? null);
+      $titular = isset($p['titular']) ? (int)$p['titular'] : 1;
+      $entMin = isset($p['entrada_minuto']) && is_numeric($p['entrada_minuto']) ? (int)$p['entrada_minuto'] : null;
+      $saiMin = isset($p['saida_minuto']) && is_numeric($p['saida_minuto']) ? (int)$p['saida_minuto'] : null;
 
+      $stmt->execute([
+        $idJogo,
+        $idTime,
+        $nomeTime,
+        $pos,
+        $num,
+        $idJogador,
+        $nomeJogador,
+        $titular,
+        $entMin,
+        $saiMin
+      ]);
     }
   }
-
   return true;
 }
 
@@ -633,7 +693,7 @@ public function getMatchId(){
   $stmt->bindParam(3, $corrected_date);
   $stmt->execute();
   $result = $stmt->fetch(PDO::FETCH_ASSOC);
-  return $result['id'];
+  return $result['id'] ?? null;
 }
 
 

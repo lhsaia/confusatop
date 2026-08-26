@@ -1,710 +1,1033 @@
+/* ==========================================================================
+   CONFUSA.top - Ranking Redesign (Light Theme 2.0 System)
+   ========================================================================== */
+
 * {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    text-decoration: none;
+  box-sizing: border-box;
 }
 
 body {
-    margin-bottom: 0 !important;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0 !important;
+  padding-top: 60px;
+  background-image: 
+    linear-gradient(180deg, rgba(248, 250, 252, 0.85) 0%, rgba(226, 232, 240, 0.95) 100%),
+    url("/images/confusa-blue.png") !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+  overflow-x: hidden;
 }
 
-
-body,
-select,
-option {
-
-    font-family: 'Montserrat', sans-serif !important;
-    color: gray !important;
-
+/* Ocultar usuário legado do cabeçalho */
+html body #logged-user {
+  display: none !important;
 }
 
-#selecaodata {
-    color: gray !important;
+/* Top bar e Bottom bar modernos */
+html body #top-bar {
+  background: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-[data-href] {
-    cursor: pointer;
+html body #bottom-bar {
+  background: rgba(15, 23, 42, 0.95) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  margin-top: auto !important;
 }
 
+/* ==========================================================================
+   Navegação do Ranking (Header Sub-bar)
+   ========================================================================== */
+
+.ranking-nav-wrapper {
+  width: 100%;
+  max-width: 1300px;
+  margin: 1.5rem auto 0 auto;
+  padding: 0 1rem;
+}
+
+.ranking-nav-container {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
+}
+
+.ranking-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ranking-logo {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+}
+
+.ranking-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.ranking-main-title {
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 1.4rem !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+  line-height: 1.2;
+}
+
+.ranking-subtitle {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.ranking-menu-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ranking-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  color: #475569 !important;
+  text-decoration: none !important;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid transparent;
+}
+
+.ranking-nav-link .nav-icon {
+  font-size: 1.15rem;
+  color: #64748b;
+  transition: color 0.2s ease;
+}
+
+.ranking-nav-link:hover {
+  background: rgba(2, 132, 199, 0.08);
+  color: #0284c7 !important;
+  border-color: rgba(2, 132, 199, 0.2);
+}
+
+.ranking-nav-link:hover .nav-icon {
+  color: #0284c7;
+}
+
+.ranking-nav-link.active {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+  border-color: #0284c7;
+}
+
+.ranking-nav-link.active .nav-icon {
+  color: #ffffff !important;
+}
+
+.ranking-nav-link.disabled {
+  opacity: 0.45;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* Compatibilidade com menu legado se existir */
 #menu-bar {
-
-    height: 90px;
-    clear: both;
-    background-color: white;
+  display: none !important;
 }
 
-#bandeiraGrande {
-    float: right;
+/* ==========================================================================
+   Contêiner e Cards Principais
+   ========================================================================== */
+
+#ranking-container,
+.ranking-container,
+.propostas-container {
+  width: 100%;
+  max-width: 1300px;
+  margin: 1.25rem auto 2.5rem auto;
+  padding: 0 1rem;
+  flex: 1;
+  box-sizing: border-box;
 }
 
-
-#top-bar,
-#bottom-bar {
-    background-color: #1A1469;
-    color: white;
+#ranking,
+.ranking-card,
+.propostas-card {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 18px !important;
+  padding: 2rem !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+  margin: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box;
 }
 
-#logo-text {
-    margin: 5px;
-    float: left;
-
+/* Títulos do Card */
+.ranking-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding-bottom: 1rem;
 }
 
-#top-menu {
-    margin: 7px 20px 0 0;
-    float: right;
+.ranking-card-title,
+#ranking h2 {
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 1.6rem !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.icon {
-    width: 25px;
-    color: white;
-
-
-}
-
-.orange {
-
-    color: orange;
-}
-
-.icon:hover {
-
-    color: #99ebff;
-}
-
-#logo {
-
-    width: 80px;
-    float: left;
-    padding-left: 70px;
-
-}
-
-h1 {
-
-    font-weight: normal;
-    float: left;
-    position: relative;
-    top: 30px;
-    left: 20px;
-
-}
-
-#ranking-menu {
-
-    border-top: 1px #CCCCCC solid;
-    clear: both;
-    margin: 0;
-    padding: 0;
-    float: bottom;
-
-}
-
-.ranking-menu-item {
-
-    color: #1A1469;
-    font-weight: bold;
-    font-size: 90%;
-    float: left;
-    padding: 20px 0 20px 70px;
-
-
-}
-
-.ranking-menu-item:hover {
-
-    color: #99ebff;
-
-}
-
-#ranking-container {
-    background-color: #F0F3F7;
-    clear: both;
-    min-height: 100vh;
-    width: 100%;
-}
-
-#ranking {
-    background-color: white;
-    width: 70%;
-    clear: both;
-    margin: 30px 0 0 80px;
-    padding: 20px;
-}
-
-h2 {
-    font-weight: normal;
-    font-size: 230%;
-    text-align: left;
-    margin-bottom: 20px;
-    margin-top: 20px;
-
-}
-
-h3 {
-    font-weight: normal;
-    font-size: 140%;
-    text-align: left;
-    margin-bottom: 20px;
-
+.ranking-card-date,
+#ranking h3 {
+  font-size: 0.9rem !important;
+  color: #64748b !important;
+  font-weight: 500 !important;
+  margin: 4px 0 0 0 !important;
 }
 
 hr {
-
-    border-top: 2px #F0F3F7 solid;
-
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  margin: 1.25rem 0;
 }
 
-table {
-    border-collapse: collapse;
-    width: 100%;
+/* ==========================================================================
+   Filtros de Federação (Segmented Control)
+   ========================================================================== */
 
+#federation-select,
+.federation-filters {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 1.25rem 0;
+  padding: 6px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
-td,
-th {
-    text-align: center;
-    padding: 8px;
+#federation-select span {
+  display: none;
 }
 
-td:nth-child(2) {
-    text-align: left;
+#federation-select a,
+.fed-filter-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  color: #475569 !important;
+  text-decoration: none !important;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-th {
-
-    font-size: 60%;
-    height: 10px;
+#federation-select a:hover,
+.fed-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.8);
+  color: #0284c7 !important;
 }
 
-tbody tr:nth-child(2n-1) {
-    background-color: #F2F2F2;
+#federation-select a.active,
+.fed-filter-btn.active {
+  background: #ffffff !important;
+  color: #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-weight: 700;
 }
 
-tbody tr:nth-child(2n) {
-    background-color: #FFFFFF;
+/* ==========================================================================
+   Tabelas Modernas
+   ========================================================================== */
+
+.tbl_user_data,
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: #ffffff;
 }
 
+table,
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 0;
+  background: transparent;
+}
 
+table thead th,
+.table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-family: 'Kanit', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  text-align: center;
+  white-space: nowrap;
+}
+
+table tbody td,
+.table tbody td {
+  padding: 12px 14px;
+  color: #1e293b;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  vertical-align: middle;
+  text-align: center;
+  transition: background 0.15s ease;
+}
+
+table tbody tr:last-child td,
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+table thead th.headings,
+.table thead th.headings,
+th.headings {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+table thead th.headings:hover,
+.table thead th.headings:hover,
+th.headings:hover {
+  background: rgba(2, 132, 199, 0.08) !important;
+  color: #0284c7 !important;
+}
+
+th span.material-symbols-outlined.hidden,
+span.material-symbols-outlined.hidden,
+.hidden {
+  display: none !important;
+}
+
+th span.material-symbols-outlined {
+  font-size: 1.25rem !important;
+  vertical-align: middle !important;
+  line-height: 1;
+}
+
+th span.material-symbols-outlined.ascending {
+  color: #0284c7 !important;
+}
+
+th span.material-symbols-outlined.descending {
+  color: #0284c7 !important;
+}
+
+.highlighted {
+  background-color: rgba(2, 132, 199, 0.08) !important;
+  color: #0284c7 !important;
+}
+
+[data-href] {
+  cursor: pointer;
+}
+
+/* Posição / Ranking Badge */
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.rank-badge.top-1 {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
+}
+
+.rank-badge.top-2 {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #334155;
+}
+
+.rank-badge.top-3 {
+  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+  color: #9a3412;
+}
+
+/* Bandeiras e Time */
 .bandeira {
-    height: 24px;
-    width: 36px;
+  height: 22px;
+  width: 32px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  vertical-align: middle;
+  margin-right: 8px;
 }
 
-
-.pagination {
-    display: inline-block;
-    list-style: none;
-
+.team-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
 }
 
-.pagination li {
-    float: left;
-
+.team-link {
+  color: #0f172a !important;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: color 0.2s ease;
 }
 
-.pagination a {
-    color: gray;
-    float: left;
-    padding: 8px 16px;
-    text-decoration: none;
+.team-link:hover {
+  color: #0284c7 !important;
 }
 
-.pagination a:active {
-    color: gray;
+.points-cell {
+  font-weight: 700;
+  color: #0284c7;
+  font-size: 0.95rem;
 }
 
-.esquerdo {
-
-    text-align: left;
+/* Linhas inativas */
+tr.cinza td,
+tr.cinza a {
+  color: #94a3b8 !important;
 }
 
-.direito {
-
-    text-align: right;
+tr.cinza .bandeira {
+  opacity: 0.6;
+  filter: grayscale(40%);
 }
 
-.alert {
-    padding: 20px;
-    border-radius: 5px;
-    float: bottom;
-
-}
-
-/* The close button */
-.closebtn {
-    margin-left: 15px;
-    color: white;
-    font-weight: bold;
-    float: right;
-    font-size: 22px;
-    line-height: 20px;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-/* When moving the mouse over the close button */
-.closebtn:hover {
-    color: black;
-}
-
-.alert-success {
-    background-color: lightgreen;
-    color: green;
-}
-
-.alert-danger {
-    background-color: indianred;
-    color: white;
-}
-
-.form-control {
-    width: 100%;
-    padding: 12px 20px;
-    margin: 8px 0;
-    display: inline-block;
-    border: 1px solid #ccc;
-    box-sizing: border-box;
-}
-
-.float-table {
-    float: left;
-
-}
-
-.btn {
-    width: 100%;
-    padding: 12px 20px;
-    margin: 8px 0;
-    display: inline-block;
-    border: 1px solid #ccc;
-    box-sizing: border-box;
-    background-color: navy;
-    color: white;
-    border-radius: 5px;
-
-}
-
-.tr_inv {
-    display: block;
-    float: left;
-}
-
-.th_inv,
-.td_inv {
-    display: block;
-}
-
-.input_gols {
-    width: 60px;
-}
-
-.input_nome_time {
-    width: 210px;
-}
-
-.x_placar {
-    width: 20px;
-    font-size: 200%;
-    text-align: center;
-    padding-top: 20px;
-}
-
-.input_penalti {
-    width: 70px;
-}
-
-.input_data {
-    width: 180px;
-}
-
-.table_below {
-    margin-top: 40px;
-}
-
-.btn_area {
-    background-color: white !important;
-
-}
-
-.penaltybox {
-    font-size: 60%;
-    position: relative;
-}
-
-.preto {
-    color: black;
-}
-
-.cinza {
-    color: lightgray;
-}
-
-.cinza a {
-    color: lightgray;
-}
-
-.infoblock {
-    float: left;
-    display: block;
-    width: 120px;
-    height: 40px;
-    border: 3px #F2f2f2 inset;
-    margin: 5px;
-    font-size: 200%;
-    padding: 5px 0 0 5px;
-
-}
-
-.vitoria {
-    color: green !important;
-}
-
-.derrota {
-    color: red !important;
-}
-
-.empate {
-    color: goldenrod !important;
-}
-
-a.disabled {
-    pointer-events: none;
-    cursor: default;
-    color: #F2f2f2;
-}
-
-#federation-select {
-    font-size: 150%;
-}
-
-a.infoblock {
-    color: #808080;
-}
-
-a.infoblock:hover {
-    color: #808080;
-}
-
-a.infoblock:visited {
-    color: #808080;
-}
-
-a.infoblock:active {
-    color: #808080;
-}
-
-
-.moreInfoModal {
-    display: block;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    /* width:600px;
-    height:400px; */
-    transform: translate(-50%, -50%);
-    max-width: 100%;
-    max-height: 90%;
-    z-index: 100;
-    background: white;
-    box-shadow: 0 0 60px 10px rgba(0, 0, 0, 0.9);
-    /* border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px; */
-    border-radius: 10px;
-    padding: 5px;
-}
-
-.modal-guts h3,
-h4 {
-    padding-left: 20px;
-}
-
-#adversarioJogo {
-    text-align: left;
-}
-
-
-.closed {
-    display: none;
-}
-
-.modalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 50;
-
-    background: rgba(0, 0, 0, 0.6);
-}
-
-.modal-guts {
-    position: relative;
-    margin: 5% auto 15% auto;
-    /* 5% from the top, 15% from the bottom and centered */
-    /* left: 0; */
-    width: 100%;
-    height: 100%;
-    z-index: 60;
-
-
-}
-
-
-
-.moreInfoModal .toggleButton {
-
-    /* don't need to go crazy with z-index here, just sits over .modal-guts */
-    z-index: 110;
-
-    border: 0;
-    background: navy;
-    color: white;
-    padding: 5px 10px;
-    font-size: 1.3rem;
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-    margin: 0;
+.badge-status {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
 }
 
 span.ativo {
-    background-color: green;
-    color: white;
-    border-radius: 10px;
-    padding: 5px;
-    margin-left: 10px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 8px;
 }
 
 span.inativo {
-    background-color: darkred;
-    color: white;
-    border-radius: 10px;
-    padding: 5px;
-    margin-left: 10px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 8px;
 }
 
+/* ==========================================================================
+   Blocos de Estatísticas (Stats Cards & Counters)
+   ========================================================================== */
 
+#info-jogos,
+.ranking-stats-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  align-items: stretch;
+  margin: 1.25rem 0;
+}
 
+.infoblock,
+.masterblock {
+  flex: 1 1 140px;
+  max-width: 220px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-decoration: none !important;
+  color: #1e293b !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  height: auto;
+  float: none;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
 
+.infoblock:hover,
+.masterblock:hover {
+  transform: translateY(-4px);
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 8px 20px rgba(2, 132, 199, 0.12);
+}
 
+.infoblock span.material-symbols-outlined,
+.masterblock span.material-symbols-outlined {
+  font-size: 1.6rem;
+  color: #0284c7;
+}
 
-/*media query*/
+.infoblock .stat-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 
-@media only screen and (max-width: 55rem) {
+.vitoria,
+span.vitoria {
+  color: #10b981 !important;
+}
 
-    img {
-        float: right;
-    }
+.empate,
+span.empate {
+  color: #f59e0b !important;
+}
 
-    #ranking {
-        background-color: white;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        margin-bottom: 40px;
-    }
+.derrota,
+span.derrota {
+  color: #ef4444 !important;
+}
 
-    /*
-	Label the data
-	*/
-    #ranking td:nth-of-type(1):before {
-        content: "Posição";
-    }
+/* ==========================================================================
+   Barra de Pesquisa (Search Box)
+   ========================================================================== */
 
-    #ranking td:nth-of-type(2):before {
-        content: "País";
-    }
+#direita,
+.search-container {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  padding: 6px 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s ease;
+  float: right;
+  margin-bottom: 1rem;
+}
 
-    #ranking td:nth-of-type(3):before {
-        content: "Pontos Totais";
-    }
+#direita:focus-within,
+.search-container:focus-within {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
 
-    #tabelajogos td:nth-of-type(1):before {
-        content: none;
-        padding-left: 8px;
-    }
+#caixa_pesquisa {
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.9rem !important;
+  color: #1e293b !important;
+  width: 220px !important;
+  height: auto !important;
+}
 
-    #tabelajogos td:nth-of-type(2):before {
-        content: none;
-    }
+#direita span.material-symbols-outlined {
+  color: #64748b;
+  font-size: 1.25rem;
+}
 
-    #tabelajogos td:nth-of-type(3):before {
-        content: none;
-    }
+/* ==========================================================================
+   Grade de Seleções (selecoes.php)
+   ========================================================================== */
 
-    #tabelajogos td:nth-of-type(6):before {
-        content: "Data";
-    }
+.selecoes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 16px;
+  padding: 1rem 0;
+  width: 100%;
+}
 
-    #tabelajogos td:nth-of-type(7):before {
-        content: "Campeonato";
-    }
+.selecao-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-decoration: none !important;
+  color: #1e293b !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-    #tabelajogos td:nth-of-type(8):before {
-        content: "Calculado?";
-    }
+.selecao-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 10px 24px rgba(2, 132, 199, 0.15);
+}
 
-    #modalPontos td:nth-of-type(1):before {
-        content: none;
-    }
+.selecao-card img {
+  width: 90px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.25s ease;
+}
 
-    #modalPontos td:nth-of-type(2):before {
-        content: none;
-    }
+.selecao-card:hover img {
+  transform: scale(1.05);
+}
 
-    #modalPontos td:nth-of-type(3):before {
-        content: none;
-    }
+.selecao-card span {
+  font-family: 'Kanit', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1e293b;
+  text-align: center;
+  line-height: 1.2;
+}
 
-    #modalPontos td:nth-of-type(4):before {
-        content: none;
-    }
+/* ==========================================================================
+   Página de Regras (regras.php)
+   ========================================================================== */
 
-    #modalPontos td:nth-of-type(6):before {
-        content: "Data";
-    }
+.rules-container {
+  max-width: 950px;
+  margin: 0 auto;
+  text-align: left;
+  line-height: 1.7;
+}
 
-    #modalPontos td:nth-of-type(7):before {
-        content: "Campeonato";
-    }
+.rules-container p {
+  color: #334155;
+  font-size: 0.95rem;
+  margin-bottom: 1.2rem;
+}
 
-    #modalPontos td:nth-of-type(8):before {
-        content: "Pontos";
-    }
+.formula-card {
+  background: rgba(2, 132, 199, 0.05);
+  border: 1px solid rgba(2, 132, 199, 0.18);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin: 1.5rem 0;
+  text-align: center;
+}
 
-    [id^='modalGols'] td:nth-of-type(6):before {
-        content: "Data";
-    }
+.formula-card .formula-main {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0284c7;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
 
-    [id^='modalGols'] td:nth-of-type(7):before {
-        content: "Campeonato";
-    }
+.rules-constants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin: 1.25rem 0;
+}
 
-    [id^='modal'] td {
-        text-align: center;
-        border: none;
-    }
+.rules-constant-item {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
+.constant-val {
+  background: #0284c7;
+  color: #ffffff;
+  font-family: 'Kanit', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  min-width: 42px;
+  text-align: center;
+}
 
-    #modalJogos td {
-        text-align: center;
-    }
+.constant-desc {
+  font-size: 0.88rem;
+  color: #334155;
+  font-weight: 500;
+}
 
-    #modalJogos td:before {
-        content: none;
-    }
+/* ==========================================================================
+   Paginação Moderna
+   ========================================================================== */
 
-    #ranking td {
-        text-align: center;
+.pagination {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 1.5rem 0 !important;
+}
 
-    }
+.pagination li {
+  display: inline-block;
+  float: none !important;
+  margin: 0;
+}
 
-    #menu-bar h1 {
-        max-width: 70%;
-        font-size: 150%;
-    }
+.pagination a,
+.pagination_link,
+.pagination button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: #475569 !important;
+  font-size: 0.85rem !important;
+  font-weight: 600;
+  text-decoration: none !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
 
-    #menu-bar #logo {
-        padding-left: 0;
-    }
+.pagination a:hover,
+.pagination_link:hover,
+.pagination button:hover:not(:disabled) {
+  background: rgba(2, 132, 199, 0.08) !important;
+  color: #0284c7 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
 
-    #menu-bar {
-        position: relative;
-        height: auto;
-    }
+.pagination li.active a,
+.pagination li.active button,
+.pagination_link:disabled {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3) !important;
+  cursor: default;
+}
 
-    #menu-bar #ranking-menu {
-        display: flex;
-        align-items: stretch;
-        flex-direction: row;
-        position: relative;
-    }
+.sr-only {
+  display: none !important;
+}
 
-    #ranking-container {
-        position: relative;
-    }
+/* ==========================================================================
+   Modais & Overlays
+   ========================================================================== */
 
-    #menu-bar .ranking-menu-item {
-        padding-left: 0;
-        display: block;
-        width: 50%;
-        line-height: 60px;
-        text-align: center;
-        margin-left: auto;
-        margin-right: auto;
-        left: 0;
-        right: 0;
-        height: auto;
-        width: auto;
-    }
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 99998;
+  display: none;
+}
 
-    h1,
-    h2,
-    h3,
-    img {
-        text-align: center;
-    }
+.moreInfoModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 800px;
+  max-height: 85vh;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  z-index: 99999;
+  display: none;
+  padding: 1.5rem;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
 
-    #ranking img {
-        float: none;
-        margin: 0 35%;
-    }
+.modal-guts {
+  margin: 0;
+  width: 100%;
+}
 
-    #info-jogos {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        align-items: stretch;
-    }
+.modal-guts h3 {
+  font-family: 'Kanit', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
 
+.modal-guts h4 {
+  font-family: 'Kanit', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #475569;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
 
+.moreInfoModal .toggleButton,
+button#retornar {
+  display: block;
+  width: 100%;
+  margin-top: 1.25rem;
+  padding: 10px 20px;
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
 
-    .infoblock {
-        width: 40%;
-        margin-left: auto;
-        margin-right: auto;
-    }
+.moreInfoModal .toggleButton:hover,
+button#retornar:hover {
+  background: #0369a1;
+}
 
-    .moreInfoModal {
-        max-width: 100%;
-        top: 0;
-        left: 0;
-        right: 0;
-        /* max-height: calc(100vh - 210px); */
-        max-height: 100%;
-        height: 100%;
-        overflow-y: auto;
-        transform: none;
-        border-radius: 0;
-        text-align: center;
+/* ==========================================================================
+   Perfil da Seleção (teamstatus.php)
+   ========================================================================== */
 
-    }
+.team-header-profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
 
-    .moreInfoModal h4 {
-        font-size: 120%;
-    }
+.team-profile-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
 
+#bandeiraGrande {
+  width: 90px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  float: none;
+}
 
+.team-profile-title {
+  display: flex;
+  flex-direction: column;
+}
 
-    .modal-guts {
-        width: 100%;
-        height: 100%;
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 30;
-        bottom: 0px;
-    }
+.team-profile-title h2 {
+  font-family: 'Kanit', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
 
-    .moreInfoModal .toggleButton {
-        border-radius: 0;
-        position: absolute;
-        top: 0;
-        width: 100%;
-        left: 0;
-    }
+.team-profile-title h3 {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 4px 0 0 0;
+  display: flex;
+  align-items: center;
+}
 
+/* ==========================================================================
+   Alerts & Misc
+   ========================================================================== */
+
+.alert {
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 1rem 0;
+}
+
+.alert-info {
+  background: rgba(2, 132, 199, 0.08);
+  color: #0369a1;
+  border: 1px solid rgba(2, 132, 199, 0.18);
+}
+
+.alert-success {
+  background: rgba(16, 185, 129, 0.08);
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.18);
+}
+
+.alert-danger {
+  background: rgba(239, 68, 68, 0.08);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.18);
+}
+
+/* ==========================================================================
+   Responsividade Mobile
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  body {
+    padding-top: 50px;
+  }
+
+  .ranking-nav-container {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+
+  .ranking-brand {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .ranking-menu-nav {
+    justify-content: center;
+  }
+
+  .ranking-nav-link {
+    flex: 1 1 calc(50% - 10px);
+    justify-content: center;
+  }
+
+  #ranking,
+  .ranking-card,
+  .propostas-card {
+    padding: 1.25rem !important;
+  }
+
+  .ranking-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #direita,
+  .search-container {
+    width: 100%;
+    float: none;
+    margin-top: 10px;
+  }
+
+  #caixa_pesquisa {
+    width: 100% !important;
+  }
+
+  .infoblock,
+  .masterblock {
+    flex: 1 1 calc(50% - 8px);
+    max-width: none;
+  }
+
+  .selecoes-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+  }
+
+  .selecao-card img {
+    width: 70px;
+    height: 46px;
+  }
+
+  .team-header-profile {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .team-profile-info {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .team-profile-title h3 {
+    justify-content: center;
+  }
 }

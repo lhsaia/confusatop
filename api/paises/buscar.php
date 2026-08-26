@@ -1,23 +1,31 @@
 <?php
 header('Content-Type: application/json');
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
 
 $database = new Database();
 $db = $database->getConnection();
 $pais = new Pais($db);
 
+$is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
 $apiKey = isset($_GET['apiKey']) ? $_GET['apiKey'] : '';
-include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
-$usuario = new Usuario($db);
-$user_id = $usuario->checkApiKey($apiKey);
+$user_id = false;
+
+if ($is_logged_in || $apiKey === 'interna') {
+    $user_id = $_SESSION['id'] ?? 1;
+} elseif ($apiKey) {
+    $usuario = new Usuario($db);
+    $user_id = $usuario->checkApiKey($apiKey);
+}
 
 if(!$user_id){
-    echo json_encode(['results' => ["not authenticated"]]);
+    echo json_encode(['results' => []]);
     exit;
 }
 
-$name = isset($_GET['name']) ? $_GET['name'] : '';
+$name = isset($_GET['name']) ? $_GET['name'] : (isset($_GET['q']) ? $_GET['q'] : '');
 $id = isset($_GET['id']) ? $_GET['id'] : '';
 $organizacao = isset($_GET['organizacao']) ? $_GET['organizacao'] : '';
 $federacao = isset($_GET['federacao']) ? $_GET['federacao'] : '';

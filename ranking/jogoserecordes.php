@@ -7,7 +7,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 $page_title = "Jogos & Recordes";
 $css_filename = "indexRanking";
 $css_login = 'login';
-$aux_css = 'jogoserecordes';
+$aux_css = 'home_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 include_once 'ranking_header.php';
@@ -19,6 +19,7 @@ include_once 'ranking_header.php';
 var localData = [];
 var asc = true;
 var activeSort = '';
+var activeDirection = true;
 
 $(document).ready(function($){
 
@@ -68,19 +69,18 @@ function updateTable(ajax_data, current_page, highlighted, direction){
     //criar tabela dinamicamente
     var tbl = '';
     tbl += pgn;
-    tbl += "<hr>";
     tbl += "<table id='tabelajogos' class='table'>";
         tbl += "<thead id='headings'>";
             tbl += "<tr>";
-                tbl += "<th asc='' id='nomeA' class='headings' width='24%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspTime A</th>";
-                tbl +=  "<th asc='' id='timeAgols' class='headings' width='5%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspGols</th>";
-                tbl +=  "<th asc='' id='timeApenaltis' class='headings' width='5%' class='penaltybox'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp</th>";
-                tbl +=  "<th asc='' id='timeBgols' class='headings' width='5%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspGols</th>";
-                tbl +=  "<th asc='' id='nomeB' class='headings' width='24%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspTime B</th>";
-                tbl +=  "<th asc='' id='data' class='headings' width='14%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspData</th>";
-                tbl +=  "<th asc='' id='campeonato' class='headings' width='14%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspCampeonato</th>";
-                tbl +=  "<th asc='' id='calculo' class='headings' width='5%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspCalculado?</th>";
-                tbl += "<th asc='' id='pontos' class='headings' width='4%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspPontos</td>";
+                tbl += "<th asc='' id='nomeA' class='headings' style='width: 25%; text-align: left;'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Time Mandante</th>";
+                tbl +=  "<th asc='' id='timeAgols' class='headings' style='width: 6%;'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Gols</th>";
+                tbl +=  "<th asc='' id='timeApenaltis' class='headings penaltybox' style='width: 6%;'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Pen.</th>";
+                tbl +=  "<th asc='' id='timeBgols' class='headings' style='width: 6%;'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Gols</th>";
+                tbl +=  "<th asc='' id='nomeB' class='headings' style='width: 25%; text-align: left;'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Time Visitante</th>";
+                tbl +=  "<th asc='' id='data' class='headings' style='width: 12%;'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Data</th>";
+                tbl +=  "<th asc='' id='campeonato' class='headings' style='width: 14%;'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Campeonato</th>";
+                tbl +=  "<th asc='' id='calculo' class='headings' style='width: 6%;'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Calc?</th>";
+                tbl += "<th asc='' id='pontos' class='headings' style='width: 6%;'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Pts</th>";
             tbl +=  "</tr>";
         tbl +=  "</thead>";
         tbl +=  "<tbody>";
@@ -88,23 +88,25 @@ function updateTable(ajax_data, current_page, highlighted, direction){
         // criar linhas
         $.each(ajax_data, function(index, val){
 
-            var pen = '';
+            var pen = '-';
             if(index>=(from_result_num-1) && index<=(from_result_num+results_per_page-2)){
 
-            if(val['timeApenaltis'] != 0 && val['timeBpenaltis'] != 0){
+            if(val['timeApenaltis'] !== null && val['timeBpenaltis'] !== null && val['timeApenaltis'] !== '' && val['timeBpenaltis'] !== ''){
                 pen = "("+val['timeApenaltis']+") pen. ("+val['timeBpenaltis']+")";
             }
 
+            var calcBadge = (val['calculo'] == '1' || val['calculo'] == 1 || val['calculo'] == 'Sim') ? "<span class='ativo' style='font-size:0.75rem; padding:2px 6px;'>Sim</span>" : "<span class='inativo' style='font-size:0.75rem; padding:2px 6px;'>Não</span>";
+
             tbl += "<tr id='"+val['id']+"' data-href='match_info.php?match_id="+val['id']+"'>";
-                tbl += "<td class='esquerdo nopadding'><img src='/images/bandeiras/"+val['bandeiraA']+"' class='bandeira'>    <a href='./teamstatus.php?team="+val['idA']+"'>"+val['nomeA']+"</a></td>";
-                tbl +=  "<td class='nopadding'>"+val['timeAgols']+"</td>";
-                tbl +=  "<td class='penaltybox nopadding'>"+pen+"</td>";
-                tbl +=  "<td class='nopadding'>"+val['timeBgols']+"</td>";
-                tbl +=  "<td class='direito nopadding'><a href='./teamstatus.php?team="+val['idB']+"'>"+val['nomeB']+"</a>    <img src='/images/bandeiras/"+val['bandeiraB']+"' class='bandeira'>  </td>";
-                tbl +=  "<td>"+val['data']+"</td>";
-                tbl +=  "<td>"+val['campeonato']+"</td>";
-                tbl +=  "<td>"+val['calculo']+"</td>";
-                tbl += "<td>"+val['pontos']+"</td>";
+                tbl += "<td style='text-align: left;'><div class='team-cell'><img src='/images/bandeiras/"+val['bandeiraA']+"' class='bandeira' alt='"+val['nomeA']+"'> <a href='./teamstatus.php?team="+val['idA']+"' class='team-link'>"+val['nomeA']+"</a></div></td>";
+                tbl +=  "<td style='font-weight: 700; font-size: 1.05rem;'>"+val['timeAgols']+"</td>";
+                tbl +=  "<td class='penaltybox' style='color: #64748b; font-size: 0.8rem;'>"+pen+"</td>";
+                tbl +=  "<td style='font-weight: 700; font-size: 1.05rem;'>"+val['timeBgols']+"</td>";
+                tbl +=  "<td style='text-align: left;'><div class='team-cell'><img src='/images/bandeiras/"+val['bandeiraB']+"' class='bandeira' alt='"+val['nomeB']+"'> <a href='./teamstatus.php?team="+val['idB']+"' class='team-link'>"+val['nomeB']+"</a></div></td>";
+                tbl +=  "<td style='color: #475569; font-size: 0.85rem;'>"+val['data']+"</td>";
+                tbl +=  "<td style='font-weight: 500; font-size: 0.85rem;'>"+val['campeonato']+"</td>";
+                tbl +=  "<td>"+calcBadge+"</td>";
+                tbl += "<td class='points-cell'>"+val['pontos']+"</td>";
             tbl +=  "</tr>";
             }
         });
@@ -116,17 +118,19 @@ function updateTable(ajax_data, current_page, highlighted, direction){
     $(document).find('.tbl_user_data').html(tbl);
     addFilters();
 
-    $(document).find('#'+highlighted).addClass('highlighted');
+    if(highlighted && highlighted !== 0 && highlighted !== '0'){
+        $(document).find('#'+highlighted).addClass('highlighted');
 
-    if(direction == 1){
-        asc = activeDirection;
-    }
-    if(asc){
-        $(document).find('#'+highlighted).find('.descending').addClass('hidden');
-        $(document).find('#'+highlighted).find('.ascending').removeClass('hidden');
-    } else {
-        $(document).find('#'+highlighted).find('.ascending').addClass('hidden');
-        $(document).find('#'+highlighted).find('.descending').removeClass('hidden');
+        if(direction == 1){
+            asc = activeDirection;
+        }
+        if(asc){
+            $(document).find('#'+highlighted).find('.descending').addClass('hidden');
+            $(document).find('#'+highlighted).find('.ascending').removeClass('hidden');
+        } else {
+            $(document).find('#'+highlighted).find('.ascending').addClass('hidden');
+            $(document).find('#'+highlighted).find('.descending').removeClass('hidden');
+        }
     }
 
     activeSort = highlighted;
@@ -144,82 +148,67 @@ $(document).on('click', '.pagination_link', function(){
 
 
 function pagination(current_page, total_pages){
-var pgn = '';
-pgn += "<ul class='pagination'>";
+    var pgn = '<ul class="pagination">';
+    if(total_pages > 1){
+        var prev_page = parseInt(current_page) - 1;
+        var next_page = parseInt(current_page) + 1;
 
-// button for first page
-if(current_page>1){
-    pgn +=  "<li><button class='pagination_link' id='inicio' title='Ir para o início'>";
-    pgn +=  "Inicio";
-    pgn +=  "</button></li>";
-}
-
-// range of links to show
-const range = 2;
-
-// display links to 'range of pages' around 'current page'
-var initial_num = current_page - range;
-var condition_limit_num = (+current_page + +range)  + +1;
-
-// teste com While
-var x;
-if(initial_num > 0){
-    x = initial_num;
-} else {
-    x = 1;
-}
-
-while(x <= total_pages && x < condition_limit_num){
-    if (x == current_page) {
-            pgn += "<li><button class='pagination_link' id='"+x+"' disabled>"+x+"<span class=\"sr-only\">(current)</span></button></li>";
+        if(current_page > 1){
+            pgn += '<li><button class="pagination_link" id="inicio" title="Primeira Página">&laquo;</button></li>';
+            pgn += '<li><button class="pagination_link" id="' + prev_page + '" title="Página Anterior">&lsaquo;</button></li>';
         }
-        else {
-            pgn += "<li><button class='pagination_link' id='"+x+"'>"+x+"</button></li>";
+
+        var range = 2;
+        var initial_num = parseInt(current_page) - range;
+        var condition_limit_num = parseInt(current_page) + range + 1;
+
+        for (var x = initial_num; x < condition_limit_num; x++) {
+            if ((x > 0) && (x <= total_pages)) {
+                if (x == current_page) {
+                    pgn += '<li class="active"><button class="pagination_link" id="' + x + '" disabled>' + x + '<span class="sr-only">(current)</span></button></li>';
+                } else {
+                    pgn += '<li><button class="pagination_link" id="' + x + '">' + x + '</button></li>';
+                }
+            }
         }
-    x = x+1;
+
+        if(current_page < total_pages){
+            pgn += '<li><button class="pagination_link" id="' + next_page + '" title="Próxima Página">&rsaquo;</button></li>';
+            pgn += '<li><button class="pagination_link" id="final" title="Última Página">&raquo;</button></li>';
+        }
+    }
+    pgn += '</ul>';
+    return pgn;
 }
 
-// button for last page
-if(current_page<total_pages){
-    pgn += "<li><button class='pagination_link' id='final' title='Última página é "+total_pages+".'>";
-    pgn += "Final";
-    pgn += "</button></li>";
-}
-
-pgn += "</ul>";
-
-return pgn;
-}
-
-$(".toggleButton").click(function() {
+$(document).on('click', ".toggleButton, .togglebutton", function() {
 
 var modalType = $(this).attr("id");
 
 if(modalType !== 'retornar'){
-    $(".modalOverlay").show();
-    $(".moreInfoModal").show();
+    $(".modalOverlay").fadeIn(200);
+    $(".moreInfoModal").fadeIn(200);
+    $(".modal-guts").hide();
     $("#modal"+modalType).show();
     $('#retornar').show();
 } else {
-    $(".modalOverlay").hide();
-    $(".moreInfoModal").hide();
+    $(".modalOverlay").fadeOut(200);
+    $(".moreInfoModal").fadeOut(200);
     $(".modal-guts").hide();
     $('#retornar').hide();
 }
 });
 
-$('.modalOverlay').click(function(e){
-    $('*[id*=odal]').each(function() {
-    $(this).hide();
+$(document).on('click', '.modalOverlay', function(e){
+    $(".modalOverlay").fadeOut(200);
+    $(".moreInfoModal").fadeOut(200);
+    $(".modal-guts").hide();
     $('#retornar').hide();
-    });
 });
 
 function addFilters(){
     $(document).find('.headings').click(function(){
        treatResults(this);
-
-
     });
 }
 
@@ -257,24 +246,14 @@ if(prop == 'pontos'){
     );
 }
 
-
     updateTable(localData, 1,prop,0);
-
-    }
+}
 
 });
 
-
-
-
 </script>
-<?php
 
-echo "<div id='ranking-container'>";
-echo "<div  id='ranking'>";
-echo "<div id='direita'><input type=text id='caixa_pesquisa' placeholder='Pesquisar...'><span class='material-symbols-outlined'>search</span></div>" ;
-echo "<h2> Recordes e jogos gerais </h2>";
-echo "<hr>";
+<?php
 
 //query informacoes
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -286,64 +265,93 @@ $jogo = new Jogo($db);
 $info_stmt = $jogo->recuperarInfoGeral();
 $info = $info_stmt->fetch(PDO::FETCH_ASSOC);
 
-echo "<div id='info-jogos'>";
-echo "<a href='#' id='Pontos' class='masterblock infoblock togglebutton' title='Pontos trocados no ranking'><span class='material-symbols-outlined'>military_tech</span> " . $info['pontosTrocados']. "</a>";
-echo "<a href='#' id='Jogos' class='masterblock infoblock  togglebutton' title='Jogos totais'><span class='material-symbols-outlined'>calendar_today</span> " . $info['jogosTotais'] . "</a>";
-echo "<a href='#' id='Vitoria' class='masterblock infoblock  togglebutton' title='Número de jogos com vencedor'><span class='material-symbols-outlined vitoria'>arrow_circle_up</span> " . $info['vitorias'] . "</a>";
-echo "<a href='#' id='Empate' class='masterblock infoblock  togglebutton' title='Número de empates'><span class='material-symbols-outlined empate'>do_not_disturb_on</span> " . $info['empates'] . "</a>";
-echo "<a href='#' id='Gols' class='masterblock infoblock  togglebutton' title='Total de gols marcados'><span class='material-symbols-outlined vitoria'>sports_soccer</span> " . $info['gols']  . "</a>";
-echo "</div>";
-echo "<br>";
+?>
 
-    // paging buttons here
-    echo "<div style='clear:both; float:center'></div>";
-echo "<hr>";
+<div class="ranking-container">
+    <div class="ranking-card">
+        <div class="ranking-card-header">
+            <div>
+                <h2 class="ranking-card-title">
+                    <span class="material-symbols-outlined" style="color: #0284c7; font-size: 1.8rem;">history</span>
+                    Recordes e Jogos Gerais
+                </h2>
+                <h3 class="ranking-card-date">Estatísticas acumuladas e histórico completo de partidas</h3>
+            </div>
+            
+            <div id="direita" class="search-container">
+                <input type="text" id="caixa_pesquisa" placeholder="Pesquisar partida...">
+                <span class="material-symbols-outlined">search</span>
+            </div>
+        </div>
 
-echo "<div style='clear:both; float:center'></div>";
+        <div id="info-jogos">
+            <a href="#" id="Pontos" class="masterblock infoblock togglebutton" title="Clique para ver recordes de pontos">
+                <span class="material-symbols-outlined">military_tech</span>
+                <span><?php echo $info['pontosTrocados']; ?></span>
+                <span class="stat-label">Pontos Trocados</span>
+            </a>
+            <a href="#" id="Jogos" class="masterblock infoblock togglebutton" title="Clique para ver recordes de jogos">
+                <span class="material-symbols-outlined">calendar_today</span>
+                <span><?php echo $info['jogosTotais']; ?></span>
+                <span class="stat-label">Jogos Totais</span>
+            </a>
+            <a href="#" id="Vitoria" class="masterblock infoblock togglebutton" title="Clique para ver maiores vitórias">
+                <span class="material-symbols-outlined vitoria">arrow_circle_up</span>
+                <span class="vitoria"><?php echo $info['vitorias']; ?></span>
+                <span class="stat-label">Vitórias</span>
+            </a>
+            <a href="#" id="Empate" class="masterblock infoblock togglebutton" title="Clique para ver empates">
+                <span class="material-symbols-outlined empate">do_not_disturb_on</span>
+                <span class="empate"><?php echo $info['empates']; ?></span>
+                <span class="stat-label">Empates</span>
+            </a>
+            <a href="#" id="Gols" class="masterblock infoblock togglebutton" title="Clique para ver maiores goleadas">
+                <span class="material-symbols-outlined" style="color: #0284c7;">sports_soccer</span>
+                <span><?php echo $info['gols']; ?></span>
+                <span class="stat-label">Gols Marcados</span>
+            </a>
+        </div>
 
-// display the products if there are any
+        <div class="tbl_user_data">
+            <div style="text-align: center; padding: 2rem;">
+                <img id="loading" src="/images/icons/ajax-loader.gif" alt="Carregando...">
+            </div>
+        </div>
+    </div>
+</div>
 
-echo "<div class='tbl_user_data'><img id='loading' src='/images/icons/ajax-loader.gif'></div>";
+<div class="modalOverlay closed" id="modalOverlay"></div>
+<div class="moreInfoModal closed" id="moreInfoModal">
+  <div id="modalPontos" class="modal-guts closed">
+    <?php $id = 0; include 'modals/modalPontos.php'; ?>
+  </div>
+  <div id="modalJogos" class="modal-guts closed">
+    <?php include_once 'modals/modalJogos.php'; ?>
+  </div>
+  <div id="modalVitoria" class="modal-guts closed">
+    <?php
+      $resultado_VED = 'V';
+      include 'modals/modalResultados.php';
+    ?>
+  </div>
+  <div id="modalEmpate" class="modal-guts closed">
+    <?php
+      $inicio_titulo = 'Com quem';
+      $final_titulo = 'empatou';
+      $resultado_VED = 'E';
+      include 'modals/modalResultados.php';
+    ?>
+  </div>
+  <div id="modalGols" class="modal-guts closed">
+    <?php
+      $titulo = "";
+      $goleadasAplicadas = 1;
+      include 'modals/modalGols.php';
+    ?>
+  </div>
+  <div><button class="toggleButton" id="retornar">Fechar Janela</button></div>
+</div>
 
-
-echo('</div>');
-echo('</div>');
-
-echo '<div class="modalOverlay closed" id="modalOverlay"></div>';
-$id = 0;
-echo '<div class="moreInfoModal closed" id="moreInfoModal">';
-  echo '<div id="modalPontos" class="modal-guts closed">';
-        include 'modals/modalPontos.php';
- echo "</div>";
-  echo " <div id='modalJogos' class='modal-guts closed'>";
-
-         include_once 'modals/modalJogos.php';
-
-  echo " </div>";
-echo  " <div id='modalVitoria' class='modal-guts closed'>";
-
-         $resultado_VED = 'V';
-         include 'modals/modalResultados.php';
-
-echo    "</div>";
-   echo "<div id='modalEmpate' class='modal-guts closed'>";
-
-         $inicio_titulo = 'Com quem';
-         $final_titulo = 'empatou';
-         $resultado_VED = 'E';
-         include 'modals/modalResultados.php';
-
-echo "</div>";
-echo "<div id='modalGols' class='modal-guts closed'>";
-
-         $titulo = "";
-         $goleadasAplicadas = 1;
-         include 'modals/modalGols.php';
-
-echo " </div>";
-echo ' <div><button class="toggleButton" id="retornar">Retornar</button></div>';
-echo "</div>";
-
+<?php
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
-
 ?>

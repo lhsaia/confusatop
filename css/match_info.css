@@ -1,99 +1,273 @@
-#match-info-header{
+/* ==========================================================================
+   CONFUSA.top - Match Info Redesign (Light Theme 2.0)
+   ========================================================================== */
+
+.match-info-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding-bottom: 1rem;
+}
+
+/* Placar Principal */
+#match-info-header {
   width: 100%;
-  display:flex;
+  max-width: 800px;
+  display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
-  margin: 20px auto;
+  align-items: center;
+  justify-content: space-between;
+  margin: 1.5rem auto;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.9) 0%, rgba(241, 245, 249, 0.9) 100%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+}
+
+.match-team-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.match-team-block.team-left {
+  justify-content: flex-start;
+}
+
+.match-team-block.team-right {
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+}
+
+#match-info-team-1-flag,
+#match-info-team-2-flag {
+  width: 70px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  padding: 0;
+}
+
+#match-info-team-1-name,
+#match-info-team-2-name {
+  font-family: 'Kanit', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.match-score-center {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 1.5rem;
+}
+
+#match-info-team-1-score,
+#match-info-team-2-score {
+  font-family: 'Kanit', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #0284c7;
+  padding: 0 4px;
+}
+
+#match-info-x-mark {
+  font-family: 'Kanit', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.penalty-indicator {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  background: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+/* Detalhes / Metadados da partida */
+#match-info-base {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 1rem auto;
   align-items: center;
   justify-content: center;
-
 }
 
-#match-info-team-1-flag, #match-info-team-2-flag{
-  width:80px;
-  height: 60px;
-  padding:5px;
-}
-
-#match-info-team-1-name, #match-info-team-2-name, #match-info-team-1-score, #match-info-team-2-score{
-  font-size:2em;
-  padding:5px;
-}
-
-#match-info-base{
-  width: 100%;
-  display:flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  margin: 10px auto;
+.match-meta-pill {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
-#match-info-competition-block{
+.match-meta-pill span.material-symbols-outlined {
+  font-size: 1rem;
+  color: #0284c7;
+}
+
+/* Linha do Tempo de Eventos */
+#match-info-events {
   width: 100%;
-  display:flex;
+  max-width: 800px;
+  margin: 2rem auto 1rem auto;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+}
+
+.events-title {
+  background: #f8fafc;
+  padding: 12px 18px;
+  font-family: 'Kanit', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #334155;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.match-event-unit {
+  width: 100%;
+  display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  transition: background 0.15s ease;
+}
+
+.match-event-unit:last-child {
+  border-bottom: none;
+}
+
+.match-event-unit:hover {
+  background: rgba(2, 132, 199, 0.02);
+}
+
+.event-col-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  text-align: right;
+}
+
+.event-col-center {
+  width: 50px;
+  display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.yellow-card{
-  color:#eaea00;
-}
-
-.red-card{
-  color:red;
-}
-
-.own-goal{
-  color:red;
-}
-
-.match-event-unit{
-  width:100%;
-  display:flex;
-  flex-direction:row;
-  flex-wrap: nowrap;
-  justify-content: center;
+.event-col-right {
+  flex: 1;
+  display: flex;
   align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  text-align: left;
 }
 
-#match-info-events{
-  margin-top:20px;
+.match-event-unit a {
+  color: #0f172a;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
 }
 
-.match-event-unit span, .match-event-unit i{
-  text-align: center;
+.match-event-unit a:hover {
+  color: #0284c7;
 }
 
-.match-event-unit a{
-    width:37%;
-}
-
-.match-event-player-name-1{
-  width:37%;
-}
-
-.match-event-player-name-2{
-  width:37%;
-}
-
-.match-event-minute-1{
-  width:10%;
+.match-event-minute {
+  font-size: 0.8rem;
   font-weight: 700;
+  color: #64748b;
+  min-width: 32px;
 }
 
-.match-event-minute-2{
-  width:10%;
-  font-weight: 700;
+.match-event-icon {
+  font-size: 1.25rem !important;
 }
 
-.match-event-icon{
-  width:6%;
+.goal,
+.match-event-icon.goal {
+  color: #10b981 !important;
 }
 
-.goal{
-  color:black;
+.yellow-card,
+.match-event-icon.yellow-card {
+  color: #f59e0b !important;
 }
+
+.red-card,
+.match-event-icon.red-card {
+  color: #ef4444 !important;
+}
+
+.own-goal,
+.match-event-icon.own-goal {
+  color: #ef4444 !important;
+}
+
+@media (max-width: 650px) {
+  #match-info-header {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem 1rem;
+    text-align: center;
+  }
+
+  .match-team-block {
+    justify-content: center !important;
+    flex-direction: row !important;
+  }
+
+  #match-info-team-1-flag,
+  #match-info-team-2-flag {
+    width: 50px;
+    height: 34px;
+  }
+
+  #match-info-team-1-name,
+  #match-info-team-2-name {
+    font-size: 1.15rem;
+  }
+
+  #match-info-team-1-score,
+  #match-info-team-2-score {
+    font-size: 1.8rem;
+  }
+}
+

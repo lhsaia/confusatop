@@ -95,3 +95,47 @@ body {
 .box__button {
     display: none !important;
 }
+
+.box.is-uploading .box__input,
+.box.is-success .box__input,
+.box.is-error .box__input {
+    visibility: hidden;
+}
+
+.box__uploading,
+.box__success,
+.box__error {
+    display: none;
+}
+
+.box.is-uploading .box__uploading,
+.box.is-success .box__success,
+.box.is-error .box__error {
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: 0;
+    transform: translateY(-50%);
+    font-weight: 600;
+}
+
+.box__uploading {
+    font-style: italic;
+    color: #0284c7;
+}
+
+.box__success {
+    color: #10b981;
+}
+
+.box__error {
+    color: #ef4444;
+}
+
+.box__restart {
+    font-weight: 700;
+    color: #0284c7;
+    text-decoration: underline;
+    cursor: pointer;
+}

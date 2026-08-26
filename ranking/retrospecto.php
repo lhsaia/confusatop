@@ -8,6 +8,7 @@ $page_title = "Retrospecto";
 $css_filename = "indexRanking";
 $css_login = 'login';
 $aux_css = 'jogoserecordes';
+$extra_css = 'home_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 include_once 'ranking_header.php';
@@ -225,12 +226,10 @@ $.ajax({
 	updateTable(jogos_data,1,0,0);
 	localData = jogos_data;
 }).done(function(data){
-	if(times[1] != 0){
-		console.log(1);
+	if(times[1] != 0 && jogos_data && jogos_data.length > 0){
 		showCharts();
 		updateCharts(jogos_data);
 	} else {
-		console.log(0);
 		hideCharts();
 	}
 });
@@ -252,6 +251,10 @@ function showCharts(){
 }
 
 function updateCharts(ajax_data){
+	if(!ajax_data || ajax_data.length === 0){
+		hideCharts();
+		return;
+	}
 	let timeA = $("#selectPais1").val();
 	let timeB = $("#selectPais2").val();
 	let golsA = 0;
@@ -636,8 +639,31 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 		single = true;
 	} 
 
+    var total_results = (ajax_data && ajax_data.length) ? ajax_data.length : 0;
+    
+    if(total_results === 0){
+        var emptyHtml = '';
+        if(!single){
+            let nomeA = $("#selectPais1 :selected").text() || 'Time A';
+            let nomeB = $("#selectPais2 :selected").text() || 'Time B';
+            emptyHtml = '<div style="text-align: center; padding: 2.5rem 1.5rem; background: #ffffff; border-radius: 14px; border: 1px solid rgba(0,0,0,0.06); margin: 1.5rem 0; box-shadow: 0 4px 14px rgba(0,0,0,0.02);">' +
+                '<span class="material-symbols-outlined" style="font-size: 3rem; color: #0284c7; margin-bottom: 0.5rem; display: block;">sports_soccer</span>' +
+                '<h4 style="font-family: \'Kanit\', sans-serif; font-size: 1.3rem; font-weight: 600; color: #1e293b; margin: 0 0 0.5rem 0;">Nenhum confronto registrado</h4>' +
+                '<p style="color: #64748b; font-size: 0.95rem; margin: 0; max-width: 500px; margin-left: auto; margin-right: auto;">' + nomeA + ' e ' + nomeB + ' ainda não se enfrentaram em partidas oficiais registradas no sistema.</p>' +
+            '</div>';
+        } else {
+            let nomeA = $("#selectPais1 :selected").text() || 'Esta seleção';
+            emptyHtml = '<div style="text-align: center; padding: 2.5rem 1.5rem; background: #ffffff; border-radius: 14px; border: 1px solid rgba(0,0,0,0.06); margin: 1.5rem 0; box-shadow: 0 4px 14px rgba(0,0,0,0.02);">' +
+                '<span class="material-symbols-outlined" style="font-size: 3rem; color: #0284c7; margin-bottom: 0.5rem; display: block;">flag</span>' +
+                '<h4 style="font-family: \'Kanit\', sans-serif; font-size: 1.3rem; font-weight: 600; color: #1e293b; margin: 0 0 0.5rem 0;">Nenhum jogo encontrado</h4>' +
+                '<p style="color: #64748b; font-size: 0.95rem; margin: 0;">Não há partidas registradas para ' + nomeA + '.</p>' +
+            '</div>';
+        }
+        $(document).find('.tbl_user_data').html(emptyHtml);
+        return;
+    }
+
     var results_per_page = 13;
-    var total_results = ajax_data.length;
     var total_pages = Math.ceil(total_results/results_per_page);
 
     var treated_page;
@@ -703,17 +729,19 @@ if(!single){
     $(document).find('.tbl_user_data').html(tbl);
     addFilters();
 
-    $(document).find('#'+highlighted).addClass('highlighted');
+    if(highlighted && highlighted !== 0 && highlighted !== '0'){
+        $(document).find('#'+highlighted).addClass('highlighted');
 
-    if(direction == 1){
-        asc = activeDirection;
-    }
-    if(asc){
-        $(document).find('#'+highlighted).find('.descending').addClass('hidden');
-        $(document).find('#'+highlighted).find('.ascending').removeClass('hidden');
-    } else {
-        $(document).find('#'+highlighted).find('.ascending').addClass('hidden');
-        $(document).find('#'+highlighted).find('.descending').removeClass('hidden');
+        if(direction == 1){
+            asc = activeDirection;
+        }
+        if(asc){
+            $(document).find('#'+highlighted).find('.descending').addClass('hidden');
+            $(document).find('#'+highlighted).find('.ascending').removeClass('hidden');
+        } else {
+            $(document).find('#'+highlighted).find('.ascending').addClass('hidden');
+            $(document).find('#'+highlighted).find('.descending').removeClass('hidden');
+        }
     }
 
     activeSort = highlighted;
@@ -791,51 +819,37 @@ $(document).on('click', '.pagination_link', function(){
 
 
 function pagination(current_page, total_pages){
-var pgn = '';
-pgn += "<ul class='pagination'>";
+    var pgn = '<ul class="pagination">';
+    if(total_pages > 1){
+        var prev_page = parseInt(current_page) - 1;
+        var next_page = parseInt(current_page) + 1;
 
-// button for first page
-if(current_page>1){
-    pgn +=  "<li><button class='pagination_link' id='inicio' title='Ir para o início'>";
-    pgn +=  "Inicio";
-    pgn +=  "</button></li>";
-}
-
-// range of links to show
-const range = 2;
-
-// display links to 'range of pages' around 'current page'
-var initial_num = current_page - range;
-var condition_limit_num = (+current_page + +range)  + +1;
-
-// teste com While
-var x;
-if(initial_num > 0){
-    x = initial_num;
-} else {
-    x = 1;
-}
-
-while(x <= total_pages && x < condition_limit_num){
-    if (x == current_page) {
-            pgn += "<li><button class='pagination_link' id='"+x+"' disabled>"+x+"<span class=\"sr-only\">(current)</span></button></li>";
+        if(current_page > 1){
+            pgn += '<li><button class="pagination_link" id="inicio" title="Primeira Página">&laquo;</button></li>';
+            pgn += '<li><button class="pagination_link" id="' + prev_page + '" title="Página Anterior">&lsaquo;</button></li>';
         }
-        else {
-            pgn += "<li><button class='pagination_link' id='"+x+"'>"+x+"</button></li>";
+
+        var range = 2;
+        var initial_num = parseInt(current_page) - range;
+        var condition_limit_num = parseInt(current_page) + range + 1;
+
+        for (var x = initial_num; x < condition_limit_num; x++) {
+            if ((x > 0) && (x <= total_pages)) {
+                if (x == current_page) {
+                    pgn += '<li><button class="pagination_link" id="' + x + '" disabled>' + x + '<span class="sr-only">(current)</span></button></li>';
+                } else {
+                    pgn += '<li><button class="pagination_link" id="' + x + '">' + x + '</button></li>';
+                }
+            }
         }
-    x = x+1;
-}
 
-// button for last page
-if(current_page<total_pages){
-    pgn += "<li><button class='pagination_link' id='final' title='Última página é "+total_pages+".'>";
-    pgn += "Final";
-    pgn += "</button></li>";
-}
-
-pgn += "</ul>";
-
-return pgn;
+        if(current_page < total_pages){
+            pgn += '<li><button class="pagination_link" id="' + next_page + '" title="Próxima Página">&rsaquo;</button></li>';
+            pgn += '<li><button class="pagination_link" id="final" title="Última Página">&raquo;</button></li>';
+        }
+    }
+    pgn += '</ul>';
+    return pgn;
 }
 
 $(".toggleButton").click(function() {

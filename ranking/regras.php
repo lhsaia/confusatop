@@ -7,55 +7,104 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 $page_title = "Ranking de Seleções - Regras";
 $css_filename = "indexRanking";
 $css_login = 'login';
-$aux_css = 'regras';
+$aux_css = 'home_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 include_once 'ranking_header.php';
 
 ?>
 
-<div id="ranking-container">
-<div align="center" id="ranking">
-<div id='regras'>
-<h2>Regras do ranking de seleções</h2>
+<div class="ranking-container">
+    <div class="ranking-card">
+        <div class="ranking-card-header">
+            <div>
+                <h2 class="ranking-card-title">
+                    <span class="material-symbols-outlined" style="color: #0284c7; font-size: 1.8rem;">menu_book</span>
+                    Regras e Metodologia do Ranking
+                </h2>
+                <h3 class="ranking-card-date">Sistema Elo adaptado para o futebol internacional CONFUSA</h3>
+            </div>
+        </div>
 
-<hr>
+        <div class="rules-container">
+            <p>O <strong>Ranking de Seleções da CONFUSA</strong> é baseado no prestigiado sistema <em>Elo</em>, originalmente desenvolvido pelo físico Dr. Árpád Élő. Usado há décadas no xadrez e hoje adotado pela FIFA, o modelo calcula dinamicamente a troca de pontos entre seleções com base na probabilidade de vitória de cada equipe.</p>
+            
+            <p>O sistema do <strong>CONFUSA.top</strong> é amplamente inspirado no padrão internacional do <a href="https://eloratings.net" target="_blank" style="color: #0284c7; font-weight: 600; text-decoration: underline;">eloratings.net</a>, agregando pesos por importância da competição, vantagem do mandante (+100 pontos no ranking para o time da casa) e um multiplicador pela diferença de gols na partida.</p>
+            
+            <p>A classificação converge para a verdadeira força relativa das equipes após aproximadamente <strong>30 partidas disputadas</strong>. Seleções com menos jogos possuem pontuação com maior volatilidade.</p>
 
-<p>O Ranking de Seleções da CONFUSA é baseado no sistema Elo, desenvolvido pelo Dr. Arpad Elo. É usado amplamente no xadrez para ranquear jogadores, e tem sido aos poucos adotado para outros esportes como o futebol (a própria FIFA passou a usar recentemente uma variação do sistema, de forma a corrigir algumas distorções).</p>
-<p>Confusa.top utiliza também uma variação desse sistema, baseado amplamente no utilizado pelo site <a href="https://eloratings.net">eloratings.net</a>, com pesos pelo tipo de partida, um ajuste para a vantagem do time da casa, e um ajuste sobre a diferença de gols na partida.</p>
-<p>Nosso ranking considera todas as partidas internacionais oficiais entre membros da CONFUSA, cujos resultados puderam ser encontrados.</p>
-<p>A tendência na classificação tende a convergir para a verdadeira força das equipes, comparadas com as demais, após cerca de 30 partidas. A pontuação para times com menos de 30 jogos disputados devem ser consideradas em um caráter mais temporário, e irão variar mais.</p>
-<p>A pontuação é calculada jogo a jogo e baseada nas seguintes fórmulas:</p>
+            <div class="formula-card">
+                <div class="formula-main">P<sub>n</sub> = P<sub>a</sub> + C × G × (R - R<sub>e</sub>)</div>
+            </div>
 
-<p><strong>P<sub>n</sub> = P<sub>a</sub> + C × G × (R - R<sub>e</sub>)</strong></p>
-<p><strong>P<sub>n</sub>&nbsp</strong> são os novos pontos, <strong>P<sub>a</sub></strong> são os pontos antigos (pré-partida).</p>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem;">
+                <p style="margin: 0;"><strong>P<sub>n</sub></strong> : Nova pontuação da equipe após o confronto.</p>
+                <p style="margin: 0;"><strong>P<sub>a</sub></strong> : Pontuação anterior da equipe antes da partida.</p>
+            </div>
 
-<p><strong>C&nbsp</strong> é a constante de peso dependente do campeonato disputado:</p>
+            <h3 style="font-family: 'Kanit', sans-serif; font-size: 1.15rem; color: #1e293b; margin-top: 1.5rem; margin-bottom: 0.5rem;">
+                1. Constante de Importância da Partida (C)
+            </h3>
+            <p>O valor de <strong>C</strong> determina o impacto máximo de pontos de acordo com a relevância do torneio:</p>
 
-<p class='doubleindent'><strong>60&nbsp</strong> para Copa do Mundo ou Olimpíadas;</p>
-<p class='doubleindent low-padding'><strong>50&nbsp</strong> para FEASCOPA, Três Mares, Escudo da Távola e a extinta Angehäit Döröt;</p>
-<p class='doubleindent low-padding'><strong>40&nbsp</strong> para Eliminatórias da Copa, de Regionais e de Olimpíadas;</p>
-<p class='doubleindent low-padding'><strong>30&nbsp</strong> para mundiais de base e Copa das Confederações;</p>
-<p class='doubleindent low-padding'><strong>20&nbsp</strong> para amistosos.</p>
-<p class='doubleindent low-padding'><strong>C&nbsp</strong> é então ajustada pela diferença de gols no jogo (<strong>G</strong>), de acordo com os seguintes valores:</p>
+            <div class="rules-constants-grid">
+                <div class="rules-constant-item">
+                    <span class="constant-val">60</span>
+                    <span class="constant-desc">Copa do Mundo ou Jogos Olímpicos</span>
+                </div>
+                <div class="rules-constant-item">
+                    <span class="constant-val">50</span>
+                    <span class="constant-desc">FEASCOPA, Três Mares, Escudo da Távola e Angehäit Döröt</span>
+                </div>
+                <div class="rules-constant-item">
+                    <span class="constant-val">40</span>
+                    <span class="constant-desc">Eliminatórias da Copa, Regionais e Olimpíadas</span>
+                </div>
+                <div class="rules-constant-item">
+                    <span class="constant-val">30</span>
+                    <span class="constant-desc">Mundiais de Base e Copa das Confederações</span>
+                </div>
+                <div class="rules-constant-item">
+                    <span class="constant-val">20</span>
+                    <span class="constant-desc">Amistosos internacionais</span>
+                </div>
+            </div>
 
-<p class='tripleindent'><strong>1&nbsp</strong> quando a diferença de gols é de 1</p>
-<p class='tripleindent low-padding'><strong>1.5&nbsp</strong> quando a diferença de gols é de 2</p>
-<p class='tripleindent low-padding'><strong>(11 + D<sub>G</sub>) × 0.125&nbsp</strong> quando a diferença de gols é de 3 ou mais, onde <strong>D<sub>G</sub></strong> é a diferença de gols.</p>
+            <h3 style="font-family: 'Kanit', sans-serif; font-size: 1.15rem; color: #1e293b; margin-top: 1.5rem; margin-bottom: 0.5rem;">
+                2. Ajuste pelo Saldo de Gols (G)
+            </h3>
+            <p>O multiplicador <strong>G</strong> recompensa goleadas expressivas:</p>
+            
+            <div class="rules-constants-grid">
+                <div class="rules-constant-item">
+                    <span class="constant-val">1.0</span>
+                    <span class="constant-desc">Diferença de 1 gol (ou empate)</span>
+                </div>
+                <div class="rules-constant-item">
+                    <span class="constant-val">1.5</span>
+                    <span class="constant-desc">Diferença de exatamente 2 gols</span>
+                </div>
+                <div class="rules-constant-item">
+                    <span class="constant-val">Fórmula</span>
+                    <span class="constant-desc"><strong>(11 + D<sub>G</sub>) × 0.125</strong> para 3 ou mais gols de diferença</span>
+                </div>
+            </div>
 
-<p><strong>R&nbsp</strong> é o resultado do jogo (<strong>1</strong> para vitória, <strong>0.5</strong> para empate, e <strong>0</strong> para derrota).</p>
+            <h3 style="font-family: 'Kanit', sans-serif; font-size: 1.15rem; color: #1e293b; margin-top: 1.5rem; margin-bottom: 0.5rem;">
+                3. Resultado Real (R) e Resultado Esperado (R<sub>e</sub>)
+            </h3>
+            <p>O valor <strong>R</strong> é o resultado obtido na partida: <strong>1.0</strong> para vitória, <strong>0.5</strong> para empate e <strong>0.0</strong> para derrota.</p>
+            <p>O resultado esperado (expectativa de vitória <strong>R<sub>e</sub></strong>) é obtido matematicamente através da diferença de pontos entre os oponentes:</p>
 
-<p><strong>R<sub>e</sub>&nbsp</strong> é o resultado esperado (expectativa de vitória), através da seguinte fórmula:</p>
+            <div class="formula-card">
+                <div class="formula-main">R<sub>e</sub> = 1 / (10<sup>(-d<sub>p</sub> / 400)</sup> + 1)</div>
+            </div>
 
-<p><strong>R<sub>e</sub> = 1 / (10<sup>(-d<sub>p</sub>/400)</sup> + 1)</strong></p>
-<p><strong>d<sub>p</sub>&nbsp</strong> é a diferença de pontuação no ranking entre as equipes, <strong>+100</strong> para o dono da casa (válido apenas para amistosos e eliminatórias).</p>
-
-</div>
-</div>
+            <p>Onde <strong>d<sub>p</sub></strong> é a diferença de pontos no ranking entre as equipes, somando-se <strong>+100</strong> de bonificação para o dono da casa em partidas com mando de campo.</p>
+        </div>
+    </div>
 </div>
 
 <?php
-
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
-
 ?>
