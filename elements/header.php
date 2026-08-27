@@ -431,13 +431,6 @@ if (!$is_redesigned):
     <?php echo $admin_btn ?>
     <?php
     switch ($currentPage[1]) {
-      case "ranking":
-          echo $ver_ranking;
-          if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
-            echo $importar_jogo;
-          }
-          echo $inserir_jogo;
-        break;
       case "arbitros":
         break;
       case "octamotor":
