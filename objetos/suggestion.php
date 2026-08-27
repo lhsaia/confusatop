@@ -73,8 +73,15 @@ class Suggestion{
 	  }
 	}
 	
-	public function toggleStatus(){
+	public function updateStatus($id, $status){
+		$id = (int)$id;
+		$status = (int)$status;
 		
+		$query = "UPDATE " . $this->table_name . " SET status = :status WHERE id = :id";
+		$stmt = $this->conn->prepare($query);
+		$stmt->bindParam(":status", $status, PDO::PARAM_INT);
+		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
+		return $stmt->execute();
 	}
 }
 ?>

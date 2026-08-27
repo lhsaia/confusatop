@@ -30,7 +30,35 @@ $(document).ready(function($){
 		echo "false";
 	 };?>';
 
+ var isAdmin = <?php echo (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) ? 'true' : 'false'; ?>;
+
 load_data();
+
+$(document).on('change', '.admin_status_select', function(){
+	let id = $(this).closest("tr").attr("id");
+	let newStatus = $(this).val();
+	let selectElem = $(this);
+	selectElem.prop('disabled', true);
+	
+	$.ajax({
+		url: "update_status.php",
+		method: "POST",
+		dataType: "json",
+		data: { id: id, status: newStatus },
+		success: function(res){
+			if(res && res.success){
+				load_data();
+			} else {
+				alert(res && res.message ? res.message : "Erro ao atualizar status.");
+				selectElem.prop('disabled', false);
+			}
+		},
+		error: function(){
+			alert("Erro de comunicação com o servidor.");
+			selectElem.prop('disabled', false);
+		}
+	});
+});
 
 
 
@@ -179,18 +207,27 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 				
 			//status
 			let status = "";
-			if(val['status'] == 0){
-				// pendente
-				status = "<p class='pending icon_box'><span class='material-symbols-outlined' style='font-size: 1.1rem; vertical-align: middle;'>hourglass_empty</span> Pendente</p>";
-			} else if(val['status'] == 1){
-				// em processo
-				status = "<p class='processing icon_box'><span class='material-symbols-outlined animate-spin' style='font-size: 1.1rem; vertical-align: middle;'>sync</span> Em processo</p>";
-			} else if(val['status'] == 2){
-				// concluido
-				status = "<p class='complete icon_box'><span class='material-symbols-outlined' style='font-size: 1.1rem; vertical-align: middle;'>check_circle</span> Completo</p>";
+			if(isAdmin){
+				status = "<select class='admin_status_select status_val_" + val['status'] + "'>";
+				status += "<option value='0' " + (val['status'] == 0 ? "selected" : "") + ">⏳ Pendente</option>";
+				status += "<option value='1' " + (val['status'] == 1 ? "selected" : "") + ">🔄 Em processo</option>";
+				status += "<option value='2' " + (val['status'] == 2 ? "selected" : "") + ">✅ Completo</option>";
+				status += "<option value='3' " + (val['status'] == 3 ? "selected" : "") + ">❌ Cancelado</option>";
+				status += "</select>";
 			} else {
-				// cancelado
-				status = "<p class='cancelled icon_box'><span class='material-symbols-outlined' style='font-size: 1.1rem; vertical-align: middle;'>cancel</span> Cancelado</p>";
+				if(val['status'] == 0){
+					// pendente
+					status = "<p class='pending icon_box'><span class='material-symbols-outlined' style='font-size: 1.1rem; vertical-align: middle;'>hourglass_empty</span> Pendente</p>";
+				} else if(val['status'] == 1){
+					// em processo
+					status = "<p class='processing icon_box'><span class='material-symbols-outlined animate-spin' style='font-size: 1.1rem; vertical-align: middle;'>sync</span> Em processo</p>";
+				} else if(val['status'] == 2){
+					// concluido
+					status = "<p class='complete icon_box'><span class='material-symbols-outlined' style='font-size: 1.1rem; vertical-align: middle;'>check_circle</span> Completo</p>";
+				} else {
+					// cancelado
+					status = "<p class='cancelled icon_box'><span class='material-symbols-outlined' style='font-size: 1.1rem; vertical-align: middle;'>cancel</span> Cancelado</p>";
+				}
 			}
 			
 			//tipo
@@ -258,51 +295,37 @@ $(document).on('click', '.pagination_link', function(){
 
 
 function pagination(current_page, total_pages){
-var pgn = '';
-pgn += "<ul class='pagination'>";
+    var pgn = '<ul class="pagination">';
+    if(total_pages > 1){
+        var prev_page = parseInt(current_page) - 1;
+        var next_page = parseInt(current_page) + 1;
 
-// button for first page
-if(current_page>1){
-    pgn +=  "<li><button class='pagination_link' id='inicio' title='Ir para o início'>";
-    pgn +=  "Inicio";
-    pgn +=  "</button></li>";
-}
-
-// range of links to show
-const range = 2;
-
-// display links to 'range of pages' around 'current page'
-var initial_num = current_page - range;
-var condition_limit_num = (+current_page + +range)  + +1;
-
-// teste com While
-var x;
-if(initial_num > 0){
-    x = initial_num;
-} else {
-    x = 1;
-}
-
-while(x <= total_pages && x < condition_limit_num){
-    if (x == current_page) {
-            pgn += "<li><button class='pagination_link' id='"+x+"' disabled>"+x+"<span class=\"sr-only\">(current)</span></button></li>";
+        if(current_page > 1){
+            pgn += '<li><button class="pagination_link" id="inicio" title="Primeira Página">&laquo;</button></li>';
+            pgn += '<li><button class="pagination_link" id="' + prev_page + '" title="Página Anterior">&lsaquo;</button></li>';
         }
-        else {
-            pgn += "<li><button class='pagination_link' id='"+x+"'>"+x+"</button></li>";
+
+        var range = 2;
+        var initial_num = parseInt(current_page) - range;
+        var condition_limit_num = parseInt(current_page) + range + 1;
+
+        for (var x = initial_num; x < condition_limit_num; x++) {
+            if ((x > 0) && (x <= total_pages)) {
+                if (x == current_page) {
+                    pgn += '<li><button class="pagination_link" id="' + x + '" disabled>' + x + '<span class="sr-only">(current)</span></button></li>';
+                } else {
+                    pgn += '<li><button class="pagination_link" id="' + x + '">' + x + '</button></li>';
+                }
+            }
         }
-    x = x+1;
-}
 
-// button for last page
-if(current_page<total_pages){
-    pgn += "<li><button class='pagination_link' id='final' title='Última página é "+total_pages+".'>";
-    pgn += "Final";
-    pgn += "</button></li>";
-}
-
-pgn += "</ul>";
-
-return pgn;
+        if(current_page < total_pages){
+            pgn += '<li><button class="pagination_link" id="' + next_page + '" title="Próxima Página">&rsaquo;</button></li>';
+            pgn += '<li><button class="pagination_link" id="final" title="Última Página">&raquo;</button></li>';
+        }
+    }
+    pgn += '</ul>';
+    return pgn;
 }
 
 

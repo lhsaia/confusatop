@@ -313,6 +313,43 @@ table#suggestionTable tr:hover {
     border: 1px solid rgba(239, 68, 68, 0.2) !important;
 }
 
+select.admin_status_select {
+    padding: 6px 10px !important;
+    border-radius: 8px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    font-family: 'Kanit', sans-serif !important;
+    cursor: pointer !important;
+    outline: none !important;
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+    background-color: #ffffff !important;
+    transition: all 0.2s ease !important;
+}
+
+select.admin_status_select.status_val_0 {
+    background-color: rgba(100, 116, 139, 0.1) !important;
+    color: #475569 !important;
+    border-color: rgba(100, 116, 139, 0.3) !important;
+}
+
+select.admin_status_select.status_val_1 {
+    background-color: rgba(245, 158, 11, 0.1) !important;
+    color: #b45309 !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+select.admin_status_select.status_val_2 {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    color: #047857 !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+select.admin_status_select.status_val_3 {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    color: #b91c1c !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
 .suggestion {
     background-color: rgba(56, 189, 248, 0.15) !important;
     color: #0284c7 !important;
