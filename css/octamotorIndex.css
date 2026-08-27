@@ -11,13 +11,35 @@
   cursor: default;
 }
 
-html{
-  overflow-y: hidden;
-
+html, body {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
 }
 
-html, body{
-  height: 100%;
+body {
+  display: flex !important;
+  flex-direction: column !important;
+  padding-top: 60px !important;
+  background-color: #282828 !important;
+  background-image: none !important;
+}
+
+html body #top-bar {
+  background: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+html body #bottom-bar {
+  background: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  margin-top: auto !important;
 }
 
 @font-face {
@@ -46,24 +68,34 @@ html, body{
     radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 8px 9px;
   background-color:#282828;
   background-size:16px 16px;
-  height:100%;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
   width:100%;
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 #container-menu-octamotor{
   display:flex;
   flex-direction: column;
-  flex-wrap: nowrap;
+  justify-content: center;
   flex-basis: 50%;
   box-sizing: border-box;
+  padding: 10px 0 15px 0;
 }
 
 #container-image-octamotor{
   flex-basis: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  height: 100%;
 }
 
 @keyframes appear {
@@ -76,17 +108,21 @@ html, body{
 }
 
 .octamotor-menu{
-  width:80%;
+  width: 80%;
+  max-width: 500px;
   border: 3px solid;
-  background-color:black;
+  background-color: black;
   font-family: krunchbold;
-  font-size: 2em;
+  font-size: 1.85em;
   border-radius: 10px;
-  padding:15px 0 15px 120px;
-  margin:38px 10px 0px 40px;
+  padding: 12px 0 12px 115px;
+  margin: 14px 10px 0px 40px;
   box-shadow: 0 0 3pt 2pt black;
   animation: appear 2s;
   box-sizing: border-box;
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 @keyframes spin {
@@ -103,25 +139,20 @@ html, body{
   animation-fill-mode: forwards;
 }
 
-/* .paused::before{
-  animation-play-state: paused;
-}
- */
-
-
 .octamotor-menu::before{
-  content: url("/images/tire_blank.svg");
+  content: "";
+  background-image: url("/images/tire_blank.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
   display: block;
-  width: 100px;
-  height: 100px;
-  line-height: 100px;
-  margin-right: 20px;
-  border-radius:50%;
-  /* background-color:salmon; */
-  position:absolute;
-  left:20px;
-  margin-top: -30px;
-  /* transform: translateY(-40%); */
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  position: absolute;
+  left: 14px;
+  top: calc(50% - 43px);
+  margin: 0;
   box-shadow: 0 -1px 1px #fff, 0 1px 1px #000, inset 0 -1px 1px rgba(0,0,0,0.5), inset 0 -1px 1px rgba(0,0,0,0.8);
   animation: spin 2s ease 0.3s 1 normal;
   animation-fill-mode: forwards;
@@ -177,7 +208,6 @@ html, body{
 }
 
 .purple::before{
-    /* background-color: purple; */
     background-color: gray;
     animation: none !important;
 }
@@ -187,44 +217,12 @@ html, body{
   border-color:purple;
 }
 
-#foca-logo, #octamotor-logo{
-  height:50%;
-  width:100%;
-  display: block;
-  background-blend-mode: multiply;
+html body #logged-user {
+  display: none !important;
 }
 
-#top-bar, #bottom-bar{
-  background-color: gray !important;
-  color:black !important;
-}
-
-#top-bar span{
-  color: darkgray !important;
-}
-
-#botaoVoltar {
-  background-color: black !important;
-}
-
-.hidden-button{
-  position:absolute;
-  width:200%;
-  height: 200%;
-  margin-left:-50%;
-}
-
-
-.icon{
-  color:black !important;
-}
-
-#bottom-bar a:visited{
-  color:darkgray !important;
-}
-
-#bottom-bar a{
-  color:darkgray !important;
+#copyright-text::after{
+  content: " and Zé D'Agostini";
 }
 
 #container-image-octamotor{
@@ -236,43 +234,19 @@ html, body{
 }
 
 .image-wrapper{
-  height:50%;
+  height: 48%;
   margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
 
 svg{
   fill:gray;
   filter: drop-shadow(10px 5px 4px black);
   display:block;
-    margin: auto;
-    height:100%;
-
-}
-
-#copyright-text::after{
-  content: " and Zé D'Agostini";
-}
-
-.nav-item, .menu-toggle-button{
-  color:black !important;
-}
-
-.nav-item:visited, .menu-toggle-button:visited{
-    color:black !important;
-}
-
-.nav-item:hover, .menu-toggle-button:hover{
-    color:#A9A9A9 !important;
-    cursor:pointer !important;
-}
-
-.nav-item{
-    background-color: #808080 !important;
-}
-
-nav{
-  background-color: #808080 !important;
+  margin: auto;
+  height: 100%;
 }
 
 .blog-button:hover{
@@ -284,32 +258,39 @@ nav{
 .blog-button::before{
   content: "Blog da";
   font-family: 'krunchbold';
-  position:relative;
-  top:80px;
-  left:20%;
-  font-size:2em;
+  position:absolute;
+  top: 30px;
+  left: 20%;
+  font-size: 1.9em;
   color:#eee;
+  z-index: 2;
 }
 
 .blog-button{
   display:inline-block;
-
+  position: relative;
+  margin-top: 20px;
 }
 
 .blog-button svg{
   fill:#eee;
-  margin-top:70px;
+  margin-top: 45px;
 }
 
-
-
-
 @media only screen and (max-width: 600px) {
+  html, body {
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+  }
+
   #container-home-octamotor{
     display:flex;
     flex-direction:column;
     flex-wrap:nowrap;
     width:auto;
+    height: auto !important;
+    overflow: visible !important;
   }
 
   .octamotor-menu{
@@ -344,6 +325,5 @@ nav{
   .blog-button{
     margin-top:60px;
     margin-bottom:60px;
-    /* height:200px; */
   }
 }

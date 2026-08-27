@@ -1,568 +1,412 @@
 <?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
-
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "Meus climas - ".($_SESSION['nomereal'] ?? '');
-$css_filename = "indexRanking";
-$aux_css = "usuario";
+$css_filename = "home_redesign";
+$aux_css = "meusclimas_redesign";
 $css_login = 'login';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
-?>
+    include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/clima.php");
 
+    $database = new Database();
+    $db = $database->getConnection();
 
-<div id="quadro-container">
-<div align="center" id="quadroTimes">
-<button id='importar_time' onclick="window.location='/ligas/criar_clima.php';">Criar clima</button>
-<h2>Quadro de climas - <?php echo $_SESSION['nomereal']?></h2>
-<div id='error_box'></div>
+    $usuario = new Usuario($db);
+    $pais = new Pais($db);
+    $clima = new Clima($db);
 
-<hr>
-
-<?php
-
-// page given in URL parameter, default page is one
-$page = isset($_GET['page']) ? $_GET['page'] : 1;
-
-// set number of records per page
-$records_per_page = 18;
-
-// calculate for the query LIMIT clause
-$from_record_num = ($records_per_page * $page) - $records_per_page;
-
-//estabelecer conexão com banco de dados
-include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
-include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
-include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
-include_once($_SERVER['DOCUMENT_ROOT']."/objetos/clima.php");
-
-$database = new Database();
-$db = $database->getConnection();
-
-$usuario = new Usuario($db);
-$pais = new Pais($db);
-$clima = new Clima($db);
-
-// query caixa de seleção países desse dono
-$stmtPais = $pais->read($_SESSION['user_id']);
-$listaPaises = array();
-while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
-    extract($row_pais);
-    $addArray = array($id, $nome);
-    $listaPaises[] = $addArray;
-}
-
-//queries de ligas e estadios
-
-//query de estadios
-$stmt = $clima->readAll($from_record_num, $records_per_page, $_SESSION['user_id']);
-
-$num = $stmt->rowCount();
-
-// the page where this paging is used
-$page_url = "meusclimas.php?";
-
-    // count all products in the database to calculate total pages
-    $total_rows = $clima->countAll($_SESSION['user_id']);
-
-
-    // paging buttons here
-    echo "<div style='clear:both;'></div>";
-    include_once($_SERVER['DOCUMENT_ROOT']."/elements/paging.php");
-
-echo "<hr>";
-
-// display the products if there are any
-if($num>0){
-
-
-    echo "<table id='tabelaPrincipal' class='table'>";
-    echo "<thead>";
-        echo "<tr>";
-           // echo "<th>Id</th>";
-            echo "<th width='30%'>Clima</th>";
-            echo "<th width='20%'>Temp. Verão</th>";
-            echo "<th width='10%'>Estilo Verão</th>";
-            echo "<th width='10%'>Temp. Outono</th>";
-            echo "<th width='10%'>Estilo Outono</th>";
-            echo "<th width='20%'>Temp. Inverno</th>";
-            echo "<th width='10%'>Estilo Inverno</th>";
-            echo "<th width='10%'>Temp. Primavera</th>";
-            echo "<th width='10%'>Estilo Primavera</th>";
-            echo "<th width='10%'>Hemisfério</th>";
-            echo "<th width='20%'class='wide'>País</th>";
-            echo "<th width='20%' class='wide'>Opções</th>";
-
-        echo "</tr>";
-        echo "</thead>";
-
-        echo "<tbody>";
-
-
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-
-            extract($row);
-
-            echo "<tr id='".$ID."'>";
-                //echo "<td><span id=".$id.">{$id}</span></td>";
-                echo "<td><span class='nomeClima nomeEditavel' id='nom".$ID."'>{$Nome}</span></td>";
-                echo "<td class='wide'><span class='nomeTempVer' id='tempver".$ID."'>{$TempVerao}</span>";
-                echo "<select class='comboTempVer editavel ' id='{$TempVerao}' hidden>'  ";
-
-                       echo "<option value='Muito Frio'>Muito Frio</option>";
-                       echo "<option value='Frio'>Frio</option>";
-                       echo "<option value='Normal'>Normal</option>";
-                       echo "<option value='Quente'>Quente</option>";
-                       echo "<option value='Muito Quente'>Muito Quente</option>";
-
-                    echo "</select>";
-                    echo "</td>";
-
-                echo "<td class='wide'><span class='nomeEstOut' id='estver".$ID."'>{$EstiloVerao}</span>";
-                echo "<select class='comboEstVer editavel ' id='{$EstiloVerao}' hidden>'  ";
-
-                        echo "<option value='Neve Forte' data-season='1'>Neve Forte</option>";
-                        echo "<option value='Neve' data-season='1'>Neve</option>";
-                        echo "<option value='Neve Ocasional' data-season='1'>Neve Ocasional</option>";
-                        echo "<option value='Neblina' data-season='2'>Neblina</option>";
-                        echo "<option value='Chuvoso' data-season='234'>Chuvoso</option>";
-                        echo "<option value='Ventos Fortes' data-season='2345'>Ventos Fortes</option>";
-                        echo "<option value='Equilibrado' data-season='3'>Equilibrado</option>";
-                        echo "<option value='Seco' data-season='45'>Seco</option>";
-                        echo "<option value='Árido' data-season='5'>Árido</option>";
-
-                    echo "</select>";
-                    echo "</td>";
-
-                    echo "<td class='wide'><span class='nomeTempOut' id='tempout".$ID."'>{$TempOutono}</span>";
-                    echo "<select class='comboTempOut editavel ' id='{$TempOutono}' hidden>'  ";
-
-                           echo "<option value='Muito Frio'>Muito Frio</option>";
-                           echo "<option value='Frio'>Frio</option>";
-                           echo "<option value='Normal'>Normal</option>";
-                           echo "<option value='Quente'>Quente</option>";
-                           echo "<option value='Muito Quente'>Muito Quente</option>";
-
-                        echo "</select>";
-                        echo "</td>";
-
-                    echo "<td class='wide'><span class='nomeEstOut' id='estout".$ID."'>{$EstiloOutono}</span>";
-                    echo "<select class='comboEstOut editavel ' id='{$EstiloOutono}' hidden>'  ";
-
-                            echo "<option value='Neve Forte' data-season='1'>Neve Forte</option>";
-                            echo "<option value='Neve' data-season='1'>Neve</option>";
-                            echo "<option value='Neve Ocasional' data-season='1'>Neve Ocasional</option>";
-                            echo "<option value='Neblina' data-season='2'>Neblina</option>";
-                            echo "<option value='Chuvoso' data-season='234'>Chuvoso</option>";
-                            echo "<option value='Ventos Fortes' data-season='2345'>Ventos Fortes</option>";
-                            echo "<option value='Equilibrado' data-season='3'>Equilibrado</option>";
-                            echo "<option value='Seco' data-season='45'>Seco</option>";
-                            echo "<option value='Árido' data-season='5'>Árido</option>";
-
-                        echo "</select>";
-                        echo "</td>";
-
-                        echo "<td class='wide'><span class='nomeTempInv' id='tempinv".$ID."'>{$TempInverno}</span>";
-                        echo "<select class='comboTempInv editavel ' id='{$TempInverno}' hidden>'  ";
-
-                               echo "<option value='Muito Frio'>Muito Frio</option>";
-                               echo "<option value='Frio'>Frio</option>";
-                               echo "<option value='Normal'>Normal</option>";
-                               echo "<option value='Quente'>Quente</option>";
-                               echo "<option value='Muito Quente'>Muito Quente</option>";
-
-                            echo "</select>";
-                            echo "</td>";
-
-                        echo "<td class='wide'><span class='nomeEstInv' id='estinv".$ID."'>{$EstiloInverno}</span>";
-                        echo "<select class='comboEstInv editavel ' id='{$EstiloInverno}' hidden>'  ";
-
-                                echo "<option value='Neve Forte' data-season='1'>Neve Forte</option>";
-                                echo "<option value='Neve' data-season='1'>Neve</option>";
-                                echo "<option value='Neve Ocasional' data-season='1'>Neve Ocasional</option>";
-                                echo "<option value='Neblina' data-season='2'>Neblina</option>";
-                                echo "<option value='Chuvoso' data-season='234'>Chuvoso</option>";
-                                echo "<option value='Ventos Fortes' data-season='2345'>Ventos Fortes</option>";
-                                echo "<option value='Equilibrado' data-season='3'>Equilibrado</option>";
-                                echo "<option value='Seco' data-season='45'>Seco</option>";
-                                echo "<option value='Árido' data-season='5'>Árido</option>";
-
-                            echo "</select>";
-                            echo "</td>";
-
-                            echo "<td class='wide'><span class='nomeTempPri' id='temppri".$ID."'>{$TempPrimavera}</span>";
-                            echo "<select class='comboTempPri editavel ' id='{$TempPrimavera}' hidden>'  ";
-
-                                   echo "<option value='Muito Frio'>Muito Frio</option>";
-                                   echo "<option value='Frio'>Frio</option>";
-                                   echo "<option value='Normal'>Normal</option>";
-                                   echo "<option value='Quente'>Quente</option>";
-                                   echo "<option value='Muito Quente'>Muito Quente</option>";
-
-                                echo "</select>";
-                                echo "</td>";
-
-                            echo "<td class='wide'><span class='nomeEstPri' id='estpri".$ID."'>{$EstiloPrimavera}</span>";
-                            echo "<select class='comboEstPri editavel ' id='{$EstiloPrimavera}' hidden>'  ";
-
-                                    echo "<option value='Neve Forte' data-season='1'>Neve Forte</option>";
-                                    echo "<option value='Neve' data-season='1'>Neve</option>";
-                                    echo "<option value='Neve Ocasional' data-season='1'>Neve Ocasional</option>";
-                                    echo "<option value='Neblina' data-season='2'>Neblina</option>";
-                                    echo "<option value='Chuvoso' data-season='234'>Chuvoso</option>";
-                                    echo "<option value='Ventos Fortes' data-season='2345'>Ventos Fortes</option>";
-                                    echo "<option value='Equilibrado' data-season='3'>Equilibrado</option>";
-                                    echo "<option value='Seco' data-season='45'>Seco</option>";
-                                    echo "<option value='Árido' data-season='5'>Árido</option>";
-
-                                echo "</select>";
-                                echo "</td>";
-
-                                if($Hemisferio == 1){
-                                    $nomeHemisferio = "Norte";
-                                } else {
-                                    $nomeHemisferio = "Sul";
-                                }
-                                echo "<td class='wide'><span class='hemisferio' id='hem".$ID."'>{$nomeHemisferio}</span>";
-                                echo "<select class='comboHem editavel ' id='{$Hemisferio}' hidden>'  ";
-
-                                        echo "<option value='0'>Sul</option>";
-                                        echo "<option value='1'>Norte</option>";
-
-                                    echo "</select>";
-                                    echo "</td>";
-
-                echo "<td class='wide'><img src='/images/bandeiras/{$bandeiraPais}' class='bandeira nomePais' id='ban".$ID."'>  <span class='nomePais' id='pai".$ID."'>{$siglaPais}</span>";
-                echo " <select class='comboPais editavel ' id='{$idPais}' hidden>'  ";
-                    //echo "<option>Selecione país...</option>";
-                    for($i = 0; $i < count($listaPaises);$i++){
-                        echo "<option value='{$listaPaises[$i][0]}'>{$listaPaises[$i][1]}</option>";
-                    }
-                    echo "</select>";
-                    echo "</td>";
-                    $optionsString = "<td class='wide'>";
-
-                        $optionsString .= "<a id='edi".$ID."' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
-                        $optionsString .= "<a hidden id='sal".$ID."' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
-                        $optionsString .= "<a hidden id='can".$ID."' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
-                        //$optionsString .= "<a id='del".$ID."' title='Deletar' class='clickable deletar'><i class='far fa-trash-alt inlineButton negative'></i></a>";
-                    $optionsString .= "</td>";
-                    echo $optionsString;
-
-                 echo "</tr>";
-
-            }
-
-    echo "</tbody>";
-    echo "</table>";
-
-}
-
-// tell the user there are no products
-else{
-    echo "<div class='alert alert-info'>Não há climas</div>";
-}
-
-echo('</div>');
-echo('</div>');
-
+    // query caixa de seleção países desse dono
+    $stmtPais = $pais->read($_SESSION['user_id']);
+    $listaPaises = array();
+    while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
+        extract($row_pais);
+        $addArray = array($id, $nome);
+        $listaPaises[] = $addArray;
+    }
 ?>
 
 <script>
+var localData = [];
+var asc = true;
+var activeSort = '';
+var activeDirection = true;
 
-    $(document).ready(function() {
+var listaPaises = <?php echo json_encode($listaPaises); ?>;
+var logged = '<?php echo (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true) ? "true" : "false"; ?>';
+var admin = '<?php echo (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) ? "true" : "false"; ?>';
+var user_id = '<?php echo $_SESSION['user_id'] ?? 0; ?>';
 
-        const styleConstraints = {
-            'Muito Frio': ['Neve', 'Neve Forte', 'Neve Ocasional'],
-            'Frio': ['Chuvoso', 'Neblina', 'Ventos Fortes'],
-            'Normal': ['Chuvoso', 'Equilibrado', 'Ventos Fortes'],
-            'Quente': ['Chuvoso', 'Ventos Fortes', 'Seco'],
-            'Muito Quente': ['Ventos Fortes', 'Seco', 'Árido']
+var tempOptions = ['Muito Frio', 'Frio', 'Normal', 'Quente', 'Muito Quente'];
+var estOptions = ['Neve Forte', 'Neve', 'Neve Ocasional', 'Neblina', 'Chuvoso', 'Ventos Fortes', 'Equilibrado', 'Seco', 'Árido'];
+
+$(document).ready(function($){
+
+    function delay(fn, ms){
+        let timer = 0;
+        return function(...args){
+            clearTimeout(timer);
+            timer = setTimeout(fn.bind(this, ...args), ms || 0);
         };
+    }
 
-        function updateStyleOptions(tempSelect, styleSelect) {
-            const selectedTemp = tempSelect.val();
-            const validStyles = styleConstraints[selectedTemp] || [];
-            const currentStyle = styleSelect.val();
+    load_data();
 
-            // Store the original options if not already stored
-            if (!styleSelect.data('original-options')) {
-                styleSelect.data('original-options', styleSelect.find('option').clone());
+    $('#caixa_pesquisa').keyup(delay(function(e){
+        load_data();
+    }, 400));
+
+    function load_data(){
+        var searchText = $('#caixa_pesquisa').val();
+        $('#loading').show();
+
+        $.ajax({
+            url: "search_climate.php",
+            method: "POST",
+            cache: false,
+            data: { searchText: searchText },
+            success: function(data){
+                $('#loading').hide();
+                localData = JSON.parse(data);
+                activeSort = '';
+                asc = true;
+                updateTable(localData, 1, '', 2);
+            },
+            error: function(){
+                $('#loading').hide();
+            }
+        });
+    }
+
+    function buildOptions(list, selectedValue){
+        var html = '';
+        list.forEach(function(item){
+            html += "<option value='" + item + "' " + (selectedValue === item ? 'selected' : '') + ">" + item + "</option>";
+        });
+        return html;
+    }
+
+    function updateTable(ajax_data, current_page, highlighted, direction){
+        var results_per_page = 18;
+        var total_results = ajax_data.length;
+        var total_pages = Math.ceil(total_results / results_per_page);
+
+        var treated_page;
+        if(current_page == 'final'){
+            treated_page = total_pages;
+        } else if(current_page == 'inicio'){
+            treated_page = 1;
+        } else {
+            treated_page = parseInt(current_page) || 1;
+        }
+
+        var from_result_num = (results_per_page * treated_page) - results_per_page;
+        var pgn = pagination(treated_page, total_pages);
+
+        var tbl = '';
+        tbl += pgn;
+        tbl += "<div class='tbl_user_data'>";
+        tbl += "<table id='tabelaPrincipal' class='table'>";
+        tbl += "<thead>";
+        tbl += "<tr>";
+        tbl += "<th id='Nome' class='headings' width='15%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Clima</th>";
+        tbl += "<th width='8%'>Temp. Verão</th>";
+        tbl += "<th width='9%'>Est. Verão</th>";
+        tbl += "<th width='8%'>Temp. Outono</th>";
+        tbl += "<th width='9%'>Est. Outono</th>";
+        tbl += "<th width='8%'>Temp. Inverno</th>";
+        tbl += "<th width='9%'>Est. Inverno</th>";
+        tbl += "<th width='8%'>Temp. Prim.</th>";
+        tbl += "<th width='9%'>Est. Prim.</th>";
+        tbl += "<th width='6%'>Hemisf.</th>";
+        tbl += "<th id='siglaPais' class='headings' width='6%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;País</th>";
+        tbl += "<th width='5%'>Opções</th>";
+        tbl += "</tr>";
+        tbl += "</thead>";
+        tbl += "<tbody>";
+
+        if(total_results === 0){
+            tbl += "<tr><td colspan='12' style='text-align:center; padding: 2rem;'>Nenhum clima encontrado.</td></tr>";
+        } else {
+            $.each(ajax_data, function(index, val){
+                if(index >= (from_result_num) && index < (from_result_num + results_per_page)){
+                    tbl += "<tr id='" + val['ID'] + "'>";
+                    tbl += "<td><span class='nomeClima nomeEditavel' id='nom" + val['ID'] + "'>" + val['Nome'] + "</span></td>";
+
+                    // Verão
+                    tbl += "<td><span class='nomeTempVer'>" + val['TempVerao'] + "</span>";
+                    tbl += "<select class='comboTempVer editavel' id='seltempver" + val['ID'] + "' hidden>" + buildOptions(tempOptions, val['TempVerao']) + "</select></td>";
+
+                    tbl += "<td><span class='nomeEstVer'>" + val['EstiloVerao'] + "</span>";
+                    tbl += "<select class='comboEstVer editavel' id='selestver" + val['ID'] + "' hidden>" + buildOptions(estOptions, val['EstiloVerao']) + "</select></td>";
+
+                    // Outono
+                    tbl += "<td><span class='nomeTempOut'>" + val['TempOutono'] + "</span>";
+                    tbl += "<select class='comboTempOut editavel' id='seltempout" + val['ID'] + "' hidden>" + buildOptions(tempOptions, val['TempOutono']) + "</select></td>";
+
+                    tbl += "<td><span class='nomeEstOut'>" + val['EstiloOutono'] + "</span>";
+                    tbl += "<select class='comboEstOut editavel' id='selestout" + val['ID'] + "' hidden>" + buildOptions(estOptions, val['EstiloOutono']) + "</select></td>";
+
+                    // Inverno
+                    tbl += "<td><span class='nomeTempInv'>" + val['TempInverno'] + "</span>";
+                    tbl += "<select class='comboTempInv editavel' id='seltempinv" + val['ID'] + "' hidden>" + buildOptions(tempOptions, val['TempInverno']) + "</select></td>";
+
+                    tbl += "<td><span class='nomeEstInv'>" + val['EstiloInverno'] + "</span>";
+                    tbl += "<select class='comboEstInv editavel' id='selestinv" + val['ID'] + "' hidden>" + buildOptions(estOptions, val['EstiloInverno']) + "</select></td>";
+
+                    // Primavera
+                    tbl += "<td><span class='nomeTempPri'>" + val['TempPrimavera'] + "</span>";
+                    tbl += "<select class='comboTempPri editavel' id='seltemppri" + val['ID'] + "' hidden>" + buildOptions(tempOptions, val['TempPrimavera']) + "</select></td>";
+
+                    tbl += "<td><span class='nomeEstPri'>" + val['EstiloPrimavera'] + "</span>";
+                    tbl += "<select class='comboEstPri editavel' id='selestpri" + val['ID'] + "' hidden>" + buildOptions(estOptions, val['EstiloPrimavera']) + "</select></td>";
+
+                    // Hemisfério
+                    var hemisferioTexto = (val['Hemisferio'] === 1 || val['Hemisferio'] === '1' || val['Hemisferio'] === 'Sul') ? 'Sul' : 'Norte';
+                    tbl += "<td><span class='nomeHem'>" + hemisferioTexto + "</span>";
+                    tbl += "<select class='comboHemisferio editavel' id='selhem" + val['ID'] + "' hidden>";
+                    tbl += "<option value='Norte' " + (hemisferioTexto === 'Norte' ? 'selected' : '') + ">Norte</option>";
+                    tbl += "<option value='Sul' " + (hemisferioTexto === 'Sul' ? 'selected' : '') + ">Sul</option>";
+                    tbl += "</select></td>";
+
+                    // País
+                    tbl += "<td><img src='/images/bandeiras/" + (val['bandeiraPais'] || 'flag.png') + "' class='bandeira nomePais' id='ban" + val['ID'] + "'> <span class='nomePais' id='pai" + val['ID'] + "'>" + (val['siglaPais'] || '') + "</span>";
+                    tbl += "<select class='comboPais editavel' id='selpai" + val['ID'] + "' hidden>";
+                    listaPaises.forEach(function(p){
+                        tbl += "<option value='" + p[0] + "' " + (val['idPais'] == p[0] ? 'selected' : '') + ">" + p[1] + "</option>";
+                    });
+                    tbl += "</select></td>";
+
+                    // Ações
+                    tbl += "<td class='actions-col'>";
+                    if(logged === "true"){
+                        tbl += "<a id='edi" + val['ID'] + "' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
+                        tbl += "<a hidden id='sal" + val['ID'] + "' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
+                        tbl += "<a hidden id='can" + val['ID'] + "' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
+                    }
+                    tbl += "</td>";
+
+                    tbl += "</tr>";
+                }
+            });
+        }
+
+        tbl += "</tbody>";
+        tbl += "</table>";
+        tbl += "</div>";
+
+        $('#table-container').html(tbl);
+
+        var showAsc = (direction === 2) ? activeDirection : (direction === 1);
+
+        if(highlighted){
+            $('#' + highlighted).addClass('highlighted');
+            if(showAsc){
+                $('#' + highlighted).find('.descending').addClass('hidden');
+                $('#' + highlighted).find('.ascending').removeClass('hidden');
+            } else {
+                $('#' + highlighted).find('.ascending').addClass('hidden');
+                $('#' + highlighted).find('.descending').removeClass('hidden');
+            }
+            activeSort = highlighted;
+            activeDirection = showAsc;
+        }
+
+        addFilters();
+        bindEvents();
+    }
+
+    function bindEvents(){
+        $('.editar').off('click').on('click', function(){
+            var tbl_row = $(this).closest('tr');
+
+            tbl_row.find('span').each(function(){
+                $(this).attr('original_entry', $(this).html());
+            });
+
+            tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
+            tbl_row.find('.salvar').show();
+            tbl_row.find('.cancelar').show();
+            tbl_row.find('.editar').hide();
+
+            tbl_row.find('span:not(.nomeEditavel)').hide();
+            tbl_row.find('.bandeira').hide();
+            tbl_row.find('select').show();
+        });
+
+        $('.cancelar').off('click').on('click', function(){
+            var tbl_row = $(this).closest('tr');
+
+            tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+            tbl_row.find('select').hide();
+            tbl_row.find('span:not(.nomeEditavel)').show();
+            tbl_row.find('.bandeira').show();
+
+            tbl_row.find('.salvar').hide();
+            tbl_row.find('.cancelar').hide();
+            tbl_row.find('.editar').show();
+
+            tbl_row.find('span').each(function(){
+                $(this).html($(this).attr('original_entry'));
+            });
+        });
+
+        $('.salvar').off('click').on('click', function(){
+            var tbl_row = $(this).closest('tr');
+            var id = tbl_row.attr("id");
+
+            var nomeClima = tbl_row.find('#nom' + id).text().trim();
+            var tempVerao = tbl_row.find('#seltempver' + id).val();
+            var estiloVerao = tbl_row.find('#selestver' + id).val();
+            var tempOutono = tbl_row.find('#seltempout' + id).val();
+            var estiloOutono = tbl_row.find('#selestout' + id).val();
+            var tempInverno = tbl_row.find('#seltempinv' + id).val();
+            var estiloInverno = tbl_row.find('#selestinv' + id).val();
+            var tempPrimavera = tbl_row.find('#seltemppri' + id).val();
+            var estiloPrimavera = tbl_row.find('#selestpri' + id).val();
+            var hemisferio = tbl_row.find('#selhem' + id).val();
+            var pais = tbl_row.find('#selpai' + id).val();
+
+            $.ajax({
+                url: 'alterar_clima.php',
+                type: "POST",
+                dataType: 'json',
+                data: {
+                    id: id,
+                    nomeClima: nomeClima,
+                    tempVerao: tempVerao,
+                    estiloVerao: estiloVerao,
+                    tempOutono: tempOutono,
+                    estiloOutono: estiloOutono,
+                    tempInverno: tempInverno,
+                    estiloInverno: estiloInverno,
+                    tempPrimavera: tempPrimavera,
+                    estiloPrimavera: estiloPrimavera,
+                    hemisferio: hemisferio,
+                    pais: pais
+                },
+                success: function(data){
+                    if(data && data.error && data.error !== ''){
+                        alert(data.error);
+                    }
+                    load_data();
+                },
+                error: function(xhr){
+                    var msg = "Erro, o procedimento não foi realizado. Tente novamente.";
+                    try {
+                        var res = JSON.parse(xhr.responseText);
+                        if(res && res.error) msg = res.error;
+                    } catch(e){}
+                    alert(msg);
+                    load_data();
+                }
+            });
+        });
+    }
+
+    function addFilters(){
+        $('.headings').off('click').on('click', function(){
+            var column = $(this).attr('id');
+            if(!column) return;
+
+            if(activeSort !== column){
+                asc = true;
             }
 
-            // Clear current options
-            styleSelect.empty();
+            localData.sort(function(a, b){
+                var valA = (a[column] || '').toString().toLowerCase();
+                var valB = (b[column] || '').toString().toLowerCase();
 
-            // Add valid options
-            const originalOptions = styleSelect.data('original-options');
-            
-            let foundCheck = false;
-
-            originalOptions.each(function() {
-                const optionVal = $(this).val();
-                if (validStyles.includes(optionVal)) {
-                    styleSelect.append($(this).clone());
-                    if(optionVal == currentStyle){
-                        foundCheck = true;
-                    }
+                if(asc){
+                    return (valA > valB) ? 1 : ((valA < valB) ? -1 : 0);
+                } else {
+                    return (valA < valB) ? 1 : ((valA > valB) ? -1 : 0);
                 }
             });
 
-            // If the current style is no longer valid, select the first valid option
-            if (foundCheck) {
-                styleSelect.val(currentStyle);
-            } else {
-                 if(styleSelect.find('option').length > 0){
-                     styleSelect.prop('selectedIndex', 0);
-                 }
+            var currentAsc = asc;
+            asc = !asc;
+            updateTable(localData, 1, column, currentAsc ? 1 : 0);
+        });
+
+        $('.page_link').off('click').on('click', function(e){
+            e.preventDefault();
+            var target_page = $(this).attr('id');
+            updateTable(localData, target_page, activeSort, 2);
+        });
+    }
+
+    function pagination(current_page, total_pages){
+        var pgn = '<ul class="pagination">';
+        if(total_pages > 1){
+            var prev_page = parseInt(current_page) - 1;
+            var next_page = parseInt(current_page) + 1;
+
+            if(current_page > 1){
+                pgn += '<li><a class="page_link" id="inicio" title="Primeira Página">&laquo;</a></li>';
+                pgn += '<li><a class="page_link" id="' + prev_page + '" title="Página Anterior">&lsaquo;</a></li>';
+            }
+
+            var range = 2;
+            var initial_num = current_page - range;
+            var condition_limit_num = (current_page + range) + 1;
+
+            for (var x = initial_num; x < condition_limit_num; x++) {
+                if ((x > 0) && (x <= total_pages)) {
+                    if (x == current_page) {
+                        pgn += '<li class="active"><a>' + x + ' <span class="sr-only">(current)</span></a></li>';
+                    } else {
+                        pgn += '<li><a class="page_link" id="' + x + '">' + x + '</a></li>';
+                    }
+                }
+            }
+
+            if(current_page < total_pages){
+                pgn += '<li><a class="page_link" id="' + next_page + '" title="Próxima Página">&rsaquo;</a></li>';
+                pgn += '<li><a class="page_link" id="final" title="Última Página">&raquo;</a></li>';
             }
         }
-
-         $('.editar').click(function(){
-        var tbl_row =  $(this).closest('tr');
-        tbl_row.find('span').each(function(index, val){
-            $(this).attr('original_entry', $(this).html());
-
-        });
-		let id = tbl_row.attr("id")
-        tbl_row.find('.nomeEditavel').css("cursor","text");
-        // tbl_row.find('.nomeLiga').css("cursor","text");
-        // tbl_row.find('.nomeLiga').css("pointer-events","none");
-        tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
-        tbl_row.find('.salvar').show();
-        tbl_row.find('.cancelar').show();
-        tbl_row.find('.editar').hide();
-        // tbl_row.find('.deletar').hide();
-        tbl_row.find('.nomePais').hide();
-        tbl_row.find('.nomeTempVer').hide();
-        tbl_row.find('.nomeEstVer').hide();
-        tbl_row.find('.nomeTempOut').hide();
-        tbl_row.find('.nomeEstOut').hide();
-        tbl_row.find('.nomeTempInv').hide();
-        tbl_row.find('.nomeEstInv').hide();
-        tbl_row.find('.nomeTempPri').hide();
-        tbl_row.find('.nomeEstPri').hide();
-        tbl_row.find('.hemisferio').hide();
-        
-        // tbl_row.find('.newlogoedit').show();
-        // tbl_row.find('.logoimage').hide();
-
-        var paisId = tbl_row.find('.comboPais').attr('id');
-        tbl_row.find('.comboPais').show().val(paisId);
-        
-        var tempVerId = tbl_row.find('.comboTempVer').attr('id');
-        var comboTempVer = tbl_row.find('.comboTempVer');
-        var comboEstVer = tbl_row.find('.comboEstVer');
-        comboTempVer.show().val(tempVerId);
-         var estVerId = tbl_row.find('.comboEstVer').attr('id');
-        comboEstVer.show().val(estVerId);
-        updateStyleOptions(comboTempVer, comboEstVer);
-       
-
-        var tempOutId = tbl_row.find('.comboTempOut').attr('id');
-        var comboTempOut = tbl_row.find('.comboTempOut');
-        var comboEstOut = tbl_row.find('.comboEstOut');
-        comboTempOut.show().val(tempOutId);
-        var estOutId = tbl_row.find('.comboEstOut').attr('id');
-        comboEstOut.show().val(estOutId);
-        updateStyleOptions(comboTempOut, comboEstOut);
-        
-        
-        var tempInvId = tbl_row.find('.comboTempInv').attr('id');
-        var comboTempInv = tbl_row.find('.comboTempInv');
-        var comboEstInv = tbl_row.find('.comboEstInv');
-        comboTempInv.show().val(tempInvId);
-        var estInvId = tbl_row.find('.comboEstInv').attr('id');
-        comboEstInv.show().val(estInvId);
-        updateStyleOptions(comboTempInv, comboEstInv);
-        
-        var tempPriId = tbl_row.find('.comboTempPri').attr('id');
-        var comboTempPri = tbl_row.find('.comboTempPri');
-        var comboEstPri = tbl_row.find('.comboEstPri');
-        comboTempPri.show().val(tempPriId);
-        var estPriId = tbl_row.find('.comboEstPri').attr('id');
-        comboEstPri.show().val(estPriId);
-        updateStyleOptions(comboTempPri, comboEstPri);
-
-        var hemId = tbl_row.find('.comboHem').attr('id');
-        tbl_row.find('.comboHem').show().val(hemId);
-
-    });
-
-    // Event listeners for Temp dropdown changes
-    $(document).on('change', '.comboTempVer', function() {
-        var tbl_row = $(this).closest('tr');
-        updateStyleOptions($(this), tbl_row.find('.comboEstVer'));
-    });
-    $(document).on('change', '.comboTempOut', function() {
-        var tbl_row = $(this).closest('tr');
-        updateStyleOptions($(this), tbl_row.find('.comboEstOut'));
-    });
-    $(document).on('change', '.comboTempInv', function() {
-        var tbl_row = $(this).closest('tr');
-        updateStyleOptions($(this), tbl_row.find('.comboEstInv'));
-    });
-    $(document).on('change', '.comboTempPri', function() {
-        var tbl_row = $(this).closest('tr');
-        updateStyleOptions($(this), tbl_row.find('.comboEstPri'));
-    });
-
-
-        $('.cancelar').click(function(){
-        var tbl_row =  $(this).closest('tr');
-        // tbl_row.find('.nomeLiga').css("pointer-events","auto");
-        // tbl_row.find('.nomeLiga').css("cursor","auto");
-        tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
-        
-        tbl_row.find('.comboPais').hide();
-        tbl_row.find('.nomePais').show();
-        
-        tbl_row.find('.comboTempVer').hide();
-        tbl_row.find('.nomeTempVer').show();
-        tbl_row.find('.comboEstVer').hide();
-        tbl_row.find('.nomeEstVer').show();
-        
-        tbl_row.find('.comboTempOut').hide();
-        tbl_row.find('.nomeTempOut').show();
-        tbl_row.find('.comboEstOut').hide();
-        tbl_row.find('.nomeEstOut').show();
-        
-        tbl_row.find('.comboTempInv').hide();
-        tbl_row.find('.nomeTempInv').show();
-        tbl_row.find('.comboEstInv').hide();
-        tbl_row.find('.nomeEstInv').show();
-        
-        tbl_row.find('.comboTempPri').hide();
-        tbl_row.find('.nomeTempPri').show();
-        tbl_row.find('.comboEstPri').hide();
-        tbl_row.find('.nomeEstPri').show();
-        
-        tbl_row.find('.comboHem').hide();
-        tbl_row.find('.hemisferio').show();
-        
-        tbl_row.find('.salvar').hide();
-        tbl_row.find('.cancelar').hide();
-        tbl_row.find('.editar').show();
-        // tbl_row.find('.deletar').show();
-        // tbl_row.find('.newlogoedit').hide();
-        // tbl_row.find('.logoimage').show();
-
-        tbl_row.find('span').each(function(index, val){
-            $(this).html($(this).attr('original_entry'));
-        });
-    });
-
-    $('.salvar').click(function(){
-        var tbl_row =  $(this).closest('tr');
-        // tbl_row.find('.nomeLiga').css("pointer-events","auto");
-        // tbl_row.find('.nomeLiga').css("cursor","auto");
-        tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
-        
-        tbl_row.find('.comboPais').hide();
-        tbl_row.find('.nomePais').show();
-        
-        tbl_row.find('.comboTempVer').hide();
-        tbl_row.find('.nomeTempVer').show();
-        tbl_row.find('.comboEstVer').hide();
-        tbl_row.find('.nomeEstVer').show();
-        
-        tbl_row.find('.comboTempOut').hide();
-        tbl_row.find('.nomeTempOut').show();
-        tbl_row.find('.comboEstOut').hide();
-        tbl_row.find('.nomeEstOut').show();
-        
-        tbl_row.find('.comboTempInv').hide();
-        tbl_row.find('.nomeTempInv').show();
-        tbl_row.find('.comboEstInv').hide();
-        tbl_row.find('.nomeEstInv').show();
-        
-        tbl_row.find('.comboTempPri').hide();
-        tbl_row.find('.nomeTempPri').show();
-        tbl_row.find('.comboEstPri').hide();
-        tbl_row.find('.nomeEstPri').show();
-        
-        tbl_row.find('.comboHem').hide();
-        tbl_row.find('.hemisferio').show();
-        
-        tbl_row.find('.salvar').hide();
-        tbl_row.find('.cancelar').hide();
-        tbl_row.find('.editar').show();
-        // tbl_row.find('.deletar').show();
-        // tbl_row.find('.newlogoedit').hide();
-        // tbl_row.find('.logoimage').show();
-
-        var id = tbl_row.attr('id');
-        var nomeClima = tbl_row.find('#nom'+id).html();
-        var tempVerao = tbl_row.find('.comboTempVer').val();
-        var estiloVerao = tbl_row.find('.comboEstVer').val();
-        
-        var tempOutono = tbl_row.find('.comboTempOut').val();
-        var estiloOutono = tbl_row.find('.comboEstOut').val();
-        
-        var tempInverno = tbl_row.find('.comboTempInv').val();
-        var estiloInverno = tbl_row.find('.comboEstInv').val();
-        
-        var tempPrimavera = tbl_row.find('.comboTempPri').val();
-        var estiloPrimavera = tbl_row.find('.comboEstPri').val();
-        
-        var hemisferio = tbl_row.find('.comboHem').val();
-        
-        var pais = tbl_row.find('.comboPais').val();
-
-      
-         var formData = new FormData();
-         formData.append('id', id);
-         formData.append('nomeClima', nomeClima);
-         formData.append('tempVerao', tempVerao);
-         formData.append('estiloVerao', estiloVerao);
-         formData.append('tempOutono', tempOutono);
-         formData.append('estiloOutono', estiloOutono);
-         formData.append('tempInverno', tempInverno);
-         formData.append('estiloInverno', estiloInverno);
-         formData.append('tempPrimavera', tempPrimavera);
-         formData.append('estiloPrimavera', estiloPrimavera);
-         formData.append('hemisferio', hemisferio);
-         formData.append('pais', pais);
-
-        //console.log(formData);
-         $.ajax({
-             url: 'alterar_clima.php',
-             processData: false,
-            contentType: false,
-            cache: false,
-            type: "POST",
-            dataType: 'json',
-             data: formData,
-                  success: function(data) {
-                      if(data.error != ''){
-                        alert(data.error)
-                      }
-                      location.reload();
-                  },
-                  error: function(data) {
-                      successmessage = 'Error';
-                      alert("Erro, o procedimento não foi realizado, tente novamente.");
-                      location.reload();
-                  }
-              });
-     });
+        pgn += '</ul>';
+        return pgn;
+    }
 
 });
-
-
-
 </script>
 
-<?php
+<main class="propostas-container">
+    <div class="propostas-card">
+        <div class="header-actions-container">
+            <h2 class="propostas-title">Quadro de climas - <?php echo htmlspecialchars($_SESSION['nomereal'] ?? ''); ?></h2>
+            <div class="header-buttons-wrapper">
+                <div id="search_wrapper">
+                    <span class="material-symbols-outlined">search</span>
+                    <input type="text" id="caixa_pesquisa" placeholder="Buscar clima..." autocomplete="off">
+                </div>
+                <button class="btn-action-primary" onclick="window.location='/ligas/criar_clima.php';">
+                    <span class="material-symbols-outlined">add</span> Criar clima
+                </button>
+            </div>
+        </div>
 
+        <div id="loading" style="display:none;">
+            <img src="/images/loading.gif" alt="Carregando...">
+        </div>
+
+        <div id="table-container"></div>
+    </div>
+</main>
+
+<?php
 } else {
-    echo "Usuário, por favor refaça o login.";
+    echo "<main class='propostas-container'><div class='propostas-card'><p>Usuário, por favor refaça o login.</p></div></main>";
 }
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
-
 ?>

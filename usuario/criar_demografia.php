@@ -18,18 +18,22 @@ $pais->id = $_GET['idTime'];
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "Inserir fatia demográfica";
-$css_filename = "indexRanking";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'criar';
+$aux_css = 'criar_pais_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
-echo"<div>";
-
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && $pais->checarDono($pais->id,$_SESSION['user_id'])){
+?>
 
+<div class="propostas-container">
+<div class="propostas-card">
+<h2 class="propostas-title">➕ Inserir Fatia Demográfica</h2>
+<div id='errorbox'></div>
+
+<?php
     $error_msg = '';
-
 
 // if the form was submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
@@ -104,91 +108,47 @@ for (i = 0; i < close.length; i++) {
 }
 </script>
 
-
+<div id='inscricao'>
 <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF'] . "?idTime=" . $pais->id ?>'>
 
-    <table class='table table-below float-table'>
+    <label for="origem">Origem</label>
+    <?php
+    $stmt = $pais->listaOrigens();
+    echo "<select class='form-control' id='origem' name='origem'>";
+    while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
+        extract($row_category);
+        echo "<option value='{$ID}' data-nomeMasc='{$nomeM}' data-sobrenomeMasc='{$sobrenomeM}'>{$Origem}</option>";
+    }
+    echo "</select>";
+    ?>
 
-    <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Origem</td>
-            <td class="td_inv input_nome_time">
-                <?php
-                // ler times do banco de dados
-                $stmt = $pais->listaOrigens();
+    <label for="fatorPercentual">Fator percentual (%)</label>
+    <input type="number" class='form-control inputHerdeiro' min='1' max='100' value='10' name='fatorPercentual' id='fatorPercentual'>
 
-                // put them in a select drop-down
-                echo "<select class='form-control' id='origem' name='origem'>";
+    <label for="ocorrenciaNomeDuplo">Ocorrência de nome duplo (%)</label>
+    <input type="number" class='form-control inputHerdeiro' min='0' max='100' value='0' name='ocorrenciaNomeDuplo' id='ocorrenciaNomeDuplo'>
 
-                while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
-                    extract($row_category);
-                    echo "<option value='{$ID}' data-nomeMasc='{$nomeM}' data-sobrenomeMasc='{$sobrenomeM}'>{$Origem}</option>";
-                }
+    <label for="indiceMiscigenacao">Índice de miscigenação (%)</label>
+    <input type="number" class='form-control inputHerdeiro' min='0' max='100' value='0' id='indiceMiscigenacao' name='indiceMiscigenacao'>
 
-                echo "</select>";
-                ?>
-            </td>
-        </tr>
+    <label for="nomeOuSobrenome">Nome ou Sobrenome</label>
+    <select class='form-control' id='nomeOuSobrenome' name='nomeOuSobrenome'>
+        <option id='opcaoNome' value='10'>Nome apenas</option>
+        <option id='opcaoSobrenome' value='1'>Sobrenome apenas</option>
+        <option id='opcaoAmbos' value='11'>Ambos</option>
+    </select>
 
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Fator percentual (%)</td>
-            <td class="td_inv input_nome_time fatorPercentual">
-
-            <input type="number" class='form-control inputHerdeiro' min='1' max='100' value='10' name='fatorPercentual'>
-
-            </td>
-        </tr>
-
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Ocorrência de nome duplo (%)</td>
-            <td class="td_inv input_nome_time ocorrenciaNomeDuplo">
-
-            <input type="number" class='form-control inputHerdeiro' min='0' max='100' value='0' name='ocorrenciaNomeDuplo'>
-
-            </td>
-        </tr>
-
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Índice de miscigenação (%)</td>
-            <td class="td_inv input_nome_time indiceMiscigenacao">
-
-            <input type="number" class='form-control inputHerdeiro' min='0' max='100' value='0' id='indiceMiscigenacao'  name='indiceMiscigenacao'>
-
-            </td>
-        </tr>
-
-        <tr class="tr_inv">
-            <td class="td_inv input_nome_time">Nome ou Sobrenome</td>
-            <td class="td_inv input_nome_time">
-                <?php
-                // put them in a select drop-down
-                echo "<select class='form-control' id='nomeOuSobrenome' name='nomeOuSobrenome'>";
-                echo "<option id='opcaoNome' value='10'>Nome apenas</option>";
-                echo "<option id='opcaoSobrenome'  value='1'>Sobrenome apenas</option>";
-                echo "<option id='opcaoAmbos' value='11'>Ambos</option>";
-                echo "</select>";
-                ?>
-            </td>
-        </tr>
-
-        <tr class="tr_inv btn_area">
-            <td class="td_inv btn_area"></td>
-            <td class="td_inv btn_area">
-            <input type='hidden' name='pais' value='<?php echo $pais->id ?>'/>
-                <button type="submit" name="criar" class="btn">Inserir</button>
-            </td>
-        </tr>
-
-    </table>
+    <input type='hidden' name='pais' value='<?php echo $pais->id ?>'/>
+    <div style="margin-top: 24px;">
+        <button type="submit" name="criar" class="btn-submit">Inserir</button>
+    </div>
 </form>
+</div>
 
 <script>
-
 $("#origem").on("change",function(){
-    //console.log("Inicio");
     var temNomeMasc = $('option:selected', this).attr("data-nomeMasc");
     var temSobrenomeMasc = $('option:selected', this).attr("data-sobrenomeMasc");
-    //console.log(temNomeMasc);
-    //console.log(temSobrenomeMasc);
     if(temNomeMasc < 1){
         $("#opcaoNome").hide();
     } else {
@@ -208,15 +168,12 @@ $("#origem").on("change",function(){
     } else {
         $("#opcaoAmbos").hide();
     }
-
-
 });
 
 $("#nomeOuSobrenome").val(11);
 
 $("#nomeOuSobrenome").on("change", function(){
     if($(this).val() != 11){
-      console.log(10);
         $("#indiceMiscigenacao").val(100);
         $("#indiceMiscigenacao").prop("readonly", true).change();
     } else {
@@ -224,19 +181,17 @@ $("#nomeOuSobrenome").on("change", function(){
         $("#indiceMiscigenacao").prop("readonly", false).change();
     }
 });
-
-
 </script>
 
 <?php
-
-    } else {
-
-    echo "Usuário sem permissão para inserir demografia nesse país, por favor faça o login.";
+} else {
+    echo "<div class='alert alert-danger'>Usuário sem permissão para inserir demografia nesse país, por favor faça o login.</div>";
 }
+?>
 
+</div>
+</div>
 
-echo "</div>";
-
+<?php
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 ?>

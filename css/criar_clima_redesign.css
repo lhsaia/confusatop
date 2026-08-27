@@ -1,0 +1,244 @@
+﻿/* ==========================================================================
+   CONFUSA.top - Criar Clima Redesign (Light Theme System)
+   ========================================================================== */
+
+body {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  display: flex;
+  flex-direction: column;
+  padding-top: 60px;
+  background-image: 
+    linear-gradient(180deg, rgba(248, 250, 252, 0.85) 0%, rgba(226, 232, 240, 0.95) 100%),
+    url("/images/confusa-blue.png") !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+  overflow-x: hidden;
+}
+
+.bg {
+  display: none !important;
+}
+
+html body #logged-user {
+  display: none !important;
+}
+
+.propostas-container {
+  width: 100%;
+  max-width: 750px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  flex: 1;
+  box-sizing: border-box;
+}
+
+.propostas-card {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 18px !important;
+  padding: 2.25rem !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+}
+
+.propostas-title {
+  font-family: 'Kanit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1.6rem !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+}
+
+.card-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  padding-bottom: 1rem;
+  width: 100%;
+}
+
+.btn-voltar {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  color: #475569;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.btn-voltar:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+#inscricao {
+  width: 100% !important;
+  max-width: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+#inscricao label {
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  display: block !important;
+  margin-top: 16px !important;
+  margin-bottom: 4px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+#inscricao input[type='text'],
+#inscricao input[type='number'],
+#inscricao select,
+#inscricao .form-control {
+  width: 100% !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  color: #334155 !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.95rem !important;
+  outline: none !important;
+  transition: all 0.25s ease !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
+}
+
+#inscricao input:focus,
+#inscricao select:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+  outline: none !important;
+}
+
+.season-block {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.season-title {
+  font-family: 'Kanit', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #0284c7;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.season-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Submit buttons container matching criar_time / arbitros */
+.form-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.form-actions button.btn {
+  background: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.12) !important;
+  color: #475569 !important;
+  padding: 12px 20px !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 0.95rem !important;
+  cursor: pointer !important;
+  transition: all 0.25s ease !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+.form-actions button.btn .material-symbols-outlined {
+  font-size: 20px !important;
+}
+
+.form-actions button.btn:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.form-actions button#salvar,
+.form-actions button[type="submit"] {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;
+}
+
+.form-actions button#salvar:hover,
+.form-actions button[type="submit"]:hover {
+  background: linear-gradient(135deg, #0369a1, #075985) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4) !important;
+}
+
+.form-actions button#salvar .material-symbols-outlined,
+.form-actions button[type="submit"] .material-symbols-outlined {
+  color: #ffffff !important;
+}
+
+/* Alertas */
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.alert-success {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: #166534;
+}
+
+.alert-danger {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+}
+
+.closebtn {
+  font-size: 20px;
+  cursor: pointer;
+  margin-left: 12px;
+}

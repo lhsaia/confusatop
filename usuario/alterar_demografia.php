@@ -21,36 +21,30 @@ $num = $stmt->rowCount();
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = $nomePagina;
-$css_filename = "indexRanking";
-$aux_css = "usuario";
+$css_filename = "home_redesign";
+$aux_css = "meuspaises_redesign";
 $css_login = 'login';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && $pais->checarDono($pais->id,$_SESSION['user_id'])){
 
-
-
 ?>
 
-<div id="quadro-container">
-<div align="center" id="quadroTimes">
-<button id='importar_time' onclick="window.location='/usuario/criar_demografia.php?idTime=<?php echo $pais->id ?>';">Criar demografia</button>
-<h2><?php echo $nomePagina?></h2>
+<div class="propostas-container">
+<div class="propostas-card">
+<div class="header-actions-container">
+    <h2 class="propostas-title"><?php echo $nomePagina?></h2>
+    <button class='btn-action-primary' onclick="window.location='/usuario/criar_demografia.php?idTime=<?php echo $pais->id ?>';">Criar demografia</button>
+</div>
 <div id='error_box'></div>
 
-<hr>
-
 <?php
-
-echo "<div style='clear:both;'></div>";
-
-
-echo "<hr>";
 
 // display the products if there are any
 if($num>0){
 
+    echo "<div class='tbl_user_data'>";
     echo "<table id='tabelaPrincipal' class='table'>";
     echo "<thead id='thead".$pais->id."'>";
         echo "<tr>";
@@ -123,15 +117,18 @@ if($num>0){
 
     echo "</tbody>";
     echo "</table>";
+    echo "</div>";
 
     } else {
         echo "<div class='alert alert-info'>Não há demografias para o país selecionado</div>";
     }
 
 } else {
-    echo "<div class='alert alert-info'>Usuário sem permissão para realizar essa ação</div>";
+    echo "<div class='alert alert-danger'>Usuário sem permissão para realizar essa ação</div>";
 }
 
+echo "</div>";
+echo "</div>";
 ?>
 <script>
 

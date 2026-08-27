@@ -34,11 +34,65 @@
   padding: 1.5rem 1rem !important;
 }
 
-/* Toolbar card container */
-#toolbar-card-container {
+/* Card header flex and top buttons */
+.card-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  padding-bottom: 1rem;
+  width: 100%;
+}
+
+.btn-voltar {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  color: #475569;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.btn-voltar:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+.btn-hexagen-top {
+  cursor: pointer !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 8px !important;
+  gap: 6px !important;
+  padding: 8px 16px !important;
+  background: rgba(2, 132, 199, 0.08) !important;
+  border: 1px solid rgba(2, 132, 199, 0.2) !important;
+  border-radius: 8px !important;
+  color: #0284c7 !important;
+  font-weight: 600 !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 0.9rem !important;
+  transition: all 0.2s ease !important;
+  margin: 0 !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+}
+
+.btn-hexagen-top:hover {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #0369a1 !important;
+}
+
+.btn-hexagen-top span.material-symbols-outlined {
+  font-size: 18px !important;
+  color: #0284c7 !important;
 }
 
 /* Toolbar button styles */
@@ -159,33 +213,88 @@
   box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
 }
 
+/* Submit buttons container matching criar_time / tecnico / jogador */
+.form-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.form-actions button.btn,
 #inscricao .btn {
-  background: #0284c7;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-family: 'Kanit', sans-serif;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-  width: 100% !important;
-  display: block !important;
-  margin-right: 0 !important;
-  margin-top: 10px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.12) !important;
+  color: #475569 !important;
+  padding: 12px 20px !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 0.95rem !important;
+  cursor: pointer !important;
+  transition: all 0.25s ease !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: auto !important;
 }
 
+.form-actions button.btn .material-symbols-outlined,
+#inscricao .btn .material-symbols-outlined {
+  font-size: 20px !important;
+}
+
+.form-actions button.btn:hover,
 #inscricao .btn:hover {
-  background: #0369a1;
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
 }
 
-#inscricao .btn[type="reset"] {
-  background: #64748b;
+.form-actions button#salvar,
+.form-actions button[type="submit"],
+#inscricao button[type="submit"] {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;
 }
 
-#inscricao .btn[type="reset"]:hover {
-  background: #475569;
+.form-actions button#salvar:hover,
+.form-actions button[type="submit"]:hover,
+#inscricao button[type="submit"]:hover {
+  background: linear-gradient(135deg, #0369a1, #075985) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4) !important;
+}
+
+.form-actions button#salvar .material-symbols-outlined,
+.form-actions button[type="submit"] .material-symbols-outlined,
+#inscricao button[type="submit"] .material-symbols-outlined {
+  color: #ffffff !important;
+}
+
+.form-actions button#hexagen,
+#inscricao button#hexagen {
+  grid-column: span 2;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3) !important;
+}
+
+.form-actions button#hexagen:hover,
+#inscricao button#hexagen:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.45) !important;
+}
+
+.form-actions button#hexagen .material-symbols-outlined,
+#inscricao button#hexagen .material-symbols-outlined {
+  color: #ffffff !important;
 }
 
 /* Responsividade de tabelas para celular */

@@ -553,3 +553,7 @@ body #hamburger-menu #close-menu[style*="display: block"] {
   display: none !important;
 }
 
+.headings {
+  cursor: pointer !important;
+}
+

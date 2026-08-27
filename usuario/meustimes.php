@@ -7,8 +7,8 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "Meus times - ".($_SESSION['nomereal'] ?? '');
-$css_filename = "indexRanking";
-$aux_css = "usuario";
+$css_filename = "home_redesign";
+$aux_css = "meustimes_redesign";
 $css_login = 'login';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
@@ -188,18 +188,18 @@ function updateTable(ajax_data, current_page, highlighted, direction){
     tbl += "<table id='tabelaPrincipal' class='table'>";
         tbl += "<thead id='headings'>";
 			tbl += "<tr>";
-				tbl += "<th asc='' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspTime</th>";
+				tbl += "<th id='Nome' asc='' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspTime</th>";
 				tbl += "<th asc='' class='headings' width='2%'>Escudo</th>";
 				tbl += "<th asc='' class='headings' width='2%'>Mascote</th>";
 				tbl += "<th asc='' class='headings' width='2%'>Uniforme 1</th>";
 				tbl += "<th asc='' class='headings' width='2%'>Cores 1</th>";
 				tbl += "<th asc='' class='headings' width='2%'>Uniforme 2</th>";
 				tbl += "<th asc='' class='headings' width='2%'>Cores 2</th>";
-				tbl += "<th asc='' class='headings' width='15%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspEstadio</th>";
-				tbl += "<th asc='' class='headings' width='2%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspMax Torcida</th>";
-				tbl += "<th asc='' class='headings' width='2%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspFidelidade</th>";
-				tbl += "<th asc='' class='headings' width='20%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspLiga</th>";
-				tbl += "<th asc='' class='headings' width='20%' class=''><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspPaís</th>";
+				tbl += "<th id='nomeEstadio' asc='' class='headings' width='15%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspEstadio</th>";
+				tbl += "<th id='MaxTorcedores' asc='' class='headings' width='2%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspMax Torcida</th>";
+				tbl += "<th id='Fidelidade' asc='' class='headings' width='2%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspFidelidade</th>";
+				tbl += "<th id='nomeLiga' asc='' class='headings' width='20%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspLiga</th>";
+				tbl += "<th id='siglaPais' asc='' class='headings' width='20%' class=''><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspPaís</th>";
 				tbl += "<th asc='' class='headings' width='5%' class=''>Opções</th>";
 			tbl += "</tr>";
         tbl +=  "</thead>";
@@ -363,6 +363,7 @@ $('.quadrado-uniforme').each(function(i, obj) {
     tbl_row.find('.cancelar').show();
     tbl_row.find('.editar').hide();
     tbl_row.find('.deletar').hide();
+    tbl_row.find('.promover').hide();
     tbl_row.find('.nomePais').hide();
     tbl_row.find('.hiddenInput').show();
     tbl_row.find('.fidelidadeFixo').hide();
@@ -410,6 +411,7 @@ $('.quadrado-uniforme').each(function(i, obj) {
     tbl_row.find('.cancelar').hide();
     tbl_row.find('.editar').show();
     tbl_row.find('.deletar').show();
+    tbl_row.find('.promover').show();
     tbl_row.find('.thumb').removeClass('editableThumb');
     tbl_row.find('.hiddenInput').hide();
     tbl_row.find('.comboTorcedores').hide();
@@ -642,51 +644,37 @@ $(document).on('click', '.pagination_link', function(){
 
 
 function pagination(current_page, total_pages){
-var pgn = '';
-pgn += "<ul class='pagination'>";
+    var pgn = '<ul class="pagination">';
+    if(total_pages > 1){
+        var prev_page = parseInt(current_page) - 1;
+        var next_page = parseInt(current_page) + 1;
 
-// button for first page
-if(current_page>1){
-    pgn +=  "<li><button class='pagination_link' id='inicio' title='Ir para o início'>";
-    pgn +=  "Inicio";
-    pgn +=  "</button></li>";
-}
-
-// range of links to show
-const range = 2;
-
-// display links to 'range of pages' around 'current page'
-var initial_num = current_page - range;
-var condition_limit_num = (+current_page + +range)  + +1;
-
-// teste com While
-var x;
-if(initial_num > 0){
-    x = initial_num;
-} else {
-    x = 1;
-}
-
-while(x <= total_pages && x < condition_limit_num){
-    if (x == current_page) {
-            pgn += "<li><button class='pagination_link' id='"+x+"' disabled>"+x+"<span class=\"sr-only\">(current)</span></button></li>";
+        if(current_page > 1){
+            pgn += '<li><button class="pagination_link" id="inicio" title="Primeira Página">&laquo;</button></li>';
+            pgn += '<li><button class="pagination_link" id="' + prev_page + '" title="Página Anterior">&lsaquo;</button></li>';
         }
-        else {
-            pgn += "<li><button class='pagination_link' id='"+x+"'>"+x+"</button></li>";
+
+        var range = 2;
+        var initial_num = parseInt(current_page) - range;
+        var condition_limit_num = parseInt(current_page) + range + 1;
+
+        for (var x = initial_num; x < condition_limit_num; x++) {
+            if ((x > 0) && (x <= total_pages)) {
+                if (x == current_page) {
+                    pgn += '<li><button class="pagination_link" id="' + x + '" disabled>' + x + '<span class="sr-only">(current)</span></button></li>';
+                } else {
+                    pgn += '<li><button class="pagination_link" id="' + x + '">' + x + '</button></li>';
+                }
+            }
         }
-    x = x+1;
-}
 
-// button for last page
-if(current_page<total_pages){
-    pgn += "<li><button class='pagination_link' id='final' title='Última página é "+total_pages+".'>";
-    pgn += "Final";
-    pgn += "</button></li>";
-}
-
-pgn += "</ul>";
-
-return pgn;
+        if(current_page < total_pages){
+            pgn += '<li><button class="pagination_link" id="' + next_page + '" title="Próxima Página">&rsaquo;</button></li>';
+            pgn += '<li><button class="pagination_link" id="final" title="Última Página">&raquo;</button></li>';
+        }
+    }
+    pgn += '</ul>';
+    return pgn;
 }
 
 
@@ -762,23 +750,23 @@ function hexToRgb(hex) {
 
 </script>
 
-<div id="quadro-container">
-<div align="center" id="quadroTimes">
-<div id='search_wrapper'><input type=text id='caixa_pesquisa' placeholder='Pesquisar...'><span class='material-symbols-outlined'>search</span></div>
-<button id='importar_time' onclick="window.location='/times/criar_time.php';">Criar time</button>
-<button id='importar_time' onclick="window.location='/times/importar_time.php';">Importar time</button>
-<h2>Quadro de times - <?php echo $_SESSION['nomereal']?></h2>
+<div class="propostas-container">
+<div class="propostas-card">
 
-<hr>
+<div class="header-actions-container">
+    <h2 class="propostas-title">Quadro de times - <?php echo $_SESSION['nomereal']?></h2>
+    <div class="header-buttons-wrapper">
+        <div id='search_wrapper'><input type=text id='caixa_pesquisa' placeholder='Pesquisar...'><span class='material-symbols-outlined'>search</span></div>
+        <button class='btn-action-primary' onclick="window.location='/times/criar_time.php';">Criar time</button>
+        <button class='btn-action-primary' onclick="window.location='/times/importar_time.php';">Importar time</button>
+    </div>
+</div>
+
 <div id='error_box'></div>
 
 <?php
 
-echo "<div style='clear:both;'></div>";
-echo "<hr>";
 echo "<div class='tbl_user_data'><img id='loading' src='/images/icons/ajax-loader.gif'></div>";
-
-// echo "<div class='alert alert-info'>Não há times</div>";
 
 echo('</div>');
 echo('</div>');

@@ -99,29 +99,43 @@ color:#E9E5AA;
   padding: 2px 5px 2px 5px;
 }
 
-#top-bar, #bottom-bar{
-  background-color: gray !important;
-  color:black !important;
+html, body {
+  min-height: 100vh !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
 }
 
-#top-bar span{
-  color: darkgray !important;
+body {
+  background-color: #282828 !important;
+  background-image: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding-top: 60px !important;
+  box-sizing: border-box;
 }
 
-#botaoVoltar {
-  background-color: black !important;
+html body #logged-user {
+  display: none !important;
 }
 
-.icon{
-  color:black !important;
+html body #top-bar {
+  background: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
-#bottom-bar a:visited{
-  color:darkgray !important;
-}
-
-#bottom-bar a{
-  color:darkgray !important;
+html body #bottom-bar {
+  position: relative !important;
+  bottom: auto !important;
+  width: 100% !important;
+  flex-shrink: 0 !important;
+  background: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  margin-top: auto !important;
+  z-index: 10 !important;
 }
 
 #copyright-text::after{
@@ -132,7 +146,9 @@ color:#E9E5AA;
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  height: calc( 100% - 45px );
+  flex: 1 0 auto !important;
+  min-height: calc(100vh - 110px) !important;
+  height: auto !important;
   border-radius:10px;
   box-sizing: border-box;
 }

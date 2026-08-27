@@ -22,43 +22,61 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $db = $database->getConnection();
     $pais = new Pais($db);
     function imageImporter($file_name, $target_filename){
+      @ini_set('memory_limit', '512M');
       $maxDim = 100;
-      list($width, $height, $type, $attr) = getimagesize( $file_name );
+      list($width, $height, $type) = getimagesize( $file_name );
       if ( $width > $maxDim || $height > $maxDim ) {
-      //  $target_filename = $file_name;
         $ratio = $width/$height;
         if( $ratio > 1) {
-          $new_width = $maxDim;
-          $new_height = $maxDim/$ratio;
+          $new_width = round($maxDim);
+          $new_height = round($maxDim/$ratio);
         } else {
-          $new_width = $maxDim*$ratio;
-          $new_height = $maxDim;
+          $new_width = round($maxDim*$ratio);
+          $new_height = round($maxDim);
         }
-    } else {
-      $new_width = $width;
-      $new_height = $height;
-    }
-        //$save_to_path = "uploads/compressed_file.png";
-        if($type != "image/png"){
-          $src = imagecreatefromstring( file_get_contents( $file_name ) );
-        } else {
+      } else {
+        $new_width = $width;
+        $new_height = $height;
+      }
+
+      $src = null;
+      if ($type == IMAGETYPE_PNG || $type == "image/png") {
+        $src = @imagecreatefrompng($file_name);
+        if (!$src && function_exists('compress_png')) {
           $compressed_png_content = compress_png($file_name);
-          $src = imagecreatefromstring($compressed_png_content);
+          $src = @imagecreatefromstring($compressed_png_content);
         }
+      } else if ($type == IMAGETYPE_WEBP || $type == 18 || $type == "image/webp") {
+        $src = @imagecreatefromwebp($file_name);
+      } else if ($type == IMAGETYPE_JPEG || $type == "image/jpeg" || $type == "image/jpg") {
+        $src = @imagecreatefromjpeg($file_name);
+      }
 
-        //file_put_contents($save_to_path, $compressed_png_content);
-        $dst = imagecreatetruecolor( $new_width, $new_height );
-        //start changes
-        $background = imagecolorallocate($dst , 0, 0, 0);
-        imagecolortransparent($dst, $background);
-        imagealphablending($dst, false);
-        imagesavealpha($dst, true);
-        //end changes
-        imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, $width, $height );
-        imagedestroy( $src );
-        imagepng( $dst, $target_filename ); // adjust format as needed
-        imagedestroy( $dst );
+      if (!$src) {
+        try {
+          $file_data = @file_get_contents($file_name);
+          if ($file_data !== false) {
+            $src = @imagecreatefromstring($file_data);
+          }
+        } catch (Exception $e) {
+          $src = null;
+        }
+      }
 
+      if (!$src) {
+        return false;
+      }
+
+      $dst = imagecreatetruecolor( $new_width, $new_height );
+      $background = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+      imagecolortransparent($dst, $background);
+      imagealphablending($dst, false);
+      imagesavealpha($dst, true);
+      imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, $width, $height );
+      imagedestroy( $src );
+      imagepng( $dst, $target_filename );
+      imagedestroy( $dst );
+      return true;
     }
 
     //alterar pais

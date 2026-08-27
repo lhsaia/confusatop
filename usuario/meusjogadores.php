@@ -215,17 +215,17 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 			tbl += "<thead id='headings"+user_id+"'>";
 				tbl += "<tr>";
 					tbl += "<th asc='' class='headings' width='2%'>Foto</th>";
-					tbl += "<th asc='' class='headings' width='15%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspNome</th>";
+					tbl += "<th id='Nome' asc='' class='headings' width='15%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspNome</th>";
 					tbl += "<th asc='' class='headings' width='10%'>Nascimento (idade) </th>";
 					tbl += "<th asc='' class='headings' width='10%'>Mentalidade</th>";
 					tbl += "<th asc='' class='headings' width='10%'>Cobrança de Falta</th>";
 					tbl += "<th asc='' class='headings' width='10%'>Valor [Calculado]</th>";
 					//tbl += "<th asc='' class='headings' width='5%'>Valor (calculado)</th>";
 					tbl += "<th asc='' class='headings' width='10%'>Posições</th>";
-					tbl += "<th asc='' class='headings' width='3%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspNível</th>";
-					tbl += "<th asc='' class='headings' width='3%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspPaís</th>";
-					tbl += "<th asc='' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspClube</th>";
-					tbl += "<th asc='' class='headings' width='5%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspStatus</th>";
+					tbl += "<th id='Nivel' asc='' class='headings' width='3%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspNível</th>";
+					tbl += "<th id='siglaPais' asc='' class='headings' width='3%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspPaís</th>";
+					tbl += "<th id='clubeVinculado' asc='' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspClube</th>";
+					tbl += "<th id='disponibilidade' asc='' class='headings' width='5%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspStatus</th>";
 					tbl += "<th asc='' class='headings' width='10%' class=''>Opções</th>";
 				tbl += "</tr>";
 			tbl +=  "</thead>";
@@ -775,51 +775,37 @@ $.ajax({
 
 
 	function pagination(current_page, total_pages){
-	var pgn = '';
-	pgn += "<ul class='pagination'>";
+		var pgn = '<ul class="pagination">';
+		if(total_pages > 1){
+			var prev_page = parseInt(current_page) - 1;
+			var next_page = parseInt(current_page) + 1;
 
-	// button for first page
-	if(current_page>1){
-		pgn +=  "<li><button class='pagination_link' id='inicio' title='Ir para o início'>";
-		pgn +=  "Inicio";
-		pgn +=  "</button></li>";
-	}
-
-	// range of links to show
-	const range = 2;
-
-	// display links to 'range of pages' around 'current page'
-	var initial_num = current_page - range;
-	var condition_limit_num = (+current_page + +range)  + +1;
-
-	// teste com While
-	var x;
-	if(initial_num > 0){
-		x = initial_num;
-	} else {
-		x = 1;
-	}
-
-	while(x <= total_pages && x < condition_limit_num){
-		if (x == current_page) {
-				pgn += "<li><button class='pagination_link' id='"+x+"' disabled>"+x+"<span class=\"sr-only\">(current)</span></button></li>";
+			if(current_page > 1){
+				pgn += '<li><button class="pagination_link" id="inicio" title="Primeira Página">&laquo;</button></li>';
+				pgn += '<li><button class="pagination_link" id="' + prev_page + '" title="Página Anterior">&lsaquo;</button></li>';
 			}
-			else {
-				pgn += "<li><button class='pagination_link' id='"+x+"'>"+x+"</button></li>";
+
+			var range = 2;
+			var initial_num = parseInt(current_page) - range;
+			var condition_limit_num = parseInt(current_page) + range + 1;
+
+			for (var x = initial_num; x < condition_limit_num; x++) {
+				if ((x > 0) && (x <= total_pages)) {
+					if (x == current_page) {
+						pgn += '<li><button class="pagination_link" id="' + x + '" disabled>' + x + '<span class="sr-only">(current)</span></button></li>';
+					} else {
+						pgn += '<li><button class="pagination_link" id="' + x + '">' + x + '</button></li>';
+					}
+				}
 			}
-		x = x+1;
-	}
 
-	// button for last page
-	if(current_page<total_pages){
-		pgn += "<li><button class='pagination_link' id='final' title='Última página é "+total_pages+".'>";
-		pgn += "Final";
-		pgn += "</button></li>";
-	}
-
-	pgn += "</ul>";
-
-	return pgn;
+			if(current_page < total_pages){
+				pgn += '<li><button class="pagination_link" id="' + next_page + '" title="Próxima Página">&rsaquo;</button></li>';
+				pgn += '<li><button class="pagination_link" id="final" title="Última Página">&raquo;</button></li>';
+			}
+		}
+		pgn += '</ul>';
+		return pgn;
 	}
 
 

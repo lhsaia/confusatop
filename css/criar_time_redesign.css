@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CONFUSA.top - Criar País Redesign (Light Theme System)
+   CONFUSA.top - Criar Time Redesign (Light Theme System)
    ========================================================================== */
 
 body {
@@ -32,7 +32,7 @@ html body #top-bar #logged-user {
 /* Container Principal */
 .propostas-container {
   width: 100%;
-  max-width: 650px;
+  max-width: 750px;
   margin: 0 auto;
   padding: 3rem 1.5rem;
   flex: 1;
@@ -85,8 +85,8 @@ html body #top-bar #logged-user {
 }
 
 #inscricao input[type='text'],
-#inscricao input[type='number'],
-#inscricao select {
+#inscricao select,
+#inscricao input[type='number'] {
   width: 100% !important;
   background: #ffffff !important;
   border: 1px solid rgba(0, 0, 0, 0.15) !important;
@@ -101,8 +101,8 @@ html body #top-bar #logged-user {
 }
 
 #inscricao input[type='text']:focus,
-#inscricao input[type='number']:focus,
-#inscricao select:focus {
+#inscricao select:focus,
+#inscricao input[type='number']:focus {
   border-color: #0284c7 !important;
   box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
 }
@@ -141,7 +141,7 @@ label.custom-file-upload:hover {
   border-color: #0284c7 !important;
 }
 
-#bandeira-preview {
+.custom-file-upload img {
   max-height: 40px !important;
   max-width: 60px !important;
   object-fit: contain !important;
@@ -149,41 +149,100 @@ label.custom-file-upload:hover {
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-/* Checkbox Container */
-.checkbox-container {
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  margin-top: 20px !important;
-  margin-bottom: 10px !important;
+/* Colors Inputs styling */
+.cores-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 6px;
 }
 
-.checkbox-container input[type="checkbox"] {
-  width: 20px !important;
-  height: 20px !important;
+#inscricao input[type="color"] {
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 8px !important;
+  padding: 0 !important;
+  width: 44px !important;
+  height: 44px !important;
   cursor: pointer !important;
-  margin: 0 !important;
-  accent-color: #0284c7 !important;
+  background: #ffffff !important;
+  outline: none !important;
+  box-sizing: border-box !important;
 }
 
-.checkbox-container label {
-  font-family: 'Montserrat', sans-serif !important;
-  font-size: 0.9rem !important;
-  font-weight: 600 !important;
-  color: #475569 !important;
-  margin: 0 !important;
-  text-transform: none !important;
-  letter-spacing: normal !important;
-  display: inline-block !important;
+/* Multi-selects manual naming lists */
+select[multiple] {
+  height: 140px !important;
+}
+
+.origemNomes, .origemSobrenomes {
+  display: none; /* jQuery controlará a exibição baseada na nomenclatura manual */
+}
+
+/* JQuery UI Sliders */
+.slider-group {
+  background: rgba(0, 0, 0, 0.02);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.05);
+  margin-top: 10px;
+}
+
+.slider_itself {
+  margin: 15px 0 !important;
+  background: #e2e8f0 !important;
+  border: none !important;
+  height: 6px !important;
+  border-radius: 3px !important;
+  position: relative;
+}
+
+.slider_itself .ui-slider-range {
+  background: #0284c7 !important;
+  position: absolute;
+  height: 100%;
+  border-radius: 3px;
+}
+
+.slider_itself .ui-slider-handle {
+  border-radius: 50% !important;
+  background: #0284c7 !important;
+  border: 2px solid #fff !important;
+  width: 18px !important;
+  height: 18px !important;
+  top: -6px !important;
+  margin-left: -9px !important;
   cursor: pointer !important;
+  outline: none !important;
+  position: absolute;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+}
+
+/* Flex row para valores numéricos dos Sliders */
+.slider-values-row {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.slider-values-row div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#inscricao .slider-values-row input[type='number'].smallInput {
+  width: 70px !important;
+  padding: 6px 10px !important;
+  text-align: center;
 }
 
 /* Submit buttons container */
 .form-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 25px;
+  gap: 15px;
+  margin-top: 30px;
 }
 
 .form-actions button.btn {
@@ -203,13 +262,10 @@ label.custom-file-upload:hover {
   align-items: center !important;
   justify-content: center !important;
   gap: 8px !important;
-  text-transform: none !important;
-  letter-spacing: normal !important;
-  box-shadow: none !important;
 }
 
 .form-actions button.btn .material-symbols-outlined {
-  font-size: 20px !important;
+  color: #1A1469 !important; /* Cor roxa característica da CONFUSA */
 }
 
 .form-actions button.btn:hover {
@@ -217,34 +273,25 @@ label.custom-file-upload:hover {
   color: #0f172a !important;
 }
 
-.form-actions button#salvar,
-.form-actions button[type="submit"] {
+.form-actions button#hexagen {
+  grid-column: span 2;
   background: linear-gradient(135deg, #0284c7, #0369a1) !important;
   border: none !important;
   color: #fff !important;
   box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
 }
 
-.form-actions button#salvar:hover,
-.form-actions button[type="submit"]:hover {
+.form-actions button#hexagen:hover {
   background: linear-gradient(135deg, #0369a1, #075985) !important;
   transform: translateY(-1px) !important;
-  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4) !important;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.45) !important;
 }
 
-.form-actions button#salvar .material-symbols-outlined,
-.form-actions button[type="submit"] .material-symbols-outlined {
-  color: #ffffff !important;
-}
-
-/* Forçar Footer no fim do fluxo da página */
-#bottom-bar {
-  position: relative !important;
-  margin-top: auto !important;
-  bottom: auto !important;
-}
-
-/* Premium Floating Toast Notifications */
+/* Toast Notifications */
 .alert {
   position: fixed !important;
   top: 80px !important;
@@ -264,18 +311,6 @@ label.custom-file-upload:hover {
   justify-content: space-between !important;
   gap: 15px !important;
   transition: opacity 0.4s ease, transform 0.4s ease !important;
-  animation: slideIn 0.3s ease forwards !important;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(120%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
 }
 
 .alert-success {
@@ -302,25 +337,27 @@ label.custom-file-upload:hover {
   transition: opacity 0.2s ease !important;
 }
 
-.alert-btn .closebtn:hover {
-  opacity: 0.7 !important;
-}
-
-.alert.fade-out {
-  animation: none !important;
-  opacity: 0 !important;
-  transform: translateX(120%) !important;
-  transition: opacity 0.4s ease, transform 0.4s ease !important;
-}
-
 /* Responsividade Mobile */
 @media (max-width: 768px) {
   .propostas-container {
     padding: 1.5rem 0.5rem !important;
   }
-  
   .propostas-card {
     padding: 1.25rem !important;
     border-radius: 12px !important;
   }
+  .form-actions {
+    grid-template-columns: 1fr;
+  }
+  .form-actions button#hexagen {
+    grid-column: span 1;
+  }
+  .slider-values-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
 }

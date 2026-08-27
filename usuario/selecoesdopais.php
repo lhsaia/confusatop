@@ -23,8 +23,8 @@ $resultPais = $stmtPais->fetch(PDO::FETCH_ASSOC);
 $nomePais = $resultPais['nome'];
 
 $page_title = "Tela de seleções - " . $nomePais;
-$css_filename = "indexRanking";
-$aux_css = "usuario";
+$css_filename = "home_redesign";
+$aux_css = "meustimes_redesign";
 $css_login = 'login';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
@@ -54,16 +54,14 @@ while ($row_estadio = $stmtEstadio->fetch(PDO::FETCH_ASSOC)){
 ?>
 
 
-<div id="quadro-container">
-<div align="center" id="quadroTimes">
-<button id='importar_time' onclick="window.location='/times/criar_selecao.php?idPais=<?php echo $codigoPais?>';">Criar seleção</button>
-<h2>Tela de seleções - <?php echo $nomePais ?></h2>
-
-<hr>
-
-<div style='clear:both;'></div>
-
-<hr>
+<div class="propostas-container">
+<div class="propostas-card">
+    <div class="header-actions-container">
+        <h2 class="propostas-title">Tela de seleções - <?php echo $nomePais ?></h2>
+        <div class="header-buttons-wrapper">
+            <button class='btn-action-primary' onclick="window.location='/times/criar_selecao.php?idPais=<?php echo $codigoPais?>';">Criar seleção</button>
+        </div>
+    </div>
 
 <?php
 
@@ -74,12 +72,12 @@ $stmt = $time->readSelecoes($codigoPais);
 
 $num = $stmt->rowCount();
 
-echo "<hr>";
 echo "<div id='errorbox'></div>";
 
 // display the products if there are any
 if($num>0){
 
+    echo "<div class='tbl_user_data'>";
     echo "<table id='tabelaPrincipal' class='table'>";
     echo "<thead>";
         echo "<tr>";
@@ -195,6 +193,7 @@ if($num>0){
 
     echo "</tbody>";
     echo "</table>";
+    echo "</div>";
 
 }
 

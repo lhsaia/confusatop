@@ -261,10 +261,13 @@
 }
 
 /* Custom file upload styling for forms inside ligas cards */
-.custom-file-upload:not(.hiddenInput) {
+.custom-file-upload,
+#inscricao .custom-file-upload,
+label.custom-file-upload {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  text-align: center !important;
   gap: 10px !important;
   background: rgba(2, 132, 199, 0.04) !important;
   border: 1px dashed rgba(2, 132, 199, 0.3) !important;
@@ -272,13 +275,21 @@
   padding: 15px !important;
   cursor: pointer !important;
   transition: all 0.25s ease !important;
-  margin-top: 12px !important;
+  margin-top: 6px !important;
+  margin-bottom: 16px !important;
   box-sizing: border-box !important;
   width: 100% !important;
   color: #0369a1 !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
 }
 
-.custom-file-upload:not(.hiddenInput):hover {
+.custom-file-upload:hover,
+#inscricao .custom-file-upload:hover,
+label.custom-file-upload:hover {
   background: rgba(2, 132, 199, 0.08) !important;
   border-color: #0284c7 !important;
 }
@@ -393,4 +404,151 @@
   max-width: 110px !important;
   box-sizing: border-box !important;
 }
+
+/* Submit buttons container matching criar_time / arbitros / tecnico */
+.form-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.form-actions button.btn,
+#inscricao .btn {
+  background: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.12) !important;
+  color: #475569 !important;
+  padding: 12px 20px !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 0.95rem !important;
+  cursor: pointer !important;
+  transition: all 0.25s ease !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: auto !important;
+}
+
+.form-actions button.btn .material-symbols-outlined,
+#inscricao .btn .material-symbols-outlined {
+  font-size: 20px !important;
+}
+
+.form-actions button.btn:hover,
+#inscricao .btn:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.form-actions button#salvar,
+.form-actions button[type="submit"],
+#inscricao button[type="submit"] {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;
+}
+
+.form-actions button#salvar:hover,
+.form-actions button[type="submit"]:hover,
+#inscricao button[type="submit"]:hover {
+  background: linear-gradient(135deg, #0369a1, #075985) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4) !important;
+}
+
+.form-actions button#salvar .material-symbols-outlined,
+.form-actions button[type="submit"] .material-symbols-outlined,
+#inscricao button[type="submit"] .material-symbols-outlined {
+  color: #ffffff !important;
+}
+
+.form-actions button#hexagen,
+#inscricao button#hexagen {
+  grid-column: span 2;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3) !important;
+}
+
+.form-actions button#hexagen:hover,
+#inscricao button#hexagen:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.45) !important;
+}
+
+.form-actions button#hexagen .material-symbols-outlined,
+#inscricao button#hexagen .material-symbols-outlined {
+  color: #ffffff !important;
+}
+
+/* Card header flex and top buttons */
+.card-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  padding-bottom: 1rem;
+  width: 100%;
+}
+
+.btn-voltar {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  color: #475569;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.btn-voltar:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+.btn-hexagen-top {
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 16px !important;
+  background: rgba(2, 132, 199, 0.08) !important;
+  border: 1px solid rgba(2, 132, 199, 0.2) !important;
+  border-radius: 8px !important;
+  color: #0284c7 !important;
+  font-weight: 600 !important;
+  font-family: 'Kanit', sans-serif !important;
+  font-size: 0.9rem !important;
+  transition: all 0.2s ease !important;
+  margin: 0 !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+}
+
+.btn-hexagen-top:hover {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #0369a1 !important;
+}
+
+.btn-hexagen-top span.material-symbols-outlined {
+  font-size: 18px !important;
+  color: #0284c7 !important;
+}
+
+
 
