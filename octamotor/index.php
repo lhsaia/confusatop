@@ -17,9 +17,10 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "OctaMotor - Home";
-$css_filename = "newindex";
+$css_filename = "home_redesign";
+$aux_css = "home_redesign";
+$extra_css = "octamotorIndex";
 $css_login = 'login';
-$aux_css = "octamotorIndex";
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 

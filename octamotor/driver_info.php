@@ -19,9 +19,9 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "OctaMotor - Pilotos";
-//$css_filename = "";
-$css_login = 'login';
+$css_filename = "home_redesign";
 $aux_css = "driver_info";
+$css_login = 'login';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/octamotor/config/database.php");
@@ -90,14 +90,14 @@ if(isset($_SESSION['user_id']) && $_SESSION['user_id'] == $competition_owner && 
     <div class="container-driver-main">
       <div id="container-driver-pictures">
         <div id="container-driver-profile-picture" class="image-container">
-          <img id="profile-picture-info" class="image" src="" />
+          <img id="profile-picture-info" class="image" src="/octamotor/images/picture/default-photo.png" onerror="this.onerror=null; this.src='/octamotor/images/picture/default-photo.png';" />
         </div>
         <div id="container-driver-car-helmet">
           <div id="container-helmet" class="image-container">
-            <img id="helmet-picture-info" class="image" src="" />
+            <img id="helmet-picture-info" class="image" src="/octamotor/images/helmet/default-helmet2.png" onerror="this.onerror=null; this.src='/octamotor/images/helmet/default-helmet2.png';" />
           </div>
           <div id="container-car" class="image-container">
-            <img id="car-picture-display" class="image" src="" />
+            <img id="car-picture-display" class="image" src="/octamotor/images/car/default-car2.png" onerror="this.onerror=null; this.src='/octamotor/images/car/default-car2.png';" />
           </div>
         </div>
       </div>
@@ -415,9 +415,17 @@ function display_driver(updateEditor){
     genre = data.driver_data.genre;
     tv_name = data.driver_data.tv_name;
     country = data.driver_data.country_name;
-    photo = "/octamotor/images/picture/" + data.driver_data.photo;
-    helmet = "/octamotor/images/helmet/" + data.driver_data.helmet;
-    if(data.driver_data.car_picture){
+    if(data.driver_data.photo && data.driver_data.photo.trim() !== ""){
+      photo = "/octamotor/images/picture/" + data.driver_data.photo;
+    } else {
+      photo = "/octamotor/images/picture/default-photo.png";
+    }
+    if(data.driver_data.helmet && data.driver_data.helmet.trim() !== ""){
+      helmet = "/octamotor/images/helmet/" + data.driver_data.helmet;
+    } else {
+      helmet = "/octamotor/images/helmet/default-helmet2.png";
+    }
+    if(data.driver_data.car_picture && data.driver_data.car_picture.trim() !== ""){
       car_picture = "/octamotor/images/car/"  + data.driver_data.car_picture;
     } else {
       car_picture = "/octamotor/images/car/default-car2.png";

@@ -17,9 +17,10 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 $page_title = "OctaMotor - Blog da FOCA";
-$css_filename = "blog";
-$css_login = 'login';
+$css_filename = "home_redesign";
 $aux_css = "driver_info";
+$extra_css = "blog";
+$css_login = 'login';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -123,6 +124,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['a
 			}
 
 			$(".load-button").click(function(){
+				$(".load-button").removeClass("active");
+				$(this).addClass("active");
 				let postCode = $(this).attr("id");
 				if(document.querySelector("#save-button")){
 					if(document.querySelector(".editable") && $("#save-button").prop("disabled", false)){

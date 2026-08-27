@@ -9,79 +9,294 @@
   },
   "days": [
     {
+      "id": "day_26_08_2026",
+      "date": "26/08/2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Gerenciamento de Status de Sugestões para Administradores",
+          "desc": "Administradores agora podem alterar o status (Pendente, Em processo, Completo, Cancelado) das sugestões e bugs diretamente na tabela via AJAX."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Aumento do Limite de Upload de Arquivos (.HYL / .YMT)",
+          "desc": "O limite máximo permitido para envio de súmulas (.hyl) e arquivos de times (.ymt) foi ampliado para 10 MB, evitando erros de arquivo muito grande em partidas longas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Edição e Salvamento de Climas",
+          "desc": "Corrigida a tipagem e conversão do campo Hemisfério para o banco de dados e aprimorado o retorno de mensagens de erro na edição inline de climas."
+        },
+        {
+          "badge": "design",
+          "title": "Remoção do Atributo Determinação em Jogadores no Exterior",
+          "desc": "Removida a exibição do atributo de determinação nas tags dos jogadores na tela de Jogadores no Exterior."
+        }
+      ]
+    },
+    {
+      "id": "day_25_08_2026",
+      "date": "25/08/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Otimização de Memória no Upload de Bandeiras",
+          "desc": "Ajustado o limite de memória e otimizado o carregamento de imagens em criar_pais.php e alterar_pais.php, prevenindo estouro de memória (Allowed memory size exhausted) ao processar imagens de alta resolução."
+        },
+        {
+          "badge": "new",
+          "title": "Paginação Dinâmica via AJAX no Ranking",
+          "desc": "A navegação de páginas e a troca de filtros por federação no Ranking de Seleções agora ocorrem dinamicamente via AJAX, sem recarregar a tela, mantendo a URL atualizada e navegação instantânea."
+        },
+        {
+          "badge": "design",
+          "title": "Modernização da Importação de Jogos do Ranking",
+          "desc": "Redesenho completo da tela de importação de súmulas e conferência de jogos de seleções no padrão Visual 2.0 (Light Theme), com cards glassmorphism, campos integrados, cabeçalho dinâmico e tabela de revisão moderna."
+        },
+        {
+          "badge": "design",
+          "title": "Redesenho e Organização do Editor de Jogos de Seleções",
+          "desc": "Reformulação completa da tela de Criar/Editar Jogo no padrão Visual 2.0, removendo conflitos de CSS externos, organizando o placar, escalações lado a lado e eventos com design limpo."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção Visual na Caixa de Upload de Súmulas",
+          "desc": "Corrigida a visibilidade dos estados de carregamento, sucesso e erro na caixa de upload de arquivos, exibindo agora apenas a instrução inicial de arrastar/selecionar."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste de Contraste no Botão Editar Partida",
+          "desc": "Corrigida a cor do texto do botão 'Editar Partida' em Detalhes da Partida do Ranking, garantindo contraste branco e legibilidade perfeita sobre o fundo azul."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste Visual no Editor de Partidas de Seleções",
+          "desc": "Corrigido o dimensionamento do botão 'Salvar Partida' para tamanho compacto e ajustado o alinhamento e espaçamentos internos dos dropdowns de seleções e atletas (Select2)."
+        },
+        {
+          "badge": "design",
+          "title": "Padronização das Larguras na Tabela de Eventos",
+          "desc": "Definido layout fixo e larguras equilibradas para as colunas de minuto, seleção, tipo de lance, atleta e botão de adicionar evento na tela de edição de partidas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção nos Dropdowns de Busca de Seleções",
+          "desc": "Removido o botão 'X' de limpeza de seleção nos dropdowns e corrigida a API de busca de países (/api/paises/buscar.php) para carregar e listar corretamente as opções de seleções."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Suporte a Atletas Manuais e Salvamento de Eventos",
+          "desc": "Corrigida a persistência de eventos e escalações para atletas fora do banco ('➕ Digitar nome'), exibindo o campo de texto automaticamente e salvando os nomes e lances corretamente na partida."
+        },
+        {
+          "badge": "security",
+          "title": "Ajuste de Permissões no Módulo de Seleções",
+          "desc": "A criação de novos jogos e a importação de súmulas estão liberadas para qualquer usuário autenticado; a edição de partidas existentes permanece estritamente restrita a administradores."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Seleção de Atletas Existentes via AJAX",
+          "desc": "Corrigida a injeção do elemento option no DOM ao selecionar atletas existentes no Select2, garantindo que o ID e o nome do jogador sejam serializados e gravados corretamente na partida."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste Visual no Botão de Fechar do Toast",
+          "desc": "Removido o fundo quadrado azul do botão 'X' de fechamento nas notificações flutuantes (toasts), mantendo fundo transparente integrado à cor do alerta."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Exibição de Pênaltis em Jogos & Recordes",
+          "desc": "Corrigida a condição de exibição de pênaltis nas listagens de partidas, garantindo que disputas em que uma das seleções fez 0 gols de pênalti (ex: 3x0) sejam mostradas corretamente."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Consulta de Escalação de Seleções",
+          "desc": "Corrigido o relacionamento com a tabela de posições no método getSingleMatchLineup, permitindo que as escalações cadastradas sejam exibidas corretamente na tela de Detalhes da Partida."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Suporte a Pênaltis Nulos e Correção na Importação",
+          "desc": "Alteradas as colunas timeA_penaltis e timeB_penaltis na tabela jogos para permitir valores nulos (NULL), distinguindo partidas sem disputa de pênaltis daquelas com placares reais (ex: 1x0 ou 3x0) e eliminando erros de integridade na importação."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Preservação do Status Calculado em Jogos Existentes",
+          "desc": "Ao importar súmulas de jogos já existentes no banco de dados, o campo 'calculado' é mantido inalterado, evitando desmarcar partidas que já haviam sido processadas pelo ranking."
+        }
+      ]
+    },
+    {
+      "id": "day_24_08_2026",
+      "date": "24/08/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Reenvio Automático na Simulação de Partidas",
+          "desc": "Implementada detecção e reenvio automático do comando de simulação quando o motor Java executa rotinas de compatibilidade/migração com o portal web, garantindo a geração contínua das súmulas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Gerador de Tabela em Fase de Grupos",
+          "desc": "Corrigida a referência da variável de índice ($j) no cálculo de confrontos do algoritmo Berger para torneios mistos (fase de grupos), eliminando avisos e notices de PHP."
+        }
+      ]
+    },
+    {
+      "id": "day_23_08_2026",
+      "date": "23/08/2026",
+      "items": [
+        {
+          "badge": "design",
+          "title": "Modernização de Seleções e Subtelas de Usuário",
+          "desc": "Atualização das telas de Criar Seleção, Seleções do País, Demografia do País e Configurações para o padrão Visual 2.0 com cards glassmorphism, formulários e tabelas modernos integrados ao novo cabeçalho e rodapé."
+        },
+        {
+          "badge": "design",
+          "title": "Redesenho do Blog da FOCA no Light Theme 2.0",
+          "desc": "Modernização completa da página do Blog da FOCA para o padrão Light Theme 2.0 com cards translúcidos glassmorphism em fundo claro, lista de posts estilizada com indicador de post ativo, painel de leitura refinado e tipografia aprimorada."
+        },
+        {
+          "badge": "new",
+          "title": "Escalações e Gestão em Jogos de Seleções",
+          "desc": "Inclusão de suporte completo a escalações nos jogos de seleções do Ranking oficial (titulares, reservas, comissão técnica e substituições), com importação automática, visualização lado a lado e novo editor visual moderno restrito a administradores."
+        },
+        {
+          "badge": "new",
+          "title": "Conferência na Importação de Jogos de Clubes",
+          "desc": "Implementação da tela de revisão e conferência interativa na importação de jogos de clubes, permitindo mapeamento com autocompletion, detecção de duplicatas e confirmação em lote."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Blindagem Transacional e Proteção de Dados de Partidas",
+          "desc": "Implementação de transações PDO atômicas com rollback em todas as rotas de gravação e importação de partidas, garantindo integridade e prevenindo perda acidental de dados."
+        },
+        {
+          "badge": "design",
+          "title": "Novo Cabeçalho e Rodapé no OctaMotor",
+          "desc": "Atualização do cabeçalho e rodapé em todas as páginas do OctaMotor para a estrutura moderna em tom preto translúcido, corrigindo o overflow vertical e preservando integralmente o layout e identidade visual clássica do simulador."
+        },
+        {
+          "badge": "design",
+          "title": "Redesenho do 7vidas no Dark Theme 2.0",
+          "desc": "Modernização completa do simulador de draft e sobrevivência 7vidas para o padrão Dark Theme 2.0 com cards translúcidos glassmorphism sobre fundo clássico CONFUSA, campinho tático aprimorado, roleta estilizada, placar de simulação com eventos coloridos e novo modal de regras."
+        },
+        {
+          "badge": "design",
+          "title": "Redesenho dos Escudos Pops no Light Theme 2.0",
+          "desc": "Modernização visual da página de Escudos Pops para o padrão Light Theme 2.0 com cards translúcidos glassmorphism, grid responsivo, botão de alternância de fases estilizado, animação de zoom nos escudos e feedback visual aprimorado para palpites corretos e incorretos."
+        },
+        {
+          "badge": "design",
+          "title": "Redesenho Completo do Ranking no Light Theme 2.0",
+          "desc": "Modernização integral de todas as páginas da seção de Ranking (Masculino, Seleções, Regras, Jogos & Recordes, Perfil da Seleção e Detalhes da Partida) com o padrão Visual 2.0, navegação por abas com indicador de página ativa, cards glassmorphism, filtros de federação estilizados, badges de posição e paginação moderna, preservando a estrutura da página de retrospecto."
+        },
+        {
+          "badge": "design",
+          "title": "Novo Card de Sem Confrontos no Retrospecto",
+          "desc": "Aprimorada a exibição da página de retrospecto quando duas seleções nunca se enfrentaram: os medidores e tabelas vazias são ocultados em favor de um card informativo e amigável com destaque dos países."
+        },
+        {
+          "badge": "design",
+          "title": "Redesenho dos Jogos de Clubes no Light Theme 2.0",
+          "desc": "Migração completa da Central de Jogos de Clubes (listagem com busca em tempo real e ordenação interativa, detalhes da partida com placar em destaque e linha do tempo de eventos, escalações em dois blocos e formulário de edição/criação) para o padrão Light Theme 2.0."
+        }
+      ]
+    },
+    {
+      "id": "day_22_08_2026",
       "date": "22/08/2026",
-      "title": "Configuração do Git para Database do Octamotor",
-      "description": "Removido o arquivo de configuração octamotor/config/database.php do rastreamento do Git para que seja devidamente ignorado localmente."
-    },
-    {
-      "date": "22/08/2026",
-      "title": "Acesso Restrito ao Assistente de Associação",
-      "description": "Restringida a funcionalidade de associação/atualização inteligente de importados exclusivamente a administradores do site. Usuários regulares importam diretamente como novos por padrão."
-    },
-    {
-      "date": "22/08/2026",
-      "title": "Limitação de Largura na Edição de Jogadores",
-      "description": "Ajustado o tamanho máximo dos campos de input e select durante a edição inline na página 'Meus Jogadores' para evitar o estouro horizontal do layout e garantir melhor responsividade."
-    },
-    {
-      "date": "22/08/2026",
-      "title": "Ajuste na Exibição e Ordenação de Sugestões",
-      "description": "Configurada a página de sugestões para exibir apenas as pendentes por padrão ao carregar, e ajustadas as consultas e algoritmos de ordenação (JS e Banco de Dados) para que itens pendentes sempre apareçam no topo."
-    },
-    {
-      "date": "22/08/2026",
-      "title": "Correção no Voto de Sugestões (toggleVote)",
-      "description": "Corrigido erro 500 ao votar em sugestões. A lógica de curtir/votar foi portada de stored procedure do banco para consultas puras em PHP/PDO, eliminando dependências que causavam falhas se a procedure estivesse ausente."
-    },
-    {
-      "date": "22/08/2026",
-      "title": "Redesenho das Páginas de Contato e Sugestões",
-      "description": "Remodeladas as páginas de Contato, Envio de E-mail e Sugestões/Bugs com o novo design responsivo Light Theme, tabelas com badges de status e formulários com visual premium."
-    },
-    {
-      "date": "22/08/2026",
-      "title": "Redesenho e Atualização da Página Sobre",
-      "description": "Remodelada a página Sobre / Tutorial com o novo design responsivo Light Theme, organizando o índice lateral e atualizando o conteúdo explicativo com os novos recursos do site (como Finanças e Estatísticas)."
-    },
-    {
-      "date": "22/08/2026",
-      "title": "Renovação do Cabeçalho e Rodapé de Apenas Membros",
-      "description": "Renovados o cabeçalho e rodapé da página apenas_membros.php para utilizar o layout moderno e o novo padrão de navegação com menu lateral."
-    },
-    {
-      "date": "22/08/2026",
-      "title": "Ajuste de Layout dos Modais de Login",
-      "description": "Atualizados os modais de login, logout, novo usuário e recuperação de senha com o novo padrão estético (layout centralizado com desfoque de fundo e visual premium)."
-    },
-    {
-      "date": "22/08/2026",
-      "title": "Redesenho Premium da Área de Admin",
-      "description": "Atualizadas todas as telas da Área de Admin para o Premium Dark Theme 2.0. Corrigido problema de tipo de dado no admin_status que causava redirecionamento incorreto no localhost, bug visual de tags PHP no visualizador de logs, e erro fatal de redeclaração da função random_str no cadastro de usuários."
-    },
-    {
-      "date": "21/08/2026",
-      "title": "Padronização do Botão Hexagen",
-      "description": "Alinhada a posição e o estilo visual do gerador automático 'Hexagen' nas telas de inserção de jogadores e árbitros, movendo-o para o container de ações no rodapé dos formulários."
-    },
-    {
-      "date": "21/08/2026",
-      "title": "Redesenho do Quadro de Jogadores",
-      "description": "Modernizadas as telas 'Meus Jogadores' e 'Criar Jogador' com o novo layout responsivo Light Theme, cabeçalhos, formulários alinhados e ocultação inteligente dos botões secundários durante a edição da linha."
-    },
-    {
-      "date": "21/08/2026",
-      "title": "Redesenho de Ligas e Campeonatos",
-      "description": "Modernizadas as telas 'Minhas Ligas', 'Gerenciar Campeonatos' (Minhas Copas) e 'Criar Liga' com a nova identidade visual Light Theme e layouts responsivos premium."
-    },
-    {
-      "date": "21/08/2026",
-      "title": "Redesenho da Inserção de Países",
-      "description": "Aplicado o novo layout moderno no padrão Light Theme para a página de criação de países, incluindo upload de bandeiras com visualização prévia, conversão automática para WebP e bloqueio dinâmico do campo de Federação (só habilitado ao marcar que o país é membro da CONFUSA)."
-    },
-    {
-      "date": "21/08/2026",
-      "title": "Substituição do Botão de Apresentação",
-      "description": "Definido o novo modelo Placar como a visualização oficial e única de apresentação do time ao clicar no botão 'Apresentação' ou ao acessar o time deslogado/visitante."
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Proteção de Memória no Extrato Financeiro",
+          "desc": "Corrigido erro de estouro de memória (Fatal Error Memory Exhausted) no filtro de registros financeiros através da validação obrigatória do ID do time antes de executar as consultas de movimentações e transferências."
+        },
+        {
+          "badge": "design",
+          "title": "Redesenho de Jogadores no Exterior com Busca AJAX",
+          "desc": "Migração da página de atletas no exterior para o Light Theme 2.0, incluindo pesquisa instantânea com debounce, ordenação interativa de todas as colunas, paginação dinâmica e modal modernizado de repatriação."
+        },
+        {
+          "badge": "design",
+          "title": "Redesenho da Exportação para HYMT",
+          "desc": "Interface moderna em Light Theme para seleção de países, ligas e opções de pacotes de banco de dados HYMT, com controles elegantes e feedback visual do download."
+        },
+        {
+          "badge": "design",
+          "title": "Redesenho de Parâmetros HYMT e Criação",
+          "desc": "Atualização das telas Meus Parâmetros e Criar Parâmetros para o padrão Light Theme 2.0, com barras de estilo visualmente aprimoradas, edição inline limpa e sliders modernos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Importação de Elencos .ymt Externos",
+          "desc": "Corrigido erro que impedia a importação de times (.ymt) com mais de 23 jogadores para competições, limitando a vinculação de posições e parâmetros aos limites físicos suportados pela tabela de elencos e escalações do SQLite."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste no Modo de Edição de Meus Climas",
+          "desc": "Corrigido o transbordo da tabela de climas durante a edição inline, aplicando layout fixo, proporções otimizadas de colunas e contenção visual em todos os seletores de estações climáticas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção e Auto-Migração de Desfalques em Competições",
+          "desc": "Adicionada auto-migração da coluna lesionado_ate na tabela competicao_suspensos para garantir o registro e controle de lesões em jogadores de times importados (.ymt), além de tratamento de exceções (try/catch) na simulação e escalação."
+        },
+        {
+          "badge": "design",
+          "title": "Padronização do Componente de Paginação",
+          "desc": "Atualizado o componente global de paginação (elements/paging.php e tabelas dinâmicas) com setas de navegação direta («, ‹, ›, »), facilitando o salto rápido para a primeira e última páginas e melhorando a fluidez visual em todas as tabelas do sistema."
+        },
+        {
+          "badge": "design",
+          "title": "Redesenho e AJAX em Estádios, Climas e Técnicos",
+          "desc": "Migração completa das páginas Meus Estádios, Meus Climas, Meus Técnicos e suas respectivas telas de criação e importação para o padrão Light Theme 2.0, incluindo busca em tempo real, ordenação por colunas e paginação dinâmica via AJAX."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção dos emails de proposta de técnico",
+          "desc": "Emails de nova proposta para técnico agora incluem nome do técnico, nome e escudo do clube proponente e nível. Corrigido bug em que o usuário recebia email vazio sem informações da proposta."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Auto-aceite de proposta de técnico livre",
+          "desc": "Corrigido bug em que propostas para técnicos sem clube (clubeOrigem=0) sempre disparavam email mesmo quando o proponente era o próprio dono do técnico — agora o sistema auto-aceita corretamente."
+        },
+        {
+          "badge": "design",
+          "title": "Redesenho do Quadro e Criação de Times",
+          "desc": "Migração das páginas 'Meus Times' e 'Criar Time' para o novo layout premium Light Theme, com ordenação por coluna, ocultação de botões secundários ao editar, correção de transbordo de upload, sliders modernos e responsividade completa."
+        },
+        {
+          "badge": "new",
+          "title": "Alertas de Divergência na Associação de Importados",
+          "desc": "Implementados avisos visuais automáticos no assistente de associação que sinalizam quando um clube está em outra liga ou quando um jogador/técnico pertence a um time diferente do que está sendo importado."
+        },
+        {
+          "badge": "new",
+          "title": "Acesso Restrito ao Assistente de Associação",
+          "desc": "Restringida a funcionalidade de associação/atualização inteligente de importados exclusivamente a administradores. Usuários regulares importam diretamente como novos por padrão."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Voto de Sugestões",
+          "desc": "Corrigido erro 500 ao votar em sugestões. A lógica de curtir/votar foi portada de stored procedure do banco para consultas puras em PHP/PDO, eliminando dependências que causavam falhas se a procedure estivesse ausente."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajustes na Exibição e Ordenação de Sugestões",
+          "desc": "Configurada a página de sugestões para exibir apenas as pendentes por padrão ao carregar, e ajustadas as consultas e algoritmos de ordenação para que itens pendentes sempre apareçam no topo."
+        },
+        {
+          "badge": "design",
+          "title": "Redesenho das Páginas de Contato, Sugestões e Sobre",
+          "desc": "Remodeladas as páginas de Contato, Sugestões/Bugs e Sobre/Tutorial com o novo design responsivo Light Theme, tabelas com badges de status, formulários com visual premium e conteúdo atualizado."
+        },
+        {
+          "badge": "design",
+          "title": "Renovação de Login, Modais e Área de Admin",
+          "desc": "Atualizados os modais de login/logout, a página apenas_membros.php e todas as telas da Área de Admin para os novos padrões visuais Light e Dark Theme 2.0. Corrigidos bugs de redirecionamento e redeclaração de funções na área admin."
+        }
+      ]
     },
     {
       "id": "day_21_08_2026",
@@ -140,12 +355,12 @@
           "desc": "Restaurada a cor de destaque (verde/vermelha) na listagem de janelas e removida a coluna legada. Redesenhados os formulários e filtros de busca avançada de jogadores e técnicos no padrão Light Theme com sliders e seletores modernos. Implementado bloqueio de propostas em janelas fechadas."
         },
         {
-          "badge": "new",
+          "badge": "design",
           "title": "Redesenho e Paginação AJAX das Listagens do Mercado",
           "desc": "Atualização das listagens de Últimas e Maiores Transferências, Jogadores mais Valiosos e Janelas de Transferência no Mercado (/mercado/transferencias.php) para o novo Light Theme visual padrão, com paginação reativa via AJAX e melhor espaçamento entre clubes e ligas."
         },
         {
-          "badge": "new",
+          "badge": "design",
           "title": "Redesenho do Mercado (Green Theme)",
           "desc": "Atualização da página principal do Mercado (/mercado/) para o novo layout baseado em cards e grid, com o tema visual verde (esmeralda e deep green)."
         },
@@ -160,7 +375,7 @@
           "desc": "Correção de erro de propriedade indefinida ao processar a duração de lesões de jogadores a partir do arquivo de partida."
         },
         {
-          "badge": "new",
+          "badge": "design",
           "title": "Redesenho do Quadro de Árbitros",
           "desc": "Atualização das páginas de listagem, inserção e importação de árbitros para o novo layout (Light Theme), melhorando a responsividade e consistência visual do site."
         },
