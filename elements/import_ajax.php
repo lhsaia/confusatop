@@ -46,33 +46,32 @@ if (isset($_POST['ajax'])) {
     if (isset($_SESSION['jogadorTime'])) {
         if ($_SESSION['jogadorTime'] == 2) {
             $correct_extension = 'ymt';
-            $max_file_size = 400000;
+            $max_file_size = 10485760; // 10MB
             $arquivo_tratamento = "/times/tratamento_time.php";
         } else if ($_SESSION['jogadorTime'] == 1) {
             $correct_extension = 'jog';
-            $max_file_size = 2400;
+            $max_file_size = 10485760; // 10MB
             $arquivo_tratamento = "/jogadores/tratamento_jogador.php";
         } else if ($_SESSION['jogadorTime'] == 3) {
             $correct_extension = 'tda';
-            $max_file_size = 400;
+            $max_file_size = 10485760; // 10MB
             $arquivo_tratamento = "/arbitros/tratamento_arbitro.php";
         } else if ($_SESSION['jogadorTime'] == 4) {
             $arquivo_tratamento = "/ranking/tratamento_jogo.php";
             $correct_extension = 'hyl';
-            $max_file_size = 400000;
+            $max_file_size = 10485760; // 10MB
         } else if ($_SESSION['jogadorTime'] == 5) {
             $arquivo_tratamento = "/import/tratamento_tecnico.php";
             $correct_extension = 'tec';
-            $max_file_size = 2400;
+            $max_file_size = 10485760; // 10MB
         } else if ($_SESSION['jogadorTime'] == 6) {
             $arquivo_tratamento = "/import/tratamento_estadio.php";
             $correct_extension = 'est';
-            $correct_extension = 'est';
-            $max_file_size = 2000;
+            $max_file_size = 10485760; // 10MB
         } else if ($_SESSION['jogadorTime'] == 7) {
             $arquivo_tratamento = "/ligas/gerenciador/tratamento_jogo.php";
             $correct_extension = 'hyl';
-            $max_file_size = 400000;
+            $max_file_size = 10485760; // 10MB
         }
     }
 
@@ -143,19 +142,32 @@ if (isset($_POST['ajax'])) {
 
         //libxml_use_internal_errors(true);
 
-        if (isset($_SESSION['jogadorTime']) && $_SESSION['jogadorTime'] == 4) {
+        if (isset($_SESSION['jogadorTime']) && ($_SESSION['jogadorTime'] == 4 || $_SESSION['jogadorTime'] == 7)) {
             $parsedGames = [];
             $countriesList = [];
+            $clubsList = [];
 
-            // Buscar todos os países do sistema para o Select2 (sem filtro de ranqueável)
-            $stmtCountries = $pais->read(null, null, false);
-            while ($row = $stmtCountries->fetch(PDO::FETCH_ASSOC)) {
-                $countriesList[] = [
-                    'id' => (int) $row['id'],
-                    'nome' => $row['nome'],
-                    'sigla' => $row['sigla'],
-                    'bandeira' => $row['bandeira']
-                ];
+            if ($_SESSION['jogadorTime'] == 4) {
+                // Buscar todos os países do sistema para o Select2
+                $stmtCountries = $pais->read(null, null, false);
+                while ($row = $stmtCountries->fetch(PDO::FETCH_ASSOC)) {
+                    $countriesList[] = [
+                        'id' => (int) $row['id'],
+                        'nome' => $row['nome'],
+                        'sigla' => $row['sigla'],
+                        'bandeira' => $row['bandeira']
+                    ];
+                }
+            } else if ($_SESSION['jogadorTime'] == 7) {
+                // Buscar todos os clubes para o Select2
+                $stmtClubs = $db->query("SELECT ID as id, Nome as nome, escudo FROM clube ORDER BY Nome ASC");
+                while ($row = $stmtClubs->fetch(PDO::FETCH_ASSOC)) {
+                    $clubsList[] = [
+                        'id' => (int) $row['id'],
+                        'nome' => $row['nome'],
+                        'escudo' => $row['escudo'] ?: 'sem_escudo.png'
+                    ];
+                }
             }
 
             for ($i = 0; $i <= count($filesToUpload) - 1; $i++) {
@@ -175,14 +187,8 @@ if (isset($_POST['ajax'])) {
                         continue;
                     }
 
-                    $nome_pais_A = isset($xml->time1) ? (string) $xml->time1 : '';
-                    $nome_pais_B = isset($xml->time2) ? (string) $xml->time2 : '';
-
-                    $timeA_id = $pais->idPorNomeTratado($nome_pais_A);
-                    $timeB_id = $pais->idPorNomeTratado($nome_pais_B);
-
-                    $timeA_bandeira = $timeA_id ? $pais->bandeiraPorId($timeA_id) : '-';
-                    $timeB_bandeira = $timeB_id ? $pais->bandeiraPorId($timeB_id) : '-';
+                    $nome_time_A = isset($xml->time1) ? (string) $xml->time1 : '';
+                    $nome_time_B = isset($xml->time2) ? (string) $xml->time2 : '';
 
                     // Extração de data do arquivo
                     $tempName = substr($originalName, 10);
@@ -195,44 +201,168 @@ if (isset($_POST['ajax'])) {
 
                     $is_duplicate = false;
                     $existing_id = null;
-                    if ($timeA_id && $timeB_id) {
-                        $jogo->timeA_id = $timeA_id;
-                        $jogo->timeB_id = $timeB_id;
-                        $jogo->data = $game_date;
-                        $existing_id = $jogo->getMatchId();
-                        if ($existing_id) {
-                            $is_duplicate = true;
-                        }
-                    }
+                    $timeA_id = null;
+                    $timeB_id = null;
+                    $timeA_meta = '';
+                    $timeB_meta = '';
 
-                    $escalacaoTime1 = [];
-                    if (isset($xml->escalacaoTime1) && is_array($xml->escalacaoTime1)) {
-                        foreach ($xml->escalacaoTime1 as $p) {
-                            if (isset($p->id) && isset($p->nome)) {
-                                $escalacaoTime1[] = ['id' => (int) $p->id, 'nome' => (string) $p->nome];
+                    if ($_SESSION['jogadorTime'] == 4) {
+                        $timeA_id = $pais->idPorNomeTratado($nome_time_A);
+                        $timeB_id = $pais->idPorNomeTratado($nome_pais_B ?? $nome_time_B);
+                        $timeA_meta = $timeA_id ? $pais->bandeiraPorId($timeA_id) : '-';
+                        $timeB_meta = $timeB_id ? $pais->bandeiraPorId($timeB_id) : '-';
+
+                        if ($timeA_id && $timeB_id) {
+                            $jogo->timeA_id = $timeA_id;
+                            $jogo->timeB_id = $timeB_id;
+                            $jogo->data = $game_date;
+                            $existing_id = $jogo->getMatchId();
+                            if ($existing_id) {
+                                $is_duplicate = true;
+                            }
+                        }
+                    } else if ($_SESSION['jogadorTime'] == 7) {
+                        $timeA_id = $time->idPorNome($nome_time_A);
+                        $timeB_id = $time->idPorNome($nome_time_B);
+                        if ($timeA_id == 0) $timeA_id = null;
+                        if ($timeB_id == 0) $timeB_id = null;
+
+                        // Escudos
+                        if ($timeA_id) {
+                            $stEsc = $db->prepare("SELECT escudo FROM clube WHERE ID = ?");
+                            $stEsc->execute([$timeA_id]);
+                            $timeA_meta = $stEsc->fetchColumn() ?: 'sem_escudo.png';
+                        } else {
+                            $timeA_meta = 'sem_escudo.png';
+                        }
+                        if ($timeB_id) {
+                            $stEsc = $db->prepare("SELECT escudo FROM clube WHERE ID = ?");
+                            $stEsc->execute([$timeB_id]);
+                            $timeB_meta = $stEsc->fetchColumn() ?: 'sem_escudo.png';
+                        } else {
+                            $timeB_meta = 'sem_escudo.png';
+                        }
+
+                        // Duplicate check in jogos_clube
+                        if ($timeA_id && $timeB_id) {
+                            $stDup = $db->prepare("SELECT id FROM jogos_clube WHERE timeA_id = ? AND timeB_id = ? AND data = ? LIMIT 1");
+                            $stDup->execute([$timeA_id, $timeB_id, $game_date]);
+                            $existing_id = $stDup->fetchColumn();
+                            if ($existing_id) {
+                                $is_duplicate = true;
                             }
                         }
                     }
-                    $escalacaoTime2 = [];
-                    if (isset($xml->escalacaoTime2) && is_array($xml->escalacaoTime2)) {
-                        foreach ($xml->escalacaoTime2 as $p) {
-                            if (isset($p->id) && isset($p->nome)) {
-                                $escalacaoTime2[] = ['id' => (int) $p->id, 'nome' => (string) $p->nome];
-                            }
-                        }
-                    }
 
+                    // Extrair Eventos e Substituições
                     $eventos = [];
-                    if (isset($xml->eventos) && is_array($xml->eventos)) {
+                    $substituicoes = [];
+                    if (isset($xml->eventos) && (is_array($xml->eventos) || is_object($xml->eventos))) {
                         foreach ($xml->eventos as $ev) {
-                            if (isset($ev->tempo) && isset($ev->minutos) && isset($ev->tipoEvento) && isset($ev->idJogador)) {
-                                $eventos[] = [
-                                    'tempo' => (string) $ev->tempo,
-                                    'minutos' => (int) $ev->minutos,
-                                    'tipoEvento' => (string) $ev->tipoEvento,
-                                    'idJogador' => (int) $ev->idJogador
-                                ];
+                            $tipoEv = (string)($ev->tipoEvento ?? '');
+                            $tempoEv = (string)($ev->tempo ?? 1);
+                            $minutosEv = (int)($ev->minutos ?? 0);
+                            $idJog = (int)($ev->idJogador ?? 0);
+                            $idNovoJog = (int)($ev->idNovoJogador ?? 0);
+
+                            if ($tipoEv === 'substituicao') {
+                                if ($idJog > 0) $substituicoes[$idJog]['saiu'] = $minutosEv;
+                                if ($idNovoJog > 0) $substituicoes[$idNovoJog]['entrou'] = $minutosEv;
                             }
+
+                            $eventos[] = [
+                                'tempo' => $tempoEv,
+                                'minutos' => $minutosEv,
+                                'tipoEvento' => $tipoEv,
+                                'idJogador' => $idJog,
+                                'idNovoJogador' => $idNovoJog
+                            ];
+                        }
+                    }
+
+                    // Extrair Escalações Completas Time 1
+                    $escalacaoTime1 = [];
+                    $startersKeys1 = ['escalacaoTime1', 'titularesTime1', 'elencoTime1'];
+                    foreach ($startersKeys1 as $sKey) {
+                        if (isset($xml->$sKey) && (is_array($xml->$sKey) || is_object($xml->$sKey))) {
+                            foreach ($xml->$sKey as $p) {
+                                if (isset($p->id) || isset($p->nome)) {
+                                    $pId = (int)($p->id ?? 0);
+                                    $escalacaoTime1[] = [
+                                        'id' => $pId,
+                                        'nome' => (string)($p->nome ?? ''),
+                                        'posicao' => (string)($p->posicao ?? ''),
+                                        'numero' => isset($p->numero) ? (int)$p->numero : null,
+                                        'titular' => 1,
+                                        'entrada_minuto' => $substituicoes[$pId]['entrou'] ?? null,
+                                        'saida_minuto' => $substituicoes[$pId]['saiu'] ?? null
+                                    ];
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    $benchKeys1 = ['reservasTime1', 'bancoTime1'];
+                    foreach ($benchKeys1 as $bKey) {
+                        if (isset($xml->$bKey) && (is_array($xml->$bKey) || is_object($xml->$bKey))) {
+                            foreach ($xml->$bKey as $p) {
+                                if (isset($p->id) || isset($p->nome)) {
+                                    $pId = (int)($p->id ?? 0);
+                                    $escalacaoTime1[] = [
+                                        'id' => $pId,
+                                        'nome' => (string)($p->nome ?? ''),
+                                        'posicao' => (string)($p->posicao ?? ''),
+                                        'numero' => isset($p->numero) ? (int)$p->numero : null,
+                                        'titular' => 0,
+                                        'entrada_minuto' => $substituicoes[$pId]['entrou'] ?? null,
+                                        'saida_minuto' => $substituicoes[$pId]['saiu'] ?? null
+                                    ];
+                                }
+                            }
+                            break;
+                        }
+                    }
+
+                    // Extrair Escalações Completas Time 2
+                    $escalacaoTime2 = [];
+                    $startersKeys2 = ['escalacaoTime2', 'titularesTime2', 'elencoTime2'];
+                    foreach ($startersKeys2 as $sKey) {
+                        if (isset($xml->$sKey) && (is_array($xml->$sKey) || is_object($xml->$sKey))) {
+                            foreach ($xml->$sKey as $p) {
+                                if (isset($p->id) || isset($p->nome)) {
+                                    $pId = (int)($p->id ?? 0);
+                                    $escalacaoTime2[] = [
+                                        'id' => $pId,
+                                        'nome' => (string)($p->nome ?? ''),
+                                        'posicao' => (string)($p->posicao ?? ''),
+                                        'numero' => isset($p->numero) ? (int)$p->numero : null,
+                                        'titular' => 1,
+                                        'entrada_minuto' => $substituicoes[$pId]['entrou'] ?? null,
+                                        'saida_minuto' => $substituicoes[$pId]['saiu'] ?? null
+                                    ];
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    $benchKeys2 = ['reservasTime2', 'bancoTime2'];
+                    foreach ($benchKeys2 as $bKey) {
+                        if (isset($xml->$bKey) && (is_array($xml->$bKey) || is_object($xml->$bKey))) {
+                            foreach ($xml->$bKey as $p) {
+                                if (isset($p->id) || isset($p->nome)) {
+                                    $pId = (int)($p->id ?? 0);
+                                    $escalacaoTime2[] = [
+                                        'id' => $pId,
+                                        'nome' => (string)($p->nome ?? ''),
+                                        'posicao' => (string)($p->posicao ?? ''),
+                                        'numero' => isset($p->numero) ? (int)$p->numero : null,
+                                        'titular' => 0,
+                                        'entrada_minuto' => $substituicoes[$pId]['entrou'] ?? null,
+                                        'saida_minuto' => $substituicoes[$pId]['saiu'] ?? null
+                                    ];
+                                }
+                            }
+                            break;
                         }
                     }
 
@@ -242,12 +372,15 @@ if (isset($_POST['ajax'])) {
                         'estadio' => isset($xml->estadio) ? (string) $xml->estadio : '',
                         'campeonato' => (int) $campeonato_jogo_import,
                         'fase' => (int) $fase_jogo_import,
-                        'time1_raw' => $nome_pais_A,
-                        'time2_raw' => $nome_pais_B,
+                        'competicao_tipo' => (int) ($_POST['competicao_tipo'] ?? 1),
+                        'time1_raw' => $nome_time_A,
+                        'time2_raw' => $nome_time_B,
                         'timeA_id' => $timeA_id ? (int) $timeA_id : null,
-                        'timeA_bandeira' => $timeA_bandeira,
+                        'timeA_bandeira' => ($_SESSION['jogadorTime'] == 4) ? $timeA_meta : null,
+                        'timeA_escudo' => ($_SESSION['jogadorTime'] == 7) ? $timeA_meta : null,
                         'timeB_id' => $timeB_id ? (int) $timeB_id : null,
-                        'timeB_bandeira' => $timeB_bandeira,
+                        'timeB_bandeira' => ($_SESSION['jogadorTime'] == 4) ? $timeB_meta : null,
+                        'timeB_escudo' => ($_SESSION['jogadorTime'] == 7) ? $timeB_meta : null,
                         'placarTime1' => isset($xml->placarTime1) ? (int) $xml->placarTime1 : 0,
                         'placarTime2' => isset($xml->placarTime2) ? (int) $xml->placarTime2 : 0,
                         'placarProrrogacaoTime1' => isset($xml->placarProrrogacaoTime1) ? (int) $xml->placarProrrogacaoTime1 : -1,
@@ -272,8 +405,10 @@ if (isset($_POST['ajax'])) {
             die(json_encode([
                 'success' => true,
                 'phase' => 1,
+                'type' => (int)$_SESSION['jogadorTime'],
                 'games' => $parsedGames,
                 'countries' => $countriesList,
+                'clubs' => $clubsList,
                 'php_output' => $php_output
             ]));
         }
@@ -383,7 +518,7 @@ if (isset($_POST['ajax'])) {
                         $matches = [];
                         
                         // 1. Search for exact name match
-                        $sql_exact = "SELECT j.ID, j.Nome, j.Nivel, j.Nascimento, p.Bandeira, p.Nome AS NomePais FROM jogador j LEFT JOIN paises p ON j.Pais = p.id WHERE j.Nome = ?";
+                        $sql_exact = "SELECT j.ID, j.Nome, j.Nivel, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as Idade, j.Sexo, p.Bandeira, p.Nome AS NomePais, b.ID AS idClube, b.Nome AS NomeClube FROM jogador j LEFT JOIN paises p ON j.Pais = p.id LEFT JOIN contratos_jogador c ON c.jogador = j.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID WHERE j.Nome = ?";
                         $params_exact = [$ip['nome']];
                         $stmt_exact = $db->prepare($sql_exact);
                         $stmt_exact->execute($params_exact);
@@ -396,7 +531,7 @@ if (isset($_POST['ajax'])) {
                             $j_name_clauses = array_map(function($clause) {
                                 return "j." . $clause;
                             }, $name_clauses);
-                            $sql_similar = "SELECT j.ID, j.Nome, j.Nivel, j.Nascimento, p.Bandeira, p.Nome AS NomePais FROM jogador j LEFT JOIN paises p ON j.Pais = p.id WHERE " . implode(' OR ', $j_name_clauses) . " LIMIT 10";
+                            $sql_similar = "SELECT j.ID, j.Nome, j.Nivel, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as Idade, j.Sexo, p.Bandeira, p.Nome AS NomePais, b.ID AS idClube, b.Nome AS NomeClube FROM jogador j LEFT JOIN paises p ON j.Pais = p.id LEFT JOIN contratos_jogador c ON c.jogador = j.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID WHERE " . implode(' OR ', $j_name_clauses) . " LIMIT 10";
                             $stmt_similar = $db->prepare($sql_similar);
                             $stmt_similar->execute($params_similar);
                             $similar_matches = $stmt_similar->fetchAll(PDO::FETCH_ASSOC);
@@ -430,16 +565,16 @@ if (isset($_POST['ajax'])) {
                         // Team matches
                         $t_name = (string)$xml->clube->Nome;
                         $t_sigla = (string)$xml->clube->TresLetras;
-                        $stmt_t = $db->prepare("SELECT ID, Nome FROM clube WHERE Nome = ? OR TresLetras = ?");
+                        $stmt_t = $db->prepare("SELECT c.ID, c.Nome, c.liga, l.Nome AS NomeLiga FROM clube c LEFT JOIN liga l ON c.liga = l.ID WHERE c.Nome = ? OR c.TresLetras = ?");
                         $stmt_t->execute([$t_name, $t_sigla]);
                         $t_matches = $stmt_t->fetchAll(PDO::FETCH_ASSOC);
 
                         // Coach matches
                         $c_name = trim(preg_replace('/\s*\[.*?\]\s*$/', '', (string)$xml->tecnico->Nome));
-                        $stmt_c_exact = $db->prepare("SELECT ID, Nome FROM tecnico WHERE Nome = ?");
+                        $stmt_c_exact = $db->prepare("SELECT a.ID, a.Nome, a.Nivel, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, a.Sexo, b.ID AS idClube, b.Nome AS NomeClube FROM tecnico a LEFT JOIN contratos_tecnico c ON c.tecnico = a.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID WHERE a.Nome = ?");
                         $stmt_c_exact->execute([$c_name]);
                         $c_exact = $stmt_c_exact->fetchAll(PDO::FETCH_ASSOC);
-                        $stmt_c_fuzzy = $db->prepare("SELECT ID, Nome FROM tecnico WHERE Nome LIKE ?");
+                        $stmt_c_fuzzy = $db->prepare("SELECT a.ID, a.Nome, a.Nivel, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, a.Sexo, b.ID AS idClube, b.Nome AS NomeClube FROM tecnico a LEFT JOIN contratos_tecnico c ON c.tecnico = a.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID WHERE a.Nome LIKE ?");
                         $stmt_c_fuzzy->execute(['%' . $c_name . '%']);
                         $c_fuzzy = $stmt_c_fuzzy->fetchAll(PDO::FETCH_ASSOC);
                         $c_matches = array_slice(array_unique(array_merge($c_exact, $c_fuzzy), SORT_REGULAR), 0, 5);
@@ -456,7 +591,12 @@ if (isset($_POST['ajax'])) {
 
                         $team_matches_data = [
                             'clube' => ['nome' => $t_name, 'matches' => $t_matches],
-                            'tecnico' => ['nome' => $c_name, 'matches' => $c_matches],
+                            'tecnico' => [
+                                'nome' => $c_name, 
+                                'idade' => (int)$xml->tecnico->Idade,
+                                'nivel' => (int)$xml->tecnico->Nivel,
+                                'matches' => $c_matches
+                            ],
                             'estadio' => ['nome' => $s_name, 'matches' => $s_matches]
                         ];
                     }

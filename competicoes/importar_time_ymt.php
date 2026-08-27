@@ -41,7 +41,7 @@ $clima = new Clima($ldb);
 $tecnico = new Tecnico($ldb);
 
 $correct_extension = 'ymt';
-$max_file_size = 400000;
+$max_file_size = 10485760; // 10MB
 
 $upload_success = null;
 $upload_error = '';
