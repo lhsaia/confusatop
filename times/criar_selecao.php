@@ -26,15 +26,20 @@ $codigoPais = $_GET['idPais'];
 $donoLogado = $pais->checarDono($codigoPais, $_SESSION['user_id']);
 
 $page_title = "Criar Seleção";
-$css_filename = "indexRanking";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'criar';
+$aux_css = 'criar_time_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
-echo"<div>";
-
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && $donoLogado == true){
+?>
+
+<div class="propostas-container">
+<div class="propostas-card">
+<h2 class="propostas-title">➕ Criar Seleção</h2>
+<div id='errorbox'></div>
+
 
     $error_msg = '';
 
@@ -240,181 +245,183 @@ for (i = 0; i < close.length; i++) {
 </script>
 
 
+<div id='inscricao'>
 <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['REQUEST_URI']; ?>'>
 
-    <table class='table table-below float-table'>
+    <label for="categoria">Categoria</label>
+    <select class='form-control' name='categoria' id='categoria'>
+        <option selected value='1'>Principal</option>
+        <option value='2'>Olímpica</option>
+        <option value='3'>Sub-20</option>
+        <option value='4'>Sub-18</option>
+    </select>
 
-    <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Categoria</td>
-            <td class="td_inv input_nome_time"><select class='form-control' name='categoria' id='categoria'>
-                <option selected value='1'>Principal</option>
-                <option value='2'>Olímpica</option>
-                <option value='3'>Sub-20</option>
-                <option value='4'>Sub-18</option>
-            </select></td>
-        </tr>
+    <label for="sigla">Sigla</label>
+    <input type='text' maxlength="3" name='sigla' id='sigla' class='form-control inputHerdeiro' />
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Sigla</td>
-            <td class="td_inv input_nome_time"><input type='text' maxlength="3" name='sigla' id='sigla' class='form-control inputHerdeiro' /></td>
-        </tr>
+    <label>Escudo</label>
+    <label class='custom-file-upload' for='escudo'>
+        <span class="material-symbols-outlined" style="font-size: 24px; color: #0284c7;">cloud_upload</span>
+        <img id='escudo-preview' style="display:none;">
+        <span id='nomeEscudo'>Clique para selecionar o escudo</span>
+    </label>
+    <input type="file" id='escudo' name='escudo' accept=".jpg,.png,.jpeg,.webp" style="display: none !important;">
 
+    <label>Uniforme titular</label>
+    <label class='custom-file-upload' for='uni1'>
+        <span class="material-symbols-outlined" style="font-size: 24px; color: #0284c7;">cloud_upload</span>
+        <img id='uni1-preview' style="display:none;">
+        <span id='nomeUni1'>Clique para selecionar o uniforme titular</span>
+    </label>
+    <input type="file" id='uni1' name='uni1' accept=".jpg,.png,.jpeg,.webp" style="display: none !important;">
 
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Escudo</td>
-            <td class="td_inv input_nome_time">
+    <label>Cores uniforme titular</label>
+    <div class="cores-container">
+        <input type="color" name='cor1uni1'>
+        <input type="color" name='cor2uni1' value='#ffffff'>
+        <input type="color" name='cor3uni1'>
+    </div>
 
-            <input type="file" class='form-control custom-file-upload' name='escudo' accept=".jpg,.png,.jpeg">
+    <label>Uniforme reserva</label>
+    <label class='custom-file-upload' for='uni2'>
+        <span class="material-symbols-outlined" style="font-size: 24px; color: #0284c7;">cloud_upload</span>
+        <img id='uni2-preview' style="display:none;">
+        <span id='nomeUni2'>Clique para selecionar o uniforme reserva</span>
+    </label>
+    <input type="file" id='uni2' name='uni2' accept=".jpg,.png,.jpeg,.webp" style="display: none !important;">
 
+    <label>Cores uniforme reserva</label>
+    <div class="cores-container">
+        <input type="color" name='cor1uni2' value='#ffffff'>
+        <input type="color" name='cor2uni2'>
+        <input type="color" name='cor3uni2' value='#ffffff'>
+    </div>
 
-            </td>
-        </tr>
+    <label for="maxTorcida">Máx. Torcida</label>
+    <select class='form-control' name='maxTorcida' id='maxTorcida'>
+        <option value='1000'>&lt;1000</option>
+        <option value='2000'>&lt;2000</option>
+        <option value='3000'>&lt;3000</option>
+        <option value='4000'>&lt;4000</option>
+        <option value='5000'>&lt;5000</option>
+        <option value='6000'>&lt;6000</option>
+        <option value='7000'>&lt;7000</option>
+        <option value='8000'>&lt;8000</option>
+        <option value='9000'>&lt;9000</option>
+        <option value='10000'>&lt;10000</option>
+        <option value='20000'>&lt;20000</option>
+        <option value='30000'>&lt;30000</option>
+        <option value='40000'>&lt;40000</option>
+        <option value='50000'>&lt;50000</option>
+        <option value='60000'>&lt;60000</option>
+        <option value='70000'>&lt;70000</option>
+        <option value='80000'>&lt;80000</option>
+        <option value='90000'>&lt;90000</option>
+        <option value='100000'>&lt;100000</option>
+        <option selected value='0'>&gt;100000</option>
+    </select>
 
-        <tr class="tr_inv  spec_height">
-            <td class="td_inv input_nome_time">Uniforme titular</td>
-            <td class="td_inv input_nome_time">
+    <label for="fidelidade">Fidelidade</label>
+    <input type='number' id='fidelidade' value='5' max='10' min='1' name='fidelidade' class='form-control inputHerdeiro' />
 
-            <input type="file" class='form-control custom-file-upload' name='uni1' accept=".jpg,.png,.jpeg">
+    <label for="sexo">Masc/Fem</label>
+    <select class='form-control' id='sexo' name='sexo'>
+        <option selected value='0'>Masculino</option>
+        <option value='1'>Feminino</option>
+    </select>
 
+    <label for="estadio">Estádio</label>
+    <?php
+    $stmt = $estadio->read($_SESSION['user_id']);
+    echo "<select class='form-control' id='estadio' name='estadio'>";
+    while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
+        extract($row_category);
+        echo "<option value='{$id}' data-pais='{$Pais}'>{$nome} ({$capacidade})</option>";
+    }
+    echo "</select>";
+    ?>
 
-            </td>
-        </tr>
-
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Cores uniforme titular</td>
-            <td class="td_inv input_nome_time">
-
-            <input type="color" name='cor1uni1'>
-            <input type="color" name='cor2uni1' value='#ffffff'>
-            <input type="color" name='cor3uni1'>
-
-            </td>
-        </tr>
-
-        <tr class="tr_inv  spec_height">
-            <td class="td_inv input_nome_time">Uniforme reserva</td>
-            <td class="td_inv input_nome_time">
-
-            <input type="file" class='form-control custom-file-upload' name='uni2' accept=".jpg,.png,.jpeg">
-
-
-            </td>
-        </tr>
-
-        <tr class="tr_inv  spec_height">
-            <td class="td_inv input_nome_time">Cores uniforme reserva</td>
-            <td class="td_inv input_nome_time">
-
-            <input type="color" name='cor1uni2' value='#ffffff'>
-            <input type="color" name='cor2uni2'>
-            <input type="color" name='cor3uni2' value='#ffffff'>
-
-            </td>
-        </tr>
-
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Máx. Torcida</td>
-            <td class="td_inv input_nome_time"><select class='form-control' name='maxTorcida' id='maxTorcida'>
-                <option value='1000'>&lt;1000</option>
-                <option value='2000'>&lt;2000</option>
-                <option value='3000'>&lt;3000</option>
-                <option value='4000'>&lt;4000</option>
-                <option value='5000'>&lt;5000</option>
-                <option value='6000'>&lt;6000</option>
-                <option value='7000'>&lt;7000</option>
-                <option value='8000'>&lt;8000</option>
-                <option value='9000'>&lt;9000</option>
-                <option value='10000'>&lt;10000</option>
-                <option value='20000'>&lt;20000</option>
-                <option value='30000'>&lt;30000</option>
-                <option value='40000'>&lt;40000</option>
-                <option value='50000'>&lt;50000</option>
-                <option value='60000'>&lt;60000</option>
-                <option value='70000'>&lt;70000</option>
-                <option value='80000'>&lt;80000</option>
-                <option value='90000'>&lt;90000</option>
-                <option value='100000'>&lt;100000</option>
-                <option selected value='0'>&gt;100000</option>
-            </select></td>
-        </tr>
-
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Fidelidade</td>
-            <td class="td_inv input_nome_time"><input type='number' id='fidelidade' value='5' max='10' min='1' name='fidelidade' class='form-control inputHerdeiro' /></td>
-        </tr>
-
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Masc/Fem</td>
-            <td class="td_inv input_nome_time">
-
-                <select class='form-control' id='sexo' name='sexo'>
-                <option selected value='0'>Masculino</option>
-                <option value='1'>Feminino</option>
-                </select>
-
-            </td>
-        </tr>
-
-
-        <tr class="tr_inv spec_height">
-            <td class="td_inv input_nome_time">Estádio</td>
-            <td class="td_inv input_nome_time">
-                <?php
-                // ler times do banco de dados
-                $stmt = $estadio->read($_SESSION['user_id']);
-
-                // put them in a select drop-down
-                echo "<select class='form-control' id='estadio'  name='estadio'>";
-
-                while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
-                    extract($row_category);
-                    echo "<option value='{$id}' data-pais='{$Pais}'>{$nome} ({$capacidade})</option>";
-                }
-
-                echo "</select>";
-                ?>
-            </td>
-        </tr>
-
-        <tr class="tr_inv btn_area">
-            <td class="td_inv btn_area"></td>
-            <td class="td_inv btn_area">
-                  <input type='hidden' name='pais' value='<?php echo $_GET['idPais'] ?>'>
-                <button type="submit" name="criar" class="btn" value="0">Inserir</button>
-                <button type="reset" name="reset" class="btn">Limpar</button>
-            </td>
-        </tr>
-
-    </table>
+    <input type='hidden' name='pais' value='<?php echo $_GET['idPais'] ?>'>
+    <div style="display: flex; gap: 10px; margin-top: 24px;">
+        <button type="submit" name="criar" class="btn-submit" value="0">Inserir</button>
+        <button type="reset" name="reset" class="btn-reset">Limpar</button>
+    </div>
 </form>
+</div>
 
-  <script>
-
-  $(function () {
+<script>
+$(function () {
   $("#fidelidade").keydown(function () {
-    // Save old value.
     if (!$(this).val() || (parseInt($(this).val()) <= 10 && parseInt($(this).val()) >= 1))
     $(this).data("old", $(this).val());
   });
   $("#fidelidade").keyup(function () {
-    // Check correct, else revert back to old value.
     if (!$(this).val() || (parseInt($(this).val()) <= 10 && parseInt($(this).val()) >= 1));
     else
       $(this).val($(this).data("old"));
   });
-});
 
-  </script>
+  function readURL(input, previewId) {
+      if (input.files && input.files[0]) {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+              $('#' + previewId + '-preview').attr('src', e.target.result).show();
+          }
+          reader.readAsDataURL(input.files[0]);
+      }
+  }
+
+  $('#escudo').on('change', function(){
+      if (this.files && this.files[0]) {
+          $('#nomeEscudo').text(this.files[0].name);
+          readURL(this, 'escudo');
+      } else {
+          $('#nomeEscudo').text('Clique para selecionar o escudo');
+          $('#escudo-preview').hide().attr('src', '');
+      }
+  });
+
+  $('#uni1').on('change', function(){
+      if (this.files && this.files[0]) {
+          $('#nomeUni1').text(this.files[0].name);
+          readURL(this, 'uni1');
+      } else {
+          $('#nomeUni1').text('Clique para selecionar o uniforme titular');
+          $('#uni1-preview').hide().attr('src', '');
+      }
+  });
+
+  $('#uni2').on('change', function(){
+      if (this.files && this.files[0]) {
+          $('#nomeUni2').text(this.files[0].name);
+          readURL(this, 'uni2');
+      } else {
+          $('#nomeUni2').text('Clique para selecionar o uniforme reserva');
+          $('#uni2-preview').hide().attr('src', '');
+      }
+  });
+
+  $('button[type="reset"]').on('click', function(){
+      $('#nomeEscudo').text('Clique para selecionar o escudo');
+      $('#escudo-preview').hide().attr('src', '');
+      $('#nomeUni1').text('Clique para selecionar o uniforme titular');
+      $('#uni1-preview').hide().attr('src', '');
+      $('#nomeUni2').text('Clique para selecionar o uniforme reserva');
+      $('#uni2-preview').hide().attr('src', '');
+  });
+});
+</script>
 
 <?php
-
-    } else {
-
-    echo "Usuário sem permissão para criar seleções, por favor faça o login.";
+} else {
+    echo "<div class='alert alert-danger'>Usuário sem permissão para criar seleções, por favor faça o login.</div>";
 }
+?>
 
+</div>
+</div>
 
-echo "</div>";
-
+<?php
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 ?>
+

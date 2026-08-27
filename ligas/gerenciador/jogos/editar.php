@@ -5,9 +5,10 @@ include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogos_clube.php");
 
 $page_title = "Editar Partida (Clubes)";
-$css_filename = "indexRanking";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = "match_editor";
+$aux_css = "home_redesign";
+$extra_css = "jogos_clubes_redesign";
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -15,7 +16,7 @@ $database = new Database();
 $db = $database->getConnection();
 $jogo = new Jogo($db);
 
-$match_id = isset($_GET['match_id']) ? (int)$_GET['match_id'] : 0;
+$match_id = isset($_GET['match_id']) ? (int)$_GET['match_id'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
 $match_info = null;
 $events = [];
 $lineup = [];
@@ -37,8 +38,32 @@ if($match_id > 0) {
 $teamLineups = [1 => [], 2 => []]; 
 $coaches = [1 => [], 2 => []];
 if($match_info) {
+    $timeA_id = (int)$match_info['timeA_id'];
+    $timeB_id = (int)$match_info['timeB_id'];
+    
     foreach($lineup as $p) {
-        $tId = ($p['id_time'] == $match_info['timeA_id']) ? 1 : (($p['id_time'] == $match_info['timeB_id']) ? 2 : 0);
+        $pTeamId = (int)$p['id_time'];
+        $tId = 0;
+        
+        if($timeA_id > 0 && $pTeamId === $timeA_id) {
+            $tId = 1;
+        } elseif($timeB_id > 0 && $pTeamId === $timeB_id) {
+            $tId = 2;
+        } elseif(isset($p['lado']) && ($p['lado'] == 'A' || $p['lado'] == '1')) {
+            $tId = 1;
+        } elseif(isset($p['lado']) && ($p['lado'] == 'B' || $p['lado'] == '2')) {
+            $tId = 2;
+        }
+        
+        // Fallback se id_time for 0 ou manual
+        if($tId === 0) {
+            if(count($teamLineups[1]) + count($coaches[1]) < 18) {
+                $tId = 1;
+            } else {
+                $tId = 2;
+            }
+        }
+        
         if($tId > 0) {
             if($p['posicao'] == 'S' && $p['id_jogador'] == 0 && (stripos($p['nome_jogador'], 'Tecnico') !== false || stripos($p['nome_jogador'], 'Técnico') !== false)) {
                 $p['posicao'] = 'T';
@@ -67,7 +92,7 @@ function renderPlayerRow($side, $idx, $p, $allPositions, $isCoach = false) {
     ?>
     <tr class="lineup-row <?php echo $rowClass; ?>">
         <td class="px-1 text-center">
-            <select name="lineup[<?php echo $side; ?>][<?php echo $prefix; ?>][pos]" class="form-control form-control-sm px-1 text-center fw-bold" style="font-size: 0.7rem;">
+            <select name="lineup[<?php echo $side; ?>][<?php echo $prefix; ?>][pos]" class="form-control form-control-sm px-1 text-center fw-bold" style="font-size: 0.75rem; border-radius: 6px;">
                 <?php foreach($allPositions as $pos): ?>
                     <option value="<?php echo $pos['Sigla']; ?>" <?php echo (strcasecmp((string)($p['posicao'] ?? ''), (string)$pos['Sigla']) === 0) ? 'selected' : ''; ?>><?php echo $pos['Sigla']; ?></option>
                 <?php endforeach; ?>
@@ -75,7 +100,7 @@ function renderPlayerRow($side, $idx, $p, $allPositions, $isCoach = false) {
         </td>
         <td>
             <select name="lineup[<?php echo $side; ?>][<?php echo $prefix; ?>][id_jogador]" class="form-control form-control-sm select-player-api" <?php echo $isCoach ? 'data-is-coach="1"' : ''; ?>>
-                <option value="0">--- NÃO CONSTA NO BANCO ---</option>
+                <option value="-1">--- NÃO CONSTA NO BANCO ---</option>
                 <?php if(!$isManual): ?>
                     <option value="<?php echo $p['id_jogador']; ?>" selected><?php echo htmlspecialchars($p['nome_jogador']); ?></option>
                 <?php endif; ?>
@@ -106,47 +131,44 @@ function renderPlayerRow($side, $idx, $p, $allPositions, $isCoach = false) {
 }
 ?>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <style>
-    body { background-color: #f4f7f6; color: #333; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-    #ranking-container { padding: 30px; max-width: 1400px; margin: 0 auto; }
-    .editor-card { background: white; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 25px; border: 1px solid #e9ecef; }
-    .section-title { font-size: 0.95rem; font-weight: 700; color: #1a1469; margin-bottom: 18px; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; display: flex; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
-    .section-title i, .section-title .material-symbols-outlined { margin-right: 8px; color: #ff6b6b; font-size: 0.8em; }
-    .form-label { font-size: 0.75rem; text-transform: uppercase; color: #6c757d; font-weight: 700; margin-bottom: 5px; display: block; }
-    .team-editor-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 8px; border: 1px solid #eee; }
-    .team-crest-preview { width: 60px; height: 60px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex-shrink: 0; overflow: hidden; }
+    .editor-card { background: #ffffff; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.03); padding: 22px; margin-bottom: 25px; border: 1px solid rgba(0,0,0,0.08); }
+    .section-title { font-family: 'Kanit', sans-serif; font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 18px; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; display: flex; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
+    .section-title i, .section-title .material-symbols-outlined { margin-right: 8px; color: #0284c7; font-size: 1.1rem; }
+    .form-label { font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 5px; display: block; }
+    .team-editor-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); }
+    .team-crest-preview { width: 60px; height: 60px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 2px 6px rgba(0,0,0,0.05); flex-shrink: 0; overflow: hidden; }
     .team-crest-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
-    .lineup-row { border-left: 4px solid transparent; transition: 0.2s; border-bottom: 1px solid #eee !important; }
-    .lineup-row.starter { border-left-color: #28a745; background-color: #fff; }
-    .lineup-row.bench { border-left-color: #ffc107; background-color: #fdfdfd; opacity: 0.9; }
+    .lineup-row { border-left: 4px solid transparent; transition: 0.2s; border-bottom: 1px solid rgba(0,0,0,0.04) !important; }
+    .lineup-row.starter { border-left-color: #10b981; background-color: #fff; }
+    .lineup-row.bench { border-left-color: #f59e0b; background-color: #fcfcfc; opacity: 0.95; }
     .sub-minutes-container { display: flex; align-items: center; gap: 4px; }
-    .sub-icon { font-size: 0.7rem; width: 14px; text-align: center; }
-    .sub-in { color: #28a745; }
-    .sub-out { color: #dc3545; }
-    .btn-xs { padding: 2px 10px; font-size: 0.65rem; font-weight: 800; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.8px; display: inline-flex; align-items: center; justify-content: center; height: 26px; border: none; font-family: 'Inter', system-ui, -apple-system, sans-serif !important; }
-    .btn-save-custom { background-color: #28a745 !important; color: #fff !important; width: auto; }
-    .btn-save-custom:hover { background-color: #218838 !important; transform: translateY(-1px); }
-    .btn-cancel-custom { background-color: #dc3545 !important; color: #fff !important; width: auto; }
-    .btn-cancel-custom:hover { background-color: #c82333 !important; transform: translateY(-1px); }
-    .form-control-xs { padding: 0 !important; height: 24px !important; width: 34px !important; font-size: 0.7rem !important; }
+    .sub-icon { font-size: 0.75rem; width: 14px; text-align: center; }
+    .sub-in { color: #10b981; }
+    .sub-out { color: #ef4444; }
+    .form-control-xs { padding: 0 !important; height: 26px !important; width: 36px !important; font-size: 0.75rem !important; border-radius: 6px !important; }
     .cursor-pointer { cursor: pointer; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     .new-row { animation: fadeIn 0.3s ease-out; }
     .sticky-header {
         position: -webkit-sticky;
         position: sticky;
-        top: 50px; /* Adjust based on navbar height */
-        z-index: 9;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(8px);
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        padding: 12px 20px;
+        top: 60px;
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 14px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+        padding: 14px 22px;
         margin-bottom: 25px;
-        border: 1px solid rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.08);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -155,42 +177,113 @@ function renderPlayerRow($side, $idx, $p, $allPositions, $isCoach = false) {
     .unsaved-badge {
         font-size: 0.75rem;
         font-weight: 700;
-        color: #dc3545; /* Bootstrap danger color */
-        background: #ffe6e6;
+        color: #ef4444;
+        background: #fee2e2;
         padding: 4px 10px;
         border-radius: 20px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         margin-right: 15px;
-        display: none; /* Initially hidden */
+        display: none;
         align-items: center;
-        border: 1px solid #f1b0b7;
+        border: 1px solid #fca5a5;
     }
-    .unsaved-badge i { margin-right: 5px; }
+    .unsaved-badge span { margin-right: 5px; font-size: 1rem; }
     
-    /* Toast Notifications */
+    #lineupTabs .nav-link {
+        border-radius: 10px !important;
+        font-family: 'Kanit', sans-serif !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+        background: #f1f5f9 !important;
+        border: 1px solid rgba(0,0,0,0.06) !important;
+        transition: all 0.2s ease !important;
+    }
+    #lineupTabs .nav-link.active {
+        background: #0284c7 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25) !important;
+    }
+    
+    .select2-container--bootstrap4 .select2-selection {
+        border-radius: 8px !important;
+        border: 1px solid rgba(0,0,0,0.15) !important;
+    }
+    .select2-container--bootstrap4.select2-container--focus .select2-selection {
+        border-color: #0284c7 !important;
+        box-shadow: 0 0 0 0.2rem rgba(2, 132, 199, 0.15) !important;
+    }
+
+    /* Segmented Control para Tipo de Competição (Liga / Copa) */
+    .comp-type-toggle-group {
+        display: flex;
+        background: #f1f5f9;
+        padding: 4px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        gap: 4px;
+        width: 100%;
+    }
+    .comp-type-toggle-group input[type="radio"] {
+        display: none;
+    }
+    .comp-toggle-label {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 7px 12px;
+        margin: 0;
+        font-family: 'Kanit', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #64748b;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        user-select: none;
+    }
+    .comp-toggle-label span.material-symbols-outlined {
+        font-size: 1.15rem;
+        transition: transform 0.2s ease;
+    }
+    .comp-toggle-label:hover {
+        color: #0f172a;
+        background: rgba(255, 255, 255, 0.6);
+    }
+    .comp-type-toggle-group input[type="radio"]:checked + .comp-toggle-label {
+        background: #ffffff;
+        color: #0284c7;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        font-weight: 700;
+    }
+    .comp-type-toggle-group input[type="radio"]:checked + .comp-toggle-label span.material-symbols-outlined {
+        color: #0284c7;
+        transform: scale(1.1);
+    }
+
     #toast-container { position: fixed; top: 80px; right: 20px; z-index: 9999; }
     .custom-toast {
         background: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.12);
         padding: 15px 20px;
         margin-bottom: 15px;
         display: flex;
         align-items: center;
         min-width: 300px;
         animation: slideIn 0.3s ease-out;
-        border-left: 5px solid #28a745;
+        border-left: 5px solid #10b981;
     }
-    .custom-toast.error { border-left-color: #dc3545; }
-    .custom-toast.warning { border-left-color: #ffc107; }
+    .custom-toast.error { border-left-color: #ef4444; }
+    .custom-toast.warning { border-left-color: #f59e0b; }
     .toast-icon { margin-right: 15px; font-size: 1.2rem; }
     .toast-content { flex-grow: 1; }
-    .toast-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 2px; }
-    .toast-message { font-size: 0.8rem; color: #666; }
+    .toast-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 2px; font-family: 'Kanit', sans-serif; }
+    .toast-message { font-size: 0.85rem; color: #64748b; }
     .toast-close { cursor: pointer; opacity: 0.5; font-size: 1.1rem; }
     .toast-close:hover { opacity: 1; }
-    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     @keyframes fadeOut { to { transform: translateX(100%); opacity: 0; } }
     .spin { animation: spin 2s linear infinite; }
@@ -199,220 +292,320 @@ function renderPlayerRow($side, $idx, $p, $allPositions, $isCoach = false) {
 
 <div id="toast-container"></div>
 
-
-<div id="ranking-container">
+<div class="clubes-container" style="max-width: 1360px;">
     <form id="matchForm" action="salvar_jogo.php" method="POST">
         <input type="hidden" name="match_id" value="<?php echo $match_id; ?>">
         
         <div class="sticky-header">
-            <h4 class="fw-bold mb-0 text-dark text-nowrap" style="letter-spacing: -0.5px;"><?php echo $match_id ? "Editar Partida #".$match_id : "Nova Partida"; ?></h4>
+            <div class="d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined" style="color: #0284c7; font-size: 1.6rem;">sports_soccer</span>
+                <h4 class="fw-bold mb-0 text-dark text-nowrap" style="font-family: 'Kanit', sans-serif; letter-spacing: -0.5px;"><?php echo $match_id ? "Editar Partida #".$match_id : "Nova Partida"; ?></h4>
+            </div>
             <div class="d-flex align-items-center">
                 <div class="unsaved-badge" id="unsavedBadge">
                     <span class="material-symbols-outlined">error</span> Alterações não salvas
                 </div>
-                <a href="index.php" class="btn btn-xs btn-cancel-custom shadow-sm mr-2 me-2" style="white-space: nowrap;">CANCELAR</a>
-                <button type="submit" class="btn btn-xs btn-save-custom shadow-sm" style="white-space: nowrap;">SALVAR PARTIDA</button>
+                <a href="index.php" class="btn-clubes-secondary mr-2 me-2" style="white-space: nowrap; padding: 7px 16px;">CANCELAR</a>
+                <button type="submit" class="btn-clubes-primary" style="white-space: nowrap; padding: 7px 18px;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem; margin-right: 4px;">save</span>
+                    SALVAR PARTIDA
+                </button>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-lg-7">
-                <div class="editor-card">
-                    <h5 class="section-title"><span class="material-symbols-outlined">info</span> Info Geral</h5>
-                    <div class="row">
-                        <div class="col-md-5 mb-3">
-                            <label class="form-label">Competição</label>
-                            <div class="d-flex gap-3 mb-2">
-                                <div class="form-check m-0">
-                                    <input class="form-check-input comp-type" type="radio" name="competicao_tipo" id="typeLiga" value="0" <?php echo (!$match_info || $match_info['competicao_tipo'] == 0) ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="typeLiga">Liga</label>
-                                </div>
-                                <div class="form-check m-0">
-                                    <input class="form-check-input comp-type" type="radio" name="competicao_tipo" id="typeCopa" value="1" <?php echo ($match_info && $match_info['competicao_tipo'] == 1) ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="typeCopa">Copa</label>
-                                </div>
+        <!-- 1. Dados e Metadados da Partida -->
+        <div class="editor-card mb-4">
+            <h5 class="section-title"><span class="material-symbols-outlined">emoji_events</span> Dados da Partida</h5>
+            <div class="row align-items-end">
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <label class="form-label">Competição</label>
+                    <div class="comp-type-toggle-group mb-2">
+                        <input type="radio" class="comp-type" name="competicao_tipo" id="typeLiga" value="0" <?php echo (!$match_info || $match_info['competicao_tipo'] == 0) ? 'checked' : ''; ?>>
+                        <label class="comp-toggle-label" for="typeLiga">
+                            <span class="material-symbols-outlined">table_chart</span>
+                            <span>Liga</span>
+                        </label>
+
+                        <input type="radio" class="comp-type" name="competicao_tipo" id="typeCopa" value="1" <?php echo ($match_info && $match_info['competicao_tipo'] == 1) ? 'checked' : ''; ?>>
+                        <label class="comp-toggle-label" for="typeCopa">
+                            <span class="material-symbols-outlined">emoji_events</span>
+                            <span>Copa</span>
+                        </label>
+                    </div>
+                    <select name="competicao_id" id="selectComp" class="form-control" required>
+                        <?php if($match_info): ?>
+                            <option value="<?php echo $match_info['competicao_id']; ?>" selected><?php echo $match_info['competition_name']; ?></option>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-3">
+                    <label class="form-label">Fase</label>
+                    <select name="fase" class="form-control" style="height: 38px;">
+                        <?php 
+                        $fases = [0=>'N/A', 1=>'Fase pré', 2=>'Fase de grupos', 3=>'Oitavas', 4=>'Quartas', 5=>'Semi', 6=>'3º Lugar', 7=>'Repescagem', 8=>'Final'];
+                        foreach($fases as $id => $name): ?>
+                            <option value="<?php echo $id; ?>" <?php echo ($match_info && $match_info['phase'] == $id) ? 'selected' : ''; ?>><?php echo $name; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <label class="form-label">Data do Jogo</label>
+                    <?php $valData = ($match_info && $match_info['data']) ? $match_info['data'] : date('Y-m-d'); ?>
+                    <input type="date" name="data" class="form-control" style="height: 38px;" value="<?php echo $valData; ?>" required>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <label class="form-label">Estádio</label>
+                    <select name="estadio_id" id="selectStadium" class="form-control">
+                        <?php if($match_info && ($match_info['estadio_id'] || $match_info['estadio'])): ?>
+                            <option value="<?php echo $match_info['estadio_id'] ? $match_info['estadio_id'] : '0'; ?>" selected><?php echo $match_info['estadio']; ?></option>
+                        <?php endif; ?>
+                    </select>
+                    <input type="hidden" name="estadio_nome" id="estadio_nome" value="<?php echo $match_info ? $match_info['estadio'] : ''; ?>">
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Confronto e Placar Principal -->
+        <div class="editor-card mb-4">
+            <h5 class="section-title"><span class="material-symbols-outlined">scoreboard</span> Confronto e Placar</h5>
+            <div class="row align-items-center">
+                
+                <!-- Mandante (Time A) -->
+                <div class="col-lg-5 col-md-12 mb-3 mb-lg-0">
+                    <div class="p-3 rounded-3" style="background: #f8fafc; border: 1px solid rgba(0,0,0,0.06);">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="badge" style="background: #0284c7; color:#fff; font-size:0.75rem; font-weight:700;">MANDANTE (TIME A)</span>
+                            <div class="form-check m-0">
+                                <input class="form-check-input manual-toggle" type="checkbox" id="manualA" data-side="A" <?php echo (!$match_info || !$match_info['timeA_id']) ? 'checked' : ''; ?>>
+                                <label class="form-check-label small" for="manualA">Digitar nome manual</label>
                             </div>
-                            <select name="competicao_id" id="selectComp" class="form-control" required>
-                                <?php if($match_info): ?>
-                                    <option value="<?php echo $match_info['competicao_id']; ?>" selected><?php echo $match_info['competition_name']; ?></option>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="team-crest-preview <?php echo (!$match_info || !$match_info['timeA_id']) ? 'd-none' : ''; ?>" id="crestA">
+                                <?php if($match_info && $match_info['timeA_bandeira']): ?>
+                                    <img src="/images/escudos/<?php echo $match_info['timeA_bandeira']; ?>" alt="Escudo">
+                                <?php else: ?>
+                                    <span class="material-symbols-outlined text-muted" style="font-size:2em;">shield</span>
                                 <?php endif; ?>
-                            </select>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="search-portal-container <?php echo (!$match_info || !$match_info['timeA_id']) ? 'd-none' : ''; ?>" id="searchA">
+                                    <select name="timeA_id" id="selectTimeA" class="form-control team-select" data-side="A">
+                                        <option value="-1">--- NÃO CONSTA NO BANCO ---</option>
+                                        <?php if($match_info && $match_info['timeA_id']): ?>
+                                            <option value="<?php echo $match_info['timeA_id']; ?>" selected><?php echo $match_info['timeA_nome']; ?></option>
+                                        <?php endif; ?>
+                                    </select>
+                                </div>
+                                <input type="text" name="timeA_nome" id="nameA" class="form-control <?php echo ($match_info && $match_info['timeA_id']) ? 'd-none' : ''; ?>" placeholder="Nome do Clube Mandante" value="<?php echo $match_info ? $match_info['timeA_nome'] : ''; ?>">
+                            </div>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Fase</label>
-                            <select name="fase" class="form-control form-control-sm">
-                                <?php 
-                                $fases = [0=>'N/A', 1=>'Fase pré', 2=>'Fase de grupos', 3=>'Oitavas', 4=>'Quartas', 5=>'Semi', 6=>'3º Lugar', 7=>'Repescagem', 8=>'Final'];
-                                foreach($fases as $id => $name): ?>
-                                    <option value="<?php echo $id; ?>" <?php echo ($match_info && $match_info['phase'] == $id) ? 'selected' : ''; ?>><?php echo $name; ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Data</label>
-                            <?php $valData = ($match_info && $match_info['data']) ? $match_info['data'] : date('Y-m-d'); ?>
-                            <input type="date" name="data" class="form-control form-control-sm" value="<?php echo $valData; ?>" required>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Estádio</label>
-                            <select name="estadio_id" id="selectStadium" class="form-control form-control-sm">
-                                <?php if($match_info && ($match_info['estadio_id'] || $match_info['estadio'])): ?>
-                                    <option value="<?php echo $match_info['estadio_id'] ? $match_info['estadio_id'] : '0'; ?>" selected><?php echo $match_info['estadio']; ?></option>
-                                <?php endif; ?>
-                            </select>
-                            <input type="hidden" name="estadio_nome" id="estadio_nome" value="<?php echo $match_info ? $match_info['estadio'] : ''; ?>">
+
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="form-label text-center">Gols Mandante</label>
+                                <input type="number" min="0" name="timeA_gols" class="form-control text-center fw-bold fs-5" value="<?php echo $match_info ? $match_info['timeA_gols'] : 0; ?>">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-center">Pênaltis (Opcional)</label>
+                                <input type="number" min="0" name="timeA_penaltis" class="form-control text-center" value="<?php echo $match_info ? $match_info['timeA_penaltis'] : ''; ?>" placeholder="-">
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <?php foreach(['A' => 'Mandante', 'B' => 'Visitante'] as $side => $label): 
-                        $teamIdKey = "time{$side}_id";
-                        $teamNomeKey = "time{$side}_nome";
-                        $teamBandKey = "time{$side}_bandeira";
-                        $teamGolsKey = "time{$side}_gols";
-                        $teamPenKey = "time{$side}_penaltis";
-                    ?>
-                    <div class="col-md-6">
-                        <div class="editor-card">
-                            <h5 class="section-title"><span class="material-symbols-outlined">shield</span> <?php echo $label; ?></h5>
-                            <div class="team-editor-header">
-                                <div class="team-crest-preview <?php echo (!$match_info || !$match_info[$teamIdKey]) ? 'd-none' : ''; ?>" id="crest<?php echo $side; ?>">
-                                    <?php if($match_info && $match_info[$teamBandKey]): ?>
-                                        <img src="/images/escudos/<?php echo $match_info[$teamBandKey]; ?>">
-                                    <?php else: ?>
-                                        <span class="material-symbols-outlined text-muted" style="font-size:2em;">shield</span>
-                                    <?php endif; ?>
+                <!-- Centro: VS -->
+                <div class="col-lg-2 col-md-12 text-center my-2 my-lg-0">
+                    <div style="font-family: 'Kanit', sans-serif; font-size: 1.8rem; font-weight: 900; color: #94a3b8;">
+                        VS
+                    </div>
+                    <span class="badge bg-light text-muted border">Placar Final</span>
+                </div>
+
+                <!-- Visitante (Time B) -->
+                <div class="col-lg-5 col-md-12">
+                    <div class="p-3 rounded-3" style="background: #f8fafc; border: 1px solid rgba(0,0,0,0.06);">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="badge" style="background: #475569; color:#fff; font-size:0.75rem; font-weight:700;">VISITANTE (TIME B)</span>
+                            <div class="form-check m-0">
+                                <input class="form-check-input manual-toggle" type="checkbox" id="manualB" data-side="B" <?php echo (!$match_info || !$match_info['timeB_id']) ? 'checked' : ''; ?>>
+                                <label class="form-check-label small" for="manualB">Digitar nome manual</label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="team-crest-preview <?php echo (!$match_info || !$match_info['timeB_id']) ? 'd-none' : ''; ?>" id="crestB">
+                                <?php if($match_info && $match_info['timeB_bandeira']): ?>
+                                    <img src="/images/escudos/<?php echo $match_info['timeB_bandeira']; ?>" alt="Escudo">
+                                <?php else: ?>
+                                    <span class="material-symbols-outlined text-muted" style="font-size:2em;">shield</span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="search-portal-container <?php echo (!$match_info || !$match_info['timeB_id']) ? 'd-none' : ''; ?>" id="searchB">
+                                    <select name="timeB_id" id="selectTimeB" class="form-control team-select" data-side="B">
+                                        <option value="-2">--- NÃO CONSTA NO BANCO ---</option>
+                                        <?php if($match_info && $match_info['timeB_id']): ?>
+                                            <option value="<?php echo $match_info['timeB_id']; ?>" selected><?php echo $match_info['timeB_nome']; ?></option>
+                                        <?php endif; ?>
+                                    </select>
                                 </div>
-                                <div class="flex-grow-1">
-                                    <div class="search-portal-container <?php echo (!$match_info || !$match_info[$teamIdKey]) ? 'd-none' : ''; ?>" id="search<?php echo $side; ?>">
-                                        <label class="form-label small fw-bold mb-1">Buscar no Portal</label>
-                                        <select name="time<?php echo $side; ?>_id" id="selectTime<?php echo $side; ?>" class="form-control team-select" data-side="<?php echo $side; ?>">
-                                            <option value="<?php echo $side == 'A' ? '-1' : '-2'; ?>">--- NÃO CONSTA NO BANCO ---</option>
-                                            <?php if($match_info && $match_info[$teamIdKey]): ?>
-                                                <option value="<?php echo $match_info[$teamIdKey]; ?>" selected><?php echo $match_info[$teamNomeKey]; ?></option>
-                                            <?php endif; ?>
+                                <input type="text" name="timeB_nome" id="nameB" class="form-control <?php echo ($match_info && $match_info['timeB_id']) ? 'd-none' : ''; ?>" placeholder="Nome do Clube Visitante" value="<?php echo $match_info ? $match_info['timeB_nome'] : ''; ?>">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="form-label text-center">Gols Visitante</label>
+                                <input type="number" min="0" name="timeB_gols" class="form-control text-center fw-bold fs-5" value="<?php echo $match_info ? $match_info['timeB_gols'] : 0; ?>">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-center">Pênaltis (Opcional)</label>
+                                <input type="number" min="0" name="timeB_penaltis" class="form-control text-center" value="<?php echo $match_info ? $match_info['timeB_penaltis'] : ''; ?>" placeholder="-">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 3. Lances e Eventos da Partida (Full-width) -->
+        <div class="editor-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="section-title mb-0"><span class="material-symbols-outlined">timer</span> Lances & Eventos da Partida</h5>
+                    <p class="text-muted small mb-0 mt-1">Gols e cartões da partida. O minuto é opcional (pode deixar em branco caso não saiba o minuto exato).</p>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-primary fw-bold" id="addEventRow" onclick="addNewEventRow()" style="border-radius:8px; font-size:0.75rem; padding: 6px 14px;">
+                    <span class="material-symbols-outlined align-middle" style="font-size:1rem;">add</span> Adicionar Lance
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-sm align-middle" id="eventsTable">
+                    <thead class="bg-light small">
+                        <tr style="border-bottom: 2px solid #eee;">
+                            <th width="12%" class="text-center">Minuto</th>
+                            <th width="20%">Time</th>
+                            <th width="20%">Tipo de Lance</th>
+                            <th width="43%">Jogador Envolvido</th>
+                            <th width="5%"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($events as $index => $ev): 
+                            $sideEv = ($ev['id_time'] == $match_info['timeA_id'] || $ev['nome_time'] == $match_info['timeA_nome']) ? 'A' : 'B';
+                            $evMin = ($ev['minutos'] !== null && $ev['minutos'] !== '') ? $ev['minutos'] : '';
+                        ?>
+                            <tr>
+                                <td><input type="number" name="events[<?php echo $index; ?>][minutos]" class="form-control form-control-sm text-center" value="<?php echo $evMin; ?>" placeholder="-"></td>
+                                <td>
+                                    <select name="events[<?php echo $index; ?>][side]" class="form-control form-control-sm event-side">
+                                        <option value="A" <?php echo $sideEv == 'A' ? 'selected' : ''; ?>>Time A (Mandante)</option>
+                                        <option value="B" <?php echo $sideEv == 'B' ? 'selected' : ''; ?>>Time B (Visitante)</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="events[<?php echo $index; ?>][tipo]" class="form-control form-control-sm">
+                                        <option value="1" <?php echo $ev['tipo'] == 1 ? 'selected' : ''; ?>>Gol</option>
+                                        <option value="4" <?php echo $ev['tipo'] == 4 ? 'selected' : ''; ?>>Gol Contra</option>
+                                        <option value="2" <?php echo $ev['tipo'] == 2 ? 'selected' : ''; ?>>Cartão Amarelo</option>
+                                        <option value="3" <?php echo $ev['tipo'] == 3 ? 'selected' : ''; ?>>Cartão Vermelho</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="player-input-container" data-side="<?php echo $sideEv; ?>">
+                                        <select name="events[<?php echo $index; ?>][id_jogador]" class="form-control form-control-sm select-player-api">
+                                            <option value="-1">--- NÃO CONSTA NO BANCO ---</option>
+                                            <?php if($ev['id_jogador']): ?><option value="<?php echo $ev['id_jogador']; ?>" selected><?php echo $ev['nome_jogador']; ?></option><?php endif; ?>
                                         </select>
+                                        <input type="text" name="events[<?php echo $index; ?>][nome_jogador]" class="form-control form-control-sm manual-player-name <?php echo $ev['id_jogador'] ? 'd-none' : ''; ?>" value="<?php echo $ev['nome_jogador']; ?>" placeholder="Nome do Jogador">
                                     </div>
-                                    <div class="form-check mt-1">
-                                        <input class="form-check-input manual-toggle" type="checkbox" id="manual<?php echo $side; ?>" data-side="<?php echo $side; ?>" <?php echo (!$match_info || !$match_info[$teamIdKey]) ? 'checked' : ''; ?>>
-                                        <label class="form-check-label small" for="manual<?php echo $side; ?>">Nome manual</label>
-                                    </div>
-                                    <input type="text" name="time<?php echo $side; ?>_nome" id="name<?php echo $side; ?>" class="form-control mt-2 <?php echo ($match_info && $match_info[$teamIdKey]) ? 'd-none' : ''; ?>" placeholder="Nome do Time" value="<?php echo $match_info ? $match_info[$teamNomeKey] : ''; ?>">
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <label class="form-label">Gols</label>
-                                    <input type="number" name="time<?php echo $side; ?>_gols" class="form-control text-center fw-bold" value="<?php echo $match_info ? $match_info[$teamGolsKey] : 0; ?>">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label">Pênaltis</label>
-                                    <input type="number" name="time<?php echo $side; ?>_penaltis" class="form-control text-center" value="<?php echo $match_info ? $match_info[$teamPenKey] : ''; ?>" placeholder="-">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
+                                </td>
+                                <td class="text-center"><span class="material-symbols-outlined text-danger btn-remove cursor-pointer" style="font-size:1.1rem;">delete</span></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-                <div class="editor-card">
+        <!-- 4. Escalações dos Dois Times (Lado a Lado - Sempre Visíveis) -->
+        <div class="row">
+            
+            <?php foreach(['A' => ['idx' => 1, 'label' => 'MANDANTE (TIME A)', 'badge' => 'Elenco Mandante', 'bg' => 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'], 
+                           'B' => ['idx' => 2, 'label' => 'VISITANTE (TIME B)', 'badge' => 'Elenco Visitante', 'bg' => 'linear-gradient(135deg, #475569 0%, #334155 100%)']] as $side => $tMeta): 
+                $tIdx = $tMeta['idx'];
+            ?>
+            <div class="col-lg-6 mb-4">
+                <div class="editor-card h-100">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="section-title mb-0"><span class="material-symbols-outlined">bolt</span> Eventos</h5>
-                        <button type="button" class="btn btn-xs btn-info text-white fw-bold" id="addEventRow"><span class="material-symbols-outlined">add</span> Novo Evento</button>
+                        <div class="p-2 px-3 rounded-3 shadow-sm" style="background: <?php echo $tMeta['bg']; ?>; color: #fff;">
+                            <h6 class="mb-0 fw-bold d-flex align-items-center">
+                                <span class="material-symbols-outlined me-2" style="font-size: 1.15rem;">shield</span> 
+                                <?php echo $tMeta['label']; ?>
+                            </h6>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary fw-bold" style="border-radius: 8px; font-size: 0.75rem; padding: 6px 12px;" onclick="addLineupRow('<?php echo $side; ?>')">
+                            <span class="material-symbols-outlined align-middle" style="font-size: 1rem;">add</span> Adicionar Atleta
+                        </button>
                     </div>
+
                     <div class="table-responsive">
-                        <table class="table table-sm align-middle" id="eventsTable">
-                            <thead>
-                                <tr>
-                                    <th width="10%">Min</th><th width="15%">Time</th><th width="20%">Tipo</th><th width="45%">Jogador</th><th width="10%"></th>
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="bg-light small">
+                                <tr style="background: #f8f9fa; border-bottom: 2px solid #eee;">
+                                    <th width="10%" class="text-center">POS</th>
+                                    <th width="45%">JOGADOR</th>
+                                    <th width="8%" class="text-center">Nº</th>
+                                    <th width="8%" class="text-center">TIT</th>
+                                    <th width="24%" class="text-center">SUB (▲ / ▼)</th>
+                                    <th width="5%"></th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <?php foreach($events as $index => $ev): 
-                                    $sideEv = ($ev['id_time'] == $match_info['timeA_id'] || $ev['nome_time'] == $match_info['timeA_nome']) ? 'A' : 'B';
-                                ?>
-                                    <tr>
-                                        <td><input type="number" name="events[<?php echo $index; ?>][minutos]" class="form-control form-control-sm" value="<?php echo $ev['minutos']; ?>"></td>
-                                        <td>
-                                            <select name="events[<?php echo $index; ?>][side]" class="form-control form-control-sm event-side">
-                                                <option value="A" <?php echo $sideEv == 'A' ? 'selected' : ''; ?>>Time A</option>
-                                                <option value="B" <?php echo $sideEv == 'B' ? 'selected' : ''; ?>>Time B</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select name="events[<?php echo $index; ?>][tipo]" class="form-control form-control-sm">
-                                                <option value="1" <?php echo $ev['tipo'] == 1 ? 'selected' : ''; ?>>Gol</option>
-                                                <option value="4" <?php echo $ev['tipo'] == 4 ? 'selected' : ''; ?>>Gol Contra</option>
-                                                <option value="2" <?php echo $ev['tipo'] == 2 ? 'selected' : ''; ?>>Cartão Amarelo</option>
-                                                <option value="3" <?php echo $ev['tipo'] == 3 ? 'selected' : ''; ?>>Cartão Vermelho</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <div class="player-input-container" data-side="<?php echo $sideEv; ?>">
-                                                <select name="events[<?php echo $index; ?>][id_jogador]" class="form-control form-control-sm select-player-api">
-                                                    <option value="-1">--- NÃO CONSTA NO BANCO ---</option>
-                                                    <?php if($ev['id_jogador']): ?><option value="<?php echo $ev['id_jogador']; ?>" selected><?php echo $ev['nome_jogador']; ?></option><?php endif; ?>
-                                                </select>
-                                                <input type="text" name="events[<?php echo $index; ?>][nome_jogador]" class="form-control form-control-sm manual-player-name <?php echo $ev['id_jogador'] ? 'd-none' : ''; ?>" value="<?php echo $ev['nome_jogador']; ?>" placeholder="Nome">
-                                            </div>
-                                        </td>
-                                        <td class="text-center"><span class="material-symbols-outlined text-danger btn-remove cursor-pointer">delete</span></td>
-                                    </tr>
-                                <?php endforeach; ?>
+                            <tbody id="lineup<?php echo $side; ?>Container">
+                                <?php 
+                                foreach($teamLineups[$tIdx] as $idx => $p) renderPlayerRow($side, $idx, $p, $allPositions);
+                                if(count($coaches[$tIdx]) > 0): ?>
+                                    <tr class="bg-light"><td colspan="6" class="p-1 px-3 small fw-bold text-muted text-center">COMISSÃO TÉCNICA</td></tr>
+                                    <?php foreach($coaches[$tIdx] as $cIdx => $pc) renderPlayerRow($side, "coach_$cIdx", $pc, $allPositions, true); ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
+            <?php endforeach; ?>
 
-            <div class="col-lg-5">
-                <div class="editor-card">
-                    <h5 class="section-title"><span class="material-symbols-outlined">task</span> Escalação & Reservas</h5>
-                    <ul class="nav nav-pills nav-justified mb-3" id="lineupTabs">
-                        <li class="nav-item"><button class="nav-link active py-2 small fw-bold" data-bs-toggle="pill" data-bs-target="#tabA" type="button">TIME A</button></li>
-                        <li class="nav-item"><button class="nav-link py-2 small fw-bold" data-bs-toggle="pill" data-bs-target="#tabB" type="button">TIME B</button></li>
-                    </ul>
-
-                    <div class="tab-content">
-                        <?php foreach(['A' => 1, 'B' => 2] as $side => $tIdx): ?>
-                        <div class="tab-pane fade <?php echo $side == 'A' ? 'show active' : ''; ?>" id="tab<?php echo $side; ?>">
-                            <div class="d-flex justify-content-between align-items-center mb-2 px-1">
-                                <span class="small fw-bold text-muted uppercase">Escalação</span>
-                                <button type="button" class="btn btn-xs btn-outline-primary" onclick="addLineupRow('<?php echo $side; ?>')"><span class="material-symbols-outlined">add</span> Adicionar</button>
-                            </div>
-                            <div class="p-2 mb-2 rounded-3 <?php echo $side == 'A' ? 'bg-primary text-white' : 'bg-dark text-white'; ?> shadow-sm">
-                                <h5 class="mb-0 fw-bold px-1"><span class="material-symbols-outlined me-2">shield</span> <?php echo $side == 'A' ? 'TIME A (Mandante)' : 'TIME B (Visitante)'; ?></h5>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table table-sm align-middle mb-0">
-                                    <thead class="bg-light small">
-                                        <tr style="background: #f8f9fa; border-bottom: 2px solid #eee;">
-                                            <th width="12%" class="text-center">POS</th><th width="45%">JOGADOR</th><th width="10%" class="text-center">#</th><th width="8%" class="text-center">T</th><th width="20%" class="text-center">MIN</th><th width="5%"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="lineup<?php echo $side; ?>Container">
-                                        <?php 
-                                        foreach($teamLineups[$tIdx] as $idx => $p) renderPlayerRow($side, $idx, $p, $allPositions);
-                                        if(count($coaches[$tIdx]) > 0): ?>
-                                            <tr class="bg-light"><td colspan="6" class="p-1 px-3 small fw-bold text-muted text-center">COMISSÃO TÉCNICA</td></tr>
-                                            <?php foreach($coaches[$tIdx] as $cIdx => $pc) renderPlayerRow($side, "coach_$cIdx", $pc, $allPositions, true); ?>
-                                        <?php endif; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
         </div>
     </form>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
+let eventIdx = <?php echo count($events); ?> + 500;
+
+function addNewEventRow() {
+    const side = 'A';
+    const isManual = $('#manual' + side).is(':checked');
+    const row = `<tr class="new-row">
+        <td><input type="number" name="events[${eventIdx}][minutos]" class="form-control form-control-sm text-center" placeholder="-"></td>
+        <td><select name="events[${eventIdx}][side]" class="form-control form-control-sm event-side"><option value="A">Time A (Mandante)</option><option value="B">Time B (Visitante)</option></select></td>
+        <td><select name="events[${eventIdx}][tipo]" class="form-control form-control-sm"><option value="1">Gol</option><option value="4">Gol Contra</option><option value="2">Cartão Amarelo</option><option value="3">Cartão Vermelho</option></select></td>
+        <td><div class="player-input-container" data-side="A"><select name="events[${eventIdx}][id_jogador]" class="form-control form-control-sm select-player-api"><option value="-1">--- NÃO CONSTA NO BANCO ---</option></select><input type="text" name="events[${eventIdx}][nome_jogador]" class="form-control form-control-sm manual-player-name d-none" placeholder="Nome do Jogador"></div></td>
+        <td class="text-center"><span class="material-symbols-outlined text-danger btn-remove cursor-pointer" style="font-size:1.1rem;">delete</span></td>
+    </tr>`;
+    $('#eventsTable tbody').append(row);
+    
+    const $newSelect = $('#eventsTable tbody tr:last .select-player-api');
+    if(!isManual) initPlayerSelect($newSelect, 'A');
+    else $newSelect.val('-1').trigger('change');
+    
+    eventIdx++;
+    if(typeof markAsDirty === 'function') markAsDirty();
+}
+
 $(document).ready(function() {
     initMainSelects();
     initAllPlayerSelects();
@@ -420,17 +613,17 @@ $(document).ready(function() {
     // --- DIRTY STATE TRACKING ---
     let isDirty = false;
 
-    function markAsDirty() {
+    window.markAsDirty = function() {
         if (!isDirty) {
             isDirty = true;
             $('#unsavedBadge').css('display', 'inline-flex');
         }
-    }
+    };
 
-    function markAsClean() {
+    window.markAsClean = function() {
         isDirty = false;
         $('#unsavedBadge').hide();
-    }
+    };
 
     // Monitor changes on all inputs, textareas, and selects
     $(document).on('change input', 'input, textarea, select', function() {
@@ -466,13 +659,8 @@ $(document).ready(function() {
                 markAsClean();
                 showToast('Partida salva com sucesso!', 'success');
                 
-                // If it was a new match (match_id=0), we might want to reload to update the URL
-                // But specifically responding to "nao recarregar ela inteira" - so we stay.
-                // However, technically if it was ID 0, we should update the form ID so subsequent saves work.
-                // Assuming response includes match_id.
                 if(response.match_id) {
                     $('input[name="match_id"]').val(response.match_id);
-                    // Update title if it was "Nova Partida"
                     $('.sticky-header h4').text("Editar Partida #" + response.match_id);
                 }
             } else {
@@ -488,7 +676,10 @@ $(document).ready(function() {
     });
 
     $(document).on('click', '.btn-remove', function() {
-        if(confirm('Remover?')) $(this).closest('tr').remove();
+        if(confirm('Remover?')) {
+            $(this).closest('tr').remove();
+            markAsDirty();
+        }
     });
 
     $(document).on('change', '.titular-toggle', function() {
@@ -510,24 +701,9 @@ $(document).ready(function() {
         $('#selectComp').val(null).trigger('change');
     });
 
-    let eventIdx = <?php echo count($events); ?>;
-    $('#addEventRow').click(function() {
-        const side = 'A'; // Start as A by default
-        const isManual = $(`#manual${side}`).is(':checked');
-        const row = `<tr class="new-row">
-            <td><input type="number" name="events[${eventIdx}][minutos]" class="form-control form-control-sm"></td>
-            <td><select name="events[${eventIdx}][side]" class="form-control form-control-sm event-side"><option value="A">Time A</option><option value="B">Time B</option></select></td>
-            <td><select name="events[${eventIdx}][tipo]" class="form-control form-control-sm"><option value="1">Gol</option><option value="4">Gol Contra</option><option value="2">Cartão Amarelo</option><option value="3">Cartão Vermelho</option></select></td>
-            <td><div class="player-input-container" data-side="A"><select name="events[${eventIdx}][id_jogador]" class="form-control form-control-sm select-player-api"><option value="-1">--- NÃO CONSTA NO BANCO ---</option></select><input type="text" name="events[${eventIdx}][nome_jogador]" class="form-control form-control-sm manual-player-name" placeholder="Nome"></div></td>
-            <td class="text-center"><span class="material-symbols-outlined text-danger btn-remove cursor-pointer">delete</span></td>
-        </tr>`;
-        $('#eventsTable tbody').append(row);
-        
-        const $newSelect = $('#eventsTable tbody tr:last .select-player-api');
-        if(!isManual) initPlayerSelect($newSelect, 'A');
-        else $newSelect.val('-1').trigger('change');
-        
-        eventIdx++;
+    $(document).on('click', '#addEventRow', function(e) {
+        e.preventDefault();
+        addNewEventRow();
     });
 
     $(document).on('change', '.event-side', function() {
@@ -608,19 +784,15 @@ $(document).ready(function() {
                 escapeMarkup: function(m) { return m; }
             }).on('select2:select', function(e) {
                 markAsDirty();
-                if(e.params.data.id != '-1') {
+                if(e.params.data.id != '-1' && e.params.data.id != '-2') {
                     $(`#crest${side}`).removeClass('d-none').html(`<img src="/images/escudos/${e.params.data.escudo || 'sem_escudo.png'}">`);
                     $(`#name${side}`).val(e.params.data.text).addClass('d-none');
                     $(`#manual${side}`).prop('checked', false);
-                    refreshInputsBySide(side, false);
                 } else {
                     handleManualTeamSelection(side);
                 }
             }).on('select2:clear', function() {
                 handleManualTeamSelection(side);
-            }).on('change', function() {
-                const manualIdCheck = side === 'A' ? '-1' : '-2';
-                if($(this).val() == manualIdCheck) handleManualTeamSelection(side);
             });
         });
     }
@@ -630,15 +802,10 @@ function handleManualTeamSelection(side) {
     $(`#name${side}`).removeClass('d-none');
     $(`#manual${side}`).prop('checked', true);
     
-    // Set team select to the correct side-specific manual ID
     const manualId = side === 'A' ? '-1' : '-2';
     if ($(`#selectTime${side}`).val() != manualId) {
-        $(`#selectTime${side}`).val(manualId).trigger('change');
-        return; // The change trigger will call handleManualTeamSelection again
+        $(`#selectTime${side}`).val(manualId);
     }
-    
-    // Switch all players of this side to manual
-    refreshInputsBySide(side, true);
 }
 
 function getRowSide($el) {

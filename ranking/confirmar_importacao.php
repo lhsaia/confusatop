@@ -12,8 +12,8 @@ function json_fail($msg) {
     exit;
 }
 
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || $_SESSION['jogadorTime'] != 4) {
-    json_fail('Sem permissão.');
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    json_fail('Sem permissão. Você precisa estar logado para importar jogos do ranking.');
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -66,6 +66,15 @@ try {
             continue;
         }
 
+        // Buscar nomes dos países
+        $stA = $db->prepare("SELECT nome FROM paises WHERE id = ?");
+        $stA->execute([$timeA_id]);
+        $nome_pais_A = $stA->fetchColumn() ?: ($game['time1_raw'] ?? '');
+
+        $stB = $db->prepare("SELECT nome FROM paises WHERE id = ?");
+        $stB->execute([$timeB_id]);
+        $nome_pais_B = $stB->fetchColumn() ?: ($game['time2_raw'] ?? '');
+
         // Configurar jogo
         $jogoObj->timeA_id = $timeA_id;
         $jogoObj->timeB_id = $timeB_id;
@@ -85,7 +94,7 @@ try {
         $jogoObj->timeA_gols = $placarTime1 + ($placarProrr1 >= 0 ? $placarProrr1 : 0);
         $jogoObj->timeB_gols = $placarTime2 + ($placarProrr2 >= 0 ? $placarProrr2 : 0);
 
-        // Pênaltis: null se não houver
+        // Pênaltis: null se não houver disputa
         $jogoObj->timeA_penaltis = (isset($game['placarPenaltisTime1']) && (int)$game['placarPenaltisTime1'] >= 0) ? (int)$game['placarPenaltisTime1'] : null;
         $jogoObj->timeB_penaltis = (isset($game['placarPenaltisTime2']) && (int)$game['placarPenaltisTime2'] >= 0) ? (int)$game['placarPenaltisTime2'] : null;
 
@@ -112,60 +121,105 @@ try {
             $actionLabel = 'Importado';
         }
 
-            // Eventos
-            $log_eventos  = [];
-            $escalacaoTime1 = $game['escalacaoTime1'] ?? [];
-            $escalacaoTime2 = $game['escalacaoTime2'] ?? [];
-            $raw_eventos    = $game['eventos']         ?? [];
+        // Eventos
+        $log_eventos  = [];
+        $escalacaoTime1 = $game['escalacaoTime1'] ?? [];
+        $escalacaoTime2 = $game['escalacaoTime2'] ?? [];
+        $raw_eventos    = $game['eventos']         ?? [];
 
-            foreach ($raw_eventos as $single_event) {
-                $tipoEvento = 0;
-                switch ($single_event['tipoEvento'] ?? '') {
-                    case 'amarelo':     $tipoEvento = 2; break;
-                    case 'vermelho':    $tipoEvento = 3; break;
-                    case 'gol':         $tipoEvento = 1; break;
-                    case 'golContra':   $tipoEvento = 4; break;
-                    case 'golAnuladoVAR':
-                        array_pop($log_eventos);
-                        break;
+        foreach ($raw_eventos as $single_event) {
+            $tipoEvento = 0;
+            switch ($single_event['tipoEvento'] ?? '') {
+                case 'amarelo':     $tipoEvento = 2; break;
+                case 'vermelho':    $tipoEvento = 3; break;
+                case 'gol':         $tipoEvento = 1; break;
+                case 'golContra':   $tipoEvento = 4; break;
+                case 'golAnuladoVAR':
+                    array_pop($log_eventos);
+                    break;
+            }
+            if ($tipoEvento > 0) {
+                $nomeJogador = '';
+                $idTime      = 0;
+                $tempId      = (int)($single_event['idJogador'] ?? 0);
+
+                foreach ($escalacaoTime1 as $p) {
+                    if ($tempId === (int)($p['id'] ?? 0)) { $nomeJogador = $p['nome'] ?? ''; $idTime = $timeA_id; break; }
                 }
-                if ($tipoEvento > 0) {
-                    $nomeJogador = '';
-                    $idTime      = 0;
-                    $tempId      = (int)($single_event['idJogador'] ?? 0);
-
-                    foreach ($escalacaoTime1 as $p) {
-                        if ($tempId === (int)$p['id']) { $nomeJogador = $p['nome']; $idTime = $timeA_id; break; }
-                    }
-                    if ($idTime === 0) {
-                        foreach ($escalacaoTime2 as $p) {
-                            if ($tempId === (int)$p['id']) { $nomeJogador = $p['nome']; $idTime = $timeB_id; break; }
-                        }
-                    }
-
-                    if ($idTime > 0) {
-                        $idJogador    = $jogadorObj->idPorNomePais($nomeJogador, $idTime, $tempId);
-                        $log_eventos[] = [
-                            'tempo'       => $single_event['tempo']    ?? 1,
-                            'minutos'     => (int)($single_event['minutos'] ?? 0),
-                            'tipo'        => $tipoEvento,
-                            'idJogador'   => $idJogador,
-                            'nomeJogador' => mb_substr($nomeJogador, 0, 100), // truncar para caber na coluna
-                            'idTime'      => $idTime
-                        ];
+                if ($idTime === 0) {
+                    foreach ($escalacaoTime2 as $p) {
+                        if ($tempId === (int)($p['id'] ?? 0)) { $nomeJogador = $p['nome'] ?? ''; $idTime = $timeB_id; break; }
                     }
                 }
-            }
 
-            // Eventos são não-fatais: falha aqui não deve reverter o jogo
-            try {
-                $jogoObj->importarEventos($log_eventos, $idJogo);
-            } catch (Exception $evtEx) {
-                $results[count($results) - 1]['eventos_aviso'] = 'Eventos não importados: ' . $evtEx->getMessage();
+                if ($idTime > 0) {
+                    $idJogador = $jogadorObj->idPorNomePais($nomeJogador, $idTime, $tempId);
+                    $rawMin = $single_event['minutos'] ?? null;
+                    $minutosVal = ($rawMin !== null && $rawMin !== '' && is_numeric($rawMin)) ? (int)$rawMin : null;
+                    $log_eventos[] = [
+                        'tempo'       => $single_event['tempo'] ?? 1,
+                        'minutos'     => $minutosVal,
+                        'tipo'        => $tipoEvento,
+                        'idJogador'   => $idJogador > 0 ? $idJogador : 0,
+                        'nomeJogador' => mb_substr($nomeJogador, 0, 40),
+                        'idTime'      => $idTime
+                    ];
+                }
             }
+        }
 
-            $results[] = ['filename' => $game['filename'] ?? '', 'success' => true, 'id' => $idJogo, 'action' => $actionLabel];
-            $importedCount++;
+        // Importar Eventos apenas se vieram eventos no arquivo
+        if (!empty($log_eventos)) {
+            $jogoObj->limparEventos($idJogo);
+            $jogoObj->importarEventos($log_eventos, $idJogo);
+        }
+
+        // Processar e Importar Escalação
+        $log_escalacao = [];
+        foreach ($escalacaoTime1 as $p) {
+            $pNome = trim((string)($p['nome'] ?? ''));
+            if (empty($pNome)) continue;
+            $tempId = (int)($p['id'] ?? 0);
+            $idJog = $jogadorObj->idPorNomePais($pNome, $timeA_id, $tempId);
+            $log_escalacao[] = [
+                'id_time' => $timeA_id,
+                'nome_time' => $nome_pais_A,
+                'posicao' => $p['posicao'] ?? '',
+                'numero' => isset($p['numero']) && is_numeric($p['numero']) ? (int)$p['numero'] : null,
+                'id_jogador' => $idJog > 0 ? $idJog : null,
+                'nome_jogador' => mb_substr($pNome, 0, 40),
+                'titular' => isset($p['titular']) ? (int)$p['titular'] : 1,
+                'entrada_minuto' => isset($p['entrada_minuto']) && is_numeric($p['entrada_minuto']) ? (int)$p['entrada_minuto'] : null,
+                'saida_minuto' => isset($p['saida_minuto']) && is_numeric($p['saida_minuto']) ? (int)$p['saida_minuto'] : null
+            ];
+        }
+
+        foreach ($escalacaoTime2 as $p) {
+            $pNome = trim((string)($p['nome'] ?? ''));
+            if (empty($pNome)) continue;
+            $tempId = (int)($p['id'] ?? 0);
+            $idJog = $jogadorObj->idPorNomePais($pNome, $timeB_id, $tempId);
+            $log_escalacao[] = [
+                'id_time' => $timeB_id,
+                'nome_time' => $nome_pais_B,
+                'posicao' => $p['posicao'] ?? '',
+                'numero' => isset($p['numero']) && is_numeric($p['numero']) ? (int)$p['numero'] : null,
+                'id_jogador' => $idJog > 0 ? $idJog : null,
+                'nome_jogador' => mb_substr($pNome, 0, 40),
+                'titular' => isset($p['titular']) ? (int)$p['titular'] : 1,
+                'entrada_minuto' => isset($p['entrada_minuto']) && is_numeric($p['entrada_minuto']) ? (int)$p['entrada_minuto'] : null,
+                'saida_minuto' => isset($p['saida_minuto']) && is_numeric($p['saida_minuto']) ? (int)$p['saida_minuto'] : null
+            ];
+        }
+
+        // Importar Escalação apenas se vieram escalações no arquivo
+        if (!empty($log_escalacao)) {
+            $jogoObj->limparEscalacao($idJogo);
+            $jogoObj->importarEscalacao($log_escalacao, $idJogo);
+        }
+
+        $results[] = ['filename' => $game['filename'] ?? '', 'success' => true, 'id' => $idJogo, 'action' => $actionLabel];
+        $importedCount++;
     }
 
     $usuarioObj->atualizarAlteracao($_SESSION['user_id']);

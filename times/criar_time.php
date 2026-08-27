@@ -28,9 +28,9 @@ $formacao = new Formacao($db);
 $tecnico = new Tecnico($db);
 
 $page_title = "Criar Time";
-$css_filename = "newindex";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'area_competicao';
+$aux_css = 'criar_time_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -396,43 +396,61 @@ for (i = 0; i < close.length; i++) {
 </script>
 
 
-<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
+<div class="propostas-container">
+<div class="propostas-card">
+<h2 class="propostas-title">➕ Criar Time</h2>
 <div id='errorbox'></div>
-<div>
+
 <div id='inscricao'>
 
 <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
 
-    
-
         <label for="nomeTime">Nome</label>
-<input type='text' name='nome' id='nomeTime' class='form-control inputHerdeiro' />
+        <input type='text' name='nome' id='nomeTime' class='form-control inputHerdeiro' />
 
         <label for="sigla">Sigla</label>
-<input type='text' maxlength="3" name='sigla' id='sigla' class='form-control inputHerdeiro' />
-
+        <input type='text' maxlength="3" name='sigla' id='sigla' class='form-control inputHerdeiro' />
 
         <label>Escudo</label>
-<input type="file" class='form-control custom-file-upload' name='escudo' accept=".jpg,.png,.jpeg">
+        <label class='custom-file-upload' for='escudo'>
+            <span class="material-symbols-outlined" style="font-size: 24px; color: #0284c7;">cloud_upload</span>
+            <img id='escudo-preview' style="display:none;">
+            <span id='nomeEscudo'>Clique para selecionar o escudo</span>
+        </label>
+        <input type="file" id='escudo' name='escudo' accept=".jpg,.png,.jpeg,.webp" style="display: none !important;">
 
         <label>Uniforme titular</label>
-<input type="file" class='form-control custom-file-upload' name='uni1' accept=".jpg,.png,.jpeg">
+        <label class='custom-file-upload' for='uni1'>
+            <span class="material-symbols-outlined" style="font-size: 24px; color: #0284c7;">cloud_upload</span>
+            <img id='uni1-preview' style="display:none;">
+            <span id='nomeUni1'>Clique para selecionar o uniforme titular</span>
+        </label>
+        <input type="file" id='uni1' name='uni1' accept=".jpg,.png,.jpeg,.webp" style="display: none !important;">
 
         <label>Cores uniforme titular</label>
-<input type="color" name='cor1uni1'>
+        <div class="cores-container">
+            <input type="color" name='cor1uni1'>
             <input type="color" name='cor2uni1' value='#ffffff'>
             <input type="color" name='cor3uni1'>
+        </div>
 
         <label>Uniforme reserva</label>
-<input type="file" class='form-control custom-file-upload' name='uni2' accept=".jpg,.png,.jpeg">
+        <label class='custom-file-upload' for='uni2'>
+            <span class="material-symbols-outlined" style="font-size: 24px; color: #0284c7;">cloud_upload</span>
+            <img id='uni2-preview' style="display:none;">
+            <span id='nomeUni2'>Clique para selecionar o uniforme reserva</span>
+        </label>
+        <input type="file" id='uni2' name='uni2' accept=".jpg,.png,.jpeg,.webp" style="display: none !important;">
 
         <label>Cores uniforme reserva</label>
-<input type="color" name='cor1uni2' value='#ffffff'>
+        <div class="cores-container">
+            <input type="color" name='cor1uni2' value='#ffffff'>
             <input type="color" name='cor2uni2'>
             <input type="color" name='cor3uni2' value='#ffffff'>
+        </div>
 
         <label for="maxTorcida">Máx. Torcida</label>
-<select class='form-control' name='maxTorcida' id='maxTorcida'>
+        <select class='form-control' name='maxTorcida' id='maxTorcida'>
                 <option value='1000'>&lt;1000</option>
                 <option value='2000'>&lt;2000</option>
                 <option value='3000'>&lt;3000</option>
@@ -452,14 +470,14 @@ for (i = 0; i < close.length; i++) {
                 <option value='80000'>&lt;80000</option>
                 <option value='90000'>&lt;90000</option>
                 <option value='100000'>&lt;100000</option>
-                <option selected value='0'>&gt;100000</option>
+                <option value='0' selected>&gt;100000</option>
             </select>
 
         <label for="fidelidade">Fidelidade</label>
-<input type='number' id='fidelidade' value='5' max='10' min='1' name='fidelidade' class='form-control inputHerdeiro' />
+        <input type='number' id='fidelidade' value='5' max='10' min='1' name='fidelidade' class='form-control inputHerdeiro' />
 
         <label for="pais">País</label>
-<?php
+        <?php
                 // ler times do banco de dados
                 $stmt = $pais->read($_SESSION['user_id']);
 
@@ -476,13 +494,13 @@ for (i = 0; i < close.length; i++) {
                 ?>
 
         <label for="sexo">Masc/Fem</label>
-<select class='form-control' id='sexo' name='sexo'>
+        <select class='form-control' id='sexo' name='sexo'>
                 <option selected value='0'>Masculino</option>
                 <option value='1'>Feminino</option>
                 </select>
 
         <label for="liga">Liga</label>
-<?php
+        <?php
                 // ler times do banco de dados
                 $stmt = $liga->read($_SESSION['user_id']);
 
@@ -500,7 +518,7 @@ for (i = 0; i < close.length; i++) {
 
 
         <label for="estadio">Estádio</label>
-<?php
+        <?php
                 // ler times do banco de dados
                 $stmt = $estadio->read($_SESSION['user_id']);
 
@@ -516,25 +534,27 @@ for (i = 0; i < close.length; i++) {
                 ?>
 
         <label for="sliderNiveis"><span class="material-symbols-outlined">casino</span>&nbsp Níveis</label>
-<div class="slider_itself" id="sliderNiveis">
+        <div class="slider-group">
+            <div class="slider_itself" id="sliderNiveis"></div>
+            <div class="slider-values-row">
+                <div><label for='inputNivelMin'>Min</label><input type="number" name="nivelMin" id="inputNivelMin" class='inputHerdeiro smallInput' value="30" min='1' max='99'/></div>
+                <div><label for='inputNivelMax'>Max</label><input type="number" name="nivelMax" id="inputNivelMax" class='inputHerdeiro smallInput' value="90" min='1' max='99'/></div>
+                <div><label for='inputNivelMed'>Med</label><input type="number" name="nivelMed" id="inputNivelMed" class='inputHerdeiro smallInput' value="60" min='1' max='99'/></div>
             </div>
-            
-            <label for='inputNivelMin'>Min</label><input type="number" name="nivelMin" id="inputNivelMin" class='inputHerdeiro smallInput' value="30" min='1' max='99'/>
-            <label for='inputNivelMax'>Max</label><input type="number" name="nivelMax" id="inputNivelMax" class='inputHerdeiro smallInput' value="90" min='1' max='99'/>
-            <br>
-            <label for='inputNivelMed'>Med</label><input type="number" name="nivelMed" id="inputNivelMed" class='inputHerdeiro smallInput' value="60" min='1' max='99'/>
+        </div>
 
         <label for="sliderIdades"><span class="material-symbols-outlined">casino</span>&nbsp Idades</label>
-<div class="slider_itself" id="sliderIdades">
+        <div class="slider-group">
+            <div class="slider_itself" id="sliderIdades"></div>
+            <div class="slider-values-row">
+                <div><label for='inputIdadeMin'>Min</label><input type="number" name="idadeMin" id="inputIdadeMin" class='inputHerdeiro smallInput' value="18" min='13' max='44'/></div>
+                <div><label for='inputIdadeMax'>Max</label><input type="number" name="idadeMax" id="inputIdadeMax" class='inputHerdeiro smallInput' value="36" min='13' max='44'/></div>
+                <div><label for='inputIdadeMed'>Med</label><input type="number" name="idadeMed" id="inputIdadeMed" class='inputHerdeiro smallInput' value="25" min='13' max='44'/></div>
             </div>
-            
-            <label for='inputIdadeMin'>Min</label><input type="number" name="idadeMin" id="inputIdadeMin" class='inputHerdeiro smallInput' value="18" min='13' max='44'/>
-            <label for='inputIdadeMax'>Max</label><input type="number" name="idadeMax" id="inputIdadeMax" class='inputHerdeiro smallInput' value="36" min='13' max='44'/>
-            <br>
-            <label for='inputIdadeMed'>Med</label><input type="number" name="idadeMed" id="inputIdadeMed" class='inputHerdeiro smallInput' value="25" min='13' max='44'/>
+        </div>
 
         <label for="numeroJogadores"><span class="material-symbols-outlined">casino</span>&nbsp Número de Jogadores</label>
-<select class='form-control' id='numeroJogadores' name='numeroJogadores'>
+        <select class='form-control' id='numeroJogadores' name='numeroJogadores'>
                 <option value='23'>23</option>
                 <option value='22'>22</option>
                 <option value='21'>21</option>
@@ -545,16 +565,14 @@ for (i = 0; i < close.length; i++) {
               </select>
 
         <label for="nomenclatura"><span class="material-symbols-outlined">casino</span>&nbsp Nomenclatura</label>
-<select class='form-control' id='nomenclatura' name='nomenclatura'>
+        <select class='form-control' id='nomenclatura' name='nomenclatura'>
                 <option value='0'>Automática</option>
                 <option value='1'>Manual</option>
               </select>
 
-
-
         <div class="origemNomes row_atributo">
-<label for="origemNomes"><span class="material-symbols-outlined">casino</span>&nbsp Origem dos Nomes</label>
-<select multiple class='form-control' id='origemNomes' name='origemNomes'>
+            <label for="origemNomes"><span class="material-symbols-outlined">casino</span>&nbsp Origem dos Nomes</label>
+            <select multiple class='form-control' id='origemNomes' name='origemNomes'>
                 <?php
                 $stmt = $pais->listaOrigens();
 
@@ -564,11 +582,11 @@ for (i = 0; i < close.length; i++) {
                   }
                 ?>
               </select>
-</div>
+        </div>
 
         <div class="origemSobrenomes row_atributo">
-<label for="origemSobrenomes"><span class="material-symbols-outlined">casino</span>&nbsp Origem dos Sobrenomes</label>
-<select multiple class='form-control' id='origemSobrenomes' name='origemSobrenomes'>
+            <label for="origemSobrenomes"><span class="material-symbols-outlined">casino</span>&nbsp Origem dos Sobrenomes</label>
+            <select multiple class='form-control' id='origemSobrenomes' name='origemSobrenomes'>
                 <?php
 
                 $stmt = $pais->listaOrigens();
@@ -579,10 +597,10 @@ for (i = 0; i < close.length; i++) {
                   }
                 ?>
               </select>
-</div>
+        </div>
 
         <label for="formacao"><span class="material-symbols-outlined">casino</span>&nbsp Formação Base</label>
-<select class='form-control' id='formacao' name='formacao'>
+        <select class='form-control' id='formacao' name='formacao'>
                 <?php
 
                 $stmt = $formacao->read();
@@ -594,15 +612,17 @@ for (i = 0; i < close.length; i++) {
                 ?>
               </select>
 
-        <div style="margin-top: 15px;">
-<input type='hidden' name='inserir'>
-                  <input type='hidden' name='clube' value=''>
-                <button type="submit" name="criar" class="btn" value="0">Inserir sem jogadores</button>
-                <button type="reset" name="reset" class="btn">Limpar</button>
-                <button type='submit' id='hexagen' name="criar" class="btn" value="1"><span class="material-symbols-outlined">casino</span>&nbsp Inserir com jogadores</button>
-</div>
+        <input type='hidden' name='inserir'>
+        <input type='hidden' name='clube' value=''>
+        
+        <div class="form-actions">
+            <button type="submit" name="criar" class="btn" value="0">Inserir sem jogadores</button>
+            <button type="reset" name="reset" class="btn">Limpar</button>
+            <button type='submit' id='hexagen' name="criar" class="btn" value="1"><span class="material-symbols-outlined">casino</span>&nbsp Inserir com jogadores</button>
+        </div>
 
     </form>
+</div>
 </div>
 </div>
 
@@ -756,6 +776,55 @@ $(this).show();
     if (!$(this).val() || (parseInt($(this).val()) <= 10 && parseInt($(this).val()) >= 1));
     else
       $(this).val($(this).data("old"));
+  });
+
+  function readURL(input, target_div) {
+      if (input.files && input.files[0]) {
+          var reader = new FileReader();
+          reader.onload = function (e) {
+              $('#' + target_div + '-preview').attr('src', e.target.result).show();
+          };
+          reader.readAsDataURL(input.files[0]);
+      }
+  }
+
+  $('#escudo').on('change', function(){
+      if (this.files && this.files[0]) {
+          $('#nomeEscudo').text(this.files[0].name);
+          readURL(this, 'escudo');
+      } else {
+          $('#nomeEscudo').text('Clique para selecionar o escudo');
+          $('#escudo-preview').hide().attr('src', '');
+      }
+  });
+
+  $('#uni1').on('change', function(){
+      if (this.files && this.files[0]) {
+          $('#nomeUni1').text(this.files[0].name);
+          readURL(this, 'uni1');
+      } else {
+          $('#nomeUni1').text('Clique para selecionar o uniforme titular');
+          $('#uni1-preview').hide().attr('src', '');
+      }
+  });
+
+  $('#uni2').on('change', function(){
+      if (this.files && this.files[0]) {
+          $('#nomeUni2').text(this.files[0].name);
+          readURL(this, 'uni2');
+      } else {
+          $('#nomeUni2').text('Clique para selecionar o uniforme reserva');
+          $('#uni2-preview').hide().attr('src', '');
+      }
+  });
+
+  $('button[type="reset"]').on('click', function(){
+      $('#nomeEscudo').text('Clique para selecionar o escudo');
+      $('#escudo-preview').hide().attr('src', '');
+      $('#nomeUni1').text('Clique para selecionar o uniforme titular');
+      $('#uni1-preview').hide().attr('src', '');
+      $('#nomeUni2').text('Clique para selecionar o uniforme reserva');
+      $('#uni2-preview').hide().attr('src', '');
   });
 });
 
