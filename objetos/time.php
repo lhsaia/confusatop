@@ -1769,16 +1769,19 @@ function readExtraInfo($id){
 		$stmt->bindParam(":id", $codigo_time);
 		$stmt->bindParam(":tecnico", $codigo_time);
 		
-		$lastOne = 1;
+		$playerIndex = 1;
 		
 		foreach($arrayJogadores as $key => $jogadorUnico){
+			if ($playerIndex > 23) {
+				break;
+			}
 			$codigo_jogador = $codigo_time * 1000 - $key;
-			$paramBinder = ":jogador" . ($key + 1);
+			$paramBinder = ":jogador" . $playerIndex;
 			$stmt->bindValue($paramBinder, $codigo_jogador);
-			$lastOne++;
+			$playerIndex++;
 		}
 		
-		for ($i = $lastOne; $i <= 23; $i++) {
+		for ($i = $playerIndex; $i <= 23; $i++) {
 			$paramBinder = ":jogador" . $i;
 			$stmt->bindValue($paramBinder, 0, PDO::PARAM_INT);
 		}
@@ -1797,6 +1800,7 @@ function readExtraInfo($id){
                 //The INSERT query failed due to a key constraint violation.
                 return false;
             }
+            return false;
         }
 	}
 	
@@ -1818,18 +1822,30 @@ function readExtraInfo($id){
 		$stmt->bindParam(":id", $codigo_time);
 		$stmt->bindParam(":capitao", $capitaoNewId);
 		
-		$stmt->bindParam(":penalti1" , $penaltisNewArray[1]);
-		$stmt->bindParam(":penalti2" , $penaltisNewArray[2]);
-		$stmt->bindParam(":penalti3" , $penaltisNewArray[3]);
+		$penalti1 = isset($penaltisNewArray[1]) ? $penaltisNewArray[1] : 0;
+		$penalti2 = isset($penaltisNewArray[2]) ? $penaltisNewArray[2] : 0;
+		$penalti3 = isset($penaltisNewArray[3]) ? $penaltisNewArray[3] : 0;
+
+		$stmt->bindValue(":penalti1", $penalti1);
+		$stmt->bindValue(":penalti2", $penalti2);
+		$stmt->bindValue(":penalti3", $penalti3);
 		
 		$playerCounter = 1;
 	
 		foreach($titularesNewArray as $key => $posicaoJogador){
+			if ($playerCounter > 11) {
+				break;
+			}
 			$paramBinder = ":pos" . $playerCounter;
 			$stmt->bindValue($paramBinder, $posicaoJogador);
 			$paramBinder = ":jogador" . $playerCounter;
 			$stmt->bindValue($paramBinder, $key);
 			$playerCounter++;
+		}
+
+		for ($i = $playerCounter; $i <= 11; $i++) {
+			$stmt->bindValue(":pos" . $i, "");
+			$stmt->bindValue(":jogador" . $i, 0, PDO::PARAM_INT);
 		}
 
         try {
@@ -1845,6 +1861,7 @@ function readExtraInfo($id){
                 //The INSERT query failed due to a key constraint violation.
                 return false;
             }
+            return false;
         }
 	}
 

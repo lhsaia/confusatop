@@ -28,7 +28,10 @@ class Transaction{
 	}
 	
 	public function retrieveTransactions($teamId, $transactionType, $startDate = null, $endDate = null){
-		$teamId = htmlspecialchars(strip_tags($teamId));
+		$teamId = intval($teamId);
+		if ($teamId <= 0) {
+			return null;
+		}
 		$transactionType = htmlspecialchars(strip_tags($transactionType));
 		$startDate = htmlspecialchars(strip_tags($startDate));
 		$endDate = htmlspecialchars(strip_tags($endDate));

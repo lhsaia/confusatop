@@ -44,7 +44,7 @@ class Clima{
         $this->tempPrimavera=htmlspecialchars(strip_tags($this->tempPrimavera));
         $this->estiloPrimavera=htmlspecialchars(strip_tags($this->estiloPrimavera));
         $this->hemisferio=htmlspecialchars(strip_tags($this->hemisferio));
-        $this->pais=htmlspecialchars(strip_tags($this->pais));
+        $hemisferioInt = ($this->hemisferio === 'Sul' || $this->hemisferio === '1' || $this->hemisferio === 1) ? 1 : 0;
 
         // bind values
         $stmt->bindParam(":nome", $this->nome);
@@ -56,7 +56,7 @@ class Clima{
         $stmt->bindParam(":estiloInverno", $this->estiloInverno);
         $stmt->bindParam(":tempPrimavera", $this->tempPrimavera);
         $stmt->bindParam(":estiloPrimavera", $this->estiloPrimavera);
-        $stmt->bindParam(":hemisferio", $this->hemisferio);
+        $stmt->bindParam(":hemisferio", $hemisferioInt, PDO::PARAM_INT);
         $stmt->bindParam(":pais", $this->pais);
 
         if($stmt->execute()){
@@ -143,6 +143,9 @@ return $num;
         $hemisferio = htmlspecialchars(strip_tags($hemisferio));
         $pais = htmlspecialchars(strip_tags($pais));
 
+        // Compatibilidade: se a coluna Hemisferio for INT no banco de dados
+        $hemisferioInt = ($hemisferio === 'Sul' || $hemisferio === '1' || $hemisferio === 1) ? 1 : 0;
+
         $query = "UPDATE " . $this->table_name . " SET Nome=:nome, TempVerao=:tempVerao, EstiloVerao=:estiloVerao, TempOutono=:tempOutono, EstiloOutono=:estiloOutono, TempInverno=:tempInverno, EstiloInverno=:estiloInverno, TempPrimavera=:tempPrimavera, EstiloPrimavera=:estiloPrimavera, Hemisferio=:hemisferio, Pais=:pais WHERE ID=:id";
         
         $stmt = $this->conn->prepare($query);
@@ -156,7 +159,7 @@ return $num;
         $stmt->bindParam(":estiloInverno", $estiloInverno);
         $stmt->bindParam(":tempPrimavera", $tempPrimavera);
         $stmt->bindParam(":estiloPrimavera", $estiloPrimavera);
-        $stmt->bindParam(":hemisferio", $hemisferio);
+        $stmt->bindParam(":hemisferio", $hemisferioInt, PDO::PARAM_INT);
         $stmt->bindParam(":pais", $pais);
         $stmt->bindParam(":id", $id);
 
@@ -294,6 +297,37 @@ return $num;
             return false;
         }
 
+    }
+
+    function readAllAjax($item_pesquisado, $dono = null){
+        $item_pesquisado = htmlspecialchars(strip_tags($item_pesquisado));
+        $dono = htmlspecialchars(strip_tags($dono));
+
+        if($dono === null || $dono == 0){
+            $sub_query_fim = " WHERE (a.Nome LIKE ?) ORDER BY a.Nome ASC LIMIT 150";
+        } else {
+            $sub_query_fim = " WHERE p.dono = ? AND (a.Nome LIKE ?) ORDER BY a.Nome ASC LIMIT 150";
+        } 
+
+        $query = "SELECT
+                    a.ID, a.Nome, a.TempVerao, a.EstiloVerao, a.TempOutono, a.EstiloOutono, a.TempInverno, a.EstiloInverno, a.TempPrimavera, a.EstiloPrimavera, a.Hemisferio, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais
+                FROM
+                    " . $this->table_name . " a
+                LEFT JOIN paises p ON a.Pais = p.id
+                " . $sub_query_fim;
+
+        $stmt = $this->conn->prepare( $query );
+        $item_pesquisado = "%" . $item_pesquisado . "%";
+            
+        if($dono === null || $dono == 0){
+            $stmt->bindParam(1, $item_pesquisado);
+        } else {
+            $stmt->bindParam(1, $dono);
+            $stmt->bindParam(2, $item_pesquisado);
+        } 
+
+        $stmt->execute();
+        return $stmt;
     }
 }
 ?>

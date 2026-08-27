@@ -312,7 +312,37 @@ class Estadio{
 		
 	}
 
+    function readAllAjax($item_pesquisado, $dono = null){
+        $item_pesquisado = htmlspecialchars(strip_tags($item_pesquisado));
+        $dono = htmlspecialchars(strip_tags($dono));
 
+        if($dono === null || $dono == 0){
+            $sub_query_fim = " WHERE (a.Nome LIKE ?) ORDER BY a.Capacidade DESC, a.Nome ASC LIMIT 150";
+        } else {
+            $sub_query_fim = " WHERE p.dono = ? AND (a.Nome LIKE ?) ORDER BY a.Capacidade DESC, a.Nome ASC LIMIT 150";
+        } 
+
+        $query = "SELECT
+                    a.ID, a.Nome, a.Capacidade, a.Clima, c.Nome as nomeClima, a.Caldeirao, a.Altitude, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.foto 
+                FROM
+                    " . $this->table_name . " a
+                LEFT JOIN paises p ON a.Pais = p.id
+                LEFT JOIN clima c ON a.Clima = c.ID
+                " . $sub_query_fim;
+
+        $stmt = $this->conn->prepare( $query );
+        $item_pesquisado = "%" . $item_pesquisado . "%";
+            
+        if($dono === null || $dono == 0){
+            $stmt->bindParam(1, $item_pesquisado);
+        } else {
+            $stmt->bindParam(1, $dono);
+            $stmt->bindParam(2, $item_pesquisado);
+        } 
+
+        $stmt->execute();
+        return $stmt;
+    }
 
 }
 ?>

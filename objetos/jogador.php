@@ -2382,6 +2382,40 @@ return $stmt;
             return $num;
            }
 
+        function readAllExpatAjax($item_pesquisado, $user_id){
+            $item_pesquisado = htmlspecialchars(strip_tags($item_pesquisado));
+            $user_id = htmlspecialchars(strip_tags($user_id));
+
+            $query = "SELECT * FROM (
+                SELECT tf.ID, tf.Nome, tf.Nascimento, tf.Mentalidade, tf.CobradorFalta, tf.StringPosicoes, tf.valor, tf.Nivel, tf.disponibilidade, tf.idPais, tf.idDonoPais, tf.siglaPais, tf.bandeiraPais, tf.posicaoBase as posicaoBase, tf.titularidade, b.Nome as clubeVinculado, d.Nome as clubeEmprestimo, f.Nome as clubeSelecao, tf.determinacaoOriginal, b.Escudo as escudoClubeVinculado, b.ID as idClubeVinculado, tf.Idade, q.dono as donoPaisClube, tf.modificadorNivel FROM ( 
+                    SELECT
+                        a.ID, a.Nome, a.Nascimento, m.Nome as Mentalidade, r.Nome as CobradorFalta, a.StringPosicoes, a.valor, a.Nivel, a.disponibilidade, p.id as idPais, p.dono as idDonoPais, p.sigla as siglaPais, p.bandeira as bandeiraPais, c.clube as clubeVinculado, e.clube as clubeEmprestimo, s.clube as clubeSelecao, c.posicaoBase as posicaoBase, c.titularidade, a.determinacaoOriginal, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, c.ModificadorNivel as modificadorNivel
+                    FROM
+                        " . $this->table_name . " a
+                    LEFT JOIN paises p ON a.Pais = p.id
+                    LEFT JOIN contratos_jogador c ON a.ID = c.jogador AND c.tipoContrato = 0
+                    LEFT JOIN contratos_jogador e ON a.ID = e.jogador AND e.tipoContrato = 1
+                    LEFT JOIN contratos_jogador s ON a.ID = s.jogador AND s.tipoContrato = 2
+                    LEFT JOIN mentalidade m ON a.Mentalidade = m.ID
+                    LEFT JOIN cobrador r ON a.CobradorFalta = r.ID
+                ) tf
+                LEFT JOIN clube b ON tf.clubeVinculado = b.id
+                LEFT JOIN clube d ON tf.clubeEmprestimo = d.id
+                LEFT JOIN clube f ON tf.clubeSelecao = f.id
+                LEFT JOIN paises q ON b.Pais = q.id
+            ) t1 WHERE idDonoPais = ? AND ((donoPaisClube <> idDonoPais AND donoPaisClube <> 0) OR (disponibilidade = -2)) AND (Nome LIKE ? OR IFNULL(clubeVinculado,'') LIKE ? OR IFNULL(siglaPais,'') LIKE ?) ORDER BY Nome ASC";
+
+            $stmt = $this->conn->prepare( $query );
+            $param_search = "%" . $item_pesquisado . "%";
+            $stmt->bindParam(1, $user_id);
+            $stmt->bindParam(2, $param_search);
+            $stmt->bindParam(3, $param_search);
+            $stmt->bindParam(4, $param_search);
+            $stmt->execute();
+
+            return $stmt;
+        }
+
            public function testeInatividade($idJogador){
                 $idJogador = htmlspecialchars(strip_tags($idJogador));
 

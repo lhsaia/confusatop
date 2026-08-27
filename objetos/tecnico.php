@@ -950,48 +950,106 @@ class Tecnico{
         }
 
 
-        public function enviarEmailProposta($idTecnico, $clubeOrigem){
-           $idTecnico = htmlspecialchars(strip_tags($idTecnico));
-           $clubeOrigem = htmlspecialchars(strip_tags($clubeOrigem));
+        public function enviarEmailProposta($idTecnico, $clubeOrigem, $clubeDestino, $idTransferencia){
+           $isLocalhost = (DIRECTORY_SEPARATOR === '\\')
+               || in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1'])
+               || (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost:') === 0);
+           if ($isLocalhost) {
+               return false;
+           }
 
-           if($clubeOrigem){
-             $query = "SELECT usuarios.email FROM clube LEFT JOIN paises ON paises.id = clube.pais LEFT JOIN usuarios ON usuarios.id = paises.dono WHERE clube.id = ?";
-           } else{
-             $query = "SELECT usuarios.email FROM tecnico LEFT JOIN paises ON paises.id = tecnico.Pais LEFT JOIN usuarios ON usuarios.id = paises.dono WHERE tecnico.id = ?";
+           $idTecnico       = htmlspecialchars(strip_tags($idTecnico));
+           $clubeOrigem     = htmlspecialchars(strip_tags($clubeOrigem));
+           $clubeDestino    = htmlspecialchars(strip_tags($clubeDestino));
+           $idTransferencia = htmlspecialchars(strip_tags($idTransferencia));
+
+           // e-mail do dono do clube/seleção de origem (ou do país do técnico se sem clube)
+           if ($clubeOrigem) {
+               $query = "SELECT usuarios.email FROM clube LEFT JOIN paises ON paises.id = clube.pais LEFT JOIN usuarios ON usuarios.id = paises.dono WHERE clube.id = ?";
+               $bindVal = $clubeOrigem;
+           } else {
+               $query = "SELECT usuarios.email FROM tecnico LEFT JOIN paises ON paises.id = tecnico.Pais LEFT JOIN usuarios ON usuarios.id = paises.dono WHERE tecnico.id = ?";
+               $bindVal = $idTecnico;
            }
            $stmt = $this->conn->prepare($query);
-           if($clubeOrigem){
-             $stmt->bindParam(1,$clubeOrigem);
-           } else{
-             $stmt->bindParam(1,$idTecnico);
-           }
+           $stmt->bindParam(1, $bindVal);
            $stmt->execute();
            $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-           //return $result;
+           $to = $result['email'] ?? '';
+           if (empty($to)) {
+               return false;
+           }
 
-           $to = $result['email'];
-            $sendSuccess = false;
-            try {
-                require_once($_SERVER['DOCUMENT_ROOT']."/elements/mail_setup.php");
-                $mail->clearAddresses();
-                $mail->clearReplyTos();
-                $mail->setFrom('no-reply@confusa.top', 'CONFUSA.top');
-                $mail->addAddress($to);
-                $mail->Subject = "Você recebeu uma proposta de transferência no CONFUSA.TOP ";
-                $mail->Body    = "Foi feita uma nova proposta de transferência para um técnico sob seu controle, acesse o portal para negociar.";
-                $sendSuccess = $mail->send();
-            } catch (Exception $e) {
-                $sendSuccess = false;
-            }
+           // informações do técnico
+           $stmt = $this->conn->prepare("SELECT Nome, Nivel FROM tecnico WHERE ID = ?");
+           $stmt->bindParam(1, $idTecnico);
+           $stmt->execute();
+           $rowTec = $stmt->fetch(PDO::FETCH_ASSOC);
+           $nomeTecnico = $rowTec['Nome'] ?? 'Técnico';
+           $nivelTecnico = $rowTec['Nivel'] ?? '-';
 
-            if($sendSuccess){
-              return true;
-            } else {
-              return false;
-            }
+           // informações do clube proponente (destino)
+           $stmt = $this->conn->prepare("SELECT Nome, Escudo FROM clube WHERE ID = ?");
+           $stmt->bindParam(1, $clubeDestino);
+           $stmt->execute();
+           $rowClube = $stmt->fetch(PDO::FETCH_ASSOC);
+           $nomeClube  = $rowClube['Nome']   ?? 'Clube desconhecido';
+           $escudoClube = $rowClube['Escudo'] ?? '';
+           $extEscudo   = $escudoClube ? substr($escudoClube, -3, 3) : '';
+           $data = '';
+           if ($escudoClube) {
+               $imgPath = $_SERVER['DOCUMENT_ROOT'] . "/images/escudos/" . $escudoClube;
+               if (file_exists($imgPath)) {
+                   $img = @file_get_contents($imgPath);
+                   if ($img !== false) {
+                       $data = base64_encode($img);
+                   }
+               }
+           }
 
-         }
+           if ($data !== '') {
+               $imgHtml = "<img align='middle' height='60' src='data:image/" . $extEscudo . ";base64," . $data . "'/>";
+           } elseif ($escudoClube) {
+               $imgHtml = "<img align='middle' height='60' src='https://confusa.top/images/escudos/" . urlencode($escudoClube) . "'/>";
+           } else {
+               $imgHtml = '';
+           }
+
+           $subject = "[CONFUSA.top] " . $nomeClube . " fez uma proposta por " . $nomeTecnico;
+           $html_content = '
+           <html>
+           <head></head>
+           <body>
+               <h1 align="center">Proposta de contratação de técnico</h1>
+               <div style="text-align:center;" width="100%">
+                   ' . $imgHtml . '
+                   <div><br/>
+                       O clube <strong>' . $nomeClube . '</strong> fez uma proposta para contratar o técnico
+                       <strong>' . $nomeTecnico . '</strong> (nível ' . $nivelTecnico . ').<br/>
+                       Acesse o portal para aceitar, rejeitar ou realizar uma contraproposta.
+                   </div>
+               </div>
+           </body>
+           </html>';
+
+           $sendSuccess = false;
+           try {
+               require_once($_SERVER['DOCUMENT_ROOT']."/elements/mail_setup.php");
+               $mail->clearAddresses();
+               $mail->clearReplyTos();
+               $mail->setFrom('no-reply@confusa.top', 'CONFUSA.top');
+               $mail->addAddress($to);
+               $mail->Subject = $subject;
+               $mail->Body    = $html_content;
+               $mail->isHTML(true);
+               $sendSuccess = $mail->send();
+           } catch (Exception $e) {
+               $sendSuccess = false;
+           }
+
+           return $sendSuccess;
+        }
 		
 				        function alterarInicioContrato($idTecnico,$idClube, $inicioNovo){
 
