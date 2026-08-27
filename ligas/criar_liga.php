@@ -139,13 +139,19 @@ if(isset($_POST['nome']) && !empty($_POST['pais']) && !empty($_POST['nome']) && 
 
                 <label>Logo</label>
                 <label class='custom-file-upload' for='logo'>
+                    <span class="material-symbols-outlined" style="font-size: 24px; color: #0284c7;">cloud_upload</span>
                     <img id='logo-preview' style="display:none; max-height:40px; max-width:60px; object-fit:contain; border-radius:4px;">
-                    <span id='nomeLogo'>Clique para selecionar a Logo</span>
+                    <span id='nomeLogo'>Clique para selecionar o logo</span>
                 </label>
-                <input type="file" id='logo' class='form-control' name='logo' accept=".jpg,.png,.jpeg" style="display: none !important;">
+                <input type="file" id='logo' class='form-control' name='logo' accept=".jpg,.png,.jpeg,.webp" style="display: none !important;">
 
-                <div style="margin-top: 15px;">
-                    <button type="submit" name="criar" class="btn">Inserir</button>
+                <div class="form-actions">
+                    <button type="submit" name="criar" id="salvar" class="btn">
+                        <span class="material-symbols-outlined">add_circle</span> Inserir
+                    </button>
+                    <button type="reset" name="reset" class="btn">
+                        <span class="material-symbols-outlined">restart_alt</span> Limpar
+                    </button>
                 </div>
             </form>
         </div>
@@ -171,9 +177,19 @@ $(document).ready(function(){
        }
     }
    
-    $('#logo').change(function(){
-        $("#nomeLogo").text("");
-        readURL(this, 'logo');
+    $('#logo').on('change', function(){
+        if (this.files && this.files[0]) {
+            $('#nomeLogo').text(this.files[0].name);
+            readURL(this, 'logo');
+        } else {
+            $('#nomeLogo').text('Clique para selecionar o logo');
+            $('#logo-preview').hide().attr('src', '');
+        }
+    });
+
+    $('button[type="reset"]').on('click', function(){
+        $('#nomeLogo').text('Clique para selecionar o logo');
+        $('#logo-preview').hide().attr('src', '');
     });
 });
 </script>

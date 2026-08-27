@@ -28,6 +28,20 @@ $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT'] . "/elements/login_info.php");
 include_once($_SERVER['DOCUMENT_ROOT'] . "/elements/header.php");
 echo '<link rel="stylesheet" href="/css/associar_jogadores.css?v=' . $css_versao . '">';
+
+$target_liga_name = "";
+if (!empty($pending['liga'])) {
+    $stmt_l = $db->prepare("SELECT Nome FROM liga WHERE ID = ?");
+    $stmt_l->execute([$pending['liga']]);
+    $target_liga_name = $stmt_l->fetchColumn();
+}
+
+$target_clube_name = "";
+if (!empty($pending['time'])) {
+    $stmt_tc = $db->prepare("SELECT Nome FROM clube WHERE ID = ?");
+    $stmt_tc->execute([$pending['time']]);
+    $target_clube_name = $stmt_tc->fetchColumn();
+}
 ?>
 
 <main class="propostas-container narrow-container" style="padding-top: 80px; padding-bottom: 60px;">
@@ -67,17 +81,28 @@ echo '<link rel="stylesheet" href="/css/associar_jogadores.css?v=' . $css_versao
                         </div>
 
                         <div class="match-selector-wrapper <?php echo !empty($matches) ? 'active' : ''; ?>" id="wrapper-<?php echo $field_id; ?>">
-                            <select name="team_associations[<?php echo $key; ?>][player_id]" class="match-select">
+                            <select name="team_associations[<?php echo $key; ?>][player_id]" class="match-select" onchange="checkDivergence('<?php echo $field_id; ?>', '<?php echo $key; ?>')">
                                 <?php if (!empty($matches)): ?>
                                     <?php foreach ($matches as $m): ?>
-                                        <option value="<?php echo $m['ID']; ?>">
-                                            <?php echo htmlspecialchars($m['Nome']); ?> (ID: <?php echo $m['ID']; ?>)
-                                        </option>
+                                        <?php if ($key === 'clube'): ?>
+                                            <option value="<?php echo $m['ID']; ?>" data-liga-id="<?php echo $m['liga']; ?>" data-liga-nome="<?php echo htmlspecialchars($m['NomeLiga'] ?? 'Nenhuma'); ?>">
+                                                <?php echo htmlspecialchars($m['Nome']); ?> (ID: <?php echo $m['ID']; ?>)
+                                            </option>
+                                        <?php elseif ($key === 'tecnico'): ?>
+                                            <option value="<?php echo $m['ID']; ?>" data-clube-id="<?php echo $m['idClube']; ?>" data-clube-nome="<?php echo htmlspecialchars($m['NomeClube'] ?? 'Sem Clube'); ?>" data-nivel="<?php echo $m['Nivel']; ?>" data-idade="<?php echo $m['Idade']; ?>" data-sexo="<?php echo $m['Sexo']; ?>">
+                                                <?php echo htmlspecialchars($m['Nome']); ?> (ID: <?php echo $m['ID']; ?>)
+                                            </option>
+                                        <?php else: ?>
+                                            <option value="<?php echo $m['ID']; ?>">
+                                                <?php echo htmlspecialchars($m['Nome']); ?> (ID: <?php echo $m['ID']; ?>)
+                                            </option>
+                                        <?php endif; ?>
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <option value="">Nenhuma sugestão encontrada</option>
                                 <?php endif; ?>
                             </select>
+                            <div class="divergence-warning" id="warning-<?php echo $field_id; ?>" style="margin-top: 8px; font-size: 0.85rem; color: #b45309; display: none; padding: 6px 10px; background: rgba(217, 119, 6, 0.1); border-radius: 4px; border: 1px solid rgba(217, 119, 6, 0.2);"></div>
                         </div>
                     </div>
                 </div>
@@ -94,7 +119,7 @@ echo '<link rel="stylesheet" href="/css/associar_jogadores.css?v=' . $css_versao
                 $nivel = $p['nivel'];
                 $matches = $p['matches'];
                 ?>
-                <div class="player-card" data-xml-index="<?php echo $xml_index; ?>">
+                <div class="player-card" data-xml-index="<?php echo $xml_index; ?>" data-xml-nivel="<?php echo $nivel; ?>" data-xml-idade="<?php echo $idade; ?>">
                     <div class="player-info">
                         <h3 class="player-name"><?php echo $nome; ?></h3>
                         <div class="player-meta">
@@ -115,25 +140,28 @@ echo '<link rel="stylesheet" href="/css/associar_jogadores.css?v=' . $css_versao
                             </button>
                         </div>
 
-                        <div class="match-selector-wrapper <?php echo !empty($matches) ? 'active' : ''; ?>" id="wrapper-<?php echo $xml_index; ?>" style="display: flex; align-items: center; gap: 8px;">
-                            <?php 
-                            $default_flag = '';
-                            if (!empty($matches)) {
-                                $default_flag = $matches[0]['Bandeira'];
-                            }
-                            ?>
-                            <img class="select-flag-preview" src="<?php echo $default_flag ? '/images/bandeiras/' . $default_flag : '/images/bandeiras/default.png'; ?>" style="width: 20px; height: 14px; border: 1px solid rgba(0,0,0,0.08); border-radius: 2px; <?php echo !$default_flag ? 'display: none;' : ''; ?>">
-                            <select name="associations[<?php echo $xml_index; ?>][player_id]" class="match-select" onchange="updateSelectFlag(this)">
-                                <?php if (!empty($matches)): ?>
-                                    <?php foreach ($matches as $m): ?>
-                                        <option value="<?php echo $m['ID']; ?>" data-flag="<?php echo $m['Bandeira']; ?>">
-                                            <?php echo htmlspecialchars($m['Nome']); ?> (Nível: <?php echo $m['Nivel']; ?><?php echo !empty($m['NomePais']) ? ' - ' . htmlspecialchars($m['NomePais']) : ''; ?>)
-                                        </option>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <option value="">Nenhuma sugestão encontrada</option>
-                                <?php endif; ?>
-                            </select>
+                        <div class="match-selector-wrapper <?php echo !empty($matches) ? 'active' : ''; ?>" id="wrapper-<?php echo $xml_index; ?>" style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; width: 100%;">
+                            <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                                <?php 
+                                $default_flag = '';
+                                if (!empty($matches)) {
+                                    $default_flag = $matches[0]['Bandeira'];
+                                }
+                                ?>
+                                <img class="select-flag-preview" src="<?php echo $default_flag ? '/images/bandeiras/' . $default_flag : '/images/bandeiras/default.png'; ?>" style="width: 20px; height: 14px; border: 1px solid rgba(0,0,0,0.08); border-radius: 2px; <?php echo !$default_flag ? 'display: none;' : ''; ?>">
+                                <select name="associations[<?php echo $xml_index; ?>][player_id]" class="match-select" onchange="updateSelectFlag(this); checkDivergence('<?php echo $xml_index; ?>', 'jogador')">
+                                    <?php if (!empty($matches)): ?>
+                                        <?php foreach ($matches as $m): ?>
+                                            <option value="<?php echo $m['ID']; ?>" data-flag="<?php echo $m['Bandeira']; ?>" data-clube-id="<?php echo $m['idClube']; ?>" data-clube-nome="<?php echo htmlspecialchars($m['NomeClube'] ?? 'Sem Clube'); ?>" data-nivel="<?php echo $m['Nivel']; ?>" data-idade="<?php echo $m['Idade']; ?>" data-sexo="<?php echo $m['Sexo']; ?>">
+                                                <?php echo htmlspecialchars($m['Nome']); ?> (Nível: <?php echo $m['Nivel']; ?><?php echo !empty($m['NomePais']) ? ' - ' . htmlspecialchars($m['NomePais']) : ''; ?>)
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <option value="">Nenhuma sugestão encontrada</option>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                            <div class="divergence-warning" id="warning-<?php echo $xml_index; ?>" style="margin-top: 8px; font-size: 0.85rem; color: #b45309; display: none; padding: 6px 10px; background: rgba(217, 119, 6, 0.1); border-radius: 4px; border: 1px solid rgba(217, 119, 6, 0.2); width: 100%;"></div>
                         </div>
                     </div>
                 </div>
@@ -152,6 +180,10 @@ echo '<link rel="stylesheet" href="/css/associar_jogadores.css?v=' . $css_versao
 </main>
 
 <script>
+const targetLigaId = "<?php echo (int)($pending['liga'] ?? 0); ?>";
+const targetLigaName = "<?php echo htmlspecialchars($target_liga_name); ?>";
+const targetClubName = "<?php echo htmlspecialchars($target_clube_name ?? $team_matches['clube']['nome'] ?? ''); ?>";
+
 function setPlayerAction(xmlIndex, action) {
     const input = document.getElementById('action-' + xmlIndex);
     const wrapper = document.getElementById('wrapper-' + xmlIndex);
@@ -188,6 +220,102 @@ function updateSelectFlag(select) {
         }
     }
 }
+
+const targetSexo = "<?php echo (int)($pending['sexo'] ?? 0); ?>";
+const coachXmlIdade = <?php echo (int)($team_matches['tecnico']['idade'] ?? 0); ?>;
+const coachXmlNivel = <?php echo (int)($team_matches['tecnico']['nivel'] ?? 0); ?>;
+
+function checkDivergence(fieldId, key) {
+    const wrapper = document.getElementById('wrapper-' + fieldId);
+    const select = wrapper.querySelector('select');
+    const warningDiv = document.getElementById('warning-' + fieldId);
+    if (!select || !warningDiv) return;
+    
+    const option = select.options[select.selectedIndex];
+    if (!option || option.value === "") {
+        warningDiv.style.display = 'none';
+        return;
+    }
+    
+    let warningMsg = "";
+    const card = document.querySelector(`.player-card[data-xml-index="${fieldId}"]`);
+    
+    // Check gender mismatch (sexo: 0 = Male, 1 = Female)
+    const optionSexo = option.getAttribute('data-sexo');
+    if (optionSexo !== null && targetSexo !== null && optionSexo !== targetSexo) {
+        const dbGender = optionSexo === '1' ? 'Feminino' : 'Masculino';
+        const importGender = targetSexo === '1' ? 'Feminino' : 'Masculino';
+        warningMsg += `⚠️ <strong>Divergência Crítica (Gênero):</strong> O perfil no banco é de gênero <strong>${dbGender}</strong>, mas você está importando como <strong>${importGender}</strong>.<br>`;
+    }
+    
+    if (key === 'clube') {
+        const ligaId = option.getAttribute('data-liga-id');
+        const ligaNome = option.getAttribute('data-liga-nome');
+        if (ligaId && targetLigaId && ligaId !== targetLigaId) {
+            warningMsg += `⚠️ <strong>Divergência Crítica (Liga):</strong> Este clube está atualmente cadastrado na liga <strong>"${ligaNome}"</strong>, mas você está importando na liga <strong>"${targetLigaName}"</strong>.<br>`;
+        }
+    } else if (key === 'tecnico') {
+        const clubeNome = option.getAttribute('data-clube-nome');
+        if (clubeNome && targetClubName && clubeNome.toLowerCase().trim() !== targetClubName.toLowerCase().trim()) {
+            warningMsg += `⚠️ <strong>Divergência Crítica (Vínculo):</strong> Este técnico está vinculado ao clube <strong>"${clubeNome}"</strong>, mas você está importando no clube <strong>"${targetClubName}"</strong>.<br>`;
+        }
+        
+        // Age and level warning
+        const optIdade = parseInt(option.getAttribute('data-idade'));
+        const optNivel = parseInt(option.getAttribute('data-nivel'));
+        if (coachXmlIdade && optIdade && Math.abs(optIdade - coachXmlIdade) >= 2) {
+            warningMsg += `⚠️ <strong>Aviso de Idade:</strong> A idade no banco (${optIdade} anos) difere do arquivo (${coachXmlIdade} anos). Verifique se é a mesma pessoa.<br>`;
+        }
+        if (coachXmlNivel && optNivel && Math.abs(optNivel - coachXmlNivel) > 5) {
+            warningMsg += `⚠️ <strong>Aviso de Nível:</strong> O nível no banco (${optNivel}) difere significativamente do arquivo (${coachXmlNivel}).<br>`;
+        }
+    } else if (key === 'jogador') {
+        const clubeNome = option.getAttribute('data-clube-nome');
+        if (clubeNome && targetClubName && clubeNome.toLowerCase().trim() !== targetClubName.toLowerCase().trim()) {
+            warningMsg += `⚠️ <strong>Divergência Crítica (Vínculo):</strong> Este jogador está atualmente vinculado ao clube <strong>"${clubeNome}"</strong>, mas será transferido para o clube <strong>"${targetClubName}"</strong>.<br>`;
+        }
+        
+        // Age and level warning
+        const optIdade = parseInt(option.getAttribute('data-idade'));
+        const optNivel = parseInt(option.getAttribute('data-nivel'));
+        const xmlIdade = card ? parseInt(card.getAttribute('data-xml-idade')) : 0;
+        const xmlNivel = card ? parseInt(card.getAttribute('data-xml-nivel')) : 0;
+        
+        if (xmlIdade && optIdade && Math.abs(optIdade - xmlIdade) >= 2) {
+            warningMsg += `⚠️ <strong>Aviso de Idade:</strong> A idade no banco (${optIdade} anos) difere do arquivo (${xmlIdade} anos). Verifique se é o mesmo jogador.<br>`;
+        }
+        if (xmlNivel && optNivel && Math.abs(optNivel - xmlNivel) > 5) {
+            warningMsg += `⚠️ <strong>Aviso de Nível:</strong> O nível no banco (${optNivel}) difere significativamente do arquivo (${xmlNivel}).<br>`;
+        }
+    }
+    
+    // Remove trailing <br>
+    if (warningMsg.endsWith('<br>')) {
+        warningMsg = warningMsg.substring(0, warningMsg.length - 4);
+    }
+    
+    if (warningMsg) {
+        warningDiv.innerHTML = warningMsg;
+        warningDiv.style.display = 'block';
+    } else {
+        warningDiv.style.display = 'none';
+    }
+}
+
+// Trigger check on page load
+document.addEventListener("DOMContentLoaded", function() {
+    // Check team associations
+    <?php if ($team_matches): ?>
+        <?php foreach (['clube', 'tecnico', 'estadio'] as $key): ?>
+            checkDivergence('team_assoc_<?php echo $key; ?>', '<?php echo $key; ?>');
+        <?php endforeach; ?>
+    <?php endif; ?>
+    
+    // Check players
+    <?php foreach ($players as $p): ?>
+        checkDivergence('<?php echo $p['xml_index']; ?>', 'jogador');
+    <?php endforeach; ?>
+});
 </script>
 
 <?php

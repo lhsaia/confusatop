@@ -1,5 +1,7 @@
 <?php
 
+ini_set('memory_limit', '512M');
+
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
@@ -19,42 +21,61 @@ $pais = new Pais($db);
 $usuario = new Usuario($db);
 
 function imageImporterWebP($file_name, $target_filename){
+    @ini_set('memory_limit', '512M');
     $maxDim = 100;
-    list($width, $height, $type, $attr) = getimagesize( $file_name );
+    list($width, $height, $type) = getimagesize( $file_name );
     if ( $width > $maxDim || $height > $maxDim ) {
         $ratio = $width/$height;
         if( $ratio > 1) {
-            $new_width = $maxDim;
-            $new_height = $maxDim/$ratio;
+            $new_width = round($maxDim);
+            $new_height = round($maxDim/$ratio);
         } else {
-            $new_width = $maxDim*$ratio;
-            $new_height = $maxDim;
+            $new_width = round($maxDim*$ratio);
+            $new_height = round($maxDim);
         }
     } else {
         $new_width = $width;
         $new_height = $height;
     }
-    if($type == IMAGETYPE_PNG){
-        $compressed_png_content = compress_png($file_name);
-        $src = imagecreatefromstring($compressed_png_content);
-    } else if ($type == 18 || $type == "") {
-        $src = imagecreatefromwebp($file_name);
-    } else {
+
+    $src = null;
+    if ($type == IMAGETYPE_PNG || $type == 'image/png') {
+        $src = @imagecreatefrompng($file_name);
+        if (!$src && function_exists('compress_png')) {
+            $compressed_png_content = compress_png($file_name);
+            $src = @imagecreatefromstring($compressed_png_content);
+        }
+    } else if ($type == IMAGETYPE_WEBP || $type == 18 || $type == 'image/webp') {
+        $src = @imagecreatefromwebp($file_name);
+    } else if ($type == IMAGETYPE_JPEG || $type == 'image/jpeg' || $type == 'image/jpg') {
+        $src = @imagecreatefromjpeg($file_name);
+    }
+
+    if (!$src) {
         try {
-            $src = imagecreatefromstring( file_get_contents( $file_name ) );
+            $file_data = @file_get_contents($file_name);
+            if ($file_data !== false) {
+                $src = @imagecreatefromstring($file_data);
+            }
         } catch (Exception $e) {
-            $src = imagecreatefromwebp($file_name);
+            $src = null;
         }
     }
+
+    if (!$src) {
+        return false;
+    }
+
     $dst = imagecreatetruecolor( $new_width, $new_height );
-    $background = imagecolorallocate($dst , 0, 0, 0);
+    $background = imagecolorallocatealpha($dst, 0, 0, 0, 127);
     imagecolortransparent($dst, $background);
     imagealphablending($dst, false);
     imagesavealpha($dst, true);
     imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, $width, $height );
     imagedestroy( $src );
-    imagewebp($dst, $target_filename);
+    imagewebp($dst, $target_filename, 90);
     imagedestroy( $dst );
+    return true;
 }
 
 
@@ -173,10 +194,11 @@ if(isset($_POST['nome']) && !empty($_POST['sigla']) && !empty($_POST['nome']) ){
 
                 <label>Bandeira</label>
                 <label class='custom-file-upload' for='bandeira'>
-                    <img id='bandeira-preview' style="display:none;">
-                    <span id='nomeBandeira'>Clique para selecionar a Bandeira (Max 3MB)</span>
+                    <span class="material-symbols-outlined" style="font-size: 24px; color: #0284c7;">cloud_upload</span>
+                    <img id='bandeira-preview' style="display:none; max-height:40px; max-width:60px; object-fit:contain; border-radius:4px;">
+                    <span id='nomeBandeira'>Clique para selecionar a bandeira</span>
                 </label>
-                <input type="file" id='bandeira' class='form-control' name='bandeira' accept=".jpg,.png,.jpeg" style="display: none !important;">
+                <input type="file" id='bandeira' class='form-control' name='bandeira' accept=".jpg,.png,.jpeg,.webp" style="display: none !important;">
                 
                 <?php
                 if(!$emTestes){
@@ -197,8 +219,13 @@ if(isset($_POST['nome']) && !empty($_POST['sigla']) && !empty($_POST['nome']) ){
                 }
                 ?>
 
-                <div style="margin-top: 15px;">
-                    <button type="submit" name="criar" class="btn">Inserir</button>
+                <div class="form-actions">
+                    <button type="submit" name="criar" id="salvar" class="btn">
+                        <span class="material-symbols-outlined">add_circle</span> Inserir
+                    </button>
+                    <button type="reset" name="reset" class="btn">
+                        <span class="material-symbols-outlined">restart_alt</span> Limpar
+                    </button>
                 </div>
             </form>
         </div>
@@ -224,9 +251,19 @@ $(document).ready(function(){
        }
     }
    
-    $('#bandeira').change(function(){
-        $("#nomeBandeira").text("");
-        readURL(this, 'bandeira');
+    $('#bandeira').on('change', function(){
+        if (this.files && this.files[0]) {
+            $('#nomeBandeira').text(this.files[0].name);
+            readURL(this, 'bandeira');
+        } else {
+            $('#nomeBandeira').text('Clique para selecionar a bandeira');
+            $('#bandeira-preview').hide().attr('src', '');
+        }
+    });
+
+    $('button[type="reset"]').on('click', function(){
+        $('#nomeBandeira').text('Clique para selecionar a bandeira');
+        $('#bandeira-preview').hide().attr('src', '');
     });
 
     function toggleFederacao() {

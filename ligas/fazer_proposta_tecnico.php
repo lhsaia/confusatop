@@ -27,14 +27,21 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
 
     //verificar ID logado e do clube de origem
     $idLogado = $_SESSION['user_id'];
-    $idDonoClube = $time->donoClube($clubeOrigem,$idTecnico);
-    $error_msg .= $idDonoClube;
+    $idDonoClube = $time->donoClube($clubeOrigem, $idTecnico);
 
-    // if($jogador->verificarAposentadoria($idJogador)){
-    //     $is_success = false;
-    //     $error_msg = "Jogador aposentado!";
-    //     die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
-    // }
+    // Quando o técnico está sem clube (clubeOrigem=0), verificar se o usuário logado
+    // é dono do país de origem do técnico
+    $idDonoTecnico = 0;
+    if ($clubeOrigem == 0) {
+        $query_dono_tec = "SELECT p.dono FROM tecnico t LEFT JOIN paises p ON p.id = t.Pais WHERE t.ID = ?";
+        $stmt_dono_tec = $db->prepare($query_dono_tec);
+        $stmt_dono_tec->bindParam(1, $idTecnico);
+        $stmt_dono_tec->execute();
+        $row_dono_tec = $stmt_dono_tec->fetch(PDO::FETCH_ASSOC);
+        if ($row_dono_tec) {
+            $idDonoTecnico = (int)$row_dono_tec['dono'];
+        }
+    }
 
     if($clubeOrigem == $clubeDestino){
         $is_success = false;
@@ -47,7 +54,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
 
         $idTransferencia = $db->lastInsertId();
 
-        if($idLogado == $idDonoClube){
+        if($idLogado == $idDonoClube || ($clubeOrigem == 0 && $idLogado == $idDonoTecnico)){
             if($tecnico->avaliarProposta($idTransferencia, 'aceitar')){
                 $usuario->atualizarAlteracao($_SESSION['user_id']);
                 $is_success = true;
@@ -56,7 +63,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
             }
 
         } else {
-          $tecnico->enviarEmailProposta($idTecnico, $clubeOrigem);
+          $tecnico->enviarEmailProposta($idTecnico, $clubeOrigem, $clubeDestino, $idTransferencia);
             $is_success = true;
         }
 

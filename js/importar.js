@@ -166,7 +166,7 @@
             if (data.phase === 1) {
                 form.classList.remove('is-uploading');
                 if (typeof window.renderImportReview === 'function') {
-                    window.renderImportReview(data.games, data.countries);
+                    window.renderImportReview(data.games, data.countries || data.clubs);
                 }
                 return;
             }

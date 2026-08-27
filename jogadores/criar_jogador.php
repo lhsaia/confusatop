@@ -172,11 +172,14 @@ $(document).ready(function(){
 
 <main class="propostas-container">
     <div class="propostas-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 1rem; width: 100%;">
+        <div class="card-header-flex">
             <h2 class="propostas-title" style="margin: 0; font-family: 'Kanit', sans-serif; font-size: 1.6rem; color: #1e293b;">➕ Criar Jogador</h2>
             <div style="display: flex; gap: 8px; align-items: center;">
-                <div id="toolbar-card-container"></div>
-                <a href="/usuario/meusjogadores.php" style="display: inline-block; padding: 8px 16px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(0, 0, 0, 0.06)'" onmouseout="this.style.background='rgba(0, 0, 0, 0.03)'">Voltar</a>
+                <button type="button" id="hexagen" class="btn-hexagen-top">
+                    <span class="material-symbols-outlined">casino</span>
+                    <span>Hexagen</span>
+                </button>
+                <a href="/usuario/meusjogadores.php" class="btn-voltar">Voltar</a>
             </div>
         </div>
         <div id='errorbox'></div>
@@ -338,9 +341,13 @@ $(document).ready(function(){
 
         ?>
 
-        <div style="margin-top: 15px;">
-            <button type="submit" name="criar" class="btn">Inserir</button>
-            <button type="reset" name="reset" class="btn">Limpar</button>
+        <div class="form-actions">
+            <button type="submit" name="criar" id="salvar" class="btn">
+                <span class="material-symbols-outlined">add_circle</span> Inserir
+            </button>
+            <button type="reset" name="reset" class="btn">
+                <span class="material-symbols-outlined">restart_alt</span> Limpar
+            </button>
         </div>
 
     </form>
@@ -722,9 +729,6 @@ $(document).ready(function(){
     else
       $(this).val($(this).data("old"));
   });
-  
-  $('#toolbar').html("<div id='hexagen' style='cursor:pointer; display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.2); border-radius: 8px; color: #0284c7; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;' onmouseover=\"this.style.background='rgba(2, 132, 199, 0.15)'\" onmouseout=\"this.style.background='rgba(2, 132, 199, 0.08)'\"><span style=\"font-size:18px !important\" class='material-symbols-outlined'>casino</span><span>Hexagen</span></div>");
-  $("#toolbar").appendTo("#toolbar-card-container");
 });
 
 

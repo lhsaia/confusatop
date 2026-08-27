@@ -1,14 +1,13 @@
 <?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
-
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 // include database and object files
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/estadio.php");
-include_once($_SERVER['DOCUMENT_ROOT']."/objetos/clima.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/objetos/clima.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
 
 // get database connection
@@ -17,148 +16,239 @@ $db = $database->getConnection();
 
 // pass connection to objects
 $estadio = new Estadio($db);
-$clima = new Clima($db);
 $pais = new Pais($db);
+$clima = new Clima($db);
 $usuario = new Usuario($db);
 
-$page_title = "Inserir Estádio";
-$css_filename = "newindex";
+$page_title = "Criar Estádio";
+$css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'area_competicao';
+$aux_css = 'home_redesign';
+$extra_css = 'criar_estadio_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
+if (!function_exists('compress_png')) {
+    if (file_exists($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php")) {
+        @include_once($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php");
+    }
+}
 
+if (!function_exists('imageImporterEstadio')) {
+    function imageImporterEstadio($file_name, $target_filename) {
+        $maxDim = 800;
+        list($width, $height, $type, $attr) = getimagesize($file_name);
+        if ($width > $maxDim || $height > $maxDim) {
+            $ratio = $width / $height;
+            if ($ratio > 1) {
+                $new_width = $maxDim;
+                $new_height = round($maxDim / $ratio);
+            } else {
+                $new_width = round($maxDim * $ratio);
+                $new_height = $maxDim;
+            }
+        } else {
+            $new_width = $width;
+            $new_height = $height;
+        }
+
+        if ($type == IMAGETYPE_PNG || $type == "image/png") {
+            if (function_exists('compress_png')) {
+                $compressed_png_content = compress_png($file_name);
+                $src = @imagecreatefromstring($compressed_png_content);
+            } else {
+                $src = @imagecreatefrompng($file_name);
+            }
+        } else if ($type == IMAGETYPE_WEBP || $type == 18 || $type == "image/webp") {
+            $src = @imagecreatefromwebp($file_name);
+        } else if ($type == IMAGETYPE_JPEG || $type == "image/jpeg" || $type == "image/jpg") {
+            $src = @imagecreatefromjpeg($file_name);
+        } else {
+            $src = @imagecreatefromstring(file_get_contents($file_name));
+        }
+
+        if ($src) {
+            $dst = imagecreatetruecolor($new_width, $new_height);
+            $background = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+            imagecolortransparent($dst, $background);
+            imagealphablending($dst, false);
+            imagesavealpha($dst, true);
+            imagecopyresampled($dst, $src, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
+            imagedestroy($src);
+            imagewebp($dst, $target_filename, 85);
+            imagedestroy($dst);
+            return true;
+        }
+        return false;
+    }
+}
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
     $error_msg = '';
+    $feedback_html = '';
 
+    // se formulário foi submetido
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
+        if(!empty($_POST['nome']) && !empty($_POST['capacidade']) && !empty($_POST['clima']) && !empty($_POST['pais'])){
 
-// if the form was submitted
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
-if(isset($_POST['nome']) && !empty($_POST['pais']) && !empty($_POST['clima']) && !empty($_POST['nome']) && !empty($_POST['capacidade'])){
+            $estadio->nome = $_POST['nome'];
+            $estadio->capacidade = $_POST['capacidade'];
+            $estadio->clima = $_POST['clima'];
+            $estadio->pais = $_POST['pais'];
+            $estadio->altitude = isset($_POST['altitude']) ? 1 : 0;
+            $estadio->caldeirao = isset($_POST['caldeirao']) ? 1 : 0;
 
-    // set product property values
-    $estadio->nome = $_POST['nome'];
-    $estadio->capacidade = $_POST['capacidade'];
-    $estadio->clima = $_POST['clima'];
-    $estadio->pais = $_POST['pais'];
+            if(isset($_FILES['foto']) && !empty($_FILES['foto']['tmp_name']) && (file_exists($_FILES['foto']['tmp_name']) || is_uploaded_file($_FILES['foto']['tmp_name']))){
+                $fileName = $_FILES['foto']['name'];
+                $fileSize = $_FILES['foto']['size'];
+                $filePath = $_FILES['foto']['tmp_name'];
+                $fileType = $_FILES['foto']['type'];
+                $tempVar = explode('.',$fileName);
+                $fileExt = strtolower(end($tempVar));
+                $correct_extensions = array("image/png","image/jpg","image/jpeg","image/webp");
+                $upload_dir = "/images/estadios/";
 
-    if(isset($_POST['altitude'])) {
-        $estadio->altitude = 1;
-    } else {
-        $estadio->altitude = 0;
+                if($filePath != "" && (in_array($fileType, $correct_extensions) || in_array($fileExt, ['png', 'jpg', 'jpeg', 'webp'])) && $fileSize <= 10485760){
+                    $cleanBase = preg_replace("/[^a-zA-Z0-9]/", "", $tempVar[0]);
+                    if (empty($cleanBase)) {
+                        $cleanBase = "estadio";
+                    }
+                    $newFileName = $_SESSION['user_id'] . "-" . strtolower($cleanBase) . mt_rand(1000, 9999) . ".webp";
+                    $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $newFileName;
+                    if(imageImporterEstadio($filePath, $upload_path)){
+                        $estadio->foto = $newFileName;
+                    }
+                } else if ($fileSize > 10485760) {
+                    $feedback_html = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>O arquivo de imagem deve ter no máximo 10MB!</div>";
+                }
+            }
+
+            if($estadio->create()){
+                $usuario->atualizarAlteracao($_SESSION['user_id']);
+                $feedback_html = "<div class='alert alert-success'><span class='closebtn'>&times;</span>Estádio inserido com sucesso!</div>";
+            } else {
+                $feedback_html = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>Houve um erro ao inserir o estádio!</div>";
+            }
+        } else {
+            $feedback_html = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>Preencha todos os campos obrigatórios!</div>";
+        }
     }
-
-    if(isset($_POST['caldeirao'])) {
-        $estadio->caldeirao = 1;
-    } else {
-        $estadio->caldeirao = 0;
-    }
-
-    // create the product
-    if($estadio->create()){
-        echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Estádio inserido com sucesso. ".$error_msg."</div>";
-        $usuario->atualizarAlteracao($_SESSION['user_id']);
-    }
-
-    // if unable to create the product, tell the user
-    else{
-        echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Não foi possível inserir o estádio. ".$error_msg."</div>";
-    }
-}  else {
-
-    echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Não foi possível inserir o estádio, campos em branco</div>";
-}
-}
 ?>
 
-<script type="application/javascript">
-var close = document.getElementsByClassName("closebtn");
-var i;
+<main class="propostas-container">
+    <div class="propostas-card">
+        <div class="card-header-flex">
+            <h2 class="propostas-title">➕ Criar Estádio</h2>
+            <div>
+                <a href="/usuario/meusestadios.php" class="btn-voltar">Voltar</a>
+            </div>
+        </div>
 
-for (i = 0; i < close.length; i++) {
-    close[i].onclick = function(){
-        var div = this.parentElement;
-        div.style.opacity = "0";
-        setTimeout(function(){ div.style.display = "none"; }, 600);
+        <?php echo $feedback_html; ?>
+
+        <div id='inscricao'>
+            <form method="POST" enctype="multipart/form-data" action='<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>'>
+                
+                <label for="nomeEstadio">Nome do Estádio</label>
+                <input type='text' name='nome' id='nomeEstadio' class='form-control' required placeholder="Ex: Maracanã" />
+
+                <label for="capacidade">Capacidade</label>
+                <input type='number' name='capacidade' id='capacidade' class='form-control' required min="500" step="100" placeholder="Ex: 50000" />
+
+                <label for="clima">Clima</label>
+                <select class='form-control' id='clima' name='clima' required>
+                    <option value=''>Selecione o clima...</option>
+                    <?php
+                    $stmtClima = $clima->read($_SESSION['user_id']);
+                    while ($row_clima = $stmtClima->fetch(PDO::FETCH_ASSOC)){
+                        echo "<option value='{$row_clima['ID']}'>{$row_clima['Nome']}</option>";
+                    }
+                    ?>
+                </select>
+
+                <label for="pais">País</label>
+                <select class='form-control' id='pais' name='pais' required>
+                    <option value=''>Selecione o país...</option>
+                    <?php
+                    $stmt = $pais->read();
+                    while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
+                        extract($row_category);
+                        echo "<option value='{$id}'>{$nome}</option>";
+                    }
+                    ?>
+                </select>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="altitude" name="altitude" value="1">
+                        <label for="altitude">Possui Altitude</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="caldeirao" name="caldeirao" value="1">
+                        <label for="caldeirao">Estádio Caldeirão</label>
+                    </div>
+                </div>
+
+                <label>Foto do Estádio (opcional)</label>
+                <label class='custom-file-upload' for='foto'>
+                    <span class="material-symbols-outlined" style="font-size: 24px; color: #0284c7;">cloud_upload</span>
+                    <img id='foto-preview' style="display:none;">
+                    <span id='nomeFoto'>Clique para selecionar a foto do estádio</span>
+                </label>
+                <input type="file" id='foto' name='foto' accept=".jpg,.png,.jpeg,.webp" style="display: none !important;">
+
+                <div class="form-actions">
+                    <button type="submit" name="criar" id="salvar" class="btn">
+                        <span class="material-symbols-outlined">add_circle</span> Inserir
+                    </button>
+                    <button type="reset" name="reset" class="btn">
+                        <span class="material-symbols-outlined">restart_alt</span> Limpar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<script>
+$(document).ready(function(){
+    $(document).on('click', '.closebtn', function(){
+        var div = $(this).parent();
+        div.fadeOut(300, function(){ $(this).remove(); });
+    });
+
+    function readURL(input, target_div) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $('#' + target_div + '-preview').attr('src', e.target.result).show();
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
     }
-}
+
+    $('#foto').on('change', function(){
+        if (this.files && this.files[0]) {
+            $('#nomeFoto').text(this.files[0].name);
+            readURL(this, 'foto');
+        } else {
+            $('#nomeFoto').text('Clique para selecionar a foto do estádio');
+            $('#foto-preview').hide().attr('src', '');
+        }
+    });
+
+    $('button[type="reset"]').on('click', function(){
+        $('#nomeFoto').text('Clique para selecionar a foto do estádio');
+        $('#foto-preview').hide().attr('src', '');
+    });
+});
 </script>
 
-
-<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
-<div id='errorbox'></div>
-<div>
-<div id='inscricao'>
-
-<form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
-
-    
-
-        <label>Nome</label>
-<input type='text' name='nome' class='form-control' />
-
-        <label>Capacidade</label>
-<input type='number' name='capacidade' class='form-control' min='100'/>
-
-        <label>Clima</label>
 <?php
-                // ler times do banco de dados
-                $stmt = $clima->read($_SESSION['user_id']);
-
-                // put them in a select drop-down
-                echo "<select class='form-control' name='clima'>";
-                echo "<option>Selecione clima...</option>";
-
-                while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
-                    extract($row_category);
-                    echo "<option value='{$ID}'>{$Nome}</option>";
-                }
-
-                echo "</select>";
-                ?>
-        <label>Altitude</label>
-<input type="checkbox" class='custom-file-upload' name='altitude'>
-        <label>Caldeirão</label>
-<input type="checkbox" class='custom-file-upload' name='caldeirao'>
-
-
-        <label>País</label>
-<?php
-                // ler times do banco de dados
-                $stmt = $pais->read($_SESSION['user_id']);
-
-                // put them in a select drop-down
-                echo "<select class='form-control' name='pais'>";
-                echo "<option>Selecione país...</option>";
-
-                while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
-                    extract($row_category);
-                    echo "<option value='{$id}'>{$nome}</option>";
-                }
-
-                echo "</select>";
-                ?>
-
-        <div style="margin-top: 15px;">
-<button type="submit" name="criar" class="btn">Inserir</button>
-</div>
-
-    </form>
-</div>
-</div>
-
-<?php
-
-    } else {
-
-    echo "Usuário sem permissão para criar estádios, por favor faça o login.";
+} else {
+    echo "<main class='propostas-container'><div class='propostas-card'><p>Usuário sem permissão para criar estádios, por favor faça o login.</p></div></main>";
 }
-
-
-
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 ?>

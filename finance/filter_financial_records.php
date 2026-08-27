@@ -8,10 +8,15 @@
 	}
 
     // $item_pesquisado = isset($_POST['searchText']) ? $_POST['searchText'] : '';
-	$teamId = isset($_POST['teamId']) ? $_POST['teamId'] : '';
-	$transactionType = isset($_POST['transactionType']) ? $_POST['transactionType'] : 0;
-	$startDate = (isset($_POST['startDate']) && $_POST['startDate'] != "" ) ? $_POST['startDate'] : null;
-	$endDate = (isset($_POST['endDate']) && $_POST['endDate'] != "" ) ? $_POST['endDate'] : null;
+	$teamId = isset($_POST['teamId']) ? intval($_POST['teamId']) : 0;
+	$transactionType = isset($_POST['transactionType']) ? intval($_POST['transactionType']) : 0;
+	$startDate = (isset($_POST['startDate']) && trim($_POST['startDate']) !== "" ) ? $_POST['startDate'] : null;
+	$endDate = (isset($_POST['endDate']) && trim($_POST['endDate']) !== "" ) ? $_POST['endDate'] : null;
+
+	if ($teamId <= 0) {
+		echo json_encode([]);
+		exit;
+	}
 
 	//estabelecer conexão com banco de dados
 	include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -25,7 +30,7 @@
 	$transacao = new Transaction($db);
 
     $stmt = $transacao->retrieveTransactions($teamId, $transactionType, $startDate, $endDate);
-    $return_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $return_arr = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     
     // Encoding array in JSON format
     echo json_encode($return_arr);
