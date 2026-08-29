@@ -16,6 +16,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
     $valor = $_POST['valor'] ?? 0;
     $tipoTransacao = $_POST['tipoTransacao'] ?? 0;
     $fimContrato = $_POST['fimContrato'] ?? '';
+    $mensagem = $_POST['mensagem'] ?? '';
+    $remetenteNome = $_SESSION['nomereal'] ?? $_SESSION['username'] ?? 'Usuário';
 
     //estabelecer conexão com banco de dados
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -129,7 +131,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
     }
 
     //criar transferencia pendente
-    if($jogador->proporTransferencia($idJogador, $clubeOrigem, $clubeDestino, $valor, 0, $tipoTransacao, $fimContrato)){
+    if($jogador->proporTransferencia($idJogador, $clubeOrigem, $clubeDestino, $valor, 0, $tipoTransacao, $fimContrato, $mensagem, $remetenteNome)){
 
         $idTransferencia = $db->lastInsertId();
 

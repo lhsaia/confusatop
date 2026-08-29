@@ -504,7 +504,7 @@ return $stmt;
     }
 
     //propor transferencia
-    function proporTransferencia($idJogador, $clubeOrigem, $clubeDestino, $valor, $tipoTransferencia = 0, $tipoTransacao = 0, $fimContrato = 0){
+    function proporTransferencia($idJogador, $clubeOrigem, $clubeDestino, $valor, $tipoTransferencia = 0, $tipoTransacao = 0, $fimContrato = 0, $mensagem = null, $remetenteNome = null){
         
         //verificar vinculo atual
         $query_check_vinculo = "SELECT tipoContrato, clubeVinculado, clube FROM contratos_jogador WHERE jogador = :jogador AND tipoContrato = 0";
@@ -542,9 +542,22 @@ return $stmt;
             $fimContrato = '0000-00-00';
         }
 
+        $mensagensJson = null;
+        if (!empty($mensagem) && trim($mensagem) !== '') {
+            $historico = [
+                [
+                    'remetente' => $remetenteNome ?: 'Proponente',
+                    'tipo' => 'proposta',
+                    'texto' => trim(htmlspecialchars(strip_tags($mensagem))),
+                    'data' => date('Y-m-d H:i:s')
+                ]
+            ];
+            $mensagensJson = json_encode($historico, JSON_UNESCAPED_UNICODE);
+        }
+
         $query_transferencia = "INSERT INTO transferencias
         SET
-            jogador=:jogador, clubeOrigem=:clubeOrigem, clubeDestino=:clube, valor=:valor, tipoTransferencia=:tipoTransferencia, status_execucao=0, encerramento=:encerramento, emprestimo=:emprestimo";
+            jogador=:jogador, clubeOrigem=:clubeOrigem, clubeDestino=:clube, valor=:valor, tipoTransferencia=:tipoTransferencia, status_execucao=0, encerramento=:encerramento, emprestimo=:emprestimo, mensagens=:mensagens";
         $stmt = $this->conn->prepare( $query_transferencia );
         $stmt->bindParam(":jogador", $idJogador);
         $stmt->bindParam(":tipoTransferencia", $tipoTransferencia);
@@ -553,6 +566,7 @@ return $stmt;
         $stmt->bindParam(":clubeOrigem", $clubeOrigem);
         $stmt->bindParam(":encerramento", $fimContrato);
         $stmt->bindParam(":emprestimo", $emprestimo);
+        $stmt->bindParam(":mensagens", $mensagensJson);
 
         if($stmt->execute()){
             return true;
@@ -849,7 +863,7 @@ return $stmt;
 			} else {
 				$admin_query = " 
 				UNION 
-				SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem, d.Nome as clubeDestino, t.valor, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 else 2 end) as precedencia, emprestimo, encerramento 
+				SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem, d.Nome as clubeDestino, t.valor, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 else 2 end) as precedencia, emprestimo, encerramento, t.mensagens 
 				FROM transferencias t
 				LEFT JOIN clube c ON t.clubeOrigem = c.id
 				LEFT JOIN jogador j ON t.jogador = j.id
@@ -861,7 +875,7 @@ return $stmt;
 			
 			}
 
-            $query = "SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem, d.Nome as clubeDestino, t.valor, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 else 2 end) as precedencia, emprestimo, encerramento 
+            $query = "SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem, d.Nome as clubeDestino, t.valor, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 else 2 end) as precedencia, emprestimo, encerramento, t.mensagens 
             FROM transferencias t
             LEFT JOIN clube c ON t.clubeOrigem = c.id
             LEFT JOIN jogador j ON t.jogador = j.id
@@ -871,7 +885,7 @@ return $stmt;
             LEFT JOIN paises z ON d.Pais = z.id
             WHERE ((p.dono = ? AND (t.status_execucao = 0 OR t.status_execucao = 3)) OR (c.id = 0 AND z.dono <> ? AND q.dono = ? AND (t.status_execucao = 0 OR t.status_execucao = 3)))
             UNION
-            SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem,  d.Nome as clubeDestino, t.valor, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'outbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 OR t.status_execucao = 2 then 1 else 2 end) as precedencia, emprestimo, encerramento 
+            SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem,  d.Nome as clubeDestino, t.valor, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'outbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 OR t.status_execucao = 2 then 1 else 2 end) as precedencia, emprestimo, encerramento, t.mensagens 
             FROM transferencias t
             LEFT JOIN clube d ON t.clubeDestino = d.id
             LEFT JOIN jogador j ON t.jogador = j.id
@@ -1009,23 +1023,50 @@ return $stmt;
         return $num;
         }
 
-        public function avaliarProposta($idTransferencia, $acao, $valor = null){
+        public function avaliarProposta($idTransferencia, $acao, $valor = null, $mensagem = null, $remetenteNome = null){
 
             $idTransferencia = htmlspecialchars(strip_tags($idTransferencia));
             $acao = htmlspecialchars(strip_tags($acao));
 
+            // Carrega mensagens atuais para anexar se houver nova mensagem
+            $queryMsg = "SELECT mensagens FROM transferencias WHERE id = ?";
+            $stmtMsg = $this->conn->prepare($queryMsg);
+            $stmtMsg->bindParam(1, $idTransferencia);
+            $stmtMsg->execute();
+            $rowMsg = $stmtMsg->fetch(PDO::FETCH_ASSOC);
+            $historico = [];
+            if (!empty($rowMsg['mensagens'])) {
+                $decoded = json_decode($rowMsg['mensagens'], true);
+                if (is_array($decoded)) {
+                    $historico = $decoded;
+                }
+            }
+
+            if (!empty($mensagem) && trim($mensagem) !== '') {
+                $historico[] = [
+                    'remetente' => $remetenteNome ?: 'Usuário',
+                    'tipo' => $acao,
+                    'valor' => ($acao === 'contrapropor') ? $valor : null,
+                    'texto' => trim(htmlspecialchars(strip_tags($mensagem))),
+                    'data' => date('Y-m-d H:i:s')
+                ];
+            }
+            $mensagensJson = !empty($historico) ? json_encode($historico, JSON_UNESCAPED_UNICODE) : null;
+
             if($acao == 'recusar'){
-                $query = "UPDATE transferencias SET status_execucao = 3, dataConclusao = NOW() WHERE id = ?";
+                $query = "UPDATE transferencias SET status_execucao = 3, dataConclusao = NOW(), mensagens = :mensagens WHERE id = :id";
                 $stmt = $this->conn->prepare($query);
-                $stmt->bindParam(1,$idTransferencia);
+                $stmt->bindParam(':mensagens', $mensagensJson);
+                $stmt->bindParam(':id', $idTransferencia);
 
             }
 
             if($acao == 'contrapropor'){
-                $query = "UPDATE transferencias SET status_execucao = 2, valor = ?, dataConclusao = NOW() WHERE id = ?";
+                $query = "UPDATE transferencias SET status_execucao = 2, valor = :valor, dataConclusao = NOW(), mensagens = :mensagens WHERE id = :id";
                 $stmt = $this->conn->prepare($query);
-                $stmt->bindParam(1,$valor);
-                $stmt->bindParam(2,$idTransferencia);
+                $stmt->bindParam(':valor', $valor);
+                $stmt->bindParam(':mensagens', $mensagensJson);
+                $stmt->bindParam(':id', $idTransferencia);
 
             }
 
@@ -3238,7 +3279,7 @@ return $stmt;
         }
         
     // informações transferência
-        $query = "SELECT valor, emprestimo, encerramento FROM transferencias WHERE ID = ?";
+        $query = "SELECT valor, emprestimo, encerramento, mensagens FROM transferencias WHERE ID = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1,$idTransferencia);
         $stmt->execute();
@@ -3246,6 +3287,7 @@ return $stmt;
         $valor = number_format($result["valor"], 0, ',', ' ');
         $emprestimo = $result["emprestimo"];
         $encerramento = $result["encerramento"];
+        $mensagens = $result["mensagens"];
         
         if($emprestimo){
             $tipoTransferencia = "empréstimo";
@@ -3269,7 +3311,19 @@ return $stmt;
         } else {
             $imgHtml = "<img align='middle' height='60' src='https://confusa.top/images/escudos/" . urlencode($escudoClube) . "'/>";
         }
-        $body = "<div style='text-align:center;' width='100%'>" . $imgHtml . "<div><br/>O clube "  . $nomeClube . " fez uma proposta de " . $tipoTransferencia . " por " .$nomeJogador . " no valor de F$" . $valor . $finalPeriodo . ". <br/> Acesse o portal para aceitar, rejeitar ou realizar uma contra proposta." ;
+
+        $mensagemExtraHtml = "";
+        if (!empty($mensagens)) {
+            $msgsDecoded = json_decode($mensagens, true);
+            if (is_array($msgsDecoded) && count($msgsDecoded) > 0) {
+                $lastMsg = end($msgsDecoded);
+                if (!empty($lastMsg['texto'])) {
+                    $mensagemExtraHtml = "<div style='margin-top:15px; padding:12px; background:#f8fafc; border-left:4px solid #0284c7; border-radius:4px; text-align:left;'><b>Mensagem:</b> <i>\"" . nl2br(htmlspecialchars($lastMsg['texto'])) . "\"</i></div>";
+                }
+            }
+        }
+
+        $body = "<div style='text-align:center;' width='100%'>" . $imgHtml . "<div><br/>O clube "  . $nomeClube . " fez uma proposta de " . $tipoTransferencia . " por " .$nomeJogador . " no valor de F$" . $valor . $finalPeriodo . "." . $mensagemExtraHtml . " <br/><br/> Acesse o portal para aceitar, rejeitar ou realizar uma contra proposta." ;
     
     $html_content = ' 
     <html> 

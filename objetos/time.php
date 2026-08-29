@@ -1352,14 +1352,14 @@ function readInfo($id){
 
         $idTime = htmlspecialchars(strip_tags($idTime));
 
-        $query = "SELECT SUM(valor) as recebido FROM transferencias WHERE clubeOrigem = ?";
+        $query = "SELECT SUM(valor) as recebido FROM transferencias WHERE status_execucao = 1 AND clubeOrigem = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1,$idTime);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $recebido = $row['recebido'];
 
-        $query = "SELECT SUM(valor) as pago FROM transferencias WHERE clubeDestino = ?";
+        $query = "SELECT SUM(valor) as pago FROM transferencias WHERE status_execucao = 1 AND clubeDestino = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1,$idTime);
         $stmt->execute();

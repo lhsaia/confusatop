@@ -642,6 +642,10 @@ echo $date->format('Y-m-d');
           }
           ?>
       </select>
+
+      <label for="mensagemTransf"><b>Mensagem / Observação (opcional)</b></label>
+      <textarea id="mensagemTransf" name="mensagemTransf" class="form-control" rows="2" maxlength="500" placeholder="Ex: Proposta com pagamento facilitado, aceitamos negociar..."></textarea>
+
       <input type="hidden" value="" name="idJogadorTransf" id="idJogadorTransf" required>
       <input type="hidden" value="" name="clubeOrigemTransf" id="clubeOrigemTransf" required>
       <input type="hidden" value="" name="isLoanedTransf" id="isLoanedTransf">
@@ -685,6 +689,9 @@ echo $date->format('Y-m-d');
                 ?>
 
       </select>
+
+      <label for="mensagemTecnicoTransf"><b>Mensagem / Observação (opcional)</b></label>
+      <textarea id="mensagemTecnicoTransf" name="mensagemTecnicoTransf" class="form-control" rows="2" maxlength="500" placeholder="Ex: Proposta para assumir o comando técnico da equipe..."></textarea>
 
       <input type="hidden" value="" name="idTecnicoTransf" id="idTecnicoTransf" required>
       <input type="hidden" value="" name="clubeOrigemTecnico" id="clubeOrigemTecnico" required>
@@ -1508,7 +1515,8 @@ $("#formPropostaTecnico").submit(function(event){
         'idTecnico' : $('input[name=idTecnicoTransf]').val(),
         'clubeOrigem' : clubeOrigem,
         'clubeDestino' : clubeDestino,
-        'sorveteTec' : $('input[name=sorveteTec]').val()
+        'sorveteTec' : $('input[name=sorveteTec]').val(),
+        'mensagem' : $('#mensagemTecnicoTransf').val()
     };
 
     if(clubeOrigem == clubeDestino){
@@ -1569,7 +1577,8 @@ $("#formProposta").submit(function(event){
         'valor' : $('input[name=valorJogadorTransf]').val(),
         'sorvete' : $('input[name=sorvete]').val(),
         'tipoTransacao' : $('#tipoTransacao').val(),
-        'fimContrato' : $('#fimContrato').val()
+        'fimContrato' : $('#fimContrato').val(),
+        'mensagem' : $('#mensagemTransf').val()
     };
 
     //console.log(formData);

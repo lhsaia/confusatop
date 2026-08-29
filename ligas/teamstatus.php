@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 //ini_set( 'display_errors', true );
 //error_reporting( E_ALL );
@@ -163,7 +163,7 @@ function showToast(msg, type) {
         position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999,
         background: color, color: '#fff',
         padding: '12px 20px', borderRadius: '10px',
-        fontFamily: 'Kanit, sans-serif', fontWeight: 600, fontSize: '0.95rem',
+        fontFamily: 'Outfit, sans-serif', fontWeight: 600, fontSize: '0.95rem',
         boxShadow: '0 6px 24px rgba(0,0,0,0.2)',
         display: 'flex', alignItems: 'center', gap: '8px',
         opacity: 0, transition: 'opacity 0.3s'
@@ -385,8 +385,8 @@ if($rowTec) {
     $rowTec['Nascimento'] = date("d-m-Y", strtotime($rowTec['Nascimento']));
 
     echo "<tr id='tec".$rowTec['ID']."' data-sexo='".$rowTec['Sexo']."'>";
-    echo "<td class='nopadding'><div class='foto_jogador'><img class='playerThumb' src='/images/tecnicos/".$rowTec['foto']."'></div></td>";
-    echo "<td class='nopadding nomeJogador'><span class='nomeEditavel'>{$rowTec['Nome']}</span><br><span class='posicao'>Técnico</span></td>";
+    echo "<td class='nopadding'><div class='foto_jogador'><a href='/ligas/coachstatus.php?coach={$rowTec['ID']}'><img class='playerThumb' src='/images/tecnicos/".$rowTec['foto']."'></a></div></td>";
+    echo "<td class='nopadding nomeJogador'><a href='/ligas/coachstatus.php?coach={$rowTec['ID']}' style='color:#0f172a; text-decoration:none; font-weight:600;'><span class='nomeEditavel'>{$rowTec['Nome']}</span></a><br><span class='posicao'>Técnico</span></td>";
     echo "<td data-label='Posições'><span class='cell-value'>T</span></td>";
     if($rowTec['idPais'] != 0){
         echo "<td class='nopadding' data-label='Nac.'><span class='cell-value'><img src='/images/bandeiras/{$rowTec['bandeiraPais']}' class='bandeira nomePais' id='ban".$rowTec['idPais']."'>  <span class='nomePais' id='pai".$rowTec['idPais']."'>{$rowTec['siglaPais']}</span>";
@@ -1030,6 +1030,9 @@ echo $date->format('Y-m-d');
 
       </select>
 
+      <label for="mensagemJogadorTransf"><b>Mensagem / Observação (opcional)</b></label>
+      <textarea id="mensagemJogadorTransf" name="mensagem" class="form-control" rows="2" maxlength="500" placeholder="Ex: Aceitamos negociar parcelamento ou bônus..."></textarea>
+
       <input type="hidden" value="" name="idJogador" id="idJogadorTransf" required>
       <input type="hidden" value="<?php echo $idTime ?>" name="clubeOrigem" id="clubeOrigemTransf" required>
       <input type="hidden" value="<?php echo (isset($_SESSION['user_id'])?$_SESSION['user_id']:0); ?>" name="sorvete" required>
@@ -1071,6 +1074,9 @@ echo $date->format('Y-m-d');
                 ?>
 
       </select>
+
+      <label for="mensagemTecnicoTransf"><b>Mensagem / Observação (opcional)</b></label>
+      <textarea id="mensagemTecnicoTransf" name="mensagem" class="form-control" rows="2" maxlength="500" placeholder="Ex: Proposta para assumir o comando técnico da equipe..."></textarea>
 
       <input type="hidden" value="" name="idTecnicoTransf" id="idTecnicoTransf" required>
       <input type="hidden" value="<?php echo $idTime ?>" name="clubeOrigemTecnico" id="clubeOrigemTecnico" required>
@@ -1196,7 +1202,8 @@ $("#formPropostaTecnico").submit(function(event){
         'idTecnico' : $('input[name=idTecnicoTransf]').val(),
         'clubeOrigem' : $('input[name=clubeOrigemTecnico]').val(),
         'clubeDestino' : $('select[name=clubeDestinoTecnico]').val(),
-        'sorveteTec' : $('input[name=sorveteTec]').val()
+        'sorveteTec' : $('input[name=sorveteTec]').val(),
+        'mensagem' : $('#mensagemTecnicoTransf').val()
     };
 
     console.log(formData);

@@ -12,6 +12,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     } else {
         $valor = null;
     }
+    $mensagem = $_POST['mensagem'] ?? '';
+    $remetenteNome = $_SESSION['nomereal'] ?? $_SESSION['username'] ?? 'Usuário';
 
     //estabelecer conexão com banco de dados
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -25,7 +27,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $usuario = new Usuario($db);
 
     //criar transferencia pendente
-    if($jogador->avaliarProposta($idTransferencia, $acao, $valor)){
+    if($jogador->avaliarProposta($idTransferencia, $acao, $valor, $mensagem, $remetenteNome)){
         $is_success = true;
         $error_msg = "";
         $usuario->atualizarAlteracao($_SESSION['user_id']);

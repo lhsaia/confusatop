@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
@@ -167,7 +167,7 @@ $(document).ready(function($){
 
                     tbl += "<tr id='" + val['ID'] + "' data-sexo='" + val['Sexo'] + "' data-dono-pais='" + val['idDonoPais'] + "'>";
                     tbl += "<td><div class='imageUpload'><img class='playerThumb' src='" + fotoSrc + "' /> <input type='file' hidden id='foto" + val['ID'] + "' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
-                    tbl += "<td><span class='nomeEditavel' id='nom" + val['ID'] + "'>" + val['Nome'] + "</span><span class='" + genderClass + " genderSign'>" + genderCode + "</span></td>";
+                    tbl += "<td><a href='/ligas/coachstatus.php?coach=" + val['ID'] + "' class='player-name-link' style='color:#0f172a; text-decoration:none; font-weight:600;'><span class='nomeEditavel' id='nom" + val['ID'] + "'>" + val['Nome'] + "</span></a><span class='" + genderClass + " genderSign'>" + genderCode + "</span></td>";
                     tbl += "<td><span class='nomeNascimento' id='nas" + val['ID'] + "'>" + nascimentoDisplay + " (" + val['idade'] + ")</span><input id='selnas" + val['ID'] + "' class='nascimentoEditavel editavel' type='date' value='" + val['Nascimento'] + "' hidden/></td>";
                     tbl += "<td><span class='nivelEditavel' id='niv" + val['ID'] + "'>" + val['Nivel'] + "</span></td>";
 

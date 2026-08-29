@@ -13,6 +13,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
     $idTecnico = $_POST['idTecnico'];
     $clubeOrigem = $_POST['clubeOrigem'];
     $clubeDestino = $_POST['clubeDestino'];
+    $mensagem = $_POST['mensagem'] ?? '';
+    $remetenteNome = $_SESSION['nomereal'] ?? $_SESSION['username'] ?? 'Usuário';
 
     //estabelecer conexão com banco de dados
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -50,7 +52,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
     }
 
     //criar transferencia pendente
-    if($tecnico->proporTransferencia($idTecnico, $clubeOrigem, $clubeDestino)){
+    if($tecnico->proporTransferencia($idTecnico, $clubeOrigem, $clubeDestino, 0, $mensagem, $remetenteNome)){
 
         $idTransferencia = $db->lastInsertId();
 

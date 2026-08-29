@@ -1,4 +1,4 @@
-# Regras do Projeto CONFUSA.top
+﻿# Regras do Projeto CONFUSA.top
 
 ## Atualização do Histórico de Novidades (updates.json)
 
@@ -44,7 +44,7 @@ Use os seguintes tokens e estilos conforme a área do site:
   - **Bordas dos Cards:** Borda leve `1px solid rgba(0, 0, 0, 0.08)`.
 * **Hover dos Cards:** Ganha brilho ciano (`rgba(56, 189, 248, 0.4)` no escuro ou `rgba(56, 189, 248, 0.2)` no claro) e elevação física (`transform: translateY(-6px)`).
 * **Acentos:** Ciano (`#38bdf8` / `#0284c7`), Esmeralda (`#34d399`) e Âmbar (`#fbbf24`).
-* **Tipografia:** `Kanit` para títulos principais e `Montserrat` para textos corridos e legibilidade da interface.
+* **Tipografia:** `Outfit` para títulos principais e `Montserrat` para textos corridos e legibilidade da interface.
 * **Ações Inline na Tabela (Modo de Edição):** Ao clicar em editar uma linha de tabela, oculte todos os botões de ação secundários da linha (ex: alterar demografia, ir para seleções, importação/exportação de planilhas). Mantenha visíveis apenas os botões de **Salvar** e **Cancelar** para focar a atenção do usuário no preenchimento dos dados. Restaure a visibilidade de todos os botões ao cancelar ou concluir a edição.
 * **Botão de Ação do Cabeçalho:** Botões de criação ou ação primária (como "Criar país", "Criar competição") devem ser alinhados inline no canto direito do título principal utilizando um contêiner flex (`.header-actions-container`) com largura automática (`width: auto`), e nunca ocupar 100% da largura do card.
 * **Estilização de Paginação Ativa:** Sempre aplique a estilização de página ativa no item da lista correspondente (`.pagination li.active a`) utilizando a cor de destaque azul (`#0284c7`) e texto branco. Além disso, certifique-se de incluir a classe `.sr-only { display: none !important; }` no CSS específico para ocultar o texto de acessibilidade `(current)` e evitar que ele distorça o tamanho dos botões.

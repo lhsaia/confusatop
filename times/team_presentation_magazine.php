@@ -531,11 +531,11 @@ while ($row = $time_stmt->fetch(PDO::FETCH_ASSOC)){
                 ?>
                     <div class="coach-content">
                         <div class="coach-photo">
-                            <img src="/images/tecnicos/<?php echo $rowTec['foto']; ?>" alt="<?php echo $rowTec['Nome']; ?>">
+                            <a href="/ligas/coachstatus.php?coach=<?php echo $rowTec['ID']; ?>"><img src="/images/tecnicos/<?php echo $rowTec['foto']; ?>" alt="<?php echo $rowTec['Nome']; ?>"></a>
                         </div>
                         <div class="coach-info">
                             <span class="coach-role">Técnico Principal</span>
-                            <span class="coach-name"><?php echo mb_strtoupper($nomeAbreviadoTec); ?></span>
+                            <span class="coach-name"><a href="/ligas/coachstatus.php?coach=<?php echo $rowTec['ID']; ?>" style="color: inherit; text-decoration: none;"><?php echo mb_strtoupper($nomeAbreviadoTec); ?></a></span>
                             <span class="coach-meta">Nascimento: <?php echo $rowTec['Nascimento']; ?></span>
                             <span class="coach-meta">No clube desde: <?php echo $desdeTecnico; ?></span>
                             <img class="coach-flag" src="/images/bandeiras/<?php echo $rowTec['bandeiraPais']; ?>" alt="País">

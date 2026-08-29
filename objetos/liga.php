@@ -252,6 +252,23 @@ class Liga
         return $stmt;
     }
 
+    function readAdmin()
+    {
+        $query = "SELECT
+                    a.id, a.nome, a.Pais, a.Sexo
+                FROM
+                    " . $this->table_name . " a
+                LEFT JOIN
+                    paises p ON a.Pais = p.id
+                ORDER BY
+                    nome";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+
+        return $stmt;
+    }
+
     function lerPorPais($pais, $sexo)
     {
 

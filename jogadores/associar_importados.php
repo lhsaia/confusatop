@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
@@ -42,12 +42,29 @@ if (!empty($pending['time'])) {
     $stmt_tc->execute([$pending['time']]);
     $target_clube_name = $stmt_tc->fetchColumn();
 }
+
+$target_pais_name = "";
+$target_pais_id = (int)($pending['pais_liga_selecionada'] ?? 0);
+if ($target_pais_id > 0) {
+    $stmt_p = $db->prepare("SELECT Nome FROM paises WHERE id = ?");
+    $stmt_p->execute([$target_pais_id]);
+    $target_pais_name = $stmt_p->fetchColumn();
+}
+if ($target_pais_id === 0 && !empty($pending['time'])) {
+    $stmt_p_club = $db->prepare("SELECT c.Pais, p.Nome FROM clube c LEFT JOIN paises p ON c.Pais = p.id WHERE c.ID = ?");
+    $stmt_p_club->execute([$pending['time']]);
+    $row_p = $stmt_p_club->fetch(PDO::FETCH_NUM);
+    if ($row_p) {
+        $target_pais_id = (int)$row_p[0];
+        $target_pais_name = $row_p[1];
+    }
+}
 ?>
 
 <main class="propostas-container narrow-container" style="padding-top: 80px; padding-bottom: 60px;">
     <div class="propostas-card">
         <div class="wizard-header" style="border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 1.5rem; margin-bottom: 2rem;">
-            <h1 style="margin: 0 0 10px 0; font-family: 'Kanit', sans-serif; font-size: 1.8rem; color: #1e293b; font-weight: 700;">📥 Associação de Jogadores</h1>
+            <h1 style="margin: 0 0 10px 0; font-family: 'Outfit', sans-serif; font-size: 1.8rem; color: #1e293b; font-weight: 700;">📥 Associação de Jogadores</h1>
             <p style="margin: 0; color: #64748b; font-size: 1rem;">Encontramos possíveis correspondências no banco de dados. Escolha se deseja atualizar um jogador existente (preservando o histórico de gols, jogos e transferências dele) ou criar um novo registro.</p>
         </div>
 
@@ -89,8 +106,8 @@ if (!empty($pending['time'])) {
                                                 <?php echo htmlspecialchars($m['Nome']); ?> (ID: <?php echo $m['ID']; ?>)
                                             </option>
                                         <?php elseif ($key === 'tecnico'): ?>
-                                            <option value="<?php echo $m['ID']; ?>" data-clube-id="<?php echo $m['idClube']; ?>" data-clube-nome="<?php echo htmlspecialchars($m['NomeClube'] ?? 'Sem Clube'); ?>" data-nivel="<?php echo $m['Nivel']; ?>" data-idade="<?php echo $m['Idade']; ?>" data-sexo="<?php echo $m['Sexo']; ?>">
-                                                <?php echo htmlspecialchars($m['Nome']); ?> (ID: <?php echo $m['ID']; ?>)
+                                            <option value="<?php echo $m['ID']; ?>" data-clube-id="<?php echo $m['idClube']; ?>" data-clube-nome="<?php echo htmlspecialchars($m['NomeClube'] ?? 'Sem Clube'); ?>" data-clube-pais-id="<?php echo $m['PaisClube'] ?? 0; ?>" data-clube-pais-nome="<?php echo htmlspecialchars($m['NomePaisClube'] ?? 'Sem País'); ?>" data-nivel="<?php echo $m['Nivel']; ?>" data-idade="<?php echo $m['Idade']; ?>" data-sexo="<?php echo $m['Sexo']; ?>">
+                                                <?php echo htmlspecialchars($m['Nome']); ?> (Nível: <?php echo $m['Nivel']; ?> - <?php echo htmlspecialchars($m['NomeClube'] ?? 'Sem Clube'); ?><?php echo !empty($m['NomePaisClube']) ? ' (' . htmlspecialchars($m['NomePaisClube']) . ')' : ''; ?>)
                                             </option>
                                         <?php else: ?>
                                             <option value="<?php echo $m['ID']; ?>">
@@ -152,9 +169,9 @@ if (!empty($pending['time'])) {
                                 <select name="associations[<?php echo $xml_index; ?>][player_id]" class="match-select" onchange="updateSelectFlag(this); checkDivergence('<?php echo $xml_index; ?>', 'jogador')">
                                     <?php if (!empty($matches)): ?>
                                         <?php foreach ($matches as $m): ?>
-                                            <option value="<?php echo $m['ID']; ?>" data-flag="<?php echo $m['Bandeira']; ?>" data-clube-id="<?php echo $m['idClube']; ?>" data-clube-nome="<?php echo htmlspecialchars($m['NomeClube'] ?? 'Sem Clube'); ?>" data-nivel="<?php echo $m['Nivel']; ?>" data-idade="<?php echo $m['Idade']; ?>" data-sexo="<?php echo $m['Sexo']; ?>">
-                                                <?php echo htmlspecialchars($m['Nome']); ?> (Nível: <?php echo $m['Nivel']; ?><?php echo !empty($m['NomePais']) ? ' - ' . htmlspecialchars($m['NomePais']) : ''; ?>)
-                                            </option>
+                                             <option value="<?php echo $m['ID']; ?>" data-flag="<?php echo $m['Bandeira']; ?>" data-clube-id="<?php echo $m['idClube']; ?>" data-clube-nome="<?php echo htmlspecialchars($m['NomeClube'] ?? 'Sem Clube'); ?>" data-clube-pais-id="<?php echo $m['PaisClube'] ?? 0; ?>" data-clube-pais-nome="<?php echo htmlspecialchars($m['NomePaisClube'] ?? 'Sem País'); ?>" data-nivel="<?php echo $m['Nivel']; ?>" data-idade="<?php echo $m['Idade']; ?>" data-sexo="<?php echo $m['Sexo']; ?>">
+                                                 <?php echo htmlspecialchars($m['Nome']); ?> (Nível: <?php echo $m['Nivel']; ?> - <?php echo htmlspecialchars($m['NomeClube'] ?? 'Sem Clube'); ?><?php echo !empty($m['NomePaisClube']) ? ' (' . htmlspecialchars($m['NomePaisClube']) . ')' : ''; ?><?php echo !empty($m['NomePais']) ? ' - ' . htmlspecialchars($m['NomePais']) : ''; ?>)
+                                             </option>
                                         <?php endforeach; ?>
                                     <?php else: ?>
                                         <option value="">Nenhuma sugestão encontrada</option>
@@ -183,6 +200,8 @@ if (!empty($pending['time'])) {
 const targetLigaId = "<?php echo (int)($pending['liga'] ?? 0); ?>";
 const targetLigaName = "<?php echo htmlspecialchars($target_liga_name); ?>";
 const targetClubName = "<?php echo htmlspecialchars($target_clube_name ?? $team_matches['clube']['nome'] ?? ''); ?>";
+const targetPaisId = "<?php echo $target_pais_id; ?>";
+const targetPaisNome = "<?php echo htmlspecialchars($target_pais_name); ?>";
 
 function setPlayerAction(xmlIndex, action) {
     const input = document.getElementById('action-' + xmlIndex);
@@ -200,9 +219,15 @@ function setPlayerAction(xmlIndex, action) {
     if (action === 'new') {
         buttons[0].classList.add('active-new');
         wrapper.classList.remove('active');
+        if (card) {
+            card.style.borderColor = '';
+            card.style.background = '';
+        }
     } else {
         buttons[1].classList.add('active-match');
         wrapper.classList.add('active');
+        const isPlayer = !isNaN(xmlIndex);
+        checkDivergence(xmlIndex, isPlayer ? 'jogador' : xmlIndex.replace('team_assoc_', ''));
     }
 }
 
@@ -238,6 +263,8 @@ function checkDivergence(fieldId, key) {
     }
     
     let warningMsg = "";
+    let isCritical = false;
+    let isWarning = false;
     const card = document.querySelector(`.player-card[data-xml-index="${fieldId}"]`);
     
     // Check gender mismatch (sexo: 0 = Male, 1 = Female)
@@ -246,6 +273,7 @@ function checkDivergence(fieldId, key) {
         const dbGender = optionSexo === '1' ? 'Feminino' : 'Masculino';
         const importGender = targetSexo === '1' ? 'Feminino' : 'Masculino';
         warningMsg += `⚠️ <strong>Divergência Crítica (Gênero):</strong> O perfil no banco é de gênero <strong>${dbGender}</strong>, mas você está importando como <strong>${importGender}</strong>.<br>`;
+        isCritical = true;
     }
     
     if (key === 'clube') {
@@ -253,11 +281,15 @@ function checkDivergence(fieldId, key) {
         const ligaNome = option.getAttribute('data-liga-nome');
         if (ligaId && targetLigaId && ligaId !== targetLigaId) {
             warningMsg += `⚠️ <strong>Divergência Crítica (Liga):</strong> Este clube está atualmente cadastrado na liga <strong>"${ligaNome}"</strong>, mas você está importando na liga <strong>"${targetLigaName}"</strong>.<br>`;
+            isCritical = true;
         }
     } else if (key === 'tecnico') {
         const clubeNome = option.getAttribute('data-clube-nome');
-        if (clubeNome && targetClubName && clubeNome.toLowerCase().trim() !== targetClubName.toLowerCase().trim()) {
-            warningMsg += `⚠️ <strong>Divergência Crítica (Vínculo):</strong> Este técnico está vinculado ao clube <strong>"${clubeNome}"</strong>, mas você está importando no clube <strong>"${targetClubName}"</strong>.<br>`;
+        const clubePaisId = option.getAttribute('data-clube-pais-id');
+        const clubePaisNome = option.getAttribute('data-clube-pais-nome');
+        if (clubeNome && clubeNome !== 'Sem Clube' && clubePaisId && targetPaisId && clubePaisId !== '0' && clubePaisId !== targetPaisId) {
+            warningMsg += `⚠️ <strong>Divergência Crítica (Vínculo):</strong> Este técnico está vinculado ao clube <strong>"${clubeNome}" (${clubePaisNome})</strong> de outro país, mas você está importando no clube <strong>"${targetClubName}" (${targetPaisNome})</strong>.<br>`;
+            isCritical = true;
         }
         
         // Age and level warning
@@ -265,14 +297,19 @@ function checkDivergence(fieldId, key) {
         const optNivel = parseInt(option.getAttribute('data-nivel'));
         if (coachXmlIdade && optIdade && Math.abs(optIdade - coachXmlIdade) >= 2) {
             warningMsg += `⚠️ <strong>Aviso de Idade:</strong> A idade no banco (${optIdade} anos) difere do arquivo (${coachXmlIdade} anos). Verifique se é a mesma pessoa.<br>`;
+            isWarning = true;
         }
         if (coachXmlNivel && optNivel && Math.abs(optNivel - coachXmlNivel) > 5) {
             warningMsg += `⚠️ <strong>Aviso de Nível:</strong> O nível no banco (${optNivel}) difere significativamente do arquivo (${coachXmlNivel}).<br>`;
+            isWarning = true;
         }
     } else if (key === 'jogador') {
         const clubeNome = option.getAttribute('data-clube-nome');
-        if (clubeNome && targetClubName && clubeNome.toLowerCase().trim() !== targetClubName.toLowerCase().trim()) {
-            warningMsg += `⚠️ <strong>Divergência Crítica (Vínculo):</strong> Este jogador está atualmente vinculado ao clube <strong>"${clubeNome}"</strong>, mas será transferido para o clube <strong>"${targetClubName}"</strong>.<br>`;
+        const clubePaisId = option.getAttribute('data-clube-pais-id');
+        const clubePaisNome = option.getAttribute('data-clube-pais-nome');
+        if (clubeNome && clubeNome !== 'Sem Clube' && clubePaisId && targetPaisId && clubePaisId !== '0' && clubePaisId !== targetPaisId) {
+            warningMsg += `⚠️ <strong>Divergência Crítica (Vínculo):</strong> Este jogador está atualmente vinculado ao clube <strong>"${clubeNome}" (${clubePaisNome})</strong> de outro país, mas será transferido para o clube <strong>"${targetClubName}" (${targetPaisNome})</strong>.<br>`;
+            isCritical = true;
         }
         
         // Age and level warning
@@ -283,9 +320,11 @@ function checkDivergence(fieldId, key) {
         
         if (xmlIdade && optIdade && Math.abs(optIdade - xmlIdade) >= 2) {
             warningMsg += `⚠️ <strong>Aviso de Idade:</strong> A idade no banco (${optIdade} anos) difere do arquivo (${xmlIdade} anos). Verifique se é o mesmo jogador.<br>`;
+            isWarning = true;
         }
         if (xmlNivel && optNivel && Math.abs(optNivel - xmlNivel) > 5) {
             warningMsg += `⚠️ <strong>Aviso de Nível:</strong> O nível no banco (${optNivel}) difere significativamente do arquivo (${xmlNivel}).<br>`;
+            isWarning = true;
         }
     }
     
@@ -297,8 +336,32 @@ function checkDivergence(fieldId, key) {
     if (warningMsg) {
         warningDiv.innerHTML = warningMsg;
         warningDiv.style.display = 'block';
+        
+        if (isCritical) {
+            // High Impact Red styling for critical club/liga/gender mismatch
+            warningDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+            warningDiv.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+            warningDiv.style.color = '#b91c1c';
+            if (card) {
+                card.style.borderColor = '#ef4444';
+                card.style.background = 'rgba(239, 68, 68, 0.04)';
+            }
+        } else {
+            // Softer Amber styling for minor age/level warnings
+            warningDiv.style.background = 'rgba(245, 158, 11, 0.1)';
+            warningDiv.style.borderColor = 'rgba(245, 158, 11, 0.2)';
+            warningDiv.style.color = '#b45309';
+            if (card) {
+                card.style.borderColor = '#f59e0b';
+                card.style.background = 'rgba(245, 158, 11, 0.03)';
+            }
+        }
     } else {
         warningDiv.style.display = 'none';
+        if (card) {
+            card.style.borderColor = '';
+            card.style.background = '';
+        }
     }
 }
 

@@ -9,9 +9,70 @@
   },
   "days": [
     {
+      "id": "day_28_08_2026",
+      "date": "28/08/2026",
+      "items": [
+        {
+          "badge": "design",
+          "title": "Nova Tipografia Global (Outfit)",
+          "desc": "Substituição da fonte Kanit pela Outfit em todos os títulos, cabeçalhos, cards e elementos do sistema para proporcionar maior legibilidade, modernidade e conforto visual."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Visualização de Ligas e Times para Administradores na Importação",
+          "desc": "Permitido que administradores visualizem e selecionem todas as ligas e todos os times cadastrados no sistema ao realizar importações de clubes e jogadores."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Refinamento na Busca de Correspondência de Jogadores",
+          "desc": "Alterada a lógica de pesquisa de homônimos de OR para AND. Agora o sistema exige que todas as partes do nome pesquisado estejam presentes no cadastro do banco para sugerir o match, eliminando sugestões irrelevantes."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Rebaixamento de Jogadores não Listados no XML",
+          "desc": "Garantido que jogadores preexistentes no clube que não constam na nova importação do XML sejam removidos da titularidade, da reserva e da capitania/batedor, passando ao status de suplentes."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Rescisão de Contrato do Técnico Anterior",
+          "desc": "Se um novo técnico for atribuído a um clube durante a importação, o contrato do técnico anterior com o respectivo clube é rescindido automaticamente, tornando-o agente livre."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Erro 500 no Cadastro de Técnicos",
+          "desc": "Resolvido erro de banco de dados no modo estrito (Strict Mode) ao inserir um novo técnico, definindo um valor padrão vazio para a coluna 'referencia' na query de criação."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Valor de Gênero para Técnico Importado",
+          "desc": "Corrigido erro que causava falha 500 no MySQL Strict Mode por enviar o campo 'Sexo' do técnico vazio durante a importação. Agora o valor é capturado e enviado corretamente."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Persistência do Valor dos Selects ao Recarregar a Página",
+          "desc": "Adicionado gatilho de inicialização via jQuery para sincronizar automaticamente os campos ocultos do formulário com os valores preservados pelo navegador nos dropdowns de liga e time após retornos de página ou recarregamentos."
+        },
+        {
+          "badge": "new",
+          "title": "Alerta de Vínculo de Clube entre Países Distintos",
+          "desc": "O sistema agora exibe um alerta de divergência crítica de vínculo apenas se o jogador/técnico sugerido estiver atualmente em um clube pertencente a um país diferente do país de destino da importação."
+        }
+      ]
+    },
+    {
       "id": "day_26_08_2026",
       "date": "26/08/2026",
       "items": [
+        {
+          "badge": "new",
+          "title": "Troca de Mensagens e Histórico em Transferências (Jogadores e Técnicos)",
+          "desc": "Agora é possível enviar mensagens e justificativas ao criar uma proposta, ao efetuar uma contraproposta ou ao recusar uma transferência de jogadores e técnicos, com histórico interativo em formato de chat."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Balanço Financeiro Restrito a Transferências Efetivadas",
+          "desc": "Garantido que transações e propostas de transferências ainda não efetivadas ou pendentes não sejam contabilizadas nas finanças e balanço de caixa dos clubes."
+        },
         {
           "badge": "new",
           "title": "Gerenciamento de Status de Sugestões para Administradores",
@@ -31,6 +92,11 @@
           "badge": "design",
           "title": "Remoção do Atributo Determinação em Jogadores no Exterior",
           "desc": "Removida a exibição do atributo de determinação nas tags dos jogadores na tela de Jogadores no Exterior."
+        },
+        {
+          "badge": "new",
+          "title": "Página de Perfil e Histórico de Técnicos (Coach Status)",
+          "desc": "Criada a nova tela detalhada do perfil do técnico (coachstatus.php) no padrão Visual 2.0, exibindo foto, idade, nacionalidade, nível, estilo tático, mentalidade, clube atual e todo o histórico de transferências e contratos."
         }
       ]
     },

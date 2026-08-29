@@ -26,7 +26,7 @@ class Tecnico{
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    Nome=:nome, Nascimento=:nascimento, Nivel=:nivel, Mentalidade=:mentalidade, Estilo=:estilo, Pais=:pais, Sexo=:sexo ";
+                    Nome=:nome, Nascimento=:nascimento, Nivel=:nivel, Mentalidade=:mentalidade, Estilo=:estilo, Pais=:pais, Sexo=:sexo, referencia='' ";
 
         $stmt = $this->conn->prepare($query);
 
@@ -484,16 +484,30 @@ class Tecnico{
         }
 
 
-        function proporTransferencia($idTecnico, $clubeOrigem, $clubeDestino, $tipoTransferencia = 0){
+        function proporTransferencia($idTecnico, $clubeOrigem, $clubeDestino, $tipoTransferencia = 0, $mensagem = null, $remetenteNome = null){
+
+            $mensagensJson = null;
+            if (!empty($mensagem) && trim($mensagem) !== '') {
+                $historico = [
+                    [
+                        'remetente' => $remetenteNome ?: 'Proponente',
+                        'tipo' => 'proposta',
+                        'texto' => trim(htmlspecialchars(strip_tags($mensagem))),
+                        'data' => date('Y-m-d H:i:s')
+                    ]
+                ];
+                $mensagensJson = json_encode($historico, JSON_UNESCAPED_UNICODE);
+            }
 
             $query_transferencia = "INSERT INTO transferencias_tecnico
             SET
-                tecnico=:tecnico, clubeOrigem=:clubeOrigem, clubeDestino=:clube, tipoTransferencia=:tipoTransferencia, status_execucao=0";
+                tecnico=:tecnico, clubeOrigem=:clubeOrigem, clubeDestino=:clube, tipoTransferencia=:tipoTransferencia, status_execucao=0, mensagens=:mensagens";
             $stmt = $this->conn->prepare( $query_transferencia );
             $stmt->bindParam(":tecnico", $idTecnico);
             $stmt->bindParam(":tipoTransferencia", $tipoTransferencia);
             $stmt->bindParam(":clube", $clubeDestino);
             $stmt->bindParam(":clubeOrigem", $clubeOrigem);
+            $stmt->bindParam(":mensagens", $mensagensJson);
 
             if($stmt->execute()){
                 return true;
@@ -502,15 +516,40 @@ class Tecnico{
             }
         }
 
-        public function avaliarProposta($idTransferencia, $acao){
+        public function avaliarProposta($idTransferencia, $acao, $mensagem = null, $remetenteNome = null){
 
             $idTransferencia = htmlspecialchars(strip_tags($idTransferencia));
             $acao = htmlspecialchars(strip_tags($acao));
 
+            // Carrega mensagens atuais para anexar se houver nova mensagem
+            $queryMsg = "SELECT mensagens FROM transferencias_tecnico WHERE ID = ?";
+            $stmtMsg = $this->conn->prepare($queryMsg);
+            $stmtMsg->bindParam(1, $idTransferencia);
+            $stmtMsg->execute();
+            $rowMsg = $stmtMsg->fetch(PDO::FETCH_ASSOC);
+            $historico = [];
+            if (!empty($rowMsg['mensagens'])) {
+                $decoded = json_decode($rowMsg['mensagens'], true);
+                if (is_array($decoded)) {
+                    $historico = $decoded;
+                }
+            }
+
+            if (!empty($mensagem) && trim($mensagem) !== '') {
+                $historico[] = [
+                    'remetente' => $remetenteNome ?: 'Usuário',
+                    'tipo' => $acao,
+                    'texto' => trim(htmlspecialchars(strip_tags($mensagem))),
+                    'data' => date('Y-m-d H:i:s')
+                ];
+            }
+            $mensagensJson = !empty($historico) ? json_encode($historico, JSON_UNESCAPED_UNICODE) : null;
+
             if($acao == 'recusar'){
-                $query = "UPDATE transferencias_tecnico SET status_execucao = 3, dataConclusao = NOW() WHERE ID = ?";
+                $query = "UPDATE transferencias_tecnico SET status_execucao = 3, dataConclusao = NOW(), mensagens = :mensagens WHERE ID = :id";
                 $stmt = $this->conn->prepare($query);
-                $stmt->bindParam(1,$idTransferencia);
+                $stmt->bindParam(':mensagens', $mensagensJson);
+                $stmt->bindParam(':id', $idTransferencia);
 
             }
 
@@ -775,7 +814,7 @@ class Tecnico{
         function lerPropostasPendentes($idUsuario,$from_record_num,$records_per_page){
             $idUsuario = htmlspecialchars(strip_tags($idUsuario));
 
-            $query = "SELECT j.Nome as nomeJogador, c.Nome as clubeOrigem, d.Nome as clubeDestino, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 when t.status_execucao = 3 then 2 end) as precedencia
+            $query = "SELECT j.Nome as nomeJogador, c.Nome as clubeOrigem, d.Nome as clubeDestino, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 when t.status_execucao = 3 then 2 end) as precedencia, t.mensagens
             FROM transferencias_tecnico t
             LEFT JOIN clube c ON t.clubeOrigem = c.id
             LEFT JOIN tecnico j ON t.tecnico = j.id
@@ -784,7 +823,7 @@ class Tecnico{
             LEFT JOIN paises q ON j.Pais = q.id
             WHERE ((p.dono = ? AND (t.status_execucao = 0 OR t.status_execucao = 3)) OR (c.id = 0 AND q.dono = ? AND (t.status_execucao = 0 OR t.status_execucao = 3)))
             UNION
-            SELECT j.Nome as nomeJogador, c.Nome as clubeOrigem, d.Nome as clubeDestino, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'outbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao, t.id as idTransferencia, (case when t.status_execucao = 2 then 1 else 2 end) as precedencia
+            SELECT j.Nome as nomeJogador, c.Nome as clubeOrigem, d.Nome as clubeDestino, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'outbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao, t.id as idTransferencia, (case when t.status_execucao = 2 then 1 else 2 end) as precedencia, t.mensagens
             FROM transferencias_tecnico t
             LEFT JOIN clube d ON t.clubeDestino = d.id
             LEFT JOIN tecnico j ON t.tecnico = j.id
@@ -1016,6 +1055,24 @@ class Tecnico{
                $imgHtml = '';
            }
 
+           // informações da transferência
+           $stmt = $this->conn->prepare("SELECT mensagens FROM transferencias_tecnico WHERE ID = ?");
+           $stmt->bindParam(1, $idTransferencia);
+           $stmt->execute();
+           $rowTransf = $stmt->fetch(PDO::FETCH_ASSOC);
+           $mensagens = $rowTransf['mensagens'] ?? '';
+
+           $mensagemExtraHtml = "";
+           if (!empty($mensagens)) {
+               $msgsDecoded = json_decode($mensagens, true);
+               if (is_array($msgsDecoded) && count($msgsDecoded) > 0) {
+                   $lastMsg = end($msgsDecoded);
+                   if (!empty($lastMsg['texto'])) {
+                       $mensagemExtraHtml = "<div style='margin-top:15px; padding:12px; background:#f8fafc; border-left:4px solid #0284c7; border-radius:4px; text-align:left;'><b>Mensagem:</b> <i>\"" . nl2br(htmlspecialchars($lastMsg['texto'])) . "\"</i></div>";
+                   }
+               }
+           }
+
            $subject = "[CONFUSA.top] " . $nomeClube . " fez uma proposta por " . $nomeTecnico;
            $html_content = '
            <html>
@@ -1026,7 +1083,7 @@ class Tecnico{
                    ' . $imgHtml . '
                    <div><br/>
                        O clube <strong>' . $nomeClube . '</strong> fez uma proposta para contratar o técnico
-                       <strong>' . $nomeTecnico . '</strong> (nível ' . $nivelTecnico . ').<br/>
+                       <strong>' . $nomeTecnico . '</strong> (nível ' . $nivelTecnico . ').' . $mensagemExtraHtml . '<br/><br/>
                        Acesse o portal para aceitar, rejeitar ou realizar uma contraproposta.
                    </div>
                </div>
@@ -1140,6 +1197,102 @@ class Tecnico{
 
         $stmt->execute();
         return $stmt;
+    }
+
+    function readInfo($idTecnico){
+        $idTecnico = htmlspecialchars(strip_tags($idTecnico));
+
+        $queryBase = "SELECT t.ID as id, t.Nome as nome, t.Pais as idPais, t.Nascimento as nascimento, 
+                             FLOOR((DATEDIFF(CURDATE(), t.Nascimento))/365) as idade, 
+                             t.Nivel as nivel, t.Mentalidade as mentalidade, t.Estilo as estilo, 
+                             t.Sexo as sexo, t.foto as foto, 
+                             p.nome as Pais, p.bandeira as bandeiraPais, p.sigla as siglaPais, p.dono as donoPais 
+                      FROM " . $this->table_name . " t 
+                      LEFT JOIN paises p ON t.Pais = p.id 
+                      WHERE t.ID = ? LIMIT 0,1";
+        $stmt = $this->conn->prepare($queryBase);
+        $stmt->bindParam(1, $idTecnico);
+        $stmt->execute();
+        $resultBase = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$resultBase) {
+            $resultBase = [
+                'id' => 0, 'nome' => '', 'idPais' => 0, 'nascimento' => '', 'idade' => 0,
+                'nivel' => 0, 'mentalidade' => 0, 'estilo' => 0, 'sexo' => 0, 'foto' => '',
+                'Pais' => '', 'bandeiraPais' => '', 'siglaPais' => '', 'donoPais' => 0
+            ];
+        }
+
+        $queryContrato = "SELECT c.clube as idTime, cl.Nome as time, cl.Escudo as escudoTime, cl.Pais as paisTime,
+                                 l.ID as idLiga, l.nome as liga, l.logo as logoLiga, l.tier as tier,
+                                 p.nome as nomePaisTime, p.bandeira as bandeiraPaisTime, p.dono as donoClube,
+                                 c.prazo as fimContrato, c.salario as salario, c.modificadorNivel as modificadorNivel
+                          FROM contratos_tecnico c 
+                          LEFT JOIN clube cl ON cl.ID = c.clube 
+                          LEFT JOIN liga l ON cl.liga = l.ID 
+                          LEFT JOIN paises p ON p.id = cl.Pais 
+                          WHERE c.tecnico = ? AND c.tipoContrato = 0 LIMIT 0,1";
+        $stmtContrato = $this->conn->prepare($queryContrato);
+        $stmtContrato->bindParam(1, $idTecnico);
+        $stmtContrato->execute();
+        $resultContrato = $stmtContrato->fetch(PDO::FETCH_ASSOC);
+
+        if (!$resultContrato) {
+            $resultContrato = [
+                'idTime' => 0, 'time' => 'Sem clube', 'escudoTime' => '', 'paisTime' => 0,
+                'idLiga' => 0, 'liga' => 'Sem clube', 'logoLiga' => '', 'tier' => '',
+                'nomePaisTime' => '', 'bandeiraPaisTime' => '', 'donoClube' => 0,
+                'fimContrato' => '', 'salario' => 0, 'modificadorNivel' => 0
+            ];
+        }
+
+        $queryTransferencia = "SELECT data as inicioContrato FROM transferencias_tecnico 
+                               WHERE tecnico = ? AND clubeDestino = ? AND status_execucao = 1 
+                               ORDER BY data DESC LIMIT 0,1";
+        $stmtTransf = $this->conn->prepare($queryTransferencia);
+        $stmtTransf->bindParam(1, $idTecnico);
+        $stmtTransf->bindParam(2, $resultContrato['idTime']);
+        $stmtTransf->execute();
+        $resultTransf = $stmtTransf->fetch(PDO::FETCH_ASSOC);
+
+        $inicioContrato = $resultTransf['inicioContrato'] ?? '';
+
+        return array_merge($resultBase, $resultContrato, ['inicioContrato' => $inicioContrato]);
+    }
+
+    function readAllTransferencias($idTecnico, $from_record_num = 0, $records_per_page = 100){
+        $idTecnico = htmlspecialchars(strip_tags($idTecnico));
+
+        $query = "SELECT t.id, t.data, t.dataConclusao, t.status_execucao, t.tipoTransferencia as emprestimo, 
+                         t.clubeOrigem as idOrigem, co.Nome as nomeOrigem, co.Escudo as escudoOrigem, 
+                         lo.ID as idLigaOrigem, lo.nome as nomeLigaOrigem, po.bandeira as bandeiraOrigem, co.Pais as paisOrigem,
+                         t.clubeDestino as idDestino, cd.Nome as nomeDestino, cd.Escudo as escudoDestino, 
+                         ld.ID as idLigaDestino, ld.nome as nomeLigaDestino, pd.bandeira as bandeiraDestino, cd.Pais as paisDestino
+                  FROM transferencias_tecnico t
+                  LEFT JOIN clube co ON t.clubeOrigem = co.ID
+                  LEFT JOIN liga lo ON co.liga = lo.ID
+                  LEFT JOIN paises po ON co.Pais = po.id
+                  LEFT JOIN clube cd ON t.clubeDestino = cd.ID
+                  LEFT JOIN liga ld ON cd.liga = ld.ID
+                  LEFT JOIN paises pd ON cd.Pais = pd.id
+                  WHERE t.tecnico = ? AND t.status_execucao = 1
+                  ORDER BY t.data DESC, t.id DESC
+                  LIMIT {$from_record_num}, {$records_per_page}";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $idTecnico);
+        $stmt->execute();
+        return $stmt;
+    }
+
+    function countTransferencias($idTecnico){
+        $idTecnico = htmlspecialchars(strip_tags($idTecnico));
+        $query = "SELECT COUNT(id) as total FROM transferencias_tecnico WHERE tecnico = ? AND status_execucao = 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $idTecnico);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'] ?? 0;
     }
 
 }

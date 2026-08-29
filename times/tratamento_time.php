@@ -240,6 +240,7 @@ if(!function_exists('changeName')){
              $tecnico->nivel = (int)$xml->tecnico->Nivel;
              $tecnico->mentalidade = (int)$xml->tecnico->Mentalidade;
              $tecnico->estilo = (int)$xml->tecnico->Estilo;
+             $tecnico->sexo = (int)$sexo;
 
              $assoc_tecnico = isset($team_associations['tecnico']) ? $team_associations['tecnico'] : null;
              if ($assoc_tecnico && $assoc_tecnico['action'] === 'match' && !empty($assoc_tecnico['player_id'])) {
@@ -249,6 +250,17 @@ if(!function_exists('changeName')){
                     $codigo_tecnico = $db->lastInsertId();
                  } else {
                      $error_msg .= 'Houve erros durante a inserção do tecnico. ';
+                 }
+             }
+
+             // Check if there was a previous coach and terminate their contract if it's a different person
+             $stmt_prev_coach = $db->prepare("SELECT tecnico FROM contratos_tecnico WHERE clube = ? AND tipoContrato = 0");
+             $stmt_prev_coach->execute([$codigo_time]);
+             $prev_coaches = $stmt_prev_coach->fetchAll(PDO::FETCH_COLUMN);
+             foreach ($prev_coaches as $prev_c) {
+                 if ((int)$prev_c !== (int)$codigo_tecnico) {
+                     $stmt_break = $db->prepare("DELETE FROM contratos_tecnico WHERE tecnico = ? AND tipoContrato = 0");
+                     $stmt_break->execute([$prev_c]);
                  }
              }
 
@@ -323,58 +335,72 @@ if(!function_exists('changeName')){
                 $titularesId[] = $idTitular;
             }
             
+            // Query current players before processing the import
+             $stmt_current_players = $db->prepare("SELECT jogador FROM contratos_jogador WHERE clube = ? AND tipoContrato = 0");
+             $stmt_current_players->execute([$codigo_time]);
+             $current_player_ids = $stmt_current_players->fetchAll(PDO::FETCH_COLUMN);
+             $imported_player_ids = [];
+
              foreach($array_jogadores as $index => $xmlIterator){
 
-         $xml = $xmlIterator;
-         
-         if (isset($associations[$index])) {
-             $assoc = $associations[$index];
-             if ($assoc['action'] === 'match' && !empty($assoc['player_id'])) {
-                 $id_jogador_existente = $assoc['player_id'];
-             } else {
-                 unset($id_jogador_existente);
-             }
-         } else {
-             unset($id_jogador_existente);
-         }
-         
-         include($_SERVER['DOCUMENT_ROOT']."/jogadores/tratamento_jogador.php");
-         $codigo_jogador = (isset($id_jogador_existente) && $id_jogador_existente > 0) ? $id_jogador_existente : $db->lastInsertId();
+                 $xml = $xmlIterator;
+                 
+                 if (isset($associations[$index])) {
+                     $assoc = $associations[$index];
+                     if ($assoc['action'] === 'match' && !empty($assoc['player_id'])) {
+                         $id_jogador_existente = $assoc['player_id'];
+                     } else {
+                         unset($id_jogador_existente);
+                     }
+                 } else {
+                     unset($id_jogador_existente);
+                 }
+                 
+                 include($_SERVER['DOCUMENT_ROOT']."/jogadores/tratamento_jogador.php");
+                 $codigo_jogador = (isset($id_jogador_existente) && $id_jogador_existente > 0) ? $id_jogador_existente : $db->lastInsertId();
+                 $imported_player_ids[] = (int)$codigo_jogador;
 
                  //verificar se é capitao ou penaltis (+ posicao base)
-                $idVerificacao = $xml->jogador->ID;
-                if(strcmp($idVerificacao,$capitaoId) == 0){
-                    $isCapitao = 1;
-                } else {
-                    $isCapitao = 0;
-                }
+                 $idVerificacao = $xml->jogador->ID;
+                 if(strcmp($idVerificacao,$capitaoId) == 0){
+                     $isCapitao = 1;
+                 } else {
+                     $isCapitao = 0;
+                 }
 
-                $isPenalti = 0;
-                foreach($penaltisId as $numero => $cobrador){
-                    if(strcmp($idVerificacao,$cobrador) == 0){
-                        $isPenalti = $numero+1;
-                    }
-                }
+                 $isPenalti = 0;
+                 foreach($penaltisId as $numero => $cobrador){
+                     if(strcmp($idVerificacao,$cobrador) == 0){
+                         $isPenalti = $numero+1;
+                     }
+                 }
 
-                $titularidade = 0;
-                $posicaoBase = '';
-                foreach($titularesId as $numero => $titular){
-                    if(strcmp($idVerificacao, $titular) == 0){
-                        $titularidade = 1;
-                        $posicaoBase = $titularesPos[$numero];
-                    }
-                }
+                 $titularidade = 0;
+                 $posicaoBase = '';
+                 foreach($titularesId as $numero => $titular){
+                     if(strcmp($idVerificacao, $titular) == 0){
+                         $titularidade = 1;
+                         $posicaoBase = $titularesPos[$numero];
+                     }
+                 }
 
-                if(strcmp($posicaoBase,'') != 0){
-                    $posicaoBase = $jogador->posicaoPorSigla($posicaoBase);
-                }
+                 if(strcmp($posicaoBase,'') != 0){
+                     $posicaoBase = $jogador->posicaoPorSigla($posicaoBase);
+                 }
 
                  //transferir
                  $jogador->transferir($codigo_jogador,$codigo_time,$isCapitao,$isPenalti,$titularidade,$posicaoBase);
 
              }
-             
 
+             // Demote remaining (leftover) players who are not in the XML to suplentes (titularidade = -1, posicaoBase = 0)
+             $leftover_player_ids = array_diff($current_player_ids, $imported_player_ids);
+             if (!empty($leftover_player_ids)) {
+                 $in_clause = implode(',', array_fill(0, count($leftover_player_ids), '?'));
+                 $stmt_demote = $db->prepare("UPDATE contratos_jogador SET titularidade = -1, posicaoBase = 0, capitao = 0, cobrancaPenalti = 0 WHERE clube = ? AND jogador IN ($in_clause) AND tipoContrato = 0");
+                 $stmt_demote->execute(array_merge([$codigo_time], $leftover_player_ids));
+             }
+             
              
 
 ?>

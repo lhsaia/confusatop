@@ -7,6 +7,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
     $idTransferencia = $_POST['idTransferencia'];
     $acao = $_POST['acao'];
+    $mensagem = $_POST['mensagem'] ?? '';
+    $remetenteNome = $_SESSION['nomereal'] ?? $_SESSION['username'] ?? 'Usuário';
 
     //estabelecer conexão com banco de dados
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -18,7 +20,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $usuario = new Usuario($db);
 
     //criar transferencia pendente
-    if($tecnico->avaliarProposta($idTransferencia, $acao)){
+    if($tecnico->avaliarProposta($idTransferencia, $acao, $mensagem, $remetenteNome)){
         $is_success = true;
         $error_msg = "";
         $usuario->atualizarAlteracao($_SESSION['user_id']);
