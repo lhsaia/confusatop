@@ -1223,7 +1223,7 @@ class Tecnico{
             ];
         }
 
-        $queryContrato = "SELECT c.clube as idTime, cl.Nome as time, cl.Escudo as escudoTime, cl.Pais as paisTime,
+        $queryContrato = 'SELECT c.clube as idTime, cl.Nome as time, cl.Escudo as escudoTime, cl.Pais as paisTime,
                                  l.ID as idLiga, l.nome as liga, l.logo as logoLiga, l.tier as tier,
                                  p.nome as nomePaisTime, p.bandeira as bandeiraPaisTime, p.dono as donoClube,
                                  c.prazo as fimContrato, c.salario as salario, c.modificadorNivel as modificadorNivel
@@ -1231,7 +1231,7 @@ class Tecnico{
                           LEFT JOIN clube cl ON cl.ID = c.clube 
                           LEFT JOIN liga l ON cl.liga = l.ID 
                           LEFT JOIN paises p ON p.id = cl.Pais 
-                          WHERE c.tecnico = ? AND c.tipoContrato = 0 LIMIT 0,1";
+                          WHERE c.tecnico = ? AND c.tipoContrato = 0 LIMIT 0,1';
         $stmtContrato = $this->conn->prepare($queryContrato);
         $stmtContrato->bindParam(1, $idTecnico);
         $stmtContrato->execute();
@@ -1246,9 +1246,9 @@ class Tecnico{
             ];
         }
 
-        $queryTransferencia = "SELECT data as inicioContrato FROM transferencias_tecnico 
+        $queryTransferencia = 'SELECT data as inicioContrato FROM transferencias_tecnico 
                                WHERE tecnico = ? AND clubeDestino = ? AND status_execucao = 1 
-                               ORDER BY data DESC LIMIT 0,1";
+                               ORDER BY data DESC LIMIT 0,1';
         $stmtTransf = $this->conn->prepare($queryTransferencia);
         $stmtTransf->bindParam(1, $idTecnico);
         $stmtTransf->bindParam(2, $resultContrato['idTime']);
@@ -1263,7 +1263,7 @@ class Tecnico{
     function readAllTransferencias($idTecnico, $from_record_num = 0, $records_per_page = 100){
         $idTecnico = htmlspecialchars(strip_tags($idTecnico));
 
-        $query = "SELECT t.id, t.data, t.dataConclusao, t.status_execucao, t.tipoTransferencia as emprestimo, 
+        $query = 'SELECT t.id, t.data, t.dataConclusao, t.status_execucao, t.tipoTransferencia as emprestimo, 
                          t.clubeOrigem as idOrigem, co.Nome as nomeOrigem, co.Escudo as escudoOrigem, 
                          lo.ID as idLigaOrigem, lo.nome as nomeLigaOrigem, po.bandeira as bandeiraOrigem, co.Pais as paisOrigem,
                          t.clubeDestino as idDestino, cd.Nome as nomeDestino, cd.Escudo as escudoDestino, 
@@ -1277,7 +1277,7 @@ class Tecnico{
                   LEFT JOIN paises pd ON cd.Pais = pd.id
                   WHERE t.tecnico = ? AND t.status_execucao = 1
                   ORDER BY t.data DESC, t.id DESC
-                  LIMIT {$from_record_num}, {$records_per_page}";
+                  LIMIT ' . (int)$from_record_num . ', ' . (int)$records_per_page;
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $idTecnico);
