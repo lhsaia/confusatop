@@ -58,7 +58,7 @@ html body #logged-user {
 }
 
 .propostas-title {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
   font-size: 1.5rem !important;
   color: #1e293b !important;
@@ -108,7 +108,7 @@ html body #logged-user {
 }
 
 .form-group label:not(.checkbox-label) {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 0.85rem !important;
   font-weight: 600 !important;
   color: #475569 !important;
@@ -234,7 +234,7 @@ html body #logged-user {
   padding: 12px 20px !important;
   border-radius: 8px !important;
   font-weight: 700 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 0.95rem !important;
   cursor: pointer !important;
   transition: all 0.25s ease !important;

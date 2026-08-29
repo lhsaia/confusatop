@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    financeiro_redesign.css — Redesign do Resumo Financeiro
    Segue o Light Theme padrão das subpáginas do CONFUSA.top
    ============================================================ */
@@ -31,7 +31,7 @@
 }
 
 .fin-kpi-card .kpi-label {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 0.78rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -47,7 +47,7 @@
 }
 
 .fin-kpi-card .kpi-value {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 1.55rem;
     font-weight: 700;
     color: #1e293b;
@@ -84,7 +84,7 @@
 }
 
 .fin-filters label {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 0.78rem;
     font-weight: 600;
     color: #64748b;
@@ -120,7 +120,7 @@
     padding: 9px 18px;
     background: linear-gradient(135deg, #059669, #047857);
     color: #ffffff;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 700;
     font-size: 0.9rem;
     border: none;
@@ -235,7 +235,7 @@
     border-radius: 6px;
     background: #ffffff;
     color: #475569;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 600;
     font-size: 0.85rem;
     cursor: pointer;

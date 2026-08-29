@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -139,7 +139,7 @@ function renderPlayerRow($side, $idx, $p, $allPositions, $isCoach = false) {
 
 <style>
     .editor-card { background: #ffffff; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.03); padding: 22px; margin-bottom: 25px; border: 1px solid rgba(0,0,0,0.08); }
-    .section-title { font-family: 'Kanit', sans-serif; font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 18px; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; display: flex; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
+    .section-title { font-family: 'Outfit', sans-serif; font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 18px; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; display: flex; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
     .section-title i, .section-title .material-symbols-outlined { margin-right: 8px; color: #0284c7; font-size: 1.1rem; }
     .form-label { font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 5px; display: block; }
     .team-editor-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); }
@@ -192,7 +192,7 @@ function renderPlayerRow($side, $idx, $p, $allPositions, $isCoach = false) {
     
     #lineupTabs .nav-link {
         border-radius: 10px !important;
-        font-family: 'Kanit', sans-serif !important;
+        font-family: 'Outfit', sans-serif !important;
         font-weight: 600 !important;
         color: #64748b !important;
         background: #f1f5f9 !important;
@@ -235,7 +235,7 @@ function renderPlayerRow($side, $idx, $p, $allPositions, $isCoach = false) {
         gap: 6px;
         padding: 7px 12px;
         margin: 0;
-        font-family: 'Kanit', sans-serif;
+        font-family: 'Outfit', sans-serif;
         font-size: 0.85rem;
         font-weight: 600;
         color: #64748b;
@@ -280,7 +280,7 @@ function renderPlayerRow($side, $idx, $p, $allPositions, $isCoach = false) {
     .custom-toast.warning { border-left-color: #f59e0b; }
     .toast-icon { margin-right: 15px; font-size: 1.2rem; }
     .toast-content { flex-grow: 1; }
-    .toast-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 2px; font-family: 'Kanit', sans-serif; }
+    .toast-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 2px; font-family: 'Outfit', sans-serif; }
     .toast-message { font-size: 0.85rem; color: #64748b; }
     .toast-close { cursor: pointer; opacity: 0.5; font-size: 1.1rem; }
     .toast-close:hover { opacity: 1; }
@@ -299,7 +299,7 @@ function renderPlayerRow($side, $idx, $p, $allPositions, $isCoach = false) {
         <div class="sticky-header">
             <div class="d-flex align-items-center gap-2">
                 <span class="material-symbols-outlined" style="color: #0284c7; font-size: 1.6rem;">sports_soccer</span>
-                <h4 class="fw-bold mb-0 text-dark text-nowrap" style="font-family: 'Kanit', sans-serif; letter-spacing: -0.5px;"><?php echo $match_id ? "Editar Partida #".$match_id : "Nova Partida"; ?></h4>
+                <h4 class="fw-bold mb-0 text-dark text-nowrap" style="font-family: 'Outfit', sans-serif; letter-spacing: -0.5px;"><?php echo $match_id ? "Editar Partida #".$match_id : "Nova Partida"; ?></h4>
             </div>
             <div class="d-flex align-items-center">
                 <div class="unsaved-badge" id="unsavedBadge">
@@ -417,7 +417,7 @@ function renderPlayerRow($side, $idx, $p, $allPositions, $isCoach = false) {
 
                 <!-- Centro: VS -->
                 <div class="col-lg-2 col-md-12 text-center my-2 my-lg-0">
-                    <div style="font-family: 'Kanit', sans-serif; font-size: 1.8rem; font-weight: 900; color: #94a3b8;">
+                    <div style="font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 900; color: #94a3b8;">
                         VS
                     </div>
                     <span class="badge bg-light text-muted border">Placar Final</span>

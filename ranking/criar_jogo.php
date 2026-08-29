@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -29,7 +29,7 @@ $is_admin = $is_logged_in && ((int)($_SESSION['admin_status'] ?? 0) === 1);
 if (!$is_logged_in) {
     echo "<div class='ranking-container'><div class='ranking-card' style='text-align:center; padding:3.5rem 1.5rem; font-family:Montserrat,sans-serif;'>
         <span class='material-symbols-outlined' style='font-size: 3.5rem; color: #ef4444; margin-bottom: 1rem;'>lock</span>
-        <h2 style='font-family: Kanit, sans-serif; color: #1e293b; margin-bottom: 0.5rem; font-size: 1.5rem;'>Acesso Restrito</h2>
+        <h2 style='font-family: Outfit, sans-serif; color: #1e293b; margin-bottom: 0.5rem; font-size: 1.5rem;'>Acesso Restrito</h2>
         <p style='color: #64748b; font-size: 0.95rem; max-width: 500px; margin: 0 auto 1.5rem auto;'>Você precisa estar logado para criar partidas no Ranking oficial.</p>
         <a href='/ranking' class='btn-clubes-secondary'>
             <span class='material-symbols-outlined' style='font-size: 1.15rem;'>arrow_back</span>
@@ -43,7 +43,7 @@ if (!$is_logged_in) {
 if ($match_id > 0 && !$is_admin) {
     echo "<div class='ranking-container'><div class='ranking-card' style='text-align:center; padding:3.5rem 1.5rem; font-family:Montserrat,sans-serif;'>
         <span class='material-symbols-outlined' style='font-size: 3.5rem; color: #ef4444; margin-bottom: 1rem;'>lock</span>
-        <h2 style='font-family: Kanit, sans-serif; color: #1e293b; margin-bottom: 0.5rem; font-size: 1.5rem;'>Acesso Restrito</h2>
+        <h2 style='font-family: Outfit, sans-serif; color: #1e293b; margin-bottom: 0.5rem; font-size: 1.5rem;'>Acesso Restrito</h2>
         <p style='color: #64748b; font-size: 0.95rem; max-width: 500px; margin: 0 auto 1.5rem auto;'>Apenas administradores têm permissão para editar jogos existentes no Ranking oficial.</p>
         <a href='/ranking' class='btn-clubes-secondary'>
             <span class='material-symbols-outlined' style='font-size: 1.15rem;'>arrow_back</span>
@@ -212,7 +212,7 @@ function renderNationalPlayerEditRow($side, $idx, $p, $allPositions, $isCoach = 
 }
 
 .editor-title-wrap h3 {
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-size: 1.4rem !important;
     font-weight: 700 !important;
     color: #0f172a !important;
@@ -263,7 +263,7 @@ html body .editor-container #btnSalvar {
     gap: 6px !important;
     background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
     color: #ffffff !important;
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-weight: 600 !important;
     font-size: 0.9rem !important;
     padding: 9px 20px !important;
@@ -296,7 +296,7 @@ html body .editor-container .btn-clubes-secondary {
     gap: 6px !important;
     background: #ffffff !important;
     color: #334155 !important;
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-weight: 600 !important;
     font-size: 0.88rem !important;
     padding: 8px 16px !important;
@@ -337,7 +337,7 @@ html body .editor-container .btn-clubes-secondary:hover {
 }
 
 .editor-card-header h4 {
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-size: 1.15rem !important;
     font-weight: 700 !important;
     color: #1e293b !important;
@@ -425,7 +425,7 @@ html body .editor-container .btn-clubes-secondary:hover {
 .score-input {
     width: 64px !important;
     height: 52px !important;
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-size: 1.8rem !important;
     font-weight: 800 !important;
     color: #0284c7 !important;
@@ -443,7 +443,7 @@ html body .editor-container .btn-clubes-secondary:hover {
 }
 
 .score-times {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
     color: #94a3b8;
@@ -537,7 +537,7 @@ html body .editor-container .btn-clubes-secondary:hover {
 .table-editor-custom th {
     background: #f8fafc;
     color: #475569;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 600;
     font-size: 0.8rem;
     text-transform: uppercase;
@@ -700,7 +700,7 @@ html body .editor-container .btn-clubes-secondary:hover {
 
 .lineup-card-header h5 {
     margin: 0;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 0.95rem;
     font-weight: 700;
     display: flex;
@@ -711,7 +711,7 @@ html body .editor-container .btn-clubes-secondary:hover {
 .lineup-divider-row td {
     background: #f1f5f9 !important;
     color: #475569 !important;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;

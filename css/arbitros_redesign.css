@@ -1,4 +1,4 @@
-@import url("meuspaises_redesign.css");
+﻿@import url("meuspaises_redesign.css");
 @import url("main.css");
 
 /* Adaptations for arbitros/index.php */
@@ -21,7 +21,7 @@
 .nomeEditavel {
   color: #1e293b !important;
   font-weight: 600 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 0.85rem !important;
   transition: all 0.2s ease !important;
   text-decoration: none !important;
@@ -77,7 +77,7 @@
   border-radius: 8px !important;
   color: #0284c7 !important;
   font-weight: 600 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 0.9rem !important;
   transition: all 0.2s ease !important;
   margin: 0 !important;
@@ -108,7 +108,7 @@
   border-radius: 8px !important;
   padding: 6px 14px !important;
   font-weight: 600 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
@@ -186,7 +186,7 @@
 
 #inscricao label {
   display: block;
-  font-family: 'Kanit', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 600;
   color: #475569;
   margin-top: 15px;
@@ -229,7 +229,7 @@
   padding: 12px 20px !important;
   border-radius: 8px !important;
   font-weight: 700 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 0.95rem !important;
   cursor: pointer !important;
   transition: all 0.25s ease !important;

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
@@ -173,7 +173,7 @@ $(document).ready(function(){
 <main class="propostas-container">
     <div class="propostas-card">
         <div class="card-header-flex">
-            <h2 class="propostas-title" style="margin: 0; font-family: 'Kanit', sans-serif; font-size: 1.6rem; color: #1e293b;">➕ Criar Jogador</h2>
+            <h2 class="propostas-title" style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 1.6rem; color: #1e293b;">➕ Criar Jogador</h2>
             <div style="display: flex; gap: 8px; align-items: center;">
                 <button type="button" id="hexagen" class="btn-hexagen-top">
                     <span class="material-symbols-outlined">casino</span>

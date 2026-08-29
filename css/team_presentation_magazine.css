@@ -1,4 +1,4 @@
-/* styles for Placar 90s/00s sports magazine layout */
+﻿/* styles for Placar 90s/00s sports magazine layout */
 
 
 /* Top Bar (Header Guidelines 2.0) */
@@ -203,7 +203,7 @@ html {
 }
 
 .magazine-title {
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-weight: 900 !important;
     font-size: 3.5rem !important;
     line-height: 1.1 !important;
@@ -216,7 +216,7 @@ html {
 }
 
 .magazine-subtitle {
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-weight: 700 !important;
     font-size: 1.3rem !important;
     margin: 12px 0 16px 0 !important;
@@ -302,7 +302,7 @@ html {
     font-size: 0.8rem;
     font-weight: 700;
     text-transform: uppercase;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -363,7 +363,7 @@ html {
 }
 
 .editorial-headline {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 900;
     font-size: 2.2rem;
     line-height: 1.1;
@@ -397,7 +397,7 @@ html {
 }
 
 .text-columns .capitular {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 900;
     font-size: 3.8rem;
     float: left;
@@ -426,7 +426,7 @@ html {
 
 .highlight-label {
     text-align: center;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 900;
     font-size: 0.8rem;
     padding: 4px 0;
@@ -499,7 +499,7 @@ html {
 }
 
 .card-header-stripe {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 900;
     font-size: 1rem;
     padding: 12px 20px;
@@ -531,7 +531,7 @@ html {
 }
 
 .graphic-label {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 700;
     font-size: 0.85rem;
     color: #64748b;
@@ -571,7 +571,7 @@ html {
 }
 
 .section-title-editorial h2 {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 900;
     font-size: 1.8rem;
     margin: 0 0 8px 0;
@@ -616,7 +616,7 @@ html {
     justify-content: space-between;
     align-items: center;
     padding: 4px 8px;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 900;
     font-size: 0.7rem;
     border-radius: 6px;
@@ -666,7 +666,7 @@ html {
 }
 
 .sticker-name {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 700;
     font-size: 0.85rem;
     color: #0f172a;
@@ -697,7 +697,7 @@ html {
 }
 
 .history-title {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 700;
     text-transform: uppercase;
     font-size: 0.55rem;
@@ -773,7 +773,7 @@ html {
 }
 
 .coach-name {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 900;
     font-size: 1.3rem;
     color: #0f172a;

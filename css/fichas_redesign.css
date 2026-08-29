@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    CONFUSA.top - Envio de Fichas Redesign (Light Theme System)
    ========================================================================== */
 
@@ -38,7 +38,7 @@ body {
 }
 
 .propostas-title {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
   font-size: 1.6rem !important;
   color: #1e293b !important;
@@ -46,7 +46,7 @@ body {
 }
 
 .drawer-title {
-  font-family: 'Kanit', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 1.2rem;
   color: #475569;
@@ -114,7 +114,7 @@ body {
 }
 
 .roster-meta strong {
-  font-family: 'Kanit', sans-serif;
+  font-family: 'Outfit', sans-serif;
   color: #1e293b;
   font-size: 1.1rem;
   font-weight: 600;

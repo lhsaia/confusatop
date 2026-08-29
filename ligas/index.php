@@ -1,4 +1,4 @@
-
+﻿
 <?php
 
 ini_set( 'display_errors', true );
@@ -50,7 +50,7 @@ $arrayPaises = [];
 
 <main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
 <div class="propostas-card">
-    <h2 class="propostas-title" style="margin-bottom: 5px; font-family: 'Kanit', sans-serif; text-align: left; font-size: 1.6rem; color: #1e293b;">🗺️ Federações e Países</h2>
+    <h2 class="propostas-title" style="margin-bottom: 5px; font-family: 'Outfit', sans-serif; text-align: left; font-size: 1.6rem; color: #1e293b;">🗺️ Federações e Países</h2>
     <p style="color: #64748b; margin-bottom: 25px;">Selecione uma federação no mapa ou um país (marcador) para ver os detalhes.</p>
     
     <div id="toolbar-card-container"></div>

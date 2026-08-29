@@ -1,4 +1,4 @@
-/* Full-width input fields */
+﻿/* Full-width input fields */
 input[type=text], input[type=password] , input[type=email], textarea{
     width: 100%;
     padding: 12px 20px;
@@ -954,7 +954,7 @@ nav.open {
 /* Form Elements styling */
 .modal-content label {
     display: block !important;
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-weight: 600 !important;
     color: #334155 !important;
     margin-bottom: 6px !important;
@@ -1001,7 +1001,7 @@ nav.open {
     padding: 12px !important;
     background: #0284c7 !important;
     color: #ffffff !important;
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-weight: 600 !important;
     font-size: 1rem !important;
     border: none !important;
@@ -1022,7 +1022,7 @@ nav.open {
     padding: 11px !important;
     background: transparent !important;
     color: #64748b !important;
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-weight: 600 !important;
     font-size: 0.95rem !important;
     border: 1.5px solid rgba(0, 0, 0, 0.15) !important;
@@ -1045,7 +1045,7 @@ nav.open {
     padding: 11px !important;
     background: transparent !important;
     color: #0284c7 !important;
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-weight: 600 !important;
     font-size: 0.95rem !important;
     border: 1.5px solid rgba(2, 132, 199, 0.3) !important;

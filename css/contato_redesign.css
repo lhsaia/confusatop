@@ -1,4 +1,4 @@
-/* Style for Contato/Email page redesign */
+﻿/* Style for Contato/Email page redesign */
 
 body {
     background-color: #f1f5f9 !important;
@@ -27,7 +27,7 @@ body {
 }
 
 .contato-title {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 700;
     color: #0f172a;
     font-size: 1.8rem;
@@ -44,7 +44,7 @@ body {
 
 .contato-form label {
     display: block;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 600;
     color: #334155;
     margin-bottom: 6px;
@@ -85,7 +85,7 @@ body {
     padding: 12px;
     background: #0284c7;
     color: #ffffff;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 600;
     font-size: 1rem;
     border: none;

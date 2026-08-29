@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    CONFUSA.top - Escalação Pré-Jogo CSS (Light Theme Mobile-First/Responsive)
    ========================================================================== */
 
@@ -12,7 +12,7 @@
 
 .escalacao-table th {
     padding: 12px 10px;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     color: #64748b;
     font-size: 0.75rem;
     text-transform: uppercase;
@@ -159,7 +159,7 @@
     }
     
     .jogador-name {
-        font-family: 'Kanit', sans-serif;
+        font-family: 'Outfit', sans-serif;
         font-size: 1.15rem;
         font-weight: 600;
         color: #0f172a;

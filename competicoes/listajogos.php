@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 // ini_set( 'display_errors', true );
 // error_reporting( E_ALL );
@@ -123,7 +123,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
   border-radius: 8px !important;
   padding: 6px 14px !important;
   font-weight: 600 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
@@ -146,7 +146,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 /* Estilo do Texto (tamanho padrão de botão para manter harmonia) */
 #toolbar > div span.btn-text {
   font-size: 0.85rem !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
   display: inline-block !important;
   vertical-align: middle !important;
@@ -844,7 +844,7 @@ $(document).ready(function($){
         <div id='loading' style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(9, 13, 22, 0.85); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:99999; flex-direction:column; justify-content:center; align-items:center; color:#fff; font-family:'Montserrat', sans-serif;">
             <div style="background:rgba(15, 23, 42, 0.8); padding:35px 40px; border-radius:18px; border:1px solid rgba(255,255,255,0.1); text-align:center; box-shadow:0 15px 35px rgba(0,0,0,0.6); max-width:420px; width:90%; box-sizing:border-box;">
                 <img src="/images/loaders/loader_style<?php echo $random_loader; ?>.gif" style="height:70px; margin-bottom:20px;"/>
-                <h3 id="loading-title" style="font-family:'Kanit', sans-serif; color:#38bdf8; margin:0 0 10px 0; font-size:1.4rem; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Simulando Partida</h3>
+                <h3 id="loading-title" style="font-family:'Outfit', sans-serif; color:#38bdf8; margin:0 0 10px 0; font-size:1.4rem; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Simulando Partida</h3>
                 <p id="loading-step" style="margin:0; font-size:0.95rem; color:#cbd5e1; min-height:24px;">Iniciando...</p>
                 <div id="loading-bar-container" style="width:100%; background:rgba(255,255,255,0.08); height:6px; border-radius:3px; margin-top:20px; overflow:hidden; border:1px solid rgba(255,255,255,0.05);">
                     <div id="loading-bar" style="width:5%; height:100%; background:linear-gradient(90deg, #38bdf8, #34d399); border-radius:3px; transition:width 0.4s ease-in-out;"></div>

@@ -1,5 +1,5 @@
-/* PoltronaScore CSS - Premium Design System */
-@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700&display=swap');
+﻿/* PoltronaScore CSS - Premium Design System */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700&display=swap');
 
 * {
     margin: 0;
@@ -20,7 +20,7 @@
     --accent-emerald: #34d399;
     --accent-amber: #fbbf24;
     --accent-red: #f43f5e;
-    --font-title: 'Kanit', sans-serif;
+    --font-title: 'Outfit', sans-serif;
     --font-body: 'Montserrat', sans-serif;
 }
 

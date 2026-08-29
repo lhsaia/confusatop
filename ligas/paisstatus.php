@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
@@ -137,7 +137,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
     <hr style="border: none; border-bottom: 1px solid rgba(0,0,0,0.08); margin: 20px 0;">
     
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
-        <h3 style="font-family: 'Kanit', sans-serif; color: #1e293b; font-size: 1.2rem; margin: 0;">Ligas Disponíveis</h3>
+        <h3 style="font-family: 'Outfit', sans-serif; color: #1e293b; font-size: 1.2rem; margin: 0;">Ligas Disponíveis</h3>
         <div>
             <?php include_once($_SERVER['DOCUMENT_ROOT']."/elements/paging.php"); ?>
         </div>

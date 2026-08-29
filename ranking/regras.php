@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
@@ -42,7 +42,7 @@ include_once 'ranking_header.php';
                 <p style="margin: 0;"><strong>P<sub>a</sub></strong> : Pontuação anterior da equipe antes da partida.</p>
             </div>
 
-            <h3 style="font-family: 'Kanit', sans-serif; font-size: 1.15rem; color: #1e293b; margin-top: 1.5rem; margin-bottom: 0.5rem;">
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; color: #1e293b; margin-top: 1.5rem; margin-bottom: 0.5rem;">
                 1. Constante de Importância da Partida (C)
             </h3>
             <p>O valor de <strong>C</strong> determina o impacto máximo de pontos de acordo com a relevância do torneio:</p>
@@ -70,7 +70,7 @@ include_once 'ranking_header.php';
                 </div>
             </div>
 
-            <h3 style="font-family: 'Kanit', sans-serif; font-size: 1.15rem; color: #1e293b; margin-top: 1.5rem; margin-bottom: 0.5rem;">
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; color: #1e293b; margin-top: 1.5rem; margin-bottom: 0.5rem;">
                 2. Ajuste pelo Saldo de Gols (G)
             </h3>
             <p>O multiplicador <strong>G</strong> recompensa goleadas expressivas:</p>
@@ -90,7 +90,7 @@ include_once 'ranking_header.php';
                 </div>
             </div>
 
-            <h3 style="font-family: 'Kanit', sans-serif; font-size: 1.15rem; color: #1e293b; margin-top: 1.5rem; margin-bottom: 0.5rem;">
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; color: #1e293b; margin-top: 1.5rem; margin-bottom: 0.5rem;">
                 3. Resultado Real (R) e Resultado Esperado (R<sub>e</sub>)
             </h3>
             <p>O valor <strong>R</strong> é o resultado obtido na partida: <strong>1.0</strong> para vitória, <strong>0.5</strong> para empate e <strong>0.0</strong> para derrota.</p>

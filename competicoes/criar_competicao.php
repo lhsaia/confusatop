@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
@@ -270,7 +270,7 @@ main.redesign-container {
 }
 
 #inscricao label {
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-size: 0.9rem !important;
     font-weight: 500 !important;
     color: #0284c7 !important;
@@ -346,7 +346,7 @@ main.redesign-container {
     padding: 12px 20px !important;
     border-radius: 8px !important;
     font-weight: 700 !important;
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-size: 1.05rem !important;
     cursor: pointer !important;
     box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;
@@ -363,7 +363,7 @@ main.redesign-container {
 }
 
 .hub-section-title {
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-weight: 600 !important;
     color: #1e293b !important;
     text-align: center !important;

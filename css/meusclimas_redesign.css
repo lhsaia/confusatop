@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    CONFUSA.top - Quadro de Climas Redesign (Light Theme System)
    ========================================================================== */
 
@@ -48,7 +48,7 @@ html body #logged-user {
 }
 
 .propostas-title {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
   font-size: 1.6rem !important;
   color: #1e293b !important;
@@ -126,7 +126,7 @@ html body #logged-user {
   border-radius: 8px !important;
   padding: 8px 16px !important;
   font-weight: 600 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
@@ -159,7 +159,7 @@ html body #logged-user {
 }
 
 #tabelaPrincipal th {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
   color: #475569 !important;
   text-transform: uppercase;
@@ -305,7 +305,7 @@ html body #logged-user {
 }
 
 .nomeClima {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
   font-size: 0.88rem !important;
   color: #1e293b !important;

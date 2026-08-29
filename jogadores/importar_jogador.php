@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 header('Content-Type: text/html; charset=utf-8');
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -29,28 +29,33 @@ echo '<link rel="stylesheet" href="/css/importacao_moderna.css?v=' . $css_versao
 echo '<main class="propostas-container narrow-container" style="padding-top: 80px; padding-bottom: 60px;">';
 echo '<div class="propostas-card">';
 echo '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 1rem; width: 100%;">';
-echo '    <h2 class="propostas-title" style="margin: 0; font-family: \'Kanit\', sans-serif; font-size: 1.6rem; color: #1e293b;">📥 Importar jogador</h2>';
+echo '    <h2 class="propostas-title" style="margin: 0; font-family: \'Outfit\', sans-serif; font-size: 1.6rem; color: #1e293b;">📥 Importar jogador</h2>';
 echo '    <a href="/jogadores" style="display: inline-block; padding: 8px 16px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;" onmouseover="this.style.background=\'rgba(0, 0, 0, 0.06)\'" onmouseout="this.style.background=\'rgba(0, 0, 0, 0.03)\'">Voltar</a>';
 echo '</div>';
 
-$stmtLiga = $time->read($_SESSION['user_id']);
+$is_admin = (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == false);
+$stmtLiga = $time->read($is_admin ? null : $_SESSION['user_id']);
 $listaLigas = array();
 while ($row_pais = $stmtLiga->fetch(PDO::FETCH_ASSOC)){
     $addArray = array($row_pais['id'], $row_pais['nome'], $row_pais['Sexo']);
     $listaLigas[] = $addArray;
 }
 
+$last_time = $_SESSION['last_import_time'] ?? '';
+$last_sexo = $_SESSION['last_import_sexo'] ?? '0';
+
 echo "<p class='selecaodeligas'>Seleção de time: <select id='selecaoTime' class=' selecaodeligas comboPais editavel '>'  ";
-echo "<option value='' >Selecione time...</option>";
+echo "<option value='' " . (empty($last_time) ? 'selected' : '') . ">Selecione time...</option>";
 for($i = 0; $i < count($listaLigas);$i++){
-    echo "<option value='{$listaLigas[$i][0]}' data-sexo='{$listaLigas[$i][2]}'>{$listaLigas[$i][1]}</option>";
+    $selected = ($listaLigas[$i][0] == $last_time) ? 'selected' : '';
+    echo "<option value='{$listaLigas[$i][0]}' data-sexo='{$listaLigas[$i][2]}' {$selected}>{$listaLigas[$i][1]}</option>";
 }
 echo "</select>";
 echo "</p>";
 
 echo "<p class='selecaodeligas'>Masculino / feminino: <select id='selecaosexo' class=' selecaodeligas comboPais editavel '>'  ";
-echo "<option selected value='0' >Masculino</option>";
-echo "<option value='1' >Feminino</option>";
+echo "<option value='0' " . ($last_sexo == '0' ? 'selected' : '') . ">Masculino</option>";
+echo "<option value='1' " . ($last_sexo == '1' ? 'selected' : '') . ">Feminino</option>";
 echo "</select>";
 echo "</p>";
 
@@ -72,6 +77,7 @@ echo '</main>';
 <script>
 $( document ).ready(function() {
     updateLigas();
+    $('#selecaoTime').trigger('change');
 });
 
 $('#selecaoTime').on('change', function (e) {

@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    CONFUSA.top - Ranking Redesign (Light Theme 2.0 System)
    ========================================================================== */
 
@@ -88,7 +88,7 @@ html body #bottom-bar {
 }
 
 .ranking-main-title {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 1.4rem !important;
   font-weight: 700 !important;
   color: #1e293b !important;
@@ -206,7 +206,7 @@ html body #bottom-bar {
 
 .ranking-card-title,
 #ranking h2 {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 1.6rem !important;
   font-weight: 600 !important;
   color: #1e293b !important;
@@ -309,7 +309,7 @@ table thead th,
 .table thead th {
   background: #f8fafc;
   color: #475569;
-  font-family: 'Kanit', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 0.85rem;
   text-transform: uppercase;
@@ -649,7 +649,7 @@ span.derrota {
 }
 
 .selecao-card span {
-  font-family: 'Kanit', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 0.95rem;
   color: #1e293b;
@@ -712,7 +712,7 @@ span.derrota {
 .constant-val {
   background: #0284c7;
   color: #ffffff;
-  font-family: 'Kanit', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 1rem;
   padding: 4px 10px;
@@ -832,7 +832,7 @@ span.derrota {
 }
 
 .modal-guts h3 {
-  font-family: 'Kanit', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 1.3rem;
   font-weight: 600;
   color: #1e293b;
@@ -841,7 +841,7 @@ span.derrota {
 }
 
 .modal-guts h4 {
-  font-family: 'Kanit', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 1.05rem;
   font-weight: 600;
   color: #475569;
@@ -904,7 +904,7 @@ button#retornar:hover {
 }
 
 .team-profile-title h2 {
-  font-family: 'Kanit', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 1.8rem;
   font-weight: 700;
   color: #1e293b;

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'poltrona-score-v3';
+﻿const CACHE_NAME = 'poltrona-score-v3';
 const ASSETS = [
   '/poltronascore/',
   '/poltronascore/index.php',
@@ -8,7 +8,7 @@ const ASSETS = [
   '/poltronascore/icons/icon-192.png',
   '/poltronascore/icons/icon-512.png',
   '/poltronascore/icons/favicon.png',
-  'https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700&display=swap',
+  'https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700&display=swap',
   'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200'
 ];
 

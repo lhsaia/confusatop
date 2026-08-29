@@ -30,7 +30,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
     echo '<main class="propostas-container narrow-container" style="padding-top: 80px; padding-bottom: 60px;">';
     echo '<div class="propostas-card">';
     echo '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 1rem; width: 100%;">';
-    echo '    <h2 class="propostas-title" style="margin: 0; font-family: \'Kanit\', sans-serif; font-size: 1.6rem; color: #1e293b;">📥 Importar estádio</h2>';
+    echo '    <h2 class="propostas-title" style="margin: 0; font-family: \'Outfit\', sans-serif; font-size: 1.6rem; color: #1e293b;">📥 Importar estádio</h2>';
     echo '    <a href="/usuario/meusestadios.php" style="display: inline-block; padding: 8px 16px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;" onmouseover="this.style.background=\'rgba(0, 0, 0, 0.06)\'" onmouseout="this.style.background=\'rgba(0, 0, 0, 0.03)\'">Voltar</a>';
     echo '</div>';
 

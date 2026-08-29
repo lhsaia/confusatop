@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
@@ -497,7 +497,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
 
 <main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
 <div class="propostas-card" style="padding: 30px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: left;">
-    <h2 class="propostas-title" style="margin-bottom: 5px; font-family: 'Kanit', sans-serif; text-align: left; font-size: 1.6rem; color: #1e293b;">⚽ Escalação Pré-Jogo: <?php echo htmlspecialchars($clube['Nome']); ?></h2>
+    <h2 class="propostas-title" style="margin-bottom: 5px; font-family: 'Outfit', sans-serif; text-align: left; font-size: 1.6rem; color: #1e293b;">⚽ Escalação Pré-Jogo: <?php echo htmlspecialchars($clube['Nome']); ?></h2>
     <p style="color: #64748b; margin-bottom: 25px;">Selecione os 11 titulares, o capitão e as posições antes da simulação.</p>
     
     <?php echo $mensagem; ?>
@@ -505,7 +505,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
     <form method="POST">
         <div class="table-container" style="background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 20px; margin-bottom: 20px; overflow-x: auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-                <h3 style="margin: 0; color: #1e293b; font-family: 'Kanit', sans-serif;">Elenco do Clube</h3>
+                <h3 style="margin: 0; color: #1e293b; font-family: 'Outfit', sans-serif;">Elenco do Clube</h3>
                 <span id="contador-titulares" style="background: rgba(2,132,199,0.08); border: 1px solid rgba(2, 132, 199, 0.15); color: #0284c7; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">0/11 titulares selecionados</span>
             </div>
             <table class="escalacao-table">

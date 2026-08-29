@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    CONFUSA.top - Custom Error Pages Style (CSS)
    ========================================================================== */
 
@@ -76,7 +76,7 @@ body {
 }
 
 .error-code {
-  font-family: var(--font-heading, 'Kanit', sans-serif);
+  font-family: var(--font-heading, 'Outfit', sans-serif);
   font-size: 3.5rem;
   font-weight: 900;
   line-height: 1;
@@ -87,7 +87,7 @@ body {
 }
 
 .error-title {
-  font-family: var(--font-heading, 'Kanit', sans-serif);
+  font-family: var(--font-heading, 'Outfit', sans-serif);
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-primary, #f8fafc);

@@ -1,4 +1,4 @@
-@font-face {
+﻿@font-face {
     font-family: 'alte_din_1451_mittelschriftRg';
     src: url('din1451alt-webfont.woff2') format('woff2'),
          url('din1451alt-webfont.woff') format('woff');
@@ -260,7 +260,7 @@ html body #bottom-bar {
 }
 
 .tire{
-font-family: 'Kanit', sans-serif;
+font-family: 'Outfit', sans-serif;
 font-weight: 400;
 color:white !important;
 }
@@ -270,13 +270,13 @@ color:white !important;
 }
 
 .tire::before{
-  font-family: 'Kanit', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 900;
   content:"(";
 }
 
 .tire::after{
-  font-family: 'Kanit', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 900;
   content:")";
 }

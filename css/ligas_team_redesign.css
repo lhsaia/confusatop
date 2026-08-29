@@ -1,4 +1,4 @@
-body {
+﻿body {
   font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
   background-color: #f1f5f9 !important;
   color: #0f172a !important;
@@ -35,7 +35,7 @@ body {
 }
 
 .propostas-title {
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-size: 2rem !important;
     font-weight: 700 !important;
     color: #0f172a !important;
@@ -78,7 +78,7 @@ body {
 }
 
 .infoblock .informacao {
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-size: 1.25rem !important;
     font-weight: 700 !important;
     color: #1e293b !important;
@@ -127,7 +127,7 @@ body {
 
 .modal-content label {
     display: block;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 600;
     color: #475569;
     margin-bottom: 6px;
@@ -155,7 +155,7 @@ body {
     padding: 12px;
     background: #0284c7;
     color: #fff;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 600;
     font-size: 1rem;
     border: none;
@@ -175,7 +175,7 @@ body {
     padding: 11px;
     background: transparent;
     color: #64748b;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 600;
     font-size: 0.95rem;
     border: 1.5px solid rgba(0,0,0,0.12);
@@ -207,7 +207,7 @@ body {
 .tab a {
     flex: 1;
     padding: 12px 0;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 600;
     font-size: 1rem;
     color: #64748b !important;
@@ -253,7 +253,7 @@ body {
 }
 
 .tableHolder caption {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-size: 1.15rem;
     font-weight: 600;
     color: #1e293b;
@@ -492,7 +492,7 @@ div[id*="draggable"] p {
 
 #cobradoresCapitao label {
     display: block;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 600;
     font-size: 0.9rem;
     color: #475569;
@@ -525,7 +525,7 @@ div[id*="draggable"] p {
 }
 
 #tabelaElenco th {
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     color: #64748b;
     font-size: 0.75rem;
     text-transform: uppercase;
@@ -909,7 +909,7 @@ div[id*="draggable"] img {
 }
 
 #cobradoresCapitao label {
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-size: 0.95rem !important;
     font-weight: 600 !important;
     color: #1e293b !important;
@@ -940,7 +940,7 @@ div[id*="draggable"] img {
     border: none !important;
     padding: 12px 36px !important;
     border-radius: 8px !important;
-    font-family: 'Kanit', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-weight: 600 !important;
     font-size: 1rem !important;
     cursor: pointer !important;

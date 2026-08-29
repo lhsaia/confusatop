@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
@@ -648,14 +648,14 @@ function updateTable(ajax_data, current_page, highlighted, direction){
             let nomeB = $("#selectPais2 :selected").text() || 'Time B';
             emptyHtml = '<div style="text-align: center; padding: 2.5rem 1.5rem; background: #ffffff; border-radius: 14px; border: 1px solid rgba(0,0,0,0.06); margin: 1.5rem 0; box-shadow: 0 4px 14px rgba(0,0,0,0.02);">' +
                 '<span class="material-symbols-outlined" style="font-size: 3rem; color: #0284c7; margin-bottom: 0.5rem; display: block;">sports_soccer</span>' +
-                '<h4 style="font-family: \'Kanit\', sans-serif; font-size: 1.3rem; font-weight: 600; color: #1e293b; margin: 0 0 0.5rem 0;">Nenhum confronto registrado</h4>' +
+                '<h4 style="font-family: \'Outfit\', sans-serif; font-size: 1.3rem; font-weight: 600; color: #1e293b; margin: 0 0 0.5rem 0;">Nenhum confronto registrado</h4>' +
                 '<p style="color: #64748b; font-size: 0.95rem; margin: 0; max-width: 500px; margin-left: auto; margin-right: auto;">' + nomeA + ' e ' + nomeB + ' ainda não se enfrentaram em partidas oficiais registradas no sistema.</p>' +
             '</div>';
         } else {
             let nomeA = $("#selectPais1 :selected").text() || 'Esta seleção';
             emptyHtml = '<div style="text-align: center; padding: 2.5rem 1.5rem; background: #ffffff; border-radius: 14px; border: 1px solid rgba(0,0,0,0.06); margin: 1.5rem 0; box-shadow: 0 4px 14px rgba(0,0,0,0.02);">' +
                 '<span class="material-symbols-outlined" style="font-size: 3rem; color: #0284c7; margin-bottom: 0.5rem; display: block;">flag</span>' +
-                '<h4 style="font-family: \'Kanit\', sans-serif; font-size: 1.3rem; font-weight: 600; color: #1e293b; margin: 0 0 0.5rem 0;">Nenhum jogo encontrado</h4>' +
+                '<h4 style="font-family: \'Outfit\', sans-serif; font-size: 1.3rem; font-weight: 600; color: #1e293b; margin: 0 0 0.5rem 0;">Nenhum jogo encontrado</h4>' +
                 '<p style="color: #64748b; font-size: 0.95rem; margin: 0;">Não há partidas registradas para ' + nomeA + '.</p>' +
             '</div>';
         }

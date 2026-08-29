@@ -1,4 +1,4 @@
-@import url("meuspaises_redesign.css");
+﻿@import url("meuspaises_redesign.css");
 
 /* Custom style adaptations for transferencias.php list pages (Light Theme) */
 
@@ -41,7 +41,7 @@
 }
 
 .nomeJogador {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
   font-size: 1rem !important;
   color: #1e293b !important;
@@ -118,7 +118,7 @@
 }
 
 #form_busca_jogador legend {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
   color: #1e293b !important;
   font-size: 1.1rem !important;
@@ -230,7 +230,7 @@
 }
 
 #form_busca_jogador p label {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 0.95rem !important;
   color: #475569 !important;
   vertical-align: middle !important;
@@ -311,7 +311,7 @@
   border-radius: 8px !important;
   padding: 10px 24px !important;
   font-weight: 600 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 0.95rem !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -335,7 +335,7 @@
   border-radius: 8px !important;
   padding: 10px 24px !important;
   font-weight: 600 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 0.95rem !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -416,7 +416,7 @@
 }
 
 #tabelajogos th {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
   color: #475569 !important;
   text-transform: uppercase;
@@ -525,7 +525,7 @@
 .modal-content label {
   display: block !important;
   text-align: left !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
   font-size: 0.9rem !important;
   color: #475569 !important;
@@ -588,7 +588,7 @@
   border: none !important;
   border-radius: 8px !important;
   padding: 12px 24px !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
   font-size: 1rem !important;
   cursor: pointer !important;
@@ -610,7 +610,7 @@
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
   border-radius: 8px !important;
   padding: 10px 24px !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
   font-size: 0.95rem !important;
   cursor: pointer !important;

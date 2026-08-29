@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 header('Content-Type: text/html; charset=utf-8');
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
@@ -99,7 +99,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true){
     display: flex;
     align-items: center;
     gap: 8px;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
 }
 
 .import-review-table {
@@ -112,7 +112,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true){
 .import-review-table th {
     background-color: #f8fafc;
     color: #475569;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
     font-weight: 600;
     font-size: 0.85rem;
     text-transform: uppercase;
@@ -579,7 +579,7 @@ $('#btn-confirm-import').on('click', function() {
 <div class="ranking-container">
     <div class="ranking-card" style="text-align:center; padding:3.5rem 1.5rem; font-family:'Montserrat',sans-serif;">
         <span class="material-symbols-outlined" style="font-size: 3.5rem; color: #ef4444; margin-bottom: 1rem;">lock</span>
-        <h2 style="font-family: 'Kanit', sans-serif; color: #1e293b; margin-bottom: 0.5rem; font-size: 1.5rem;">Acesso Restrito</h2>
+        <h2 style="font-family: 'Outfit', sans-serif; color: #1e293b; margin-bottom: 0.5rem; font-size: 1.5rem;">Acesso Restrito</h2>
         <p style="color: #64748b; font-size: 0.95rem; max-width: 500px; margin: 0 auto 1.5rem auto;">Você precisa estar logado para importar jogos no Ranking oficial.</p>
         <a href="/ranking" class="btn-new-import">
             <span class="material-symbols-outlined" style="font-size: 1.15rem;">arrow_back</span>

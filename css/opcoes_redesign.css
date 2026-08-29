@@ -1,4 +1,4 @@
-html {
+﻿html {
   margin-bottom: 0 !important;
   padding-bottom: 0 !important;
 }
@@ -41,7 +41,7 @@ body {
 }
 
 .propostas-title {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
   font-size: 1.6rem !important;
   color: #1e293b !important;
@@ -76,7 +76,7 @@ body {
 
 .opcoes-secao-titulo {
   color: #0284c7 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 1.25rem !important;
   margin-bottom: 1.25rem !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
@@ -255,7 +255,7 @@ label {
   color: #ffffff !important;
   border: none !important;
   border-radius: 8px !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 600 !important;
   font-size: 1rem !important;
   cursor: pointer !important;

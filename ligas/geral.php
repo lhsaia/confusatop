@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/federacoes.php");
@@ -32,7 +32,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 <main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
 <div class="propostas-card">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 1rem; width: 100%;">
-        <h2 class="propostas-title" style="margin: 0; font-family: 'Kanit', sans-serif; font-size: 1.6rem; color: #1e293b;">🏆 Quadro de ligas - <?php echo $nomeFed?></h2>
+        <h2 class="propostas-title" style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 1.6rem; color: #1e293b;">🏆 Quadro de ligas - <?php echo $nomeFed?></h2>
     </div>
 
 <?php

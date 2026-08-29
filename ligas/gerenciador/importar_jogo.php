@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 // ini_set( 'display_errors', true );
 // error_reporting( E_ALL );
@@ -69,7 +69,7 @@ $stmtCups->execute();
     display: flex;
     align-items: center;
     gap: 8px;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Outfit', sans-serif;
 }
 .import-review-table {
     width: 100%;

@@ -1,4 +1,4 @@
-@import url("meuspaises_redesign.css");
+﻿@import url("meuspaises_redesign.css");
 
 /* Adaptations for geral.php */
 .genderSign {
@@ -39,7 +39,7 @@
 .nomeEditavel {
   color: #1e293b !important;
   font-weight: 600 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 1rem !important;
   transition: all 0.2s ease !important;
   text-decoration: none !important;
@@ -152,7 +152,7 @@
 
 /* Form inputs and buttons inside redesign cards */
 .propostas-card label {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 0.9rem !important;
   font-weight: 500 !important;
   color: #0284c7 !important;
@@ -197,7 +197,7 @@
   padding: 10px 20px !important;
   border-radius: 8px !important;
   font-weight: 600 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 1rem !important;
   cursor: pointer !important;
   box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25) !important;
@@ -226,7 +226,7 @@
   padding: 10px 20px !important;
   border-radius: 8px !important;
   font-weight: 600 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 1rem !important;
   cursor: pointer !important;
   box-shadow: 0 4px 12px rgba(100, 116, 139, 0.25) !important;
@@ -247,7 +247,7 @@
 }
 
 .propostas-card-subtitle {
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 1.15rem !important;
   color: #0284c7 !important;
   margin-bottom: 1.25rem !important;
@@ -421,7 +421,7 @@ label.custom-file-upload:hover {
   padding: 12px 20px !important;
   border-radius: 8px !important;
   font-weight: 700 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 0.95rem !important;
   cursor: pointer !important;
   transition: all 0.25s ease !important;
@@ -532,7 +532,7 @@ label.custom-file-upload:hover {
   border-radius: 8px !important;
   color: #0284c7 !important;
   font-weight: 600 !important;
-  font-family: 'Kanit', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-size: 0.9rem !important;
   transition: all 0.2s ease !important;
   margin: 0 !important;

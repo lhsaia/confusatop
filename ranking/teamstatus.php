@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
@@ -128,7 +128,7 @@ $golsContra = ($info_stats['golsContraVisitante'] ?? 0) + ($info_stats['golsCont
         </div>
 
         <div style="margin-top: 1.5rem; border-top: 1px solid rgba(0, 0, 0, 0.06); padding-top: 1.25rem;">
-            <h3 style="font-family: 'Kanit', sans-serif; font-size: 1.2rem; color: #1e293b; margin: 0 0 1rem 0;">Histórico de Partidas</h3>
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.2rem; color: #1e293b; margin: 0 0 1rem 0;">Histórico de Partidas</h3>
 
             <?php
             include_once($_SERVER['DOCUMENT_ROOT']."/elements/paging.php");
