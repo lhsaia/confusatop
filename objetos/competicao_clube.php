@@ -404,6 +404,27 @@ class Competicao_clube{
 		$stmt->bindParam(':codigo_time2', $codigo_time);
 		return $stmt->execute();
 	}
+
+	function definirMesmoPaisTodos($id_competicao, $id_pais, $numero_times){
+		$id_competicao = intval($id_competicao);
+		$id_pais = intval($id_pais);
+		$numero_times = intval($numero_times);
+		
+		for($cod = 1; $cod <= $numero_times; $cod++){
+			// Proteção: se a vaga já possui um time escalado (has_team = 1 ou id_time_portal definido), preserva o time e não sobrescreve
+			$st = $this->conn->prepare("SELECT has_team, id_time_portal FROM competicao_times WHERE id_competicao = :idComp AND codigo_time = :cod LIMIT 1");
+			$st->bindParam(':idComp', $id_competicao);
+			$st->bindParam(':cod', $cod);
+			$st->execute();
+			$row = $st->fetch(PDO::FETCH_ASSOC);
+			if ($row && (!empty($row['id_time_portal']) || $row['has_team'] == '1')) {
+				continue;
+			}
+
+			$this->alterarPaisTime($id_competicao, $cod, $id_pais);
+		}
+		return true;
+	}
 	
 	function gravarImportacao($id_competicao, $codigo_time, $pais_time){
 		// Garante que a linha existe, marca como has_team = 1 e id_time_portal = NULL

@@ -681,7 +681,8 @@ echo "</table></div>";
 
 
 
-echo "</div>";
+echo "</div>"; // close .grid_quadro_jogadores
+echo "</div>"; // close #Elenco
 
 } else {
 	// permitir arrastar elenco
@@ -978,14 +979,10 @@ echo '</select>';
 
 echo '<input type="submit" class="submit-btn" value="Fazer alterações" name="cobradoresSubmit"/>';
 echo '</form>';
-echo '</div>';
-echo "</div>";
+echo '</div>'; // close #cobradoresCapitao
 }
 
-
-echo "</div>";
-
-echo "</div>";
+echo "</div>"; // close #Posicionamento
 
 ?>
 

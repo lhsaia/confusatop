@@ -89,6 +89,24 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
         <h2 class="propostas-title"><?php echo $page_title; ?></h2>
         <hr>
         
+        <?php $can_bulk_edit = ((isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) || (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $dono_competicao)); ?>
+        <div class="bulk-country-bar">
+            <div class="bulk-country-left">
+                <span class="material-symbols-outlined icon-bulk">public</span>
+                <span class="bulk-title">Definir mesmo país para todas as vagas:</span>
+                <select id="bulk_selecao_pais" class="smallform selecaoPaisBulk" <?php echo $can_bulk_edit ? '' : 'disabled'; ?>>
+                    <option data-flag="flag.png" value="0">Selecione o país...</option>
+                    <?php foreach($listaPaises as $p): ?>
+                        <option data-flag="<?php echo htmlspecialchars($p[4]); ?>" data-dono="<?php echo htmlspecialchars($p[3]); ?>" data-federacao="<?php echo htmlspecialchars($p[2]); ?>" value="<?php echo htmlspecialchars($p[0]); ?>"><?php echo htmlspecialchars($p[1]); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <button type="button" id="btn_aplicar_pais_todos" class="btn-bulk-country" <?php echo $can_bulk_edit ? '' : 'disabled'; ?> title="Atribuir este país a todas as vagas da competição">
+                <span class="material-symbols-outlined">done_all</span>
+                <span>Aplicar a Todas as Vagas</span>
+            </button>
+        </div>
+
         <?php $random_loader = rand(1,5); ?>
         <div id='loading'><img src='/images/loaders/loader_style<?php echo $random_loader; ?>.gif'/></div>
         
@@ -370,8 +388,68 @@ function init_page_elements(){
 			},
 			width:'resolve'
 		});
+		$(".selecaoPaisBulk").select2({
+			templateResult: function (country) {
+				if (!country.id || !country.element) return country.text;
+				var flag = $(country.element).attr('data-flag') || $(country.element).data('flag') || 'flag.png';
+				var baseUrl = "/images/bandeiras/";
+				return $('<span><img src="' + baseUrl + flag + '" class="bandeira" /><span class="opcaoPaisNome"> ' + country.text + '</span></span>');
+			},
+			templateSelection: function (country) {
+				if (!country.id || !country.element) return country.text;
+				var flag = $(country.element).attr('data-flag') || $(country.element).data('flag') || 'flag.png';
+				var baseUrl = "/images/bandeiras/";
+				return $('<span><img src="' + baseUrl + flag + '" id="bs01" class="bandeiraSelect" /><span> ' + country.text + '</span></span>');
+			},
+			width:'resolve'
+		});
+
         $(".selecaoPais").trigger("change", true);
 }
+
+// Ação em massa: Aplicar país a todas as vagas
+$(document).on("click", "#btn_aplicar_pais_todos", function(e){
+    e.preventDefault();
+    var pais_id = $("#bulk_selecao_pais").val();
+    var pais_nome = $("#bulk_selecao_pais option:selected").text().trim();
+    
+    if(!pais_id || pais_id == '0'){
+        alert("Por favor, selecione um país para aplicar a todas as vagas.");
+        return;
+    }
+    
+    if(!confirm("Deseja realmente definir o país '" + pais_nome + "' para TODAS as vagas desta competição?")){
+        return;
+    }
+    
+    $('#loading').show();
+    
+    var formData = new FormData();
+    formData.append('tipo_alteracao', 3);
+    formData.append('codigo_competicao', codigo_competicao);
+    formData.append('pais_time', pais_id);
+    formData.append('numero_times', numero_times);
+    
+    $.ajax({
+        type: 'POST',
+        url: 'alterar_times_competicao.php',
+        data: formData,
+        dataType: 'json',
+        processData: false,
+        contentType: false,
+        cache: false
+    }).done(function(res) {
+        $('#loading').hide();
+        if(res.success){
+            load_data();
+        } else {
+            $('#errorbox').html("<div class='alert alert-danger'>Não foi possível aplicar o país em lote:</br>" + (res.errors || res.error || "Erro desconhecido") + "</div>");
+        }
+    }).fail(function(xhr, status, error) {
+        $('#loading').hide();
+        $('#errorbox').html("<div class='alert alert-danger'>Houve um erro não esperado ao aplicar o país em todas as vagas.<div>");
+    });
+});
 
 // Event Delegation
 $(document).on("change", ".selecaoSlot", function(){

@@ -250,6 +250,31 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 		case 2:
 		
 			break;
+		case 3:
+		case 'bulk_pais':
+			// Definir mesmo país para todas as vagas da competição
+			$idCompeticao = isset($_POST['codigo_competicao']) ? intval($_POST['codigo_competicao']) : 0;
+			$paisTime = isset($_POST['pais_time']) ? intval($_POST['pais_time']) : 0;
+			$numTimes = isset($_POST['numero_times']) ? intval($_POST['numero_times']) : 0;
+			
+			if ($numTimes <= 0 && $idCompeticao > 0) {
+				$opts = $competicao->getOptions($idCompeticao);
+				$numTimes = isset($opts['numero_times']) ? intval($opts['numero_times']) : 0;
+			}
+			
+			if ($idCompeticao > 0 && $numTimes > 0) {
+				if ($competicao->definirMesmoPaisTodos($idCompeticao, $paisTime, $numTimes)) {
+					$is_success = true;
+					$error_msg = "";
+				} else {
+					$is_success = false;
+					$error_msg = "Falha ao definir o país em lote para a competição.";
+				}
+			} else {
+				$is_success = false;
+				$error_msg = "Parâmetros inválidos para alteração em lote.";
+			}
+			break;
 		default:
 			break;
 	}
