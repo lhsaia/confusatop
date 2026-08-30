@@ -641,4 +641,26 @@ hr {
   border-color: rgba(0, 0, 0, 0.08) !important;
 }
 
+/* Linha de BYE na Tabela de Jogos */
+tr.bye-row {
+  background: rgba(2, 132, 199, 0.04) !important;
+  border-left: 3px solid #0284c7 !important;
+}
+
+tr.bye-row:hover {
+  background: rgba(2, 132, 199, 0.08) !important;
+}
+
+.bye-badge-table {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
 

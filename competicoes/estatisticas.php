@@ -580,28 +580,46 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                     // Determinar se há BYEs no chaveamento de mata-mata
                     $primeiraFaseId = array_key_first($fasesKnockout);
                     $listaByesPrimeiraFase = [];
-                    if ($tipoCompeticao == 1 && $numTeamsComp > 0) {
-                        $bracketSizeComp = 2;
-                        if ($numTeamsComp > 32) $bracketSizeComp = 64;
-                        else if ($numTeamsComp > 16) $bracketSizeComp = 32;
-                        else if ($numTeamsComp > 8) $bracketSizeComp = 16;
-                        else if ($numTeamsComp > 4) $bracketSizeComp = 8;
-                        else if ($numTeamsComp > 2) $bracketSizeComp = 4;
+                    if ($tipoCompeticao == 1 && !empty($primeiraFaseId) && !empty($fasesKnockout[$primeiraFaseId])) {
+                        // Coletar todos os times que estão jogando na primeira fase
+                        $jogandoPrimeiraFaseIds = [];
+                        $jogandoPrimeiraFaseNomes = [];
+                        foreach ($fasesKnockout[$primeiraFaseId] as $p) {
+                            if (!empty($p['timeA_id']) && (int)$p['timeA_id'] > 0) $jogandoPrimeiraFaseIds[(int)$p['timeA_id']] = true;
+                            if (!empty($p['timeA_nome'])) $jogandoPrimeiraFaseNomes[trim($p['timeA_nome'])] = true;
+                            if (!empty($p['timeB_id']) && (int)$p['timeB_id'] > 0) $jogandoPrimeiraFaseIds[(int)$p['timeB_id']] = true;
+                            if (!empty($p['timeB_nome'])) $jogandoPrimeiraFaseNomes[trim($p['timeB_nome'])] = true;
+                        }
 
-                        $numByesComp = $bracketSizeComp - $numTeamsComp;
-                        if ($numByesComp > 0) {
-                            for ($b = 1; $b <= $numByesComp; $b++) {
-                                $slotByeName = "Slot " . $b;
-                                $clubeByeId = $assignedSlotTeams[$slotByeName] ?? 0;
-                                $clubeByeObj = ($clubeByeId > 0 && isset($clubes[$clubeByeId])) ? $clubes[$clubeByeId] : null;
-                                $nomeBye = $clubeByeObj ? $clubeByeObj['Nome'] : $slotByeName;
-                                $escudoBye = $clubeByeObj ? ($clubeByeObj['Escudo'] ?? '0.png') : '0.png';
+                        // Comparar com todos os participantes/slots da competição
+                        if (!empty($assignedSlotTeams)) {
+                            foreach ($assignedSlotTeams as $sName => $cId) {
+                                $cIdInt = (int)$cId;
+                                $isNoJogo = false;
+                                if ($cIdInt > 0 && isset($jogandoPrimeiraFaseIds[$cIdInt])) $isNoJogo = true;
+                                if (isset($jogandoPrimeiraFaseNomes[$sName])) $isNoJogo = true;
 
-                                $listaByesPrimeiraFase[] = [
-                                    'slot' => $slotByeName,
-                                    'nome' => $nomeBye,
-                                    'escudo' => $escudoBye
-                                ];
+                                if (!$isNoJogo) {
+                                    $clubeObj = ($cIdInt > 0 && isset($clubes[$cIdInt])) ? $clubes[$cIdInt] : null;
+                                    $nomeBye = $clubeObj ? $clubeObj['Nome'] : $sName;
+                                    $escudoBye = $clubeObj ? ($clubeObj['Escudo'] ?? '0.png') : '0.png';
+
+                                    $listaByesPrimeiraFase[] = [
+                                        'slot' => $sName,
+                                        'nome' => $nomeBye,
+                                        'escudo' => $escudoBye
+                                    ];
+                                }
+                            }
+                        } else if (!empty($clubes)) {
+                            foreach ($clubes as $cId => $cObj) {
+                                if (!isset($jogandoPrimeiraFaseIds[$cId])) {
+                                    $listaByesPrimeiraFase[] = [
+                                        'slot' => $cObj['Nome'],
+                                        'nome' => $cObj['Nome'],
+                                        'escudo' => $cObj['Escudo'] ?? '0.png'
+                                    ];
+                                }
                             }
                         }
                     }

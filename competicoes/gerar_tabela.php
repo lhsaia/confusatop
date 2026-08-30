@@ -124,6 +124,41 @@ function getStadiumForMatch($ldb, $teamId, $estadios_times, $estadios) {
     }
 }
 
+function getNeutralStadiumForMatch($ldb, $teamA_id, $teamB_id, $estadios, &$usedStadiumsInPhase) {
+    if (empty($estadios)) return 0;
+
+    $estadioA = getStadiumForTeam($ldb, $teamA_id);
+    $estadioB = getStadiumForTeam($ldb, $teamB_id);
+
+    // 1. Filtrar estádios que não pertencem nem ao time A nem ao time B
+    $disponiveis = [];
+    foreach ($estadios as $est) {
+        $eId = intval($est['ID']);
+        if ($eId > 0 && $eId != $estadioA && $eId != $estadioB) {
+            $disponiveis[] = $eId;
+        }
+    }
+
+    // Se não sobrar nenhum estádio exclusivo, usa todos exceto os dos times
+    if (empty($disponiveis)) {
+        foreach ($estadios as $est) {
+            $disponiveis[] = intval($est['ID']);
+        }
+    }
+
+    // 2. Tentar selecionar um estádio que ainda não foi usado nesta fase
+    $naoUsados = array_values(array_diff($disponiveis, $usedStadiumsInPhase));
+    if (!empty($naoUsados)) {
+        $escolhido = $naoUsados[array_rand($naoUsados)];
+    } else {
+        // Se todos os disponíveis já foram usados pelo menos uma vez na fase, reseta ou pega dos disponíveis
+        $escolhido = $disponiveis[array_rand($disponiveis)];
+    }
+
+    $usedStadiumsInPhase[] = $escolhido;
+    return $escolhido;
+}
+
 // Default date
 $currentDate = date("Y-m-d H:i:s");
 
@@ -274,10 +309,11 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
 
     // Calcular quantidade de BYEs (times que avançam direto para a fase seguinte)
     $numByes = $bracketSize - $numTeams;
+    $usedStadiumsInPhase = [];
 
     if ($numByes > 0 && $bracketSize > 2) {
-        // Times com BYE (os primeiros $numByes times) avançam direto para a próxima fase
-        // Os demais ($numTeams - $numByes) disputam a primeira fase ($fase)
+        // Sorteio dos times que ganham BYE: embaralha a lista antes de separar
+        shuffle($drawTeams);
         $teamsWithBye = array_slice($drawTeams, 0, $numByes);
         $teamsPlayingFirstRound = array_slice($drawTeams, $numByes);
         $numMatchesRound1 = count($teamsPlayingFirstRound) / 2;
@@ -295,16 +331,17 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
                     $tA_nome = ($tA_id == 0) ? $home : null;
                     $tB_id = isset($assignedSlotTeams[$away]) ? $assignedSlotTeams[$away] : 0;
                     $tB_nome = ($tB_id == 0) ? $away : null;
-                    $estId = ($tA_id > 0) ? getStadiumForMatch($ldb, $tA_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
+                    $estId = getNeutralStadiumForMatch($ldb, $tA_id, $tB_id, $estadios, $usedStadiumsInPhase);
                     $competicao->inserirJogo($idCompeticao, $tA_id, $tB_id, $fase, $arbId, $estId, $dateMatch, "true", null, null, $tA_nome, $tB_nome);
                 } else {
-                    $estId = getStadiumForMatch($ldb, $home, $estadios_times, $estadios);
+                    $estId = getNeutralStadiumForMatch($ldb, $home, $away, $estadios, $usedStadiumsInPhase);
                     $competicao->inserirJogo($idCompeticao, $home, $away, $fase, $arbId, $estId, $dateMatch, "true", null);
                 }
             }
         }
     } else {
         // Chave perfeita sem BYEs (ex: 64, 32, 16, 8, 4, 2)
+        shuffle($drawTeams);
         for ($i = 0; $i < $numTeams; $i += 2) {
             if (isset($drawTeams[$i+1])) {
                 $home = $drawTeams[$i];
@@ -317,10 +354,10 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
                     $tA_nome = ($tA_id == 0) ? $home : null;
                     $tB_id = isset($assignedSlotTeams[$away]) ? $assignedSlotTeams[$away] : 0;
                     $tB_nome = ($tB_id == 0) ? $away : null;
-                    $estId = ($tA_id > 0) ? getStadiumForMatch($ldb, $tA_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
+                    $estId = getNeutralStadiumForMatch($ldb, $tA_id, $tB_id, $estadios, $usedStadiumsInPhase);
                     $competicao->inserirJogo($idCompeticao, $tA_id, $tB_id, $fase, $arbId, $estId, $dateMatch, "true", null, null, $tA_nome, $tB_nome);
                 } else {
-                    $estId = getStadiumForMatch($ldb, $home, $estadios_times, $estadios);
+                    $estId = getNeutralStadiumForMatch($ldb, $home, $away, $estadios, $usedStadiumsInPhase);
                     $competicao->inserirJogo($idCompeticao, $home, $away, $fase, $arbId, $estId, $dateMatch, "true", null);
                 }
             }

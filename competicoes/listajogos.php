@@ -45,6 +45,20 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	$options = $competicao->getOptions($idCompeticao);
 	$compInfo = $competicao->readInfo($idCompeticao);
 	$donoCompeticao = isset($compInfo['dono']) ? (int)$compInfo['dono'] : 0;
+	$tipoCompeticao = isset($options['tipocompeticao']) ? (int)$options['tipocompeticao'] : 0;
+	$numTeamsComp = isset($options['numero_times']) ? (int)$options['numero_times'] : 0;
+
+	// Carregar vagas / slots para identificação de BYEs
+	$assignedSlotTeams = [];
+	$stmtTimesSlots = $competicao->carregarListaTimes($idCompeticao);
+	while ($rSlot = $stmtTimesSlots->fetch(PDO::FETCH_ASSOC)) {
+		$sName = !empty($rSlot['slot']) ? $rSlot['slot'] : ("Slot " . $rSlot['codigo_time']);
+		if (!empty($rSlot['id_time_portal']) && intval($rSlot['id_time_portal']) > 0) {
+			$assignedSlotTeams[$sName] = intval($rSlot['id_time_portal']);
+		} else if ($rSlot['has_team'] == 1 || $rSlot['has_team'] == '1') {
+			$assignedSlotTeams[$sName] = -1 * abs(intval($rSlot['codigo_time']));
+		}
+	}
 	
 	// query caixa de seleção países desse dono
 	$stmtPais = $pais->read();
@@ -252,6 +266,9 @@ $(document).ready(function($){
 	 var listaFases =  <?php echo json_encode($listaFases); ?>;
 	 var listaArbitros =  <?php echo json_encode($listaArbitros); ?>;
 	 var listaEstadios =  <?php echo json_encode($listaEstadios); ?>;
+	 var assignedSlotTeams = <?php echo json_encode($assignedSlotTeams); ?>;
+	 var tipoCompeticao = <?php echo (int)$tipoCompeticao; ?>;
+	 var numTeamsComp = <?php echo (int)$numTeamsComp; ?>;
 
 	 var codigo_competicao = '<?php echo $idCompeticao ?>';
 	 var localData = [];
@@ -377,8 +394,91 @@ $(document).ready(function($){
 	function updateTable(ajax_data, current_page){
 		// console.log("Iniciando updateTable com " + ajax_data.length + " jogos.");
 
+		// Calcular e mesclar BYEs na lista de itens se for torneio de mata-mata com BYEs
+		let allItems = [];
+		if (ajax_data && ajax_data.length > 0) {
+			allItems = ajax_data.slice(0);
+		}
+
+		if (tipoCompeticao == 1 && allItems.length > 0) {
+			// Encontrar a primeira fase de mata-mata
+			let fasesPresentes = [];
+			$.each(allItems, function(i, jg){
+				let f = parseInt(jg['fase']);
+				if (f > 2 && !fasesPresentes.includes(f)) {
+					fasesPresentes.push(f);
+				}
+			});
+
+			let faseOrder = {10: 1, 9: 2, 3: 3, 4: 4, 5: 5, 6: 6, 8: 7};
+			fasesPresentes.sort(function(a, b){
+				return (faseOrder[a] || 100) - (faseOrder[b] || 100);
+			});
+
+			let primeiraFaseId = fasesPresentes.length > 0 ? fasesPresentes[0] : 0;
+
+			if (primeiraFaseId > 0) {
+				let jogandoPrimeiraFaseIds = {};
+				let jogandoPrimeiraFaseNomes = {};
+				let firstDate = allItems[0] && allItems[0]['data'] ? allItems[0]['data'] : new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+				$.each(allItems, function(i, jg){
+					if (parseInt(jg['fase']) == primeiraFaseId) {
+						if (parseInt(jg['timeA_id']) > 0) jogandoPrimeiraFaseIds[parseInt(jg['timeA_id'])] = true;
+						if (jg['timeA_nome']) jogandoPrimeiraFaseNomes[$.trim(jg['timeA_nome'])] = true;
+						if (parseInt(jg['timeB_id']) > 0) jogandoPrimeiraFaseIds[parseInt(jg['timeB_id'])] = true;
+						if (jg['timeB_nome']) jogandoPrimeiraFaseNomes[$.trim(jg['timeB_nome'])] = true;
+					}
+				});
+
+				let byeList = [];
+				if (assignedSlotTeams && Object.keys(assignedSlotTeams).length > 0) {
+					$.each(assignedSlotTeams, function(slotName, cId){
+						let cIdInt = parseInt(cId);
+						let isNoJogo = false;
+						if (cIdInt > 0 && jogandoPrimeiraFaseIds[cIdInt]) isNoJogo = true;
+						if (jogandoPrimeiraFaseNomes[$.trim(slotName)]) isNoJogo = true;
+
+						if (!isNoJogo) {
+							let tObj = (cIdInt > 0) ? listaTimes.find(t => t[0] == cIdInt) : null;
+							let tNome = tObj ? tObj[1] : slotName;
+
+							byeList.push({
+								is_bye: true,
+								id: 'bye_' + slotName,
+								timeA_id: (cIdInt > 0) ? cIdInt : 0,
+								timeA_nome: tNome,
+								fase: primeiraFaseId,
+								data: firstDate,
+								status: 1
+							});
+						}
+					});
+				} else if (listaTimes && listaTimes.length > 0) {
+					$.each(listaTimes, function(i, tObj){
+						let cId = parseInt(tObj[0]);
+						if (!jogandoPrimeiraFaseIds[cId]) {
+							byeList.push({
+								is_bye: true,
+								id: 'bye_' + cId,
+								timeA_id: cId,
+								timeA_nome: tObj[1],
+								fase: primeiraFaseId,
+								data: firstDate,
+								status: 1
+							});
+						}
+					});
+				}
+
+				if (byeList.length > 0) {
+					allItems = byeList.concat(allItems);
+				}
+			}
+		}
+
 		var results_per_page = 18;
-		var total_results = ajax_data.length;
+		var total_results = allItems.length;
 		var total_pages = Math.ceil(total_results/results_per_page);
 
 		var treated_page;
@@ -427,7 +527,7 @@ $(document).ready(function($){
 			tbl +=  "<tbody>";
 
 			// criar linhas
-			$.each(ajax_data, function(index, val){
+			$.each(allItems, function(index, val){
 
 				if(index>=(from_result_num-1) && index<=(from_result_num+results_per_page-2)){
 				
@@ -522,42 +622,60 @@ $(document).ready(function($){
 				});
 
 				// Geração da tabela
-				tbl += "<tr id='"+val['id']+"'>";
-					tbl += "<td class='time-casa' data-label='Time A'><div style='display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px;'><span class='nomeTimeA' id='timeA"+ val['id']+"'>"+ nomeTimeA +"</span>" + escLinkA + "</div><select id='selTimeA"+val['id']+"' class='comboTimeA editavel' style='display:none;'>"+timeAOptions+"</select></td>";
-					let scoreClass = (val['status'] == 1 && podeVerResultado) ? 'gameScore placar-celula' : 'placar-celula-agendado';
-					tbl += "<td class='" + scoreClass + "' data-label='Placar'><span>"+scoreDisplay+"</span></td>";
-					tbl += "<td class='time-fora' data-label='Time B'><div style='display: inline-flex; align-items: center; justify-content: flex-start; gap: 4px;'><span class='nomeTimeB' id='timeB"+ val['id']+"'>"+ nomeTimeB +"</span>" + escLinkB + "</div><select id='selTimeB"+val['id']+"' class='comboTimeB editavel' style='display:none;'>"+timeBOptions+"</select></td>";
-					tbl += "<td data-label='Fase'><span class='fase' id='fase"+ val['id']+"'>"+ fase +"</span><select id='selFase"+val['id']+"' class='comboFase editavel' style='display:none;'>"+faseOptions+"</select></td>";
-					tbl += "<td data-label='Grupo'><span class='grupo' id='grupo"+ val['id']+"'>"+ grupo +"</span><input id='selGrupo"+val['id']+"' class='grupoEditavel editavel' type='text' value='"+grupo+"' style='display:none; max-width:60px;'/></td>";
-					tbl += "<td data-label='Árbitro'><span class='arbitro' id='arbitro"+ val['id']+"'>"+ arbitro +"</span><select id='selArbitro"+val['id']+"' class='comboArbitro editavel' style='display:none;' disabled>"+arbOptions+"</select></td>";
-					tbl += "<td data-label='Estádio'><span class='estadio' id='estadio"+ val['id']+"'>"+ estadio +"</span><select id='selEstadio"+val['id']+"' class='comboEstadio editavel' style='display:none;'>"+estOptions+"</select></td>";
-					tbl += "<td data-label='Data'><span class='dataPartida' id='dat"+ val['id']+"'>"+ dataDisplay+" </span><input id='selDat"+val['id']+"' class='dataEditavel editavel' type='date' value='"+dateOnly+"' style='display:none;'/></td>";
-					tbl += "<td data-label='Hora'><span class='horaPartida' id='hor"+ val['id']+"'>"+ horaDisplay+" </span><input id='selHor"+val['id']+"' class='horaEditavel editavel' type='time' value='"+hora+"' style='display:none;'/></td>";
-					tbl += "<td data-label='Neutro'><input type='checkbox' class='neutro' id='alt"+ val['id']+"' "+ (val['neutro'] == 1? 'checked' : '')+" disabled></td>";
-					let temEstadioValido = parseInt(val['estadio']) > 0 && estObj !== undefined;
-					let simularBtnHtml = "";
-					if (logged == "true" && is_admin_user == "true" && val['status'] == 0) {
-						if (temEstadioValido) {
-							simularBtnHtml = "<a title='Simular partida' class='clickable simular-match'><span class='material-symbols-outlined inlineButton simular-btn'>sports_soccer</span></a>";
-						} else {
-							simularBtnHtml = "<span title='Estádio não definido (N/A). Defina um estádio válido para simular.' style='opacity: 0.35; cursor: not-allowed;'><span class='material-symbols-outlined inlineButton'>sports_soccer</span></span>";
+				if (val['is_bye']) {
+					tbl += "<tr id='"+val['id']+"' class='bye-row'>";
+						tbl += "<td class='time-casa' data-label='Time A'><div style='display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px;'><span class='nomeTimeA'>"+ nomeTimeA +"</span></div></td>";
+						tbl += "<td class='placar-celula-agendado' data-label='Placar'><span class='bye-badge-table'>BYE</span></td>";
+						tbl += "<td class='time-fora' data-label='Time B' style='color: #64748b; font-style: italic;'>Avança direto</td>";
+						tbl += "<td data-label='Fase'><span class='fase'>"+ fase +"</span></td>";
+						tbl += "<td data-label='Grupo'>-</td>";
+						tbl += "<td data-label='Árbitro'>-</td>";
+						tbl += "<td data-label='Estádio'>-</td>";
+						tbl += "<td data-label='Data'>-</td>";
+						tbl += "<td data-label='Hora'>-</td>";
+						tbl += "<td data-label='Neutro'>-</td>";
+						tbl += "<td data-label='Simular'>-</td>";
+						tbl += "<td data-label='Status'><span class='status-badge status-simulado'>Classificado</span></td>";
+						tbl += "<td class='wide' data-label='Opções'>-</td>";
+					tbl += "</tr>";
+				} else {
+					tbl += "<tr id='"+val['id']+"'>";
+						tbl += "<td class='time-casa' data-label='Time A'><div style='display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px;'><span class='nomeTimeA' id='timeA"+ val['id']+"'>"+ nomeTimeA +"</span>" + escLinkA + "</div><select id='selTimeA"+val['id']+"' class='comboTimeA editavel' style='display:none;'>"+timeAOptions+"</select></td>";
+						let scoreClass = (val['status'] == 1 && podeVerResultado) ? 'gameScore placar-celula' : 'placar-celula-agendado';
+						tbl += "<td class='" + scoreClass + "' data-label='Placar'><span>"+scoreDisplay+"</span></td>";
+						tbl += "<td class='time-fora' data-label='Time B'><div style='display: inline-flex; align-items: center; justify-content: flex-start; gap: 4px;'><span class='nomeTimeB' id='timeB"+ val['id']+"'>"+ nomeTimeB +"</span>" + escLinkB + "</div><select id='selTimeB"+val['id']+"' class='comboTimeB editavel' style='display:none;'>"+timeBOptions+"</select></td>";
+						tbl += "<td data-label='Fase'><span class='fase' id='fase"+ val['id']+"'>"+ fase +"</span><select id='selFase"+val['id']+"' class='comboFase editavel' style='display:none;'>"+faseOptions+"</select></td>";
+						tbl += "<td data-label='Grupo'><span class='grupo' id='grupo"+ val['id']+"'>"+ grupo +"</span><input id='selGrupo"+val['id']+"' class='grupoEditavel editavel' type='text' value='"+grupo+"' style='display:none; max-width:60px;'/></td>";
+						tbl += "<td data-label='Árbitro'><span class='arbitro' id='arbitro"+ val['id']+"'>"+ arbitro +"</span><select id='selArbitro"+val['id']+"' class='comboArbitro editavel' style='display:none;' disabled>"+arbOptions+"</select></td>";
+						tbl += "<td data-label='Estádio'><span class='estadio' id='estadio"+ val['id']+"'>"+ estadio +"</span><select id='selEstadio"+val['id']+"' class='comboEstadio editavel' style='display:none;'>"+estOptions+"</select></td>";
+						tbl += "<td data-label='Data'><span class='dataPartida' id='dat"+ val['id']+"'>"+ dataDisplay+" </span><input id='selDat"+val['id']+"' class='dataEditavel editavel' type='date' value='"+dateOnly+"' style='display:none;'/></td>";
+						tbl += "<td data-label='Hora'><span class='horaPartida' id='hor"+ val['id']+"'>"+ horaDisplay+" </span><input id='selHor"+val['id']+"' class='horaEditavel editavel' type='time' value='"+hora+"' style='display:none;'/></td>";
+						tbl += "<td data-label='Neutro'><input type='checkbox' class='neutro' id='alt"+ val['id']+"' "+ (val['neutro'] == 1? 'checked' : '')+" disabled></td>";
+						let temEstadioValido = parseInt(val['estadio']) > 0 && estObj !== undefined;
+						let simularBtnHtml = "";
+						if (logged == "true" && is_admin_user == "true" && val['status'] == 0) {
+							if (temEstadioValido) {
+								simularBtnHtml = "<a title='Simular partida' class='clickable simular-match'><span class='material-symbols-outlined inlineButton simular-btn'>sports_soccer</span></a>";
+							} else {
+								simularBtnHtml = "<span title='Estádio não definido (N/A). Defina um estádio válido para simular.' style='opacity: 0.35; cursor: not-allowed;'><span class='material-symbols-outlined inlineButton'>sports_soccer</span></span>";
+							}
 						}
-					}
-					tbl += "<td data-label='Simular'>" + simularBtnHtml + "</td>";
-					tbl += "<td data-label='Status'><span class='status-badge "+statusClass+"' id='status"+ val['id']+"'>"+ statusText +"</span></td>";
+						tbl += "<td data-label='Simular'>" + simularBtnHtml + "</td>";
+						tbl += "<td data-label='Status'><span class='status-badge "+statusClass+"' id='status"+ val['id']+"'>"+ statusText +"</span></td>";
 
-					let optionsString = "<td class='wide' data-label='Opções'>";
-					if(logged == "true" && val['status'] == 0){
-						if(admin == "true" || user_id === val['idDonoPais']){
-							optionsString += "<a id='edi"+val['id']+"' title='Editar jogo' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
-							optionsString += "<a id='apa"+val['id']+"' title='Apagar jogo' class='clickable apagar'><span class='material-symbols-outlined inlineButton negativo'>delete</span></a>";
-							optionsString += "<a id='sal"+val['id']+"' title='Salvar' class='clickable salvar' style='display:none;'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
-							optionsString += "<a id='can"+val['id']+"' title='Cancelar' class='clickable cancelar' style='display:none;'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
+						let optionsString = "<td class='wide' data-label='Opções'>";
+						if(logged == "true" && val['status'] == 0){
+							if(admin == "true" || user_id === val['idDonoPais']){
+								optionsString += "<a id='edi"+val['id']+"' title='Editar jogo' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
+								optionsString += "<a id='apa"+val['id']+"' title='Apagar jogo' class='clickable apagar'><span class='material-symbols-outlined inlineButton negativo'>delete</span></a>";
+								optionsString += "<a id='sal"+val['id']+"' title='Salvar' class='clickable salvar' style='display:none;'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
+								optionsString += "<a id='can"+val['id']+"' title='Cancelar' class='clickable cancelar' style='display:none;'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
+							}
 						}
-					}
-					optionsString += "</td>";
-					tbl += optionsString;
-				tbl += "</tr>";
+						optionsString += "</td>";
+						tbl += optionsString;
+					tbl += "</tr>";
+				}
 
 
 				}
