@@ -9,9 +9,326 @@
   },
   "days": [
     {
+      "id": "day_30_08_2026",
+      "date": "30/08/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Bloqueio de Edição de Escalação em Jogos Simulados",
+          "desc": "Ocultado o botão de escalação na Lista de Jogos (listajogos.php) para partidas com status 'Simulado' ou 'Encerrado' (status = 1), e adicionada proteção no backend (escalacao_jogo.php) para impedir a alteração tática ou substituição de atletas em jogos já processados pelo simulador."
+        }
+      ]
+    },
+    {
+      "id": "day_29_08_2026",
+      "date": "29/08/2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Envio Automático de Partidas Simuladas para o CONFUSA Live",
+          "desc": "Implementada a integração que envia as súmulas (.hyl) e metadados das partidas automaticamente para o CONFUSA Live quando a opção 'Subir jogos no Live?' estiver habilitada na competição (tanto na simulação manual quanto via cron), com suporte a proxy intermediário (Cloudflare Workers) para contornar restrições de porta de saída na hospedagem."
+        },
+        {
+          "badge": "new",
+          "title": "Status 'Finalizada' e 'Em Andamento' no Painel da Competição",
+          "desc": "Aprimorada a identificação de status da competição em competitionstatus.php, detectando automaticamente quando o torneio foi concluído (Final disputada ou todos os jogos realizados) para exibir a badge 'Finalizada', em vez de 'Pronta para simular'."
+        },
+        {
+          "badge": "new",
+          "title": "Filtro Inteligente de Competições e Clubes Ativos na Central de Desfalques",
+          "desc": "Implementada verificação dinâmica que preserva todo o histórico no banco de dados e oculta automaticamente suspensões e pendurados de competições concluídas (Final realizada) ou de clubes já eliminados da disputa, mantendo a tela focada apenas nas pendências reais dos próximos jogos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste de Largura e Contenção dos Botões de Ação na Edição de Jogos",
+          "desc": "Otimizados os tamanhos máximos de inputs editáveis (times, datas, horários e estádios) e expandida a largura do card da Lista de Jogos para 1420px, garantindo que os botões de Salvar e Cancelar nunca quebrem ou caiam para fora da tabela durante a edição."
+        },
+        {
+          "badge": "design",
+          "title": "Exibição de Árbitro Definida como Aleatório na Lista de Jogos",
+          "desc": "Atualizada a coluna de Árbitro na tabela de jogos para exibir sempre 'Aleatório', refletindo o comportamento real do motor de simulação que sorteia a arbitragem dinamicamente a cada partida."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Validação de Estádio Obrigatório para Simulação de Partidas",
+          "desc": "Implementada validação no frontend e backend (simulação manual e cron) que bloqueia a tentativa de simular partidas sem estádio definido ou inválido (N/A), evitando exceções no motor de simulação Java."
+        },
+        {
+          "badge": "new",
+          "title": "Central de Desfalques e Departamento Médico Centralizado",
+          "desc": "Criada a página Central de Desfalques (desfalques.php) e integrado um card com contador em tempo real no Dashboard do Usuário, permitindo acompanhar em um único local todos os atletas no Departamento Médico (com previsão de retorno e contagem regressiva de dias) e suspensões/cartões por competição."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Alinhamento e Altura das Linhas nas Tabelas de Estatísticas",
+          "desc": "Padronizado o alinhamento das células de time e cartões com a classe .team-cell em vez de display:flex no <td>, eliminando falhas visuais de alturas desiguais nas tabelas de estatísticas da competição."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Sincronização e Consulta de Lesões no Departamento Médico",
+          "desc": "Ajustado o processamento de pós-jogo para extrair durações de lesões do arquivo .hyj e aprimorada a consulta em Estatísticas para integrar lesões registradas tanto na tabela global de jogadores quanto na tabela da competição."
+        },
+        {
+          "badge": "design",
+          "title": "Novo Layout para Partidas Agendadas e em Andamento na Súmula",
+          "desc": "Substituída a mensagem simples de texto na tela de súmula por um card moderno (Design 2.0) com glassmorphism, dados completos do confronto, horários previstos e botões de navegação."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Sigilo Temporal Estrito na Lista de Jogos",
+          "desc": "Ajustada a exibição da Lista de Jogos para ocultar o placar de partidas simuladas antecipadamente até o horário real de término do jogo, mantendo a experiência de sigilo para todos os usuários."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ativação do Botão de Simulação Individual na Lista de Jogos",
+          "desc": "Corrigido o manipulador de clique no botão de bola de futebol (Simular) na Lista de Jogos, conectando-o ao motor Hexacolor com modal de progresso e atualização imediata do placar e súmula da partida."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Migração do Mecanismo de Planilhas Excel para SimpleXLSX / SimpleXLSXGen",
+          "desc": "Substituída a biblioteca pesada legada por SimpleXLSX e SimpleXLSXGen nativos em lib/simplexlsx, eliminando dependências complexas do Composer e resolvendo integralmente erros de depreciação e advertências do PHP 8.x na importação e exportação de competições e elencos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Central de Logs: Agrupamento Estrito por Mensagem, Arquivo e Linha",
+          "desc": "Aprimorado o algoritmo de deduplicação e exclusão de logs em admin/logs.php para comparar exclusivamente o tipo, a mensagem e o arquivo/linha do erro, ignorando variações de parâmetros no stack trace completo para somar corretamente todas as ocorrências idênticas (Nx)."
+        },
+        {
+          "badge": "new",
+          "title": "Seleção Interativa e Bloqueio de Slots do Sorteio na Lista de Times",
+          "desc": "Adicionado dropdown individual de Slot/Sorteio para cada equipe na Lista de Times (ex: A1, A2, B1, etc.) com confirmação de segurança. Ao definir o slot de um time, o sistema atualiza instantaneamente todos os jogos correspondentes na tabela gerada, bloqueia o dropdown para prevenir alterações indevidas e desativa o slot nas demais vagas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Compatibilidade PHP 8.1+ e 8.2+ (strip_tags, number_format e propriedades dinâmicas)",
+          "desc": "Corrigidos avisos de depreciação ao passar valores nulos para strip_tags() e number_format(), declaradas propriedades de classe ausentes em TrioArbitragem e Time, e blindado o início de sessões contra saídas de cabeçalhos já emitidas."
+        },
+        {
+          "badge": "new",
+          "title": "Propagação Automática de Slots / Vagas na Lista de Times",
+          "desc": "Ao definir ou alterar um clube em uma vaga na Lista de Times (ex: Vaga #2 = A2), todos os jogos da tabela gerados com esse slot são automaticamente atualizados de uma só vez com o time selecionado e seu estádio, sem precisar editar jogo por jogo."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Prevenção de Erro de Cabeçalhos HTTP (headers already sent)",
+          "desc": "Adicionada verificação preventiva com headers_sent() no cabeçalho geral (header.php) antes de emitir instruções de Cache-Control e Pragma, evitando avisos e falhas de envio de cabeçalho."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Estatísticas: Classificação Separada por Grupos",
+          "desc": "Corrigida a detecção e montagem das tabelas de classificação por grupo em estatísticas, que anteriormente unificava todos os times em uma única tabela geral devido ao mapeamento restrito apenas a partidas já finalizadas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Geração de Grade com Slots / Placeholders",
+          "desc": "Implementada a geração correta de confrontos com placeholders (A1, A2, B1, Slot 1...) ao escolher a opção de Sorteio Intermediário, permitindo definir a grade inicial e alocar os clubes posteriormente na Lista de Jogos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção ao Gerar Tabela de Competição",
+          "desc": "Corrigido erro fatal (SQLSTATE 1364) ao gerar tabela de jogos e ao importar partidas, atribuindo corretamente o identificador do proprietário da competição (dono) e definindo valor padrão na tabela jogos_clube."
+        },
+        {
+          "badge": "bugfix",
+          "title": "PoltronaScore: Jogos passados fora dos Próximos",
+          "desc": "Corrigido bug em que partidas com status 'next' desatualizado na fonte apareciam entre os Próximos Jogos. A API agora valida a data/hora real de cada jogo e move automaticamente os que já passaram para Resultados Anteriores, corrigindo também o banco de dados."
+        },
+        {
+          "badge": "bugfix",
+          "title": "PoltronaScore: Times com '&' não duplicam mais",
+          "desc": "Corrigido bug em que nomes de times contendo '&' podiam ser gravados no banco como '&amp;', gerando entradas duplicadas e agrupamentos incorretos. O scraper agora aplica decodificação de entidades HTML em todos os textos extraídos da fonte."
+        },
+        {
+          "badge": "new",
+          "title": "Seleção de País na Importação de Árbitros",
+          "desc": "Adicionado seletor de país/nacionalidade na tela de importação de árbitros (.tda), permitindo definir o país de destino manualmente ou manter a detecção automática pela sigla no arquivo."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção dos Modais de Recordes em Jogos",
+          "desc": "Corrigida exceção fatal do PDO (SQLSTATE[HY093]) nos métodos adversariosMaisEnfrentados e maioresDerrotas em objetos/jogos.php e objetos/jogos_clube.php que tentavam vincular parâmetros em consultas globais sem placeholders, restaurando a exibição correta de todos os modais de estatísticas e recordes."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Verificação de Propriedade de Ligas na Exportação",
+          "desc": "Corrigida a validação de propriedade de ligas (isFromUser) e consulta múltipla de clubes na exportação de banco de dados HYMT, eliminando o erro indevido de liga não pertencente ao usuário decorrente de comparações de tipo estritas e vinculação por referência no PDO."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Prevenção de Reenvio de Formulários (Padrão PRG)",
+          "desc": "Implementado o fluxo Post/Redirect/Get (PRG) no login, logout e em todas as telas de criação e inserção (árbitros, países, ligas, clubes, seleções, jogadores, estádios, climas, parâmetros e usuários), eliminando o aviso de reenvio de formulário ao voltar ou recarregar a página."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Limpeza de Logs no Console",
+          "desc": "Comentadas todas as instruções de log e debug no console do navegador em arquivos de páginas e scripts do sistema para manter o ambiente de execução e inspeção limpo."
+        },
+        {
+          "badge": "new",
+          "title": "Restrição de Idade em Ligas e Bloqueio de Escalação",
+          "desc": "Adicionado suporte a limite de idade máxima configurável por liga (ex: Sub-20, Sub-18) na criação e edição inline em Minhas Ligas, com bloqueio automático no backend e frontend para escalação de titulares e reservas acima da idade (restringindo-os a suplentes) e sinalização com ícone de cadeado."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Validação de Técnico e Elenco na Exportação (.ymt)",
+          "desc": "Corrigidas as consultas SQL dos métodos verificarTecnicos e verificarElencoMenor em time.php que não contabilizavam corretamente clubes sem registros associados, garantindo que o backend barre a exportação e notifique o usuário caso o clube não possua técnico cadastrado ou elenco suficiente."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Criação de Seleções e Padronização Visual",
+          "desc": "Definidos valores padrão para os campos da tabela clube no método create de time.php, resolvendo a falha de inserção SQL, e padronizados os botões e formulário da tela de criação de seleções no Design 2.0."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Criação de Países e Remoção de Unicidade de Sigla",
+          "desc": "Removida a constraint de sigla única da tabela de países no banco de dados, definidos valores padrão na inserção e aprimorada a validação de upload de bandeiras em criar_pais.php."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Exportação de Seleções e Times (.ymt)",
+          "desc": "Corrigido caminho de inclusão das funções auxiliares e adicionada validação de existência de arquivos de imagens (escudos e uniformes) em get_ymt_info.php, prevenindo erros de resposta do servidor na exportação de times e seleções."
+        },
+        {
+          "badge": "design",
+          "title": "Redesenho e Separação Visual da Demografia dos Países",
+          "desc": "A tela de demografia e o formulário de inserção de fatias demográficas foram completamente reformulados: agora separam de forma clara a distribuição de Nomes Próprios e Sobrenomes em cards distintos, adicionando barras de composição empilhada proporcionais, legendas coloridas, indicadores de frequência relativa, ocorrência de nomes duplos, miscigenação e botões padronizados no Design 2.0."
+        },
+        {
+          "badge": "design",
+          "title": "Compactação e Enquadramento da Edição de Times",
+          "desc": "Ajustadas as larguras percentuais das colunas, paddings e dimensões dos campos de edição inline na listagem de times (Meus Times), garantindo que todos os controles permaneçam 100% enquadrados na tela sem transbordar o card principal."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Trava de Envio Duplo em Envio de Fichas",
+          "desc": "Adicionado bloqueio imediato de botões com indicador 'Enviando...' / 'Importando...' na tela de Envio de Fichas (enviar_fichas.php) para evitar disparos duplicados enquanto a requisição está em processamento."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Convocação de Técnicos",
+          "desc": "Definido o valor padrão para o campo 'salario' na inserção de contratos no método convocar de tecnico.php, prevenindo o erro SQL 1364 de campo sem valor padrão."
+        },
+        {
+          "badge": "design",
+          "title": "Ajuste de Largura no Mercado e Janelas de Transferência",
+          "desc": "Aumentada a largura máxima do contêiner principal para 1380px em transferencias_redesign.css e otimizadas as colunas mensais da tabela de Janelas de Transferência, garantindo que todas as 15 colunas caibam perfeitamente dentro do card."
+        },
+        {
+          "badge": "new",
+          "title": "Link para Home no Logo do Cabeçalho",
+          "desc": "Adicionado link no logotipo CONFUSA.top do cabeçalho superior (header.php) para permitir o retorno rápido à página inicial a partir de qualquer tela."
+        },
+        {
+          "badge": "new",
+          "title": "Navegação para o Jogador na Apresentação Placar",
+          "desc": "Adicionado link interativo nos cards em formato de figurinha (titulares) e nas tags do banco de reservas na Apresentação Placar do Time (team_presentation_magazine.php) para redirecionar diretamente ao perfil individual do jogador (/ligas/playerstatus.php)."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Compatibilidade SQL em Jogos do Clube",
+          "desc": "Removida referência à coluna inexistente 'origem' nos métodos de consulta de últimas partidas e próximo jogo em jogos_clube.php, corrigindo o erro 1054 do MySQL na tela de Apresentação Placar do time."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Inicialização Segura de Sessão",
+          "desc": "Condicionada a alteração de parâmetros de sessão (ini_set, session_set_cookie_params e session_name) ao estado inativo da sessão em session.php, prevenindo warnings quando a sessão já se encontra ativa."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Tratamento de Sessão e URL no Header",
+          "desc": "Protegido o acesso às variáveis de sessão ($_SESSION['impersonated']) e segmentação de rotas ($currentPage) em header.php contra notices de índices e offsets indefinidos no PHP 8."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Compatibilidade de Métricas em Status do País",
+          "desc": "Tratado o cálculo e formatação de médias (idade, jogadores e valor de mercado) em paisstatus.php com fallback de tipagem segura para evitar avisos de deprecation no number_format() em ligas sem jogadores cadastrados."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Parser de Logs com Stack Traces no PHP 8",
+          "desc": "Aprimorado o agrupamento e interpretação de logs de erro na Central de Logs (admin/logs.php), tratando corretamente linhas multilinha de Stack Trace e identificando avisos de depreciação e erros com precisão."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Sanitização em countAll de Times",
+          "desc": "Ajustado o tratamento de parâmetros nulos no método countAll de time.php, eliminando avisos de depreciação do strip_tags() no PHP 8.1+."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Redimensionamento de Imagens e PHP 8.1+",
+          "desc": "Corrigida a conversão implícita de float para int e a tipagem de dimensões em todas as rotinas de redimensionamento e upload de imagens (times, estádios, técnicos, competições, países, jogadores, destaques e octamotor), garantindo compatibilidade com o PHP 8.1+."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Tratamento de REQUEST_URI no Header",
+          "desc": "Adicionado fallback seguro com o operador null coalescing para a variável $_SERVER['REQUEST_URI'] nos formulários de autenticação e modais do cabeçalho, prevenindo avisos de índice indefinido."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Compatibilidade com PHP 8",
+          "desc": "Modernizado o tratamento de codificação de arquivos XML em rotas de importação, substituindo funções legadas por conversões seguras compatíveis com PHP 8.2+."
+        },
+        {
+          "badge": "new",
+          "title": "Edição de Times no Status da Liga",
+          "desc": "Adicionada a funcionalidade de editar o nome, escudo e uniformes (1 e 2) dos clubes diretamente pela tabela na tela de Status da Liga (leaguestatus)."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Detecção de Ambiente Local nos Logs de Erros",
+          "desc": "Ajustada a identificação de ambiente local (suportando domínios como local.confusa.top, Virtual Hosts e Windows) para que a central de logs grave e consulte o arquivo local php_errors.log sem afetar o caminho centralizado de produção."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Sincronização e Exclusão Automática no PoltronaScore",
+          "desc": "O robô de sincronização do PoltronaScore agora remove automaticamente do banco de dados local as partidas que foram canceladas ou apagadas da origem (CONFUSALive)."
+        },
+        {
+          "badge": "new",
+          "title": "Unificação de Partidas, Próximo Jogo & Sigilo Temporal",
+          "desc": "Unificado o armazenamento de todas as partidas na tabela jogos_clube com a flag discriminadora simulador_interno, integrando eventos detalhados e escalações pós-jogo. Adicionada a exibição da Próxima Partida na revista do clube e implementado o sigilo temporal: partidas simuladas com antecedência só têm seus placares e súmulas revelados após o término real do confronto no relógio (120min para tempo normal e 150min em caso de pênaltis)."
+        },
+        {
+          "badge": "new",
+          "title": "Customização de Grupos, Preliminar e Turnos em Competições",
+          "desc": "O criador de competições agora permite definir a quantidade de grupos e o número de times por grupo, com alocação automática de times excedentes em uma fase preliminar (com opção de jogo único ou ida e volta). Em pontos corridos, agora é possível escolher entre 1, 2, 3 ou 4 turnos."
+        },
+        {
+          "badge": "new",
+          "title": "Modo de Sorteio com Slots / Placeholders e Edição Inline",
+          "desc": "Adicionada opção de sorteio intermediário com geração de tabela por slots (placeholders), permitindo ao organizador encaixar ou alterar os times dos confrontos agendados diretamente na Lista de Jogos."
+        },
+        {
+          "badge": "design",
+          "title": "Exibição de Pênaltis na Chave de Mata-Mata",
+          "desc": "A aba Chave de Mata-Mata agora exibe o placar de pênaltis e o destaque do classificado quando uma partida for decidida nas penalidades."
+        },
+        {
+          "badge": "new",
+          "title": "Últimas Partidas na Revista do Time",
+          "desc": "Adicionada uma seção na página de apresentação (revista Placar) exibindo os últimos 3 jogos do clube, integrando partidas de ligas/amistosos (jogos_clube) e competições oficiais com placares, escudos, indicadores de vitória/empate/derrota e datas."
+        }
+      ]
+    },
+    {
       "id": "day_28_08_2026",
       "date": "28/08/2026",
       "items": [
+        {
+          "badge": "new",
+          "title": "Edição de Sigla (TresLetras) e Remoção de Unicidade",
+          "desc": "Removida a restrição de sigla única para clubes e seleções, permitindo agora a alteração e edição direta da sigla de 3 letras de cada clube no quadro Meus Times."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Validação Completa na Exportação (.db3, .ymt e .jog)",
+          "desc": "Estendida a verificação prévia de exportação para a exportação individual de times (.ymt) e jogadores (.jog). Para times, são checadas todas as regras de integridade (elenco mín/máx, 11 titulares, 1 goleiro, capitão, batedores de pênalti, limite de idade, técnico e clima/estádio). Para jogadores, valida-se o vínculo, limite de idade e posições válidas."
+        },
+        {
+          "badge": "new",
+          "title": "Número da Camisa no Perfil do Jogador",
+          "desc": "Adicionada a exibição do ícone com a numeração da camisa ao lado do nome do jogador na página individual do atleta."
+        },
         {
           "badge": "design",
           "title": "Nova Tipografia Global (Outfit)",
