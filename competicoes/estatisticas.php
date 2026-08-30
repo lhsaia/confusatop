@@ -624,23 +624,45 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                         }
                     }
 
+                    $faseNamesMap = [
+                        10 => "32-avos de Final",
+                        9  => "16-avos de Final",
+                        3  => "Oitavas de Final",
+                        4  => "Quartas de Final",
+                        5  => "Semifinal",
+                        6  => "Decisão do 3º Lugar",
+                        8  => "Final"
+                    ];
+
+                    $nextFaseMap = [
+                        10 => 9,  // 32-avos -> 16-avos
+                        9  => 3,  // 16-avos -> Oitavas
+                        3  => 4,  // Oitavas -> Quartas
+                        4  => 5,  // Quartas -> Semifinal
+                        5  => 8   // Semifinal -> Final
+                    ];
+
                     foreach ($fasesKnockout as $faseId => $partidasFase):
-                        $nomeFase = "Fase " . $faseId;
-                        if ($faseId == 10) $nomeFase = "32-avos de Final";
-                        if ($faseId == 9) $nomeFase = "16-avos de Final";
-                        if ($faseId == 3) $nomeFase = "Oitavas de Final";
-                        if ($faseId == 4) $nomeFase = "Quartas de Final";
-                        if ($faseId == 5) $nomeFase = "Semifinal";
-                        if ($faseId == 6) $nomeFase = "Decisão do 3º Lugar";
-                        if ($faseId == 8) $nomeFase = "Final";
+                        $nomeFase = $faseNamesMap[$faseId] ?? ("Fase " . $faseId);
+                        $proximaFaseId = $nextFaseMap[$faseId] ?? null;
+                        $nomeProx = $proximaFaseId ? ($faseNamesMap[$proximaFaseId] ?? ("Fase " . $proximaFaseId)) : null;
                 ?>
                     <div class="bracket-phase">
-                        <h3 class="bracket-phase-title"><?php echo $nomeFase; ?></h3>
+                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                            <h3 class="bracket-phase-title"><?php echo $nomeFase; ?></h3>
+                            <?php if ($nomeProx): ?>
+                                <span style="font-size: 0.82rem; color: #64748b; font-weight: 500;">
+                                    Vencedores avançam para as <strong><?php echo $nomeProx; ?></strong>
+                                </span>
+                            <?php endif; ?>
+                        </div>
                         <div class="bracket-matches-grid">
                             <?php 
-                            // Na primeira fase, se existirem BYEs, exibi-los
+                            // Na primeira fase, se existirem BYEs, exibi-los pareados com seu destino
+                            $numTotalByes = count($listaByesPrimeiraFase);
                             if ($faseId == $primeiraFaseId && !empty($listaByesPrimeiraFase)):
-                                foreach ($listaByesPrimeiraFase as $byeItem):
+                                foreach ($listaByesPrimeiraFase as $idxBye => $byeItem):
+                                    $destChaveBye = $idxBye + 1;
                             ?>
                                 <div class="bracket-bye-card">
                                     <div class="bracket-match-row">
@@ -650,8 +672,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                         </span>
                                         <span class="bracket-bye-badge">BYE</span>
                                     </div>
-                                    <div class="bracket-match-info" style="color: #0284c7; font-weight: 500;">
-                                        Classificado direto para a próxima fase
+                                    <div class="bracket-match-info" style="color: #0284c7; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+                                        <span>BYE #<?php echo ($idxBye + 1); ?></span>
+                                        <span style="font-size: 0.72rem; color: #0284c7; font-weight: 700;">➔ Enfrenta Vencedor do Jogo #<?php echo ($idxBye + 1); ?> na Chave #<?php echo $destChaveBye; ?></span>
                                     </div>
                                 </div>
                             <?php 
@@ -659,7 +682,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                             endif;
                             ?>
 
-                            <?php foreach ($partidasFase as $partida): 
+                            <?php 
+                            foreach ($partidasFase as $idxMatch => $partida): 
                                 $tA = $clubes[$partida['timeA_id']] ?? null;
                                 $tB = $clubes[$partida['timeB_id']] ?? null;
                                 $nomeTimeA = $tA['Nome'] ?? ($partida['timeA_nome'] ?? 'Indefinido');
@@ -689,6 +713,22 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                         elseif ($pB > $pA) $winB = "winner";
                                     }
                                 }
+
+                                // Identificador do chaveamento e destino
+                                $jogoNum = $idxMatch + 1;
+                                if ($faseId == $primeiraFaseId && $numTotalByes > 0) {
+                                    if ($idxMatch < $numTotalByes) {
+                                        $chaveDestinoNum = $idxMatch + 1;
+                                        $labelDestino = "➔ Enfrenta BYE #" . ($idxMatch + 1) . " (Chave #{$chaveDestinoNum})";
+                                    } else {
+                                        $offsetAfterByes = $idxMatch - $numTotalByes;
+                                        $chaveDestinoNum = $numTotalByes + floor($offsetAfterByes / 2) + 1;
+                                        $labelDestino = "➔ Chave #{$chaveDestinoNum}";
+                                    }
+                                } else {
+                                    $chaveDestinoNum = floor($idxMatch / 2) + 1;
+                                    $labelDestino = "➔ Chave #{$chaveDestinoNum}";
+                                }
                             ?>
                                 <div class="bracket-match-card">
                                     <div class="bracket-match-row <?php echo $winA; ?>">
@@ -715,14 +755,17 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                             <?php endif; ?>
                                         </span>
                                     </div>
-                                    <div class="bracket-match-info">
-                                        <?php if($podeRevelar && $temPenaltis): ?>
-                                            <span style="color: #0284c7; font-weight: 600; font-size: 0.78rem;">Pên: <?php echo $pA . " × " . $pB; ?></span>
-                                        <?php elseif(!empty($partida['data'])): ?>
-                                            <span><?php echo date('d/m/Y H:i', strtotime($partida['data'])); ?></span>
-                                        <?php endif; ?>
-                                        <?php if($partida['grupo']): ?>
-                                            <span> • Grupo <?php echo htmlspecialchars($partida['grupo']); ?></span>
+                                    <div class="bracket-match-info" style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <span style="font-weight: 700; color: #0284c7;">Jogo #<?php echo $jogoNum; ?></span>
+                                            <?php if($podeRevelar && $temPenaltis): ?>
+                                                <span style="color: #0284c7; font-weight: 600; font-size: 0.78rem;"> • Pên: <?php echo $pA . " × " . $pB; ?></span>
+                                            <?php elseif(!empty($partida['data'])): ?>
+                                                <span> • <?php echo date('d/m H:i', strtotime($partida['data'])); ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php if($nomeProx): ?>
+                                            <span style="font-size: 0.72rem; color: #64748b; font-weight: 600;"><?php echo $labelDestino; ?></span>
                                         <?php endif; ?>
                                     </div>
                                 </div>

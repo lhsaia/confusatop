@@ -507,6 +507,15 @@
 		require_once __DIR__ . '/processar_desfalques.php';
 		processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $suspensos);
 
+		// Se for partida de mata-mata, verificar se todos os confrontos da fase terminaram e avançar automaticamente
+		if (isset($matchInfo['fase']) && (int)$matchInfo['fase'] > 2) {
+			try {
+				$competicao->verificarEAvancarMataMata($idCompeticao, (int)$matchInfo['fase']);
+			} catch (\Throwable $e) {
+				error_log("PHP Simulador: [ERRO AVANÇO MATA-MATA] " . $e->getMessage());
+			}
+		}
+
 		// Se a opção subir_live estiver ativada na competição, enviar partida para o CONFUSA Live
 		if (!empty($options['subir_live'])) {
 			try {

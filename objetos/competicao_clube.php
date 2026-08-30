@@ -1006,5 +1006,194 @@ class Competicao_clube{
 
 		return true;
 	}
+
+	/**
+	 * Verifica se todos os jogos da fase de mata-mata atual foram concluídos e gera os confrontos da próxima fase.
+	 */
+	function verificarEAvancarMataMata($idCompeticao, $faseAtual) {
+		$idCompeticao = (int)$idCompeticao;
+		$faseAtual = (int)$faseAtual;
+		if ($idCompeticao <= 0 || $faseAtual <= 2) return false;
+
+		$nextFaseMap = [
+			10 => 9,  // 32-avos -> 16-avos
+			9  => 3,  // 16-avos -> Oitavas
+			3  => 4,  // Oitavas -> Quartas
+			4  => 5,  // Quartas -> Semifinal
+			5  => 8   // Semifinal -> Final
+		];
+
+		if (!isset($nextFaseMap[$faseAtual])) return false;
+		$proximaFase = $nextFaseMap[$faseAtual];
+
+		// 1. Verificar se já existem jogos criados para a próxima fase
+		$stmtJaExiste = $this->conn->prepare("SELECT 1 FROM jogos_clube WHERE competicao_id = :idComp AND fase = :proxFase LIMIT 1");
+		$stmtJaExiste->execute([':idComp' => $idCompeticao, ':proxFase' => $proximaFase]);
+		if ($stmtJaExiste->fetch()) {
+			return false; // Próxima fase já foi criada
+		}
+
+		// 2. Carregar todos os jogos da fase atual
+		$stmtJogosFase = $this->conn->prepare("SELECT * FROM jogos_clube WHERE competicao_id = :idComp AND fase = :fase ORDER BY id ASC");
+		$stmtJogosFase->execute([':idComp' => $idCompeticao, ':fase' => $faseAtual]);
+		$jogosFase = $stmtJogosFase->fetchAll(PDO::FETCH_ASSOC);
+		if (empty($jogosFase)) return false;
+
+		// 3. Verificar se todos os jogos da fase atual já foram simulados (status = 1)
+		foreach ($jogosFase as $jg) {
+			if ((int)$jg['status'] !== 1) {
+				return false; // Ainda há jogos pendentes na fase atual
+			}
+		}
+
+		// 4. Determinar vencedores de cada confronto da fase atual
+		$vencedoresJogos = [];
+		foreach ($jogosFase as $jg) {
+			$gA = (int)$jg['timeA_gols'];
+			$gB = (int)$jg['timeB_gols'];
+			$pA = $jg['timeA_penaltis'] !== null ? (int)$jg['timeA_penaltis'] : null;
+			$pB = $jg['timeB_penaltis'] !== null ? (int)$jg['timeB_penaltis'] : null;
+
+			$vencId = 0;
+			$vencNome = null;
+
+			if ($gA > $gB) {
+				$vencId = (int)$jg['timeA_id'];
+				$vencNome = $jg['timeA_nome'];
+			} elseif ($gB > $gA) {
+				$vencId = (int)$jg['timeB_id'];
+				$vencNome = $jg['timeB_nome'];
+			} elseif ($pA !== null && $pB !== null) {
+				if ($pA > $pB) {
+					$vencId = (int)$jg['timeA_id'];
+					$vencNome = $jg['timeA_nome'];
+				} else {
+					$vencId = (int)$jg['timeB_id'];
+					$vencNome = $jg['timeB_nome'];
+				}
+			} else {
+				// Fallback caso empate sem penaltis
+				$vencId = (int)$jg['timeA_id'];
+				$vencNome = $jg['timeA_nome'];
+			}
+
+			$vencedoresJogos[] = [
+				'id' => $vencId,
+				'nome' => $vencNome
+			];
+		}
+
+		// 5. Identificar se há times de BYE (somente aplicável na primeira fase da competição)
+		$byes = [];
+		$stmtMinFase = $this->conn->prepare("SELECT MIN(fase) as min_fase FROM jogos_clube WHERE competicao_id = :idComp AND fase > 2");
+		$stmtMinFase->execute([':idComp' => $idCompeticao]);
+		$minFaseRow = $stmtMinFase->fetch(PDO::FETCH_ASSOC);
+		$isFirstRoundOfComp = ($minFaseRow && (int)$minFaseRow['min_fase'] === $faseAtual);
+
+		if ($isFirstRoundOfComp) {
+			$jogandoIds = [];
+			$jogandoNomes = [];
+			foreach ($jogosFase as $jg) {
+				if ((int)$jg['timeA_id'] > 0) $jogandoIds[(int)$jg['timeA_id']] = true;
+				if (!empty($jg['timeA_nome'])) $jogandoNomes[trim($jg['timeA_nome'])] = true;
+				if ((int)$jg['timeB_id'] > 0) $jogandoIds[(int)$jg['timeB_id']] = true;
+				if (!empty($jg['timeB_nome'])) $jogandoNomes[trim($jg['timeB_nome'])] = true;
+			}
+
+			// Verificar slots da competição
+			$stSlots = $this->conn->prepare("SELECT slot, id_time_portal FROM competicao_times WHERE id_competicao = :id AND slot IS NOT NULL AND slot != ''");
+			$stSlots->execute([':id' => $idCompeticao]);
+			while ($rSlot = $stSlots->fetch(PDO::FETCH_ASSOC)) {
+				$sName = trim($rSlot['slot']);
+				$cId = (int)$rSlot['id_time_portal'];
+				$isNoJogo = false;
+				if ($cId > 0 && isset($jogandoIds[$cId])) $isNoJogo = true;
+				if (isset($jogandoNomes[$sName])) $isNoJogo = true;
+
+				if (!$isNoJogo) {
+					$byes[] = [
+						'id' => $cId,
+						'nome' => ($cId == 0) ? $sName : null
+					];
+				}
+			}
+		}
+
+		// 6. Montar confrontos da próxima fase
+		$confrontosProximaFase = [];
+		$numByes = count($byes);
+
+		// Primeiro, parear cada BYE #i com o Vencedor do Jogo #i
+		for ($i = 0; $i < $numByes; $i++) {
+			$byeTeam = $byes[$i];
+			$vencTeam = isset($vencedoresJogos[$i]) ? $vencedoresJogos[$i] : ['id' => 0, 'nome' => 'A definir'];
+			$confrontosProximaFase[] = [
+				'timeA' => $byeTeam,
+				'timeB' => $vencTeam
+			];
+		}
+
+		// Depois, parear os vencedores de jogos restantes entre si de 2 em 2
+		for ($i = $numByes; $i < count($vencedoresJogos); $i += 2) {
+			$team1 = $vencedoresJogos[$i];
+			$team2 = isset($vencedoresJogos[$i+1]) ? $vencedoresJogos[$i+1] : ['id' => 0, 'nome' => 'A definir'];
+			$confrontosProximaFase[] = [
+				'timeA' => $team1,
+				'timeB' => $team2
+			];
+		}
+
+		if (empty($confrontosProximaFase)) return false;
+
+		// 7. Obter estádios e árbitros para a nova fase
+		$docRoot = isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__);
+		$db3File = $docRoot . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+		$ldb = null;
+		$estadios = [];
+		$arbitros = [];
+		if (file_exists($db3File)) {
+			try {
+				$ldb = new PDO("sqlite:" . $db3File);
+				$ldb->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+				$stmtEst = $ldb->query("SELECT ID FROM estadio");
+				if ($stmtEst) $estadios = $stmtEst->fetchAll(PDO::FETCH_ASSOC);
+				$stmtArb = $ldb->query("SELECT ID FROM arbitro");
+				if ($stmtArb) $arbitros = $stmtArb->fetchAll(PDO::FETCH_ASSOC);
+			} catch (\Throwable $e) {}
+		}
+
+		// Data inicial para a próxima fase: 3 dias após a data do último jogo da fase atual
+		$lastDate = !empty($jogosFase[count($jogosFase)-1]['data']) ? $jogosFase[count($jogosFase)-1]['data'] : date('Y-m-d H:i:s');
+		$baseDate = date('Y-m-d 16:00:00', strtotime($lastDate . ' +3 days'));
+
+		$usedStadiumsInPhase = [];
+
+		// 8. Inserir os jogos da próxima fase no MariaDB
+		foreach ($confrontosProximaFase as $idxConf => $conf) {
+			$tA_id = $conf['timeA']['id'];
+			$tA_nome = $conf['timeA']['nome'];
+			$tB_id = $conf['timeB']['id'];
+			$tB_nome = $conf['timeB']['nome'];
+
+			$dateMatch = date("Y-m-d 16:00:00", strtotime($baseDate . " +" . floor($idxConf / 2) . " days"));
+			$arbId = count($arbitros) > 0 ? (int)$arbitros[array_rand($arbitros)]['ID'] : 0;
+
+			// Estádio neutro sem conflito
+			$estId = 0;
+			if (!empty($estadios)) {
+				$disponiveis = [];
+				foreach ($estadios as $est) {
+					$disponiveis[] = (int)$est['ID'];
+				}
+				$naoUsados = array_values(array_diff($disponiveis, $usedStadiumsInPhase));
+				$estId = !empty($naoUsados) ? $naoUsados[array_rand($naoUsados)] : $disponiveis[array_rand($disponiveis)];
+				$usedStadiumsInPhase[] = $estId;
+			}
+
+			$this->inserirJogo($idCompeticao, $tA_id, $tB_id, $proximaFase, $arbId, $estId, $dateMatch, "true", null, null, $tA_nome, $tB_nome);
+		}
+
+		return true;
+	}
 }
 ?>

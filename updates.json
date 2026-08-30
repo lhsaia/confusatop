@@ -14,8 +14,8 @@
       "items": [
         {
           "badge": "new",
-          "title": "Fases 16-avos e 32-avos de Final com Normalização de BYEs",
-          "desc": "Adicionado suporte completo a torneios maiores de mata-mata com as novas fases de 16-avos-de-final (32 times) e 32-avos-de-final (64 times). Implementado algoritmo de normalização de chaveamento com avanço direto por BYE para torneios com números arbitrários de clubes (ex: 56 times com 8 BYEs iniciando em 32-avos)."
+          "title": "Avanço Automático de Fase e Pareamento no Mata-Mata",
+          "desc": "Quando todos os confrontos de uma fase do mata-mata forem simulados e concluídos, o sistema automaticamente classifica os vencedores (e os times com BYE), gerando as partidas da fase seguinte (ex: 32-avos ➔ 16-avos ➔ Oitavas ➔ Quartas ➔ Semifinal ➔ Final)."
         },
         {
           "badge": "bugfix",
