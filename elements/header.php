@@ -1,7 +1,9 @@
 <?php
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
+if (!headers_sent()) {
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+}
 
 echo "<html class='no-capture' lang='pt-br' xmlns='http://www.w3.org/1999/xhtml' xml:lang='pt-br'>";
 echo "<head>";
@@ -51,7 +53,8 @@ $ver_ranking = "<a class='nav-item' href='/ranking/index.php'>Ranking</a>";
 $octamotor_home = "<a class='nav-item' href='/octamotor'>Octamotor home</a>";
 
 
-$currentPage =  explode('/',strtok($_SERVER['REQUEST_URI'], '?'));
+$request_uri = $_SERVER['REQUEST_URI'] ?? '';
+$currentPage =  explode('/', strtok($request_uri, '?'));
 
  ?>
 
@@ -107,10 +110,10 @@ if(isset($extra_css)){
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('/sw.js').then(function(registration) {
-      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      // console.log('ServiceWorker registration successful with scope: ', registration.scope);
       registration.update();
     }, function(err) {
-      console.log('ServiceWorker registration failed: ', err);
+      // console.log('ServiceWorker registration failed: ', err);
     });
   });
 }
@@ -372,8 +375,10 @@ if (!$is_redesigned):
 <div id="top-bar" class="elementoFixo no-capture">
   <div id="logo-text">
 
-  <span style="white-space: nowrap; display: inline-block;">
-    CONFUSA<span class="orange">.</span>top <span class='beta'></span>
+  <span style="white-space: nowrap; display: inline-flex; align-items: center;">
+    <a href="/" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center;">
+      CONFUSA<span class="orange">.</span>top <span class='beta'></span>
+    </a>
     <span onclick="showUpdatesModal()" style="display: inline-flex; vertical-align: middle; cursor: pointer; color: #94a3b8; margin-left: 8px; transition: color 0.2s; user-select: none;" onmouseover="this.style.color='#38bdf8'" onmouseout="this.style.color='#94a3b8'" title="Novidades e Atualizações">
       <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle;">help</span>
     </span>
@@ -387,7 +392,7 @@ if (!$is_redesigned):
 </div>
 
 <span id="logged-user" class="<?php echo $class_conectado?>">
-  <?php if(isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == false): ?>
+  <?php if(isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && empty($_SESSION['impersonated'])): ?>
     <a href="/admin/index.php" style="color: inherit; text-decoration: none; border-bottom: 1px dashed #38bdf8;"><?php echo $welcometext ?></a>
   <?php else: ?>
     <?php echo $welcometext ?>
@@ -411,8 +416,9 @@ if (!$is_redesigned):
   <nav class="nav no-capture" id='nav'>
     <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true): 
       $avatar_to_show = !empty($_SESSION['avatar']) ? $_SESSION['avatar'] : '/images/default-user.png';
-      $is_admin = ($_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == false);
-      $role_label = $_SESSION['impersonated'] ? 'Admin impersonando' : ($is_admin ? 'Administrador' : 'Membro');
+      $is_impersonated = !empty($_SESSION['impersonated']);
+      $is_admin = (($_SESSION['admin_status'] ?? '') == '1' && !$is_impersonated);
+      $role_label = $is_impersonated ? 'Admin impersonando' : ($is_admin ? 'Administrador' : 'Membro');
     ?>
       <div class="menu-profile-header">
         <img src="<?php echo htmlspecialchars($avatar_to_show); ?>" alt="Avatar" class="menu-profile-avatar" />
@@ -431,7 +437,8 @@ if (!$is_redesigned):
     <?php echo $change_pass ?>
     <?php echo $admin_btn ?>
     <?php
-    switch ($currentPage[1]) {
+    $currentSection = $currentPage[1] ?? '';
+    switch ($currentSection) {
       case "arbitros":
         break;
       case "octamotor":
@@ -447,7 +454,7 @@ if (!$is_redesigned):
 <div style="clear:both;"></div>
 
 <div id='id01' class="modal">
-  <form method="POST" class="modal-content animate larger" action="<?php echo htmlspecialchars($_SERVER['REQUEST_URI']);?>">
+  <form method="POST" class="modal-content animate larger" action="<?php echo htmlspecialchars($request_uri);?>">
     <div class="imgcontainer">
       <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
     </div>
@@ -477,7 +484,7 @@ if (!$is_redesigned):
 
     <div id='id02' class="modal">
 
-  <form method="POST" class="modal-content animate smaller" action="<?php echo htmlspecialchars($_SERVER['REQUEST_URI']);?>">
+  <form method="POST" class="modal-content animate smaller" action="<?php echo htmlspecialchars($request_uri);?>">
 
     <div class="container">
         <p>Você tem certeza?</p>
@@ -491,7 +498,7 @@ if (!$is_redesigned):
 
 <div id="id03" class="modal">
 
-  <form method="POST" class="modal-content animate larger" action="<?php echo htmlspecialchars($_SERVER['REQUEST_URI']);?>">
+  <form method="POST" class="modal-content animate larger" action="<?php echo htmlspecialchars($request_uri);?>">
     <div class="imgcontainer">
       <span onclick="document.getElementById('id03').style.display='none'" class="close" title="Close Modal">&times;</span>
     </div>
@@ -517,7 +524,7 @@ if (!$is_redesigned):
 
 <div id="id04" class="modal">
 
-  <form method="POST" class="modal-content animate larger" action="<?php echo htmlspecialchars($_SERVER['REQUEST_URI']);?>">
+  <form method="POST" class="modal-content animate larger" action="<?php echo htmlspecialchars($request_uri);?>">
     <div class="imgcontainer">
       <span onclick="document.getElementById('id04').style.display='none'" class="close" title="Close Modal">&times;</span>
     </div>

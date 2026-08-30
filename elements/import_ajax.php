@@ -433,7 +433,8 @@ if (isset($_POST['ajax'])) {
                     $xml = json_decode(file_get_contents($filePath));
                 } else {
                     if (simplexml_load_string(file_get_contents($filePath)) == false) {
-                        $xml = simplexml_load_string(utf8_encode(file_get_contents($filePath)));
+                        $rawContent = file_get_contents($filePath);
+                        $xml = simplexml_load_string(function_exists('mb_convert_encoding') ? mb_convert_encoding($rawContent, 'UTF-8', 'ISO-8859-1') : utf8_encode($rawContent));
 
                     } else {
                         $xml = simplexml_load_string(file_get_contents($filePath));

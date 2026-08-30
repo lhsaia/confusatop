@@ -3,8 +3,11 @@
 
 
 if(isset($_POST['logout']) && $_POST['logout']==true){
-$_SESSION = array();
-session_destroy();
+    $_SESSION = array();
+    session_destroy();
+    $target_url = !empty($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
+    header("Location: " . $target_url);
+    exit;
 }
 
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -60,9 +63,12 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
 			}
 
             if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {
-    header("Location: " . $_POST['redirect']);
-    exit;
-}
+                header("Location: " . $_POST['redirect']);
+                exit;
+            } else {
+                header("Location: " . ($_SERVER['REQUEST_URI'] ?? '/'));
+                exit;
+            }
 			
 
     	} else {
@@ -110,9 +116,12 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
             }
 
             if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {
-    header("Location: " . $_POST['redirect']);
-    exit;
-}
+                header("Location: " . $_POST['redirect']);
+                exit;
+            } else {
+                header("Location: " . ($_SERVER['REQUEST_URI'] ?? '/'));
+                exit;
+            }
 
     	} else {
             $_POST['success']='1';
