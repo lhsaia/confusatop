@@ -26,8 +26,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     $estadios_times = isset($_POST['estadios_times']) ? intval($_POST['estadios_times']) : 0;
     $idCompeticao = intval($_POST['id_competicao']);
     $desempate_grupos = isset($_POST['desempate_grupos']) ? $_POST['desempate_grupos'] : 'SG,GP,VI,CD';
+    $num_grupos = isset($_POST['num_grupos']) ? intval($_POST['num_grupos']) : 4;
+    $times_por_grupo = isset($_POST['times_por_grupo']) ? intval($_POST['times_por_grupo']) : 4;
+    $tipo_preliminar = isset($_POST['tipo_preliminar']) ? intval($_POST['tipo_preliminar']) : 1;
+    $turnos_pontos_corridos = isset($_POST['turnos_pontos_corridos']) ? intval($_POST['turnos_pontos_corridos']) : 2;
 	
-	if($competicao->alterarOpcoes($idUsuario, $_POST['numero_times'], $_POST['data_limite'], $_POST['subir_live'], $_POST['sorteio'], $_POST['gol_fora'], $_POST['final_unica'], $_POST['tipo_competicao'], $_POST['criterio_desempate'], $_POST['criterio_desempate_final'], $_POST['criterio_suspensao'], $_POST['zerar_amarelos'], $_POST['permitir_alteracoes'], $_POST['inicio_alteracoes'], $_POST['fim_alteracoes'], $_POST['numero_alteracoes'], $idCompeticao, $estadios_times, $desempate_grupos)){
+	if($competicao->alterarOpcoes($idUsuario, $_POST['numero_times'], $_POST['data_limite'], $_POST['subir_live'], $_POST['sorteio'], $_POST['gol_fora'], $_POST['final_unica'], $_POST['tipo_competicao'], $_POST['criterio_desempate'], $_POST['criterio_desempate_final'], $_POST['criterio_suspensao'], $_POST['zerar_amarelos'], $_POST['permitir_alteracoes'], $_POST['inicio_alteracoes'], $_POST['fim_alteracoes'], $_POST['numero_alteracoes'], $idCompeticao, $estadios_times, $desempate_grupos, $num_grupos, $times_por_grupo, $tipo_preliminar, $turnos_pontos_corridos)){
 		$is_success = true;
 	} else {
 		$is_success = false;

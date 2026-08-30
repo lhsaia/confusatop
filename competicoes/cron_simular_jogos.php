@@ -24,9 +24,10 @@ $fimBusca    = date('Y-m-d H:i:s', strtotime('+24 hours')); // 24 horas à frent
 echo "[" . date('Y-m-d H:i:s') . "] Iniciando Cron de Simulação para partidas entre {$inicioBusca} e {$fimBusca}...\n";
 
 // Buscar jogos programados para as próximas X horas
-$query = "SELECT id, competicao, timeA_id AS timeA, timeB_id AS timeB, estadio, neutro, fase, data 
-          FROM competicao_jogos 
+$query = "SELECT id, competicao_id AS competicao, timeA_id AS timeA, timeB_id AS timeB, estadio_id AS estadio, neutro, fase, data 
+          FROM jogos_clube 
           WHERE status = 0 
+            AND simulador_interno = 1
             AND data >= :inicio 
             AND data <= :fim 
           ORDER BY data ASC";
@@ -68,11 +69,27 @@ foreach ($partidas as $matchInfo) {
     // 1. Copiar SQLite da competição para data/database.db3
     copy($sourceDbPath, $targetDbPath);
     
+    $idEstadio = isset($matchInfo['estadio']) ? (int)$matchInfo['estadio'] : 0;
+    if ($idEstadio <= 0) {
+        echo "   [ERRO] A Partida #{$idPartida} não possui estádio definido. Pulando...\n";
+        continue;
+    }
+
     $liteDatabase = new SQLiteDatabase();
     $liteDatabase->fileName = $targetDbPath;
     $ldb = $liteDatabase->getConnection();
     $liteCompeticao = new Competicao_clube($ldb);
     $timeObj = new Time($ldb);
+
+    // Validar se o estádio existe na tabela estadio do SQLite
+    $stmtEstCheck = $ldb->prepare("SELECT 1 FROM estadio WHERE ID = :idEst LIMIT 1");
+    $stmtEstCheck->bindValue(':idEst', $idEstadio, PDO::PARAM_INT);
+    $stmtEstCheck->execute();
+    if (!$stmtEstCheck->fetch()) {
+        $ldb = null;
+        echo "   [ERRO] O estádio #{$idEstadio} da Partida #{$idPartida} não existe no banco SQLite. Pulando...\n";
+        continue;
+    }
 
     // Garantir tabela de compatibilidade com as versões necessárias
     try {
@@ -446,25 +463,70 @@ foreach ($partidas as $matchInfo) {
     
     $golsTimeA = 0;
     $golsTimeB = 0;
+    $penA = null;
+    $penB = null;
     $xml = json_decode(file_get_contents($hylFile));
     if ($xml) {
         $golsTimeA = (int)$xml->placarTime1;
         $golsTimeB = (int)$xml->placarTime2;
+        if (isset($xml->penaltis) && $xml->penaltis) {
+            $penA = isset($xml->placarPenaltisTime1) ? (int)$xml->placarPenaltisTime1 : 0;
+            $penB = isset($xml->placarPenaltisTime2) ? (int)$xml->placarPenaltisTime2 : 0;
+        }
     } else {
         error_log("PHP Simulador: [ERRO] Cron gerou súmula vazia/corrompida na partida #{$idPartida}. Output: " . trim($output));
         echo "   [ERRO] O arquivo .hyl para a Partida #{$idPartida} foi gerado mas está corrompido ou vazio. Pulando...\n";
         continue;
     }
     
+    // Fallback para .hyj se penaltis nao vieram no .hyl
+    $hyjFile = str_replace('.hyl', '.hyj', $hylFile);
+    if ($penA === null && file_exists($hyjFile)) {
+        $jsonHyj = json_decode(file_get_contents($hyjFile));
+        if ($jsonHyj && isset($jsonHyj->penaltis) && $jsonHyj->penaltis) {
+            $penA = isset($jsonHyj->time1->placarPenaltis) ? (int)$jsonHyj->time1->placarPenaltis : 0;
+            $penB = isset($jsonHyj->time2->placarPenaltis) ? (int)$jsonHyj->time2->placarPenaltis : 0;
+        }
+    }
+
     // Atualizar resultado no MariaDB
-    $competicaoObj->uploadMatchResults($idPartida, $golsTimeA, $golsTimeB, $path);
+    $competicaoObj->uploadMatchResults($idPartida, $golsTimeA, $golsTimeB, $path, $penA, $penB);
 
     // Processar desfalques pós jogo (cartões, lesões, suspensões) no MariaDB
     require_once __DIR__ . '/hexacolor/processar_desfalques.php';
-    $hyjFile = str_replace('.hyl', '.hyj', $hylFile);
     processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $suspensos);
 
-    echo "   [SUCESSO] Partida #{$idPartida} simulada! Placar: {$siglaA} {$golsTimeA} x {$golsTimeB} {$siglaB}\n";
+    // Se a opção subir_live estiver ativada na competição, enviar partida para o CONFUSA Live
+    if (!empty($options['subir_live'])) {
+        try {
+            require_once $docRoot . '/lib/ConfusaLiveUploader.php';
+            $faseNome = "Rodada " . (isset($matchInfo['fase']) ? $matchInfo['fase'] : '1');
+            try {
+                $stmtFase = $db->prepare("SELECT nome FROM fase WHERE id = :faseId LIMIT 1");
+                $stmtFase->bindValue(':faseId', $matchInfo['fase'], PDO::PARAM_INT);
+                $stmtFase->execute();
+                if ($rowFase = $stmtFase->fetch(PDO::FETCH_ASSOC)) {
+                    $faseNome = $rowFase['nome'];
+                }
+            } catch (\Throwable $e) {}
+
+            if (!empty($matchInfo['grupo'])) {
+                $faseNome .= " - Grupo " . $matchInfo['grupo'];
+            }
+
+            $liveResult = ConfusaLiveUploader::enviarPartida($hylFile, $nomeComposto, $faseNome, $matchInfo['data']);
+            if ($liveResult['success']) {
+                echo "   [LIVE] Partida #{$idPartida} enviada com sucesso para o CONFUSA Live.\n";
+            } else {
+                echo "   [LIVE AVISO] Não foi possível enviar a partida #{$idPartida} para o Live: {$liveResult['message']}\n";
+            }
+        } catch (\Throwable $e) {
+            echo "   [LIVE EXCEÇÃO] Erro ao disparar upload: " . $e->getMessage() . "\n";
+        }
+    }
+
+    $penMsg = ($penA !== null) ? " (Pên: {$penA}x{$penB})" : "";
+    echo "   [SUCESSO] Partida #{$idPartida} simulada! Placar: {$siglaA} {$golsTimeA} x {$golsTimeB} {$siglaB}{$penMsg}\n";
 }
 
 echo "[" . date('Y-m-d H:i:s') . "] Processamento do Cron concluído com sucesso.\n";

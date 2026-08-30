@@ -41,9 +41,24 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 			$codigoTime = $_POST['codigo_time'];
 			$paisTime = $_POST['pais_time'];
 			
+			$prevTeamId = 0;
+			try {
+				$stPrev = $db->prepare("SELECT id_time_portal FROM competicao_times WHERE id_competicao = :idComp AND codigo_time = :cod LIMIT 1");
+				$stPrev->bindParam(':idComp', $idCompeticao);
+				$stPrev->bindParam(':cod', $codigoTime);
+				$stPrev->execute();
+				$rPrev = $stPrev->fetch(PDO::FETCH_ASSOC);
+				if ($rPrev && !empty($rPrev['id_time_portal'])) {
+					$prevTeamId = intval($rPrev['id_time_portal']);
+				}
+			} catch(Exception $e) {}
+
 			if($competicao->alterarPaisTime($idCompeticao,$codigoTime, $paisTime )){
 				$is_success = true;
 				$error_msg = "";
+				if ($paisTime == 0 && $prevTeamId > 0) {
+					$competicao->atualizarJogosPorSlot($idCompeticao, $codigoTime, 0, $prevTeamId);
+				}
 			} else {
 				$is_success = false;
 				$error_msg = "Falha ao alterar país do time";
@@ -55,6 +70,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 			$codigoTime = $_POST['codigo_time'];
 			$paisTime = $_POST['pais_time'];
 			$timePortal = $_POST['time_portal'];
+			
+			$prevTeamId = 0;
+			try {
+				$stPrev = $db->prepare("SELECT id_time_portal FROM competicao_times WHERE id_competicao = :idComp AND codigo_time = :cod LIMIT 1");
+				$stPrev->bindParam(':idComp', $idCompeticao);
+				$stPrev->bindParam(':cod', $codigoTime);
+				$stPrev->execute();
+				$rPrev = $stPrev->fetch(PDO::FETCH_ASSOC);
+				if ($rPrev && !empty($rPrev['id_time_portal'])) {
+					$prevTeamId = intval($rPrev['id_time_portal']);
+				}
+			} catch(Exception $e) {}
 			
 			// codigo para efetivamente copiar o time para o banco de dados
 
@@ -203,6 +230,17 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 				$is_success = true;
 				$error_msg = "";
 				file_put_contents($logFile, "MYSQL: Sucesso ao vincular time portal\n", FILE_APPEND);
+				
+				$stSlot = $db->prepare("SELECT slot FROM competicao_times WHERE id_competicao = :idComp AND codigo_time = :cod LIMIT 1");
+				$stSlot->bindParam(':idComp', $idCompeticao);
+				$stSlot->bindParam(':cod', $codigoTime);
+				$stSlot->execute();
+				$rSlot = $stSlot->fetch(PDO::FETCH_ASSOC);
+				if($rSlot && !empty($rSlot['slot'])){
+					$competicao->definirSlotTime($idCompeticao, $codigoTime, $rSlot['slot']);
+				} else {
+					$competicao->atualizarJogosPorSlot($idCompeticao, $codigoTime, $timePortal, $prevTeamId);
+				}
 			} else {
 				$is_success = false;
 				$error_msg = "Falha ao alterar time com base no portal";

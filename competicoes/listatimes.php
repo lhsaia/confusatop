@@ -149,8 +149,8 @@ $( document ).ready(function(){
 	var lista_paises = <?php echo json_encode($listaPaises) ?>;
 	var lista_times = <?php echo json_encode($listaTimes) ?>;
 	var dono_competicao = '<?php echo $dono_competicao ?>';
-	console.log("Total de times disponíveis carregados:", lista_times.length);
-	console.log("O time 817 está na lista?", lista_times.find(t => t[0] == 817));
+	// console.log("Total de times disponíveis carregados:", lista_times.length);
+	// console.log("O time 817 está na lista?", lista_times.find(t => t[0] == 817));
 	
 	 var logged ='<?php if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 		echo "true";
@@ -183,15 +183,59 @@ $( document ).ready(function(){
 			cache:false,
 			data:{codigo_competicao:codigo_competicao},
 			success:function(data){
-				console.log("Dados carregados:", data);
 				$('#loading').hide();  // hide loading indicator
-				localData = JSON.parse(data);
+				if(typeof data === 'object'){
+					localData = data;
+				} else {
+					try {
+						localData = JSON.parse(data);
+					} catch(e) {
+						console.error("Erro no parse dos dados:", e, data);
+						localData = [];
+					}
+				}
 				update_table();	
+			},
+			error:function(xhr, status, error){
+				$('#loading').hide();
+				console.error("Erro AJAX refresh_team_list:", error);
 			}
 		});
 	}
 
-	
+	function getSlotLabel(i) {
+		let tipo = parseInt('<?php echo isset($options['tipocompeticao']) ? (int)$options['tipocompeticao'] : 0; ?>');
+		let numGrupos = parseInt('<?php echo (isset($options['num_grupos']) && (int)$options['num_grupos'] > 0) ? (int)$options['num_grupos'] : 4; ?>');
+		let timesPorGrupo = parseInt('<?php echo (isset($options['times_por_grupo']) && (int)$options['times_por_grupo'] > 0) ? (int)$options['times_por_grupo'] : 4; ?>');
+		let totalTimes = parseInt(numero_times);
+		
+		if (tipo === 0) { // Misto
+			let capacidade = numGrupos * timesPorGrupo;
+			let tot = Math.max(totalTimes, capacidade);
+			let excedente = tot > capacidade ? (tot - capacidade) : 0;
+			let numPreliminar = excedente * 2;
+			if (i <= numPreliminar) {
+				return "P" + i;
+			} else {
+				let groupVaga = i - numPreliminar - 1;
+				let g = Math.floor(groupVaga / timesPorGrupo);
+				let k = (groupVaga % timesPorGrupo) + 1;
+				let letra = String.fromCharCode(65 + g);
+				return letra + k;
+			}
+		} else {
+			return "Slot " + i;
+		}
+	}
+
+	function getAllAvailableSlots() {
+		let allSlots = [];
+		for(let k = 1; k <= numero_times; k++) {
+			allSlots.push(getSlotLabel(k));
+		}
+		return allSlots;
+	}
+
 	function update_table(){
 
     //criar tabela dinamicamente
@@ -199,16 +243,17 @@ $( document ).ready(function(){
 	var status_time = '';
 	var cor_status = '';
 	var font_status = '';
+	let adminStatus = (admin === "true" || parseInt(dono_competicao) === parseInt(user_id)) ? "" : "disabled";
 	
 	for (var i = 1; i <= numero_times; i++) {
 		var status_time = '';
 		var cor_status = '';
 		var font_status = '';
 		
-		let matchData = localData.find(element => parseInt(element.codigo_time) == i);
+		let matchData = localData.find(element => parseInt(element.codigo_time) === parseInt(i));
 		if(matchData){
 			var checkTeam = (parseInt(matchData.has_team) === 1);
-			console.log("Vaga "+i+" | has_team:", matchData.has_team, " | Resultado:", checkTeam);
+			// console.log("Vaga "+i+" | has_team:", matchData.has_team, " | Resultado:", checkTeam);
 			if (checkTeam){
 				status_time = 'Time pronto';
 				cor_status = 'rgba(52, 211, 153, 0.1)';
@@ -224,10 +269,27 @@ $( document ).ready(function(){
 			font_status = '#0284c7';
 		}
 
+		// Dropdown de Slot / Posição do Sorteio
+		let currentSlot = (matchData && matchData.slot) ? matchData.slot : '';
+		let isSlotLocked = (currentSlot !== '');
+		let slotDisabled = (adminStatus === "disabled" || isSlotLocked) ? "disabled" : "";
+		let slotClass = isSlotLocked ? "smallform selecaoSlot slot-definido" : "smallform selecaoSlot";
+		let slotTitle = isSlotLocked ? ("Slot " + currentSlot + " definido e bloqueado") : "Definir slot do sorteio";
+		let slotOptions = "<option value=''>Definir Slot...</option>";
+		let allSlots = getAllAvailableSlots();
+		$.each(allSlots, function(sIdx, sVal){
+			let isSelected = (currentSlot === sVal) ? " selected " : "";
+			let inUseBy = localData.find(el => parseInt(el.codigo_time) !== parseInt(i) && el.slot === sVal);
+			if (inUseBy) {
+				slotOptions += "<option value='" + sVal + "' disabled>" + sVal + " (Vaga #" + inUseBy.codigo_time + ")</option>";
+			} else {
+				slotOptions += "<option value='" + sVal + "'" + isSelected + ">" + (isSlotLocked ? "Slot " + sVal + " ✓" : "Slot " + sVal) + "</option>";
+			}
+		});
+
 		// geração da tabela
 		var selectedOwner = 0;
 		var selectedCountry = 0;
-		let adminStatus = (admin === "true" || dono_competicao === parseInt(user_id)) ? "" : "disabled";
 		tbl += "<div class='par_pais_equipe' id='par_pais_equipe"+i+"'>";
 			tbl += "<span class='slot-badge'>Vaga #" + i + "</span>";
 			tbl += "<select id='selecaoPais"+i+"' name='pais"+i+"' class='smallform selecaoPais' placeholder='País...' "+adminStatus+">";
@@ -265,6 +327,7 @@ $( document ).ready(function(){
 				}
 			tbl += "</select>";
   
+			tbl += "<select id='selecaoSlot"+i+"' name='slot"+i+"' class='"+slotClass+"' data-vaga='"+i+"' "+slotDisabled+" title='"+slotTitle+"'>"+slotOptions+"</select>";
 			tbl += "<span class='fileUploader ui-button ui-widget'>Importar .ymt temporário</span><input id='import_team"+i+"' type='file' accept='.ymt' value='Importar .ymt temporário' hidden class='hiddenInput import_team' />";
 			tbl += "<input id='update_team"+i+"' type='submit' value='Salvar' class='ui-button ui-widget update_team' disabled/>";
 			tbl += "<span class='status_competicao' style='background-color:"+cor_status+" !important; color:"+font_status+" !important; border: 1px solid "+font_status+"20 !important;'>" +status_time + "</span>";
@@ -280,31 +343,72 @@ $( document ).ready(function(){
 function init_page_elements(){
 		$(".selecaoPais").select2({
 			templateResult: function (country) {
-								if (!country.id) return country.text;
-								var baseUrl = "/images/bandeiras/";
-								return $('<span><img src="' + baseUrl + '/' + country.element.attributes[0].value + '" class="bandeira" /><span  class="opcaoPaisNome"> ' + country.text + '</span></span>');
-							},
+				if (!country.id || !country.element) return country.text;
+				var flag = $(country.element).attr('data-flag') || $(country.element).data('flag') || 'flag.png';
+				var baseUrl = "/images/bandeiras/";
+				return $('<span><img src="' + baseUrl + flag + '" class="bandeira" /><span class="opcaoPaisNome"> ' + country.text + '</span></span>');
+			},
 			templateSelection: function (country) {
-								if (!country.id) return country.text;
-								var baseUrl = "/images/bandeiras/";
-								return $('<span><img src="' + baseUrl + '/' + country.element.attributes[0].value + '" id="bs01" class="bandeiraSelect" /><span> ' + country.text + '</span></span>');
-							},
+				if (!country.id || !country.element) return country.text;
+				var flag = $(country.element).attr('data-flag') || $(country.element).data('flag') || 'flag.png';
+				var baseUrl = "/images/bandeiras/";
+				return $('<span><img src="' + baseUrl + flag + '" id="bs01" class="bandeiraSelect" /><span> ' + country.text + '</span></span>');
+			},
 			width:'resolve'
 		});
 		
 		$(".selecaoTime").select2({
 			templateResult: function (country) {
-								if (!country.id) return country.text;
-								return $('<span><img src="' + country.element.attributes[0].value + '" class="bandeira" /><span  class="opcaoPaisNome"> ' + country.text + '</span></span>');
-							},
+				if (!country.id || !country.element) return country.text;
+				var flag = $(country.element).attr('data-flag') || $(country.element).data('flag') || '/images/escudos/0.png';
+				return $('<span><img src="' + flag + '" class="bandeira" /><span class="opcaoPaisNome"> ' + country.text + '</span></span>');
+			},
 			templateSelection: function (country) {
-								if (!country.id) return country.text;
-								return $('<span><img src="' + country.element.attributes[0].value + '" id="bs01" class="bandeiraSelect" /><span> ' + country.text + '</span></span>');
-							},
+				if (!country.id || !country.element) return country.text;
+				var flag = $(country.element).attr('data-flag') || $(country.element).data('flag') || '/images/escudos/0.png';
+				return $('<span><img src="' + flag + '" id="bs01" class="bandeiraSelect" /><span> ' + country.text + '</span></span>');
+			},
 			width:'resolve'
 		});
         $(".selecaoPais").trigger("change", true);
 }
+
+// Event Delegation
+$(document).on("change", ".selecaoSlot", function(){
+    let vaga = $(this).data('vaga');
+    let newSlot = $(this).val();
+    if(!newSlot) return;
+
+    if(!confirm("Confirmar a atribuição do Slot " + newSlot + " para esta vaga? Após definido, o slot será bloqueado e preencherá os jogos automaticamente.")){
+        $(this).val('');
+        return;
+    }
+
+    $('#loading').show();
+    $.ajax({
+        url: "salvar_slot_time.php",
+        method: "POST",
+        data: {
+            id_competicao: codigo_competicao,
+            codigo_time: vaga,
+            slot: newSlot
+        },
+        dataType: "json",
+        success: function(res){
+            $('#loading').hide();
+            if(res.success){
+                load_data();
+            } else {
+                alert("Erro ao definir slot: " + (res.error || "Desconhecido"));
+                load_data();
+            }
+        },
+        error: function(xhr, status, error){
+            $('#loading').hide();
+            alert("Erro de conexão ao definir slot: " + error);
+        }
+    });
+});
 
 // Event Delegation
 $(document).on("change", ".selecaoTime", function(){
@@ -343,7 +447,7 @@ $(document).on("change", ".selecaoPais", function(e, unlock){
             cache:false,
             data:{codigo_time:codigo_time, codigo_competicao:codigo_competicao},
             success:function(data){
-                var new_data = JSON.parse(data);
+                var new_data = (typeof data === 'object') ? data : JSON.parse(data);
                 opt += "<option data-flag='"+new_data.Escudo+"'  value='99999999' selected>"+new_data.Nome+" (externo)</option>";
                 $("#selecaoTime" + codigo_time ).html(opt).trigger('change.select2');
             }
@@ -366,7 +470,7 @@ $(document).on("click", ".update_team", function(e){
 			formData.append('codigo_competicao',codigo_competicao);
 			formData.append('pais_time',pais_time);
 			
-			console.log("Enviando TIPO 0 (Apenas País)");
+			// console.log("Enviando TIPO 0 (Apenas País)");
 			$.ajax({
                 type        : 'POST', // define the type of HTTP verb we want to use (POST for our form)
                 url         : 'alterar_times_competicao.php', // the url where we want to POST
@@ -376,7 +480,7 @@ $(document).on("click", ".update_team", function(e){
                 contentType: false,
                 cache: false
             }).done(function(new_response) {
-				console.log("Resposta TIPO 0:", new_response);
+				// console.log("Resposta TIPO 0:", new_response);
                 if(new_response.success){
 					load_data();
                 } else {
@@ -406,7 +510,7 @@ $(document).on("click", ".update_team", function(e){
 				// console.log(key[0] + ', ' + key[1]);
 			// }
 			
-			console.log("Enviando TIPO 1 (País + Time)");
+			// console.log("Enviando TIPO 1 (País + Time)");
 						$.ajax({
                 type        : 'POST', // define the type of HTTP verb we want to use (POST for our form)
                 url         : '/export/verificar_exportacao.php', // the url where we want to POST
@@ -416,7 +520,7 @@ $(document).on("click", ".update_team", function(e){
                 contentType: false,
                 cache: false
             }).done(function(new_response) {
-				console.log("Resposta verificar_exportacao:", new_response);
+				// console.log("Resposta verificar_exportacao:", new_response);
                 if(new_response.success){
 					
 					$.ajax({
@@ -428,7 +532,7 @@ $(document).on("click", ".update_team", function(e){
 						contentType: false,
 						cache: false
 					}).done(function(new_response) {
-						console.log("Resposta Final alterar_times_competicao:", new_response);
+						// console.log("Resposta Final alterar_times_competicao:", new_response);
 						if(new_response.success){
 							
 							

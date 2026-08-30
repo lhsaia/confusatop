@@ -11,7 +11,7 @@ if (!$idCompeticao) {
     die(json_encode(['success' => false, 'error' => 'ID da competição não fornecido.']));
 }
 
-require_once $_SERVER['DOCUMENT_ROOT'] . "/vendor/autoload.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . "/lib/simplexlsx/SimpleXLSX.php";
 include_once $_SERVER['DOCUMENT_ROOT'] . "/config/database.php";
 include_once $_SERVER['DOCUMENT_ROOT'] . "/objetos/competicao_clube.php";
 
@@ -31,7 +31,7 @@ if (!$isAdmin && $_SESSION['user_id'] != $dono) {
     die(json_encode(['success' => false, 'error' => 'Você não tem permissão para importar dados nesta competição.']));
 }
 
-use PhpOffice\PhpSpreadsheet\IOFactory;
+use Shuchkin\SimpleXLSX;
 
 if (isset($_FILES['planilha_excel']) && !empty($_FILES['planilha_excel'])) {
     $filePath = $_FILES['planilha_excel']['tmp_name'];
@@ -45,8 +45,24 @@ if (isset($_FILES['planilha_excel']) && !empty($_FILES['planilha_excel'])) {
 
     if ($filePath != "" && ($_FILES['planilha_excel']['size'] > 0)) {
         try {
-            $spreadsheet = IOFactory::load($filePath);
-            $sheetData = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
+            $xlsx = SimpleXLSX::parse($filePath);
+            if (!$xlsx) {
+                throw new Exception(SimpleXLSX::parseError());
+            }
+            $rawRows = $xlsx->rows();
+            
+            // Reindex to 1-based row and column letters A, B, C...
+            $sheetData = [];
+            $colLetters = range('A', 'Z');
+            foreach ($rawRows as $rIdx => $rowValues) {
+                $rowNum = $rIdx + 1;
+                $sheetData[$rowNum] = [];
+                foreach ($rowValues as $cIdx => $val) {
+                    if (isset($colLetters[$cIdx])) {
+                        $sheetData[$rowNum][$colLetters[$cIdx]] = $val;
+                    }
+                }
+            }
             
             $db->beginTransaction();
             
@@ -98,7 +114,7 @@ if (isset($_FILES['planilha_excel']) && !empty($_FILES['planilha_excel'])) {
                     // UPDATE
                     $matchId = intval($matchId);
                     // Check if match belongs to this competition
-                    $stmtCheck = $db->prepare("SELECT competicao FROM competicao_jogos WHERE id = ?");
+                    $stmtCheck = $db->prepare("SELECT competicao_id FROM jogos_clube WHERE id = ?");
                     $stmtCheck->execute([$matchId]);
                     $dbCompId = $stmtCheck->fetchColumn();
                     
@@ -109,18 +125,16 @@ if (isset($_FILES['planilha_excel']) && !empty($_FILES['planilha_excel'])) {
                         continue;
                     }
                     
-                    $query = "UPDATE competicao_jogos 
+                    $query = "UPDATE jogos_clube 
                               SET timeA_id = :timeA, timeB_id = :timeB, timeA_gols = :golsA, timeB_gols = :golsB,
-                                  timeA_portal = :portalA, timeB_portal = :portalB, data = :data, estadio = :estadio,
-                                  neutro = :neutro, arbitro = :arbitro, fase = :fase, grupo = :grupo, status = :status
+                                  data = :data, estadio_id = :estadio,
+                                  neutro = :neutro, arbitro_id = :arbitro, fase = :fase, grupo = :grupo, status = :status
                               WHERE id = :id";
                     $stmt = $db->prepare($query);
                     $stmt->bindParam(':timeA', $timeA_id);
                     $stmt->bindParam(':timeB', $timeB_id);
                     $stmt->bindValue(':golsA', $golsA, $golsA === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
                     $stmt->bindValue(':golsB', $golsB, $golsB === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
-                    $stmt->bindParam(':portalA', $timeA_portal);
-                    $stmt->bindParam(':portalB', $timeB_portal);
                     $stmt->bindParam(':data', $dataHora);
                     $stmt->bindParam(':estadio', $estadio);
                     $stmt->bindParam(':neutro', $neutro);
@@ -133,17 +147,15 @@ if (isset($_FILES['planilha_excel']) && !empty($_FILES['planilha_excel'])) {
                     $successCount++;
                 } else {
                     // INSERT
-                    $query = "INSERT INTO competicao_jogos 
-                              (timeA_id, timeB_id, timeA_gols, timeB_gols, timeA_portal, timeB_portal, data, competicao, estadio, neutro, arbitro, fase, grupo, status)
+                    $query = "INSERT INTO jogos_clube 
+                              (timeA_id, timeB_id, timeA_gols, timeB_gols, data, competicao_id, estadio_id, neutro, arbitro_id, fase, grupo, status, competicao_tipo, simulador_interno, dono)
                               VALUES 
-                              (:timeA, :timeB, :golsA, :golsB, :portalA, :portalB, :data, :competicao, :estadio, :neutro, :arbitro, :fase, :grupo, :status)";
+                              (:timeA, :timeB, :golsA, :golsB, :data, :competicao, :estadio, :neutro, :arbitro, :fase, :grupo, :status, 1, 1, :dono)";
                     $stmt = $db->prepare($query);
                     $stmt->bindParam(':timeA', $timeA_id);
                     $stmt->bindParam(':timeB', $timeB_id);
                     $stmt->bindValue(':golsA', $golsA, $golsA === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
                     $stmt->bindValue(':golsB', $golsB, $golsB === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
-                    $stmt->bindParam(':portalA', $timeA_portal);
-                    $stmt->bindParam(':portalB', $timeB_portal);
                     $stmt->bindParam(':data', $dataHora);
                     $stmt->bindParam(':competicao', $idCompeticao);
                     $stmt->bindParam(':estadio', $estadio);
@@ -152,6 +164,7 @@ if (isset($_FILES['planilha_excel']) && !empty($_FILES['planilha_excel'])) {
                     $stmt->bindParam(':fase', $fase);
                     $stmt->bindValue(':grupo', $grupo, $grupo === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
                     $stmt->bindParam(':status', $status);
+                    $stmt->bindParam(':dono', $dono);
                     $stmt->execute();
                     $successCount++;
                 }
@@ -167,9 +180,6 @@ if (isset($_FILES['planilha_excel']) && !empty($_FILES['planilha_excel'])) {
                 echo json_encode(['success' => true, 'message' => "Tabela importada com sucesso! {$successCount} partidas processadas."]);
             }
             
-            $spreadsheet->disconnectWorksheets();
-            unset($spreadsheet);
-            
         } catch (Exception $e) {
             if ($db->inTransaction()) {
                 $db->rollBack();
@@ -182,3 +192,4 @@ if (isset($_FILES['planilha_excel']) && !empty($_FILES['planilha_excel'])) {
 } else {
     echo json_encode(['success' => false, 'error' => 'Nenhum arquivo enviado.']);
 }
+

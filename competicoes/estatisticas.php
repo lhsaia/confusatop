@@ -39,6 +39,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $stmtClubes = $cdb->query("SELECT ID, Nome, TresLetras, Escudo FROM clube");
     $clubes = [];
     while ($row = $stmtClubes->fetch(PDO::FETCH_ASSOC)) {
+        if (!empty($row['Escudo'])) {
+            $row['Escudo'] = basename($row['Escudo']);
+        }
         $clubes[$row['ID']] = $row;
     }
     
@@ -63,59 +66,90 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     }
     
     // 4. Carregar Jogos e Calcular Tabela de Classificação por Grupo
-    $stmtJogos = $db->prepare("SELECT id, timeA_id, timeA_gols, timeB_id, timeB_gols, status, fase, grupo, path 
-                               FROM competicao_jogos 
-                               WHERE competicao = :idComp");
+    // Apenas partidas com status = 1 e cujo término no tempo real já tenha passado
+    $stmtJogos = $db->prepare("SELECT id, timeA_id, timeA_gols, timeB_id, timeB_gols, timeA_penaltis, timeB_penaltis, status, fase, grupo, path 
+                               FROM jogos_clube 
+                               WHERE competicao_id = :idComp 
+                                 AND simulador_interno = 1
+                                 AND status = 1
+                                 AND (
+                                     (timeA_penaltis IS NULL AND DATE_ADD(data, INTERVAL 120 MINUTE) <= NOW())
+                                     OR
+                                     (timeA_penaltis IS NOT NULL AND DATE_ADD(data, INTERVAL 150 MINUTE) <= NOW())
+                                 )");
     $stmtJogos->bindParam(':idComp', $idCompeticao, PDO::PARAM_INT);
     $stmtJogos->execute();
     $jogos = $stmtJogos->fetchAll(PDO::FETCH_ASSOC);
     
+    // 4. Carregar todos os jogos da Fase 2 para mapear a estrutura de Grupos e Clubes
+    $stmtFase2Jogos = $db->prepare("SELECT timeA_id, timeB_id, grupo 
+                                    FROM jogos_clube 
+                                    WHERE competicao_id = :idComp 
+                                      AND simulador_interno = 1 
+                                      AND fase = 2");
+    $stmtFase2Jogos->bindParam(':idComp', $idCompeticao, PDO::PARAM_INT);
+    $stmtFase2Jogos->execute();
+    $allFase2 = $stmtFase2Jogos->fetchAll(PDO::FETCH_ASSOC);
+
     // Detectar quais grupos existem na Fase 2
     $gruposDetectados = [];
-    foreach ($jogos as $j) {
-        if ($j['fase'] == 2) {
-            $g = trim($j['grupo']);
-            if ($g !== '' && !in_array($g, $gruposDetectados)) {
+    $clubeGrupoMap = [];
+    foreach ($allFase2 as $j) {
+        $g = trim($j['grupo'] ?? '');
+        if ($g !== '') {
+            if (!in_array($g, $gruposDetectados)) {
                 $gruposDetectados[] = $g;
             }
+            if (!empty($j['timeA_id']) && !isset($clubeGrupoMap[$j['timeA_id']])) $clubeGrupoMap[$j['timeA_id']] = $g;
+            if (!empty($j['timeB_id']) && !isset($clubeGrupoMap[$j['timeB_id']])) $clubeGrupoMap[$j['timeB_id']] = $g;
         }
     }
     sort($gruposDetectados);
-    
-    // Descobrir em qual grupo está cada clube (pelo primeiro jogo de fase 2)
-    $clubeGrupoMap = [];
-    foreach ($jogos as $j) {
-        if ($j['fase'] == 2 && trim($j['grupo']) !== '') {
-            $g = trim($j['grupo']);
-            if (!isset($clubeGrupoMap[$j['timeA_id']])) $clubeGrupoMap[$j['timeA_id']] = $g;
-            if (!isset($clubeGrupoMap[$j['timeB_id']])) $clubeGrupoMap[$j['timeB_id']] = $g;
-        } elseif ($j['fase'] == 2) {
-            // Sem grupo definido (pontos corridos)
-            if (!isset($clubeGrupoMap[$j['timeA_id']])) $clubeGrupoMap[$j['timeA_id']] = '';
-            if (!isset($clubeGrupoMap[$j['timeB_id']])) $clubeGrupoMap[$j['timeB_id']] = '';
-        }
-    }
-    
     $temGrupos = !empty($gruposDetectados);
     
     // Inicializar tabela por grupo (ou tabela única se não houver grupos)
     $tabelaPorGrupo = [];
-    foreach ($clubes as $idC => $c) {
-        $g = $clubeGrupoMap[$idC] ?? '';
-        $tabelaPorGrupo[$g][$idC] = [
-            'id' => $idC,
-            'nome' => $c['Nome'],
-            'escudo' => $c['Escudo'],
-            'sigla' => $c['TresLetras'],
-            'jogos' => 0,
-            'pontos' => 0,
-            'vitorias' => 0,
-            'empates' => 0,
-            'derrotas' => 0,
-            'gp' => 0,
-            'gc' => 0,
-            'sg' => 0
-        ];
+    if ($temGrupos) {
+        foreach ($gruposDetectados as $g) {
+            $tabelaPorGrupo[$g] = [];
+        }
+        foreach ($clubeGrupoMap as $idC => $g) {
+            if ($g !== '' && isset($clubes[$idC])) {
+                $c = $clubes[$idC];
+                $tabelaPorGrupo[$g][$idC] = [
+                    'id' => $idC,
+                    'nome' => $c['Nome'],
+                    'escudo' => $c['Escudo'],
+                    'sigla' => $c['TresLetras'],
+                    'jogos' => 0,
+                    'pontos' => 0,
+                    'vitorias' => 0,
+                    'empates' => 0,
+                    'derrotas' => 0,
+                    'gp' => 0,
+                    'gc' => 0,
+                    'sg' => 0
+                ];
+            }
+        }
+    } else {
+        $tabelaPorGrupo[''] = [];
+        foreach ($clubes as $idC => $c) {
+            $tabelaPorGrupo[''][$idC] = [
+                'id' => $idC,
+                'nome' => $c['Nome'],
+                'escudo' => $c['Escudo'],
+                'sigla' => $c['TresLetras'],
+                'jogos' => 0,
+                'pontos' => 0,
+                'vitorias' => 0,
+                'empates' => 0,
+                'derrotas' => 0,
+                'gp' => 0,
+                'gc' => 0,
+                'sg' => 0
+            ];
+        }
     }
     
     $fasesKnockout = [];
@@ -130,7 +164,15 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             
             // Fase de grupos entra na classificação
             if ($j['fase'] == 2) {
-                $g = $clubeGrupoMap[$idA] ?? '';
+                $g = trim($j['grupo'] ?? '');
+                if ($temGrupos) {
+                    if ($g === '' || !isset($tabelaPorGrupo[$g])) {
+                        $g = $clubeGrupoMap[$idA] ?? ($clubeGrupoMap[$idB] ?? '');
+                    }
+                } else {
+                    $g = '';
+                }
+                
                 if (isset($tabelaPorGrupo[$g][$idA]) && isset($tabelaPorGrupo[$g][$idB])) {
                     $tabelaPorGrupo[$g][$idA]['jogos']++;
                     $tabelaPorGrupo[$g][$idB]['jogos']++;
@@ -233,27 +275,38 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     }
     
     // 6. Consultar Departamento Médico (Lesionados) no MySQL
-    // Obter todos os jogadores com lesão ativa
+    // Obter todos os jogadores com lesão ativa (na tabela jogador ou competicao_suspensos)
     $lesionados = [];
     if (!empty($jogadoresMap)) {
         $pIds = array_keys($jogadoresMap);
         $inClause = implode(',', $pIds);
-        $stmtLes = $db->prepare("SELECT id, lesionado_ate FROM jogador WHERE id IN ($inClause) AND lesionado_ate >= CURDATE()");
-        $stmtLes->execute();
-        $lesRows = $stmtLes->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($lesRows as $l) {
-            $pid = (int)$l['id'];
-            if (isset($jogadoresMap[$pid])) {
-                $clubeId = $jogadorClubeMap[$pid] ?? 0;
-                $lesionados[] = [
-                    'id' => $pid,
-                    'nome' => $jogadoresMap[$pid]['Nome'],
-                    'clube' => $clubes[$clubeId]['Nome'] ?? 'Sem clube',
-                    'escudo' => $clubes[$clubeId]['Escudo'] ?? '',
-                    'retorno' => date('d/m/Y', strtotime($l['lesionado_ate']))
-                ];
+        try {
+            $stmtLes = $db->prepare("SELECT val.id, GREATEST(COALESCE(j.lesionado_ate, '1970-01-01'), COALESCE(cs.lesionado_ate, '1970-01-01')) AS lesionado_ate
+                                     FROM (
+                                         SELECT id FROM jogador WHERE id IN ($inClause) AND lesionado_ate >= CURDATE()
+                                         UNION
+                                         SELECT id_jogador AS id FROM competicao_suspensos WHERE id_competicao = :idComp AND id_jogador IN ($inClause) AND lesionado_ate >= CURDATE()
+                                     ) val
+                                     LEFT JOIN jogador j ON val.id = j.id
+                                     LEFT JOIN competicao_suspensos cs ON val.id = cs.id_jogador AND cs.id_competicao = :idComp2");
+            $stmtLes->bindParam(':idComp', $idCompeticao, PDO::PARAM_INT);
+            $stmtLes->bindParam(':idComp2', $idCompeticao, PDO::PARAM_INT);
+            $stmtLes->execute();
+            $lesRows = $stmtLes->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($lesRows as $l) {
+                $pid = (int)$l['id'];
+                if (isset($jogadoresMap[$pid])) {
+                    $clubeId = $jogadorClubeMap[$pid] ?? 0;
+                    $lesionados[] = [
+                        'id' => $pid,
+                        'nome' => $jogadoresMap[$pid]['Nome'],
+                        'clube' => $clubes[$clubeId]['Nome'] ?? 'Sem clube',
+                        'escudo' => $clubes[$clubeId]['Escudo'] ?? '',
+                        'retorno' => date('d/m/Y', strtotime($l['lesionado_ate']))
+                    ];
+                }
             }
-        }
+        } catch (Exception $e) {}
     }
     
     // 7. Consultar Suspensos da Competição no MySQL
@@ -377,7 +430,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         <!-- Conteúdo 1: Classificação -->
         <div class="tab-content active" id="tab-classificacao">
             <?php
-            $temGrupos = count($tabelaPorGrupo) > 1;
             if ($temGrupos):
                 $firstGroup = true;
             ?>
@@ -425,8 +477,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                 <tr>
                                     <td class="pos-col <?php echo $posClass; ?>"><?php echo $pos++; ?>º</td>
                                     <td class="team-col">
-                                        <img class="team-logo" src="/images/escudos/<?php echo $team['escudo'] ? $team['escudo'] : '0.png'; ?>" alt="Escudo" />
-                                        <span><?php echo htmlspecialchars($team['nome']); ?></span>
+                                        <div class="team-cell">
+                                            <img class="team-logo" src="/images/escudos/<?php echo $team['escudo'] ? $team['escudo'] : '0.png'; ?>" alt="Escudo" />
+                                            <span><?php echo htmlspecialchars($team['nome']); ?></span>
+                                        </div>
                                     </td>
                                     <td class="pts-col"><?php echo $team['pontos']; ?></td>
                                     <td><?php echo $team['jogos']; ?></td>
@@ -473,8 +527,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                             <tr>
                                 <td class="pos-col <?php echo $posClass; ?>"><?php echo $pos++; ?>º</td>
                                 <td class="team-col">
-                                    <img class="team-logo" src="/images/escudos/<?php echo $team['escudo'] ? $team['escudo'] : '0.png'; ?>" alt="Escudo" />
-                                    <span><?php echo htmlspecialchars($team['nome']); ?></span>
+                                    <div class="team-cell">
+                                        <img class="team-logo" src="/images/escudos/<?php echo $team['escudo'] ? $team['escudo'] : '0.png'; ?>" alt="Escudo" />
+                                        <span><?php echo htmlspecialchars($team['nome']); ?></span>
+                                    </div>
                                 </td>
                                 <td class="pts-col"><?php echo $team['pontos']; ?></td>
                                 <td><?php echo $team['jogos']; ?></td>
@@ -517,8 +573,22 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                 $gA = $partida['status'] == 1 ? $partida['timeA_gols'] : '-';
                                 $gB = $partida['status'] == 1 ? $partida['timeB_gols'] : '-';
                                 
-                                $winA = ($partida['status'] == 1 && $gA > $gB) ? "winner" : "";
-                                $winB = ($partida['status'] == 1 && $gB > $gA) ? "winner" : "";
+                                $temPenaltis = ($partida['status'] == 1 && $partida['timeA_penaltis'] !== null && $partida['timeB_penaltis'] !== null);
+                                $pA = $temPenaltis ? (int)$partida['timeA_penaltis'] : null;
+                                $pB = $temPenaltis ? (int)$partida['timeB_penaltis'] : null;
+
+                                $winA = "";
+                                $winB = "";
+                                if ($partida['status'] == 1) {
+                                    if ($gA > $gB) {
+                                        $winA = "winner";
+                                    } elseif ($gB > $gA) {
+                                        $winB = "winner";
+                                    } elseif ($temPenaltis) {
+                                        if ($pA > $pB) $winA = "winner";
+                                        elseif ($pB > $pA) $winB = "winner";
+                                    }
+                                }
                             ?>
                                 <div class="bracket-match-card">
                                     <div class="bracket-match-row <?php echo $winA; ?>">
@@ -526,16 +596,29 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                             <img class="team-logo" src="/images/escudos/<?php echo $tA['Escudo'] ?? '0.png'; ?>" alt="" />
                                             <?php echo htmlspecialchars($tA['Nome'] ?? 'Indefinido'); ?>
                                         </span>
-                                        <span class="bracket-score"><?php echo $gA; ?></span>
+                                        <span class="bracket-score">
+                                            <?php echo $gA; ?>
+                                            <?php if ($temPenaltis): ?>
+                                                <small style="font-size: 0.8rem; color: #38bdf8; font-weight: 700; margin-left: 2px;">(<?php echo $pA; ?>)</small>
+                                            <?php endif; ?>
+                                        </span>
                                     </div>
                                     <div class="bracket-match-row <?php echo $winB; ?>">
                                         <span class="bracket-team">
                                             <img class="team-logo" src="/images/escudos/<?php echo $tB['Escudo'] ?? '0.png'; ?>" alt="" />
                                             <?php echo htmlspecialchars($tB['Nome'] ?? 'Indefinido'); ?>
                                         </span>
-                                        <span class="bracket-score"><?php echo $gB; ?></span>
+                                        <span class="bracket-score">
+                                            <?php echo $gB; ?>
+                                            <?php if ($temPenaltis): ?>
+                                                <small style="font-size: 0.8rem; color: #38bdf8; font-weight: 700; margin-left: 2px;">(<?php echo $pB; ?>)</small>
+                                            <?php endif; ?>
+                                        </span>
                                     </div>
                                     <div class="bracket-match-info">
+                                        <?php if($temPenaltis): ?>
+                                            <span style="color: #0284c7; font-weight: 600; font-size: 0.78rem;">Pên: <?php echo $pA . " × " . $pB; ?></span>
+                                        <?php endif; ?>
                                         <?php if($partida['grupo']): ?>
                                             <span>Grupo <?php echo htmlspecialchars($partida['grupo']); ?></span>
                                         <?php endif; ?>
@@ -575,9 +658,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                 <?php else: foreach ($artilharia as $art): ?>
                                     <tr>
                                         <td class="player-col"><?php echo htmlspecialchars($art['nome']); ?></td>
-                                        <td style="display:flex; align-items:center; gap:6px;">
-                                            <img class="team-logo" src="/images/escudos/<?php echo $art['escudo'] ? $art['escudo'] : '0.png'; ?>" alt="" />
-                                            <span><?php echo htmlspecialchars($art['clube']); ?></span>
+                                        <td class="team-col">
+                                            <div class="team-cell">
+                                                <img class="team-logo" src="/images/escudos/<?php echo $art['escudo'] ? $art['escudo'] : '0.png'; ?>" alt="" />
+                                                <span><?php echo htmlspecialchars($art['clube']); ?></span>
+                                            </div>
                                         </td>
                                         <td><span class="stats-count-badge"><?php echo $art['valor']; ?></span></td>
                                     </tr>
@@ -608,9 +693,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                 <?php else: foreach ($assistencias as $ass): ?>
                                     <tr>
                                         <td class="player-col"><?php echo htmlspecialchars($ass['nome']); ?></td>
-                                        <td style="display:flex; align-items:center; gap:6px;">
-                                            <img class="team-logo" src="/images/escudos/<?php echo $ass['escudo'] ? $ass['escudo'] : '0.png'; ?>" alt="" />
-                                            <span><?php echo htmlspecialchars($ass['clube']); ?></span>
+                                        <td class="team-col">
+                                            <div class="team-cell">
+                                                <img class="team-logo" src="/images/escudos/<?php echo $ass['escudo'] ? $ass['escudo'] : '0.png'; ?>" alt="" />
+                                                <span><?php echo htmlspecialchars($ass['clube']); ?></span>
+                                            </div>
                                         </td>
                                         <td><span class="stats-count-badge" style="background:#34d399;"><?php echo $ass['valor']; ?></span></td>
                                     </tr>
@@ -646,9 +733,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                 <?php else: foreach ($suspensos as $sus): ?>
                                     <tr>
                                         <td class="player-col"><?php echo htmlspecialchars($sus['nome']); ?></td>
-                                        <td style="display:flex; align-items:center; gap:6px;">
-                                            <img class="team-logo" src="/images/escudos/<?php echo $sus['escudo'] ? $sus['escudo'] : '0.png'; ?>" alt="" />
-                                            <span><?php echo htmlspecialchars($sus['clube']); ?></span>
+                                        <td class="team-col">
+                                            <div class="team-cell">
+                                                <img class="team-logo" src="/images/escudos/<?php echo $sus['escudo'] ? $sus['escudo'] : '0.png'; ?>" alt="" />
+                                                <span><?php echo htmlspecialchars($sus['clube']); ?></span>
+                                            </div>
                                         </td>
                                         <td><span class="stats-badge suspenso">Suspenso</span></td>
                                     </tr>
@@ -679,9 +768,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                 <?php else: foreach ($lesionados as $les): ?>
                                     <tr>
                                         <td class="player-col"><?php echo htmlspecialchars($les['nome']); ?></td>
-                                        <td style="display:flex; align-items:center; gap:6px;">
-                                            <img class="team-logo" src="/images/escudos/<?php echo $les['escudo'] ? $les['escudo'] : '0.png'; ?>" alt="" />
-                                            <span><?php echo htmlspecialchars($les['clube']); ?></span>
+                                        <td class="team-col">
+                                            <div class="team-cell">
+                                                <img class="team-logo" src="/images/escudos/<?php echo $les['escudo'] ? $les['escudo'] : '0.png'; ?>" alt="" />
+                                                <span><?php echo htmlspecialchars($les['clube']); ?></span>
+                                            </div>
                                         </td>
                                         <td><span class="stats-badge lesionado"><?php echo $les['retorno']; ?></span></td>
                                     </tr>
@@ -712,9 +803,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                 <?php else: foreach ($cartoesAmarelosAcumulados as $am): ?>
                                     <tr>
                                         <td class="player-col"><?php echo htmlspecialchars($am['nome']); ?></td>
-                                        <td style="display:flex; align-items:center; gap:6px;">
-                                            <img class="team-logo" src="/images/escudos/<?php echo $am['escudo'] ? $am['escudo'] : '0.png'; ?>" alt="" />
-                                            <span><?php echo htmlspecialchars($am['clube']); ?></span>
+                                        <td class="team-col">
+                                            <div class="team-cell">
+                                                <img class="team-logo" src="/images/escudos/<?php echo $am['escudo'] ? $am['escudo'] : '0.png'; ?>" alt="" />
+                                                <span><?php echo htmlspecialchars($am['clube']); ?></span>
+                                            </div>
                                         </td>
                                         <td>
                                             <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">

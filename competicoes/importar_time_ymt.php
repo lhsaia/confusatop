@@ -74,7 +74,8 @@ if (!empty($_FILES['files'])) {
 		if($filePath != "" && $forbidden == 0 && $importExt == $correct_extension && $importSize <= $max_file_size){
 
 			if(simplexml_load_string(file_get_contents($filePath)) == false){
-				$xml = simplexml_load_string(utf8_encode(file_get_contents($filePath)));
+				$content = file_get_contents($filePath);
+				$xml = simplexml_load_string(function_exists('mb_convert_encoding') ? mb_convert_encoding($content, 'UTF-8', 'ISO-8859-1') : utf8_encode($content));
 
 			} else {
 				$xml = simplexml_load_string(file_get_contents($filePath));
@@ -441,6 +442,18 @@ if (!empty($_FILES['files'])) {
 		
 if($is_success){
 	$competicao->gravarImportacao($idCompeticao, abs($codigo_time), $pais_time);
+	
+	$stSlot = $db->prepare("SELECT slot FROM competicao_times WHERE id_competicao = :idComp AND codigo_time = :cod LIMIT 1");
+	$codTimeAbs = abs($codigo_time);
+	$stSlot->bindParam(':idComp', $idCompeticao);
+	$stSlot->bindParam(':cod', $codTimeAbs);
+	$stSlot->execute();
+	$rSlot = $stSlot->fetch(PDO::FETCH_ASSOC);
+	if($rSlot && !empty($rSlot['slot'])){
+		$competicao->definirSlotTime($idCompeticao, $codTimeAbs, $rSlot['slot']);
+	} else {
+		$competicao->atualizarJogosPorSlot($idCompeticao, $codTimeAbs, $codigo_time);
+	}
 }
 
 die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg, 'errors'=> $error_msg ]));

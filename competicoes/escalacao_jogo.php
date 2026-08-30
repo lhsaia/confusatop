@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
@@ -89,6 +89,17 @@ $clube = ['Nome' => $nomeTime];
 // Permissão: Apenas Admin, Dono da Competição ou Dono do Time
 if (!$isAdmin && $userLogado != $donoCompeticao && $userLogado != $donoTime) {
     die("Acesso negado. Apenas o responsável pelo time ou o administrador podem alterar a escalação.");
+}
+
+// Se for edição de escalação para um jogo específico, validar se o jogo já foi simulado/encerrado
+if ($idJogo > 0) {
+    $stmtStatusJogo = $db->prepare("SELECT status FROM jogos_clube WHERE id = :idJogo LIMIT 1");
+    $stmtStatusJogo->bindParam(':idJogo', $idJogo, PDO::PARAM_INT);
+    $stmtStatusJogo->execute();
+    $jogoStatusRow = $stmtStatusJogo->fetch(PDO::FETCH_ASSOC);
+    if ($jogoStatusRow && $jogoStatusRow['status'] == 1) {
+        die("Esta partida já foi simulada/encerrada e sua escalação não pode mais ser alterada.");
+    }
 }
 
 // Processar formulário de escalação (POST)

@@ -111,16 +111,49 @@ require_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 		
 		<label for='input_sorteio'>Sorteio</label>
 		<select name='input_sorteio' id='input_sorteio'>
-			<option value='0' <?php echo ($options['sorteio']==0?"selected":"")?>>Automático</option>
-			<option value='1' <?php echo ($options['sorteio']==1?"selected":"")?>>Manual</option>
+			<option value='0' <?php echo ($options['sorteio']==0?"selected":"")?>>Automático (Distribuir times reais)</option>
+			<option value='2' <?php echo ($options['sorteio']==2?"selected":"")?>>Intermediário (Gerar grade com slots / placeholders)</option>
+			<option value='1' <?php echo ($options['sorteio']==1?"selected":"")?>>Totalmente Manual (Criar jogos um a um)</option>
 		</select>
 		
 		<label for='input_tipocompeticao'>Tipo de competição</label>
 		<select name='input_tipocompeticao' id='input_tipocompeticao'>
-			<option value='0' <?php echo ($options['tipocompeticao']==0?"selected":"")?>>Misto</option>
+			<option value='0' <?php echo ($options['tipocompeticao']==0?"selected":"")?>>Misto (Grupos + Mata-mata)</option>
 			<option value='1' <?php echo ($options['tipocompeticao']==1?"selected":"")?>>Mata-mata</option>
 			<option value='2' <?php echo ($options['tipocompeticao']==2?"selected":"")?>>Pontos Corridos</option>
 		</select>
+
+		<!-- Configurações específicas para Torneio Misto (Fase de Grupos) -->
+		<div id="secao_misto" style="<?php echo ($options['tipocompeticao']==0 ? '' : 'display:none;'); ?> background: rgba(2, 132, 199, 0.04); border: 1px dashed rgba(2, 132, 199, 0.25); border-radius: 8px; padding: 15px; margin-top: 15px;">
+			<div style="display: flex; gap: 15px; flex-wrap: wrap;">
+				<div style="flex: 1; min-width: 140px;">
+					<label for='input_numgrupos' style="margin-top:0;">Número de grupos</label>
+					<input type='number' min='1' max='16' name='input_numgrupos' id='input_numgrupos' value='<?php echo (isset($options['num_grupos']) && intval($options['num_grupos']) > 0) ? intval($options['num_grupos']) : 4; ?>'/>
+				</div>
+				<div style="flex: 1; min-width: 140px;">
+					<label for='input_timesporgrupo' style="margin-top:0;">Times por grupo</label>
+					<input type='number' min='2' max='16' name='input_timesporgrupo' id='input_timesporgrupo' value='<?php echo (isset($options['times_por_grupo']) && intval($options['times_por_grupo']) > 0) ? intval($options['times_por_grupo']) : 4; ?>'/>
+				</div>
+			</div>
+			<div style="margin-top: 10px;">
+				<label for='input_tipopreliminar'>Fase Preliminar (Se houver times excedentes)</label>
+				<select name='input_tipopreliminar' id='input_tipopreliminar'>
+					<option value='1' <?php echo (!isset($options['tipo_preliminar']) || $options['tipo_preliminar']==1) ? "selected" : ""; ?>>Ida e Volta</option>
+					<option value='0' <?php echo (isset($options['tipo_preliminar']) && $options['tipo_preliminar']==0) ? "selected" : ""; ?>>Apenas Ida (Jogo Único)</option>
+				</select>
+			</div>
+		</div>
+
+		<!-- Configurações específicas para Pontos Corridos -->
+		<div id="secao_pontoscorridos" style="<?php echo ($options['tipocompeticao']==2 ? '' : 'display:none;'); ?> background: rgba(2, 132, 199, 0.04); border: 1px dashed rgba(2, 132, 199, 0.25); border-radius: 8px; padding: 15px; margin-top: 15px;">
+			<label for='input_turnospontoscorridos' style="margin-top:0;">Número de turnos</label>
+			<select name='input_turnospontoscorridos' id='input_turnospontoscorridos'>
+				<option value='1' <?php echo (isset($options['turnos_pontos_corridos']) && $options['turnos_pontos_corridos']==1) ? "selected" : ""; ?>>1 Turno (Apenas Ida)</option>
+				<option value='2' <?php echo (!isset($options['turnos_pontos_corridos']) || $options['turnos_pontos_corridos']==2) ? "selected" : ""; ?>>2 Turnos (Ida e Volta)</option>
+				<option value='3' <?php echo (isset($options['turnos_pontos_corridos']) && $options['turnos_pontos_corridos']==3) ? "selected" : ""; ?>>3 Turnos</option>
+				<option value='4' <?php echo (isset($options['turnos_pontos_corridos']) && $options['turnos_pontos_corridos']==4) ? "selected" : ""; ?>>4 Turnos</option>
+			</select>
+		</div>
 
 		<label for='input_subirjogoslive' style="margin-top: 15px;">
 			Subir jogos no Live?
@@ -342,6 +375,20 @@ $(document).ready(function($){
 
   
 
+	$("#input_tipocompeticao").on("change", function(){
+		let tipo = $(this).val();
+		if(tipo == "0"){
+			$("#secao_misto").slideDown(200);
+			$("#secao_pontoscorridos").slideUp(200);
+		} else if(tipo == "2"){
+			$("#secao_misto").slideUp(200);
+			$("#secao_pontoscorridos").slideDown(200);
+		} else {
+			$("#secao_misto").slideUp(200);
+			$("#secao_pontoscorridos").slideUp(200);
+		}
+	});
+
         // Inicializar Select2
         $('.select2-multiple').select2({
             placeholder: "Selecione..."
@@ -358,6 +405,10 @@ $(document).ready(function($){
 			let gol_fora = $("#input_golfora").prop("checked") * 1;
 			let final_unica = $("#input_finalunica").prop("checked") * 1;
 			let tipo_competicao = $("#input_tipocompeticao").val();
+			let num_grupos = $("#input_numgrupos").val();
+			let times_por_grupo = $("#input_timesporgrupo").val();
+			let tipo_preliminar = $("#input_tipopreliminar").val();
+			let turnos_pontos_corridos = $("#input_turnospontoscorridos").val();
 			let criterio_desempate = $("#input_criteriosdesempate").val();
 			let criterio_desempate_final = $("#input_criteriosdesempatefinal").val();
 			let criterio_suspensao = $("#input_criteriossuspensao").val();
@@ -386,6 +437,10 @@ $(document).ready(function($){
 			formData.append('gol_fora',gol_fora);
 			formData.append('final_unica',final_unica);
 			formData.append('tipo_competicao',tipo_competicao);
+			formData.append('num_grupos',num_grupos);
+			formData.append('times_por_grupo',times_por_grupo);
+			formData.append('tipo_preliminar',tipo_preliminar);
+			formData.append('turnos_pontos_corridos',turnos_pontos_corridos);
 			formData.append('criterio_desempate',criterio_desempate);
 			formData.append('criterio_desempate_final',criterio_desempate_final);
 			formData.append('criterio_suspensao',criterio_suspensao);
@@ -415,7 +470,7 @@ $(document).ready(function($){
 			
 			// Display the key/value pairs
 			for (var pair of formData.entries()) {
-				console.log(pair[0]+ ', ' + pair[1]); 
+				// console.log(pair[0]+ ', ' + pair[1]); 
 			}
 
           $.ajax({
@@ -430,7 +485,7 @@ $(document).ready(function($){
                 
                 window.location.href = 'competitionstatus.php?id=' + idCompeticao;
           }).fail(function(data) {
-              console.log(data);
+              // console.log(data);
             $('#errorbox').html(data.error_msg);
           });
           

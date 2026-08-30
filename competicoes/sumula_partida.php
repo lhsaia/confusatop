@@ -21,24 +21,110 @@ if($matchInfo){
 	if($competitionInfo){
 		$nomeComposto = $competitionInfo['ano'] . " - " . $competitionInfo['nome'];
 		
-		// Encontrar o arquivo PNG dinamicamente em qualquer rodada usando glob
-		$baseDir = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/" . $nomeComposto;
-		// Buscamos em qualquer subdiretório (*º Rodada ou similar) pelo arquivo de imagem correto
-		$files = glob($baseDir . "/*/" . $matchInfo['path'] . ".png");
-		if(empty($files)){
-			// Busca de segurança em todo o diretório de Partidas caso o nome da competição tenha divergência sutil
-			$files = glob($_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/*/*/" . $matchInfo['path'] . ".png");
+		// Sigilo Temporal: Se a partida ainda não tiver terminado no tempo real, bloquear a súmula
+		$horarioJogo = strtotime($matchInfo['data']);
+		$duracaoMinutos = (!empty($matchInfo['timeA_penaltis']) || !empty($matchInfo['timeB_penaltis'])) ? 150 : 120;
+		$horarioTermino = $horarioJogo + ($duracaoMinutos * 60);
+
+		// Se já terminou no tempo real e possui arquivo gerado, envia a imagem
+		if (time() >= $horarioTermino && !empty($matchInfo['path'])) {
+			$baseDir = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/" . $nomeComposto;
+			$files = glob($baseDir . "/*/" . $matchInfo['path'] . ".png");
+			if(empty($files)){
+				$files = glob($_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/*/*/" . $matchInfo['path'] . ".png");
+			}
+			
+			if(!empty($files)){
+				$filePath = $files[0];
+				header("Content-Type: image/png");
+				header("Content-Length: " . filesize($filePath));
+				readfile($filePath);
+				exit;
+			}
 		}
-		
-		if(!empty($files)){
-			$filePath = $files[0];
-			header("Content-Type: image/png");
-			header("Content-Length: " . filesize($filePath));
-			readfile($filePath);
-			exit;
-		} else {
-			die("Erro: Arquivo de imagem da súmula nao encontrado no servidor.");
-		}
+
+		// Se chegou aqui: ou o jogo não terminou no tempo real, ou a imagem ainda está sendo gerada
+		include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
+
+		$page_title = "Súmula da Partida - CONFUSA.top";
+		$css_filename = "home_redesign";
+		$aux_css = "home_redesign";
+		$css_login = 'login';
+		$css_versao = date('h:i:s');
+		include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+
+		$timeA_nome = !empty($matchInfo['timeA_nome']) ? $matchInfo['timeA_nome'] : (!empty($matchInfo['timeA_id']) ? "Time #" . $matchInfo['timeA_id'] : "A definir");
+		$timeB_nome = !empty($matchInfo['timeB_nome']) ? $matchInfo['timeB_nome'] : (!empty($matchInfo['timeB_id']) ? "Time #" . $matchInfo['timeB_id'] : "A definir");
+		$dataFormatada = date('d/m/Y \à\s H:i', $horarioJogo);
+		$horarioFimFormatado = date('H:i', $horarioTermino);
+		$emAndamento = (time() >= $horarioJogo && time() < $horarioTermino);
+		$jaEncerradoTempoReal = (time() >= $horarioTermino);
+?>
+<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
+
+<main class="propostas-container" style="max-width: 720px; margin: 40px auto; padding: 0 15px; font-family: 'Montserrat', sans-serif;">
+    <div class="propostas-card" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 18px; border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06); padding: 40px 30px; text-align: center;">
+        
+        <div style="width: 76px; height: 76px; margin: 0 auto 22px; border-radius: 50%; background: linear-gradient(135deg, rgba(2, 132, 199, 0.15), rgba(56, 189, 248, 0.25)); display: flex; align-items: center; justify-content: center; color: #0284c7; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.18);">
+            <span class="material-symbols-outlined" style="font-size: 40px;">
+                <?php echo $jaEncerradoTempoReal ? 'pending_actions' : ($emAndamento ? 'sports_soccer' : 'schedule'); ?>
+            </span>
+        </div>
+
+        <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 700; color: #0f172a; margin: 0 0 10px 0;">
+            <?php 
+                if ($jaEncerradoTempoReal) {
+                    echo 'Processando Súmula Oficial';
+                } elseif ($emAndamento) {
+                    echo 'Partida em Andamento';
+                } else {
+                    echo 'Partida Agendada';
+                }
+            ?>
+        </h2>
+
+        <div style="display: inline-block; padding: 6px 18px; background: rgba(2, 132, 199, 0.1); border-radius: 20px; color: #0284c7; font-weight: 600; font-size: 0.85rem; margin-bottom: 24px;">
+            <?php echo htmlspecialchars($nomeComposto); ?>
+        </div>
+
+        <div style="background: rgba(241, 245, 249, 0.75); border: 1px solid rgba(0, 0, 0, 0.06); border-radius: 14px; padding: 20px; margin-bottom: 24px;">
+            <div style="font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 600; color: #1e293b; display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                <span><?php echo htmlspecialchars($timeA_nome); ?></span>
+                <span style="font-size: 0.85rem; font-weight: 700; color: #64748b; padding: 3px 10px; background: #ffffff; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">VS</span>
+                <span><?php echo htmlspecialchars($timeB_nome); ?></span>
+            </div>
+            <div style="margin-top: 12px; font-size: 0.92rem; color: #475569; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: #0284c7;">event</span>
+                <span>Data & Horário: <strong><?php echo $dataFormatada; ?></strong> <?php if(!$jaEncerradoTempoReal): ?>(término aprox. às <strong><?php echo $horarioFimFormatado; ?></strong>)<?php endif; ?></span>
+            </div>
+        </div>
+
+        <p style="color: #475569; font-size: 1rem; line-height: 1.65; margin: 0 auto 30px; max-width: 520px;">
+            <?php if($jaEncerradoTempoReal): ?>
+                A partida já encerrou seu horário regulamentar. O arquivo visual da súmula está sendo gerado e estará disponível em instantes.
+            <?php elseif($emAndamento): ?>
+                A partida está acontecendo agora! O placar e a súmula oficial com todos os lances, gols e cartões serão liberados automaticamente após o término do jogo.
+            <?php else: ?>
+                A partida ainda está agendada. A súmula oficial será liberada automaticamente após o término do confronto.
+            <?php endif; ?>
+        </p>
+
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <a href="/competicoes/listajogos.php?id=<?php echo $idCompeticao; ?>" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; background: #0284c7; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 600; font-family: 'Outfit', sans-serif; font-size: 0.95rem; box-shadow: 0 3px 10px rgba(2, 132, 199, 0.25); transition: all 0.2s ease;">
+                <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+                <span>Voltar para a Lista de Jogos</span>
+            </a>
+            <a href="/competicoes/competitionstatus.php?id=<?php echo $idCompeticao; ?>" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; background: rgba(0, 0, 0, 0.04); border: 1px solid rgba(0, 0, 0, 0.08); color: #475569; text-decoration: none; border-radius: 10px; font-weight: 600; font-family: 'Outfit', sans-serif; font-size: 0.95rem; transition: all 0.2s ease;">
+                <span class="material-symbols-outlined" style="font-size: 20px;">trophy</span>
+                <span>Ver Competição</span>
+            </a>
+        </div>
+    </div>
+</main>
+
+<?php
+		include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
+		exit;
 	}
 }
 

@@ -9,7 +9,7 @@ if (!$idCompeticao) {
     die("ID da competição não fornecido.");
 }
 
-require_once $_SERVER['DOCUMENT_ROOT'] . "/vendor/autoload.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . "/lib/simplexlsx/SimpleXLSXGen.php";
 include_once $_SERVER['DOCUMENT_ROOT'] . "/config/database.php";
 include_once $_SERVER['DOCUMENT_ROOT'] . "/objetos/competicao_clube.php";
 
@@ -29,54 +29,41 @@ if (!$isAdmin && $_SESSION['user_id'] != $dono) {
     die("Você não tem permissão para exportar esta planilha.");
 }
 
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Shuchkin\SimpleXLSXGen;
 
-$spreadsheet = new Spreadsheet();
-$sheet = $spreadsheet->getActiveSheet();
-
-// Style configurations
-$headerStyle = [
-    'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-    'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '1A1469']],
-    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+// Rows data construction
+$rows = [
+    // Instructions block
+    ["<b>INSTRUÇÕES DE PREENCHIMENTO:</b>", null, null, null, null, null, null, null, null, null, null, null, null, null],
+    ["1. Coluna 'ID Partida': NÃO altere o ID de partidas existentes. Deixe em branco se quiser CADASTRAR um novo jogo.", null, null, null, null, null, null, null, null, null, null, null, null, null],
+    ["2. Colunas 'Time A ID' e 'Time B ID': Use IDs de times válidos da competição. Os nomes são apenas informativos.", null, null, null, null, null, null, null, null, null, null, null, null, null],
+    ["3. 'Data/Hora': Use o formato YYYY-MM-DD HH:MM:SS (Ex: 2026-08-05 15:30:00).", null, null, null, null, null, null, null, null, null, null, null, null, null],
+    ["4. 'Neutro': Insira 0 para jogo com mando de campo do Time A, ou 1 para campo neutro.", null, null, null, null, null, null, null, null, null, null, null, null, null],
+    ["5. Para salvar as alterações, salve o arquivo e faça o upload através do botão 'Importar Excel'.", null, null, null, null, null, null, null, null, null, null, null, null, null],
+    [], // Blank line (row 7)
+    // Headers (row 8)
+    [
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>ID Partida</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Time A ID</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Time A Nome</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Gols A</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Time B ID</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Time B Nome</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Gols B</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Data/Hora</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Fase ID</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Grupo</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Estádio ID</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Árbitro ID</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Neutro (0/1)</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Status (0/1)</b></style>'
+    ]
 ];
-
-// Instructions block
-$sheet->setCellValue('A1', "INSTRUÇÕES DE PREENCHIMENTO:");
-$sheet->mergeCells('A1:N1');
-$sheet->setCellValue('A2', "1. Coluna 'ID Partida': NÃO altere o ID de partidas existentes. Deixe em branco se quiser CADASTRAR um novo jogo.");
-$sheet->mergeCells('A2:N2');
-$sheet->setCellValue('A3', "2. Colunas 'Time A ID' e 'Time B ID': Use IDs de times válidos da competição. Os nomes são apenas informativos.");
-$sheet->mergeCells('A3:N3');
-$sheet->setCellValue('A4', "3. 'Data/Hora': Use o formato YYYY-MM-DD HH:MM:SS (Ex: 2026-08-05 15:30:00).");
-$sheet->mergeCells('A4:N4');
-$sheet->setCellValue('A5', "4. 'Neutro': Insira 0 para jogo com mando de campo do Time A, ou 1 para campo neutro.");
-$sheet->mergeCells('A5:N5');
-$sheet->setCellValue('A6', "5. Para salvar as alterações, salve o arquivo e faça o upload através do botão 'Importar Excel'.");
-$sheet->mergeCells('A6:N6');
-
-// Headers
-$headers = [
-    'ID Partida', 'Time A ID', 'Time A Nome', 'Gols A',
-    'Time B ID', 'Time B Nome', 'Gols B',
-    'Data/Hora', 'Fase ID', 'Grupo', 'Estádio ID', 'Árbitro ID', 'Neutro (0/1)', 'Status (0/1)'
-];
-
-$row = 8;
-$colChar = 'A';
-foreach ($headers as $h) {
-    $sheet->setCellValue($colChar . $row, $h);
-    $sheet->getColumnDimension($colChar)->setAutoSize(true);
-    $colChar++;
-}
-$sheet->getStyle('A8:N8')->applyFromArray($headerStyle);
 
 // Load matches
 $stmt = $competicaoObj->carregarListaJogos($idCompeticao);
 $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$dataRow = 9;
 foreach ($matches as $m) {
     $stmtTeamA = $db->prepare("SELECT Nome FROM clube WHERE ID = ?");
     $stmtTeamA->execute([$m['timeA_id']]);
@@ -86,32 +73,30 @@ foreach ($matches as $m) {
     $stmtTeamB->execute([$m['timeB_id']]);
     $tBName = $stmtTeamB->fetchColumn() ?: "Time #".$m['timeB_id'];
 
-    $sheet->setCellValue('A' . $dataRow, $m['id']);
-    $sheet->setCellValue('B' . $dataRow, $m['timeA_id']);
-    $sheet->setCellValue('C' . $dataRow, $tAName);
-    $sheet->setCellValue('D' . $dataRow, $m['timeA_gols']);
-    $sheet->setCellValue('E' . $dataRow, $m['timeB_id']);
-    $sheet->setCellValue('F' . $dataRow, $tBName);
-    $sheet->setCellValue('G' . $dataRow, $m['timeB_gols']);
-    $sheet->setCellValue('H' . $dataRow, $m['data']);
-    $sheet->setCellValue('I' . $dataRow, $m['fase']);
-    $sheet->setCellValue('J' . $dataRow, $m['grupo']);
-    $sheet->setCellValue('K' . $dataRow, $m['estadio']);
-    $sheet->setCellValue('L' . $dataRow, $m['arbitro']);
-    $sheet->setCellValue('M' . $dataRow, $m['neutro']);
-    $sheet->setCellValue('N' . $dataRow, $m['status']);
-    
-    // Style read-only columns (C, F)
-    $sheet->getStyle('C' . $dataRow)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('F1F5F9');
-    $sheet->getStyle('F' . $dataRow)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('F1F5F9');
-    
-    $dataRow++;
+    $rows[] = [
+        $m['id'],
+        $m['timeA_id'],
+        '<style bgcolor="#F1F5F9">' . htmlspecialchars($tAName, ENT_QUOTES, 'UTF-8') . '</style>',
+        $m['timeA_gols'],
+        $m['timeB_id'],
+        '<style bgcolor="#F1F5F9">' . htmlspecialchars($tBName, ENT_QUOTES, 'UTF-8') . '</style>',
+        $m['timeB_gols'],
+        $m['data'],
+        $m['fase'],
+        $m['grupo'],
+        $m['estadio'],
+        $m['arbitro'],
+        $m['neutro'],
+        $m['status']
+    ];
 }
 
-header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-header('Content-Disposition: attachment;filename="tabela_competicao_' . $idCompeticao . '.xlsx"');
-header('Cache-Control: max-age=0');
-
-$writer = new Xlsx($spreadsheet);
-$writer->save('php://output');
+$xlsx = SimpleXLSXGen::fromArray($rows);
+$xlsx->mergeCells('A1:N1');
+$xlsx->mergeCells('A2:N2');
+$xlsx->mergeCells('A3:N3');
+$xlsx->mergeCells('A4:N4');
+$xlsx->mergeCells('A5:N5');
+$xlsx->mergeCells('A6:N6');
+$xlsx->downloadAs('tabela_competicao_' . $idCompeticao . '.xlsx');
 exit();

@@ -9,7 +9,7 @@ $db = $database->getConnection();
 $matchId = isset($_POST['matchId']) ? $_POST['matchId'] : die();
 
 // Puxar info da partida para saber qual a competição
-$stmt = $db->prepare("SELECT competicao FROM competicao_jogos WHERE id = :id");
+$stmt = $db->prepare("SELECT competicao_id as competicao FROM jogos_clube WHERE id = :id");
 $stmt->bindParam(':id', $matchId);
 $stmt->execute();
 $match = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -26,7 +26,17 @@ if (!$isAdmin && $_SESSION['user_id'] != $dono) {
     die(json_encode(array("success" => false, "error" => "Você não tem permissão para apagar jogos nesta competição.")));
 }
 
-$query = "DELETE FROM competicao_jogos WHERE id = :id";
+// 1. Limpar eventos e escalações associados a este jogo
+$stmtEv = $db->prepare("DELETE FROM jogos_clube_eventos WHERE id_jogo = :id");
+$stmtEv->bindParam(':id', $matchId);
+$stmtEv->execute();
+
+$stmtEsc = $db->prepare("DELETE FROM jogos_clube_escalacao WHERE id_partida = :id");
+$stmtEsc->bindParam(':id', $matchId);
+$stmtEsc->execute();
+
+// 2. Apagar a partida
+$query = "DELETE FROM jogos_clube WHERE id = :id";
 $stmt = $db->prepare($query);
 $stmt->bindParam(':id', $matchId);
 

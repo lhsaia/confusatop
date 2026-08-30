@@ -398,7 +398,7 @@ $('.salvar').click(function(){
 
 
 for (var key of formData.entries()) {
-     console.log(key[0] + ', ' + key[1]);
+     // console.log(key[0] + ', ' + key[1]);
  }
 
      $.ajax({
@@ -414,7 +414,7 @@ for (var key of formData.entries()) {
                 .done(function(data) {
 
         // log data to the console so we can see
-        console.log(data);
+        // console.log(data);
 
 
         if (! data.success) {
@@ -434,10 +434,10 @@ for (var key of formData.entries()) {
 
         // here we will handle errors and validation messages
         }).fail(function(jqXHR, textStatus, errorThrown ){
-            console.log("Erro");
-            console.log(jqXHR);
-            console.log(textStatus);
-            console.log(errorThrown);
+            // console.log("Erro");
+            // console.log(jqXHR);
+            // console.log(textStatus);
+            // console.log(errorThrown);
             $('#modalProposta').hide();
             $('#errorbox').append('<div class="alert alert-danger">Não foi possível editar o jogador, '+errorThrown+'</div>');
         });

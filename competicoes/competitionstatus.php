@@ -26,16 +26,34 @@ $times_inseridos = $info['times_inseridos'];
 
 $all_options = $competicao->checkOptionsFilled($idCompeticao);
 
-//temporary data
-if($all_options == null){
-	if($times_inseridos < $total_times){
-		$codigo_status_competicao = 1;
-	} else {
-		$codigo_status_competicao = 2;
-	}
-	
+// Consultar status real dos jogos da competição
+$stmtJogosStatus = $db->prepare("
+    SELECT 
+        COUNT(*) as total_jogos,
+        SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as jogos_simulados,
+        SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) as jogos_pendentes,
+        SUM(CASE WHEN fase = 8 AND status = 1 THEN 1 ELSE 0 END) as final_simulada
+    FROM jogos_clube 
+    WHERE competicao_id = :idComp AND simulador_interno = 1
+");
+$stmtJogosStatus->execute([':idComp' => $idCompeticao]);
+$statsJogos = $stmtJogosStatus->fetch(PDO::FETCH_ASSOC);
+
+$totalJogos = (int)($statsJogos['total_jogos'] ?? 0);
+$jogosSimulados = (int)($statsJogos['jogos_simulados'] ?? 0);
+$jogosPendentes = (int)($statsJogos['jogos_pendentes'] ?? 0);
+$finalSimulada = (int)($statsJogos['final_simulada'] ?? 0);
+
+if ($all_options != null) {
+	$codigo_status_competicao = 0; // Em criação (opções não preenchidas)
+} elseif ($times_inseridos < $total_times) {
+	$codigo_status_competicao = 1; // Aguardando times
+} elseif ($finalSimulada > 0 || ($totalJogos > 0 && $jogosPendentes === 0 && $jogosSimulados > 0)) {
+	$codigo_status_competicao = 4; // Finalizada
+} elseif ($jogosSimulados > 0) {
+	$codigo_status_competicao = 3; // Em andamento (já teve jogos simulados)
 } else {
-	$codigo_status_competicao = 0;
+	$codigo_status_competicao = 2; // Pronta para simular
 }
 
 $status_competicao = "";
@@ -57,6 +75,10 @@ switch($codigo_status_competicao){
 	case 3: 
 		$status_competicao = "Em andamento";
 		$status_badge_class = "status-em-andamento";
+		break;
+	case 4:
+		$status_competicao = "Finalizada";
+		$status_badge_class = "status-finalizada";
 		break;
 	default:
 		$status_competicao = "Status não disponível";
