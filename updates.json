@@ -19,6 +19,16 @@
         },
         {
           "badge": "bugfix",
+          "title": "Tratamento de Tipos e Deprecations em Login e Status",
+          "desc": "Adicionada validação de existência e verificação estrita de arrays para evitar avisos PHP de array offset on bool e deprecations do password_verify com hash nulo em login_info.php e competitionstatus.php."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Filtragem Estrita de Clubes Participantes na Tabela",
+          "desc": "A tabela de classificação em Estatísticas agora exibe exclusivamente os clubes que foram escalados e confirmados na competição (Lista de Times/Slots), removendo clubes substituídos ou excluídos que permaneciam no banco SQLite anterior."
+        },
+        {
+          "badge": "bugfix",
           "title": "Ocultação do Rótulo (current) na Paginação",
           "desc": "Adicionada a classe .sr-only com display: none para ocultar o texto de acessibilidade (current) no item de página ativa da paginação na lista de jogos e demais páginas com paginação."
         },

@@ -49,6 +49,19 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $clubes[$row['ID']] = $row;
     }
 
+    // Carregar clubes cadastrados no portal (MariaDB) para garantir nomes/escudos atualizados
+    try {
+        $stmtPortalTimes = $db->query("SELECT id, nome as Nome, sigla as TresLetras, escudo as Escudo FROM time");
+        if ($stmtPortalTimes) {
+            while ($pTime = $stmtPortalTimes->fetch(PDO::FETCH_ASSOC)) {
+                if (!empty($pTime['Escudo'])) {
+                    $pTime['Escudo'] = basename($pTime['Escudo']);
+                }
+                $clubes[(int)$pTime['id']] = $pTime;
+            }
+        }
+    } catch (\Throwable $e) {}
+
     // Carregar vagas / slots atribuídos do MariaDB
     $assignedSlotTeams = [];
     $stmtTimesSlots = $competicao->carregarListaTimes($idCompeticao);
@@ -144,21 +157,60 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         }
     } else {
         $tabelaPorGrupo[''] = [];
-        foreach ($clubes as $idC => $c) {
-            $tabelaPorGrupo[''][$idC] = [
-                'id' => $idC,
-                'nome' => $c['Nome'],
-                'escudo' => $c['Escudo'],
-                'sigla' => $c['TresLetras'],
-                'jogos' => 0,
-                'pontos' => 0,
-                'vitorias' => 0,
-                'empates' => 0,
-                'derrotas' => 0,
-                'gp' => 0,
-                'gc' => 0,
-                'sg' => 0
-            ];
+        
+        // Coletar apenas os IDs dos times que efetivamente participam desta competição
+        $timesParticipantesIds = [];
+        foreach ($assignedSlotTeams as $sName => $cIdPortal) {
+            if ($cIdPortal > 0) {
+                $timesParticipantesIds[$cIdPortal] = true;
+            }
+        }
+
+        // Adicionar também times presentes nos jogos da fase 2 (pontos corridos)
+        foreach ($allFase2 as $j) {
+            if (!empty($j['timeA_id']) && (int)$j['timeA_id'] > 0) $timesParticipantesIds[(int)$j['timeA_id']] = true;
+            if (!empty($j['timeB_id']) && (int)$j['timeB_id'] > 0) $timesParticipantesIds[(int)$j['timeB_id']] = true;
+        }
+
+        // Se encontrou times participantes específicos, popula apenas eles
+        if (!empty($timesParticipantesIds)) {
+            foreach (array_keys($timesParticipantesIds) as $idC) {
+                if (isset($clubes[$idC])) {
+                    $c = $clubes[$idC];
+                    $tabelaPorGrupo[''][$idC] = [
+                        'id' => $idC,
+                        'nome' => $c['Nome'],
+                        'escudo' => $c['Escudo'],
+                        'sigla' => $c['TresLetras'],
+                        'jogos' => 0,
+                        'pontos' => 0,
+                        'vitorias' => 0,
+                        'empates' => 0,
+                        'derrotas' => 0,
+                        'gp' => 0,
+                        'gc' => 0,
+                        'sg' => 0
+                    ];
+                }
+            }
+        } else {
+            // Fallback caso não haja slots mapeados
+            foreach ($clubes as $idC => $c) {
+                $tabelaPorGrupo[''][$idC] = [
+                    'id' => $idC,
+                    'nome' => $c['Nome'],
+                    'escudo' => $c['Escudo'],
+                    'sigla' => $c['TresLetras'],
+                    'jogos' => 0,
+                    'pontos' => 0,
+                    'vitorias' => 0,
+                    'empates' => 0,
+                    'derrotas' => 0,
+                    'gp' => 0,
+                    'gc' => 0,
+                    'sg' => 0
+                ];
+            }
         }
     }
     

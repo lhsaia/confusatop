@@ -32,15 +32,15 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
 			$impersonation = $usuario_inserido[1];
 			$info_impersonation = $usuario->passByName($impersonation);
 			$info_real = $usuario->passByName($real_user);
-			$senha_cadastrada = $info_real['senha'];
-			$nomereal = $info_impersonation['nome'];
-			$admin_status = (int)$info_real['admin_status'];
+			$senha_cadastrada = is_array($info_real) ? ($info_real['senha'] ?? '') : '';
+			$nomereal = is_array($info_impersonation) ? ($info_impersonation['nome'] ?? '') : '';
+			$admin_status = is_array($info_real) ? (int)($info_real['admin_status'] ?? 0) : 0;
 			
 			
 			
 			
 			    	// Verify user password and set $_SESSION
-    	if ( $admin_status === 1 && password_verify( $senha_inserida, $senha_cadastrada ) ) {
+    	if ( $admin_status === 1 && !empty($senha_cadastrada) && password_verify( $senha_inserida, $senha_cadastrada ) ) {
             //header_remove();
     		$_SESSION['user_id'] = $usuario->ID($impersonation);
             $_SESSION['username'] = $impersonation;
@@ -48,7 +48,7 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
             $_SESSION['admin_status'] = $admin_status;
             $_SESSION['loggedin'] = true;
 			$_SESSION['impersonated'] = true;
-			$_SESSION['avatar'] = $info_impersonation['avatar'] ?? null;
+			$_SESSION['avatar'] = is_array($info_impersonation) ? ($info_impersonation['avatar'] ?? null) : null;
 			$_SESSION['emTestes'] = $usuario->emTestes($_SESSION['user_id']);
 
 			if (!$_SESSION['emTestes']) {
@@ -79,23 +79,23 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
 			
 		} else {
 			
-			        $info_usuario = $usuario->passByName($usuario_inserido);
-        $senha_cadastrada = $info_usuario['senha'];
-        $nomereal = $info_usuario['nome'];
-        $admin_status = $info_usuario['admin_status'];
+			$info_usuario = $usuario->passByName($usuario_inserido);
+			$senha_cadastrada = is_array($info_usuario) ? ($info_usuario['senha'] ?? '') : '';
+			$nomereal = is_array($info_usuario) ? ($info_usuario['nome'] ?? '') : '';
+			$admin_status = is_array($info_usuario) ? ($info_usuario['admin_status'] ?? 0) : 0;
 
 
-    	// Verify user password and set $_SESSION
-    	if ( password_verify( $senha_inserida, $senha_cadastrada ) ) {
-            //header_remove();
-    		$_SESSION['user_id'] = $usuario->ID($usuario_inserido);
-            $_SESSION['username'] = $usuario_inserido;
-            $_SESSION['nomereal'] = $nomereal;
-            $_SESSION['admin_status'] = $admin_status;
-            $_SESSION['loggedin'] = true;
-			$_SESSION['impersonated'] = false;
-			$_SESSION['avatar'] = $info_usuario['avatar'] ?? null;
-			$_SESSION['emTestes'] = $usuario->emTestes($_SESSION['user_id']);
+			// Verify user password and set $_SESSION
+			if ( !empty($senha_cadastrada) && password_verify( $senha_inserida, $senha_cadastrada ) ) {
+				//header_remove();
+				$_SESSION['user_id'] = $usuario->ID($usuario_inserido);
+				$_SESSION['username'] = $usuario_inserido;
+				$_SESSION['nomereal'] = $nomereal;
+				$_SESSION['admin_status'] = $admin_status;
+				$_SESSION['loggedin'] = true;
+				$_SESSION['impersonated'] = false;
+				$_SESSION['avatar'] = is_array($info_usuario) ? ($info_usuario['avatar'] ?? null) : null;
+				$_SESSION['emTestes'] = $usuario->emTestes($_SESSION['user_id']);
 
 			if (!$_SESSION['emTestes']) {
 				$stmtToken = $db->prepare("SELECT mcp_token FROM usuarios WHERE id = ?");

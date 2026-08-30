@@ -16,13 +16,16 @@ $db = $database->getConnection();
 $competicao = new Competicao_clube($db);
 
 $info = $competicao->readInfo($idCompeticao);
-$nome_competicao = $info['nome'];
-$ano_competicao = $info['ano'];
-$sede_competicao = $info['sede'];
-$federacao_nome = $info['federacao'];
-$logo_competicao = $info['logo'];
-$total_times = $info['total_times'];
-$times_inseridos = $info['times_inseridos'];
+if (!$info) {
+	die("Competição não encontrada.");
+}
+$nome_competicao = $info['nome'] ?? '';
+$ano_competicao = $info['ano'] ?? '';
+$sede_competicao = $info['sede'] ?? '';
+$federacao_nome = $info['federacao'] ?? '';
+$logo_competicao = $info['logo'] ?? '';
+$total_times = (int)($info['total_times'] ?? 0);
+$times_inseridos = (int)($info['times_inseridos'] ?? 0);
 
 $all_options = $competicao->checkOptionsFilled($idCompeticao);
 
