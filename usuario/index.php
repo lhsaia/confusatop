@@ -67,6 +67,23 @@ $propostasPendentesTecnico = (int)($res_tecnicos['total'] ?? 0);
 $tempoDesatualizado = $usuario->alteracoesPosteriores($_SESSION['user_id']);
 $horas = round($tempoDesatualizado/3600,1);
 
+// Garantir a existência da tabela competicao_suspensos antes das consultas
+try {
+    $db->exec("CREATE TABLE IF NOT EXISTS `competicao_suspensos` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `id_competicao` INT NOT NULL,
+        `id_jogador` INT NOT NULL,
+        `cartoes_amarelos` INT DEFAULT 0,
+        `suspenso` TINYINT(1) DEFAULT 0,
+        `jogos_restantes` INT DEFAULT 0,
+        `lesionado_ate` DATE DEFAULT NULL,
+        INDEX (`id_competicao`),
+        INDEX (`id_jogador`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+} catch (Exception $e) {
+    // Silently ignore if table already exists or permission issues
+}
+
 // Consulta para contar partidas ativas e desfalques de times do usuário
 $query_count_jogos_ativos = "
     SELECT j.id, j.competicao_id as competicao,
@@ -123,17 +140,6 @@ foreach ($jogos_ativos as $ja) {
 // Consulta para contar total de desfalques ativos (DM + Suspensos) nos clubes do usuário
 $totalDesfalquesAtivos = 0;
 try {
-    $db->exec("CREATE TABLE IF NOT EXISTS `competicao_suspensos` (
-        `id` INT AUTO_INCREMENT PRIMARY KEY,
-        `id_competicao` INT NOT NULL,
-        `id_jogador` INT NOT NULL,
-        `cartoes_amarelos` INT DEFAULT 0,
-        `suspenso` TINYINT(1) DEFAULT 0,
-        `jogos_restantes` INT DEFAULT 0,
-        `lesionado_ate` DATE DEFAULT NULL,
-        INDEX (`id_competicao`),
-        INDEX (`id_jogador`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
     // Contar lesionados ativos no DM
     $stmt_dm = $db->prepare("
@@ -267,7 +273,7 @@ $fichasPendentes = (int)($res_fichas['total'] ?? 0);
         <!-- Central de Desfalques -->
         <a href='desfalques.php' id="centralDesfalques" class='hub-card'>
             <div class="hub-card-hero-image">
-                <img src="/images/jogos_ativos.webp" alt="Central de Desfalques" />
+                <img src="/images/deptomedico.jpg" alt="Central de Desfalques" />
             </div>
             <div class="hub-card-body">
                 <h3 class="hub-card-title">
