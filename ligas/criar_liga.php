@@ -17,24 +17,18 @@ $db = $database->getConnection();
 $liga = new Liga($db);
 $pais = new Pais($db);
 
-$page_title = "Inserir liga";
-$css_filename = "home_redesign";
-$css_login = 'login';
-$aux_css = 'home_redesign';
-$extra_css = 'ligas_redesign';
-$css_versao = date('h:i:s');
-include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
-
-
-
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
-
-    $error_msg = '';
-
+$feedback_html = '';
+if(isset($_SESSION['flash_msg'])){
+    $feedback_html = $_SESSION['flash_msg'];
+    unset($_SESSION['flash_msg']);
+}
 
 // if the form was submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 if(isset($_POST['nome']) && !empty($_POST['pais']) && !empty($_POST['nome']) && !empty($_POST['tier'])){
+
+    $error_msg = '';
 
     if((file_exists($_FILES['logo']['tmp_name']) || is_uploaded_file($_FILES['logo']['tmp_name']))){
     $logo_path = $_FILES['logo']['name'];
@@ -42,7 +36,7 @@ if(isset($_POST['nome']) && !empty($_POST['pais']) && !empty($_POST['nome']) && 
     $filePath = $_FILES['logo']['tmp_name'];
     $tempVar = explode(".",$logo_path);
     $fileExt = strtolower(end($tempVar));
-    $correct_extensions = array("png","jpg","jpeg");
+    $correct_extensions = array("png","jpg","jpeg","webp");
     $upload_dir = "/images/ligas/";
 
     if($logo_path != "" && in_array($fileExt,$correct_extensions) && $fileSize <= 2000000){
@@ -67,7 +61,7 @@ if(isset($_POST['nome']) && !empty($_POST['pais']) && !empty($_POST['nome']) && 
             $error_msg .= "O nome do arquivo estava em branco. ";
         }
         if(in_array($fileExt,$correct_extensions) == false){
-            $error_msg .= "A extensão (.".$fileExt.") não é permitida. Use JPG ou PNG.";
+            $error_msg .= "A extensão (.".$fileExt.") não é permitida. Use JPG, PNG ou WEBP.";
         }
     }
 
@@ -78,29 +72,47 @@ if(isset($_POST['nome']) && !empty($_POST['pais']) && !empty($_POST['nome']) && 
     $liga->nome = $_POST['nome'];
     $liga->pais = $_POST['pais'];
     $liga->tier = $_POST['tier'];
-
+    $liga->limite_idade = (!empty($_POST['limite_idade'])) ? intval($_POST['limite_idade']) : null;
     $liga->sexo = $_POST['sexo'];
 
 
     // create the product
     if($liga->inserir()){
-        echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Liga inserida com sucesso. ".$error_msg."</div>";
+        $_SESSION['flash_msg'] = "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Liga inserida com sucesso. ".$error_msg."</div>";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
     }
 
     // if unable to create the product, tell the user
     else{
-        echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>".$error_msg."</div>";
+        $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve um erro ao criar a liga. ".$error_msg."</div>";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
     }
 }  else {
 
-    echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>".$error_msg.", campos em branco</div>";
+    $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Campos em branco</div>";
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit;
 }
 }
+}
+
+$page_title = "Inserir liga";
+$css_filename = "home_redesign";
+$css_login = 'login';
+$aux_css = 'home_redesign';
+$extra_css = 'ligas_redesign';
+$css_versao = date('h:i:s');
+include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 ?>
 
 <main class="propostas-container">
     <div class="propostas-card">
         <h2 class="propostas-title">Criar Liga</h2>
+        <?php echo $feedback_html; ?>
         <div id='inscricao'>
             <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
                 
@@ -120,9 +132,13 @@ if(isset($_POST['nome']) && !empty($_POST['pais']) && !empty($_POST['nome']) && 
                     <option value='2'>2 (segunda divisão)</option>
                     <option value='3'>3 (terceira divisão)</option>
                     <option value='4'>4 (quarta divisão)</option>
-                    <option value='5'>5 (quinta divisão)</option>
-                    <option value='6'>6 (sexta divisão)</option>
+                    <option value='5'>5 (quinta divisão / juniores)</option>
+                    <option value='6'>6 (sexta divisão / juniores)</option>
+                    <option value='7'>7 (sétima divisão / aspirantes)</option>
                 </select>
+
+                <label for="limite_idade">Limite de Idade (opcional / ex: 20 para Sub-20)</label>
+                <input type='number' name='limite_idade' id="limite_idade" class='form-control' min="14" max="45" placeholder="Sem restrição (padrão)" />
 
                 <label for="pais">País</label>
                 <?php

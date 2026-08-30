@@ -18,21 +18,15 @@ $tecnico = new Tecnico($db);
 $pais = new Pais($db);
 $usuario = new Usuario($db);
 
-$page_title = "Criar Técnico";
-$css_filename = "home_redesign";
-$css_login = 'login';
-$aux_css = 'home_redesign';
-$extra_css = 'criar_tecnico_redesign';
-$css_versao = date('h:i:s');
-include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+$feedback_html = '';
+if(isset($_SESSION['flash_msg'])){
+    $feedback_html = $_SESSION['flash_msg'];
+    unset($_SESSION['flash_msg']);
+}
 
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
-
-    $error_msg = '';
-    $feedback_html = '';
-
-    // se formulário foi submetido
-    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
+// se formulário foi submetido
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
+    if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
         if(!empty($_POST['nome']) && !empty($_POST['nascimento']) && !empty($_POST['pais'])){
 
             $tecnico->nome = $_POST['nome'];
@@ -45,14 +39,31 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
             if($tecnico->create(true)){
                 $usuario->atualizarAlteracao($_SESSION['user_id']);
-                $feedback_html = "<div class='alert alert-success'><span class='closebtn'>&times;</span>Técnico inserido com sucesso!</div>";
+                $_SESSION['flash_msg'] = "<div class='alert alert-success'><span class='closebtn'>&times;</span>Técnico inserido com sucesso!</div>";
+                header("Location: " . $_SERVER['PHP_SELF']);
+                exit;
             } else {
-                $feedback_html = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>Houve um erro ao inserir o técnico!</div>";
+                $_SESSION['flash_msg'] = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>Houve um erro ao inserir o técnico!</div>";
+                header("Location: " . $_SERVER['PHP_SELF']);
+                exit;
             }
         } else {
-            $feedback_html = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>Preencha todos os campos obrigatórios!</div>";
+            $_SESSION['flash_msg'] = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>Preencha todos os campos obrigatórios!</div>";
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit;
         }
     }
+}
+
+$page_title = "Criar Técnico";
+$css_filename = "home_redesign";
+$css_login = 'login';
+$aux_css = 'home_redesign';
+$extra_css = 'criar_tecnico_redesign';
+$css_versao = date('h:i:s');
+include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 ?>
 
 <main class="propostas-container">

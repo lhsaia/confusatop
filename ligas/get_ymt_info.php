@@ -1,6 +1,6 @@
 <?php
 
-require("/home/lhsaia/confusa.top/lib/functions.php");
+require_once($_SERVER['DOCUMENT_ROOT']."/lib/functions.php");
 
 // ini_set( 'display_errors', true );
 // error_reporting( E_ALL );
@@ -25,25 +25,85 @@ $clima = new Clima($db);
 
 //coletar informações
 $infos = array();
-$infos[] = $time->coletarInformacoesTime($idTime);
-$infos[] = $jogador->coletarJogadoresTime($idTime);
-$infos[] = $tecnico->coletarTecnicoTime($idTime);
-$infos[] = $estadio->coletarEstadioTime($idTime);
-$infos[] = $clima->coletarClimaTime($idTime);
-if($infos[0][0]["Escudo"] != "0.png"){
-  $infos[] = base64_encode(file_get_contents(__DIR__ ."/../images/escudos/".$infos[0][0]["Escudo"]));
-} else {
-  $infos[] = "";
+$timeInfo = $time->coletarInformacoesTime($idTime);
+$jogadoresInfo = $jogador->coletarJogadoresTime($idTime);
+$tecnicoInfo = $tecnico->coletarTecnicoTime($idTime);
+$estadioInfo = $estadio->coletarEstadioTime($idTime);
+$climaInfo = $clima->coletarClimaTime($idTime);
+
+if(empty($timeInfo)){
+    die(json_encode(['error' => 'Time não encontrado.']));
 }
-if($infos[0][0]["Uniforme1"] != "semclube1.png"){
-  $infos[] = base64_encode(file_get_contents(__DIR__ ."/../images/uniformes/".$infos[0][0]["Uniforme1"]));
-}  else {
-  $infos[] = "";
+
+$error_messages = [];
+
+if($elencoMenor = $time->verificarElencoMenor(null, [$idTime])){
+    $error_messages[] = "Há elencos com menos de 11 jogadores.";
 }
-if($infos[0][0]["Uniforme2"] != "semclube2.png"){
-  $infos[] = base64_encode(file_get_contents(__DIR__ ."/../images/uniformes/".$infos[0][0]["Uniforme2"]));
+
+if($elencoMaior = $time->verificarElencoMaior(null, [$idTime])){
+    $error_messages[] = "Há elencos com mais de 23 jogadores (fora suplentes).";
+}
+
+if($capitaoTime = $time->verificarCapitao(null, [$idTime])){
+    $error_messages[] = "O time não possui exatamente 1 capitão titular escalado.";
+}
+
+if($penaltisTime = $time->verificarPenaltis(null, [$idTime])){
+    $error_messages[] = "O time não possui todos os 3 cobradores de pênaltis titulares definidos.";
+}
+
+if($goleirosTime = $time->verificarGoleiros(null, [$idTime])){
+    $error_messages[] = "O time não possui exatamente 1 goleiro titular escalado.";
+}
+
+if($escalacaoTime = $time->verificarEscalacoes(null, [$idTime])){
+    $error_messages[] = "O time não possui os 11 jogadores titulares escalados.";
+}
+
+if($aposentadosTime = $time->verificarAposentados(null, [$idTime])){
+    $error_messages[] = "O time possui jogadores com idade acima da permitida (> 45 anos).";
+}
+
+if($tecnicosTimes = $time->verificarTecnicos(null, [$idTime])){
+    $error_messages[] = "O time não possui técnico cadastrado ou possui técnicos demais.";
+}
+
+if($climaEstadioTimes = $time->verificarClimaEstadio(null, [$idTime])){
+    $error_messages[] = "O time não possui estádio associado ou o estádio está sem clima cadastrado.";
+}
+
+if(!empty($error_messages)){
+    die(json_encode(['error' => implode('<br>', $error_messages)]));
+}
+
+$infos[] = $timeInfo;
+$infos[] = $jogadoresInfo;
+$infos[] = $tecnicoInfo;
+$infos[] = $estadioInfo;
+$infos[] = $climaInfo;
+$escudoPath = __DIR__ . "/../images/escudos/" . $infos[0][0]["Escudo"];
+if (!empty($infos[0][0]["Escudo"]) && $infos[0][0]["Escudo"] != "0.png" && file_exists($escudoPath) && is_file($escudoPath)) {
+    $escudoContent = @file_get_contents($escudoPath);
+    $infos[] = ($escudoContent !== false) ? base64_encode($escudoContent) : "";
 } else {
-  $infos[] = "";
+    $infos[] = "";
+}
+
+$uni1Path = __DIR__ . "/../images/uniformes/" . $infos[0][0]["Uniforme1"];
+if (!empty($infos[0][0]["Uniforme1"]) && $infos[0][0]["Uniforme1"] != "semclube1.png" && file_exists($uni1Path) && is_file($uni1Path)) {
+    $uni1Content = @file_get_contents($uni1Path);
+    $infos[] = ($uni1Content !== false) ? base64_encode($uni1Content) : "";
+} else {
+    $infos[] = "";
+}
+
+$uni2Path = __DIR__ . "/../images/uniformes/" . $infos[0][0]["Uniforme2"];
+if (!empty($infos[0][0]["Uniforme2"]) && $infos[0][0]["Uniforme2"] != "semclube2.png" && file_exists($uni2Path) && is_file($uni2Path)) {
+    $uni2Content = @file_get_contents($uni2Path);
+    $infos[] = ($uni2Content !== false) ? base64_encode($uni2Content) : "";
+} else {
+    $infos[] = "";
 }
 
 for($i = 0; $i< sizeof($infos[1]); $i++){

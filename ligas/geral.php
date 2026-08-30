@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/federacoes.php");
@@ -100,6 +100,7 @@ if($num>0){
             echo "<th>Liga</th>";
             echo "<th>Logo</th>";
             echo "<th>Tier</th>";
+            echo "<th>Idade Máx.</th>";
             echo "<th class='wide'>País</th>";
 
         echo "</tr>";
@@ -120,13 +121,14 @@ if($num>0){
                 $genderClass = "genderFem";
             }
 
-
+            $limiteIdadeDisplay = (!empty($limite_idade) && intval($limite_idade) > 0) ? $limite_idade : '-';
 
             echo "<tr id='".$id."'>";
                 //echo "<td><span id=".$id.">{$id}</span></td>";
                 echo "<td><a class='nomeEditavel' href='leaguestatus.php?league=".$id."' id='nom".$id."'>{$nome}<span class=' {$genderClass} genderSign'>{$genderCode}</span></a></td>";
                 echo "<td><img src='/images/ligas/{$logo}' width='auto' height='35px'></td>";
                 echo "<td><span class='nomeEditavel' id='tie".$id."'>{$tier}</span></td>";
+                echo "<td><span class='idade-badge' id='ida".$id."'>{$limiteIdadeDisplay}</span></td>";
                 if($idPais != 0){
                     echo "<td class='wide'><img src='/images/bandeiras/{$bandeiraPais}' class='bandeira nomePais' id='ban".$id."'>  <span class='nomePais' id='pai".$id."'>{$siglaPais}</span>";
                 } else {

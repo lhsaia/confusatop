@@ -61,7 +61,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
 $(document).ready(function(){
   $('.svg-menu__path__seleccion').on("click", function(e){
-      console.log('oi');
+      // console.log('oi');
         var selection = $(this).attr('id');
 
         window.location = '/ligas/geral.php?fed='+selection;

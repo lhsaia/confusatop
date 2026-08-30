@@ -65,6 +65,7 @@ $nome_pais_time = $info['nomePaisTime']; //ok
 $bandeira_pais_time = $info['bandeiraPaisTime']; //ok
 $nivel_jogador = $info['Nivel'];
 $lesionado_ate = $info['lesionado_ate'] ?? null;
+$numero_camisa = $info['numeroCamisa'] ?? null;
 
 
 if(isset($_SESSION['user_id']) && $donoPais == $_SESSION["user_id"]){
@@ -426,7 +427,11 @@ echo "<div class='propostas-card'>";
 echo "<div id='quadro-container'>";
 echo "<div id='quadro-superior'>";
 echo "<div id='quadro-nomes'>";
-echo "<h2>" . $nome_jogador;
+echo "<h2>";
+if ($numero_camisa !== null && $numero_camisa !== '') {
+    echo "<span class='jersey-icon' title='Número da camisa'>{$numero_camisa}</span> ";
+}
+echo $nome_jogador;
 if (!empty($lesionado_ate) && strtotime($lesionado_ate) >= strtotime(date('Y-m-d'))) {
     echo " <span class='stamp stamp-fim' style='background-color:#d32f2f; color:#fff;'><span class='material-symbols-outlined' style='font-size:0.8rem; vertical-align:middle;'>medical_services</span> Lesionado até " . date('d/m/Y', strtotime($lesionado_ate)) . "</span>";
 }
@@ -884,7 +889,7 @@ if ($donoLogado) {
                         }
                     })
                     .catch(error => {
-                        console.error('Error:', error);
+                        // console.error('Error:', error);
                         alert('Erro ao processar requisição.');
                     });
                 }
@@ -929,7 +934,7 @@ if ($donoLogado) {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            // console.error('Error:', error);
             alert('Erro ao enviar requisição.');
         });
     });

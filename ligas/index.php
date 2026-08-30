@@ -415,7 +415,7 @@ showCountries();
 	$("#toggleNC").on("click", function(){
 		classePaises++;
 		if(classePaises > 2){classePaises = 0};
-		console.log(classePaises);
+		// console.log(classePaises);
 		switch (classePaises) {
 			case 0:
 				$("#toggleNC").text("CONFUSA");

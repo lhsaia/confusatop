@@ -24,20 +24,18 @@ $localizacao_foto = null;
       $maxDim = 180;
       list($width, $height, $type, $attr) = getimagesize( $file_name );
       if ( $width > $maxDim || $height > $maxDim ) {
-      //  $target_filename = $file_name;
         $ratio = $width/$height;
         if( $ratio > 1) {
-          $new_width = $maxDim;
-          $new_height = $maxDim/$ratio;
+          $new_width = (int) $maxDim;
+          $new_height = (int) round($maxDim/$ratio);
         } else {
-          $new_width = $maxDim*$ratio;
-          $new_height = $maxDim;
+          $new_width = (int) round($maxDim*$ratio);
+          $new_height = (int) $maxDim;
         }
     } else {
-      $new_width = $width;
-      $new_height = $height;
+      $new_width = (int) $width;
+      $new_height = (int) $height;
     }
-        //$save_to_path = "uploads/compressed_file.png";
         if($type == "image/png"){
 			$compressed_png_content = compress_png($file_name);
 			$src = imagecreatefromstring($compressed_png_content);
@@ -54,17 +52,13 @@ $localizacao_foto = null;
 			
         }
 
-        //file_put_contents($save_to_path, $compressed_png_content);
         $dst = imagecreatetruecolor( $new_width, $new_height );
-        //start changes
         $background = imagecolorallocate($dst , 0, 0, 0);
         imagecolortransparent($dst, $background);
         imagealphablending($dst, false);
         imagesavealpha($dst, true);
-        //end changes
-        imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, $width, $height );
+        imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
         imagedestroy( $src );
-        //imagepng( $dst, $target_filename ); // adjust format as needed
 		imagewebp($dst, $target_filename);
         imagedestroy( $dst );
 

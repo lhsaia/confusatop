@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 //ini_set( 'display_errors', true );
 //error_reporting( E_ALL );
@@ -95,14 +95,14 @@ if($status_time > 0){
 }
 
 //outras informações para infoblock
-$mediaIdade = number_format($info['mediaIdade'],1);
-$estrangeiros = $info['estrangeiros'];
-$jogadores_selecao = $info['emSelecao'];
-$valor_total_clube = number_format($info['valorTotal']/1000000,1) . "M";
+$mediaIdade = number_format((float)($info['mediaIdade'] ?? 0), 1);
+$estrangeiros = $info['estrangeiros'] ?? 0;
+$jogadores_selecao = $info['emSelecao'] ?? 0;
+$valor_total_clube = number_format(((float)($info['valorTotal'] ?? 0))/1000000, 1) . "M";
 $recorde_transferencia = $time->balancoTransferencias($idTime);
-$recorde_transferencia = number_format($recorde_transferencia/1000000,1) . "M";
-$nivel_medio = number_format($info['mediaNivel'], 1);
-$nivel_medio_onze = number_format($info['mediaNivelOnze'],1);
+$recorde_transferencia = number_format(((float)($recorde_transferencia ?? 0))/1000000, 1) . "M";
+$nivel_medio = number_format((float)($info['mediaNivel'] ?? 0), 1);
+$nivel_medio_onze = number_format((float)($info['mediaNivelOnze'] ?? 0), 1);
 
 
 if($liga_time != ''){
@@ -227,7 +227,7 @@ $perc_estrangeiros = $total_rows > 0 ? number_format(($estrangeiros / $total_row
 
 <main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
 <div class="propostas-card">
-<div id="quadro-container" class="<?php echo $idTime; ?>">
+<div id="quadro-container" class="<?php echo $idTime; ?>" data-limite-idade="<?php echo htmlspecialchars($limite_idade_liga ?? ''); ?>">
     <div class="team-header-flex-wrapper" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
         <div class="team-header-title-container" style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
             <img id="bandeiraGrande" src="/images/escudos/<?php echo htmlspecialchars($escudo_time); ?>" style="height: 60px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
@@ -237,6 +237,9 @@ $perc_estrangeiros = $total_rows > 0 ? number_format(($estrangeiros / $total_row
                     <?php if(!$is_selecao): ?>
                         <a href="paisstatus.php?country=<?php echo $pais_id; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars($pais_time); ?></a>
                         <a href="leaguestatus.php?league=<?php echo $liga_id; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars($liga_time); ?></a>
+                        <?php if(!empty($limite_idade_liga)): ?>
+                            <span style="background: rgba(2, 132, 199, 0.1); color: #0284c7; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; margin-left: 6px;">Sub-<?php echo htmlspecialchars($limite_idade_liga); ?></span>
+                        <?php endif; ?>
                     <?php else: ?>
                         <span style="color: #64748b; font-weight: 600;"><?php echo htmlspecialchars($nomeFederacao); ?></span>
                     <?php endif; ?>
@@ -483,24 +486,27 @@ $agora = date('Y-m-d');
                     $titular = 'suplente';
                     break;
                 }
+                
+                $bloqueadoPorIdade = (!empty($limite_idade_liga) && intval($limite_idade_liga) > 0 && intval($Idade) > intval($limite_idade_liga));
+                $lockIconElenco = $bloqueadoPorIdade ? " <span class='material-symbols-outlined locked-icon' style='font-size: 16px; color: #ef4444; vertical-align: middle;' title='Bloqueado para escalação: Idade ({$Idade} anos) acima do limite da liga ({$limite_idade_liga} anos)'>lock</span>" : "";
 
                 if($titular == 'titular'){
-                    $lista_titulares[] = ['nome' => $nomeJogador, 'nivel' => $Nivel, 'mod' => $ModificadorNivel, 'posicaoBase' => $posicaoBase, 'stringPosicoes' => $stringPosicoes, 'idJogador' => $idJogador, 'mentalidade' => $mentalidade, 'capitao' => $capitao, 'cobrancaPenalti' => $cobrancaPenalti, 'cobradorFalta' => $cobradorFalta, 'foto' => $foto];
+                    $lista_titulares[] = ['nome' => $nomeJogador, 'nivel' => $Nivel, 'mod' => $ModificadorNivel, 'posicaoBase' => $posicaoBase, 'stringPosicoes' => $stringPosicoes, 'idJogador' => $idJogador, 'mentalidade' => $mentalidade, 'capitao' => $capitao, 'cobrancaPenalti' => $cobrancaPenalti, 'cobradorFalta' => $cobradorFalta, 'foto' => $foto, 'idade' => $Idade, 'bloqueadoIdade' => $bloqueadoPorIdade];
                 } else if($titular == 'reserva'){
-                    $lista_reservas[] = ['nome' => $nomeJogador, 'nivel' => $Nivel, 'mod' => $ModificadorNivel, 'posicaoBase' => $posicaoBase, 'stringPosicoes' => $stringPosicoes, 'idJogador' => $idJogador];
+                    $lista_reservas[] = ['nome' => $nomeJogador, 'nivel' => $Nivel, 'mod' => $ModificadorNivel, 'posicaoBase' => $posicaoBase, 'stringPosicoes' => $stringPosicoes, 'idJogador' => $idJogador, 'idade' => $Idade, 'bloqueadoIdade' => $bloqueadoPorIdade];
                 } else {
-                    $lista_suplentes[] = ['nome' => $nomeJogador, 'nivel' => $Nivel, 'mod' => $ModificadorNivel, 'posicaoBase' => $posicaoBase, 'stringPosicoes' => $stringPosicoes, 'idJogador' => $idJogador];
+                    $lista_suplentes[] = ['nome' => $nomeJogador, 'nivel' => $Nivel, 'mod' => $ModificadorNivel, 'posicaoBase' => $posicaoBase, 'stringPosicoes' => $stringPosicoes, 'idJogador' => $idJogador, 'idade' => $Idade, 'bloqueadoIdade' => $bloqueadoPorIdade];
                 }
 
 
-            echo "<tr data-id-dono-vinculado='".$clubeVinculado."' data-sexo='".$sexoJogador."' id='".$idJogador."' class='".$titular."'>";
+            echo "<tr data-id-dono-vinculado='".$clubeVinculado."' data-sexo='".$sexoJogador."' id='".$idJogador."' class='".$titular." ".($bloqueadoPorIdade ? "jogador-bloqueado-idade" : "")."' data-bloqueado-idade='".($bloqueadoPorIdade ? "1" : "0")."'>";
             echo "<td class='nopadding'><div class='foto_jogador'><div class='imageUpload'><img class='playerThumb' src='/images/jogadores/".$foto."' /> <input type='file' hidden id='foto".$idJogador."' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div>
                 <div class='jersey-container'>
                     <div class='jersey-icon' title='Número da camisa'>{$numeroCamisa}</div>
                     <input type='number' class='editavel numeroCamisa' value='{$numeroCamisa}' min='1' max='99' style='display:none;'>
                 </div>
                 </div></td>";
-                echo "<td class='nopadding nomeJogador'><a href='/ligas/playerstatus.php?player={$idJogador}' class='nomeEditavel'>{$nomeJogador}</a><br><span class='posicao'>{$posicaoBase}</span></td>";
+                echo "<td class='nopadding nomeJogador'><a href='/ligas/playerstatus.php?player={$idJogador}' class='nomeEditavel'>{$nomeJogador}</a>{$lockIconElenco}<br><span class='posicao'>{$posicaoBase}</span></td>";
                 echo "<td class='nopadding' data-label='Posições'><span class='cell-value'><span class='posicoesAtuais'>{$stringPosicoes}</span>";
                 echo " <select multiple class='comboPosicoes editavel ' hidden>'  ";
                 for($i = 0; $i < count($listaPosicoes);$i++){
@@ -574,6 +580,7 @@ $drag_players = "draggable";
 //pagina do elenco
 echo "<div class='tabcontent' id='Elenco' style='display: none;'>";
 
+echo "<div class='grid_quadro_jogadores'>";
 echo "<div class='tableHolder'><table id='tabelaTitulares'>";
 echo "<caption>Titulares</caption>";
 echo "<thead>";
@@ -586,8 +593,10 @@ echo "</tr>";
 echo "</thead>";
 echo "<tbody>";
 foreach($lista_titulares as $jogador_tabela){
-    echo "<tr class='clickablerow_tit' id='elenco".$jogador_tabela['idJogador']."'>";
-    echo "<td class='nopadding nomeJogador'>{$jogador_tabela['nome']}<br><span class='posicao'>{$jogador_tabela['posicaoBase']}</span></td>";
+    $isBloq = !empty($jogador_tabela['bloqueadoIdade']);
+    $lockBadge = $isBloq ? " <span class='material-symbols-outlined locked-icon' style='font-size: 15px; color: #ef4444; vertical-align: middle;' title='Bloqueado: Idade ({$jogador_tabela['idade']} anos) acima do limite da liga ({$limite_idade_liga} anos)'>lock</span>" : "";
+    echo "<tr class='clickablerow_tit ".($isBloq ? "jogador-bloqueado-idade" : "")."' id='elenco".$jogador_tabela['idJogador']."' data-bloqueado-idade='".($isBloq ? "1" : "0")."'>";
+    echo "<td class='nopadding nomeJogador'>{$jogador_tabela['nome']}{$lockBadge}<br><span class='posicao'>{$jogador_tabela['posicaoBase']}</span></td>";
     echo "<td class='nopadding' data-label='Nível'>{$jogador_tabela['nivel']} (".$jogador_tabela['mod'].")</td>";
     echo "<td class='nopadding' data-label='Posições'>{$jogador_tabela['stringPosicoes']}</td>";
     echo "<td class='nopadding actions-cell' data-label='Ações'>";
@@ -616,12 +625,16 @@ echo "</tr>";
 echo "</thead>";
 echo "<tbody>";
 foreach($lista_reservas as $jogador_tabela){
-    echo "<tr class='clickablerow_res' id='elenco".$jogador_tabela['idJogador']."'>";
-    echo "<td class='nopadding nomeJogador'>{$jogador_tabela['nome']}<br><span class='posicao'>{$jogador_tabela['posicaoBase']}</span></td>";
+    $isBloq = !empty($jogador_tabela['bloqueadoIdade']);
+    $lockBadge = $isBloq ? " <span class='material-symbols-outlined locked-icon' style='font-size: 15px; color: #ef4444; vertical-align: middle;' title='Bloqueado: Idade ({$jogador_tabela['idade']} anos) acima do limite da liga ({$limite_idade_liga} anos)'>lock</span>" : "";
+    echo "<tr class='clickablerow_res ".($isBloq ? "jogador-bloqueado-idade" : "")."' id='elenco".$jogador_tabela['idJogador']."' data-bloqueado-idade='".($isBloq ? "1" : "0")."'>";
+    echo "<td class='nopadding nomeJogador'>{$jogador_tabela['nome']}{$lockBadge}<br><span class='posicao'>{$jogador_tabela['posicaoBase']}</span></td>";
     echo "<td class='nopadding' data-label='Nível'>{$jogador_tabela['nivel']} (".$jogador_tabela['mod'].")</td>";
     echo "<td class='nopadding' data-label='Posições'>{$jogador_tabela['stringPosicoes']}</td>";
     echo "<td class='nopadding actions-cell' data-label='Ações'>";
-    echo "<a href='#' class='quick-move-btn promote-reserva-btn' data-action='promote-reserva' data-id='".$jogador_tabela['idJogador']."' title='Promover a Titular' style='margin-right: 5px;'><span class='material-symbols-outlined'>arrow_upward</span></a>";
+    if(!$isBloq){
+        echo "<a href='#' class='quick-move-btn promote-reserva-btn' data-action='promote-reserva' data-id='".$jogador_tabela['idJogador']."' title='Promover a Titular' style='margin-right: 5px;'><span class='material-symbols-outlined'>arrow_upward</span></a>";
+    }
     echo "<a href='#' class='quick-move-btn demote-reserva-btn' data-action='demote-reserva' data-id='".$jogador_tabela['idJogador']."' title='Mover para Suplente'><span class='material-symbols-outlined'>arrow_downward</span></a>";
     echo "</td>";
     echo "</tr>";
@@ -647,12 +660,18 @@ echo "</tr>";
 echo "</thead>";
 echo "<tbody>";
 foreach($lista_suplentes as $jogador_tabela){
-    echo "<tr class='clickablerow_sup' id='elenco".$jogador_tabela['idJogador']."'>";
-    echo "<td class='nopadding nomeJogador'>{$jogador_tabela['nome']}<br><span class='posicao'>{$jogador_tabela['posicaoBase']}</span></td>";
+    $isBloq = !empty($jogador_tabela['bloqueadoIdade']);
+    $lockBadge = $isBloq ? " <span class='material-symbols-outlined locked-icon' style='font-size: 15px; color: #ef4444; vertical-align: middle;' title='Bloqueado: Idade ({$jogador_tabela['idade']} anos) acima do limite da liga ({$limite_idade_liga} anos)'>lock</span>" : "";
+    echo "<tr class='clickablerow_sup ".($isBloq ? "jogador-bloqueado-idade" : "")."' id='elenco".$jogador_tabela['idJogador']."' data-bloqueado-idade='".($isBloq ? "1" : "0")."'>";
+    echo "<td class='nopadding nomeJogador'>{$jogador_tabela['nome']}{$lockBadge}<br><span class='posicao'>{$jogador_tabela['posicaoBase']}</span></td>";
     echo "<td class='nopadding' data-label='Nível'>{$jogador_tabela['nivel']} (".$jogador_tabela['mod'].")</td>";
     echo "<td class='nopadding' data-label='Posições'>{$jogador_tabela['stringPosicoes']}</td>";
     echo "<td class='nopadding actions-cell' data-label='Ações'>";
-    echo "<a href='#' class='quick-move-btn' data-action='promote-suplente' data-id='".$jogador_tabela['idJogador']."' title='Promover a Reserva'><span class='material-symbols-outlined'>arrow_upward</span></a>";
+    if(!$isBloq){
+        echo "<a href='#' class='quick-move-btn' data-action='promote-suplente' data-id='".$jogador_tabela['idJogador']."' title='Promover a Reserva'><span class='material-symbols-outlined'>arrow_upward</span></a>";
+    } else {
+        echo "<span class='quick-move-btn disabled' title='Bloqueado: Acima da idade limite da liga' style='opacity: 0.35; cursor: not-allowed;'><span class='material-symbols-outlined'>lock</span></span>";
+    }
     echo "</td>";
     echo "</tr>";
 }
@@ -1174,7 +1193,7 @@ $(document).on("click", '.proposta', function(event){
 
 $(".propostaTecnico").click(function(){
     var nome = $(this).closest('tr').find('.nomeTecnico').html();
-    console.log(nome);
+    // console.log(nome);
     var id = $(this).attr("id");
     id = id.split("c");
     id = parseInt(id[1]);
@@ -1206,7 +1225,7 @@ $("#formPropostaTecnico").submit(function(event){
         'mensagem' : $('#mensagemTecnicoTransf').val()
     };
 
-    console.log(formData);
+    // console.log(formData);
 
      $.ajax({
             type        : 'POST', // define the type of HTTP verb we want to use (POST for our form)
@@ -1219,7 +1238,7 @@ $("#formPropostaTecnico").submit(function(event){
                     .done(function(data) {
 
 // log data to the console so we can see
-console.log(data);
+// console.log(data);
 window.scrollTo(0, 0);
 
 if (! data.success) {
@@ -1236,10 +1255,10 @@ $('#modalPropostaTecnico').hide();
 
 // here we will handle errors and validation messages
 }).fail(function(jqXHR, textStatus, errorThrown ){
-    console.log("Erro");
-    console.log(jqXHR);
-    console.log(textStatus);
-    console.log(errorThrown);
+    // console.log("Erro");
+    // console.log(jqXHR);
+    // console.log(textStatus);
+    // console.log(errorThrown);
 });
 
 
@@ -1268,7 +1287,7 @@ $("#formProposta").submit(function(event){
                     .done(function(data) {
 
 // log data to the console so we can see
-console.log(data);
+// console.log(data);
 window.scrollTo(0, 0);
 
 if (! data.success) {
@@ -1285,10 +1304,10 @@ $('#modalProposta').hide();
 
 // here we will handle errors and validation messages
 }).fail(function(jqXHR, textStatus, errorThrown ){
-    console.log("Erro");
-    console.log(jqXHR);
-    console.log(textStatus);
-    console.log(errorThrown);
+    // console.log("Erro");
+    // console.log(jqXHR);
+    // console.log(textStatus);
+    // console.log(errorThrown);
 });
 
 
@@ -1403,6 +1422,11 @@ if(stringPosicaoReserva == 'G' && stringPosicaoTitular != 'G' || stringPosicaoRe
     return;
 }
 
+if($('.clickablerow_res.selected').data('bloqueado-idade') == 1){
+    alert('Jogador não pode ser promovido a titular: idade acima do limite da liga!');
+    return;
+}
+
 //efetuar a troca por AJAX
 var formData = {
         'idJogador1' : idTitular,
@@ -1422,7 +1446,7 @@ var formData = {
                     .done(function(data) {
 
 // log data to the console so we can see
-console.log(data);
+// console.log(data);
 // window.scrollTo(0, 0);
 
 if (! data.success) {
@@ -1455,6 +1479,11 @@ try {
     return;
 }
 
+if($('.clickablerow_sup.selected').data('bloqueado-idade') == 1){
+    alert('Jogador não pode ser promovido a reserva: idade acima do limite da liga!');
+    return;
+}
+
 //efetuar a troca por AJAX
 var formData = {
         'idJogador1' : idTitular,
@@ -1474,7 +1503,7 @@ var formData = {
                     .done(function(data) {
 
 // log data to the console so we can see
-console.log(data);
+// console.log(data);
 // window.scrollTo(0, 0);
 
 if (! data.success) {
@@ -1524,7 +1553,7 @@ var formData = {
                     .done(function(data) {
 
 // log data to the console so we can see
-console.log(data);
+// console.log(data);
 // window.scrollTo(0, 0);
 
 if (! data.success) {
@@ -1558,6 +1587,11 @@ try {
     return;
 }
 
+if($('.clickablerow_sup.selected').data('bloqueado-idade') == 1){
+    alert('Jogador não pode ser promovido a reserva: idade acima do limite da liga!');
+    return;
+}
+
 var total_reserva = $('.clickablerow_res').length;
 if(total_reserva > 11){
     alert('Já existem 12 jogadores na reserva!');
@@ -1582,7 +1616,7 @@ var formData = {
                     .done(function(data) {
 
 // log data to the console so we can see
-console.log(data);
+// console.log(data);
 // window.scrollTo(0, 0);
 
 if (! data.success) {
@@ -1614,6 +1648,11 @@ $(document).on("click", "#enviar_para_titular", function(event){
       return;
   }
 
+  if($('.clickablerow_res.selected').data('bloqueado-idade') == 1){
+      alert('Jogador não pode ser promovido a titular: idade acima do limite da liga!');
+      return;
+  }
+
   var total_titular = $('.clickablerow_tit').length;
   if(total_titular > 10){
       alert('Já existem 11 jogadores titulares!');
@@ -1638,7 +1677,7 @@ $(document).on("click", "#enviar_para_titular", function(event){
                     .done(function(data) {
 
 // log data to the console so we can see
-console.log(data);
+// console.log(data);
 // window.scrollTo(0, 0);
 
 if (! data.success) {
@@ -1695,7 +1734,7 @@ $(document).on("click", "#remover_titular", function(event){
                     .done(function(data) {
 
 // log data to the console so we can see
-console.log(data);
+// console.log(data);
 // window.scrollTo(0, 0);
 
 if (! data.success) {
@@ -1723,6 +1762,12 @@ $(document).on("click", ".quick-move-btn", function(e) {
     var idTime = $('#quadro-container').prop('class');
     var total_titular = $('.clickablerow_tit').length;
     var total_reserva = $('.clickablerow_res').length;
+
+    var $row = $(this).closest('tr');
+    if ((action === 'promote-suplente' || action === 'promote-reserva') && $row.data('bloqueado-idade') == 1) {
+        alert('Jogador não pode ser escalado: idade acima do limite da liga!');
+        return;
+    }
 
     var tipoAlteracao;
     if (action === 'promote-suplente') {
@@ -1894,8 +1939,8 @@ var formData = {
         'clube' : idTime
     };
 
-    console.log("id1:"+idJogador1 + "pos" + posJogador1);
-    console.log("id2:"+idJogador2 + "pos" + posJogador2);
+    // console.log("id1:"+idJogador1 + "pos" + posJogador1);
+    // console.log("id2:"+idJogador2 + "pos" + posJogador2);
 
      $.ajax({
             type        : 'POST', // define the type of HTTP verb we want to use (POST for our form)
@@ -1908,7 +1953,7 @@ var formData = {
                     .done(function(data) {
 
 // log data to the console so we can see
-console.log(data);
+// console.log(data);
 //window.scrollTo(0, 0);
 
 if (! data.success) {
@@ -1950,7 +1995,7 @@ function swapNodes(a, b) {
     $(document).on("submit", "#formCapitaoCobrancas", function(event) {
     event.preventDefault();
 
-    console.log($('#formCapitaoCobrancas').serialize());
+    // console.log($('#formCapitaoCobrancas').serialize());
 
     var errosForm;
     var successForm;
@@ -1994,7 +2039,7 @@ formData.append('idJogador',idJogador);
 formData.append('alteracao',4);
 formData.append('idTime',idTime);
 
-console.log(idJogador);
+// console.log(idJogador);
 
 if(window.confirm("Deseja mesmo aposentar este jogador?")){
     ajaxCallJogador(formData);
@@ -2066,7 +2111,7 @@ var formData = {
     'alteracao' : 2
 };
 
-console.log(formData);
+// console.log(formData);
 
 if(window.confirm("Deseja mesmo desconvocar?")){
 ajaxCallTecnico(formData);
@@ -2121,7 +2166,7 @@ if(donoTime.localeCompare(donoJogador) == 0 || donoJogador == 0){
 
 var idJogador = tbl_row.prop('id');
 
-console.log(isDono);
+// console.log(isDono);
 
     // Jersey (always editable if permitted by role context, but here logic assumes viewing user has rights to toggle edit mode in general)
     tbl_row.find('.jersey-icon').hide();
@@ -2271,7 +2316,11 @@ tbl_row.find(".valor").html(valor);
       })
       .done(function(response) {
 
-        console.log(0);
+        if(response.error){
+            window.scrollTo(0, 0);
+            $('#errorbox').html('<div class="alert alert-danger"><span class="closebtn" style="float: right; cursor: pointer; font-weight: bold;" onclick="$(this).parent().fadeOut();">&times;</span>' + response.error + '</div>');
+            return;
+        }
 
         var xmlData = "<jogadorExportacao>\n <jogador>\n <ID>" +
           response[0][0].idJogador + "</ID>\n <Nome>" +
@@ -2361,7 +2410,7 @@ tbl_row.find(".valor").html(valor);
         download(fileName,xmlData);
       })
       .fail(function() {
-        console.log("error");
+        // console.log("error");
       });
 
 
@@ -2544,7 +2593,7 @@ function ajaxCallJogador(formData){
                     .done(function(data) {
 
             // log data to the console so we can see
-            console.log(data);
+            // console.log(data);
             window.scrollTo(0, 0);
 
             if (! data.success) {
@@ -2563,10 +2612,10 @@ function ajaxCallJogador(formData){
 
             // here we will handle errors and validation messages
             }).fail(function(jqXHR, textStatus, errorThrown ){
-                console.log("Erro");
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
+                // console.log("Erro");
+                // console.log(jqXHR);
+                // console.log(textStatus);
+                // console.log(errorThrown);
                 $('#modalProposta').hide();
                 $('#errorbox').append('<div class="alert alert-danger">Não foi possível concluir, '+errorThrown+'</div>');
             });
@@ -2587,7 +2636,7 @@ $.ajax({
                 .done(function(data) {
 
         // log data to the console so we can see
-        console.log(data);
+        // console.log(data);
         window.scrollTo(0, 0);
 
         if (! data.success) {
@@ -2606,10 +2655,10 @@ $.ajax({
 
         // here we will handle errors and validation messages
         }).fail(function(jqXHR, textStatus, errorThrown ){
-            console.log("Erro");
-            console.log(jqXHR);
-            console.log(textStatus);
-            console.log(errorThrown);
+            // console.log("Erro");
+            // console.log(jqXHR);
+            // console.log(textStatus);
+            // console.log(errorThrown);
             $('#modalPropostaTecnico').hide();
             $('#errorbox').append('<div class="alert alert-danger">Não foi possível concluir, '+errorThrown+'</div>');
         });

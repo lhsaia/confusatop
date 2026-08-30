@@ -16,7 +16,23 @@ $jogador = new Jogador($db);
 
 //coletar informações
 $infos = array();
-$infos[] = $jogador->coletarInformacoesJogador($idJogador, $idTime);
+$jogadorData = $jogador->coletarInformacoesJogador($idJogador, $idTime);
+
+if(empty($jogadorData)){
+    die(json_encode(['error' => 'Jogador não encontrado ou não vinculado ao clube.']));
+}
+
+$idade = (int)$jogadorData[0]['Idade'];
+if($idade > 45){
+    die(json_encode(['error' => 'Jogador com idade acima da permitida pelo Hexacolor (> 45 anos).']));
+}
+
+$stringPosicoes = $jogadorData[0]['StringPosicoes'] ?? '';
+if(empty($stringPosicoes) || strpos($stringPosicoes, '1') === false){
+    die(json_encode(['error' => 'Jogador não possui nenhuma posição habilitada.']));
+}
+
+$infos[] = $jogadorData;
 
 //modificar atributos
 

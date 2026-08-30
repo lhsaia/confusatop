@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 ?>
 <!DOCTYPE html>
@@ -49,6 +49,7 @@ $nome_liga = $info['nome'];
 $logo_liga = $info['logo'];
 $pais_liga = $info['Pais'];
 $tier_liga = $info['tier'];
+$limite_idade_liga = isset($info['limite_idade']) ? $info['limite_idade'] : null;
 $idPais = $info['idPais'];
 $idDonoPais = $info['idDonoPais'];
 $sexoLiga = $info['Sexo'];
@@ -63,12 +64,12 @@ while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
 }
 
 //outras informações para infoblock
-$mediaIdade = number_format($info['mediaIdade'],1);
+$mediaIdade = number_format((float)($info['mediaIdade'] ?? 0), 1);
 $estrangeiros = $info['estrangeiros'];
-$valor_total_clube = number_format($info['valorTotal']/1000000000,2) . "B";
+$valor_total_clube = number_format((float)($info['valorTotal'] ?? 0) / 1000000000, 2) . "B";
 $jogadores = $info['jogadores'];
-$nivel_medio = number_format($info['mediaNivel'], 1);
-$nivel_medio_onze = number_format($info['mediaNivelOnze'],1);
+$nivel_medio = number_format((float)($info['mediaNivel'] ?? 0), 1);
+$nivel_medio_onze = number_format((float)($info['mediaNivelOnze'] ?? 0), 1);
 
 $page_title = $nome_liga;
 $css_filename = "home_redesign";
@@ -92,10 +93,12 @@ if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais){
         <img id="bandeiraGrande" src="/images/ligas/<?php echo htmlspecialchars($logo_liga); ?>" style="height: 60px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
         <div>
             <h2 class="propostas-title" style="margin: 0; text-align: left;"><?php echo htmlspecialchars($nome_liga); ?></h2>
-            <h3 style="margin: 4px 0 0 0; font-size: 1rem;"><a href="paisstatus.php?country=<?php echo $idPais; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars($pais_liga); ?></a> - Tier <?php echo $tier_liga; ?></h3>
+            <h3 style="margin: 4px 0 0 0; font-size: 1rem;"><a href="paisstatus.php?country=<?php echo $idPais; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars($pais_liga); ?></a> - Tier <?php echo $tier_liga; ?><?php if(!empty($limite_idade_liga)) echo " • <span style='background: rgba(2, 132, 199, 0.1); color: #0284c7; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;'>Sub-" . htmlspecialchars($limite_idade_liga) . "</span>"; ?></h3>
         </div>
     </div>
     
+    <div id="errorbox"></div>
+
     <hr style="border: none; border-bottom: 1px solid rgba(0,0,0,0.08); margin: 20px 0;">
 
     <?php
@@ -188,30 +191,52 @@ if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais){
                     $idTime = $row['ID'];
                     $info = $time->readInfo($idTime);
 
-                    $elencoPorTime = $info['jogadores'];
-                    $mediaIdadePorTime = number_format($info['mediaIdade'],1);
-                    $estrangeirosPorTime = $info['estrangeiros'];
-                    $valorMercadoPorTime = "F$ ". number_format(($info['valorTotal']/1000000),2)."M";
-                    $valorMedioJogador = "F$ ". number_format(($elencoPorTime > 0 ? ($info['valorTotal']/($elencoPorTime*1000000)) : 0),2)."M";
-                    $escudos = $info['Escudo'];
-                    $uniforme1 = $info['Uniforme1'];
-                    $uniforme2 = $info['Uniforme2'];
-                    $nivel_medio = number_format($info['mediaNivel'], 1);
-                    $nivel_medio_onze = number_format($info['mediaNivelOnze'],1);
+                    $elencoPorTime = $info['jogadores'] ?? 0;
+                    $mediaIdadePorTime = number_format((float)($info['mediaIdade'] ?? 0), 1);
+                    $estrangeirosPorTime = $info['estrangeiros'] ?? 0;
+                    $valorMercadoPorTime = "F$ ". number_format(((float)($info['valorTotal'] ?? 0)/1000000), 2)."M";
+                    $valorMedioJogador = "F$ ". number_format(($elencoPorTime > 0 ? ((float)($info['valorTotal'] ?? 0)/($elencoPorTime*1000000)) : 0), 2)."M";
+                    $escudos = $info['Escudo'] ?? '';
+                    $uniforme1 = $info['Uniforme1'] ?? '';
+                    $uniforme2 = $info['Uniforme2'] ?? '';
+                    $nivel_medio = number_format((float)($info['mediaNivel'] ?? 0), 1);
+                    $nivel_medio_onze = number_format((float)($info['mediaNivelOnze'] ?? 0), 1);
+                    $estadioId = $row['estadioId'] ?? $info['estadioId'] ?? 0;
+                    $maxTorcedores = $row['MaxTorcedores'] ?? $info['MaxTorcedores'] ?? 0;
+                    $fidelidade = $row['Fidelidade'] ?? $info['Fidelidade'] ?? 10;
+                    $uni1cor1 = $row['Uni1Cor1'] ?? $info['Uni1Cor1'] ?? '000000';
+                    $uni1cor2 = $row['Uni1Cor2'] ?? $info['Uni1Cor2'] ?? '000000';
+                    $uni1cor3 = $row['Uni1Cor3'] ?? $info['Uni1Cor3'] ?? '000000';
+                    $uni2cor1 = $row['Uni2Cor1'] ?? $info['Uni2Cor1'] ?? '000000';
+                    $uni2cor2 = $row['Uni2Cor2'] ?? $info['Uni2Cor2'] ?? '000000';
+                    $uni2cor3 = $row['Uni2Cor3'] ?? $info['Uni2Cor3'] ?? '000000';
                 ?>
-                    <tr id="<?php echo $idTime; ?>" class="<?php echo $idLiga; ?>">
+                    <tr id="<?php echo $idTime; ?>" class="<?php echo $idLiga; ?>" data-pais="<?php echo $idPais; ?>" data-estadio="<?php echo $estadioId; ?>" data-maxtorcedores="<?php echo $maxTorcedores; ?>" data-fidelidade="<?php echo $fidelidade; ?>" data-u1c1="<?php echo $uni1cor1; ?>" data-u1c2="<?php echo $uni1cor2; ?>" data-u1c3="<?php echo $uni1cor3; ?>" data-u2c1="<?php echo $uni2cor1; ?>" data-u2c2="<?php echo $uni2cor2; ?>" data-u2c3="<?php echo $uni2cor3; ?>">
                         <td class="cell-clube">
-                            <img class="logoliga" src="/images/escudos/<?php echo htmlspecialchars($escudos); ?>" height="30px"/>
-                            <a href="<?php echo $baseLink; ?>.php?team=<?php echo $idTime; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars($row['Nome']); ?></a>
+                            <div class="imageUpload">
+                                <img class="logoliga thumb" src="/images/escudos/<?php echo htmlspecialchars($escudos); ?>" height="30px"/>
+                                <?php if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais): ?>
+                                    <input type="file" hidden id="escudo<?php echo $idTime; ?>" class="hiddenInput" name="escudo" accept=".jpg,.png,.jpeg"/>
+                                <?php endif; ?>
+                            </div>
+                            <a class="linkNome" href="<?php echo $baseLink; ?>.php?team=<?php echo $idTime; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;">
+                                <span class="nomeEditavel" id="nom<?php echo $idTime; ?>"><?php echo htmlspecialchars($row['Nome']); ?></span>
+                            </a>
                         </td>
                         <td data-label="Uniformes">
                             <span class="cell-value">
-                                <?php if(!empty($uniforme1)): ?>
-                                    <img src="/images/uniformes/<?php echo htmlspecialchars($uniforme1); ?>" height="30px" style="margin-right: 5px;"/>
-                                <?php endif; ?>
-                                <?php if(!empty($uniforme2)): ?>
-                                    <img src="/images/uniformes/<?php echo htmlspecialchars($uniforme2); ?>" height="30px"/>
-                                <?php endif; ?>
+                                <div class="imageUpload" style="margin-right: 5px;">
+                                    <img class="thumb thumb-uni1" src="<?php echo !empty($uniforme1) ? '/images/uniformes/' . htmlspecialchars($uniforme1) : '/images/placeholder.png'; ?>" height="30px"/>
+                                    <?php if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais): ?>
+                                        <input type="file" hidden id="uni1<?php echo $idTime; ?>" class="hiddenInput" name="uni1" accept=".jpg,.png,.jpeg"/>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="imageUpload">
+                                    <img class="thumb thumb-uni2" src="<?php echo !empty($uniforme2) ? '/images/uniformes/' . htmlspecialchars($uniforme2) : '/images/placeholder.png'; ?>" height="30px"/>
+                                    <?php if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais): ?>
+                                        <input type="file" hidden id="uni2<?php echo $idTime; ?>" class="hiddenInput" name="uni2" accept=".jpg,.png,.jpeg"/>
+                                    <?php endif; ?>
+                                </div>
                             </span>
                         </td>
                         <td data-label="Elenco">
@@ -242,6 +267,9 @@ if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais){
                                         <span class="material-symbols-outlined inlineButton azul">download</span>
                                     </a>
                                     <?php if($_SESSION['user_id'] === $idDonoPais): ?>
+                                        <a id="edi<?php echo $idTime; ?>" title="Editar Time" class="clickable editar" style="cursor: pointer; margin-right: 8px;">
+                                            <span class="material-symbols-outlined inlineButton azul">edit</span>
+                                        </a>
                                         <a id="mov<?php echo $idTime; ?>" title="Mover" class="clickable mover" style="cursor: pointer; margin-right: 8px;">
                                             <span class="material-symbols-outlined inlineButton azul">swap_vert</span>
                                         </a>
@@ -279,63 +307,208 @@ if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais){
 
         $(document).ready(function() {
 
+var modoEdicao = null; // 'mover' ou 'editar'
+
 $('.mover').click(function(){
     var idLiga = $(this).closest('tr').attr("class");
     var tbl_row =  $(this).closest('tr');
+    modoEdicao = 'mover';
 
     tbl_row.find('.selecionar_liga').show().val(idLiga);
     tbl_row.find('.salvar').show();
     tbl_row.find('.cancelar').show();
     tbl_row.find('.mover').hide();
+    tbl_row.find('.editar').hide();
     tbl_row.find('.exportar').hide();
-
 });
 
- $('.cancelar').click(function(){
-        var tbl_row =  $(this).closest('tr');
-        tbl_row.find('.salvar').hide();
-        tbl_row.find('.cancelar').hide();
-        tbl_row.find('.mover').show();
-        tbl_row.find('.selecionar_liga').hide();
-        tbl_row.find('.exportar').show();
+$('.editar').click(function(){
+    var tbl_row = $(this).closest('tr');
+    modoEdicao = 'editar';
 
+    tbl_row.find('.nomeEditavel').each(function(){
+        $(this).attr('original_entry', $(this).text());
     });
 
-    $('.salvar').click(function(){
-        var tbl_row =  $(this).closest('tr');
+    tbl_row.find('.thumb').each(function(){
+        $(this).attr('original_src', $(this).attr('src'));
+    });
+
+    tbl_row.find('.linkNome').css("cursor", "text").css("pointer-events", "none");
+    tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
+    tbl_row.find('.thumb').addClass('editableThumb');
+    tbl_row.find('.hiddenInput').show();
+
+    tbl_row.find('.salvar').show();
+    tbl_row.find('.cancelar').show();
+    tbl_row.find('.editar').hide();
+    tbl_row.find('.mover').hide();
+    tbl_row.find('.exportar').hide();
+    tbl_row.find('.selecionar_liga').hide();
+});
+
+// Preview imediato ao selecionar nova imagem
+$(document).on('change', '.hiddenInput', function(){
+    var input = this;
+    var img = $(this).closest('.imageUpload').find('.thumb');
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            img.attr('src', e.target.result);
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+});
+
+$('.cancelar').click(function(){
+    var tbl_row = $(this).closest('tr');
+
+    if (modoEdicao === 'editar') {
+        tbl_row.find('.linkNome').css("cursor", "pointer").css("pointer-events", "auto");
+        tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+        tbl_row.find('.thumb').removeClass('editableThumb');
+        tbl_row.find('.hiddenInput').hide().val('');
+
+        tbl_row.find('.nomeEditavel').each(function(){
+            if ($(this).attr('original_entry') !== undefined) {
+                $(this).text($(this).attr('original_entry'));
+            }
+        });
+
+        tbl_row.find('.thumb').each(function(){
+            if ($(this).attr('original_src') !== undefined) {
+                $(this).attr('src', $(this).attr('original_src'));
+            }
+        });
+    }
+
+    tbl_row.find('.salvar').hide();
+    tbl_row.find('.cancelar').hide();
+    tbl_row.find('.mover').show();
+    tbl_row.find('.editar').show();
+    tbl_row.find('.exportar').show();
+    tbl_row.find('.selecionar_liga').hide();
+    modoEdicao = null;
+});
+
+$('.salvar').click(function(){
+    var tbl_row = $(this).closest('tr');
+    var idTime = tbl_row.attr("id");
+
+    if (modoEdicao === 'mover') {
         tbl_row.find('.salvar').hide();
         tbl_row.find('.cancelar').hide();
         tbl_row.find('.mover').show();
+        tbl_row.find('.editar').show();
         tbl_row.find('.exportar').show();
         tbl_row.find('.selecionar_liga').hide();
 
-        var idTime = $(this).closest('tr').attr("id");
         var idNovaLiga = tbl_row.find('.selecionar_liga').val();
 
-         var formData = new FormData();
-         formData.append('idTime', idTime);
-         formData.append('idNovaLiga', idNovaLiga);
+        var formData = new FormData();
+        formData.append('idTime', idTime);
+        formData.append('idNovaLiga', idNovaLiga);
 
-         $.ajax({
-             url: 'mover_time_liga.php',
-             processData: false,
+        $.ajax({
+            url: 'mover_time_liga.php',
+            processData: false,
             contentType: false,
             cache: false,
             type: "POST",
             dataType: 'json',
-             data: formData,
-                  success: function(data) {
-                      if(data.error != ''){
-                        alert(data.error)
-                      }
-                      location.reload();
-                  },
-                  error: function(data) {
-                      successmessage = 'Error';
-                      alert("Erro, o procedimento não foi realizado, tente novamente.");
-                  }
-              });
-     });
+            data: formData,
+            success: function(data) {
+                if(data.error != ''){
+                    alert(data.error);
+                }
+                location.reload();
+            },
+            error: function() {
+                alert("Erro, o procedimento não foi realizado, tente novamente.");
+            }
+        });
+    } else if (modoEdicao === 'editar') {
+        tbl_row.find('.linkNome').css("cursor", "pointer").css("pointer-events", "auto");
+        tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+        tbl_row.find('.thumb').removeClass('editableThumb');
+        tbl_row.find('.hiddenInput').hide();
+
+        tbl_row.find('.salvar').hide();
+        tbl_row.find('.cancelar').hide();
+        tbl_row.find('.editar').show();
+        tbl_row.find('.mover').show();
+        tbl_row.find('.exportar').show();
+
+        var nomeTime = tbl_row.find('#nom' + idTime).text().trim();
+        var pais = tbl_row.data('pais');
+        var estadio = tbl_row.data('estadio');
+        var liga = tbl_row.attr('class');
+        var maxTorcedores = tbl_row.data('maxtorcedores');
+        var fidelidade = tbl_row.data('fidelidade');
+        var uni1cor1 = tbl_row.data('u1c1');
+        var uni1cor2 = tbl_row.data('u1c2');
+        var uni1cor3 = tbl_row.data('u1c3');
+        var uni2cor1 = tbl_row.data('u2c1');
+        var uni2cor2 = tbl_row.data('u2c2');
+        var uni2cor3 = tbl_row.data('u2c3');
+
+        var inputEscudo = tbl_row.find('#escudo' + idTime)[0];
+        var escudo = (inputEscudo && inputEscudo.files.length > 0) ? inputEscudo.files[0] : null;
+
+        var inputUni1 = tbl_row.find('#uni1' + idTime)[0];
+        var uni1 = (inputUni1 && inputUni1.files.length > 0) ? inputUni1.files[0] : null;
+
+        var inputUni2 = tbl_row.find('#uni2' + idTime)[0];
+        var uni2 = (inputUni2 && inputUni2.files.length > 0) ? inputUni2.files[0] : null;
+
+        var formData = new FormData();
+        formData.append('id', idTime);
+        formData.append('nomeTime', nomeTime);
+        formData.append('pais', pais);
+        formData.append('estadio', estadio);
+        formData.append('liga', liga);
+        formData.append('maxTorcedores', maxTorcedores);
+        formData.append('fidelidade', fidelidade);
+        formData.append('uni1cor1', uni1cor1);
+        formData.append('uni1cor2', uni1cor2);
+        formData.append('uni1cor3', uni1cor3);
+        formData.append('uni2cor1', uni2cor1);
+        formData.append('uni2cor2', uni2cor2);
+        formData.append('uni2cor3', uni2cor3);
+
+        if(escudo != null){
+            formData.append('escudo', escudo);
+        }
+        if(uni1 != null){
+            formData.append('uni1', uni1);
+        }
+        if(uni2 != null){
+            formData.append('uni2', uni2);
+        }
+
+        $.ajax({
+            url: '/usuario/alterar_time.php',
+            processData: false,
+            contentType: false,
+            cache: false,
+            type: "POST",
+            dataType: 'json',
+            data: formData,
+            success: function(data) {
+                if(data.error && data.error !== ''){
+                    alert(data.error);
+                }
+                location.reload();
+            },
+            error: function() {
+                alert("Erro, o procedimento não foi realizado, tente novamente.");
+                location.reload();
+            }
+        });
+    }
+
+    modoEdicao = null;
+});
 
 
      $('.exportar').click(function(){
@@ -344,15 +517,33 @@ $('.mover').click(function(){
        var idTime = $(this).closest('tr').attr("id");
        
 
-       $.ajax({
-         url: 'get_ymt_info.php',
-         type: 'POST',
-         dataType: 'json',
-         data: {idTime: idTime}
-       })
-       .done(function(response) {
+        $.ajax({
+          url: 'get_ymt_info.php',
+          type: 'POST',
+          dataType: 'json',
+          data: {idTime: idTime}
+        })
+        .done(function(response) {
 		   
-		   console.log(response);
+		   // console.log(response);
+
+         if(response.error){
+             window.scrollTo(0, 0);
+             $('#errorbox').html('<div class="alert alert-danger"><span class="closebtn" style="float: right; cursor: pointer; font-weight: bold;" onclick="$(this).parent().fadeOut();">&times;</span>' + response.error + '</div>');
+             return;
+         }
+
+         if(!response[2] || response[2].length === 0){
+             window.scrollTo(0, 0);
+             $('#errorbox').html('<div class="alert alert-danger"><span class="closebtn" style="float: right; cursor: pointer; font-weight: bold;" onclick="$(this).parent().fadeOut();">&times;</span>Este time não possui nenhum técnico registrado. Para exportar um time, é obrigatório contratar um técnico primeiro.</div>');
+             return;
+         }
+
+         if(!response[3] || response[3].length === 0 || !response[4] || response[4].length === 0){
+             window.scrollTo(0, 0);
+             $('#errorbox').html('<div class="alert alert-danger"><span class="closebtn" style="float: right; cursor: pointer; font-weight: bold;" onclick="$(this).parent().fadeOut();">&times;</span>O estádio deste time não possui clima associado/cadastrado. Para exportar o arquivo .ymt, é obrigatório cadastrar e vincular um clima ao estádio.</div>');
+             return;
+         }
 
          let arquivoEsc;
          let arquivoUni1;
@@ -563,7 +754,7 @@ $('.mover').click(function(){
 
          var fileName = response[0][0].Nome+".ymt";
          
-         console.log("here");
+         // console.log("here");
 
          function download(filename, text) {
              var element = document.createElement('a');
@@ -581,7 +772,7 @@ $('.mover').click(function(){
          download(fileName,xmlData);
        })
        .fail(function() {
-         console.log("error");
+         // console.log("error");
        });
 
 

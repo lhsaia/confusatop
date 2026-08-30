@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
@@ -162,11 +162,12 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
                     $idLiga = $row['id'];
                     $info = $liga->readInfo($idLiga);
 
-                    $elencoPorTime = $info['jogadores'];
-                    $mediaIdadePorTime = number_format($info['mediaIdade'],1);
-                    $estrangeirosPorTime = $info['estrangeiros'];
-                    $valorMercadoPorTime = "F$ ". number_format(($info['valorTotal']/1000000),2)."M";
-                    $valorMedioJogador = "F$ ". number_format(($info['valorTotal']/($elencoPorTime*1000000 + 0.0000000001)),2)."M";
+                    $elencoPorTime = (int)($info['jogadores'] ?? 0);
+                    $mediaIdadePorTime = number_format((float)($info['mediaIdade'] ?? 0), 1);
+                    $estrangeirosPorTime = (int)($info['estrangeiros'] ?? 0);
+                    $valorTotalNum = (float)($info['valorTotal'] ?? 0);
+                    $valorMercadoPorTime = "F$ " . number_format(($valorTotalNum / 1000000), 2) . "M";
+                    $valorMedioJogador = "F$ " . number_format(($valorTotalNum / ($elencoPorTime * 1000000 + 0.0000000001)), 2) . "M";
                 ?>
                     <tr>
                         <td class="cell-liga">
@@ -243,10 +244,10 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
                          //location.reload();
                      }
                  }).fail(function(jqXHR, textStatus, errorThrown ){
-                     console.log("Erro");
-                     console.log(jqXHR);
-                     console.log(textStatus);
-                     console.log(errorThrown);
+                     // console.log("Erro");
+                     // console.log(jqXHR);
+                     // console.log(textStatus);
+                     // console.log(errorThrown);
                  });
         });
 		
@@ -258,7 +259,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
             var formData = new FormData();
             formData.append('codigo_liga', idLiga);
 			
-			console.log(idLiga);
+			// console.log(idLiga);
 
             $.ajax({
                 url: '/export/export_kitbasher.php',
@@ -278,10 +279,10 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
                          //location.reload();
                      }
                  }).fail(function(jqXHR, textStatus, errorThrown ){
-                     console.log("Erro");
-                     console.log(jqXHR);
-                     console.log(textStatus);
-                     console.log(errorThrown);
+                     // console.log("Erro");
+                     // console.log(jqXHR);
+                     // console.log(textStatus);
+                     // console.log(errorThrown);
                  });
         });
         

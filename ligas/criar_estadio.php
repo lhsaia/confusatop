@@ -20,14 +20,6 @@ $pais = new Pais($db);
 $clima = new Clima($db);
 $usuario = new Usuario($db);
 
-$page_title = "Criar Estádio";
-$css_filename = "home_redesign";
-$css_login = 'login';
-$aux_css = 'home_redesign';
-$extra_css = 'criar_estadio_redesign';
-$css_versao = date('h:i:s');
-include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
-
 if (!function_exists('compress_png')) {
     if (file_exists($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php")) {
         @include_once($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php");
@@ -41,15 +33,15 @@ if (!function_exists('imageImporterEstadio')) {
         if ($width > $maxDim || $height > $maxDim) {
             $ratio = $width / $height;
             if ($ratio > 1) {
-                $new_width = $maxDim;
-                $new_height = round($maxDim / $ratio);
+                $new_width = (int) $maxDim;
+                $new_height = (int) round($maxDim / $ratio);
             } else {
-                $new_width = round($maxDim * $ratio);
-                $new_height = $maxDim;
+                $new_width = (int) round($maxDim * $ratio);
+                $new_height = (int) $maxDim;
             }
         } else {
-            $new_width = $width;
-            $new_height = $height;
+            $new_width = (int) $width;
+            $new_height = (int) $height;
         }
 
         if ($type == IMAGETYPE_PNG || $type == "image/png") {
@@ -73,7 +65,7 @@ if (!function_exists('imageImporterEstadio')) {
             imagecolortransparent($dst, $background);
             imagealphablending($dst, false);
             imagesavealpha($dst, true);
-            imagecopyresampled($dst, $src, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
+            imagecopyresampled($dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height);
             imagedestroy($src);
             imagewebp($dst, $target_filename, 85);
             imagedestroy($dst);
@@ -83,13 +75,15 @@ if (!function_exists('imageImporterEstadio')) {
     }
 }
 
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
+$feedback_html = '';
+if(isset($_SESSION['flash_msg'])){
+    $feedback_html = $_SESSION['flash_msg'];
+    unset($_SESSION['flash_msg']);
+}
 
-    $error_msg = '';
-    $feedback_html = '';
-
-    // se formulário foi submetido
-    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
+// se formulário foi submetido
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
+    if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
         if(!empty($_POST['nome']) && !empty($_POST['capacidade']) && !empty($_POST['clima']) && !empty($_POST['pais'])){
 
             $estadio->nome = $_POST['nome'];
@@ -120,20 +114,39 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
                         $estadio->foto = $newFileName;
                     }
                 } else if ($fileSize > 10485760) {
-                    $feedback_html = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>O arquivo de imagem deve ter no máximo 10MB!</div>";
+                    $_SESSION['flash_msg'] = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>O arquivo de imagem deve ter no máximo 10MB!</div>";
+                    header("Location: " . $_SERVER['PHP_SELF']);
+                    exit;
                 }
             }
 
             if($estadio->create()){
                 $usuario->atualizarAlteracao($_SESSION['user_id']);
-                $feedback_html = "<div class='alert alert-success'><span class='closebtn'>&times;</span>Estádio inserido com sucesso!</div>";
+                $_SESSION['flash_msg'] = "<div class='alert alert-success'><span class='closebtn'>&times;</span>Estádio inserido com sucesso!</div>";
+                header("Location: " . $_SERVER['PHP_SELF']);
+                exit;
             } else {
-                $feedback_html = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>Houve um erro ao inserir o estádio!</div>";
+                $_SESSION['flash_msg'] = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>Houve um erro ao inserir o estádio!</div>";
+                header("Location: " . $_SERVER['PHP_SELF']);
+                exit;
             }
         } else {
-            $feedback_html = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>Preencha todos os campos obrigatórios!</div>";
+            $_SESSION['flash_msg'] = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>Preencha todos os campos obrigatórios!</div>";
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit;
         }
     }
+}
+
+$page_title = "Criar Estádio";
+$css_filename = "home_redesign";
+$css_login = 'login';
+$aux_css = 'home_redesign';
+$extra_css = 'criar_estadio_redesign';
+$css_versao = date('h:i:s');
+include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 ?>
 
 <main class="propostas-container">

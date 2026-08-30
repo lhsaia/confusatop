@@ -21,21 +21,31 @@ $pais = new Pais($db);
 $usuario = new Usuario($db);
 
 function imageImporterWebP($file_name, $target_filename){
+    if (empty($file_name) || !file_exists($file_name)) {
+        return false;
+    }
     @ini_set('memory_limit', '512M');
     $maxDim = 100;
-    list($width, $height, $type) = getimagesize( $file_name );
+    $imageInfo = @getimagesize( $file_name );
+    if ($imageInfo === false) {
+        return false;
+    }
+    list($width, $height, $type) = $imageInfo;
+    if ($width <= 0 || $height <= 0) {
+        return false;
+    }
     if ( $width > $maxDim || $height > $maxDim ) {
         $ratio = $width/$height;
         if( $ratio > 1) {
-            $new_width = round($maxDim);
-            $new_height = round($maxDim/$ratio);
+            $new_width = (int) $maxDim;
+            $new_height = (int) round($maxDim/$ratio);
         } else {
-            $new_width = round($maxDim*$ratio);
-            $new_height = round($maxDim);
+            $new_width = (int) round($maxDim*$ratio);
+            $new_height = (int) $maxDim;
         }
     } else {
-        $new_width = $width;
-        $new_height = $height;
+        $new_width = (int) $width;
+        $new_height = (int) $height;
     }
 
     $src = null;
@@ -43,7 +53,9 @@ function imageImporterWebP($file_name, $target_filename){
         $src = @imagecreatefrompng($file_name);
         if (!$src && function_exists('compress_png')) {
             $compressed_png_content = compress_png($file_name);
-            $src = @imagecreatefromstring($compressed_png_content);
+            if ($compressed_png_content) {
+                $src = @imagecreatefromstring($compressed_png_content);
+            }
         }
     } else if ($type == IMAGETYPE_WEBP || $type == 18 || $type == 'image/webp') {
         $src = @imagecreatefromwebp($file_name);
@@ -71,7 +83,7 @@ function imageImporterWebP($file_name, $target_filename){
     imagecolortransparent($dst, $background);
     imagealphablending($dst, false);
     imagesavealpha($dst, true);
-    imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, $width, $height );
+    imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
     imagedestroy( $src );
     imagewebp($dst, $target_filename, 90);
     imagedestroy( $dst );
@@ -80,33 +92,24 @@ function imageImporterWebP($file_name, $target_filename){
 
 
 
-$page_title = "Inserir país";
-$css_filename = "home_redesign";
-$css_login = 'login';
-$aux_css = 'home_redesign';
-$extra_css = 'criar_pais_redesign';
-$css_versao = date('h:i:s');
-include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
-
-
-
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
-
-    $error_msg = '';
-	//ver se é período de testes ou não
-$emTestes = $usuario->emTestes($_SESSION['user_id']);
+$feedback_html = '';
+if(isset($_SESSION['flash_msg'])){
+    $feedback_html = $_SESSION['flash_msg'];
+    unset($_SESSION['flash_msg']);
+}
 
 // if the form was submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 if(isset($_POST['nome']) && !empty($_POST['sigla']) && !empty($_POST['nome']) ){
 	
-
-
-    $logo_path = $_FILES['bandeira']['name'];
-    $fileSize = $_FILES['bandeira']['size'];
-    $filePath = $_FILES['bandeira']['tmp_name'];
+    $error_msg = '';
+    $logo_path = isset($_FILES['bandeira']['name']) ? $_FILES['bandeira']['name'] : '';
+    $fileSize = isset($_FILES['bandeira']['size']) ? $_FILES['bandeira']['size'] : 0;
+    $filePath = isset($_FILES['bandeira']['tmp_name']) ? $_FILES['bandeira']['tmp_name'] : '';
+    $fileError = isset($_FILES['bandeira']['error']) ? $_FILES['bandeira']['error'] : UPLOAD_ERR_NO_FILE;
     $extension = explode(".",$logo_path);
-    $file_ext = isset($extension[1]) ? $extension[1] : '';
+    $file_ext = isset($extension[1]) ? end($extension) : '';
     $correct_extensions = array("png","jpg","jpeg","webp");
     $upload_dir = "/images/bandeiras/";
     $pais->bandeira = "flag.png";
@@ -130,59 +133,81 @@ if(isset($_POST['nome']) && !empty($_POST['sigla']) && !empty($_POST['nome']) ){
     // create the product
     if($pais->inserir()){
         $idPais = $db->lastInsertId();
-        if($logo_path != "" && substr_count($logo_path,".")==1 && in_array(strtolower($file_ext),$correct_extensions) && $fileSize <= 3000000){
 
-            $new_logo_path = $pais->sigla . ".webp";
-            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $new_logo_path;
-            
-            if(file_exists($upload_path)){
-                unlink($upload_path);
-            }
+        // Processar upload da bandeira apenas se um arquivo foi enviado
+        if (!empty($logo_path) && $fileError != UPLOAD_ERR_NO_FILE) {
+            $file_ext = strtolower(pathinfo($logo_path, PATHINFO_EXTENSION));
 
-            imageImporterWebP($filePath, $upload_path);
-            $bandeiraAtualizada = $new_logo_path;
+            if ($fileError == UPLOAD_ERR_OK && !empty($filePath) && (is_uploaded_file($filePath) || file_exists($filePath))) {
+                if (!in_array($file_ext, $correct_extensions)) {
+                    $error_msg .= " Mas a extensão '." . htmlspecialchars($file_ext) . "' não é permitida (use PNG, JPG, JPEG ou WEBP).";
+                } else if ($fileSize > 3000000) {
+                    $error_msg .= " Mas o arquivo da bandeira é maior que 3MB.";
+                } else {
+                    $new_logo_path = $pais->sigla . ".webp";
+                    $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $new_logo_path;
+                    
+                    if(file_exists($upload_path)){
+                        @unlink($upload_path);
+                    }
 
-            if($pais->atualizarBandeira($idPais, $bandeiraAtualizada)){
-
+                    if(imageImporterWebP($filePath, $upload_path)){
+                        $bandeiraAtualizada = $new_logo_path;
+                        if(!$pais->atualizarBandeira($idPais, $bandeiraAtualizada)){
+                            $error_msg .= " Mas não foi possível vincular a bandeira.";
+                        }
+                    } else {
+                        $error_msg .= " Mas não foi possível processar a imagem da bandeira.";
+                    }
+                }
             } else {
-                $error_msg .= "Não foi possível inserir a bandeira, erro na vinculação.";
-            }
-
-        } else {
-            $error_msg .= "Mas não foi possível inserir a bandeira. ";
-            if($fileSize > 3000000){
-                $error_msg .= "Arquivo deve ser menor que 3MB.";
-            }
-            if($logo_path == ''){
-                $error_msg .= "Falha no nome do arquivo.";
-            }
-            if(substr_count($logo_path,".") > 1){
-                $error_msg .= "Nome do arquivo não pode conter pontos além da extensão.";
-            }
-            if(in_array(strtolower($file_ext),$correct_extensions) == false){
-                $error_msg .= "Extensão ".$file_ext." não é permitida.";
+                if ($fileError == UPLOAD_ERR_INI_SIZE || $fileError == UPLOAD_ERR_FORM_SIZE) {
+                    $error_msg .= " Mas o arquivo da bandeira ultrapassou o tamanho máximo permitido.";
+                } else if ($fileError == UPLOAD_ERR_PARTIAL) {
+                    $error_msg .= " Mas o upload da bandeira foi interrompido.";
+                } else {
+                    $error_msg .= " Mas não foi possível processar o upload da bandeira.";
+                }
             }
         }
 
-
         $usuario->atualizarAlteracao($_SESSION['user_id']);
-        echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Pais inserido com sucesso. ".$error_msg."</div>";
+        $_SESSION['flash_msg'] = "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>País inserido com sucesso.".$error_msg."</div>";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
     }
 
     // if unable to create the product, tell the user
     else{
-        echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>".$error_msg."</div>";
+        $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve um erro ao inserir o país. ".$error_msg."</div>";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
     }
 }  else {
 
-    echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>".$error_msg." Campos em branco</div>";
+    $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Campos em branco</div>";
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit;
 }
 }
+}
+
+$page_title = "Inserir país";
+$css_filename = "home_redesign";
+$css_login = 'login';
+$aux_css = 'home_redesign';
+$extra_css = 'criar_pais_redesign';
+$css_versao = date('h:i:s');
+include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
+    $emTestes = $usuario->emTestes($_SESSION['user_id']);
 ?>
 
 <main class="propostas-container">
     <div class="propostas-card">
         <h2 class="propostas-title">Inserir País</h2>
+        <?php echo $feedback_html; ?>
         <div id='inscricao'>
             <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
                 
