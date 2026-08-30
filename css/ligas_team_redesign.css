@@ -231,51 +231,61 @@ body {
 
 /* Elenco drag/drop list styles */
 #Elenco {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 25px;
-    margin-top: 20px;
+    width: 100% !important;
+    margin-top: 20px !important;
+}
+
+.grid_quadro_jogadores {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 15px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 .tableHolder {
-    flex: 1;
-    min-width: 300px;
-    background: #ffffff;
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 14px;
-    padding: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(0,0,0,0.08) !important;
+    border-radius: 14px !important;
+    padding: 16px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02) !important;
+    box-sizing: border-box !important;
 }
 
 .tableHolder table {
-    width: 100%;
-    border-collapse: collapse;
+    width: 100% !important;
+    border-collapse: collapse !important;
 }
 
 .tableHolder caption {
-    font-family: 'Outfit', sans-serif;
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: #1e293b;
-    padding: 10px 0;
-    text-align: left;
-    border-bottom: 2px solid #0284c7;
-    margin-bottom: 12px;
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 1.15rem !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    padding: 10px 0 !important;
+    text-align: left !important;
+    border-bottom: 2px solid #0284c7 !important;
+    margin-bottom: 12px !important;
 }
 
 /* Specific colors for lists */
-#tabelaTitulares caption { border-bottom-color: #10b981; }
-#tabelaReservas caption { border-bottom-color: #3b82f6; }
-#tabelaSuplentes caption { border-bottom-color: #94a3b8; }
+#tabelaTitulares caption { border-bottom-color: #10b981 !important; }
+#tabelaReservas caption { border-bottom-color: #3b82f6 !important; }
+#tabelaSuplentes caption { border-bottom-color: #94a3b8 !important; }
 
 .tableHolder tr {
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    cursor: pointer;
-    transition: background 0.2s;
+    border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+    cursor: pointer !important;
+    transition: background 0.2s !important;
 }
 
 .tableHolder tr:hover {
-    background: rgba(0,0,0,0.01);
+    background: rgba(0,0,0,0.01) !important;
 }
 
 .tableHolder tr.selected {
@@ -285,41 +295,47 @@ body {
 }
 
 .tableHolder td {
-    padding: 10px 8px;
-    font-size: 0.9rem;
-    color: #475569;
+    padding: 10px 8px !important;
+    font-size: 0.9rem !important;
+    color: #475569 !important;
 }
 
 /* Center controls in Elenco tab */
-#Elenco > div:not(.tableHolder) {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    padding: 10px;
+.grid_quadro_jogadores > div:not(.tableHolder),
+#Elenco > div:not(.tableHolder):not(.grid_quadro_jogadores) {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 10px 4px !important;
+    align-self: center !important;
+    flex-shrink: 0 !important;
 }
 
+.grid_quadro_jogadores > div:not(.tableHolder) a,
 #Elenco > div:not(.tableHolder) a {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: #0284c7;
-    border: 1px solid rgba(2,132,199,0.2);
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 10px rgba(2, 132, 199, 0.15);
+    display: inline-flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    background: #0284c7 !important;
+    border: 1px solid rgba(2,132,199,0.2) !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 10px rgba(2, 132, 199, 0.15) !important;
 }
 
+.grid_quadro_jogadores > div:not(.tableHolder) a:hover,
 #Elenco > div:not(.tableHolder) a:hover {
-    background: #0369a1;
-    transform: scale(1.1);
+    background: #0369a1 !important;
+    transform: scale(1.1) !important;
 }
 
+.grid_quadro_jogadores > div:not(.tableHolder) a span,
 #Elenco > div:not(.tableHolder) a span {
-    font-size: 1.4rem !important;
+    font-size: 1.3rem !important;
     color: #ffffff !important;
     height: auto !important;
     width: auto !important;
@@ -623,13 +639,15 @@ div[id*="draggable"] p {
 
 /* Mobile responsive card layouts */
 @media screen and (max-width: 1024px) {
-    #Elenco {
-        flex-direction: column;
+    .grid_quadro_jogadores {
+        flex-direction: column !important;
+        flex-wrap: wrap !important;
     }
     
+    .grid_quadro_jogadores > div:not(.tableHolder),
     #Elenco > div:not(.tableHolder) {
-        flex-direction: row;
-        flex-wrap: wrap;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
     }
 }
 
@@ -1056,7 +1074,8 @@ div[id*="draggable"] img {
     }
 
     /* Elenco tab mobile tweaks - hide middle action buttons as we now have inline sets */
-    #Elenco > div:not(.tableHolder) {
+    .grid_quadro_jogadores > div:not(.tableHolder),
+    #Elenco > div:not(.tableHolder):not(.grid_quadro_jogadores) {
         display: none !important;
     }
     .tableHolder {

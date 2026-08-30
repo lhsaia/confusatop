@@ -341,6 +341,81 @@ body {
   margin: 1rem 0;
 }
 
+/* Barra de Ação em Massa (País para Todos) */
+.bulk-country-bar {
+  background: rgba(2, 132, 199, 0.05) !important;
+  border: 1px solid rgba(2, 132, 199, 0.18) !important;
+  border-radius: 12px !important;
+  padding: 12px 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 15px !important;
+  width: 100% !important;
+  margin-top: 15px !important;
+  margin-bottom: 20px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+  box-sizing: border-box !important;
+}
+
+.bulk-country-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  flex: 1 !important;
+}
+
+.bulk-country-left .icon-bulk {
+  color: #0284c7 !important;
+  font-size: 1.4rem !important;
+}
+
+.bulk-title {
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.92rem !important;
+  color: #1e293b !important;
+}
+
+.bulk-country-bar .select2-container {
+  min-width: 200px !important;
+  width: auto !important;
+  flex: 1 !important;
+  max-width: 300px !important;
+}
+
+.btn-bulk-country {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 7px 14px !important;
+  font-weight: 600 !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.85rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2) !important;
+  transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+  width: auto !important;
+}
+
+.btn-bulk-country:hover:not(:disabled) {
+  background: #0369a1 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3) !important;
+}
+
+.btn-bulk-country:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
 /* Custom background vectors overrides */
 .bg {
   display: none !important;
@@ -357,6 +432,28 @@ body {
   .propostas-card {
     padding: 1.25rem !important;
     border-radius: 12px !important;
+  }
+
+  .bulk-country-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 1rem !important;
+    gap: 12px !important;
+  }
+
+  .bulk-country-left {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .bulk-country-bar .select2-container {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .btn-bulk-country {
+    width: 100% !important;
+    justify-content: center !important;
   }
 
   .par_pais_equipe {
@@ -385,5 +482,66 @@ body {
   .status_competicao {
     width: 100% !important;
     height: 32px !important;
+  }
+}
+
+/* Floating Toast Notifications */
+.floating-toast {
+  position: fixed !important;
+  bottom: 28px !important;
+  right: 28px !important;
+  z-index: 99999 !important;
+  max-width: 480px !important;
+  width: calc(100vw - 40px) !important;
+  background: #ffffff !important;
+  color: #1e293b !important;
+  padding: 16px 20px !important;
+  border-radius: 14px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.9rem !important;
+  line-height: 1.5 !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-sizing: border-box !important;
+}
+
+.floating-toast.toast-error {
+  border-left: 6px solid #ef4444 !important;
+}
+.floating-toast.toast-error > span.material-symbols-outlined {
+  color: #ef4444 !important;
+}
+
+.floating-toast.toast-success {
+  border-left: 6px solid #10b981 !important;
+}
+.floating-toast.toast-success > span.material-symbols-outlined {
+  color: #10b981 !important;
+}
+
+.floating-toast.toast-info {
+  border-left: 6px solid #0284c7 !important;
+}
+.floating-toast.toast-info > span.material-symbols-outlined {
+  color: #0284c7 !important;
+}
+
+.floating-toast.show {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+@media (max-width: 768px) {
+  .floating-toast {
+    left: 20px !important;
+    right: 20px !important;
+    bottom: 20px !important;
+    width: auto !important;
   }
 }
