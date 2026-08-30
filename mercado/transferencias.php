@@ -1553,10 +1553,10 @@ $('#modalPropostaTecnico').hide();
 
 // here we will handle errors and validation messages
 }).fail(function(jqXHR, textStatus, errorThrown ){
-    console.log("Erro");
-    console.log(jqXHR);
-    console.log(textStatus);
-    console.log(errorThrown);
+    // console.log("Erro");
+    // console.log(jqXHR);
+    // console.log(textStatus);
+    // console.log(errorThrown);
 });
 
 
@@ -1617,7 +1617,7 @@ $('#modalProposta').hide();
 
 // here we will handle errors and validation messages
 }).fail(function(jqXHR, textStatus, errorThrown ){
-    console.log("Erro");
+    // console.log("Erro");
     //console.log(jqXHR);
     //console.log(textStatus);
     //console.log(errorThrown);
@@ -1670,7 +1670,7 @@ $("#formConvocacao").submit(function(event){
             window.scrollTo(0, 0);
             $('#modalConvocacao').hide();
             $('#errorbox').html('<div class="alert alert-danger">Erro de comunicação com o servidor.</div>');
-            console.error("AJAX Error: ", textStatus, errorThrown, jqXHR.responseText);
+            // console.error("AJAX Error: ", textStatus, errorThrown, jqXHR.responseText);
         });
 
 

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
@@ -21,25 +21,18 @@ $pais = new Pais($db);
 $usuario = new Usuario($db);
 $time = new Time($db);
 
-$page_title = "Criar Jogador";
-$css_filename = "home_redesign";
-$css_login = 'login';
-$aux_css = 'home_redesign';
-$extra_css = 'ligas_redesign';
-$css_versao = date('h:i:s');
-include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
-
-
-
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
-
-    $error_msg = '';
-
+$feedback_html = '';
+if(isset($_SESSION['flash_msg'])){
+    $feedback_html = $_SESSION['flash_msg'];
+    unset($_SESSION['flash_msg']);
+}
 
 // se jogador foi submetido
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 if(isset($_POST['nome']) && isset($_POST['nascimento']) && $_POST['pais'] != 0 && !empty($_POST['comboPosicoes'])){
 
+    $error_msg = '';
 
     // atributos basicos dos jogadores
     $jogador->nomeJogador = $_POST['nome'];
@@ -59,8 +52,6 @@ if(isset($_POST['nome']) && isset($_POST['nascimento']) && $_POST['pais'] != 0 &
 		$clube = 0;
 	}
 
-    //var_dump($_POST);
-	
     //posicoes
     $prePosicoes = $_POST['comboPosicoes'];
     $stringPosicoes = '';
@@ -71,19 +62,13 @@ if(isset($_POST['nome']) && isset($_POST['nascimento']) && $_POST['pais'] != 0 &
         $isGoleiro = false;
     }
 
-	
-	//exit();
-    //var_dump($prePosicoes);
-
-    for($i = 0;$i < 15;$i++){
-        $codigo = $i+1;
-        if(array_search($codigo,$prePosicoes) !== false){
+    foreach($prePosicoes as $key => $value){
+        if($value != 0){
             $stringPosicoes .= "1";
         } else {
             $stringPosicoes .= "0";
         }
     }
-
 
     $jogador->stringPosicoes = $stringPosicoes;
 
@@ -95,9 +80,11 @@ if(isset($_POST['nome']) && isset($_POST['nascimento']) && $_POST['pais'] != 0 &
         $jogador->jogoAereo = $_POST['jogoaereo'];
         $jogador->lancamentos = $_POST['lancamentos'];
         $jogador->defesaPenaltis = $_POST['defesapenaltis'];
+        $jogador->visaoJogo = $_POST['visaojogogoleiro'];
+        $jogador->velocidade = $_POST['velocidadegoleiro'];
+        $jogador->forca = $_POST['forcagoleiro'];
         $jogador->marcacao = 0;
         $jogador->desarme = 0;
-        $jogador->visaoJogo = 0;
         $jogador->movimentacao = 0;
         $jogador->cruzamentos = 0;
         $jogador->cabeceamento = 0;
@@ -105,8 +92,7 @@ if(isset($_POST['nome']) && isset($_POST['nascimento']) && $_POST['pais'] != 0 &
         $jogador->controleBola = 0;
         $jogador->finalizacao = 0;
         $jogador->faroGol = 0;
-        $jogador->velocidade = 0;
-        $jogador->forca = 0;
+
     } else {
             //atributos complexos dos jogadores
         $jogador->marcacao = $_POST['marcacao'];
@@ -129,35 +115,48 @@ if(isset($_POST['nome']) && isset($_POST['nascimento']) && $_POST['pais'] != 0 &
         $jogador->defesaPenaltis = 0;
     }
 
-
-
-
-    //var_dump(get_object_vars($jogador));
-
     // create the product
     if($jogador->create(true)){
         $idJogadorCriado = $db->lastInsertId();
         if($clube != 0){
           if($jogador->transferir($idJogadorCriado,$clube,0,0,-1)){
-            echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Jogador inserido e transferido com sucesso!</div>";
+            $_SESSION['flash_msg'] = "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Jogador inserido e transferido com sucesso!</div>";
           } else {
-            echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Jogador inserido com sucesso, mas houve falha na transferência.</div>";
+            $_SESSION['flash_msg'] = "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Jogador inserido com sucesso, mas houve falha na transferência.</div>";
           }
         } else {
-          echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Jogador inserido com sucesso!</div>";
+          $_SESSION['flash_msg'] = "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Jogador inserido com sucesso!</div>";
         }
         $usuario->atualizarAlteracao($_SESSION['user_id']);
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
     }
 
     // if unable to create the product, tell the user
     else{
-        echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve um erro ao inserir o jogador!</div>";
+        $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve um erro ao inserir o jogador!</div>";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
     }
 }  else {
 
-    echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve um erro ao inserir jogador, campos em branco!</div>";
+    $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve um erro ao inserir jogador, campos em branco!</div>";
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit;
 }
 }
+}
+
+$page_title = "Criar Jogador";
+$css_filename = "home_redesign";
+$css_login = 'login';
+$aux_css = 'home_redesign';
+$extra_css = 'ligas_redesign';
+$css_versao = date('h:i:s');
+include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
+echo $feedback_html;
 ?>
 
 <script type="application/javascript">
@@ -761,7 +760,7 @@ $(document).on("click", "#hexagen", function(){
                     .done(function(data) {
 
             // log data to the console so we can see
-            console.log(data);
+            // console.log(data);
 
 
             if (data.success) {
@@ -814,10 +813,10 @@ $(document).on("click", "#hexagen", function(){
 
             // here we will handle errors and validation messages
             }).fail(function(jqXHR, textStatus, errorThrown ){
-            console.log("Erro");
-            console.log(jqXHR);
-            console.log(textStatus);
-            console.log(errorThrown);
+            // console.log("Erro");
+            // console.log(jqXHR);
+            // console.log(textStatus);
+            // console.log(errorThrown);
             });
 
 });

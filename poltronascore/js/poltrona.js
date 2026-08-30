@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => {
                 statusDot.className = 'status-dot error';
                 updateTimeText.textContent = 'Erro de rede';
-                console.error(err);
+                // console.error(err);
             });
     }
     
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(err => {
                 mEventsList.innerHTML = '<div class="no-data">Falha ao obter detalhes.</div>';
-                console.error(err);
+                // console.error(err);
             });
     }
     
@@ -334,10 +334,10 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/poltronascore/sw.js')
             .then(reg => {
-                console.log('PoltronaScore Service Worker registered: ', reg.scope);
+                // console.log('PoltronaScore Service Worker registered: ', reg.scope);
             })
             .catch(err => {
-                console.error('Service Worker registration failed: ', err);
+                // console.error('Service Worker registration failed: ', err);
             });
     });
 }
@@ -371,7 +371,7 @@ if (btnInstall) {
             deferredPrompt.prompt();
             deferredPrompt.userChoice.then((choiceResult) => {
                 if (choiceResult.outcome === 'accepted') {
-                    console.log('PWA installation accepted.');
+                    // console.log('PWA installation accepted.');
                 }
                 deferredPrompt = null;
                 installBanner.classList.remove('show');

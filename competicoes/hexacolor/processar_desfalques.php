@@ -39,7 +39,7 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
         }
     }
 
-    // 3. Processar o arquivo JSON da partida (.hyj) para cartões
+    // 3. Processar cartões e lesões a partir do arquivo JSON da partida (.hyj)
     if (file_exists($hyjFile)) {
         $json = json_decode(file_get_contents($hyjFile));
         if ($json) {
@@ -52,14 +52,16 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
             }
 
             foreach ($players as $pj) {
-                $pId = (int)$pj->idJogador;
+                $pId = (int)($pj->idJogador ?? 0);
                 if ($pId == 0) continue;
 
-                $amarelosPartida = (int)$pj->amarelos;
-                $vermelhosPartida = (int)$pj->vermelhos;
+                $amarelosPartida = (int)($pj->amarelos ?? 0);
+                $vermelhosPartida = (int)($pj->vermelhos ?? 0);
+                $temLesao = (int)($pj->lesao ?? 0);
+                $duracaoLesao = (int)($pj->duracaoLesao ?? 0);
 
+                // --- PROCESSAR CARTÕES E SUSPENSÕES ---
                 if ($amarelosPartida > 0 || $vermelhosPartida > 0) {
-                    // Obter registro atual do jogador
                     $stmtGet = $db->prepare("SELECT cartoes_amarelos, suspenso, jogos_restantes FROM competicao_suspensos WHERE id_competicao = :idComp AND id_jogador = :idJog LIMIT 1");
                     $stmtGet->bindValue(':idComp', $idCompeticao, PDO::PARAM_INT);
                     $stmtGet->bindValue(':idJog', $pId, PDO::PARAM_INT);
@@ -67,7 +69,6 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
                     $rowSus = $stmtGet->fetch(PDO::FETCH_ASSOC);
 
                     if (!$rowSus) {
-                        // Inserir registro inicial
                         $stmtIns = $db->prepare("INSERT INTO competicao_suspensos (id_competicao, id_jogador, cartoes_amarelos, suspenso, jogos_restantes) VALUES (:idComp, :idJog, 0, 0, 0)");
                         $stmtIns->bindValue(':idComp', $idCompeticao, PDO::PARAM_INT);
                         $stmtIns->bindValue(':idJog', $pId, PDO::PARAM_INT);
@@ -101,7 +102,7 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
                         }
                     }
 
-                    // Salvar de volta no banco
+                    // Salvar suspensão/cartões no banco
                     $stmtUp = $db->prepare("UPDATE competicao_suspensos SET cartoes_amarelos = :amarelos, suspenso = :suspenso, jogos_restantes = :restantes WHERE id_competicao = :idComp AND id_jogador = :idJog");
                     $stmtUp->bindValue(':amarelos', $novoAmarelos, PDO::PARAM_INT);
                     $stmtUp->bindValue(':suspenso', $novoSuspenso, PDO::PARAM_INT);
@@ -110,48 +111,97 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
                     $stmtUp->bindValue(':idJog', $pId, PDO::PARAM_INT);
                     $stmtUp->execute();
                 }
+
+                // --- PROCESSAR LESÕES ---
+                if ($temLesao == 1 || $duracaoLesao > 0) {
+                    $duracao = ($duracaoLesao > 0) ? $duracaoLesao : 7;
+
+                    // Atualiza tabela jogador global
+                    $stmtLes = $db->prepare("UPDATE jogador SET lesionado_ate = DATE_ADD(CURDATE(), INTERVAL :duracao DAY) WHERE ID = :idJog");
+                    $stmtLes->bindValue(':duracao', $duracao, PDO::PARAM_INT);
+                    $stmtLes->bindValue(':idJog', $pId, PDO::PARAM_INT);
+                    $stmtLes->execute();
+
+                    // Grava/atualiza também na tabela competicao_suspensos
+                    $stmtGetLes = $db->prepare("SELECT 1 FROM competicao_suspensos WHERE id_competicao = :idComp AND id_jogador = :idJog LIMIT 1");
+                    $stmtGetLes->bindValue(':idComp', $idCompeticao, PDO::PARAM_INT);
+                    $stmtGetLes->bindValue(':idJog', $pId, PDO::PARAM_INT);
+                    $stmtGetLes->execute();
+                    if (!$stmtGetLes->fetch()) {
+                        $stmtInsLes = $db->prepare("INSERT INTO competicao_suspensos (id_competicao, id_jogador, cartoes_amarelos, suspenso, jogos_restantes, lesionado_ate) VALUES (:idComp, :idJog, 0, 0, 0, DATE_ADD(CURDATE(), INTERVAL :duracao DAY))");
+                        $stmtInsLes->bindValue(':idComp', $idCompeticao, PDO::PARAM_INT);
+                        $stmtInsLes->bindValue(':idJog', $pId, PDO::PARAM_INT);
+                        $stmtInsLes->bindValue(':duracao', $duracao, PDO::PARAM_INT);
+                        $stmtInsLes->execute();
+                    } else {
+                        $stmtUpdLes = $db->prepare("UPDATE competicao_suspensos SET lesionado_ate = DATE_ADD(CURDATE(), INTERVAL :duracao DAY) WHERE id_competicao = :idComp AND id_jogador = :idJog");
+                        $stmtUpdLes->bindValue(':duracao', $duracao, PDO::PARAM_INT);
+                        $stmtUpdLes->bindValue(':idComp', $idCompeticao, PDO::PARAM_INT);
+                        $stmtUpdLes->bindValue(':idJog', $pId, PDO::PARAM_INT);
+                        $stmtUpdLes->execute();
+                    }
+                }
             }
         }
     }
 
-    // 4. Processar o arquivo XML da partida (.hyl) para lesões
-    if (file_exists($hylFile)) {
-        $xml = json_decode(file_get_contents($hylFile));
-        if ($xml && isset($xml->eventos)) {
-            foreach ($xml->eventos as $ev) {
-                if (isset($ev->tipoEvento) && $ev->tipoEvento == "lesao") {
-                    $pId = isset($ev->idJogador) ? (int)$ev->idJogador : 0;
-                    $duracao = isset($ev->duracao) ? (int)$ev->duracao : 0; // em dias
-                    if ($pId != 0 && $duracao > 0) {
-                        // Se for jogador do portal, atualiza a tabela jogador global
-                        if ($pId > 0) {
-                            $stmtLes = $db->prepare("UPDATE jogador SET lesionado_ate = DATE_ADD(CURDATE(), INTERVAL :duracao DAY) WHERE ID = :idJog");
-                            $stmtLes->bindValue(':duracao', $duracao, PDO::PARAM_INT);
-                            $stmtLes->bindValue(':idJog', $pId, PDO::PARAM_INT);
-                            $stmtLes->execute();
-                        }
-                        
-                        // Grava/atualiza também na tabela competicao_suspensos (para servir como repositório de lesões de times customizados/externos)
-                        $stmtGet = $db->prepare("SELECT 1 FROM competicao_suspensos WHERE id_competicao = :idComp AND id_jogador = :idJog LIMIT 1");
-                        $stmtGet->bindValue(':idComp', $idCompeticao, PDO::PARAM_INT);
-                        $stmtGet->bindValue(':idJog', $pId, PDO::PARAM_INT);
-                        $stmtGet->execute();
-                        if (!$stmtGet->fetch()) {
-                            $stmtIns = $db->prepare("INSERT INTO competicao_suspensos (id_competicao, id_jogador, cartoes_amarelos, suspenso, jogos_restantes, lesionado_ate) VALUES (:idComp, :idJog, 0, 0, 0, DATE_ADD(CURDATE(), INTERVAL :duracao DAY))");
-                            $stmtIns->bindValue(':idComp', $idCompeticao, PDO::PARAM_INT);
-                            $stmtIns->bindValue(':idJog', $pId, PDO::PARAM_INT);
-                            $stmtIns->bindValue(':duracao', $duracao, PDO::PARAM_INT);
-                            $stmtIns->execute();
-                        } else {
-                            $stmtUpLes = $db->prepare("UPDATE competicao_suspensos SET lesionado_ate = DATE_ADD(CURDATE(), INTERVAL :duracao DAY) WHERE id_competicao = :idComp AND id_jogador = :idJog");
-                            $stmtUpLes->bindValue(':duracao', $duracao, PDO::PARAM_INT);
-                            $stmtUpLes->bindValue(':idComp', $idCompeticao, PDO::PARAM_INT);
-                            $stmtUpLes->bindValue(':idJog', $pId, PDO::PARAM_INT);
-                            $stmtUpLes->execute();
-                        }
+    // 5. Gravar eventos detalhados na tabela unificada jogos_clube_eventos
+    if (file_exists($hyjFile)) {
+        $json = json_decode(file_get_contents($hyjFile));
+        if ($json && isset($json->lances)) {
+            // Limpa eventos anteriores desta partida para evitar duplicações
+            $stmtDelEv = $db->prepare("DELETE FROM jogos_clube_eventos WHERE id_jogo = :idJogo");
+            $stmtDelEv->bindValue(':idJogo', $idPartida, PDO::PARAM_INT);
+            $stmtDelEv->execute();
+
+            $stmtInsEv = $db->prepare("INSERT INTO jogos_clube_eventos (id_jogo, tempo, minutos, tipo, id_jogador, nome_jogador, id_time, nome_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            foreach ($json->lances as $lance) {
+                $minuto = isset($lance->minuto) ? (int)$lance->minuto : 0;
+                $tempo = ($minuto <= 45) ? 1 : 2;
+                $tipo = isset($lance->tipo) ? $lance->tipo : '';
+                $idJog = isset($lance->idJogador) ? (int)$lance->idJogador : 0;
+                $nomeJog = isset($lance->nomeJogador) ? $lance->nomeJogador : '';
+                $idTm = isset($lance->idTime) ? (int)$lance->idTime : 0;
+                $nomeTm = isset($lance->nomeTime) ? $lance->nomeTime : '';
+
+                if (!empty($tipo)) {
+                    $stmtInsEv->execute([$idPartida, $tempo, $minuto, $tipo, $idJog, $nomeJog, $idTm, $nomeTm]);
+                }
+            }
+        }
+
+        // 6. Gravar escalações na tabela unificada jogos_clube_escalacao
+        if ($json) {
+            $stmtDelEsc = $db->prepare("DELETE FROM jogos_clube_escalacao WHERE id_partida = :idPartida");
+            $stmtDelEsc->bindValue(':idPartida', $idPartida, PDO::PARAM_INT);
+            $stmtDelEsc->execute();
+
+            $stmtInsEsc = $db->prepare("INSERT INTO jogos_clube_escalacao (id_partida, id_time, nome_time, posicao, numero, id_jogador, nome_jogador, titular, entrada_tempo, entrada_minuto, saida_tempo, saida_minuto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+            $timesEsc = [];
+            if (isset($json->time1)) $timesEsc[] = $json->time1;
+            if (isset($json->time2)) $timesEsc[] = $json->time2;
+
+            foreach ($timesEsc as $tmObj) {
+                $tmId = isset($tmObj->idTime) ? (int)$tmObj->idTime : 0;
+                $tmNome = isset($tmObj->nomeTime) ? $tmObj->nomeTime : '';
+                if (isset($tmObj->jogadores) && is_array($tmObj->jogadores)) {
+                    foreach ($tmObj->jogadores as $idx => $jg) {
+                        $jgId = isset($jg->idJogador) ? (int)$jg->idJogador : 0;
+                        $jgNome = isset($jg->nome) ? $jg->nome : '';
+                        $pos = isset($jg->posicao) ? $jg->posicao : '';
+                        $num = isset($jg->numero) ? (int)$jg->numero : ($idx + 1);
+                        $titular = ($idx < 11) ? 1 : 0;
+                        $entTempo = isset($jg->entradaTempo) ? (int)$jg->entradaTempo : 0;
+                        $entMin = isset($jg->entradaMinuto) ? (int)$jg->entradaMinuto : 0;
+                        $saiTempo = isset($jg->saidaTempo) ? (int)$jg->saidaTempo : 0;
+                        $saiMin = isset($jg->saidaMinuto) ? (int)$jg->saidaMinuto : 0;
+
+                        $stmtInsEsc->execute([$idPartida, $tmId, $tmNome, $pos, $num, $jgId, $jgNome, $titular, $entTempo, $entMin, $saiTempo, $saiMin]);
                     }
                 }
             }
         }
     }
 }
+

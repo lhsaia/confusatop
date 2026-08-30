@@ -50,7 +50,7 @@ $nacionalidadeSelecionada = $pending['nacionalidade'];
 $paisLigaSelecionada = $pending['pais_liga_selecionada'];
 
 if (simplexml_load_string($pending['xml_content']) == false) {
-    $xml = simplexml_load_string(utf8_encode($pending['xml_content']));
+    $xml = simplexml_load_string(function_exists('mb_convert_encoding') ? mb_convert_encoding($pending['xml_content'], 'UTF-8', 'ISO-8859-1') : utf8_encode($pending['xml_content']));
 } else {
     $xml = simplexml_load_string($pending['xml_content']);
 }

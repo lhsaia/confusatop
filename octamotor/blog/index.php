@@ -154,22 +154,22 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['a
 
 			});
 
-console.log(editingFileName);
+// console.log(editingFileName);
 if(editingFileName == ""){
 	let first_link = document.querySelector("#blog-post-list button:first-child");
 	first_link.click();
 } else {
-	console.log("aqui");
+	// console.log("aqui");
 
 	let first_link = document.getElementById(editingFileName);
-		console.log(first_link);
+		// console.log(first_link);
 	first_link.click();
 }
 
 
 		})
 		.fail(function() {
-			console.log("error");
+			// console.log("error");
 		});
 
 	}
@@ -185,7 +185,7 @@ if(editingFileName == ""){
 		let user_id = logged_user.user_id;
 
 		if(aux_str === user_id){
-			console.log(true);
+			// console.log(true);
 			return true;
 		} else {
 			return false;
@@ -227,7 +227,7 @@ if(editingFileName == ""){
 			editingFileName = postCode;
 		})
 		.fail(function() {
-			console.log("error");
+			// console.log("error");
 		});
 
 	}
@@ -254,7 +254,7 @@ if(editingFileName == ""){
 			loadPostList();
 		})
 		.fail(function() {
-			console.log("error");
+			// console.log("error");
 		});
 
 	});
@@ -302,7 +302,7 @@ if(editingFileName == ""){
 		$("#edit-button").prop("disabled", "disabled");
 		$("#save-button").prop("disabled", false);
 		let credit_div = document.getElementById("credit_div");
-		console.log(credit_div);
+		// console.log(credit_div);
 		credit_div.parentNode.removeChild(credit_div);
 		editor = new MediumEditor('.editable', {
 			buttonLabels: 'fontawesome',

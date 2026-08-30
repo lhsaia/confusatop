@@ -56,6 +56,11 @@
 	}
 	
 	$idCompeticao = $matchInfo['competicao'];
+	$idEstadio = isset($matchInfo['estadio']) ? (int)$matchInfo['estadio'] : 0;
+	if ($idEstadio <= 0) {
+		die(json_encode(['success' => false, 'error' => 'A partida não possui um estádio definido. Edite a partida e selecione um estádio válido antes de simular.']));
+	}
+
 	$sourceDbPath = $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$idCompeticao."-database.db3";
 	
 	$targetDbPath = __DIR__ . "/data/database.db3";
@@ -75,6 +80,15 @@
 	$ldb = $liteDatabase->getConnection();
 	$liteCompeticao = new Competicao_clube($ldb);
 	$time = new Time($ldb);
+
+	// Validar se o estádio realmente existe na tabela estadio do SQLite da competição
+	$stmtEstCheck = $ldb->prepare("SELECT 1 FROM estadio WHERE ID = :idEst LIMIT 1");
+	$stmtEstCheck->bindValue(':idEst', $idEstadio, PDO::PARAM_INT);
+	$stmtEstCheck->execute();
+	if (!$stmtEstCheck->fetch()) {
+		$ldb = null;
+		die(json_encode(['success' => false, 'error' => 'O estádio selecionado (#'.$idEstadio.') não foi encontrado no banco de dados da competição. Por favor, edite a partida e selecione um estádio válido.']));
+	}
 	
 	// Garantir tabela de compatibilidade com as versões necessárias
 	try {
@@ -98,9 +112,8 @@
 	$competitionInfo = $competicao->readInfo($idCompeticao);
 	
 	$isAdmin = isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1;
-	$isDono = isset($_SESSION['user_id']) && isset($competitionInfo['dono']) && $_SESSION['user_id'] == $competitionInfo['dono'];
-	if(!$isAdmin && !$isDono){
-		die(json_encode(['success' => false, 'error' => 'Apenas administradores ou o criador da competição podem simular partidas.']));
+	if(!$isAdmin){
+		die(json_encode(['success' => false, 'error' => 'Apenas administradores do sistema podem simular partidas manualmente.']));
 	}
 	
 	$nomeComposto = $competitionInfo['ano'] . " - " . $competitionInfo['nome'];
@@ -462,22 +475,67 @@
 		
 		$golsTimeA = 0;
 		$golsTimeB = 0;
+		$penA = null;
+		$penB = null;
 		$xml = json_decode(file_get_contents($hylFile));
 		if ($xml) {
 			$golsTimeA = (int)$xml->placarTime1;
 			$golsTimeB = (int)$xml->placarTime2;
+			if (isset($xml->penaltis) && $xml->penaltis) {
+				$penA = isset($xml->placarPenaltisTime1) ? (int)$xml->placarPenaltisTime1 : 0;
+				$penB = isset($xml->placarPenaltisTime2) ? (int)$xml->placarPenaltisTime2 : 0;
+			}
 		} else {
 			error_log("PHP Simulador: [ERRO] Súmula corrompida. Output: " . trim($output));
 			die(json_encode([ 'success'=> false, 'error'=> "Erro: O arquivo .hyl da súmula foi criado porém está corrompido ou vazio." ]));
 		}
 		
+		// Fallback para .hyj se penaltis nao vieram no .hyl
+		$hyjFile = str_replace('.hyl', '.hyj', $hylFile);
+		if ($penA === null && file_exists($hyjFile)) {
+			$jsonHyj = json_decode(file_get_contents($hyjFile));
+			if ($jsonHyj && isset($jsonHyj->penaltis) && $jsonHyj->penaltis) {
+				$penA = isset($jsonHyj->time1->placarPenaltis) ? (int)$jsonHyj->time1->placarPenaltis : 0;
+				$penB = isset($jsonHyj->time2->placarPenaltis) ? (int)$jsonHyj->time2->placarPenaltis : 0;
+			}
+		}
+
 		// Atualizar o resultado no banco principal MariaDB
-		$competicao->uploadMatchResults($idPartida, $golsTimeA, $golsTimeB, $path);
+		$competicao->uploadMatchResults($idPartida, $golsTimeA, $golsTimeB, $path, $penA, $penB);
 
 		// Processar desfalques pós jogo (cartões, lesões, suspensões) no MariaDB
 		require_once __DIR__ . '/processar_desfalques.php';
-		$hyjFile = str_replace('.hyl', '.hyj', $hylFile);
 		processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $suspensos);
+
+		// Se a opção subir_live estiver ativada na competição, enviar partida para o CONFUSA Live
+		if (!empty($options['subir_live'])) {
+			try {
+				$uploaderPath = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__, 2)) . '/lib/ConfusaLiveUploader.php';
+				if (file_exists($uploaderPath)) {
+					require_once $uploaderPath;
+					$faseNome = "Rodada " . (isset($matchInfo['fase']) ? $matchInfo['fase'] : '1');
+					try {
+						$stmtFase = $db->prepare("SELECT nome FROM fase WHERE id = :faseId LIMIT 1");
+						$stmtFase->bindValue(':faseId', $matchInfo['fase'], PDO::PARAM_INT);
+						$stmtFase->execute();
+						if ($rowFase = $stmtFase->fetch(PDO::FETCH_ASSOC)) {
+							$faseNome = $rowFase['nome'];
+						}
+					} catch (\Throwable $e) {}
+
+					if (!empty($matchInfo['grupo'])) {
+						$faseNome .= " - Grupo " . $matchInfo['grupo'];
+					}
+
+					$liveResult = ConfusaLiveUploader::enviarPartida($hylFile, $nomeComposto, $faseNome, $matchInfo['data']);
+					if (!$liveResult['success']) {
+						error_log("PHP Simulador: [AVISO LIVE] Falha ao enviar partida #{$idPartida} para o Live: " . $liveResult['message']);
+					}
+				}
+			} catch (\Throwable $e) {
+				error_log("PHP Simulador: [ERRO LIVE EXCEÇÃO] " . $e->getMessage());
+			}
+		}
 
 		die(json_encode([ 'success'=> true, 'error'=> ""]));
 	} else {

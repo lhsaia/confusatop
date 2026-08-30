@@ -181,8 +181,8 @@ function pagination(current_page, total_pages){
     return pgn;
 }
 
-$(document).on('click', ".toggleButton, .togglebutton", function() {
-
+$(document).on('click', ".toggleButton, .togglebutton", function(e) {
+e.preventDefault();
 var modalType = $(this).attr("id");
 
 if(modalType !== 'retornar'){
@@ -200,6 +200,7 @@ if(modalType !== 'retornar'){
 });
 
 $(document).on('click', '.modalOverlay', function(e){
+    e.preventDefault();
     $(".modalOverlay").fadeOut(200);
     $(".moreInfoModal").fadeOut(200);
     $(".modal-guts").hide();

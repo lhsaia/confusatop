@@ -156,7 +156,7 @@
                                 .done(function(data) {
             
             // log data to the console so we can see
-            console.log(data); 
+            // console.log(data); 
             
             if (data.require_association) {
                 window.location.href = data.redirect;
@@ -177,10 +177,10 @@
             
             // here we will handle errors and validation messages
             }).fail(function(jqXHR, textStatus, errorThrown ){
-                console.log("Erro");
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
+                // console.log("Erro");
+                // console.log(jqXHR);
+                // console.log(textStatus);
+                // console.log(errorThrown);
             }).always(function(){
                 form.classList.remove( 'is-uploading' );
             });
@@ -233,6 +233,6 @@
 		});
 	}( document, window, 0 ));
 function newFunction(event) {
-    console.log(event);
+    // console.log(event);
 }
 

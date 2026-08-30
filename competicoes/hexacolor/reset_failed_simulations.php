@@ -16,8 +16,8 @@ $database = new Database();
 $db = $database->getConnection();
 $competicao = new Competicao_clube($db);
 
-// Selecionar todos os jogos que constam como simulados (status = 1)
-$query = "SELECT * FROM competicao_jogos WHERE status = 1";
+// Selecionar todos os jogos que constam como simulados (status = 1) e vieram do simulador
+$query = "SELECT * FROM jogos_clube WHERE status = 1 AND simulador_interno = 1";
 $stmt = $db->query($query);
 $jogos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -30,7 +30,7 @@ foreach ($jogos as $jogo) {
     
     // Se o path no banco de dados estiver vazio, a súmula nunca foi gerada
     if (empty($pathSalvo)) {
-        $db->query("UPDATE competicao_jogos SET timeA_gols = NULL, timeB_gols = NULL, path = NULL, status = 0 WHERE id = $idPartida");
+        $db->query("UPDATE jogos_clube SET timeA_gols = NULL, timeB_gols = NULL, path = NULL, status = 0 WHERE id = $idPartida");
         $resets++;
         echo "Jogo ID $idPartida resetado (caminho da súmula estava em branco).<br>";
         continue;
@@ -52,7 +52,7 @@ foreach ($jogos as $jogo) {
     
     // Se o arquivo da súmula não existe fisicamente no servidor, a simulação deu erro
     if (!$arquivoEncontrado) {
-        $db->query("UPDATE competicao_jogos SET timeA_gols = NULL, timeB_gols = NULL, path = NULL, status = 0 WHERE id = $idPartida");
+        $db->query("UPDATE jogos_clube SET timeA_gols = NULL, timeB_gols = NULL, path = NULL, status = 0 WHERE id = $idPartida");
         $resets++;
         echo "Jogo ID $idPartida resetado (Súmula '$pathSalvo.hyl' não foi localizada no servidor).<br>";
     }
