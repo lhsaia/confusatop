@@ -31,13 +31,13 @@ class Tecnico{
         $stmt = $this->conn->prepare($query);
 
         // posted values
-        $this->nome=htmlspecialchars(strip_tags($this->nome));
-        $this->nascimento=htmlspecialchars(strip_tags($this->nascimento));
-        $this->nivel=htmlspecialchars(strip_tags($this->nivel));
-        $this->mentalidade=htmlspecialchars(strip_tags($this->mentalidade));
-        $this->estilo=htmlspecialchars(strip_tags($this->estilo));
-        $this->pais=htmlspecialchars(strip_tags($this->pais));
-        $this->sexo=htmlspecialchars(strip_tags($this->sexo));
+        $this->nome = htmlspecialchars(strip_tags((string)($this->nome ?? '')));
+        $this->nascimento = htmlspecialchars(strip_tags((string)($this->nascimento ?? '')));
+        $this->nivel = htmlspecialchars(strip_tags((string)($this->nivel ?? '')));
+        $this->mentalidade = htmlspecialchars(strip_tags((string)($this->mentalidade ?? '')));
+        $this->estilo = htmlspecialchars(strip_tags((string)($this->estilo ?? '')));
+        $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
+        $this->sexo = htmlspecialchars(strip_tags((string)($this->sexo ?? '')));
 
         // bind values
         $stmt->bindParam(":nome", $this->nome);
@@ -250,9 +250,9 @@ class Tecnico{
         //transpor para tabela de exportação
         function exportacao($idPais = null, $idTime = null, $idLiga = null){
 
-            $idPais = htmlspecialchars(strip_tags($idPais));
-            $idTime = htmlspecialchars(strip_tags($idTime));
-			$idLiga = htmlspecialchars(strip_tags($idLiga));
+            $idPais = $idPais !== null ? htmlspecialchars(strip_tags((string)$idPais)) : null;
+            $idTime = $idTime !== null ? htmlspecialchars(strip_tags((string)$idTime)) : null;
+			$idLiga = $idLiga !== null ? htmlspecialchars(strip_tags((string)$idLiga)) : null;
 
             if($idPais != null){
               $subquery = " b.Pais=:pais ";
@@ -676,16 +676,16 @@ class Tecnico{
 
             function pesquisaAvancada($nivelMin, $nivelMax, $nome, $nacionalidade, $mentalidade, $estilo, $semclube, $sexo, $apenasConfusa, $usuarioLogado, $liga){
 
-            $nivelMin = htmlspecialchars(strip_tags($nivelMin));
-            $nivelMax = htmlspecialchars(strip_tags($nivelMax));
-            $nome = htmlspecialchars(strip_tags($nome));
-            $nacionalidade = htmlspecialchars(strip_tags($nacionalidade));
-            $mentalidade = htmlspecialchars(strip_tags($mentalidade));
-            $estilo = htmlspecialchars(strip_tags($estilo));
-            $semclube = htmlspecialchars(strip_tags($semclube));
-            $sexo = htmlspecialchars(strip_tags($sexo));
-            $apenasConfusa = htmlspecialchars(strip_tags($apenasConfusa));
-			$liga = htmlspecialchars(strip_tags($liga));
+            $nivelMin = htmlspecialchars(strip_tags((string)($nivelMin ?? '')));
+            $nivelMax = htmlspecialchars(strip_tags((string)($nivelMax ?? '')));
+            $nome = htmlspecialchars(strip_tags((string)($nome ?? '')));
+            $nacionalidade = htmlspecialchars(strip_tags((string)($nacionalidade ?? '')));
+            $mentalidade = htmlspecialchars(strip_tags((string)($mentalidade ?? '')));
+            $estilo = htmlspecialchars(strip_tags((string)($estilo ?? '')));
+            $semclube = htmlspecialchars(strip_tags((string)($semclube ?? '')));
+            $sexo = htmlspecialchars(strip_tags((string)($sexo ?? '')));
+            $apenasConfusa = htmlspecialchars(strip_tags((string)($apenasConfusa ?? '')));
+			$liga = htmlspecialchars(strip_tags((string)($liga ?? '')));
 
             $subquery = '';
             if($estilo != null){
@@ -766,7 +766,7 @@ class Tecnico{
                 $tipoContrato = 1;
             }
 
-            $query = "INSERT INTO contratos_tecnico (tecnico, clube, modificadorNivel, prazo, tipoContrato) VALUES (?, ?, 0, 0, ?) ON DUPLICATE KEY UPDATE tecnico = tecnico";
+            $query = "INSERT INTO contratos_tecnico (tecnico, clube, modificadorNivel, prazo, tipoContrato, salario) VALUES (?, ?, 0, 0, ?, 0) ON DUPLICATE KEY UPDATE tecnico = tecnico";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(1, $idTecnico);
             $stmt->bindParam(2, $selecaoDestino);
@@ -875,16 +875,16 @@ class Tecnico{
 
         function editar($idTecnico,$idTime,$nomeTecnico,$nacionalidadeTecnico,$nascimentoTecnico,$nivelTecnico,$isDono,$mentalidadeTecnico = null, $estiloTecnico = null, $foto = null,  $desdeContrato = null){
 
-            $idTecnico = htmlspecialchars(strip_tags($idTecnico));
-            $idTime = htmlspecialchars(strip_tags($idTime));
-            $nomeTecnico = htmlspecialchars(strip_tags($nomeTecnico));
-            $nacionalidadeTecnico = htmlspecialchars(strip_tags($nacionalidadeTecnico));
-            $nascimentoTecnico = htmlspecialchars(strip_tags($nascimentoTecnico));
-            $nivelTecnico = htmlspecialchars(strip_tags($nivelTecnico));
-            $mentalidadeTecnico = htmlspecialchars(strip_tags($mentalidadeTecnico));
-            $estiloTecnico = htmlspecialchars(strip_tags($estiloTecnico));
-			$foto = htmlspecialchars(strip_tags($foto));
-			$desdeContrato = htmlspecialchars(strip_tags($desdeContrato));
+            $idTecnico = htmlspecialchars(strip_tags((string)($idTecnico ?? '')));
+            $idTime = ($idTime !== null && $idTime !== '') ? htmlspecialchars(strip_tags((string)$idTime)) : null;
+            $nomeTecnico = htmlspecialchars(strip_tags((string)($nomeTecnico ?? '')));
+            $nacionalidadeTecnico = htmlspecialchars(strip_tags((string)($nacionalidadeTecnico ?? '')));
+            $nascimentoTecnico = htmlspecialchars(strip_tags((string)($nascimentoTecnico ?? '')));
+            $nivelTecnico = htmlspecialchars(strip_tags((string)($nivelTecnico ?? '')));
+            $mentalidadeTecnico = ($mentalidadeTecnico !== null && $mentalidadeTecnico !== '') ? htmlspecialchars(strip_tags((string)$mentalidadeTecnico)) : null;
+            $estiloTecnico = ($estiloTecnico !== null && $estiloTecnico !== '') ? htmlspecialchars(strip_tags((string)$estiloTecnico)) : null;
+			$foto = ($foto !== null && $foto !== '') ? htmlspecialchars(strip_tags((string)$foto)) : null;
+			$desdeContrato = ($desdeContrato !== null && $desdeContrato !== '') ? htmlspecialchars(strip_tags((string)$desdeContrato)) : null;
 
             if($nivelTecnico > 10){
               $nivelTecnico = 10;

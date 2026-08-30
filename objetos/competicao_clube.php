@@ -227,7 +227,7 @@ class Competicao_clube{
 
 		$id = htmlspecialchars(strip_tags($id));
 		$query = "SELECT
-                numero_times, limite_fichas, subir_live, sorteio, golfora, finalunica, tipocompeticao, criteriodesempate, criteriodesempatefinal, suspensao, zeraramarelos, alteracoeselenco, inicioalteracoes, fimalteracoes, jogadoresadicionais, estadios_times, desempate_grupos  
+                numero_times, limite_fichas, subir_live, sorteio, golfora, finalunica, tipocompeticao, criteriodesempate, criteriodesempatefinal, suspensao, zeraramarelos, alteracoeselenco, inicioalteracoes, fimalteracoes, jogadoresadicionais, estadios_times, desempate_grupos, num_grupos, times_por_grupo, tipo_preliminar, turnos_pontos_corridos  
             FROM
                 competicao_opcoes 
             WHERE
@@ -240,7 +240,7 @@ class Competicao_clube{
 		return $options;
     }
 	
-	function alterarOpcoes($idUsuario, $numero_times, $data_limite, $subir_live, $sorteio, $gol_fora, $final_unica, $tipo_competicao, $criterio_desempate, $criterio_desempate_final, $criterio_suspensao, $zerar_amarelos, $permitir_alteracoes, $inicio_alteracoes, $fim_alteracoes, $numero_alteracoes, $id_competicao, $estadios_times = 1, $desempate_grupos = 'SG,GP,VI,CD'){
+	function alterarOpcoes($idUsuario, $numero_times, $data_limite, $subir_live, $sorteio, $gol_fora, $final_unica, $tipo_competicao, $criterio_desempate, $criterio_desempate_final, $criterio_suspensao, $zerar_amarelos, $permitir_alteracoes, $inicio_alteracoes, $fim_alteracoes, $numero_alteracoes, $id_competicao, $estadios_times = 1, $desempate_grupos = 'SG,GP,VI,CD', $num_grupos = 4, $times_por_grupo = 4, $tipo_preliminar = 1, $turnos_pontos_corridos = 2){
 	
 			$idUsuario = htmlspecialchars(strip_tags($idUsuario));
 			$numero_times = htmlspecialchars(strip_tags($numero_times));
@@ -260,6 +260,11 @@ class Competicao_clube{
 			$numero_alteracoes = htmlspecialchars(strip_tags($numero_alteracoes));
 			$estadios_times = htmlspecialchars(strip_tags($estadios_times));
 			$desempate_grupos = htmlspecialchars(strip_tags($desempate_grupos));
+			$num_grupos = intval($num_grupos) > 0 ? intval($num_grupos) : 4;
+			$times_por_grupo = intval($times_por_grupo) > 0 ? intval($times_por_grupo) : 4;
+			$tipo_preliminar = intval($tipo_preliminar);
+			$turnos_pontos_corridos = (intval($turnos_pontos_corridos) >= 1 && intval($turnos_pontos_corridos) <= 4) ? intval($turnos_pontos_corridos) : 2;
+
 			if($numero_alteracoes == "") $numero_alteracoes = 0;
 			if($inicio_alteracoes == "") $inicio_alteracoes = null;
 			if($fim_alteracoes == "") $fim_alteracoes = null;
@@ -268,7 +273,7 @@ class Competicao_clube{
 			
 			$query = "UPDATE competicao_opcoes 
             SET
-                 numero_times =:numero_times, limite_fichas=:limite_fichas, subir_live=:subir_live, sorteio=:sorteio, golfora=:golfora, finalunica=:finalunica, tipocompeticao=:tipocompeticao, criteriodesempate=:criteriodesempate, criteriodesempatefinal=:criteriodesempatefinal, suspensao=:suspensao, zeraramarelos=:zeraramarelos, alteracoeselenco=:alteracoeselenco, inicioalteracoes=:inicioalteracoes, fimalteracoes=:fimalteracoes, jogadoresadicionais=:numeroalteracoes, estadios_times=:estadios_times, desempate_grupos=:desempate_grupos  
+                 numero_times =:numero_times, limite_fichas=:limite_fichas, subir_live=:subir_live, sorteio=:sorteio, golfora=:golfora, finalunica=:finalunica, tipocompeticao=:tipocompeticao, criteriodesempate=:criteriodesempate, criteriodesempatefinal=:criteriodesempatefinal, suspensao=:suspensao, zeraramarelos=:zeraramarelos, alteracoeselenco=:alteracoeselenco, inicioalteracoes=:inicioalteracoes, fimalteracoes=:fimalteracoes, jogadoresadicionais=:numeroalteracoes, estadios_times=:estadios_times, desempate_grupos=:desempate_grupos, num_grupos=:num_grupos, times_por_grupo=:times_por_grupo, tipo_preliminar=:tipo_preliminar, turnos_pontos_corridos=:turnos_pontos_corridos   
              WHERE
                 id_competicao = :idComp";
 
@@ -291,6 +296,10 @@ class Competicao_clube{
 		$stmt->bindParam(":numeroalteracoes", $numero_alteracoes);
 		$stmt->bindParam(":estadios_times", $estadios_times);
 		$stmt->bindParam(":desempate_grupos", $desempate_grupos);
+		$stmt->bindParam(":num_grupos", $num_grupos);
+		$stmt->bindParam(":times_por_grupo", $times_por_grupo);
+		$stmt->bindParam(":tipo_preliminar", $tipo_preliminar);
+		$stmt->bindParam(":turnos_pontos_corridos", $turnos_pontos_corridos);
 		
 		if($stmt->execute()){
 			return true;
@@ -299,6 +308,7 @@ class Competicao_clube{
 		}
 	}
 	
+
 
 
 	function checkOptionsFilled($id){
@@ -321,7 +331,7 @@ class Competicao_clube{
 		
 		$idCompeticao = htmlspecialchars(strip_tags($idCompeticao));
 		
-		$query = "SELECT codigo_time, pais_time, has_team, id_time_portal FROM competicao_times WHERE id_competicao = :id_competicao ORDER BY codigo_time ASC ";
+		$query = "SELECT codigo_time, pais_time, has_team, id_time_portal, slot FROM competicao_times WHERE id_competicao = :id_competicao ORDER BY codigo_time ASC ";
         $stmt = $this->conn->prepare( $query );
 
         $stmt->bindParam(":id_competicao", $idCompeticao);
@@ -330,15 +340,15 @@ class Competicao_clube{
 		return $stmt;
 		
 	}
-
-	
 	function carregarListaJogos($idCompeticao){
 		$idCompeticao = htmlspecialchars(strip_tags($idCompeticao));
 		
-		$query = "SELECT j.*, 
+		$query = "SELECT j.id, j.timeA_id, j.timeB_id, j.timeA_nome, j.timeB_nome, j.timeA_gols, j.timeB_gols, j.timeA_penaltis, j.timeB_penaltis,
+		                 j.data, j.competicao_id as competicao, j.estadio_id as estadio, j.neutro, j.arbitro_id as arbitro,
+		                 j.fase, j.grupo, j.path, j.status, j.simulador_interno,
 		                 (SELECT p.dono FROM clube c LEFT JOIN paises p ON c.Pais = p.id WHERE c.ID = j.timeA_id LIMIT 1) as idDonoPais
-		          FROM competicao_jogos j
-		          WHERE j.competicao = :id_competicao 
+		          FROM jogos_clube j
+		          WHERE j.competicao_id = :id_competicao AND j.simulador_interno = 1
 		          ORDER BY j.data ASC ";
 		$stmt = $this->conn->prepare( $query );
 
@@ -351,8 +361,15 @@ class Competicao_clube{
 	function getMatchInfo($matchId){
 		$matchId = htmlspecialchars(strip_tags($matchId));
 		
-		$query = "SELECT * FROM competicao_jogos 
-		WHERE id = :id";
+		$query = "SELECT j.id, j.timeA_id, j.timeB_id, j.timeA_gols, j.timeB_gols, j.timeA_penaltis, j.timeB_penaltis,
+		                 j.data, j.competicao_id as competicao, j.estadio_id as estadio, j.neutro, j.arbitro_id as arbitro,
+		                 j.fase, j.grupo, j.path, j.status, j.simulador_interno,
+		                 COALESCE(j.timeA_nome, cA.Nome) as timeA_nome,
+		                 COALESCE(j.timeB_nome, cB.Nome) as timeB_nome
+		          FROM jogos_clube j
+		          LEFT JOIN clube cA ON j.timeA_id = cA.ID
+		          LEFT JOIN clube cB ON j.timeB_id = cB.ID
+		          WHERE j.id = :id";
         $stmt = $this->conn->prepare( $query );
 
         $stmt->bindParam(":id", $matchId);
@@ -412,11 +429,9 @@ class Competicao_clube{
 		
 	}
 	
-	function inserirJogo($id_competicao,$timeA,$timeB,$fase,$arbitro,$estadio, $datetime, $neutro, $grupo = null){
+	function inserirJogo($id_competicao,$timeA,$timeB,$fase,$arbitro,$estadio, $datetime, $neutro, $grupo = null, $dono = null, $nomeA = null, $nomeB = null){
 		
 		$id_competicao = htmlspecialchars(strip_tags($id_competicao));
-		$timeA = htmlspecialchars(strip_tags($timeA));
-		$timeB = htmlspecialchars(strip_tags($timeB));
 		$fase = htmlspecialchars(strip_tags($fase));
 		$arbitro = htmlspecialchars(strip_tags($arbitro));
 		$estadio = htmlspecialchars(strip_tags($estadio));
@@ -427,52 +442,44 @@ class Competicao_clube{
 			$grupo = htmlspecialchars(strip_tags($grupo));	
 		}
 		
-		if($timeA <= 0){
-			$portalA = 0;
-		} else {
-			$portalA = 1;
-		}
-		
-		if($timeB <= 0){
-			$portalB = 0;
-		} else {
-			$portalB = 1;
-		}
-		
-		if($neutro == "false"){
+		if($neutro == "false" || $neutro === false){
             $neutro = 0;
-        } else if ($neutro == "true"){
+        } else if ($neutro == "true" || $neutro === true){
             $neutro = 1;
         }
+
+		$timeA_id = (is_numeric($timeA) && intval($timeA) > 0) ? intval($timeA) : 0;
+		$timeB_id = (is_numeric($timeB) && intval($timeB) > 0) ? intval($timeB) : 0;
+
+		$timeA_nome = $nomeA ? htmlspecialchars(strip_tags($nomeA)) : (!is_numeric($timeA) && !empty($timeA) ? htmlspecialchars(strip_tags($timeA)) : null);
+		$timeB_nome = $nomeB ? htmlspecialchars(strip_tags($nomeB)) : (!is_numeric($timeB) && !empty($timeB) ? htmlspecialchars(strip_tags($timeB)) : null);
 		
-		$query = "INSERT INTO competicao_jogos (timeA_id, timeB_id, timeA_portal, timeB_portal, data, competicao, estadio, neutro, arbitro, fase, grupo) VALUES (:timeA, :timeB, :portalA, :portalB, :data, :competicao, :estadio, :neutro, :arbitro, :fase, :grupo)";
+		$query = "INSERT INTO jogos_clube (timeA_id, timeA_nome, timeB_id, timeB_nome, data, competicao_id, estadio_id, neutro, arbitro_id, fase, grupo, competicao_tipo, simulador_interno, status, dono) 
+		          VALUES (:timeA, :nomeA, :timeB, :nomeB, :data, :competicao, :estadio, :neutro, :arbitro, :fase, :grupo, 1, 1, 0, COALESCE(:dono, (SELECT dono FROM " . $this->table_name . " WHERE id = :competicao_dono LIMIT 1), 0))";
         $stmt = $this->conn->prepare( $query );
 
-        $stmt->bindParam(":timeA", $timeA);
-        $stmt->bindParam(":timeB", $timeB);
-        $stmt->bindParam(":portalA", $portalA);
-		$stmt->bindParam(":portalB", $portalB);
+        $stmt->bindParam(":timeA", $timeA_id);
+        $stmt->bindParam(":nomeA", $timeA_nome);
+        $stmt->bindParam(":timeB", $timeB_id);
+        $stmt->bindParam(":nomeB", $timeB_nome);
 		$stmt->bindParam(":data", $datetime);
 		$stmt->bindParam(":competicao", $id_competicao);
+		$stmt->bindParam(":competicao_dono", $id_competicao);
 		$stmt->bindParam(":estadio", $estadio);
 		$stmt->bindParam(":neutro", $neutro);
 		$stmt->bindParam(":arbitro", $arbitro);
 		$stmt->bindParam(":fase", $fase);
 		$stmt->bindParam(":grupo", $grupo);
+		$stmt->bindValue(":dono", $dono, $dono === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
 
         if($stmt->execute()){
             return true;
         } else {
             return false;
         }
-		
-		
-		
 	}
 	
 	function getColors(){
-		
-
 		$query = "SELECT (SELECT  valor as cor1 FROM opcoes WHERE parametro = 'partidaCor1' ) as partidaCor1, (SELECT  valor as cor2 FROM opcoes WHERE parametro = 'partidaCor2') as partidaCor2, (SELECT  valor as cor3 FROM opcoes WHERE parametro = 'partidaCor3') as partidaCor3";
 		$stmt = $this->conn->query($query);
 		$stmt->execute();
@@ -480,16 +487,18 @@ class Competicao_clube{
 		return $result;
 	}
 	
-	function uploadMatchResults($idPartida, $golsTimeA, $golsTimeB, $path){
+	function uploadMatchResults($idPartida, $golsTimeA, $golsTimeB, $path, $penA = null, $penB = null){
 		$idPartida = htmlspecialchars(strip_tags($idPartida));
 		$golsTimeA = htmlspecialchars(strip_tags($golsTimeA));
 		$golsTimeB = htmlspecialchars(strip_tags($golsTimeB));
 		$path = htmlspecialchars(strip_tags($path));	
 
-		$query = "UPDATE competicao_jogos 
+		$query = "UPDATE jogos_clube 
 					SET 
 						timeA_gols = :timeA_gols,
 						timeB_gols = :timeB_gols,
+						timeA_penaltis = :timeA_penaltis,
+						timeB_penaltis = :timeB_penaltis,
 						path = :path,
 						status = 1 
 					WHERE
@@ -499,6 +508,16 @@ class Competicao_clube{
 
         $stmt->bindParam(":timeA_gols", $golsTimeA);
         $stmt->bindParam(":timeB_gols", $golsTimeB);
+        if($penA !== null && $penA !== '') {
+            $stmt->bindValue(":timeA_penaltis", (int)$penA, PDO::PARAM_INT);
+        } else {
+            $stmt->bindValue(":timeA_penaltis", null, PDO::PARAM_NULL);
+        }
+        if($penB !== null && $penB !== '') {
+            $stmt->bindValue(":timeB_penaltis", (int)$penB, PDO::PARAM_INT);
+        } else {
+            $stmt->bindValue(":timeB_penaltis", null, PDO::PARAM_NULL);
+        }
         $stmt->bindParam(":path", $path);
 		$stmt->bindParam(":id", $idPartida);
 
@@ -508,7 +527,6 @@ class Competicao_clube{
             return false;
         }
 	}
-	
 	
 	function getTeamColors($uniforme, $idTime){
 		
@@ -625,7 +643,22 @@ class Competicao_clube{
 	}
 	function limparJogos($id_competicao){
 		$id_competicao = htmlspecialchars(strip_tags($id_competicao));
-		$query = "DELETE FROM competicao_jogos WHERE competicao = :id_competicao";
+		
+		// 1. Limpar eventos e escalações associados aos jogos desta competição
+		$querySub = "SELECT id FROM jogos_clube WHERE competicao_id = :id_comp1 AND simulador_interno = 1";
+		$stmtSub = $this->conn->prepare($querySub);
+		$stmtSub->bindParam(":id_comp1", $id_competicao);
+		$stmtSub->execute();
+		$matchIds = $stmtSub->fetchAll(PDO::FETCH_COLUMN);
+		
+		if(!empty($matchIds)){
+			$inQuery = implode(',', array_map('intval', $matchIds));
+			$this->conn->exec("DELETE FROM jogos_clube_eventos WHERE id_jogo IN ($inQuery)");
+			$this->conn->exec("DELETE FROM jogos_clube_escalacao WHERE id_partida IN ($inQuery)");
+		}
+
+		// 2. Apagar os jogos da tabela unificada
+		$query = "DELETE FROM jogos_clube WHERE competicao_id = :id_competicao AND simulador_interno = 1";
 		$stmt = $this->conn->prepare( $query );
 		$stmt->bindParam(":id_competicao", $id_competicao);
 		if($stmt->execute()){
@@ -633,6 +666,324 @@ class Competicao_clube{
 		} else {
 			return false;
 		}
+	}
+
+	function getSlotInfoForVaga($idCompeticao, $vagaIndex){
+		$options = $this->getOptions($idCompeticao);
+		$tipo = isset($options['tipocompeticao']) ? intval($options['tipocompeticao']) : 0;
+		$vagaIndex = intval($vagaIndex);
+		
+		if ($tipo == 0) { // Misto
+			$numGroups = (isset($options['num_grupos']) && intval($options['num_grupos']) > 0) ? intval($options['num_grupos']) : 4;
+			$teamsPerGroup = (isset($options['times_por_grupo']) && intval($options['times_por_grupo']) > 0) ? intval($options['times_por_grupo']) : 4;
+			$capacidadeGrupos = $numGroups * $teamsPerGroup;
+			$numeroTimes = isset($options['numero_times']) ? intval($options['numero_times']) : $capacidadeGrupos;
+			$totalTeams = max($numeroTimes, $capacidadeGrupos);
+			$excedente = $totalTeams > $capacidadeGrupos ? ($totalTeams - $capacidadeGrupos) : 0;
+			$numPreliminar = $excedente * 2;
+			
+			if ($vagaIndex <= $numPreliminar) {
+				return ['slot' => "P" . $vagaIndex, 'fase' => 1, 'grupo' => 'P'];
+			} else {
+				$groupVaga = $vagaIndex - $numPreliminar - 1;
+				$g = intdiv($groupVaga, $teamsPerGroup);
+				$k = ($groupVaga % $teamsPerGroup) + 1;
+				$groupLetter = chr(65 + $g);
+				return ['slot' => $groupLetter . $k, 'fase' => 2, 'grupo' => $groupLetter];
+			}
+		} else if ($tipo == 1) { // Mata-mata
+			return ['slot' => "Slot " . $vagaIndex, 'fase' => null, 'grupo' => null];
+		} else { // Pontos corridos
+			return ['slot' => "Slot " . $vagaIndex, 'fase' => 2, 'grupo' => null];
+		}
+	}
+
+	function getSlotNameForVaga($idCompeticao, $vagaIndex){
+		$info = $this->getSlotInfoForVaga($idCompeticao, $vagaIndex);
+		return $info ? $info['slot'] : "Slot " . $vagaIndex;
+	}
+
+	function atualizarJogosPorSlot($idCompeticao, $vagaIndex, $idTimeReal, $prevTimeId = 0){
+		$info = $this->getSlotInfoForVaga($idCompeticao, $vagaIndex);
+		if (!$info) return false;
+		
+		$slotName = $info['slot'];
+		$fase = $info['fase'];
+		$grupo = $info['grupo'];
+		
+		$idCompeticao = intval($idCompeticao);
+		$idTimeReal = intval($idTimeReal);
+		$prevTimeId = intval($prevTimeId);
+		
+		$whereExtraA = "";
+		$whereExtraB = "";
+		if ($grupo !== null && $grupo !== '') {
+			$whereExtraA = " AND (grupo = '$grupo' OR grupo IS NULL) ";
+			$whereExtraB = " AND (grupo = '$grupo' OR grupo IS NULL) ";
+		}
+		
+		if ($idTimeReal > 0) {
+			// 1. Atualizar por nome do slot (placeholder)
+			$this->conn->exec("UPDATE jogos_clube 
+			                   SET timeA_id = $idTimeReal, timeA_nome = NULL 
+			                   WHERE competicao_id = $idCompeticao 
+			                     AND simulador_interno = 1 
+			                     AND timeA_nome = '$slotName' $whereExtraA");
+			                     
+			$this->conn->exec("UPDATE jogos_clube 
+			                   SET timeB_id = $idTimeReal, timeB_nome = NULL 
+			                   WHERE competicao_id = $idCompeticao 
+			                     AND simulador_interno = 1 
+			                     AND timeB_nome = '$slotName' $whereExtraB");
+
+			// 2. Se estava substituindo um time anterior
+			if ($prevTimeId > 0 && $prevTimeId != $idTimeReal) {
+				$this->conn->exec("UPDATE jogos_clube 
+				                   SET timeA_id = $idTimeReal 
+				                   WHERE competicao_id = $idCompeticao 
+				                     AND simulador_interno = 1 
+				                     AND timeA_id = $prevTimeId $whereExtraA");
+				                     
+				$this->conn->exec("UPDATE jogos_clube 
+				                   SET timeB_id = $idTimeReal 
+				                   WHERE competicao_id = $idCompeticao 
+				                     AND simulador_interno = 1 
+				                     AND timeB_id = $prevTimeId $whereExtraB");
+			}
+			
+			// 3. Atualizar estádios dos jogos mandantes se estádio for por time
+			$options = $this->getOptions($idCompeticao);
+			$estadios_times = isset($options['estadios_times']) ? intval($options['estadios_times']) : 1;
+			if ($estadios_times == 1) {
+				$db3File = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+				if (file_exists($db3File)) {
+					$liteDb = new SQLiteDatabase();
+					$liteDb->fileName = $db3File;
+					$sdb = $liteDb->getConnection();
+					if ($sdb) {
+						$stClube = $sdb->prepare("SELECT Estadio FROM clube WHERE ID = :id");
+						$stClube->bindParam(':id', $idTimeReal);
+						$stClube->execute();
+						$rC = $stClube->fetch(PDO::FETCH_ASSOC);
+						if ($rC && !empty($rC['Estadio'])) {
+							$estId = intval($rC['Estadio']);
+							$stUpdEst = $this->conn->prepare("UPDATE jogos_clube 
+							                                  SET estadio_id = :estId 
+							                                  WHERE competicao_id = :idComp 
+							                                    AND simulador_interno = 1 
+							                                    AND timeA_id = :idTime");
+							$stUpdEst->bindParam(':estId', $estId, PDO::PARAM_INT);
+							$stUpdEst->bindParam(':idComp', $idCompeticao, PDO::PARAM_INT);
+							$stUpdEst->bindParam(':idTime', $idTimeReal, PDO::PARAM_INT);
+							$stUpdEst->execute();
+						}
+					}
+				}
+			}
+		} else {
+			// Resetando para o placeholder do slot
+			if ($prevTimeId > 0) {
+				$this->conn->exec("UPDATE jogos_clube 
+				                   SET timeA_id = 0, timeA_nome = '$slotName' 
+				                   WHERE competicao_id = $idCompeticao 
+				                     AND simulador_interno = 1 
+				                     AND timeA_id = $prevTimeId $whereExtraA");
+				                     
+				$this->conn->exec("UPDATE jogos_clube 
+				                   SET timeB_id = 0, timeB_nome = '$slotName' 
+				                   WHERE competicao_id = $idCompeticao 
+				                     AND simulador_interno = 1 
+				                     AND timeB_id = $prevTimeId $whereExtraB");
+			}
+		}
+		
+		return true;
+	}
+
+	function definirSlotTime($idCompeticao, $codigoTime, $slotName){
+		$idCompeticao = intval($idCompeticao);
+		$codigoTime = intval($codigoTime);
+		$slotName = trim($slotName);
+		
+		// 1. Descobrir qual time está nesta vaga
+		$st = $this->conn->prepare("SELECT pais_time, has_team, id_time_portal, slot FROM competicao_times WHERE id_competicao = :idComp AND codigo_time = :cod LIMIT 1");
+		$st->bindParam(':idComp', $idCompeticao);
+		$st->bindParam(':cod', $codigoTime);
+		$st->execute();
+		$row = $st->fetch(PDO::FETCH_ASSOC);
+		if(!$row) return false;
+		
+		$prevSlot = trim($row['slot'] ?? '');
+		$teamId = 0;
+		if(!empty($row['id_time_portal']) && intval($row['id_time_portal']) > 0){
+			$teamId = intval($row['id_time_portal']);
+		} else if(isset($row['has_team']) && ($row['has_team'] == 1 || $row['has_team'] == '1')){
+			$teamId = -1 * abs($codigoTime);
+		}
+		
+		// 2. Se outro time já tinha esse mesmo $slotName, desvincular o outro time desse slot
+		if($slotName !== ''){
+			$stClearOther = $this->conn->prepare("UPDATE competicao_times SET slot = NULL WHERE id_competicao = :idComp AND slot = :slot AND codigo_time != :cod");
+			$stClearOther->bindParam(':idComp', $idCompeticao);
+			$stClearOther->bindParam(':slot', $slotName);
+			$stClearOther->bindParam(':cod', $codigoTime);
+			$stClearOther->execute();
+		}
+		
+		// 3. Atualizar o slot deste time na tabela competicao_times
+		$newSlotVal = ($slotName === '') ? null : $slotName;
+		$stUpd = $this->conn->prepare("UPDATE competicao_times SET slot = :slot WHERE id_competicao = :idComp AND codigo_time = :cod");
+		$stUpd->bindParam(':slot', $newSlotVal);
+		$stUpd->bindParam(':idComp', $idCompeticao);
+		$stUpd->bindParam(':cod', $codigoTime);
+		$stUpd->execute();
+		
+		// 4. Se o time tinha um slot anterior e ele mudou, restaurar o placeholder do slot anterior nos jogos
+		if($prevSlot !== '' && $prevSlot !== $slotName && $teamId != 0){
+			$this->conn->exec("UPDATE jogos_clube SET timeA_id = 0, timeA_nome = '$prevSlot' WHERE competicao_id = $idCompeticao AND simulador_interno = 1 AND timeA_id = $teamId");
+			$this->conn->exec("UPDATE jogos_clube SET timeB_id = 0, timeB_nome = '$prevSlot' WHERE competicao_id = $idCompeticao AND simulador_interno = 1 AND timeB_id = $teamId");
+		}
+		
+		// 5. Se o novo slot foi definido e temos um time, preencher os jogos com este time
+		if($slotName !== '' && $teamId != 0){
+			$this->conn->exec("UPDATE jogos_clube SET timeA_id = $teamId, timeA_nome = NULL WHERE competicao_id = $idCompeticao AND simulador_interno = 1 AND timeA_nome = '$slotName'");
+			$this->conn->exec("UPDATE jogos_clube SET timeB_id = $teamId, timeB_nome = NULL WHERE competicao_id = $idCompeticao AND simulador_interno = 1 AND timeB_nome = '$slotName'");
+			
+			// Atualizar estádio mandante se estadios_times == 1
+			$options = $this->getOptions($idCompeticao);
+			$estadios_times = isset($options['estadios_times']) ? intval($options['estadios_times']) : 1;
+			if ($estadios_times == 1 && $teamId > 0) {
+				$db3File = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+				if (file_exists($db3File)) {
+					$liteDb = new SQLiteDatabase();
+					$liteDb->fileName = $db3File;
+					$sdb = $liteDb->getConnection();
+					if ($sdb) {
+						$stClube = $sdb->prepare("SELECT Estadio FROM clube WHERE ID = :id");
+						$stClube->bindParam(':id', $teamId);
+						$stClube->execute();
+						$rC = $stClube->fetch(PDO::FETCH_ASSOC);
+						if ($rC && !empty($rC['Estadio'])) {
+							$estId = intval($rC['Estadio']);
+							$stUpdEst = $this->conn->prepare("UPDATE jogos_clube 
+							                                  SET estadio_id = :estId 
+							                                  WHERE competicao_id = :idComp 
+							                                    AND simulador_interno = 1 
+							                                    AND timeA_id = :idTime");
+							$stUpdEst->bindParam(':estId', $estId, PDO::PARAM_INT);
+							$stUpdEst->bindParam(':idComp', $idCompeticao, PDO::PARAM_INT);
+							$stUpdEst->bindParam(':idTime', $teamId, PDO::PARAM_INT);
+							$stUpdEst->execute();
+						}
+					}
+				}
+			}
+		}
+		
+		return true;
+	}
+
+	function isClubeAtivoNaCompeticao($idCompeticao, $idClube) {
+		$idCompeticao = (int)$idCompeticao;
+		$idClube = (int)$idClube;
+		if ($idCompeticao <= 0 || $idClube <= 0) return false;
+
+		// 1. Se a Final (fase 8) já foi jogada, a competição encerrou para todos os times
+		$stmtFinal = $this->conn->prepare("SELECT 1 FROM jogos_clube WHERE competicao_id = :idComp AND fase = 8 AND status = 1 LIMIT 1");
+		$stmtFinal->execute([':idComp' => $idCompeticao]);
+		if ($stmtFinal->fetch()) {
+			return false;
+		}
+
+		// 2. Se o time possui qualquer partida agendada (status = 0), ele está 100% ativo
+		$stmtJogosPendentes = $this->conn->prepare("
+			SELECT 1 FROM jogos_clube 
+			WHERE competicao_id = :idComp 
+			  AND (timeA_id = :idClube OR timeB_id = :idClube) 
+			  AND status = 0 
+			LIMIT 1
+		");
+		$stmtJogosPendentes->execute([':idComp' => $idCompeticao, ':idClube' => $idClube]);
+		if ($stmtJogosPendentes->fetch()) {
+			return true;
+		}
+
+		// 3. Buscar todas as partidas simuladas do time nesta competição
+		$stmtJogos = $this->conn->prepare("
+			SELECT id, timeA_id, timeB_id, timeA_gols, timeB_gols, timeA_penaltis, timeB_penaltis, fase, status 
+			FROM jogos_clube 
+			WHERE competicao_id = :idComp 
+			  AND (timeA_id = :idClube OR timeB_id = :idClube)
+			ORDER BY fase DESC, id DESC
+		");
+		$stmtJogos->execute([':idComp' => $idCompeticao, ':idClube' => $idClube]);
+		$jogos = $stmtJogos->fetchAll(PDO::FETCH_ASSOC);
+
+		if (empty($jogos)) {
+			return true;
+		}
+
+		// Identificar a maior fase disputada pelo clube
+		$maiorFase = 0;
+		foreach ($jogos as $j) {
+			if ((int)$j['fase'] > $maiorFase) {
+				$maiorFase = (int)$j['fase'];
+			}
+		}
+
+		// Se disputou mata-mata (fase > 2)
+		if ($maiorFase > 2) {
+			$jogosFase = array_filter($jogos, function($j) use ($maiorFase) {
+				return (int)$j['fase'] === $maiorFase;
+			});
+
+			$golsPro = 0;
+			$golsContra = 0;
+			$penPro = null;
+			$penContra = null;
+			$tevePenaltis = false;
+
+			foreach ($jogosFase as $jf) {
+				if ((int)$jf['status'] == 1) {
+					$isA = ((int)$jf['timeA_id'] === $idClube);
+					$golsPro += (int)($isA ? $jf['timeA_gols'] : $jf['timeB_gols']);
+					$golsContra += (int)($isA ? $jf['timeB_gols'] : $jf['timeA_gols']);
+
+					$penA = $jf['timeA_penaltis'];
+					$penB = $jf['timeB_penaltis'];
+					if ($penA !== null && $penA !== '') {
+						$tevePenaltis = true;
+						$penPro = (int)($isA ? $penA : $penB);
+						$penContra = (int)($isA ? $penB : $penA);
+					}
+				}
+			}
+
+			// Se foi eliminado no agregado ou nos pênaltis, não está mais ativo
+			if ($tevePenaltis && $penPro !== null && $penContra !== null) {
+				if ($penPro < $penContra) return false;
+			} else {
+				if ($golsPro < $golsContra) return false;
+			}
+
+			return true;
+		}
+
+		// Se a competição já avançou para o mata-mata (fase > 2) e o time não está lá
+		$stmtMataMataOutros = $this->conn->prepare("SELECT 1 FROM jogos_clube WHERE competicao_id = :idComp AND fase > 2 LIMIT 1");
+		$stmtMataMataOutros->execute([':idComp' => $idCompeticao]);
+		if ($stmtMataMataOutros->fetch()) {
+			return false;
+		}
+
+		// Se todos os jogos da competição já foram simulados e não há mais partidas pendentes
+		$stmtTotalNaoJogados = $this->conn->prepare("SELECT 1 FROM jogos_clube WHERE competicao_id = :idComp AND status = 0 LIMIT 1");
+		$stmtTotalNaoJogados->execute([':idComp' => $idCompeticao]);
+		if (!$stmtTotalNaoJogados->fetch()) {
+			return false;
+		}
+
+		return true;
 	}
 }
 ?>

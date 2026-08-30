@@ -22,9 +22,13 @@ class Time{
     public $maxTorcedores;
     public $fidelidade;
     public $pais;
-    public $liga;
-    public $sexo;
+    public $liga;    public $sexo;
     public $status;
+    public $mascote;
+    public $titulos;
+    public $sobre_titulo;
+    public $sobre_subtitulo;
+    public $sobre_texto;
 
 
     public function __construct($db){
@@ -37,42 +41,42 @@ class Time{
         if(!isset($this->status)){
             $this->status = 0;
         }
+        if(!isset($this->mascote)){
+            $this->mascote = '0.png';
+        }
+        $titulos = '';
+        $sobre_titulo = '';
+        $sobre_subtitulo = '';
+        $sobre_texto = '';
 
         //escrever query
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    Nome=:nome, TresLetras=:sigla, Estadio=:estadio, Escudo=:escudo, Uni1Cor1=:uniforme1cor1, Uni1Cor2=:uniforme1cor2, Uni1Cor3=:uniforme1cor3, Uni2Cor1=:uniforme2cor1, Uni2Cor2=:uniforme2cor2, Uni2Cor3=:uniforme2cor3, Uniforme1=:uniforme1, Uniforme2=:uniforme2, MaxTorcedores=:maxTorcedores, Fidelidade=:fidelidade, Pais=:pais, liga=:liga, Sexo=:sexo, status=:status ";
+                    Nome=:nome, TresLetras=:sigla, Estadio=:estadio, Escudo=:escudo, Uni1Cor1=:uniforme1cor1, Uni1Cor2=:uniforme1cor2, Uni1Cor3=:uniforme1cor3, Uni2Cor1=:uniforme2cor1, Uni2Cor2=:uniforme2cor2, Uni2Cor3=:uniforme2cor3, Uniforme1=:uniforme1, Uniforme2=:uniforme2, MaxTorcedores=:maxTorcedores, Fidelidade=:fidelidade, Pais=:pais, liga=:liga, Sexo=:sexo, status=:status, mascote=:mascote, titulos=:titulos, sobre_titulo=:sobre_titulo, sobre_subtitulo=:sobre_subtitulo, sobre_texto=:sobre_texto ";
 
         $stmt = $this->conn->prepare($query);
 
         // posted values
-        $this->nome=htmlspecialchars(strip_tags($this->nome));
-        $this->sigla=htmlspecialchars(strip_tags($this->sigla));
-        $this->estadio=htmlspecialchars(strip_tags($this->estadio));
-        $this->escudo=htmlspecialchars(strip_tags($this->escudo));
-        $this->uniforme1cor1=htmlspecialchars(strip_tags($this->uniforme1cor1));
-        $this->uniforme1cor2=htmlspecialchars(strip_tags($this->uniforme1cor2));
-        $this->uniforme1cor3=htmlspecialchars(strip_tags($this->uniforme1cor3));
-        $this->uniforme1=htmlspecialchars(strip_tags($this->uniforme1));
-        $this->uniforme2cor1=htmlspecialchars(strip_tags($this->uniforme2cor1));
-        $this->uniforme2cor2=htmlspecialchars(strip_tags($this->uniforme2cor2));
-        $this->uniforme2cor3=htmlspecialchars(strip_tags($this->uniforme2cor3));
-        $this->uniforme2=htmlspecialchars(strip_tags($this->uniforme2));
-        $this->maxTorcedores=htmlspecialchars(strip_tags($this->maxTorcedores));
-        $this->fidelidade=htmlspecialchars(strip_tags($this->fidelidade));
-        $this->pais=htmlspecialchars(strip_tags($this->pais));
-        $this->liga=htmlspecialchars(strip_tags($this->liga));
-        if ($this->liga === '') {
-            $this->liga = null;
-        }
-        $this->sexo=htmlspecialchars(strip_tags($this->sexo));
-        $this->status=htmlspecialchars(strip_tags($this->status));
-
-        // verificar sigla
-        if($this->siglaDuplicada()){
-            $this->sigla = $this->novaSiglaUnica();
-        }
+        $this->nome = htmlspecialchars(strip_tags((string)($this->nome ?? '')));
+        $this->sigla = htmlspecialchars(strip_tags((string)($this->sigla ?? '')));
+        $this->estadio = htmlspecialchars(strip_tags((string)($this->estadio ?? '')));
+        $this->escudo = htmlspecialchars(strip_tags((string)($this->escudo ?? '')));
+        $this->uniforme1cor1 = htmlspecialchars(strip_tags((string)($this->uniforme1cor1 ?? '')));
+        $this->uniforme1cor2 = htmlspecialchars(strip_tags((string)($this->uniforme1cor2 ?? '')));
+        $this->uniforme1cor3 = htmlspecialchars(strip_tags((string)($this->uniforme1cor3 ?? '')));
+        $this->uniforme1 = htmlspecialchars(strip_tags((string)($this->uniforme1 ?? '')));
+        $this->uniforme2cor1 = htmlspecialchars(strip_tags((string)($this->uniforme2cor1 ?? '')));
+        $this->uniforme2cor2 = htmlspecialchars(strip_tags((string)($this->uniforme2cor2 ?? '')));
+        $this->uniforme2cor3 = htmlspecialchars(strip_tags((string)($this->uniforme2cor3 ?? '')));
+        $this->uniforme2 = htmlspecialchars(strip_tags((string)($this->uniforme2 ?? '')));
+        $this->mascote = htmlspecialchars(strip_tags((string)($this->mascote ?? '')));
+        $this->maxTorcedores = htmlspecialchars(strip_tags((string)($this->maxTorcedores ?? '')));
+        $this->fidelidade = htmlspecialchars(strip_tags((string)($this->fidelidade ?? '')));
+        $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
+        $this->liga = htmlspecialchars(strip_tags((string)($this->liga ?? '')));
+        $this->sexo = htmlspecialchars(strip_tags((string)($this->sexo ?? '')));
+        $this->status = htmlspecialchars(strip_tags((string)($this->status ?? '')));;
 
         // bind values
         $stmt->bindParam(":nome", $this->nome);
@@ -87,12 +91,17 @@ class Time{
         $stmt->bindParam(":uniforme2cor2", $this->uniforme2cor2);
         $stmt->bindParam(":uniforme2cor3", $this->uniforme2cor3);
         $stmt->bindParam(":uniforme2", $this->uniforme2);
+        $stmt->bindParam(":mascote", $this->mascote);
         $stmt->bindParam(":maxTorcedores", $this->maxTorcedores);
         $stmt->bindParam(":fidelidade", $this->fidelidade);
         $stmt->bindParam(":pais", $this->pais);
         $stmt->bindParam(":liga", $this->liga);
         $stmt->bindParam(":sexo", $this->sexo);
         $stmt->bindParam(":status", $this->status);
+        $stmt->bindParam(":titulos", $titulos);
+        $stmt->bindParam(":sobre_titulo", $sobre_titulo);
+        $stmt->bindParam(":sobre_subtitulo", $sobre_subtitulo);
+        $stmt->bindParam(":sobre_texto", $sobre_texto);
 
         try {
             //PDO query execution goes here.
@@ -103,10 +112,7 @@ class Time{
             }
         }
         catch (\PDOException $e) {
-            if ($e->errorInfo[1] == 1062) {
-                //The INSERT query failed due to a key constraint violation.
-                return false;
-            }
+            return false;
         }
 
 
@@ -167,21 +173,21 @@ return $stmt;
  // used for paging products
  public function countAll($dono = null, $liga = null){
 
-    $dono = htmlspecialchars(strip_tags($dono));
-    $liga = htmlspecialchars(strip_tags($liga));
+    $dono = ($dono !== null && $dono !== '') ? htmlspecialchars(strip_tags((string)$dono)) : null;
+    $liga = ($liga !== null && $liga !== '') ? htmlspecialchars(strip_tags((string)$liga)) : null;
 
-    if($dono == null && $liga == null){
+    if($dono === null && $liga === null){
 
        $query = "SELECT id FROM " . $this->table_name . "";
 
-    } else if($liga == null) {
+    } else if($liga === null) {
 
         $query =    "SELECT a.id
                     FROM " . $this->table_name . " a
                      LEFT JOIN paises p ON a.pais = p.id
                       WHERE a.status = 0 AND p.dono = ".$dono;
 
-    } else if($dono == null){
+    } else if($dono === null){
         $query =    "SELECT a.id
                     FROM " . $this->table_name . " a
                      LEFT JOIN paises p ON a.pais = p.id
@@ -210,7 +216,7 @@ function readInfo($id){
     }
 
     $query = "SELECT
-                a.id, a.Nome, a.TresLetras, e.Nome as Estadio, e.Capacidade as Capacidade, p.Nome as Pais, a.Escudo, a.Uniforme1, a.Uniforme2, l.nome as liga, l.id as liga_id, p.id as pais_id, p.dono as donoPais, a.status, a.Uni1Cor1, a.Uni1Cor2, l.logo as logoLiga, e.foto as fotoEstadio   
+                a.id, a.Nome, a.TresLetras, e.Nome as Estadio, e.Capacidade as Capacidade, p.Nome as Pais, a.Escudo, a.Uniforme1, a.Uniforme2, l.nome as liga, l.id as liga_id, l.limite_idade as limite_idade_liga, p.id as pais_id, p.dono as donoPais, a.status, a.Uni1Cor1, a.Uni1Cor2, l.logo as logoLiga, e.foto as fotoEstadio   
             FROM
                 " . $this->table_name . " a
             LEFT JOIN
@@ -287,10 +293,10 @@ function readInfo($id){
 
         function exportacao($idPais = null, $idTime = null, $idLiga = null, $multiple = null){
 
-			$multiple = htmlspecialchars(strip_tags($multiple));
-			$idPais = htmlspecialchars(strip_tags($idPais));
-			$idTime = htmlspecialchars(strip_tags($idTime));
-			$idLiga = htmlspecialchars(strip_tags($idLiga));
+			$multiple = $multiple !== null ? htmlspecialchars(strip_tags((string)$multiple)) : null;
+			$idPais = $idPais !== null ? htmlspecialchars(strip_tags((string)$idPais)) : null;
+			$idTime = $idTime !== null ? htmlspecialchars(strip_tags((string)$idTime)) : null;
+			$idLiga = $idLiga !== null ? htmlspecialchars(strip_tags((string)$idLiga)) : null;
 			
 
             if($idPais != null){
@@ -505,7 +511,7 @@ function readInfo($id){
 		   } 
 
 			if($idUsuario != null){
-			  $query = "SELECT c.Nome, count(CASE WHEN t.jogador IS NOT NULL THEN t.jogador ELSE 0 END) as total FROM `contratos_jogador` t RIGHT JOIN clube c ON c.id = t.clube LEFT JOIN paises p ON c.Pais = p.id WHERE p.dono = ? GROUP BY c.Nome HAVING total <13";
+			  $query = "SELECT c.Nome, count(t.jogador) as total FROM clube c LEFT JOIN `contratos_jogador` t ON c.id = t.clube LEFT JOIN paises p ON c.Pais = p.id WHERE p.dono = ? GROUP BY c.id HAVING total <13";
 			  $stmt = $this->conn->prepare( $query );
 			  $stmt->bindParam(1, $idUsuario);
 			} else {
@@ -520,7 +526,7 @@ function readInfo($id){
 				$subquery .= " OR c.ID = ? ";
 			  }
 			  
-			  $query = "SELECT c.Nome, count(CASE WHEN t.jogador IS NOT NULL THEN t.jogador ELSE 0 END) as total FROM `contratos_jogador` t RIGHT JOIN clube c ON c.id = t.clube WHERE ".$subquery." GROUP BY c.Nome HAVING total <13";
+			  $query = "SELECT c.Nome, count(t.jogador) as total FROM clube c LEFT JOIN `contratos_jogador` t ON c.id = t.clube WHERE ".$subquery." GROUP BY c.id HAVING total <13";
 			  $stmt = $this->conn->prepare($query);
 			  if(is_array($listaTimesExportados)){
 				for($j = 0; $j < $totalTimes ; $j++){
@@ -628,7 +634,7 @@ function readInfo($id){
 		   } 
 
             if($idUsuario != null){
-              $query = "SELECT c.Nome, count(CASE WHEN t.tecnico IS NOT NULL THEN t.tecnico ELSE 0 END) as total FROM `contratos_tecnico` t RIGHT JOIN clube c ON c.id = t.clube LEFT JOIN paises p ON c.Pais = p.id WHERE p.dono = ? GROUP BY clube HAVING total <> 1";
+              $query = "SELECT c.Nome, count(t.tecnico) as total FROM clube c LEFT JOIN `contratos_tecnico` t ON c.id = t.clube LEFT JOIN paises p ON c.Pais = p.id WHERE p.dono = ? GROUP BY c.id HAVING total <> 1";
               $stmt = $this->conn->prepare( $query );
               $stmt->bindParam(1, $idUsuario);
             } else {
@@ -641,7 +647,7 @@ function readInfo($id){
               for($i = 1;$i < $totalTimes;$i++){
                 $subquery .= " OR c.ID = ? ";
               }
-              $query = "SELECT c.Nome, count(CASE WHEN t.tecnico IS NOT NULL THEN t.tecnico ELSE 0 END) as total FROM `contratos_tecnico` t RIGHT JOIN clube c ON c.id = t.clube WHERE ".$subquery." GROUP BY clube HAVING total <> 1";
+              $query = "SELECT c.Nome, count(t.tecnico) as total FROM clube c LEFT JOIN `contratos_tecnico` t ON c.id = t.clube WHERE ".$subquery." GROUP BY c.id HAVING total <> 1";
               $stmt = $this->conn->prepare($query);
 			  if(is_array($listaTimesExportados)){
 				for($j = 0; $j < $totalTimes ; $j++){
@@ -827,6 +833,46 @@ function readInfo($id){
             return $listaTimes;
         }
 
+        function verificarClimaEstadio($idUsuario = null, $listaTimesExportados = null){
+            if($idUsuario != null){
+                $idUsuario = htmlspecialchars(strip_tags($idUsuario));  
+            } 
+
+            if($idUsuario != null){
+                $query = "SELECT c.Nome, (CASE WHEN e.ID IS NULL THEN 'Estádio não cadastrado ou não associado' WHEN e.Clima IS NULL OR e.Clima = 0 OR cl.ID IS NULL THEN 'Estádio sem clima cadastrado' ELSE 'Sem clima' END) as motivo FROM clube c LEFT JOIN paises p ON c.Pais = p.id LEFT JOIN estadio e ON c.Estadio = e.ID LEFT JOIN clima cl ON e.Clima = cl.ID WHERE p.dono = ? AND (e.ID IS NULL OR e.Clima IS NULL OR e.Clima = 0 OR cl.ID IS NULL) GROUP BY c.ID";
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(1, $idUsuario);
+            } else {
+                $subquery = " c.ID = ? ";
+                if(is_array($listaTimesExportados)){
+                    $totalTimes = count($listaTimesExportados);
+                } else {
+                    $totalTimes = 1;
+                }
+                for($i = 1; $i < $totalTimes; $i++){
+                    $subquery .= " OR c.ID = ? ";
+                }
+                $query = "SELECT c.Nome, (CASE WHEN e.ID IS NULL THEN 'Estádio não cadastrado ou não associado' WHEN e.Clima IS NULL OR e.Clima = 0 OR cl.ID IS NULL THEN 'Estádio sem clima cadastrado' ELSE 'Sem clima' END) as motivo FROM clube c LEFT JOIN estadio e ON c.Estadio = e.ID LEFT JOIN clima cl ON e.Clima = cl.ID WHERE (" . $subquery . ") AND (e.ID IS NULL OR e.Clima IS NULL OR e.Clima = 0 OR cl.ID IS NULL) GROUP BY c.ID";
+                $stmt = $this->conn->prepare($query);
+                if(is_array($listaTimesExportados)){
+                    for($j = 0; $j < $totalTimes; $j++){
+                        $stmt->bindParam($j + 1, $listaTimesExportados[$j]);
+                    }
+                } else {
+                    $stmt->bindParam(1, $listaTimesExportados);
+                }
+            }
+
+            $stmt->execute();
+            $listaTimes = array();
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+                extract($row);
+                $listaTimes[] = [$Nome, $motivo];
+            }
+
+            return $listaTimes;
+        }
+
         function moverLiga($idTime, $idLiga){
             $idTime = htmlspecialchars(strip_tags($idTime));
             $idLiga = htmlspecialchars(strip_tags($idLiga));
@@ -847,6 +893,37 @@ function readInfo($id){
             $idJogador1 = htmlspecialchars(strip_tags($idJogador1));
             $idJogador2 = htmlspecialchars(strip_tags($idJogador2));
             $tipoAlteracao = htmlspecialchars(strip_tags($tipoAlteracao));
+
+            // Verificar se o clube pertence a uma liga com limite de idade
+            if($time != null){
+                $queryLiga = "SELECT l.limite_idade FROM clube c LEFT JOIN liga l ON c.liga = l.id WHERE c.id = ?";
+                $stmtLiga = $this->conn->prepare($queryLiga);
+                $stmtLiga->bindParam(1, $time);
+                $stmtLiga->execute();
+                $limiteIdade = $stmtLiga->fetchColumn();
+
+                if($limiteIdade !== false && $limiteIdade !== null && intval($limiteIdade) > 0){
+                    $limiteIdade = intval($limiteIdade);
+
+                    // Identificar jogadores promovidos a Titular (1) ou Reserva (0)
+                    $jogadoresVerificar = [];
+                    if($tipoAlteracao == 0 && !empty($idJogador2)) $jogadoresVerificar[] = $idJogador2;
+                    if($tipoAlteracao == 1 && !empty($idJogador2)) $jogadoresVerificar[] = $idJogador2;
+                    if($tipoAlteracao == 2 && !empty($idJogador1)) $jogadoresVerificar[] = $idJogador1;
+                    if($tipoAlteracao == 4 && !empty($idJogador1)) $jogadoresVerificar[] = $idJogador1;
+
+                    foreach($jogadoresVerificar as $jId){
+                        $queryIdade = "SELECT FLOOR(DATEDIFF(NOW(), Nascimento)/365) as idade FROM jogador WHERE id = ?";
+                        $stmtIdade = $this->conn->prepare($queryIdade);
+                        $stmtIdade->bindParam(1, $jId);
+                        $stmtIdade->execute();
+                        $idadeJogador = $stmtIdade->fetchColumn();
+                        if($idadeJogador !== false && intval($idadeJogador) > $limiteIdade){
+                            return false;
+                        }
+                    }
+                }
+            }
 
             //tipos de alteraçao
             //0 - troca entre titular e reserva
@@ -1160,6 +1237,10 @@ function readInfo($id){
             $query .= " mascote=:mascote, ";
         }
 
+        if(isset($this->sigla) && $this->sigla !== ''){
+            $query .= " TresLetras=:sigla, ";
+        }
+
         //escrever query
         $query .= " Estadio=:estadio,
                     Uni1Cor1=:uniforme1cor1,
@@ -1177,43 +1258,47 @@ function readInfo($id){
         $stmt = $this->conn->prepare($query);
 
         if(isset($this->escudo)){
-            $this->escudo=htmlspecialchars(strip_tags($this->escudo));
+            $this->escudo = htmlspecialchars(strip_tags((string)$this->escudo));
             $stmt->bindParam(":escudo", $this->escudo);
         }
 
         if(isset($this->uniforme1)){
-            $this->uniforme1=htmlspecialchars(strip_tags($this->uniforme1));
+            $this->uniforme1 = htmlspecialchars(strip_tags((string)$this->uniforme1));
             $stmt->bindParam(":uniforme1", $this->uniforme1);
         }
 
         if(isset($this->uniforme2)){
-            $this->uniforme2=htmlspecialchars(strip_tags($this->uniforme2));
+            $this->uniforme2 = htmlspecialchars(strip_tags((string)$this->uniforme2));
             $stmt->bindParam(":uniforme2", $this->uniforme2);
         }
 
         if(isset($this->mascote)){
-            $this->mascote=htmlspecialchars(strip_tags($this->mascote));
+            $this->mascote = htmlspecialchars(strip_tags((string)$this->mascote));
             $stmt->bindParam(":mascote", $this->mascote);
         }
 
+        if(isset($this->sigla) && $this->sigla !== ''){
+            $this->sigla = strtoupper(substr(htmlspecialchars(strip_tags((string)$this->sigla)), 0, 3));
+            $stmt->bindParam(":sigla", $this->sigla);
+        }
+
         // posted values
-        $this->nome=htmlspecialchars(strip_tags($this->nome), $double_encode = false);
-        $this->sigla=htmlspecialchars(strip_tags($this->sigla));
-        $this->estadio=htmlspecialchars(strip_tags($this->estadio));
-        $this->uniforme1cor1=htmlspecialchars(strip_tags($this->uniforme1cor1));
-        $this->uniforme1cor2=htmlspecialchars(strip_tags($this->uniforme1cor2));
-        $this->uniforme1cor3=htmlspecialchars(strip_tags($this->uniforme1cor3));
-        $this->uniforme2cor1=htmlspecialchars(strip_tags($this->uniforme2cor1));
-        $this->uniforme2cor2=htmlspecialchars(strip_tags($this->uniforme2cor2));
-        $this->uniforme2cor3=htmlspecialchars(strip_tags($this->uniforme2cor3));
-        $this->maxTorcedores=htmlspecialchars(strip_tags($this->maxTorcedores));
-        $this->fidelidade=htmlspecialchars(strip_tags($this->fidelidade));
-        $this->pais=htmlspecialchars(strip_tags($this->pais));
-        $this->liga=htmlspecialchars(strip_tags($this->liga));
+        $this->nome = htmlspecialchars(strip_tags((string)($this->nome ?? '')), $double_encode = false);
+        $this->estadio = htmlspecialchars(strip_tags((string)($this->estadio ?? '')));
+        $this->uniforme1cor1 = htmlspecialchars(strip_tags((string)($this->uniforme1cor1 ?? '')));
+        $this->uniforme1cor2 = htmlspecialchars(strip_tags((string)($this->uniforme1cor2 ?? '')));
+        $this->uniforme1cor3 = htmlspecialchars(strip_tags((string)($this->uniforme1cor3 ?? '')));
+        $this->uniforme2cor1 = htmlspecialchars(strip_tags((string)($this->uniforme2cor1 ?? '')));
+        $this->uniforme2cor2 = htmlspecialchars(strip_tags((string)($this->uniforme2cor2 ?? '')));
+        $this->uniforme2cor3 = htmlspecialchars(strip_tags((string)($this->uniforme2cor3 ?? '')));
+        $this->maxTorcedores = htmlspecialchars(strip_tags((string)($this->maxTorcedores ?? '')));
+        $this->fidelidade = htmlspecialchars(strip_tags((string)($this->fidelidade ?? '')));
+        $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
+        $this->liga = htmlspecialchars(strip_tags((string)($this->liga ?? '')));
         if ($this->liga === '') {
             $this->liga = null;
         }
-        $this->id=htmlspecialchars(strip_tags($this->id));
+        $this->id = htmlspecialchars(strip_tags((string)($this->id ?? '')));
 
         // bind values
         $stmt->bindParam(":nome", $this->nome);
@@ -1570,31 +1655,29 @@ return $stmt;
 
     //ler todos os jogadores para o quadro
 function readAllMultiLeague($ligas){
+    if (empty($ligas) || !is_array($ligas)) {
+        return [];
+    }
 
-	$subquery = " liga = ? ";
-	$totalLigas = count($ligas);
-	for($i = 1;$i < $totalLigas;$i++){
-		$subquery .= " OR liga = ? ";
-	}
+    $cleanLigas = array_values(array_unique(array_filter($ligas, function($val) {
+        return $val !== '' && $val !== null;
+    })));
 
-    $query = "SELECT ID FROM " . $this->table_name . " WHERE " . $subquery;
+    if (empty($cleanLigas)) {
+        return [];
+    }
 
+    $placeholders = implode(',', array_fill(0, count($cleanLigas), '?'));
+    $query = "SELECT ID FROM " . $this->table_name . " WHERE liga IN (" . $placeholders . ")";
 
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute($cleanLigas);
+    $listaTimes = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+        $listaTimes[] = $row['ID'];
+    }
 
-	$stmt = $this->conn->prepare( $query );
-	for($j = 0; $j < $totalLigas ; $j++){
-		$stmt->bindParam($j+1, $ligas[$j]);
-	}
-	$stmt->execute();
-	while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-		extract($row);
-		$listaTimes[] = $ID;
-	}
-
-	return $listaTimes;
-
-
-
+    return $listaTimes;
 }
 
 function getName($idClube){

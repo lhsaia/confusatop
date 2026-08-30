@@ -15,6 +15,8 @@ class Pais{
     public $bandeira;
     public $pontos_anteriores;
     public $federacao;
+    public $ranqueado;
+    public $ativo;
 
 
     public function __construct($db){
@@ -24,21 +26,26 @@ class Pais{
     // criar pais
     function inserir(){
 
+        if(!isset($this->ativo)){
+            $this->ativo = 1;
+        }
+
         //escrever query
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    nome=:nome, sigla=:sigla, dono=:dono, pontos=1000, posicao=0, bandeira=:bandeira, pontos_anteriores=1000, ranqueavel=:ranqueado, federacao=:federacao";
+                    nome=:nome, sigla=:sigla, dono=:dono, pontos=1000, posicao=0, bandeira=:bandeira, pontos_anteriores=1000, ranqueavel=:ranqueado, federacao=:federacao, ativo=:ativo, pontos_inicial=1000, ultimo_jogo='0000-00-00'";
 
         $stmt = $this->conn->prepare($query);
 
         // posted values
-        $this->nome=htmlspecialchars(strip_tags($this->nome));
-        $this->sigla=htmlspecialchars(strip_tags($this->sigla));
-        $this->dono=htmlspecialchars(strip_tags($this->dono));
-        $this->bandeira=htmlspecialchars(strip_tags($this->bandeira));
-        $this->ranqueado=htmlspecialchars(strip_tags($this->ranqueado));
-        $this->federacao=htmlspecialchars(strip_tags($this->federacao));
+        $this->nome = htmlspecialchars(strip_tags((string)($this->nome ?? '')));
+        $this->sigla = htmlspecialchars(strip_tags((string)($this->sigla ?? '')));
+        $this->dono = htmlspecialchars(strip_tags((string)($this->dono ?? '')));
+        $this->bandeira = htmlspecialchars(strip_tags((string)($this->bandeira ?? '')));
+        $this->ranqueado = htmlspecialchars(strip_tags((string)($this->ranqueado ?? '')));
+        $this->federacao = htmlspecialchars(strip_tags((string)($this->federacao ?? '')));
+        $this->ativo = htmlspecialchars(strip_tags((string)($this->ativo ?? '')));
 
         // bind values
         $stmt->bindParam(":nome", $this->nome);
@@ -47,6 +54,7 @@ class Pais{
         $stmt->bindParam(":bandeira", $this->bandeira);
         $stmt->bindParam(":ranqueado", $this->ranqueado);
         $stmt->bindParam(":federacao", $this->federacao);
+        $stmt->bindParam(":ativo", $this->ativo);
 
         if($stmt->execute()){
             return true;
@@ -237,7 +245,7 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
     // used for paging products
     public function countAll($federacao = null, $donoPais = null){
 
-        $federacao = htmlspecialchars(strip_tags($federacao));
+        $federacao = ($federacao !== null && $federacao !== '') ? htmlspecialchars(strip_tags((string)$federacao)) : null;
 
     if($federacao != null){
 
@@ -399,14 +407,14 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
 
     function alterar($idPais,$nomePais,$siglaPais,$federacaoPais,$ranqueavel,$logo, $latitude, $longitude){
 
-        $idPais = htmlspecialchars(strip_tags($idPais));
-        $nomePais = htmlspecialchars(strip_tags($nomePais));
-        $siglaPais = htmlspecialchars(strip_tags($siglaPais));
-        $federacaoPais = htmlspecialchars(strip_tags($federacaoPais));
-        $ranqueavel = htmlspecialchars(strip_tags($ranqueavel));
-        $logo = htmlspecialchars(strip_tags($logo));
-		$latitude = htmlspecialchars(strip_tags($latitude));
-		$longitude = htmlspecialchars(strip_tags($longitude));
+        $idPais = htmlspecialchars(strip_tags((string)($idPais ?? '')));
+        $nomePais = htmlspecialchars(strip_tags((string)($nomePais ?? '')));
+        $siglaPais = htmlspecialchars(strip_tags((string)($siglaPais ?? '')));
+        $federacaoPais = htmlspecialchars(strip_tags((string)($federacaoPais ?? '')));
+        $ranqueavel = htmlspecialchars(strip_tags((string)($ranqueavel ?? '')));
+        $logo = ($logo !== null && $logo !== '') ? htmlspecialchars(strip_tags((string)$logo)) : null;
+		$latitude = htmlspecialchars(strip_tags((string)($latitude ?? '')));
+		$longitude = htmlspecialchars(strip_tags((string)($longitude ?? '')));
 
         if($logo != null && $logo != ''){
             $subquery = ", bandeira=:bandeira";

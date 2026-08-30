@@ -14,6 +14,11 @@ class TrioArbitragem{
     public $pais;
 	public $nivel;
 	public $nascimento;
+    public $nome;
+    public $sigla;
+    public $usuario;
+    public $pontos;
+    public $posicao;
 
     public function __construct($db){
         $this->conn = $db;
@@ -31,13 +36,18 @@ class TrioArbitragem{
         $stmt = $this->conn->prepare($query);
 
         // posted values
-        $this->nome=htmlspecialchars(strip_tags($this->nomeArbitro));
-        $this->sigla=htmlspecialchars(strip_tags($this->nomeAuxiliarUm));
-        $this->usuario=htmlspecialchars(strip_tags($this->nomeAuxiliarDois));
-        $this->pontos=htmlspecialchars(strip_tags($this->estilo));
-        $this->posicao=htmlspecialchars(strip_tags($this->pais));
-		$this->nivel=htmlspecialchars(strip_tags($this->nivel));
-		$this->nascimento=htmlspecialchars(strip_tags($this->nascimento));
+        $this->nomeArbitro = htmlspecialchars(strip_tags((string)($this->nomeArbitro ?? '')));
+        $this->nomeAuxiliarUm = htmlspecialchars(strip_tags((string)($this->nomeAuxiliarUm ?? '')));
+        $this->nomeAuxiliarDois = htmlspecialchars(strip_tags((string)($this->nomeAuxiliarDois ?? '')));
+        $this->estilo = htmlspecialchars(strip_tags((string)($this->estilo ?? '')));
+        $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
+        $this->nivel = htmlspecialchars(strip_tags((string)($this->nivel ?? '')));
+        $this->nascimento = htmlspecialchars(strip_tags((string)($this->nascimento ?? '')));
+        $this->nome = $this->nomeArbitro;
+        $this->sigla = $this->nomeAuxiliarUm;
+        $this->usuario = $this->nomeAuxiliarDois;
+        $this->pontos = $this->estilo;
+        $this->posicao = $this->pais;
 
          //verificar se árbitro já existe
          $tag_comparacao = (string)$this->nomeArbitro;
@@ -201,8 +211,8 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
     //transpor para tabela de exportação
     function exportacao($idPais = null, $idFederacao = null){
 
-        $idPais = htmlspecialchars(strip_tags($idPais));
-        $idFederacao = htmlspecialchars(strip_tags($idFederacao));
+        $idPais = $idPais !== null ? htmlspecialchars(strip_tags((string)$idPais)) : null;
+        $idFederacao = $idFederacao !== null ? htmlspecialchars(strip_tags((string)$idFederacao)) : null;
 
 
 
@@ -444,11 +454,8 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
         $stmt = $this->conn->prepare($query);
 
         // posted values
-		$this->id=htmlspecialchars(strip_tags($this->id));
-        //$this->nomeArbitro=htmlspecialchars(strip_tags($this->nomeArbitro));
-        //$this->nomeAuxiliarUm=htmlspecialchars(strip_tags($this->nomeAuxiliarUm));
-        //$this->nomeAuxiliarDois=htmlspecialchars(strip_tags($this->nomeAuxiliarDois));
-        $this->estilo=htmlspecialchars(strip_tags($this->estilo));
+		$this->id = htmlspecialchars(strip_tags((string)($this->id ?? '')));
+        $this->estilo = htmlspecialchars(strip_tags((string)($this->estilo ?? '')));
 		
         // bind values
 		$stmt->bindParam(":id", $this->id);
@@ -479,7 +486,7 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
 	}
 	
 	function getTrioArbitragem($idArbitragem){
-		$idArbitragem = htmlspecialchars(strip_tags($idArbitragem));
+		$idArbitragem = htmlspecialchars(strip_tags((string)($idArbitragem ?? '')));
 
     $query = "SELECT
                 nomeArbitro, nomeAuxiliarUm, nomeAuxiliarDois  

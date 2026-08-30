@@ -22,6 +22,12 @@ class Jogo{
     public $estadio_id;
     public $competicao_tipo; // 0 = Liga, 1 = Copa
     public $dono;
+    public $status = 1; // 0 = Agendado/Pendente, 1 = Finalizado
+    public $simulador_interno = 0; // 0 = Manual/Legado, 1 = Motor Hexacolor
+    public $neutro = 0;
+    public $grupo;
+    public $path;
+    public $arbitro_id;
 
 
     public function __construct($db){
@@ -327,8 +333,10 @@ class Jogo{
                     ON t1.adversario = c.id";
 
         $stmt = $this->conn->prepare( $query );
-        $stmt->bindParam(1, $id);
-        $stmt->bindParam(2, $id);
+        if($id != 0){
+            $stmt->bindParam(1, $id);
+            $stmt->bindParam(2, $id);
+        }
         $stmt->execute();
 
         return $stmt;
@@ -380,17 +388,26 @@ class Jogo{
 
     function maioresDerrotas($id){
         $id = htmlspecialchars(strip_tags($id));
+
+        if($id == 0){
+            $append_a = "";
+            $append_b = "";
+        } else {
+            $append_a = "WHERE timeA_id = ? ";
+            $append_b = "WHERE timeB_id = ? ";
+        }
+
         $query = "SELECT p.nome as nomeTime, t1.golsPro as timeGols, t1.golsContra as adversarioGols, c.nome as nomeAdversario, t1.data, COALESCE(li.nome, cc.nome) as nomeCampeonato FROM
 
             (SELECT timeA_id as time, timeA_gols as golsPro, timeB_gols as golsContra, timeB_id as adversario,
                 (timeA_gols - timeB_gols) as golsSaldo, id, data, competicao_id, competicao_tipo
             FROM jogos_clube
-            WHERE timeA_id = ?
+            ".$append_a."
             UNION
             SELECT timeB_id as time, timeB_gols as golsPro, timeA_gols as golsContra, timeA_id as adversario,
                 (timeB_gols - timeA_gols) as golsSaldo, id, data, competicao_id, competicao_tipo
             FROM jogos_clube
-            WHERE timeB_id = ?
+            ".$append_b."
             ORDER BY golsSaldo ASC, golsContra DESC
             LIMIT 0,10) t1
 
@@ -403,8 +420,10 @@ class Jogo{
         WHERE t1.golsSaldo < 0";
 
         $stmt = $this->conn->prepare( $query );
-        $stmt->bindParam(1, $id);
-        $stmt->bindParam(2, $id);
+        if($id != 0){
+            $stmt->bindParam(1, $id);
+            $stmt->bindParam(2, $id);
+        }
         $stmt->execute();
 
         return $stmt;
@@ -838,5 +857,105 @@ public function getMatchId(){
 		return $stmt;
 }
 
+    /**
+     * Retorna os últimos jogos públicos e finalizados de uma equipe
+     * Respeitando a regra de sigilo temporal (jogos simulados com antecedência só aparecem após o término real do jogo)
+     * Regulamentar: 120min (2h) | Pênaltis: 150min (2h30)
+     */
+    public function buscarUltimosJogosTime($id_time, $limite = 3) {
+        $id_time = (int)$id_time;
+        $limite = (int)$limite;
+
+        $query = "
+            SELECT 
+                j.id as match_id,
+                j.data as data_jogo,
+                COALESCE(li.nome, cc.nome, cl.nome, 'Amistoso / Competição') as competicao_nome,
+                j.timeA_id,
+                COALESCE(cA.Nome, j.timeA_nome) as timeA_nome,
+                COALESCE(cA.Escudo, '0.png') as timeA_escudo,
+                j.timeA_gols,
+                j.timeB_id,
+                COALESCE(cB.Nome, j.timeB_nome) as timeB_nome,
+                COALESCE(cB.Escudo, '0.png') as timeB_escudo,
+                j.timeB_gols,
+                j.timeA_penaltis,
+                j.timeB_penaltis,
+                j.simulador_interno
+            FROM jogos_clube j
+            LEFT JOIN clube cA ON j.timeA_id = cA.ID
+            LEFT JOIN clube cB ON j.timeB_id = cB.ID
+            LEFT JOIN liga li ON j.competicao_id = li.id AND j.competicao_tipo = 0
+            LEFT JOIN campeonatos_clube cc ON j.competicao_id = cc.id AND j.competicao_tipo = 1
+            LEFT JOIN competicao_lista cl ON j.competicao_id = cl.id AND j.simulador_interno = 1
+            WHERE (j.timeA_id = :id1 OR j.timeB_id = :id2)
+              AND j.status = 1
+              AND (
+                  -- Partidas normais / manuais que já passaram
+                  (j.timeA_penaltis IS NULL AND DATE_ADD(j.data, INTERVAL 120 MINUTE) <= NOW())
+                  OR
+                  -- Partidas com prorrogação/pênaltis que já passaram
+                  (j.timeA_penaltis IS NOT NULL AND DATE_ADD(j.data, INTERVAL 150 MINUTE) <= NOW())
+              )
+            ORDER BY j.data DESC, j.id DESC
+            LIMIT :limite
+        ";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id1', $id_time, PDO::PARAM_INT);
+        $stmt->bindParam(':id2', $id_time, PDO::PARAM_INT);
+        $stmt->bindParam(':limite', $limite, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Retorna a próxima partida agendada da equipe (se houver)
+     * Considera partidas pendentes (status = 0) ou partidas que ainda não terminaram no tempo real
+     */
+    public function buscarProximoJogoTime($id_time) {
+        $id_time = (int)$id_time;
+
+        $query = "
+            SELECT 
+                j.id as match_id,
+                j.data as data_jogo,
+                COALESCE(li.nome, cc.nome, cl.nome, 'Amistoso / Competição') as competicao_nome,
+                j.timeA_id,
+                COALESCE(cA.Nome, j.timeA_nome) as timeA_nome,
+                COALESCE(cA.Escudo, '0.png') as timeA_escudo,
+                j.timeB_id,
+                COALESCE(cB.Nome, j.timeB_nome) as timeB_nome,
+                COALESCE(cB.Escudo, '0.png') as timeB_escudo,
+                j.fase,
+                j.grupo,
+                j.estadio_id,
+                e.Nome as estadio_nome,
+                f.nome as fase_nome,
+                j.simulador_interno
+            FROM jogos_clube j
+            LEFT JOIN clube cA ON j.timeA_id = cA.ID
+            LEFT JOIN clube cB ON j.timeB_id = cB.ID
+            LEFT JOIN estadio e ON j.estadio_id = e.ID
+            LEFT JOIN fase f ON j.fase = f.id
+            LEFT JOIN liga li ON j.competicao_id = li.id AND j.competicao_tipo = 0
+            LEFT JOIN campeonatos_clube cc ON j.competicao_id = cc.id AND j.competicao_tipo = 1
+            LEFT JOIN competicao_lista cl ON j.competicao_id = cl.id AND j.simulador_interno = 1
+            WHERE (j.timeA_id = :id1 OR j.timeB_id = :id2)
+              AND (
+                  j.status = 0
+                  OR (j.timeA_penaltis IS NULL AND DATE_ADD(j.data, INTERVAL 120 MINUTE) > NOW())
+                  OR (j.timeA_penaltis IS NOT NULL AND DATE_ADD(j.data, INTERVAL 150 MINUTE) > NOW())
+              )
+            ORDER BY j.data ASC, j.id ASC
+            LIMIT 1
+        ";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id1', $id_time, PDO::PARAM_INT);
+        $stmt->bindParam(':id2', $id_time, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }
 ?>

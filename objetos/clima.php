@@ -34,16 +34,16 @@ class Clima{
         $stmt = $this->conn->prepare($query);
 
         // posted values
-        $this->nome=htmlspecialchars(strip_tags($this->nome));
-        $this->tempVerao=htmlspecialchars(strip_tags($this->tempVerao));
-        $this->estiloVerao=htmlspecialchars(strip_tags($this->estiloVerao));
-        $this->tempOutono=htmlspecialchars(strip_tags($this->tempOutono));
-        $this->estiloOutono=htmlspecialchars(strip_tags($this->estiloOutono));
-        $this->tempInverno=htmlspecialchars(strip_tags($this->tempInverno));
-        $this->estiloInverno=htmlspecialchars(strip_tags($this->estiloInverno));
-        $this->tempPrimavera=htmlspecialchars(strip_tags($this->tempPrimavera));
-        $this->estiloPrimavera=htmlspecialchars(strip_tags($this->estiloPrimavera));
-        $this->hemisferio=htmlspecialchars(strip_tags($this->hemisferio));
+        $this->nome = htmlspecialchars(strip_tags((string)($this->nome ?? '')));
+        $this->tempVerao = htmlspecialchars(strip_tags((string)($this->tempVerao ?? '')));
+        $this->estiloVerao = htmlspecialchars(strip_tags((string)($this->estiloVerao ?? '')));
+        $this->tempOutono = htmlspecialchars(strip_tags((string)($this->tempOutono ?? '')));
+        $this->estiloOutono = htmlspecialchars(strip_tags((string)($this->estiloOutono ?? '')));
+        $this->tempInverno = htmlspecialchars(strip_tags((string)($this->tempInverno ?? '')));
+        $this->estiloInverno = htmlspecialchars(strip_tags((string)($this->estiloInverno ?? '')));
+        $this->tempPrimavera = htmlspecialchars(strip_tags((string)($this->tempPrimavera ?? '')));
+        $this->estiloPrimavera = htmlspecialchars(strip_tags((string)($this->estiloPrimavera ?? '')));
+        $this->hemisferio = htmlspecialchars(strip_tags((string)($this->hemisferio ?? '')));
         $hemisferioInt = ($this->hemisferio === 'Sul' || $this->hemisferio === '1' || $this->hemisferio === 1) ? 1 : 0;
 
         // bind values
@@ -200,8 +200,8 @@ return $num;
 
     function exportacao($idPais = null, $idTime = null){
 
-        $idPais = htmlspecialchars(strip_tags($idPais));
-        $idTime = htmlspecialchars(strip_tags($idTime));
+        $idPais = $idPais !== null ? htmlspecialchars(strip_tags((string)$idPais)) : null;
+        $idTime = $idTime !== null ? htmlspecialchars(strip_tags((string)$idTime)) : null;
 
         if($idPais != null){
           $query = "SELECT DISTINCT c.ID as idClima, c.Nome as nomeClima, c.TempVerao, c.EstiloVerao, c.TempOutono, c.EstiloOutono, c.TempInverno, c.EstiloInverno, c.TempPrimavera, c.EstiloPrimavera, c.Hemisferio FROM estadio e LEFT JOIN clima c ON e.Clima = c.ID WHERE e.Pais=:pais";

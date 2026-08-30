@@ -29,22 +29,22 @@ class Estadio{
         $stmt = $this->conn->prepare($query);
 
         // posted values
-        $this->nome=htmlspecialchars(strip_tags($this->nome));
-        $this->capacidade=htmlspecialchars(strip_tags($this->capacidade));
-        $this->clima=htmlspecialchars(strip_tags($this->clima));
-        $this->altitude=htmlspecialchars(strip_tags($this->altitude));
-        $this->caldeirao=htmlspecialchars(strip_tags($this->caldeirao));
-        $this->pais=htmlspecialchars(strip_tags($this->pais));
+        $this->nome = htmlspecialchars(strip_tags((string)($this->nome ?? '')));
+        $this->capacidade = htmlspecialchars(strip_tags((string)($this->capacidade ?? '')));
+        $this->clima = htmlspecialchars(strip_tags((string)($this->clima ?? '')));
+        $this->altitude = htmlspecialchars(strip_tags((string)($this->altitude ?? '')));
+        $this->caldeirao = htmlspecialchars(strip_tags((string)($this->caldeirao ?? '')));
+        $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
         
         if($this->altitude == "false"){
             $this->altitude = 0;
-        } else if ($this->altitude == "true"){
+        } else {
             $this->altitude = 1;
         }
         
         if($this->caldeirao == "false"){
             $this->caldeirao = 0;
-        } else if ($this->caldeirao == "true"){
+        } else {
             $this->caldeirao = 1;
         }
 
@@ -129,14 +129,14 @@ class Estadio{
     //alterar jogador
     function alterar($idEstadio,$nomeEstadio,$capacidade,$pais,$altitude, $caldeirao, $clima, $foto = null){
 
-        $idEstadio = htmlspecialchars(strip_tags($idEstadio));
-        $nomeEstadio = htmlspecialchars(strip_tags($nomeEstadio));
-        $capacidade = htmlspecialchars(strip_tags($capacidade));
-        $pais = htmlspecialchars(strip_tags($pais));
-        $altitude = htmlspecialchars(strip_tags($altitude));
-		$caldeirao = htmlspecialchars(strip_tags($caldeirao));
-		$clima = htmlspecialchars(strip_tags($clima));
-		$foto = htmlspecialchars(strip_tags($foto));
+        $idEstadio = htmlspecialchars(strip_tags((string)($idEstadio ?? '')));
+        $nomeEstadio = htmlspecialchars(strip_tags((string)($nomeEstadio ?? '')));
+        $capacidade = htmlspecialchars(strip_tags((string)($capacidade ?? '')));
+        $pais = htmlspecialchars(strip_tags((string)($pais ?? '')));
+        $altitude = htmlspecialchars(strip_tags((string)($altitude ?? '')));
+		$caldeirao = htmlspecialchars(strip_tags((string)($caldeirao ?? '')));
+		$clima = htmlspecialchars(strip_tags((string)($clima ?? '')));
+		$foto = ($foto !== null && $foto !== '') ? htmlspecialchars(strip_tags((string)$foto)) : null;
 		
 		$altitude = ($altitude == 'true') ? 1 : 0;
 		$caldeirao = ($caldeirao == 'true') ? 1 : 0;
@@ -172,8 +172,8 @@ class Estadio{
 
     function exportacao($idPais = null, $idTime = null){
 
-        $idPais = htmlspecialchars(strip_tags($idPais));
-        $idTime = htmlspecialchars(strip_tags($idTime));
+        $idPais = $idPais !== null ? htmlspecialchars(strip_tags((string)$idPais)) : null;
+        $idTime = $idTime !== null ? htmlspecialchars(strip_tags((string)$idTime)) : null;
 
         if($idPais != null){
           $query = "SELECT e.ID, e.Nome, e.Capacidade, e.Clima, e.Altitude, e.Caldeirao FROM estadio e WHERE e.Pais=:pais";

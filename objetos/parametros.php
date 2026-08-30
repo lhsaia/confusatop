@@ -126,9 +126,9 @@ class Parametro{
 
     }
 
-    function exportacao($idPais){
+    function exportacao($idPais = null){
 
-        $idPais = htmlspecialchars(strip_tags($idPais));
+        $idPais = $idPais !== null ? htmlspecialchars(strip_tags((string)$idPais)) : null;
 
         $query = "SELECT h.ID, h.Nome, h.Gols, h.Faltas, h.Impedimentos, h.Cartoes, (0.4 + 0.2 * h.Estilo) as Alto, (1.6 - 0.2 * h.Estilo) as Chao, CASE WHEN h.PaisPadrao <> 0 THEN p.bandeira ELSE '-' END as PaisPadrao, h.Selecionado, h.ExibirBandeiras FROM parametrosHYMT h LEFT JOIN paises p ON p.ID = h.PaisPadrao WHERE h.PaisPadrao = ? OR h.PaisPadrao = 0";
         $stmt = $this->conn->prepare($query);

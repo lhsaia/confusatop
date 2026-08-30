@@ -326,8 +326,10 @@ class Jogo{
                     ON t1.adversario = c.id";
 
         $stmt = $this->conn->prepare( $query );
-        $stmt->bindParam(1, $id);
-        $stmt->bindParam(2, $id);
+        if($id != 0){
+            $stmt->bindParam(1, $id);
+            $stmt->bindParam(2, $id);
+        }
         $stmt->execute();
 
         return $stmt;
@@ -379,17 +381,26 @@ class Jogo{
 
     function maioresDerrotas($id){
         $id = htmlspecialchars(strip_tags($id));
+
+        if($id == 0){
+            $append_a = "";
+            $append_b = "";
+        } else {
+            $append_a = "WHERE timeA_id = ? ";
+            $append_b = "WHERE timeB_id = ? ";
+        }
+
         $query = "SELECT p.nome as nomeTime, t1.golsPro as timeGols, t1.golsContra as adversarioGols, c.nome as nomeAdversario, t1.data, l.nome as nomeCampeonato FROM
 
             (SELECT timeA_id as time, timeA_gols as golsPro, timeB_gols as golsContra, timeB_id as adversario,
                 (timeA_gols - timeB_gols) as golsSaldo, id, data, campeonato
             FROM jogos
-            WHERE timeA_id = ?
+            ".$append_a."
             UNION
             SELECT timeB_id as time, timeB_gols as golsPro, timeA_gols as golsContra, timeA_id as adversario,
                 (timeB_gols - timeA_gols) as golsSaldo, id, data, campeonato
             FROM jogos
-            WHERE timeB_id = ?
+            ".$append_b."
             ORDER BY golsSaldo ASC, golsContra DESC
             LIMIT 0,10) t1
 
@@ -402,8 +413,10 @@ class Jogo{
         WHERE t1.golsSaldo < 0";
 
         $stmt = $this->conn->prepare( $query );
-        $stmt->bindParam(1, $id);
-        $stmt->bindParam(2, $id);
+        if($id != 0){
+            $stmt->bindParam(1, $id);
+            $stmt->bindParam(2, $id);
+        }
         $stmt->execute();
 
         return $stmt;

@@ -48,7 +48,7 @@ class Jogador{
 
 
         $subquery = ", Valor=:valor";
-        $this->valor=htmlspecialchars(strip_tags($this->valor));
+        $this->valor = htmlspecialchars(strip_tags((string)($this->valor ?? '')));
 
         $this->progressao = $this->randomProgressao();
 
@@ -63,41 +63,41 @@ class Jogador{
         $stmt = $this->conn->prepare($query);
 
         // posted values
-        $this->nomeJogador=htmlspecialchars(strip_tags($this->nomeJogador));
-        $this->nascimento=htmlspecialchars(strip_tags($this->nascimento));
-        $this->mentalidade=htmlspecialchars(strip_tags($this->mentalidade));
-        $this->cobradorFalta=htmlspecialchars(strip_tags($this->cobradorFalta));
-        $this->pais=htmlspecialchars(strip_tags($this->pais));
-        $this->condicao=htmlspecialchars(strip_tags($this->condicao));
-        $this->stringPosicoes=htmlspecialchars(strip_tags($this->stringPosicoes));
-        $this->nivel=htmlspecialchars(strip_tags($this->nivel));
-        $this->sexo=htmlspecialchars(strip_tags($this->sexo));
+        $this->nomeJogador = htmlspecialchars(strip_tags((string)($this->nomeJogador ?? '')));
+        $this->nascimento = htmlspecialchars(strip_tags((string)($this->nascimento ?? '')));
+        $this->mentalidade = htmlspecialchars(strip_tags((string)($this->mentalidade ?? '')));
+        $this->cobradorFalta = htmlspecialchars(strip_tags((string)($this->cobradorFalta ?? '')));
+        $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
+        $this->condicao = htmlspecialchars(strip_tags((string)($this->condicao ?? '')));
+        $this->stringPosicoes = htmlspecialchars(strip_tags((string)($this->stringPosicoes ?? '')));
+        $this->nivel = htmlspecialchars(strip_tags((string)($this->nivel ?? '')));
+        $this->sexo = htmlspecialchars(strip_tags((string)($this->sexo ?? '')));
 
         //atributos de jogador de linha
-        $this->marcacao=htmlspecialchars(strip_tags($this->marcacao));
-        $this->desarme=htmlspecialchars(strip_tags($this->desarme));
-        $this->visaoJogo=htmlspecialchars(strip_tags($this->visaoJogo));
-        $this->movimentacao=htmlspecialchars(strip_tags($this->movimentacao));
-        $this->cruzamentos=htmlspecialchars(strip_tags($this->cruzamentos));
-        $this->cabeceamento=htmlspecialchars(strip_tags($this->cabeceamento));
-        $this->tecnica=htmlspecialchars(strip_tags($this->tecnica));
-        $this->controleBola=htmlspecialchars(strip_tags($this->controleBola));
-        $this->finalizacao=htmlspecialchars(strip_tags($this->finalizacao));
-        $this->faroGol=htmlspecialchars(strip_tags($this->faroGol));
-        $this->velocidade=htmlspecialchars(strip_tags($this->velocidade));
-        $this->forca=htmlspecialchars(strip_tags($this->forca));
+        $this->marcacao = htmlspecialchars(strip_tags((string)($this->marcacao ?? '')));
+        $this->desarme = htmlspecialchars(strip_tags((string)($this->desarme ?? '')));
+        $this->visaoJogo = htmlspecialchars(strip_tags((string)($this->visaoJogo ?? '')));
+        $this->movimentacao = htmlspecialchars(strip_tags((string)($this->movimentacao ?? '')));
+        $this->cruzamentos = htmlspecialchars(strip_tags((string)($this->cruzamentos ?? '')));
+        $this->cabeceamento = htmlspecialchars(strip_tags((string)($this->cabeceamento ?? '')));
+        $this->tecnica = htmlspecialchars(strip_tags((string)($this->tecnica ?? '')));
+        $this->controleBola = htmlspecialchars(strip_tags((string)($this->controleBola ?? '')));
+        $this->finalizacao = htmlspecialchars(strip_tags((string)($this->finalizacao ?? '')));
+        $this->faroGol = htmlspecialchars(strip_tags((string)($this->faroGol ?? '')));
+        $this->velocidade = htmlspecialchars(strip_tags((string)($this->velocidade ?? '')));
+        $this->forca = htmlspecialchars(strip_tags((string)($this->forca ?? '')));
 
         //atributos de goleiro
-        $this->reflexos=htmlspecialchars(strip_tags($this->reflexos));
-        $this->seguranca=htmlspecialchars(strip_tags($this->seguranca));
-        $this->saidas=htmlspecialchars(strip_tags($this->saidas));
-        $this->jogoAereo=htmlspecialchars(strip_tags($this->jogoAereo));
-        $this->lancamentos=htmlspecialchars(strip_tags($this->lancamentos));
-        $this->defesaPenaltis=htmlspecialchars(strip_tags($this->defesaPenaltis));
+        $this->reflexos = htmlspecialchars(strip_tags((string)($this->reflexos ?? '')));
+        $this->seguranca = htmlspecialchars(strip_tags((string)($this->seguranca ?? '')));
+        $this->saidas = htmlspecialchars(strip_tags((string)($this->saidas ?? '')));
+        $this->jogoAereo = htmlspecialchars(strip_tags((string)($this->jogoAereo ?? '')));
+        $this->lancamentos = htmlspecialchars(strip_tags((string)($this->lancamentos ?? '')));
+        $this->defesaPenaltis = htmlspecialchars(strip_tags((string)($this->defesaPenaltis ?? '')));
 
         //atributos mistos
-        $this->determinacao=htmlspecialchars(strip_tags($this->determinacao));
-        $this->determinacaoOriginal=htmlspecialchars(strip_tags($this->determinacaoOriginal));
+        $this->determinacao = htmlspecialchars(strip_tags((string)($this->determinacao ?? '')));
+        $this->determinacaoOriginal = htmlspecialchars(strip_tags((string)($this->determinacaoOriginal ?? '')));
 
         if($this->valor == 0){
             $stmt->bindValue(":valor", $this->calcularPasse());
@@ -152,7 +152,7 @@ class Jogador{
 
     function updateImported($idJogador, $fromScratch = null){
         $subquery = ", Valor=:valor";
-        $this->valor=htmlspecialchars(strip_tags($this->valor));
+        $this->valor = htmlspecialchars(strip_tags((string)($this->valor ?? '')));
         $this->condicao = "true";
 
         $query = "UPDATE " . $this->table_name . "
@@ -162,38 +162,38 @@ class Jogador{
 
         $stmt = $this->conn->prepare($query);
 
-        $this->nomeJogador=htmlspecialchars(strip_tags($this->nomeJogador));
-        $this->nascimento=htmlspecialchars(strip_tags($this->nascimento));
-        $this->mentalidade=htmlspecialchars(strip_tags($this->mentalidade));
-        $this->cobradorFalta=htmlspecialchars(strip_tags($this->cobradorFalta));
-        $this->pais=htmlspecialchars(strip_tags($this->pais));
-        $this->condicao=htmlspecialchars(strip_tags($this->condicao));
-        $this->stringPosicoes=htmlspecialchars(strip_tags($this->stringPosicoes));
-        $this->nivel=htmlspecialchars(strip_tags($this->nivel));
-        $this->sexo=htmlspecialchars(strip_tags($this->sexo));
+        $this->nomeJogador = htmlspecialchars(strip_tags((string)($this->nomeJogador ?? '')));
+        $this->nascimento = htmlspecialchars(strip_tags((string)($this->nascimento ?? '')));
+        $this->mentalidade = htmlspecialchars(strip_tags((string)($this->mentalidade ?? '')));
+        $this->cobradorFalta = htmlspecialchars(strip_tags((string)($this->cobradorFalta ?? '')));
+        $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
+        $this->condicao = htmlspecialchars(strip_tags((string)($this->condicao ?? '')));
+        $this->stringPosicoes = htmlspecialchars(strip_tags((string)($this->stringPosicoes ?? '')));
+        $this->nivel = htmlspecialchars(strip_tags((string)($this->nivel ?? '')));
+        $this->sexo = htmlspecialchars(strip_tags((string)($this->sexo ?? '')));
 
-        $this->marcacao=htmlspecialchars(strip_tags($this->marcacao));
-        $this->desarme=htmlspecialchars(strip_tags($this->desarme));
-        $this->visaoJogo=htmlspecialchars(strip_tags($this->visaoJogo));
-        $this->movimentacao=htmlspecialchars(strip_tags($this->movimentacao));
-        $this->cruzamentos=htmlspecialchars(strip_tags($this->cruzamentos));
-        $this->cabeceamento=htmlspecialchars(strip_tags($this->cabeceamento));
-        $this->tecnica=htmlspecialchars(strip_tags($this->tecnica));
-        $this->controleBola=htmlspecialchars(strip_tags($this->controleBola));
-        $this->finalizacao=htmlspecialchars(strip_tags($this->finalizacao));
-        $this->faroGol=htmlspecialchars(strip_tags($this->faroGol));
-        $this->velocidade=htmlspecialchars(strip_tags($this->velocidade));
-        $this->forca=htmlspecialchars(strip_tags($this->forca));
+        $this->marcacao = htmlspecialchars(strip_tags((string)($this->marcacao ?? '')));
+        $this->desarme = htmlspecialchars(strip_tags((string)($this->desarme ?? '')));
+        $this->visaoJogo = htmlspecialchars(strip_tags((string)($this->visaoJogo ?? '')));
+        $this->movimentacao = htmlspecialchars(strip_tags((string)($this->movimentacao ?? '')));
+        $this->cruzamentos = htmlspecialchars(strip_tags((string)($this->cruzamentos ?? '')));
+        $this->cabeceamento = htmlspecialchars(strip_tags((string)($this->cabeceamento ?? '')));
+        $this->tecnica = htmlspecialchars(strip_tags((string)($this->tecnica ?? '')));
+        $this->controleBola = htmlspecialchars(strip_tags((string)($this->controleBola ?? '')));
+        $this->finalizacao = htmlspecialchars(strip_tags((string)($this->finalizacao ?? '')));
+        $this->faroGol = htmlspecialchars(strip_tags((string)($this->faroGol ?? '')));
+        $this->velocidade = htmlspecialchars(strip_tags((string)($this->velocidade ?? '')));
+        $this->forca = htmlspecialchars(strip_tags((string)($this->forca ?? '')));
 
-        $this->reflexos=htmlspecialchars(strip_tags($this->reflexos));
-        $this->seguranca=htmlspecialchars(strip_tags($this->seguranca));
-        $this->saidas=htmlspecialchars(strip_tags($this->saidas));
-        $this->jogoAereo=htmlspecialchars(strip_tags($this->jogoAereo));
-        $this->lancamentos=htmlspecialchars(strip_tags($this->lancamentos));
-        $this->defesaPenaltis=htmlspecialchars(strip_tags($this->defesaPenaltis));
+        $this->reflexos = htmlspecialchars(strip_tags((string)($this->reflexos ?? '')));
+        $this->seguranca = htmlspecialchars(strip_tags((string)($this->seguranca ?? '')));
+        $this->saidas = htmlspecialchars(strip_tags((string)($this->saidas ?? '')));
+        $this->jogoAereo = htmlspecialchars(strip_tags((string)($this->jogoAereo ?? '')));
+        $this->lancamentos = htmlspecialchars(strip_tags((string)($this->lancamentos ?? '')));
+        $this->defesaPenaltis = htmlspecialchars(strip_tags((string)($this->defesaPenaltis ?? '')));
 
-        $this->determinacao=htmlspecialchars(strip_tags($this->determinacao));
-        $this->determinacaoOriginal=htmlspecialchars(strip_tags($this->determinacaoOriginal));
+        $this->determinacao = htmlspecialchars(strip_tags((string)($this->determinacao ?? '')));
+        $this->determinacaoOriginal = htmlspecialchars(strip_tags((string)($this->determinacaoOriginal ?? '')));
 
         if($this->valor == 0){
             $stmt->bindValue(":valor", $this->calcularPasse());
@@ -306,7 +306,7 @@ return $stmt;
        // used for paging products
        public function countAll($dono = null){
 
-        $dono = htmlspecialchars(strip_tags($dono));
+        $dono = ($dono !== null && $dono !== '') ? htmlspecialchars(strip_tags((string)$dono)) : null;
 
         if($dono == null){
 
@@ -1159,9 +1159,9 @@ return $stmt;
 
         function exportacao($idPais = null, $idTime = null, $orderBy = null, $idLiga = null){
 
-            $idPais = htmlspecialchars(strip_tags($idPais));
-            $idTime = htmlspecialchars(strip_tags($idTime));
-			$idLiga = htmlspecialchars(strip_tags($idLiga));
+            $idPais = $idPais !== null ? htmlspecialchars(strip_tags((string)$idPais)) : null;
+            $idTime = $idTime !== null ? htmlspecialchars(strip_tags((string)$idTime)) : null;
+			$idLiga = $idLiga !== null ? htmlspecialchars(strip_tags((string)$idLiga)) : null;
 
             if($idPais != null){
               $subquery = " b.Pais=:pais";
@@ -1212,23 +1212,23 @@ return $stmt;
 
         function pesquisaAvancada($nivelMin, $nivelMax, $idadeMin, $idadeMax, $cobrancaFalta, $disponivel, $nome, $nacionalidade, $mentalidade, $stringPosicoes, $seletorPosicoes, $semclube, $valorMin, $valorMax, $sexo, $apenasConfusa, $usuarioLogado, $liga){
 
-            $nivelMin = htmlspecialchars(strip_tags($nivelMin));
-            $nivelMax = htmlspecialchars(strip_tags($nivelMax));
-            $idadeMin = htmlspecialchars(strip_tags($idadeMin));
-            $idadeMax = htmlspecialchars(strip_tags($idadeMax));
-            $cobrancaFalta = htmlspecialchars(strip_tags($cobrancaFalta));
-            $disponivel = htmlspecialchars(strip_tags($disponivel));
-            $nome = htmlspecialchars(strip_tags($nome));
-            $nacionalidade = htmlspecialchars(strip_tags($nacionalidade));
-            $mentalidade = htmlspecialchars(strip_tags($mentalidade));
-            $stringPosicoes = htmlspecialchars(strip_tags($stringPosicoes));
-            $seletorPosicoes = htmlspecialchars(strip_tags($seletorPosicoes));
-            $semclube = htmlspecialchars(strip_tags($semclube));
-            $valorMin = htmlspecialchars(strip_tags($valorMin));
-            $valorMax = htmlspecialchars(strip_tags($valorMax));
-            $sexo = htmlspecialchars(strip_tags($sexo));
-            $apenasConfusa = htmlspecialchars(strip_tags($apenasConfusa));
-			$liga = htmlspecialchars(strip_tags($liga));
+            $nivelMin = htmlspecialchars(strip_tags((string)($nivelMin ?? '')));
+            $nivelMax = htmlspecialchars(strip_tags((string)($nivelMax ?? '')));
+            $idadeMin = htmlspecialchars(strip_tags((string)($idadeMin ?? '')));
+            $idadeMax = htmlspecialchars(strip_tags((string)($idadeMax ?? '')));
+            $cobrancaFalta = htmlspecialchars(strip_tags((string)($cobrancaFalta ?? '')));
+            $disponivel = htmlspecialchars(strip_tags((string)($disponivel ?? '')));
+            $nome = htmlspecialchars(strip_tags((string)($nome ?? '')));
+            $nacionalidade = htmlspecialchars(strip_tags((string)($nacionalidade ?? '')));
+            $mentalidade = htmlspecialchars(strip_tags((string)($mentalidade ?? '')));
+            $stringPosicoes = htmlspecialchars(strip_tags((string)($stringPosicoes ?? '')));
+            $seletorPosicoes = htmlspecialchars(strip_tags((string)($seletorPosicoes ?? '')));
+            $semclube = htmlspecialchars(strip_tags((string)($semclube ?? '')));
+            $valorMin = htmlspecialchars(strip_tags((string)($valorMin ?? '')));
+            $valorMax = htmlspecialchars(strip_tags((string)($valorMax ?? '')));
+            $sexo = htmlspecialchars(strip_tags((string)($sexo ?? '')));
+            $apenasConfusa = htmlspecialchars(strip_tags((string)($apenasConfusa ?? '')));
+			$liga = htmlspecialchars(strip_tags((string)($liga ?? '')));
 
             //converter stringPosicoes para cada posicao
             $splitPosicoes = str_split($stringPosicoes);
@@ -1549,20 +1549,21 @@ return $stmt;
 
         function editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono, $atividadeJogador, $mentalidadeJogador = null, $determinacaoJogador = null, $cobrancaFaltaJogador = null, $encerramentoContrato = null, $foto = null, $desdeContrato = null, $numeroCamisa = null){
 
-            $idJogador = htmlspecialchars(strip_tags($idJogador));
-            $idTime = htmlspecialchars(strip_tags($idTime));
-            $nomeJogador = htmlspecialchars(strip_tags($nomeJogador));
-            $nacionalidadeJogador = htmlspecialchars(strip_tags($nacionalidadeJogador));
-            $nascimentoJogador = htmlspecialchars(strip_tags($nascimentoJogador));
-            $valorJogador = htmlspecialchars(strip_tags($valorJogador));
-            $nivelJogador = htmlspecialchars(strip_tags($nivelJogador));
-            $atividadeJogador = htmlspecialchars(strip_tags($atividadeJogador));
-            $mentalidadeJogador = htmlspecialchars(strip_tags($mentalidadeJogador));
-            $determinacaoJogador = htmlspecialchars(strip_tags($determinacaoJogador));
-            $cobrancaFaltaJogador = htmlspecialchars(strip_tags($cobrancaFaltaJogador));
-			$encerramentoContrato = htmlspecialchars(strip_tags($encerramentoContrato));
-			$foto = htmlspecialchars(strip_tags($foto));
-			$desdeContrato = htmlspecialchars(strip_tags($desdeContrato));
+            $idJogador = htmlspecialchars(strip_tags((string)($idJogador ?? '')));
+            $idTime = ($idTime !== null && $idTime !== '') ? htmlspecialchars(strip_tags((string)$idTime)) : null;
+            $nomeJogador = htmlspecialchars(strip_tags((string)($nomeJogador ?? '')));
+            $nacionalidadeJogador = htmlspecialchars(strip_tags((string)($nacionalidadeJogador ?? '')));
+            $nascimentoJogador = htmlspecialchars(strip_tags((string)($nascimentoJogador ?? '')));
+            $valorJogador = htmlspecialchars(strip_tags((string)($valorJogador ?? '')));
+            $nivelJogador = htmlspecialchars(strip_tags((string)($nivelJogador ?? '')));
+            $atividadeJogador = htmlspecialchars(strip_tags((string)($atividadeJogador ?? '')));
+            $mentalidadeJogador = ($mentalidadeJogador !== null && $mentalidadeJogador !== '') ? htmlspecialchars(strip_tags((string)$mentalidadeJogador)) : null;
+            $determinacaoJogador = ($determinacaoJogador !== null && $determinacaoJogador !== '') ? htmlspecialchars(strip_tags((string)$determinacaoJogador)) : null;
+            $cobrancaFaltaJogador = ($cobrancaFaltaJogador !== null && $cobrancaFaltaJogador !== '') ? htmlspecialchars(strip_tags((string)$cobrancaFaltaJogador)) : null;
+			$encerramentoContrato = ($encerramentoContrato !== null && $encerramentoContrato !== '') ? htmlspecialchars(strip_tags((string)$encerramentoContrato)) : null;
+			$foto = ($foto !== null && $foto !== '') ? htmlspecialchars(strip_tags((string)$foto)) : null;
+			$desdeContrato = ($desdeContrato !== null && $desdeContrato !== '') ? htmlspecialchars(strip_tags((string)$desdeContrato)) : null;
+			$numeroCamisa = ($numeroCamisa !== null && $numeroCamisa !== '') ? htmlspecialchars(strip_tags((string)$numeroCamisa)) : null;
 			
 			if(!is_array($posicoesJogador)){
 				$posicoesJogador = explode(",", $posicoesJogador);
@@ -1955,7 +1956,7 @@ return $stmt;
                 ];
             }
 
-            $queryContrato = "SELECT l.logo as logoLiga, l.tier as tier, l.nome as liga, c.Escudo as escudoTime, j.clube as idTime, c.Nome as time, c.Pais as paisTime, p.nome as nomePaisTime, p.bandeira as bandeiraPaisTime, c.liga as idLiga, j.encerramento as fimContrato, j.salario FROM contratos_jogador j LEFT JOIN clube c ON c.ID = j.clube LEFT JOIN liga l ON c.liga = l.ID LEFT JOIN paises p ON p.id = c.Pais WHERE jogador = ? AND tipoContrato = 0";
+            $queryContrato = "SELECT l.logo as logoLiga, l.tier as tier, l.nome as liga, c.Escudo as escudoTime, j.clube as idTime, c.Nome as time, c.Pais as paisTime, p.nome as nomePaisTime, p.bandeira as bandeiraPaisTime, c.liga as idLiga, j.encerramento as fimContrato, j.salario, j.numeroCamisa FROM contratos_jogador j LEFT JOIN clube c ON c.ID = j.clube LEFT JOIN liga l ON c.liga = l.ID LEFT JOIN paises p ON p.id = c.Pais WHERE jogador = ? AND tipoContrato = 0";
             $stmt = $this->conn->prepare($queryContrato);
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
@@ -1965,7 +1966,8 @@ return $stmt;
                 $resultContrato = [
                     'logoLiga' => '', 'tier' => '', 'liga' => 'Sem clube', 'escudoTime' => '',
                     'idTime' => 0, 'time' => 'Sem clube', 'paisTime' => 0, 'nomePaisTime' => '',
-                    'bandeiraPaisTime' => '', 'idLiga' => 0, 'fimContrato' => '', 'salario' => 0
+                    'bandeiraPaisTime' => '', 'idLiga' => 0, 'fimContrato' => '', 'salario' => 0,
+                    'numeroCamisa' => null
                 ];
             }
 
@@ -3284,8 +3286,8 @@ return $stmt;
         $stmt->bindParam(1,$idTransferencia);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $valor = number_format($result["valor"], 0, ',', ' ');
-        $emprestimo = $result["emprestimo"];
+        $valor = number_format((float)($result["valor"] ?? 0), 0, ',', ' ');
+        $emprestimo = $result["emprestimo"] ?? false;
         $encerramento = $result["encerramento"];
         $mensagens = $result["mensagens"];
         

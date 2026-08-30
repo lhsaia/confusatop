@@ -10,6 +10,7 @@ class Liga
     public $id;
     public $nome;
     public $tier;
+    public $limite_idade;
     public $logo;
     public $pais;
     public $sexo;
@@ -27,20 +28,26 @@ class Liga
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    nome=:nome, tier=:tier, logo=:logo, pais=:pais, Sexo=:sexo, status=0 ";
+                    nome=:nome, tier=:tier, limite_idade=:limite_idade, logo=:logo, pais=:pais, Sexo=:sexo, status=0 ";
 
         $stmt = $this->conn->prepare($query);
 
         // posted values
-        $this->nome = htmlspecialchars(strip_tags($this->nome));
-        $this->tier = htmlspecialchars(strip_tags($this->tier));
-        $this->logo = htmlspecialchars(strip_tags($this->logo));
-        $this->pais = htmlspecialchars(strip_tags($this->pais));
-        $this->sexo = htmlspecialchars(strip_tags($this->sexo));
+        $this->nome = htmlspecialchars(strip_tags((string)($this->nome ?? '')));
+        $this->tier = htmlspecialchars(strip_tags((string)($this->tier ?? '')));
+        $this->limite_idade = (!empty($this->limite_idade) && intval($this->limite_idade) > 0) ? intval($this->limite_idade) : null;
+        $this->logo = htmlspecialchars(strip_tags((string)($this->logo ?? '')));
+        $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
+        $this->sexo = htmlspecialchars(strip_tags((string)($this->sexo ?? '')));
 
         // bind values
         $stmt->bindParam(":nome", $this->nome);
         $stmt->bindParam(":tier", $this->tier);
+        if ($this->limite_idade !== null) {
+            $stmt->bindParam(":limite_idade", $this->limite_idade, PDO::PARAM_INT);
+        } else {
+            $stmt->bindValue(":limite_idade", null, PDO::PARAM_NULL);
+        }
         $stmt->bindParam(":logo", $this->logo);
         $stmt->bindParam(":pais", $this->pais);
         $stmt->bindParam(":sexo", $this->sexo);
@@ -68,7 +75,7 @@ class Liga
         }
 
         $query = "SELECT
-                 a.id, a.nome, a.tier, a.logo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.Sexo as sexo, p.nome as nomePais 
+                 a.id, a.nome, a.tier, a.limite_idade, a.logo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.Sexo as sexo, p.nome as nomePais 
              FROM
                  " . $this->table_name . " a
              LEFT JOIN paises p ON a.pais = p.id
@@ -135,14 +142,15 @@ class Liga
         return $num;
     }
 
-    function alterar($idLiga, $nomeLiga, $tierLiga, $pais, $logo = null)
+    function alterar($idLiga, $nomeLiga, $tierLiga, $pais, $logo = null, $limite_idade = null)
     {
 
-        $idLiga = htmlspecialchars(strip_tags($idLiga));
-        $nomeLiga = htmlspecialchars(strip_tags($nomeLiga));
-        $tierLiga = htmlspecialchars(strip_tags($tierLiga));
-        $pais = htmlspecialchars(strip_tags($pais));
-        $logo = htmlspecialchars(strip_tags($logo));
+        $idLiga = htmlspecialchars(strip_tags((string)$idLiga));
+        $nomeLiga = htmlspecialchars(strip_tags((string)$nomeLiga));
+        $tierLiga = htmlspecialchars(strip_tags((string)$tierLiga));
+        $pais = htmlspecialchars(strip_tags((string)$pais));
+        $logo = ($logo !== null && $logo !== '') ? htmlspecialchars(strip_tags((string)$logo)) : null;
+        $limite_idade = (!empty($limite_idade) && intval($limite_idade) > 0) ? intval($limite_idade) : null;
 
         if ($logo != null) {
             $subquery = ", logo=:logo";
@@ -150,11 +158,16 @@ class Liga
             $subquery = "";
         }
 
-        $query = "UPDATE " . $this->table_name . " SET nome=:nome, tier=:tier, pais=:pais " . $subquery . " WHERE id=:id";
+        $query = "UPDATE " . $this->table_name . " SET nome=:nome, tier=:tier, limite_idade=:limite_idade, pais=:pais " . $subquery . " WHERE id=:id";
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(":nome", $nomeLiga);
         $stmt->bindParam(":tier", $tierLiga);
+        if ($limite_idade !== null) {
+            $stmt->bindParam(":limite_idade", $limite_idade, PDO::PARAM_INT);
+        } else {
+            $stmt->bindValue(":limite_idade", null, PDO::PARAM_NULL);
+        }
         $stmt->bindParam(":pais", $pais);
         if ($logo != null) {
             $stmt->bindParam(":logo", $logo);
@@ -176,6 +189,7 @@ class Liga
         $info1 = [
             'nome' => '',
             'tier' => '',
+            'limite_idade' => null,
             'logo' => '',
             'Pais' => '',
             'idPais' => 0,
@@ -194,7 +208,7 @@ class Liga
 
         if ($id > 0) {
             $query = "SELECT
-                    a.nome, a.tier, a.logo, p.Nome as Pais, a.Pais as idPais, a.Sexo, p.dono as idDonoPais
+                    a.nome, a.tier, a.limite_idade, a.logo, p.Nome as Pais, a.Pais as idPais, a.Sexo, p.dono as idDonoPais
                 FROM
                     " . $this->table_name . " a
                 LEFT JOIN
@@ -379,31 +393,36 @@ class Liga
 
     function isFromUser($leagueList, $userID)
     {
-
-        $subquery = " l.id = ? ";
-        $totalLigas = count($leagueList);
-        for ($i = 1; $i < $totalLigas; $i++) {
-            $subquery .= " OR l.id = ? ";
-        }
-
-        $query = "SELECT p.dono FROM " . $this->table_name . " l LEFT JOIN paises p ON p.id = l.pais WHERE " . $subquery;
-        $stmt = $this->conn->prepare($query);
-        for ($j = 0; $j < $totalLigas; $j++) {
-            $stmt->bindParam($j + 1, $leagueList[$j]);
-        }
-        $stmt->execute();
-        //return $stmt;
-        $listaDonos = array();
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            extract($row);
-            $listaDonos[] = $dono;
-        }
-
-        if (array_unique($listaDonos) === array($userID)) {
-            return true;
-        } else {
+        if (empty($leagueList) || !is_array($leagueList)) {
             return false;
         }
+
+        $cleanLeagueList = array_values(array_unique(array_filter($leagueList, function($val) {
+            return $val !== '' && $val !== null;
+        })));
+
+        if (empty($cleanLeagueList)) {
+            return false;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($cleanLeagueList), '?'));
+        $query = "SELECT l.id, p.dono FROM " . $this->table_name . " l LEFT JOIN paises p ON p.id = l.Pais WHERE l.id IN (" . $placeholders . ")";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($cleanLeagueList);
+
+        $foundLeagues = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if ($row['dono'] === null || (string)$row['dono'] !== (string)$userID) {
+                return false;
+            }
+            $foundLeagues[] = $row['id'];
+        }
+
+        if (count($foundLeagues) !== count($cleanLeagueList)) {
+            return false;
+        }
+
+        return true;
     }
 }
 ?>
