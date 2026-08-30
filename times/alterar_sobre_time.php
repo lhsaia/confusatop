@@ -21,7 +21,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     //estabelecer conexão com banco de dados
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
-	require ($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php");
 	require_once $_SERVER['DOCUMENT_ROOT'].'/lib/htmlpurifier/library/HTMLPurifier.auto.php';
     
     $purifier = new HTMLPurifier();

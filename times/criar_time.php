@@ -76,112 +76,97 @@ if(isset($_POST['nome']) && isset($_POST['sigla']) && $_POST['pais'] != 0){
     //recebimento arquivos
     $new_logo_path = null;
 
-    if(file_exists($_FILES['escudo']['tmp_name']) || is_uploaded_file($_FILES['escudo']['tmp_name'])){
+    if(!empty($_FILES['escudo']['tmp_name']) && (file_exists($_FILES['escudo']['tmp_name']) || is_uploaded_file($_FILES['escudo']['tmp_name']))){
         $fileName = $_FILES['escudo']['name'];
         $fileSize = $_FILES['escudo']['size'];
         $filePath = $_FILES['escudo']['tmp_name'];
-        $fileType = $_FILES['escudo']['type'];
-        $tempVar = explode('.',$fileName);
-        $fileExt = strtolower( end($tempVar));
-        $correct_extensions = array("image/png","image/jpg","image/jpeg");
+        $fileBase = pathinfo($fileName, PATHINFO_FILENAME);
+        $cleanBase = preg_replace('/[^A-Za-z0-9_-]/', '', $fileBase) ?: 'escudo';
+        $newFileName = $_SESSION['user_id'] . "-" . $cleanBase . "-" . mt_rand(1, 10000) . ".webp";
         $upload_dir = "/images/escudos/";
 
-        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 100000){
+        $correct_extensions = array("image/png", "image/jpg", "image/jpeg", "image/webp");
+        $mime = function_exists('mime_content_type') ? @mime_content_type($filePath) : $_FILES['escudo']['type'];
 
-            $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-            $result = move_uploaded_file($filePath, $upload_path);
-                if (!$result) {
-                    $error_msg .= "Não foi possível inserir o escudo, erro na inserção.";
-                    $time->escudo = $time->escudoPadrao();
-                } else {
-                    $time->escudo = $_SESSION['user_id'] ."-" .$fileName;
-                }
-
-            //$fileData = file_get_contents($filePath);
-            //$time->escudo = base64_encode($fileData).".".$fileExt;
-
+        if($filePath != "" && (in_array($mime, $correct_extensions) || in_array($_FILES['escudo']['type'], $correct_extensions)) && $fileSize <= 5000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $newFileName;
+            $result = processAndSaveWebPImage($filePath, $upload_path, 512, 90);
+            if (!$result) {
+                $error_msg .= "Não foi possível processar o escudo em WebP. ";
+                $time->escudo = $time->escudoPadrao();
+            } else {
+                $time->escudo = $newFileName;
+            }
         } else {
             $time->escudo = $time->escudoPadrao();
             $error_msg .= "Não foi possível inserir o escudo. ";
-            if($fileSize > 100000){
-                $error_msg .= "Arquivo deve ser menor que 100kb.";
+            if($fileSize > 5000000){
+                $error_msg .= "Arquivo deve ser menor que 5MB. ";
             }
             if($filePath == ''){
-                $error_msg .= "Falha no nome do arquivo.";
-            }
-            if(in_array($fileType,$correct_extensions) == false){
-                $error_msg .= "Extensão ".$fileExt." não é permitida.";
+                $error_msg .= "Falha no nome do arquivo. ";
             }
         }
     } else {
         $time->escudo = $time->escudoPadrao();
     }
 
-    if(file_exists($_FILES['uni1']['tmp_name']) || is_uploaded_file($_FILES['uni1']['tmp_name'])){
+    if(!empty($_FILES['uni1']['tmp_name']) && (file_exists($_FILES['uni1']['tmp_name']) || is_uploaded_file($_FILES['uni1']['tmp_name']))){
         $fileName = $_FILES['uni1']['name'];
         $fileSize = $_FILES['uni1']['size'];
         $filePath = $_FILES['uni1']['tmp_name'];
-        $fileType = $_FILES['uni1']['type'];
-        $tempVar = explode('.',$fileName);
-        $fileExt = strtolower( end($tempVar));
-        $correct_extensions = array("image/png","image/jpg","image/jpeg");
+        $fileBase = pathinfo($fileName, PATHINFO_FILENAME);
+        $cleanBase = preg_replace('/[^A-Za-z0-9_-]/', '', $fileBase) ?: 'uni1';
+        $newFileName = $_SESSION['user_id'] . "-" . $cleanBase . "-" . mt_rand(1, 10000) . ".webp";
         $upload_dir = "/images/uniformes/";
 
-        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 100000){
+        $correct_extensions = array("image/png", "image/jpg", "image/jpeg", "image/webp");
+        $mime = function_exists('mime_content_type') ? @mime_content_type($filePath) : $_FILES['uni1']['type'];
 
-           // $fileData = file_get_contents($filePath);
-           // $time->uniforme1 = base64_encode($fileData).".".$fileExt;
-           $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-           $result = move_uploaded_file($filePath, $upload_path);
-               if (!$result) {
-                   $error_msg .= "Não foi possível inserir o uniforme, erro na inserção.";
-                   $time->uniforme1 = $time->uniforme1Padrao();
-               } else {
-                   $time->uniforme1 = $_SESSION['user_id'] ."-" .$fileName;
-               }
-
-
+        if($filePath != "" && (in_array($mime, $correct_extensions) || in_array($_FILES['uni1']['type'], $correct_extensions)) && $fileSize <= 5000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $newFileName;
+            $result = processAndSaveWebPImage($filePath, $upload_path, 600, 90);
+            if (!$result) {
+                $error_msg .= "Não foi possível processar o uniforme 1 em WebP. ";
+                $time->uniforme1 = $time->uniforme1Padrao();
+            } else {
+                $time->uniforme1 = $newFileName;
+            }
         } else {
             $time->uniforme1 = $time->uniforme1Padrao();
             $error_msg .= "Não foi possível inserir o uniforme 1. ";
-            if($fileSize > 100000){
-                $error_msg .= "Arquivo deve ser menor que 100kb.";
+            if($fileSize > 5000000){
+                $error_msg .= "Arquivo deve ser menor que 5MB. ";
             }
             if($filePath == ''){
-                $error_msg .= "Falha no nome do arquivo.";
-            }
-            if(in_array($fileType,$correct_extensions) == false){
-                $error_msg .= "Extensão ".$fileExt." não é permitida.";
+                $error_msg .= "Falha no nome do arquivo. ";
             }
         }
     } else {
         $time->uniforme1 = $time->uniforme1Padrao();
     }
 
-    if(file_exists($_FILES['uni2']['tmp_name']) || is_uploaded_file($_FILES['uni2']['tmp_name'])){
+    if(!empty($_FILES['uni2']['tmp_name']) && (file_exists($_FILES['uni2']['tmp_name']) || is_uploaded_file($_FILES['uni2']['tmp_name']))){
         $fileName = $_FILES['uni2']['name'];
         $fileSize = $_FILES['uni2']['size'];
         $filePath = $_FILES['uni2']['tmp_name'];
-        $fileType = $_FILES['uni2']['type'];
-        $tempVar = explode('.',$fileName);
-        $fileExt = strtolower( end($tempVar));
-        $correct_extensions = array("image/png","image/jpg","image/jpeg");
+        $fileBase = pathinfo($fileName, PATHINFO_FILENAME);
+        $cleanBase = preg_replace('/[^A-Za-z0-9_-]/', '', $fileBase) ?: 'uni2';
+        $newFileName = $_SESSION['user_id'] . "-" . $cleanBase . "-" . mt_rand(1, 10000) . ".webp";
         $upload_dir = "/images/uniformes/";
 
-        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 100000){
+        $correct_extensions = array("image/png", "image/jpg", "image/jpeg", "image/webp");
+        $mime = function_exists('mime_content_type') ? @mime_content_type($filePath) : $_FILES['uni2']['type'];
 
-            //$fileData = file_get_contents($filePath);
-            //$time->uniforme2 = base64_encode($fileData).".".$fileExt;
-            $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-            $result = move_uploaded_file($filePath, $upload_path);
-                if (!$result) {
-                    $error_msg .= "Não foi possível inserir o uniforme, erro na inserção.";
-                    $time->uniforme2 = $time->uniforme2Padrao();
-                } else {
-                    $time->uniforme2 = $_SESSION['user_id'] ."-" .$fileName;
-                }
-
-
+        if($filePath != "" && (in_array($mime, $correct_extensions) || in_array($_FILES['uni2']['type'], $correct_extensions)) && $fileSize <= 5000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $newFileName;
+            $result = processAndSaveWebPImage($filePath, $upload_path, 600, 90);
+            if (!$result) {
+                $error_msg .= "Não foi possível processar o uniforme 2 em WebP. ";
+                $time->uniforme2 = $time->uniforme2Padrao();
+            } else {
+                $time->uniforme2 = $newFileName;
+            }
         } else {
             $time->uniforme2 = $time->uniforme2Padrao();
             $error_msg .= "Não foi possível inserir o uniforme 2. ";

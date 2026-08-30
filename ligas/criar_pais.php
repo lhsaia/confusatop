@@ -8,9 +8,9 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 // include database and object files
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
-require_once ($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php");
 
 // get database connection
 $database = new Database();
@@ -19,78 +19,6 @@ $db = $database->getConnection();
 // pass connection to objects
 $pais = new Pais($db);
 $usuario = new Usuario($db);
-
-function imageImporterWebP($file_name, $target_filename){
-    if (empty($file_name) || !file_exists($file_name)) {
-        return false;
-    }
-    @ini_set('memory_limit', '512M');
-    $maxDim = 100;
-    $imageInfo = @getimagesize( $file_name );
-    if ($imageInfo === false) {
-        return false;
-    }
-    list($width, $height, $type) = $imageInfo;
-    if ($width <= 0 || $height <= 0) {
-        return false;
-    }
-    if ( $width > $maxDim || $height > $maxDim ) {
-        $ratio = $width/$height;
-        if( $ratio > 1) {
-            $new_width = (int) $maxDim;
-            $new_height = (int) round($maxDim/$ratio);
-        } else {
-            $new_width = (int) round($maxDim*$ratio);
-            $new_height = (int) $maxDim;
-        }
-    } else {
-        $new_width = (int) $width;
-        $new_height = (int) $height;
-    }
-
-    $src = null;
-    if ($type == IMAGETYPE_PNG || $type == 'image/png') {
-        $src = @imagecreatefrompng($file_name);
-        if (!$src && function_exists('compress_png')) {
-            $compressed_png_content = compress_png($file_name);
-            if ($compressed_png_content) {
-                $src = @imagecreatefromstring($compressed_png_content);
-            }
-        }
-    } else if ($type == IMAGETYPE_WEBP || $type == 18 || $type == 'image/webp') {
-        $src = @imagecreatefromwebp($file_name);
-    } else if ($type == IMAGETYPE_JPEG || $type == 'image/jpeg' || $type == 'image/jpg') {
-        $src = @imagecreatefromjpeg($file_name);
-    }
-
-    if (!$src) {
-        try {
-            $file_data = @file_get_contents($file_name);
-            if ($file_data !== false) {
-                $src = @imagecreatefromstring($file_data);
-            }
-        } catch (Exception $e) {
-            $src = null;
-        }
-    }
-
-    if (!$src) {
-        return false;
-    }
-
-    $dst = imagecreatetruecolor( $new_width, $new_height );
-    $background = imagecolorallocatealpha($dst, 0, 0, 0, 127);
-    imagecolortransparent($dst, $background);
-    imagealphablending($dst, false);
-    imagesavealpha($dst, true);
-    imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
-    imagedestroy( $src );
-    imagewebp($dst, $target_filename, 90);
-    imagedestroy( $dst );
-    return true;
-}
-
-
 
 $feedback_html = '';
 if(isset($_SESSION['flash_msg'])){

@@ -6,6 +6,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 // include database and object files
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
 
@@ -23,51 +24,36 @@ if(isset($_SESSION['flash_msg'])){
     unset($_SESSION['flash_msg']);
 }
 
-// if the form was submitted
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
-if(isset($_POST['nome']) && !empty($_POST['pais']) && !empty($_POST['nome']) && !empty($_POST['tier'])){
+// se formulário foi submetido
+if($_POST){
 
     $error_msg = '';
 
-    if((file_exists($_FILES['logo']['tmp_name']) || is_uploaded_file($_FILES['logo']['tmp_name']))){
-    $logo_path = $_FILES['logo']['name'];
-    $fileSize = $_FILES['logo']['size'];
-    $filePath = $_FILES['logo']['tmp_name'];
-    $tempVar = explode(".",$logo_path);
-    $fileExt = strtolower(end($tempVar));
-    $correct_extensions = array("png","jpg","jpeg","webp");
-    $upload_dir = "/images/ligas/";
+    if(!empty($_FILES['logo']['name']) && isset($_FILES['logo']['tmp_name']) && (file_exists($_FILES['logo']['tmp_name']) || is_uploaded_file($_FILES['logo']['tmp_name']))){
+        $logo_path = $_FILES['logo']['name'];
+        $fileSize = $_FILES['logo']['size'];
+        $filePath = $_FILES['logo']['tmp_name'];
+        $fileBase = pathinfo($logo_path, PATHINFO_FILENAME);
+        $cleanBase = preg_replace('/[^A-Za-z0-9_-]/', '', $fileBase) ?: 'liga';
+        $newFileName = $_SESSION['user_id'] . "-" . $cleanBase . "-" . mt_rand(1, 10000) . ".webp";
+        $upload_dir = "/images/ligas/";
 
-    if($logo_path != "" && in_array($fileExt,$correct_extensions) && $fileSize <= 2000000){
-
-
-        $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $logo_path;
-        $result = move_uploaded_file($filePath, $upload_path);
+        if($fileSize <= 5000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $newFileName;
+            $result = processAndSaveWebPImage($filePath, $upload_path, 512, 90);
             if (!$result) {
-                $error_msg .= " Não foi possível salvar o logo no servidor.";
+                $error_msg .= " Não foi possível processar o logo em WebP.";
                 $liga->logo = $liga->logoPadrao();
             } else {
-                $liga->logo = $_SESSION['user_id'] ."-" .$logo_path;
+                $liga->logo = $newFileName;
             }
-
+        } else {
+            $liga->logo = $liga->logoPadrao();
+            $error_msg .= " A imagem enviada excede 5MB.";
+        }
     } else {
         $liga->logo = $liga->logoPadrao();
-        $error_msg .= " Mas ocorreu um aviso: o escudo não pôde ser enviado. ";
-        if($fileSize > 2000000){
-            $error_msg .= "A imagem enviada excede 2MB. ";
-        }
-        if($logo_path == ''){
-            $error_msg .= "O nome do arquivo estava em branco. ";
-        }
-        if(in_array($fileExt,$correct_extensions) == false){
-            $error_msg .= "A extensão (.".$fileExt.") não é permitida. Use JPG, PNG ou WEBP.";
-        }
     }
-
-} else {
-    $liga->logo = $liga->logoPadrao();
-}
     // set product property values
     $liga->nome = $_POST['nome'];
     $liga->pais = $_POST['pais'];

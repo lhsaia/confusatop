@@ -6,6 +6,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 // include database and object files
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/estadio.php");
@@ -90,33 +91,28 @@ if(isset($_POST['categoria']) && isset($_POST['sigla']) && !empty($_POST['sigla'
 
     $correct_extensions = array("png", "jpg", "jpeg", "webp");
 
-    // Escudo
+// Escudo
     if(!empty($_FILES['escudo']['name']) && isset($_FILES['escudo']['tmp_name']) && is_uploaded_file($_FILES['escudo']['tmp_name'])){
         $fileName = $_FILES['escudo']['name'];
         $fileSize = $_FILES['escudo']['size'];
         $filePath = $_FILES['escudo']['tmp_name'];
-        $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $fileBase = pathinfo($fileName, PATHINFO_FILENAME);
+        $cleanBase = preg_replace('/[^A-Za-z0-9_-]/', '', $fileBase) ?: 'escudo';
+        $newFileName = $_SESSION['user_id'] . "-" . $cleanBase . "-" . mt_rand(1, 10000) . ".webp";
         $upload_dir = "/images/escudos/";
 
-        if(in_array($fileExt, $correct_extensions) && $fileSize <= 3000000){
-            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
-            if (file_exists($upload_path)) {
-                @unlink($upload_path);
-            }
-            $result = move_uploaded_file($filePath, $upload_path);
+        if($fileSize <= 5000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $newFileName;
+            $result = processAndSaveWebPImage($filePath, $upload_path, 512, 90);
             if (!$result) {
-                $error_msg .= " Não foi possível inserir o escudo.";
+                $error_msg .= " Não foi possível processar o escudo em WebP.";
                 $time->escudo = $time->escudoPadrao();
             } else {
-                $time->escudo = $_SESSION['user_id'] . "-" . $fileName;
+                $time->escudo = $newFileName;
             }
         } else {
             $time->escudo = $time->escudoPadrao();
-            if($fileSize > 3000000){
-                $error_msg .= " Arquivo do escudo deve ser menor que 3MB.";
-            } else {
-                $error_msg .= " Extensão do escudo (." . $fileExt . ") não permitida.";
-            }
+            $error_msg .= " Arquivo do escudo deve ser menor que 5MB.";
         }
     } else {
         $time->escudo = $time->escudoPadrao();
@@ -127,28 +123,23 @@ if(isset($_POST['categoria']) && isset($_POST['sigla']) && !empty($_POST['sigla'
         $fileName = $_FILES['uni1']['name'];
         $fileSize = $_FILES['uni1']['size'];
         $filePath = $_FILES['uni1']['tmp_name'];
-        $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $fileBase = pathinfo($fileName, PATHINFO_FILENAME);
+        $cleanBase = preg_replace('/[^A-Za-z0-9_-]/', '', $fileBase) ?: 'uni1';
+        $newFileName = $_SESSION['user_id'] . "-" . $cleanBase . "-" . mt_rand(1, 10000) . ".webp";
         $upload_dir = "/images/uniformes/";
 
-        if(in_array($fileExt, $correct_extensions) && $fileSize <= 3000000){
-            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
-            if (file_exists($upload_path)) {
-                @unlink($upload_path);
-            }
-            $result = move_uploaded_file($filePath, $upload_path);
+        if($fileSize <= 5000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $newFileName;
+            $result = processAndSaveWebPImage($filePath, $upload_path, 600, 90);
             if (!$result) {
-                $error_msg .= " Não foi possível inserir o uniforme 1.";
+                $error_msg .= " Não foi possível processar o uniforme 1 em WebP.";
                 $time->uniforme1 = $time->uniforme1Padrao();
             } else {
-                $time->uniforme1 = $_SESSION['user_id'] . "-" . $fileName;
+                $time->uniforme1 = $newFileName;
             }
         } else {
             $time->uniforme1 = $time->uniforme1Padrao();
-            if($fileSize > 3000000){
-                $error_msg .= " Arquivo do uniforme 1 deve ser menor que 3MB.";
-            } else {
-                $error_msg .= " Extensão do uniforme 1 (." . $fileExt . ") não permitida.";
-            }
+            $error_msg .= " Arquivo do uniforme 1 deve ser menor que 5MB.";
         }
     } else {
         $time->uniforme1 = $time->uniforme1Padrao();
@@ -159,28 +150,23 @@ if(isset($_POST['categoria']) && isset($_POST['sigla']) && !empty($_POST['sigla'
         $fileName = $_FILES['uni2']['name'];
         $fileSize = $_FILES['uni2']['size'];
         $filePath = $_FILES['uni2']['tmp_name'];
-        $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $fileBase = pathinfo($fileName, PATHINFO_FILENAME);
+        $cleanBase = preg_replace('/[^A-Za-z0-9_-]/', '', $fileBase) ?: 'uni2';
+        $newFileName = $_SESSION['user_id'] . "-" . $cleanBase . "-" . mt_rand(1, 10000) . ".webp";
         $upload_dir = "/images/uniformes/";
 
-        if(in_array($fileExt, $correct_extensions) && $fileSize <= 3000000){
-            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
-            if (file_exists($upload_path)) {
-                @unlink($upload_path);
-            }
-            $result = move_uploaded_file($filePath, $upload_path);
+        if($fileSize <= 5000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $newFileName;
+            $result = processAndSaveWebPImage($filePath, $upload_path, 600, 90);
             if (!$result) {
-                $error_msg .= " Não foi possível inserir o uniforme 2.";
+                $error_msg .= " Não foi possível processar o uniforme 2 em WebP.";
                 $time->uniforme2 = $time->uniforme2Padrao();
             } else {
-                $time->uniforme2 = $_SESSION['user_id'] . "-" . $fileName;
+                $time->uniforme2 = $newFileName;
             }
         } else {
             $time->uniforme2 = $time->uniforme2Padrao();
-            if($fileSize > 3000000){
-                $error_msg .= " Arquivo do uniforme 2 deve ser menor que 3MB.";
-            } else {
-                $error_msg .= " Extensão do uniforme 2 (." . $fileExt . ") não permitida.";
-            }
+            $error_msg .= " Arquivo do uniforme 2 deve ser menor que 5MB.";
         }
     } else {
         $time->uniforme2 = $time->uniforme2Padrao();

@@ -15,65 +15,11 @@ $database = new Database();
 $db = $database->getConnection();
 
 // pass connection to objects
+include_once($_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php");
 $estadio = new Estadio($db);
 $pais = new Pais($db);
 $clima = new Clima($db);
 $usuario = new Usuario($db);
-
-if (!function_exists('compress_png')) {
-    if (file_exists($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php")) {
-        @include_once($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php");
-    }
-}
-
-if (!function_exists('imageImporterEstadio')) {
-    function imageImporterEstadio($file_name, $target_filename) {
-        $maxDim = 800;
-        list($width, $height, $type, $attr) = getimagesize($file_name);
-        if ($width > $maxDim || $height > $maxDim) {
-            $ratio = $width / $height;
-            if ($ratio > 1) {
-                $new_width = (int) $maxDim;
-                $new_height = (int) round($maxDim / $ratio);
-            } else {
-                $new_width = (int) round($maxDim * $ratio);
-                $new_height = (int) $maxDim;
-            }
-        } else {
-            $new_width = (int) $width;
-            $new_height = (int) $height;
-        }
-
-        if ($type == IMAGETYPE_PNG || $type == "image/png") {
-            if (function_exists('compress_png')) {
-                $compressed_png_content = compress_png($file_name);
-                $src = @imagecreatefromstring($compressed_png_content);
-            } else {
-                $src = @imagecreatefrompng($file_name);
-            }
-        } else if ($type == IMAGETYPE_WEBP || $type == 18 || $type == "image/webp") {
-            $src = @imagecreatefromwebp($file_name);
-        } else if ($type == IMAGETYPE_JPEG || $type == "image/jpeg" || $type == "image/jpg") {
-            $src = @imagecreatefromjpeg($file_name);
-        } else {
-            $src = @imagecreatefromstring(file_get_contents($file_name));
-        }
-
-        if ($src) {
-            $dst = imagecreatetruecolor($new_width, $new_height);
-            $background = imagecolorallocatealpha($dst, 0, 0, 0, 127);
-            imagecolortransparent($dst, $background);
-            imagealphablending($dst, false);
-            imagesavealpha($dst, true);
-            imagecopyresampled($dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height);
-            imagedestroy($src);
-            imagewebp($dst, $target_filename, 85);
-            imagedestroy($dst);
-            return true;
-        }
-        return false;
-    }
-}
 
 $feedback_html = '';
 if(isset($_SESSION['flash_msg'])){

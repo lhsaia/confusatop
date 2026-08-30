@@ -19,58 +19,14 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
     //estabelecer conexão com banco de dados
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
-	require ($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php");
     
     $database = new Database();
     $db = $database->getConnection();
     $jogador = new Jogador($db);
     $usuario = new Usuario($db);
-	
-	function imageImporter($file_name, $target_filename){
-      $maxDim = 180;
-      list($width, $height, $type, $attr) = getimagesize( $file_name );
-      if ( $width > $maxDim || $height > $maxDim ) {
-        $ratio = $width/$height;
-        if( $ratio > 1) {
-          $new_width = (int) $maxDim;
-          $new_height = (int) round($maxDim/$ratio);
-        } else {
-          $new_width = (int) round($maxDim*$ratio);
-          $new_height = (int) $maxDim;
-        }
-    } else {
-      $new_width = (int) $width;
-      $new_height = (int) $height;
-    }
-        if($type == "image/png"){
-			$compressed_png_content = compress_png($file_name);
-			$src = imagecreatefromstring($compressed_png_content);
-        } else if ($type == 18 || $type == "") {
-			$src = imagecreatefromwebp($file_name);
-		} else {
-        			
-            try {
-                $src = imagecreatefromstring( file_get_contents( $file_name ) );
-            } catch (Exception $e) {
-                $src = imagecreatefromwebp($file_name);
-            }
-			
-			
-        }
-
-        $dst = imagecreatetruecolor( $new_width, $new_height );
-        $background = imagecolorallocate($dst , 0, 0, 0);
-        imagecolortransparent($dst, $background);
-        imagealphablending($dst, false);
-        imagesavealpha($dst, true);
-        imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
-        imagedestroy( $src );
-		imagewebp($dst, $target_filename);
-        imagedestroy( $dst );
-
-    }
 
 
     if($tipo == 1){
@@ -151,7 +107,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 			if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 8000000){
 
 				$upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-				imageImporter($filePath, $upload_path);
+				processAndSaveWebPImage($filePath, $upload_path, 300, 90);
 				$localizacao_foto = $_SESSION['user_id'] ."-" .$fileName;
 
 
@@ -281,7 +237,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 8000000){
 
             $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-            imageImporter($filePath, $upload_path);
+            processAndSaveWebPImage($filePath, $upload_path, 300, 90);
             $localizacao_foto = $_SESSION['user_id'] ."-" .$fileName;
 
 

@@ -5,7 +5,7 @@ error_reporting( E_ALL );
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
-    require ($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php");
     $idLiga = $_POST['id'];
     $nomeLiga = $_POST['nomeLiga'];
     $tierLiga = $_POST['tierLiga'];
@@ -14,72 +14,25 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $error_msg = "";
     $new_logo_path = null;
 
-    function imageImporter($file_name, $target_filename){
-      $maxDim = 200;
-      list($width, $height, $type, $attr) = getimagesize( $file_name );
-      if ( $width > $maxDim || $height > $maxDim ) {
-        $ratio = $width/$height;
-        if( $ratio > 1) {
-          $new_width = (int) $maxDim;
-          $new_height = (int) round($maxDim/$ratio);
-        } else {
-          $new_width = (int) round($maxDim*$ratio);
-          $new_height = (int) $maxDim;
-        }
-    } else {
-      $new_width = (int) $width;
-      $new_height = (int) $height;
-    }
-        if($type != "image/png"){
-          $src = imagecreatefromstring( file_get_contents( $file_name ) );
-        } else {
-          $compressed_png_content = compress_png($file_name);
-          $src = imagecreatefromstring($compressed_png_content);
-        }
-
-        $dst = imagecreatetruecolor( $new_width, $new_height );
-        $background = imagecolorallocate($dst , 0, 0, 0);
-        imagecolortransparent($dst, $background);
-        imagealphablending($dst, false);
-        imagesavealpha($dst, true);
-        imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
-        imagedestroy( $src );
-        imagepng( $dst, $target_filename );
-        imagedestroy( $dst );
-
-    }
-
-    if(isset($_FILES) && !empty($_FILES)){
-
+    if(isset($_FILES['logo']) && !empty($_FILES['logo']['tmp_name']) && (file_exists($_FILES['logo']['tmp_name']) || is_uploaded_file($_FILES['logo']['tmp_name']))){
         $logo_path = $_FILES['logo']['name'];
         $fileSize = $_FILES['logo']['size'];
         $filePath = $_FILES['logo']['tmp_name'];
-        $fileType = $_FILES['logo']['type'];
-        $correct_extensions = array("image/png","image/jpg","image/jpeg");
+        $fileBase = pathinfo($logo_path, PATHINFO_FILENAME);
+        $cleanBase = preg_replace('/[^A-Za-z0-9_-]/', '', $fileBase) ?: 'liga';
+        $fileName = $cleanBase . mt_rand(1, 10000) . ".webp";
         $upload_dir = "/images/ligas/";
-        $new_logo_path = $_SESSION['user_id'] ."-" . $logo_path;
 
-        if($logo_path != "" && in_array($fileType,$correct_extensions) && $fileSize <= 2000000){
-
-
-            $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $logo_path;
-            imageImporter($filePath, $upload_path);
-          //  $result = move_uploaded_file($filePath, $upload_path);
-            //    if (!$result) {
-                //    $error_msg .= "Não foi possível inserir o logo, erro na inserção.";
-              //  }
-
+        if($fileSize <= 5000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
+            $result = processAndSaveWebPImage($filePath, $upload_path, 512, 90);
+            if ($result) {
+                $new_logo_path = $_SESSION['user_id'] . "-" . $fileName;
+            } else {
+                $error_msg .= "Não foi possível processar o logo em WebP.";
+            }
         } else {
-            $error_msg .= "Não foi possível inserir o logo. ";
-            if($fileSize > 2000000){
-                $error_msg .= "Arquivo deve ser menor que 2Mb.";
-            }
-            if($logo_path == ''){
-                $error_msg .= "Falha no nome do arquivo.";
-            }
-            if(in_array($fileType,$correct_extensions) == false){
-                $error_msg .= "Extensão ".$extension[1]." não é permitida.";
-            }
+            $error_msg .= "Não foi possível inserir o logo. Arquivo deve ser menor que 5Mb.";
         }
     }
     //estabelecer conexão com banco de dados

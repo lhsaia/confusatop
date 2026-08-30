@@ -6,8 +6,8 @@ error_reporting( E_ALL );
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
   require_once $_SERVER['DOCUMENT_ROOT']."/octamotor/config/database.php";
-  require_once $_SERVER['DOCUMENT_ROOT']. "/octamotor/classes/track.php";
-  require ($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php");
+  require_once $_SERVER['DOCUMENT_ROOT']."/octamotor/classes/track.php";
+  include_once $_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php";
 
   $track_data = array();
 
@@ -27,66 +27,20 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
   $previous_image = $_POST["previous_image"];
 
 
-  function imageImporter($file_name, $target_filename, $maxDim){
-    list($width, $height, $type, $attr) = getimagesize( $file_name );
-    if ( $width > $maxDim || $height > $maxDim ) {
-      $ratio = $width/$height;
-      if( $ratio > 1) {
-        $new_width = (int) $maxDim;
-        $new_height = (int) round($maxDim/$ratio);
-      } else {
-        $new_width = (int) round($maxDim*$ratio);
-        $new_height = (int) $maxDim;
-      }
-  } else {
-    $new_width = (int) $width;
-    $new_height = (int) $height;
-  }
-
-    $dst = imagecreatetruecolor( $new_width, $new_height );
-      if($type != 3){
-        $src = imagecreatefromstring( file_get_contents( $file_name ) );
-      } else {
-        $compressed_png_content = compress_png($file_name);
-        $src = imagecreatefromstring($compressed_png_content);
-        imagecolortransparent($dst, imagecolorallocatealpha($dst, 0, 0, 0, 127));
-        imagealphablending($dst, false);
-        imagesavealpha($dst, true);
-      }
-
-      imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
-      imagedestroy( $src );
-      imagepng( $dst, $target_filename );
-      imagedestroy( $dst );
-
-  }
-
   // tratamento e importação de imagem
-  if(isset($_FILES['image']) && !empty($_FILES['image'])){
+  if(isset($_FILES['image']) && !empty($_FILES['image']['tmp_name']) && (file_exists($_FILES['image']['tmp_name']) || is_uploaded_file($_FILES['image']['tmp_name']))){
       $fileName = $_FILES['image']['name'];
       $fileExplode = explode(".",$fileName);
-      $fileName = $fileExplode[0] . mt_rand(1,10000)."." .$fileExplode[1];
+      $fileBase = preg_replace("/[^a-zA-Z0-9]/", "", $fileExplode[0]) ?: "track";
+      $fileName = strtolower($fileBase) . mt_rand(1,10000).".webp";
       $filePath = $_FILES['image']['tmp_name'];
-      $fileType = $_FILES['image']['type'];
-      $fileExt = strtolower(end($fileExplode));
-      $correct_extensions = array("image/png","image/jpg","image/jpeg");
       $upload_dir = "/octamotor/images/track/";
 
-      if($filePath != "" && in_array($fileType,$correct_extensions)){
-
-          $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-          imageImporter($filePath, $upload_path,450);
+      $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
+      if(processAndSaveWebPImage($filePath, $upload_path, 800, 90)){
           $track_data["image"] = $_SESSION['user_id'] ."-" .$fileName;
-
       } else {
-
-          $error_msg .= "Não foi possível inserir o logo. ";
-          if($filePath == ''){
-              $error_msg .= "Falha no nome do arquivo.";
-          }
-          if(in_array($fileType,$correct_extensions) == false){
-              $error_msg .= "Extensão ".$fileExt." não é permitida.";
-          }
+          $error_msg .= "Não foi possível processar o traçado da pista em WebP. ";
           $track_data["image"] = $previous_image;
       }
   } else {

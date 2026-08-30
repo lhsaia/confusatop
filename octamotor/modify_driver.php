@@ -6,8 +6,8 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
   require_once $_SERVER['DOCUMENT_ROOT']."/octamotor/config/database.php";
-  require_once $_SERVER['DOCUMENT_ROOT']. "/octamotor/classes/driver.php";
-  require ($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php");
+  require_once $_SERVER['DOCUMENT_ROOT']."/octamotor/classes/driver.php";
+  include_once $_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php";
 
   $driver_data = array();
 
@@ -27,97 +27,39 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
   $previous_photo = $_POST["previous_photo"];
   $previous_helmet = $_POST["previous_helmet"];
 
-  function imageImporter($file_name, $target_filename){
-    $maxDim = 330;
-    list($width, $height, $type, $attr) = getimagesize( $file_name );
-    if ( $width > $maxDim || $height > $maxDim ) {
-      $ratio = $width/$height;
-      if( $ratio > 1) {
-        $new_width = (int) $maxDim;
-        $new_height = (int) round($maxDim/$ratio);
-      } else {
-        $new_width = (int) round($maxDim*$ratio);
-        $new_height = (int) $maxDim;
-      }
-  } else {
-    $new_width = (int) $width;
-    $new_height = (int) $height;
-  }
-      if($type != "image/png"){
-        $src = imagecreatefromstring( file_get_contents( $file_name ) );
-      } else {
-        $compressed_png_content = compress_png($file_name);
-        $src = imagecreatefromstring($compressed_png_content);
-      }
-
-      $dst = imagecreatetruecolor( $new_width, $new_height );
-      $background = imagecolorallocate($dst , 0, 0, 0);
-      imagecolortransparent($dst, $background);
-      imagealphablending($dst, false);
-      imagesavealpha($dst, true);
-      imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
-      imagedestroy( $src );
-      imagepng( $dst, $target_filename );
-      imagedestroy( $dst );
-
-  }
-
   // tratamento e importação de imagem
-  if(isset($_FILES['photo']) && !empty($_FILES['photo'])){
+  if(isset($_FILES['photo']) && !empty($_FILES['photo']['tmp_name']) && (file_exists($_FILES['photo']['tmp_name']) || is_uploaded_file($_FILES['photo']['tmp_name']))){
       $fileName = $_FILES['photo']['name'];
       $fileExplode = explode(".",$fileName);
-      $fileName = $fileExplode[0] . mt_rand(1,10000)."." .$fileExplode[1];
+      $fileBase = preg_replace("/[^a-zA-Z0-9]/", "", $fileExplode[0]) ?: "driver";
+      $fileName = strtolower($fileBase) . mt_rand(1,10000).".webp";
       $filePath = $_FILES['photo']['tmp_name'];
-      $fileType = $_FILES['photo']['type'];
-      $fileExt = strtolower(end($fileExplode));
-      $correct_extensions = array("image/png","image/jpg","image/jpeg");
-      $upload_dir = "/octamotor/images/picture/";
+      $upload_dir = "/octamotor/images/driver/";
 
-      if($filePath != "" && in_array($fileType,$correct_extensions)){
-
-          $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-          imageImporter($filePath, $upload_path);
+      $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
+      if(processAndSaveWebPImage($filePath, $upload_path, 330, 90)){
           $driver_data["photo"] = $_SESSION['user_id'] ."-" .$fileName;
-
       } else {
-
-          $error_msg .= "Não foi possível inserir a foto. ";
-          if($filePath == ''){
-              $error_msg .= "Falha no nome do arquivo.";
-          }
-          if(in_array($fileType,$correct_extensions) == false){
-              $error_msg .= "Extensão ".$fileExt." não é permitida.";
-          }
+          $error_msg .= "Não foi possível processar a foto em WebP. ";
           $driver_data["photo"] = $previous_photo;
       }
   } else {
     $driver_data["photo"] = $previous_photo;
   }
 
-  if(isset($_FILES['helmet']) && !empty($_FILES['helmet'])){
+  if(isset($_FILES['helmet']) && !empty($_FILES['helmet']['tmp_name']) && (file_exists($_FILES['helmet']['tmp_name']) || is_uploaded_file($_FILES['helmet']['tmp_name']))){
       $fileName = $_FILES['helmet']['name'];
       $fileExplode = explode(".",$fileName);
-      $fileName = $fileExplode[0] . mt_rand(1,10000)."." .$fileExplode[1];
+      $fileBase = preg_replace("/[^a-zA-Z0-9]/", "", $fileExplode[0]) ?: "helmet";
+      $fileName = strtolower($fileBase) . mt_rand(1,10000).".webp";
       $filePath = $_FILES['helmet']['tmp_name'];
-      $fileType = $_FILES['helmet']['type'];
-      $fileExt = strtolower(end($fileExplode));
-      $correct_extensions = array("image/png","image/jpg","image/jpeg");
       $upload_dir = "/octamotor/images/helmet/";
-      if($filePath != "" && in_array($fileType,$correct_extensions)){
 
-          $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-          imageImporter($filePath, $upload_path);
+      $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
+      if(processAndSaveWebPImage($filePath, $upload_path, 330, 90)){
           $driver_data["helmet"] = $_SESSION['user_id'] ."-" .$fileName;
-
       } else {
-
-          $error_msg .= "Não foi possível inserir a foto. ";
-          if($filePath == ''){
-              $error_msg .= "Falha no nome do arquivo.";
-          }
-          if(in_array($fileType,$correct_extensions) == false){
-              $error_msg .= "Extensão ".$fileExt." não é permitida.";
-          }
+          $error_msg .= "Não foi possível processar o capacete em WebP. ";
           $driver_data["helmet"] = $previous_helmet;
       }
   } else {

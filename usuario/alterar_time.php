@@ -11,10 +11,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
     //estabelecer conexão com banco de dados
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
-      require ($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php");
     $database = new Database();
     $db = $database->getConnection();
     $time = new Time($db);
@@ -45,42 +45,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $error_msg = "";
     $new_logo_path = null;
 
-    function imageImporter($file_name, $target_filename){
-      $maxDim = 200;
-      list($width, $height, $type, $attr) = getimagesize( $file_name );
-      if ( $width > $maxDim || $height > $maxDim ) {
-        $ratio = $width/$height;
-        if( $ratio > 1) {
-          $new_width = (int) $maxDim;
-          $new_height = (int) round($maxDim/$ratio);
-        } else {
-          $new_width = (int) round($maxDim*$ratio);
-          $new_height = (int) $maxDim;
-        }
-    } else {
-      $new_width = (int) $width;
-      $new_height = (int) $height;
-    }
-        if($type != IMAGETYPE_PNG){
-          $src = imagecreatefromstring( file_get_contents( $file_name ) );
-        } else {
-          $compressed_png_content = compress_png($file_name);
-          $src = imagecreatefromstring($compressed_png_content);
-        }
-
-        $dst = imagecreatetruecolor( $new_width, $new_height );
-        $background = imagecolorallocate($dst , 0, 0, 0);
-        imagecolortransparent($dst, $background);
-        imagealphablending($dst, false);
-        imagesavealpha($dst, true);
-        imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
-        imagedestroy( $src );
-        imagepng( $dst, $target_filename );
-        imagedestroy( $dst );
-
-    }
-
-
     $allowed_image_exts = array("png", "jpg", "jpeg", "webp");
     $allowed_mimes = array("image/png", "image/jpg", "image/jpeg", "image/pjpeg", "image/x-png", "image/webp");
 
@@ -90,7 +54,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $filePath = $_FILES['escudo']['tmp_name'];
         $fileExt = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
         $fileBase = pathinfo($origName, PATHINFO_FILENAME);
-        $fileName = $fileBase . mt_rand(1, 10000) . "." . $fileExt;
+        $cleanBase = preg_replace('/[^A-Za-z0-9_-]/', '', $fileBase) ?: 'escudo';
+        $fileName = $cleanBase . mt_rand(1, 10000) . ".webp";
         $upload_dir = "/images/escudos/";
 
         $mime = '';
@@ -103,14 +68,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $isValidExt = in_array($fileExt, $allowed_image_exts);
         $isValidMime = empty($mime) || in_array($mime, $allowed_mimes);
 
-        if($filePath != "" && $isValidExt && $isValidMime && $fileSize <= 2000000){
+        if($filePath != "" && $isValidExt && $isValidMime && $fileSize <= 5000000){
             $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
-            imageImporter($filePath, $upload_path);
-            $time->escudo = $_SESSION['user_id'] . "-" . $fileName;
+            $result = processAndSaveWebPImage($filePath, $upload_path, 512, 90);
+            if ($result) {
+                $time->escudo = $_SESSION['user_id'] . "-" . $fileName;
+            } else {
+                $error_msg .= "Não foi possível processar o escudo em WebP. ";
+            }
         } else {
             $error_msg .= "Não foi possível inserir o escudo. ";
-            if($fileSize > 2000000){
-                $error_msg .= "Arquivo deve ser menor que 2Mb. ";
+            if($fileSize > 5000000){
+                $error_msg .= "Arquivo deve ser menor que 5Mb. ";
             }
             if($filePath == ''){
                 $error_msg .= "Falha no envio do arquivo. ";
@@ -127,7 +96,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $filePath = $_FILES['uni1']['tmp_name'];
         $fileExt = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
         $fileBase = pathinfo($origName, PATHINFO_FILENAME);
-        $fileName = $fileBase . mt_rand(1, 10000) . "." . $fileExt;
+        $cleanBase = preg_replace('/[^A-Za-z0-9_-]/', '', $fileBase) ?: 'uni1';
+        $fileName = $cleanBase . mt_rand(1, 10000) . ".webp";
         $upload_dir = "/images/uniformes/";
 
         $mime = '';
@@ -140,14 +110,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $isValidExt = in_array($fileExt, $allowed_image_exts);
         $isValidMime = empty($mime) || in_array($mime, $allowed_mimes);
 
-        if($filePath != "" && $isValidExt && $isValidMime && $fileSize <= 2000000){
+        if($filePath != "" && $isValidExt && $isValidMime && $fileSize <= 5000000){
             $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
-            imageImporter($filePath, $upload_path);
-            $time->uniforme1 = $_SESSION['user_id'] . "-" . $fileName;
+            $result = processAndSaveWebPImage($filePath, $upload_path, 600, 90);
+            if ($result) {
+                $time->uniforme1 = $_SESSION['user_id'] . "-" . $fileName;
+            } else {
+                $error_msg .= "Não foi possível processar o uniforme 1 em WebP. ";
+            }
         } else {
             $error_msg .= "Não foi possível inserir o uniforme 1. ";
-            if($fileSize > 2000000){
-                $error_msg .= "Arquivo deve ser menor que 2Mb. ";
+            if($fileSize > 5000000){
+                $error_msg .= "Arquivo deve ser menor que 5Mb. ";
             }
             if($filePath == ''){
                 $error_msg .= "Falha no envio do arquivo. ";
@@ -164,7 +138,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $filePath = $_FILES['uni2']['tmp_name'];
         $fileExt = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
         $fileBase = pathinfo($origName, PATHINFO_FILENAME);
-        $fileName = $fileBase . mt_rand(1, 10000) . "." . $fileExt;
+        $cleanBase = preg_replace('/[^A-Za-z0-9_-]/', '', $fileBase) ?: 'uni2';
+        $fileName = $cleanBase . mt_rand(1, 10000) . ".webp";
         $upload_dir = "/images/uniformes/";
 
         $mime = '';
@@ -177,14 +152,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $isValidExt = in_array($fileExt, $allowed_image_exts);
         $isValidMime = empty($mime) || in_array($mime, $allowed_mimes);
 
-        if($filePath != "" && $isValidExt && $isValidMime && $fileSize <= 2000000){
+        if($filePath != "" && $isValidExt && $isValidMime && $fileSize <= 5000000){
             $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
-            imageImporter($filePath, $upload_path);
-            $time->uniforme2 = $_SESSION['user_id'] . "-" . $fileName;
+            $result = processAndSaveWebPImage($filePath, $upload_path, 600, 90);
+            if ($result) {
+                $time->uniforme2 = $_SESSION['user_id'] . "-" . $fileName;
+            } else {
+                $error_msg .= "Não foi possível processar o uniforme 2 em WebP. ";
+            }
         } else {
             $error_msg .= "Não foi possível inserir o uniforme 2. ";
-            if($fileSize > 2000000){
-                $error_msg .= "Arquivo deve ser menor que 2Mb. ";
+            if($fileSize > 5000000){
+                $error_msg .= "Arquivo deve ser menor que 5Mb. ";
             }
             if($filePath == ''){
                 $error_msg .= "Falha no envio do arquivo. ";
@@ -195,52 +174,14 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         }
     }
 
-function imageImporterWebP($file_name, $target_filename){
-      $maxDim = 180;
-      list($width, $height, $type, $attr) = getimagesize( $file_name );
-      if ( $width > $maxDim || $height > $maxDim ) {
-        $ratio = $width/$height;
-        if( $ratio > 1) {
-          $new_width = (int) $maxDim;
-          $new_height = (int) round($maxDim/$ratio);
-        } else {
-          $new_width = (int) round($maxDim*$ratio);
-          $new_height = (int) $maxDim;
-        }
-    } else {
-      $new_width = (int) $width;
-      $new_height = (int) $height;
-    }
-        if($type == IMAGETYPE_PNG){
-			$compressed_png_content = compress_png($file_name);
-			$src = imagecreatefromstring($compressed_png_content);
-        } else if ($type == 18 || $type == "") {
-			$src = imagecreatefromwebp($file_name);
-		} else {
-            try {
-                $src = imagecreatefromstring( file_get_contents( $file_name ) );
-            } catch (Exception $e) {
-                $src = imagecreatefromwebp($file_name);
-            }
-        }
-        $dst = imagecreatetruecolor( $new_width, $new_height );
-        $background = imagecolorallocate($dst , 0, 0, 0);
-        imagecolortransparent($dst, $background);
-        imagealphablending($dst, false);
-        imagesavealpha($dst, true);
-        imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
-        imagedestroy( $src );
-		imagewebp($dst, $target_filename);
-        imagedestroy( $dst );
-    }
-
     if(isset($_FILES['mascote']) && is_array($_FILES['mascote']) && $_FILES['mascote']['error'] === UPLOAD_ERR_OK){
         $origName = $_FILES['mascote']['name'];
         $fileSize = $_FILES['mascote']['size'];
         $filePath = $_FILES['mascote']['tmp_name'];
         $fileExt = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
         $fileBase = pathinfo($origName, PATHINFO_FILENAME);
-        $fileName = $fileBase . mt_rand(1, 10000) . ".webp";
+        $cleanBase = preg_replace('/[^A-Za-z0-9_-]/', '', $fileBase) ?: 'mascote';
+        $fileName = $cleanBase . mt_rand(1, 10000) . ".webp";
         $upload_dir = "/images/mascotes/";
 
         $mime = '';
@@ -253,14 +194,18 @@ function imageImporterWebP($file_name, $target_filename){
         $isValidExt = in_array($fileExt, $allowed_image_exts);
         $isValidMime = empty($mime) || in_array($mime, $allowed_mimes);
 
-        if($filePath != "" && $isValidExt && $isValidMime && $fileSize <= 3000000){
+        if($filePath != "" && $isValidExt && $isValidMime && $fileSize <= 5000000){
             $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
-            imageImporterWebP($filePath, $upload_path);
-            $time->mascote = $_SESSION['user_id'] . "-" . $fileName;
+            $result = processAndSaveWebPImage($filePath, $upload_path, 400, 90);
+            if ($result) {
+                $time->mascote = $_SESSION['user_id'] . "-" . $fileName;
+            } else {
+                $error_msg .= "Não foi possível processar o mascote em WebP. ";
+            }
         } else {
             $error_msg .= "Não foi possível inserir o mascote. ";
-            if($fileSize > 3000000){
-                $error_msg .= "Arquivo deve ser menor que 3Mb. ";
+            if($fileSize > 5000000){
+                $error_msg .= "Arquivo deve ser menor que 5Mb. ";
             }
             if($filePath == ''){
                 $error_msg .= "Falha no envio do arquivo. ";

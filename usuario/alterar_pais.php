@@ -16,109 +16,34 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
     //estabelecer conexão com banco de dados
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
-    require ($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php");
     $database = new Database();
     $db = $database->getConnection();
     $pais = new Pais($db);
-    function imageImporter($file_name, $target_filename){
-      @ini_set('memory_limit', '512M');
-      $maxDim = 100;
-      list($width, $height, $type) = getimagesize( $file_name );
-      if ( $width > $maxDim || $height > $maxDim ) {
-        $ratio = $width/$height;
-        if( $ratio > 1) {
-          $new_width = (int) $maxDim;
-          $new_height = (int) round($maxDim/$ratio);
-        } else {
-          $new_width = (int) round($maxDim*$ratio);
-          $new_height = (int) $maxDim;
-        }
-      } else {
-        $new_width = (int) $width;
-        $new_height = (int) $height;
-      }
-
-      $src = null;
-      if ($type == IMAGETYPE_PNG || $type == "image/png") {
-        $src = @imagecreatefrompng($file_name);
-        if (!$src && function_exists('compress_png')) {
-          $compressed_png_content = compress_png($file_name);
-          $src = @imagecreatefromstring($compressed_png_content);
-        }
-      } else if ($type == IMAGETYPE_WEBP || $type == 18 || $type == "image/webp") {
-        $src = @imagecreatefromwebp($file_name);
-      } else if ($type == IMAGETYPE_JPEG || $type == "image/jpeg" || $type == "image/jpg") {
-        $src = @imagecreatefromjpeg($file_name);
-      }
-
-      if (!$src) {
-        try {
-          $file_data = @file_get_contents($file_name);
-          if ($file_data !== false) {
-            $src = @imagecreatefromstring($file_data);
-          }
-        } catch (Exception $e) {
-          $src = null;
-        }
-      }
-
-      if (!$src) {
-        return false;
-      }
-
-      $dst = imagecreatetruecolor( $new_width, $new_height );
-      $background = imagecolorallocatealpha($dst, 0, 0, 0, 127);
-      imagecolortransparent($dst, $background);
-      imagealphablending($dst, false);
-      imagesavealpha($dst, true);
-      imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
-      imagedestroy( $src );
-      imagepng( $dst, $target_filename );
-      imagedestroy( $dst );
-      return true;
-    }
 
     //alterar pais
     if($pais->alterar($idPais,$nomePais,$siglaPais,$federacaoPais, $ranqueavel,$new_logo_path, $latitude, $longitude)){
-        if(isset($_FILES) && !empty($_FILES)){
+        if(isset($_FILES['logo']) && !empty($_FILES['logo']['tmp_name']) && (file_exists($_FILES['logo']['tmp_name']) || is_uploaded_file($_FILES['logo']['tmp_name']))){
 
             $logo_path = $_FILES['logo']['name'];
             $fileSize = $_FILES['logo']['size'];
             $filePath = $_FILES['logo']['tmp_name'];
-            $fileType = $_FILES['logo']['type'];
-            $extension = explode("/",$fileType);
-            $correct_extensions = array("image/png","image/jpg","image/jpeg");
             $upload_dir = "/images/bandeiras/";
-            $new_logo_path = $siglaPais . "." . $extension[1];
+            $new_logo_path = $siglaPais . ".webp";
 
-            if($logo_path != "" && in_array($fileType,$correct_extensions) && $fileSize <= 2000000){
-
-
-                $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$new_logo_path;
+            if($fileSize <= 5000000){
+                $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $new_logo_path;
                 if(file_exists($upload_path)){
-                    unlink($upload_path);
-
+                    @unlink($upload_path);
                 }
-                imageImporter($filePath, $upload_path);
-              //  $result = move_uploaded_file($filePath, $upload_path);
-                //    if (!$result) {
-                  //      $error_msg .= "Não foi possível inserir a bandeira, erro na inserção.";
-                    //} else {
-                        $pais->atualizarBandeira($idPais, $new_logo_path);
-                  //  }
-
+                if(processAndSaveWebPImage($filePath, $upload_path, 120, 90)){
+                    $pais->atualizarBandeira($idPais, $new_logo_path);
+                } else {
+                    $error_msg .= "Não foi possível processar a imagem da bandeira em WebP.";
+                }
             } else {
-                $error_msg .= "Não foi possível inserir a bandeira. ";
-                if($fileSize > 2000000){
-                    $error_msg .= "Arquivo deve ser menor que 2Mb.";
-                }
-                if($logo_path == ''){
-                    $error_msg .= "Falha no nome do arquivo.";
-                }
-                if(in_array($fileType,$correct_extensions) == false){
-                    $error_msg .= "Extensão ".$extension[1]." não é permitida.";
-                }
+                $error_msg .= "Arquivo da bandeira deve ser menor que 5Mb.";
             }
         }
 

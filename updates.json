@@ -13,6 +13,11 @@
       "date": "30/08/2026",
       "items": [
         {
+          "badge": "new",
+          "title": "Padronização Global de Otimização e Conversão WebP de Imagens",
+          "desc": "Unificado e ativado o processamento automático de imagens para formato .webp em todo o sistema (escudos, uniformes, mascotes, logos de ligas, competições, bandeiras, estádios, fotos de jogadores/técnicos, capa da revista e Octamotor), garantindo redimensionamento proporcional e preservação de transparência/canal alfa, eliminando dependências legadas do pngquant."
+        },
+        {
           "badge": "design",
           "title": "Otimização Visual dos Cards Mobile nas Páginas 'Meus *'",
           "desc": "Aprimorado o layout mobile dos cards nas telas de Meus Países, Meus Climas, Meus Estádios, Meus Parâmetros, Meus Técnicos, Meus Times e Meus Jogadores, eliminando o amontoamento de elementos com espaçamento ideal (gap: 12px), rótulos não colapsáveis, botões de ação maiores e mais acessíveis, e cabeçalho de destaque para cada registro."

@@ -4,13 +4,13 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 // include database and object files
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/arbitros.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/estadio.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/clima.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/competicao_clube.php");
-require ($_SERVER['DOCUMENT_ROOT']."/pngquant/utility.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/config/sqliteDatabase.php");
 
 // get database connection
@@ -27,45 +27,6 @@ $clima_read = new Clima($db);
 
 $error_msg = '';
 $alert_html = '';
-
-function imageImporter($file_name, $target_filename){
-  $maxDim = 180;
-  list($width, $height, $type, $attr) = getimagesize( $file_name );
-  if ( $width > $maxDim || $height > $maxDim ) {
-    $ratio = $width/$height;
-    if( $ratio > 1) {
-      $new_width = (int) $maxDim;
-      $new_height = (int) round($maxDim/$ratio);
-    } else {
-      $new_width = (int) round($maxDim*$ratio);
-      $new_height = (int) $maxDim;
-    }
-  } else {
-    $new_width = (int) $width;
-    $new_height = (int) $height;
-  }
-  if($type == "image/png"){
-    $compressed_png_content = compress_png($file_name);
-    $src = imagecreatefromstring($compressed_png_content);
-  } else if ($type == 18 || $type == "") {
-    $src = imagecreatefromwebp($file_name);
-  } else {
-    try {
-      $src = imagecreatefromstring( file_get_contents( $file_name ) );
-    } catch (Exception $e) {
-      $src = imagecreatefromwebp($file_name);
-    }
-  }
-  $dst = imagecreatetruecolor( $new_width, $new_height );
-  $background = imagecolorallocate($dst , 0, 0, 0);
-  imagecolortransparent($dst, $background);
-  imagealphablending($dst, false);
-  imagesavealpha($dst, true);
-  imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
-  imagedestroy( $src );
-  imagewebp($dst, $target_filename);
-  imagedestroy( $dst );
-}
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
@@ -109,33 +70,25 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
                 }
             }
             
-            if(isset($_FILES['logo']) && !empty($_FILES['logo']['name'])){
+            if(isset($_FILES['logo']) && !empty($_FILES['logo']['tmp_name']) && (file_exists($_FILES['logo']['tmp_name']) || is_uploaded_file($_FILES['logo']['tmp_name']))){
                 $fileName = $_FILES['logo']['name'];
                 $fileExplode = explode(".",$fileName);
-                $fileName = $fileExplode[0] . mt_rand(1,10000).".webp";
+                $fileBase = preg_replace("/[^a-zA-Z0-9]/", "", $fileExplode[0]) ?: "competicao";
+                $fileName = strtolower($fileBase) . mt_rand(1,10000).".webp";
                 $fileSize = $_FILES['logo']['size'];
                 $filePath = $_FILES['logo']['tmp_name'];
-                $fileType = $_FILES['logo']['type'];
-                $fileExt = strtolower( end($fileExplode));
-                $correct_extensions = array("image/png","image/jpg","image/jpeg", "image/webp");
                 $upload_dir = "/images/competicoes/";
 
-                if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 2000000){
+                if($fileSize <= 5000000){
                     $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-                    imageImporter($filePath, $upload_path);
-                    $localizacao_foto = $_SESSION['user_id'] ."-" .$fileName;
-                    $competicao->logo = $localizacao_foto;
+                    if(processAndSaveWebPImage($filePath, $upload_path, 300, 90)){
+                        $localizacao_foto = $_SESSION['user_id'] ."-" .$fileName;
+                        $competicao->logo = $localizacao_foto;
+                    } else {
+                        $error_msg .= "Não foi possível processar o logo da competição em WebP.";
+                    }
                 } else {
-                    $error_msg .= "Não foi possível inserir o logo. ";
-                    if($fileSize > 2000000){
-                        $error_msg .= "Arquivo deve ser menor que 2Mb.";
-                    }
-                    if($filePath == ''){
-                        $error_msg .= "Falha no nome do arquivo.";
-                    }
-                    if(in_array($fileType,$correct_extensions) == false){
-                        $error_msg .= "Extensão não é permitida.";
-                    }
+                    $error_msg .= "Arquivo de imagem deve ser menor que 5MB.";
                 }
             } 
 
