@@ -251,6 +251,14 @@ while ($row = $time_stmt->fetch(PDO::FETCH_ASSOC)){
     }
 }
 
+// ----------------------------------------------------
+// Buscar as últimas 3 partidas e a próxima partida do time (método unificado com sigilo temporal)
+// ----------------------------------------------------
+include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogos_clube.php");
+$jogoObj = new Jogo($db);
+$ultimas_partidas = $jogoObj->buscarUltimosJogosTime($idTime, 3);
+$proxima_partida = $jogoObj->buscarProximoJogoTime($idTime);
+
 ?>
 
 <div id="magazine-container">
@@ -390,6 +398,127 @@ while ($row = $time_stmt->fetch(PDO::FETCH_ASSOC)){
         </div>
     </section>
 
+    <!-- Sessão Partidas Recentes & Próximo Confronto -->
+    <section class="magazine-recent-matches-section">
+        <?php if(!empty($proxima_partida)): 
+            $isHomeProx = ($proxima_partida['timeA_id'] == $idTime);
+            $dataFormatadaProx = !empty($proxima_partida['data_jogo']) ? date('d/m/Y H:i', strtotime($proxima_partida['data_jogo'])) : '-';
+        ?>
+            <div class="next-match-highlight-card">
+                <div class="next-match-stripe">
+                    <span class="material-symbols-outlined">schedule</span>
+                    <span>PRÓXIMA PARTIDA</span>
+                </div>
+                <div class="next-match-content">
+                    <div class="next-match-meta">
+                        <span class="next-match-comp"><?php echo htmlspecialchars($proxima_partida['competicao_nome']); ?></span>
+                        <span class="next-match-date">📅 <?php echo $dataFormatadaProx; ?></span>
+                        <?php if(!empty($proxima_partida['fase_nome'])): ?>
+                            <span class="next-match-phase">🏆 <?php echo htmlspecialchars($proxima_partida['fase_nome']); ?><?php echo !empty($proxima_partida['grupo']) ? " (Grupo " . $proxima_partida['grupo'] . ")" : ""; ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="next-match-duel">
+                        <div class="next-team <?php echo $isHomeProx ? 'is-current' : ''; ?>">
+                            <img src="/images/escudos/<?php echo $proxima_partida['timeA_escudo']; ?>" alt="<?php echo htmlspecialchars($proxima_partida['timeA_nome']); ?>">
+                            <span><?php echo htmlspecialchars(abreviarNomeClube($proxima_partida['timeA_nome'])); ?></span>
+                        </div>
+                        <div class="next-versus-tag">VS</div>
+                        <div class="next-team <?php echo !$isHomeProx ? 'is-current' : ''; ?>">
+                            <img src="/images/escudos/<?php echo $proxima_partida['timeB_escudo']; ?>" alt="<?php echo htmlspecialchars($proxima_partida['timeB_nome']); ?>">
+                            <span><?php echo htmlspecialchars(abreviarNomeClube($proxima_partida['timeB_nome'])); ?></span>
+                        </div>
+                    </div>
+                    <?php if(!empty($proxima_partida['estadio_nome'])): ?>
+                        <div class="next-match-stadium">
+                            <span class="material-symbols-outlined">stadium</span>
+                            <span><?php echo htmlspecialchars($proxima_partida['estadio_nome']); ?></span>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <div class="section-title-editorial" style="<?php echo !empty($proxima_partida) ? 'margin-top: 25px;' : ''; ?>">
+            <h2>ÚLTIMAS PARTIDAS</h2>
+            <div class="line-deco"></div>
+        </div>
+        <?php if(!empty($ultimas_partidas)): ?>
+            <div class="recent-matches-grid">
+                <?php foreach($ultimas_partidas as $partida): 
+                    $isHome = ($partida['timeA_id'] == $idTime);
+                    $golsPro = $isHome ? $partida['timeA_gols'] : $partida['timeB_gols'];
+                    $golsContra = $isHome ? $partida['timeB_gols'] : $partida['timeA_gols'];
+                    
+                    $resultado_classe = 'empate';
+                    $resultado_rotulo = 'E';
+                    if ($golsPro !== null && $golsContra !== null) {
+                        if ($golsPro > $golsContra) {
+                            $resultado_classe = 'vitoria';
+                            $resultado_rotulo = 'V';
+                        } elseif ($golsPro < $golsContra) {
+                            $resultado_classe = 'derrota';
+                            $resultado_rotulo = 'D';
+                        }
+                    }
+                    
+                    $nomeAdv = $isHome ? $partida['timeB_nome'] : $partida['timeA_nome'];
+                    $escudoAdv = $isHome ? $partida['timeB_escudo'] : $partida['timeA_escudo'];
+                    $dataFormatada = !empty($partida['data_jogo']) ? date('d/m/Y', strtotime($partida['data_jogo'])) : '-';
+                ?>
+                    <div class="recent-match-card result-<?php echo $resultado_classe; ?>">
+                        <div class="match-meta-header">
+                            <span class="match-comp-name" title="<?php echo htmlspecialchars($partida['competicao_nome']); ?>">
+                                <?php echo htmlspecialchars($partida['competicao_nome']); ?>
+                            </span>
+                            <span class="match-badge-outcome badge-<?php echo $resultado_classe; ?>">
+                                <?php echo $resultado_rotulo; ?>
+                            </span>
+                        </div>
+                        <div class="match-card-body">
+                            <!-- Time A (Mandante) -->
+                            <div class="match-team <?php echo $isHome ? 'is-current-team' : ''; ?>">
+                                <img src="/images/escudos/<?php echo $partida['timeA_escudo']; ?>" alt="<?php echo htmlspecialchars($partida['timeA_nome']); ?>" class="match-team-crest">
+                                <span class="match-team-name"><?php echo htmlspecialchars(abreviarNomeClube($partida['timeA_nome'])); ?></span>
+                            </div>
+                            
+                            <!-- Placar Central -->
+                            <div class="match-score-box">
+                                <span class="match-score"><?php echo $partida['timeA_gols'] ?? 0; ?></span>
+                                <span class="match-score-divider">x</span>
+                                <span class="match-score"><?php echo $partida['timeB_gols'] ?? 0; ?></span>
+                                <?php if(($partida['timeA_penaltis'] !== null && $partida['timeA_penaltis'] !== '') || ($partida['timeB_penaltis'] !== null && $partida['timeB_penaltis'] !== '')): ?>
+                                    <div class="match-penalties-score">
+                                        (Pên: <?php echo $partida['timeA_penaltis'] ?? 0; ?> - <?php echo $partida['timeB_penaltis'] ?? 0; ?>)
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- Time B (Visitante) -->
+                            <div class="match-team <?php echo !$isHome ? 'is-current-team' : ''; ?>">
+                                <img src="/images/escudos/<?php echo $partida['timeB_escudo']; ?>" alt="<?php echo htmlspecialchars($partida['timeB_nome']); ?>" class="match-team-crest">
+                                <span class="match-team-name"><?php echo htmlspecialchars(abreviarNomeClube($partida['timeB_nome'])); ?></span>
+                            </div>
+                        </div>
+                        <div class="match-card-footer">
+                            <span class="match-date">
+                                <span class="material-symbols-outlined icon-date">calendar_today</span>
+                                <?php echo $dataFormatada; ?>
+                            </span>
+                            <span class="match-origin-badge">
+                                <?php echo (!empty($partida['simulador_interno']) || (isset($partida['origem']) && $partida['origem'] === 'competicao_jogos')) ? 'Competição' : 'Liga'; ?>
+                            </span>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <div class="recent-matches-empty">
+                <span class="material-symbols-outlined empty-icon">sports_soccer</span>
+                <p>Nenhuma partida recente registrada para esta equipe no portal.</p>
+            </div>
+        <?php endif; ?>
+    </section>
+
     <!-- Elenco Titular -->
     <section class="magazine-squad-section">
         <div class="section-title-editorial">
@@ -430,7 +559,7 @@ while ($row = $time_stmt->fetch(PDO::FETCH_ASSOC)){
                     $nomeAbreviado = $ficha['nome'];
                 }
             ?>
-                <div class="player-sticker-card">
+                <a href="/ligas/playerstatus.php?player=<?php echo $ficha['idJogador']; ?>" class="player-sticker-card" style="text-decoration: none; color: inherit;">
                     <div class="sticker-header" style="background: <?php echo $color1; ?>; color: <?php echo $color2; ?>">
                         <span class="sticker-pos"><?php echo mb_strtoupper($posicao); ?></span>
                         <img class="sticker-flag" src="/images/bandeiras/<?php echo $ficha['nacionalidade']; ?>" alt="Nacionalidade">
@@ -499,7 +628,7 @@ while ($row = $time_stmt->fetch(PDO::FETCH_ASSOC)){
                             </div>
                         </div>
                     </div>
-                </div>
+                </a>
             <?php endforeach; ?>
         </div>
     </section>
@@ -561,9 +690,9 @@ while ($row = $time_stmt->fetch(PDO::FETCH_ASSOC)){
                         }
                         $pos = explode("-", $ficha['stringPosicoes'])[0];
                     ?>
-                        <span class="reserve-item-tag">
+                        <a href="/ligas/playerstatus.php?player=<?php echo $ficha['idJogador']; ?>" class="reserve-item-tag" style="text-decoration: none; color: inherit;">
                             <strong><?php echo $nomeAbreviado; ?></strong> (<?php echo $pos; ?>)
-                        </span>
+                        </a>
                     <?php endforeach; ?>
                 </div>
             </div>
@@ -686,7 +815,7 @@ $(document).ready(function(){
                     $("#toolbar-card-container").toggle();
                 }, "image/png");
             }).catch(function (error) {
-                console.error("Oops, html2canvas failed!", error);
+                // console.error("Oops, html2canvas failed!", error);
                 alert("Erro ao capturar a imagem da revista. Detalhe: " + error);
                 $("#top-bar").children().toggle();
                 $("#bottom-bar").children().toggle();

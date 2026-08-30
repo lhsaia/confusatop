@@ -140,8 +140,8 @@ var endDate = $("#input_fim").val();
 $('#loading').show();  // show loading indicator
 
 // console.log(transactionType);
-console.log(startDate);
-console.log(endDate);
+// console.log(startDate);
+// console.log(endDate);
 
 $.ajax({
     url:"/finance/filter_financial_records.php",

@@ -126,14 +126,14 @@ if($status_time > 0){
 }
 
 //outras informações para infoblock
-$mediaIdade = number_format($info['mediaIdade'] ?? 0, 1);
+$mediaIdade = number_format((float)($info['mediaIdade'] ?? 0), 1);
 $estrangeiros = $info['estrangeiros'] ?? 0;
 $jogadores_selecao = $info['emSelecao'] ?? 0;
-$valor_total_clube = number_format(($info['valorTotal'] ?? 0)/1000000,1) . "M";
+$valor_total_clube = number_format(((float)($info['valorTotal'] ?? 0))/1000000, 1) . "M";
 $recorde_transferencia = $time->balancoTransferencias($idTime);
-$recorde_transferencia = number_format($recorde_transferencia/1000000,1) . "M";
-$nivel_medio = number_format($info['mediaNivel'] ?? 0, 1);
-$nivel_medio_onze = number_format($info['mediaNivelOnze'] ?? 0,1);
+$recorde_transferencia = number_format(((float)($recorde_transferencia ?? 0))/1000000, 1) . "M";
+$nivel_medio = number_format((float)($info['mediaNivel'] ?? 0), 1);
+$nivel_medio_onze = number_format((float)($info['mediaNivelOnze'] ?? 0), 1);
 
 
 if($liga_time != ''){
@@ -610,7 +610,7 @@ $(document).ready(function(){
 	?>
 ];
 
-console.log(soccerfieldData);
+// console.log(soccerfieldData);
 
 $("#soccerfield").soccerfield(soccerfieldData,{
   field: {

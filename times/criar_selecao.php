@@ -25,35 +25,29 @@ $tecnico = new Tecnico($db);
 $codigoPais = $_GET['idPais'];
 $donoLogado = $pais->checarDono($codigoPais, $_SESSION['user_id']);
 
-$page_title = "Criar Seleção";
-$css_filename = "home_redesign";
-$css_login = 'login';
-$aux_css = 'criar_time_redesign';
-$css_versao = date('h:i:s');
-include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+if (!function_exists('hexToRgb')) {
+    function hexToRgb($hex){
+        list($r, $g, $b) = sscanf($hex, "#%02x%02x%02x");
+        return str_pad($r, 3, "0", STR_PAD_LEFT) . str_pad($g, 3, "0", STR_PAD_LEFT) . str_pad($b, 3, "0", STR_PAD_LEFT);
+    }
+}
 
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && $donoLogado == true){
-?>
-
-<div class="propostas-container">
-<div class="propostas-card">
-<h2 class="propostas-title">➕ Criar Seleção</h2>
-<div id='errorbox'></div>
-
-
-    $error_msg = '';
-
+$feedback_html = '';
+if(isset($_SESSION['flash_msg'])){
+    $feedback_html = $_SESSION['flash_msg'];
+    unset($_SESSION['flash_msg']);
+}
 
 // se jogador foi submetido
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
-if(isset($_POST['categoria']) && isset($_POST['sigla']) && $_POST['pais'] != 0){
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && $donoLogado == true){
+if(isset($_POST['categoria']) && isset($_POST['sigla']) && !empty($_POST['sigla']) && $_POST['pais'] != 0){
 
+    $error_msg = '';
     $codigoPais = $_POST['pais'];
     $stmtPais = $pais->readInfo($codigoPais);
     $resultPais = $stmtPais->fetch(PDO::FETCH_ASSOC);
     $nomePais = $resultPais['nome'];
-
-
 
     // atributos basicos dos jogadores
     $time->nome = $nomePais;
@@ -62,10 +56,11 @@ if(isset($_POST['categoria']) && isset($_POST['sigla']) && $_POST['pais'] != 0){
     $time->status = $_POST['categoria'];
 
     //cores
-
-    function hexToRgb($hex){
-        list($r, $g, $b) = sscanf($hex, "#%02x%02x%02x");
-        return str_pad($r, 3, "0", STR_PAD_LEFT) . str_pad($g, 3, "0", STR_PAD_LEFT) . str_pad($b, 3, "0", STR_PAD_LEFT);
+    if (!function_exists('hexToRgb')) {
+        function hexToRgb($hex){
+            list($r, $g, $b) = sscanf($hex, "#%02x%02x%02x");
+            return str_pad($r, 3, "0", STR_PAD_LEFT) . str_pad($g, 3, "0", STR_PAD_LEFT) . str_pad($b, 3, "0", STR_PAD_LEFT);
+        }
     }
 
     $time->uniforme1cor1 = hexToRgb($_POST['cor1uni1']);
@@ -93,157 +88,138 @@ if(isset($_POST['categoria']) && isset($_POST['sigla']) && $_POST['pais'] != 0){
         $time->nome = $time->nome . " (F)";
     }
 
-    //recebimento arquivos
-    $new_logo_path = null;
+    $correct_extensions = array("png", "jpg", "jpeg", "webp");
 
-    if(file_exists($_FILES['escudo']['tmp_name']) || is_uploaded_file($_FILES['escudo']['tmp_name'])){
+    // Escudo
+    if(!empty($_FILES['escudo']['name']) && isset($_FILES['escudo']['tmp_name']) && is_uploaded_file($_FILES['escudo']['tmp_name'])){
         $fileName = $_FILES['escudo']['name'];
         $fileSize = $_FILES['escudo']['size'];
         $filePath = $_FILES['escudo']['tmp_name'];
-        $fileType = $_FILES['escudo']['type'];
-        $tempVar = explode('.',$fileName);
-        $fileExt = strtolower( end($tempVar));
-        $correct_extensions = array("image/png","image/jpg","image/jpeg");
+        $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
         $upload_dir = "/images/escudos/";
 
-        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 100000){
-
-          $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-          $result = move_uploaded_file($filePath, $upload_path);
-              if (!$result) {
-                  $error_msg .= "Não foi possível inserir o escudo, erro na inserção.";
-                  $time->escudo = $time->escudoPadrao();
-              } else {
-                  $time->escudo = $_SESSION['user_id'] ."-" .$fileName;
-              }
-
+        if(in_array($fileExt, $correct_extensions) && $fileSize <= 3000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
+            if (file_exists($upload_path)) {
+                @unlink($upload_path);
+            }
+            $result = move_uploaded_file($filePath, $upload_path);
+            if (!$result) {
+                $error_msg .= " Não foi possível inserir o escudo.";
+                $time->escudo = $time->escudoPadrao();
+            } else {
+                $time->escudo = $_SESSION['user_id'] . "-" . $fileName;
+            }
         } else {
             $time->escudo = $time->escudoPadrao();
-            $error_msg .= "Não foi possível inserir o escudo. ";
-            if($fileSize > 100000){
-                $error_msg .= "Arquivo deve ser menor que 100kb.";
-            }
-            if($filePath == ''){
-                $error_msg .= "Falha no nome do arquivo.";
-            }
-            if(in_array($fileType,$correct_extensions) == false){
-                $error_msg .= "Extensão ".$fileExt." não é permitida.";
+            if($fileSize > 3000000){
+                $error_msg .= " Arquivo do escudo deve ser menor que 3MB.";
+            } else {
+                $error_msg .= " Extensão do escudo (." . $fileExt . ") não permitida.";
             }
         }
     } else {
         $time->escudo = $time->escudoPadrao();
     }
 
-    if(file_exists($_FILES['uni1']['tmp_name']) || is_uploaded_file($_FILES['uni1']['tmp_name'])){
+    // Uniforme 1
+    if(!empty($_FILES['uni1']['name']) && isset($_FILES['uni1']['tmp_name']) && is_uploaded_file($_FILES['uni1']['tmp_name'])){
         $fileName = $_FILES['uni1']['name'];
         $fileSize = $_FILES['uni1']['size'];
         $filePath = $_FILES['uni1']['tmp_name'];
-        $fileType = $_FILES['uni1']['type'];
-        $tempVar = explode('.',$fileName);
-        $fileExt = strtolower( end($tempVar));
-        $correct_extensions = array("image/png","image/jpg","image/jpeg");
+        $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
         $upload_dir = "/images/uniformes/";
 
-        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 100000){
-
-          $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-          $result = move_uploaded_file($filePath, $upload_path);
-              if (!$result) {
-                  $error_msg .= "Não foi possível inserir o uniforme, erro na inserção.";
-                  $time->uniforme1 = $time->uniforme1Padrao();
-              } else {
-                  $time->uniforme1 = $_SESSION['user_id'] ."-" .$fileName;
-              }
-
+        if(in_array($fileExt, $correct_extensions) && $fileSize <= 3000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
+            if (file_exists($upload_path)) {
+                @unlink($upload_path);
+            }
+            $result = move_uploaded_file($filePath, $upload_path);
+            if (!$result) {
+                $error_msg .= " Não foi possível inserir o uniforme 1.";
+                $time->uniforme1 = $time->uniforme1Padrao();
+            } else {
+                $time->uniforme1 = $_SESSION['user_id'] . "-" . $fileName;
+            }
         } else {
             $time->uniforme1 = $time->uniforme1Padrao();
-            $error_msg .= "Não foi possível inserir o uniforme 1. ";
-            if($fileSize > 100000){
-                $error_msg .= "Arquivo deve ser menor que 100kb.";
-            }
-            if($filePath == ''){
-                $error_msg .= "Falha no nome do arquivo.";
-            }
-            if(in_array($fileType,$correct_extensions) == false){
-                $error_msg .= "Extensão ".$fileExt." não é permitida.";
+            if($fileSize > 3000000){
+                $error_msg .= " Arquivo do uniforme 1 deve ser menor que 3MB.";
+            } else {
+                $error_msg .= " Extensão do uniforme 1 (." . $fileExt . ") não permitida.";
             }
         }
     } else {
         $time->uniforme1 = $time->uniforme1Padrao();
     }
 
-    if(file_exists($_FILES['uni2']['tmp_name']) || is_uploaded_file($_FILES['uni2']['tmp_name'])){
+    // Uniforme 2
+    if(!empty($_FILES['uni2']['name']) && isset($_FILES['uni2']['tmp_name']) && is_uploaded_file($_FILES['uni2']['tmp_name'])){
         $fileName = $_FILES['uni2']['name'];
         $fileSize = $_FILES['uni2']['size'];
         $filePath = $_FILES['uni2']['tmp_name'];
-        $fileType = $_FILES['uni2']['type'];
-        $tempVar = explode('.',$fileName);
-        $fileExt = strtolower( end($tempVar));
-        $correct_extensions = array("image/png","image/jpg","image/jpeg");
+        $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
         $upload_dir = "/images/uniformes/";
 
-        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 100000){
-
-          $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-          $result = move_uploaded_file($filePath, $upload_path);
-              if (!$result) {
-                  $error_msg .= "Não foi possível inserir o uniforme, erro na inserção.";
-                  $time->uniforme2 = $time->uniforme2Padrao();
-              } else {
-                  $time->uniforme2 = $_SESSION['user_id'] ."-" .$fileName;
-              }
-
-
+        if(in_array($fileExt, $correct_extensions) && $fileSize <= 3000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
+            if (file_exists($upload_path)) {
+                @unlink($upload_path);
+            }
+            $result = move_uploaded_file($filePath, $upload_path);
+            if (!$result) {
+                $error_msg .= " Não foi possível inserir o uniforme 2.";
+                $time->uniforme2 = $time->uniforme2Padrao();
+            } else {
+                $time->uniforme2 = $_SESSION['user_id'] . "-" . $fileName;
+            }
         } else {
-          $time->uniforme2 = $time->uniforme2Padrao();
-            $error_msg .= "Não foi possível inserir o uniforme 2. ";
-            if($fileSize > 100000){
-                $error_msg .= "Arquivo deve ser menor que 100kb.";
-            }
-            if($filePath == ''){
-                $error_msg .= "Falha no nome do arquivo.";
-            }
-            if(in_array($fileType,$correct_extensions) == false){
-                $error_msg .= "Extensão ".$fileExt." não é permitida.";
+            $time->uniforme2 = $time->uniforme2Padrao();
+            if($fileSize > 3000000){
+                $error_msg .= " Arquivo do uniforme 2 deve ser menor que 3MB.";
+            } else {
+                $error_msg .= " Extensão do uniforme 2 (." . $fileExt . ") não permitida.";
             }
         }
     } else {
         $time->uniforme2 = $time->uniforme2Padrao();
     }
 
-
-    //echo $error_msg;
-
-
     //create the product
-   if($time->create()){
-
-    echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Seleção inserida com sucesso!</div>";
-
+    if($time->create()){
+        $_SESSION['flash_msg'] = "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Seleção inserida com sucesso!" . $error_msg . "</div>";
+        header("Location: " . $_SERVER['REQUEST_URI']);
+        exit;
     } else {
-     echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Houve erro na inserção da seleção!</div>";
+        $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve erro na inserção da seleção!" . $error_msg . "</div>";
+        header("Location: " . $_SERVER['REQUEST_URI']);
+        exit;
     }
 
 }  else {
+    $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve um erro ao inserir a seleção, campos em branco!</div>";
+    header("Location: " . $_SERVER['REQUEST_URI']);
+    exit;
+}
+}
+}
 
-    echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve um erro ao inserir o time, campos em branco!</div>";
-}
-}
+$page_title = "Criar Seleção";
+$css_filename = "home_redesign";
+$css_login = 'login';
+$aux_css = 'criar_time_redesign';
+$css_versao = date('h:i:s');
+include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && $donoLogado == true){
 ?>
 
-<script type="application/javascript">
-var close = document.getElementsByClassName("closebtn");
-var i;
-
-for (i = 0; i < close.length; i++) {
-    close[i].onclick = function(){
-        var div = this.parentElement;
-        div.style.opacity = "0";
-        setTimeout(function(){ div.style.display = "none"; }, 600);
-    }
-}
-</script>
-
+<div class="propostas-container">
+<div class="propostas-card">
+<h2 class="propostas-title">➕ Criar Seleção</h2>
+<?php echo $feedback_html; ?>
+<div id='errorbox'></div>
 
 <div id='inscricao'>
 <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['REQUEST_URI']; ?>'>
@@ -342,9 +318,13 @@ for (i = 0; i < close.length; i++) {
     ?>
 
     <input type='hidden' name='pais' value='<?php echo $_GET['idPais'] ?>'>
-    <div style="display: flex; gap: 10px; margin-top: 24px;">
-        <button type="submit" name="criar" class="btn-submit" value="0">Inserir</button>
-        <button type="reset" name="reset" class="btn-reset">Limpar</button>
+    <div class="form-actions">
+        <button type="submit" name="criar" id="salvar" class="btn" value="0">
+            <span class="material-symbols-outlined">add_circle</span> Inserir Seleção
+        </button>
+        <button type="reset" name="reset" class="btn">
+            <span class="material-symbols-outlined">restart_alt</span> Limpar
+        </button>
     </div>
 </form>
 </div>

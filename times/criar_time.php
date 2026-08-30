@@ -27,23 +27,25 @@ $liga = new Liga($db);
 $formacao = new Formacao($db);
 $tecnico = new Tecnico($db);
 
-$page_title = "Criar Time";
-$css_filename = "home_redesign";
-$css_login = 'login';
-$aux_css = 'criar_time_redesign';
-$css_versao = date('h:i:s');
-include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+if (!function_exists('hexToRgb')) {
+    function hexToRgb($hex){
+        list($r, $g, $b) = sscanf($hex, "#%02x%02x%02x");
+        return str_pad($r, 3, "0", STR_PAD_LEFT) . str_pad($g, 3, "0", STR_PAD_LEFT) . str_pad($b, 3, "0", STR_PAD_LEFT);
+    }
+}
 
+$feedback_html = '';
+if(isset($_SESSION['flash_msg'])){
+    $feedback_html = $_SESSION['flash_msg'];
+    unset($_SESSION['flash_msg']);
+}
 
-
+// se formulário foi submetido
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
+if(isset($_POST['nome']) && isset($_POST['sigla']) && $_POST['pais'] != 0){
 
     $error_msg = '';
-
-
-// se jogador foi submetido
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
-if(isset($_POST['nome']) && isset($_POST['sigla']) && $_POST['pais'] != 0){
 
 
     // atributos basicos dos jogadores
@@ -361,44 +363,49 @@ if($time->alterarCapitaoCobrador($capitao[0]['id'], $cobradores[0]['id'],$cobrad
 
           // 5. Alerta das mensagens (sobre criação do time e dos jogadores)
           if($error_msg == ''){
-            echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Time inserido com sucesso!</div>";
+            $_SESSION['flash_msg'] = "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Time inserido com sucesso!</div>";
           } else {
-            echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Time inserido com sucesso, mas com os seguintes erros: </br> {$error_msg}</div>";
+            $_SESSION['flash_msg'] = "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Time inserido com sucesso, mas com os seguintes avisos: </br> {$error_msg}</div>";
           }
+          header("Location: " . $_SERVER['PHP_SELF']);
+          exit;
 
       } else {
-        echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Time inserido com sucesso!</div>";
+        $_SESSION['flash_msg'] = "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Time inserido com sucesso!</div>";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
       }
    }
 
     // if unable to create the product, tell the user
    else{
-       echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve erros ao inserir o time! ". $error_msg. "</div>";
+       $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve erros ao inserir o time! ". $error_msg. "</div>";
+       header("Location: " . $_SERVER['PHP_SELF']);
+       exit;
    }
 }  else {
 
-    echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve um erro ao inserir o time, campos em branco!</div>";
+    $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Houve um erro ao inserir o time, campos em branco!</div>";
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit;
 }
 }
+}
+
+$page_title = "Criar Time";
+$css_filename = "home_redesign";
+$css_login = 'login';
+$aux_css = 'criar_time_redesign';
+$css_versao = date('h:i:s');
+include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 ?>
-
-<script type="application/javascript">
-var close = document.getElementsByClassName("closebtn");
-var i;
-
-for (i = 0; i < close.length; i++) {
-    close[i].onclick = function(){
-        var div = this.parentElement;
-        div.style.opacity = "0";
-        setTimeout(function(){ div.style.display = "none"; }, 600);
-    }
-}
-</script>
-
 
 <div class="propostas-container">
 <div class="propostas-card">
 <h2 class="propostas-title">➕ Criar Time</h2>
+<?php echo $feedback_html; ?>
 <div id='errorbox'></div>
 
 <div id='inscricao'>
