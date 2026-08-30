@@ -13,6 +13,16 @@
       "date": "30/08/2026",
       "items": [
         {
+          "badge": "design",
+          "title": "Otimização Visual dos Cards Mobile nas Páginas 'Meus *'",
+          "desc": "Aprimorado o layout mobile dos cards nas telas de Meus Países, Meus Climas, Meus Estádios, Meus Parâmetros, Meus Técnicos, Meus Times e Meus Jogadores, eliminando o amontoamento de elementos com espaçamento ideal (gap: 12px), rótulos não colapsáveis, botões de ação maiores e mais acessíveis, e cabeçalho de destaque para cada registro."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Identificação de Competições no Perfil do Clube",
+          "desc": "Corrigida a consulta de últimas partidas e próximo confronto na página do clube, isolando as tabelas de competições do simulador interno (competicao_lista) das tabelas legadas (liga e campeonatos_clube) para exibir o nome correto do campeonato."
+        },
+        {
           "badge": "new",
           "title": "Avanço Automático de Fase e Pareamento no Mata-Mata",
           "desc": "Quando todos os confrontos de uma fase do mata-mata forem simulados e concluídos, o sistema automaticamente classifica os vencedores (e os times com BYE), gerando as partidas da fase seguinte (ex: 32-avos ➔ 16-avos ➔ Oitavas ➔ Quartas ➔ Semifinal ➔ Final)."

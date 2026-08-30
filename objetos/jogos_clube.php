@@ -870,7 +870,7 @@ public function getMatchId(){
             SELECT 
                 j.id as match_id,
                 j.data as data_jogo,
-                COALESCE(li.nome, cc.nome, cl.nome, 'Amistoso / Competição') as competicao_nome,
+                COALESCE(cl.nome, li.nome, cc.nome, 'Amistoso / Competição') as competicao_nome,
                 j.timeA_id,
                 COALESCE(cA.Nome, j.timeA_nome) as timeA_nome,
                 COALESCE(cA.Escudo, '0.png') as timeA_escudo,
@@ -881,13 +881,15 @@ public function getMatchId(){
                 j.timeB_gols,
                 j.timeA_penaltis,
                 j.timeB_penaltis,
-                j.simulador_interno
+                j.simulador_interno,
+                j.competicao_id,
+                j.competicao_tipo
             FROM jogos_clube j
             LEFT JOIN clube cA ON j.timeA_id = cA.ID
             LEFT JOIN clube cB ON j.timeB_id = cB.ID
-            LEFT JOIN liga li ON j.competicao_id = li.id AND j.competicao_tipo = 0
-            LEFT JOIN campeonatos_clube cc ON j.competicao_id = cc.id AND j.competicao_tipo = 1
             LEFT JOIN competicao_lista cl ON j.competicao_id = cl.id AND j.simulador_interno = 1
+            LEFT JOIN liga li ON j.competicao_id = li.id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 0
+            LEFT JOIN campeonatos_clube cc ON j.competicao_id = cc.id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 1
             WHERE (j.timeA_id = :id1 OR j.timeB_id = :id2)
               AND j.status = 1
               AND (
@@ -920,7 +922,7 @@ public function getMatchId(){
             SELECT 
                 j.id as match_id,
                 j.data as data_jogo,
-                COALESCE(li.nome, cc.nome, cl.nome, 'Amistoso / Competição') as competicao_nome,
+                COALESCE(cl.nome, li.nome, cc.nome, 'Amistoso / Competição') as competicao_nome,
                 j.timeA_id,
                 COALESCE(cA.Nome, j.timeA_nome) as timeA_nome,
                 COALESCE(cA.Escudo, '0.png') as timeA_escudo,
@@ -932,15 +934,17 @@ public function getMatchId(){
                 j.estadio_id,
                 e.Nome as estadio_nome,
                 f.nome as fase_nome,
-                j.simulador_interno
+                j.simulador_interno,
+                j.competicao_id,
+                j.competicao_tipo
             FROM jogos_clube j
             LEFT JOIN clube cA ON j.timeA_id = cA.ID
             LEFT JOIN clube cB ON j.timeB_id = cB.ID
             LEFT JOIN estadio e ON j.estadio_id = e.ID
             LEFT JOIN fase f ON j.fase = f.id
-            LEFT JOIN liga li ON j.competicao_id = li.id AND j.competicao_tipo = 0
-            LEFT JOIN campeonatos_clube cc ON j.competicao_id = cc.id AND j.competicao_tipo = 1
             LEFT JOIN competicao_lista cl ON j.competicao_id = cl.id AND j.simulador_interno = 1
+            LEFT JOIN liga li ON j.competicao_id = li.id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 0
+            LEFT JOIN campeonatos_clube cc ON j.competicao_id = cc.id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 1
             WHERE (j.timeA_id = :id1 OR j.timeB_id = :id2)
               AND (
                   j.status = 0

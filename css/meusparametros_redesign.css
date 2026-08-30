@@ -506,11 +506,33 @@ html body #logged-user {
   }
   .propostas-card {
     padding: 1.25rem !important;
-    border-radius: 12px !important;
+    border-radius: 14px !important;
   }
   .header-actions-container {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.75rem;
+  }
+  .btn-header-action,
+  .btn-voltar {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .opcoes-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  .opcao-item {
+    min-width: 0 !important;
+  }
+
+  .btn-salvar-opcoes {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    margin-top: 6px;
   }
 
   /* Transformação da Tabela em Cards */
@@ -537,7 +559,7 @@ html body #logged-user {
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
     border-radius: 16px !important;
     padding: 16px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03) !important;
     position: relative !important;
     gap: 0 !important;
     width: 100% !important;
@@ -553,12 +575,14 @@ html body #logged-user {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    padding: 10px 0 !important;
+    gap: 12px !important;
+    padding: 9px 0 !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
     width: 100% !important;
-    text-align: left !important;
+    text-align: right !important;
     background: transparent !important;
     box-sizing: border-box !important;
+    font-size: 0.88rem !important;
   }
 
   #tabelaPrincipal td:first-child {
@@ -566,116 +590,96 @@ html body #logged-user {
     border-bottom-left-radius: 0 !important;
     border-left: none !important;
     border-bottom: 2px solid #0284c7 !important;
-    padding-bottom: 12px !important;
+    padding-bottom: 10px !important;
     margin-bottom: 4px !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+  }
+
+  .meter {
+    height: 20px !important;
+    min-width: 65px !important;
+    max-width: 85px !important;
+    border-radius: 6px !important;
+  }
+
+  .geral-estilo {
+    height: 20px !important;
+    min-width: 100px !important;
+    max-width: 120px !important;
+    border-radius: 6px !important;
   }
 
   #tabelaPrincipal td:last-child {
     border-bottom: none !important;
+    border-top: 1px dashed rgba(0, 0, 0, 0.08) !important;
     border-top-right-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
     padding-top: 12px !important;
+    margin-top: 4px !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    justify-content: flex-end !important;
+  }
+
+  .btn-action-icon {
+    min-width: 32px !important;
+    height: 32px !important;
+    font-size: 18px !important;
+    border-radius: 8px !important;
+    margin: 2px !important;
   }
 
   /* Labels dos atributos */
-  #tabelaPrincipal td:nth-child(1)::before {
-    content: "Nome";
+  #tabelaPrincipal td::before {
+    flex-shrink: 0 !important;
     font-family: 'Montserrat', sans-serif;
-    font-size: 0.8rem;
+    font-size: 0.76rem;
     font-weight: 700;
     color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    text-align: left;
+  }
+
+  #tabelaPrincipal td:nth-child(1)::before {
+    content: "Nome";
   }
 
   #tabelaPrincipal td:nth-child(2)::before {
     content: "Gols";
-    font-family: 'Montserrat', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   #tabelaPrincipal td:nth-child(3)::before {
     content: "Faltas";
-    font-family: 'Montserrat', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   #tabelaPrincipal td:nth-child(4)::before {
     content: "Impedimentos";
-    font-family: 'Montserrat', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   #tabelaPrincipal td:nth-child(5)::before {
     content: "Cartões";
-    font-family: 'Montserrat', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   #tabelaPrincipal td:nth-child(6)::before {
     content: "Estilo";
-    font-family: 'Montserrat', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   #tabelaPrincipal td:nth-child(7)::before {
     content: "Padrão";
-    font-family: 'Montserrat', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   #tabelaPrincipal td:nth-child(8)::before {
     content: "País padrão";
-    font-family: 'Montserrat', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   #tabelaPrincipal td:nth-child(9)::before {
     content: "Bandeiras";
-    font-family: 'Montserrat', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   #tabelaPrincipal td:nth-child(10)::before {
     content: "Ações";
-    font-family: 'Montserrat', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 }
 

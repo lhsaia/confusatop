@@ -9,7 +9,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 $page_title = "Meus jogadores - ".($_SESSION['nomereal'] ?? '');
 $css_filename = "home_redesign";
 $aux_css = "home_redesign";
-$extra_css = "ligas_redesign";
+$extra_css = "meusjogadores_redesign";
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -293,7 +293,6 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 
 					tbl += "<td><span class='nivelEditavel' id='niv"+val['ID']+"'>"+val['Nivel']+"</span></td>";
 					
-					tbl += "</td>";
 					if(val['idPais'] != 0){
 						tbl += "<td class='wide'><img src='/images/bandeiras/"+val['bandeiraPais']+"' class='bandeira nomePais' id='ban"+val['ID']+"'>  <span class='nomePais' id='pai"+val['ID']+"'>"+val['siglaPais']+"</span>";
 					} else {
@@ -310,9 +309,8 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 					if(val['clubeVinculado'] != null){
 						tbl += "<td><a href='/ligas/teamstatus.php?team="+val['idClubeVinculado']+"' id='dis"+val['ID']+"'><img class='minithumb' src='/images/escudos/"+val['escudoClubeVinculado']+"'>"+val['clubeVinculado']+"</a><span class='donoClubeVinculado' hidden>"+val['donoClubeVinculado']+"</span></td>";
 					} else {
-						tbl += "<td>";
+						tbl += "<td>-</td>";
 					}
-					tbl += "</td>";
 					
 					
 					var nomeDisponibilidade = "";
