@@ -92,7 +92,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
                     <p style="margin: 3px 0 0 0; color: #cbd5e1; font-size: 13px;">Deseja encerrar o acesso temporário e retornar ao seu usuário original?</p>
                 </div>
             </div>
-            <a href="/elements/login_info.php?stop_impersonation=1" class="admin-btn admin-btn-danger" style="text-decoration: none;">
+            <a href="/admin/stop_impersonation.php" class="admin-btn admin-btn-danger" style="text-decoration: none;">
                 <span class="material-symbols-outlined">undo</span>
                 Parar Impersonação
             </a>
@@ -124,7 +124,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
                 Impersonar Usuário
             </button>
             <?php if (!empty($_SESSION['impersonated'])): ?>
-                <a href="/elements/login_info.php?stop_impersonation=1" class="admin-btn admin-btn-secondary" style="white-space: nowrap;">
+                <a href="/admin/stop_impersonation.php" class="admin-btn admin-btn-secondary" style="white-space: nowrap;">
                     <span class="material-symbols-outlined">undo</span>
                     Deixar de Impersonar
                 </a>

@@ -10,40 +10,6 @@ if(isset($_POST['logout']) && $_POST['logout']==true){
     exit;
 }
 
-// Interromper impersonação e restaurar sessão do administrador original
-if (isset($_POST['stop_impersonation']) || isset($_GET['stop_impersonation'])) {
-    if (!empty($_SESSION['impersonated']) && (!empty($_SESSION['admin_original_id']) || !empty($_SESSION['admin_original_user']))) {
-        include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
-        include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
-        $database = new Database();
-        $db = $database->getConnection();
-        $usrObj = new Usuario($db);
-
-        $adminId = !empty($_SESSION['admin_original_id']) ? (int)$_SESSION['admin_original_id'] : $usrObj->ID($_SESSION['admin_original_user']);
-        $adminInfo = $usrObj->passById($adminId);
-        
-        $stmtAdmin = $db->prepare("SELECT id, nomeusuario, nome, admin_status, avatar, emTeste FROM usuarios WHERE id = ? LIMIT 1");
-        $stmtAdmin->execute([$adminId]);
-        $rowAdmin = $stmtAdmin->fetch(PDO::FETCH_ASSOC);
-
-        if ($rowAdmin && (int)$rowAdmin['admin_status'] === 1) {
-            $_SESSION['user_id'] = (int)$rowAdmin['id'];
-            $_SESSION['username'] = $rowAdmin['nomeusuario'];
-            $_SESSION['nomereal'] = $rowAdmin['nome'];
-            $_SESSION['admin_status'] = 1;
-            $_SESSION['loggedin'] = true;
-            $_SESSION['impersonated'] = false;
-            $_SESSION['avatar'] = $rowAdmin['avatar'] ?? null;
-            $_SESSION['emTestes'] = (bool)($rowAdmin['emTeste'] ?? 0);
-            unset($_SESSION['admin_original_id'], $_SESSION['admin_original_user']);
-
-            $target_url = '/admin/index.php';
-            header("Location: " . $target_url);
-            exit;
-        }
-    }
-}
-
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
 
