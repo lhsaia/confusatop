@@ -13,9 +13,49 @@
       "date": "30/08/2026",
       "items": [
         {
+          "badge": "design",
+          "title": "Toasts Flutuantes de Validação em Lista de Times",
+          "desc": "Substituídas as mensagens estáticas de erro do topo da página em listatimes.php por toasts flutuantes modernos e fixos na viewport, permitindo que o usuário visualize avisos e validações de times sem precisar rolar até o início da tela."
+        },
+        {
+          "badge": "new",
+          "title": "Seleção de País em Massa para Vagas da Competição",
+          "desc": "Adicionada ferramenta na tela de gerenciamento de vagas (listatimes.php) que permite definir o mesmo país para todas as vagas da competição de uma só vez, agilizando a configuração de ligas e torneios."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Estrutura das Abas e Layout de Elenco e Campinho",
+          "desc": "Corrigido o aninhamento indevido de tags HTML na página do time (teamstatus.php) que ocultava o campinho tático de posicionamento, e restaurada a distribuição flexbox do elenco para exibição das tabelas de Titulares, Reservas e Suplentes perfeitamente lado a lado no desktop."
+        },
+        {
+          "badge": "design",
+          "title": "Tabelas em Cards Verticais no Mobile",
+          "desc": "Otimizada a visualização mobile das telas de gerenciamento (Meus Times, Meus Países, Meus Estádios, Meus Técnicos, Meus Climas, Meus Parâmetros e Jogadores no Exterior), transformando as tabelas densas em cards verticais responsivos e com rótulos destacados para cada atributo."
+        },
+        {
+          "badge": "design",
+          "title": "Nova Imagem do Card de Desfalques",
+          "desc": "Atualizada a imagem de capa do card 'Central de Desfalques' no Dashboard do Usuário com a arte temática do Departamento Médico (deptomedico.jpg)."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Garantia de Criação da Tabela de Suspensões no Painel do Usuário",
+          "desc": "Ajustada a ordem de execução no Dashboard do Usuário para garantir a inicialização automática da tabela competicao_suspensos antes das consultas de desfalques e jogos ativos, prevenindo erros de preparação SQL em bancos sem a tabela previamente criada."
+        },
+        {
           "badge": "bugfix",
           "title": "Bloqueio de Edição de Escalação em Jogos Simulados",
           "desc": "Ocultado o botão de escalação na Lista de Jogos (listajogos.php) para partidas com status 'Simulado' ou 'Encerrado' (status = 1), e adicionada proteção no backend (escalacao_jogo.php) para impedir a alteração tática ou substituição de atletas em jogos já processados pelo simulador."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Tratamento de Sessões Corrompidas e Compatibilidade PHP 8.1+ em Elencos",
+          "desc": "Implementada proteção contra falhas de decodificação de sessão no session_start() e adicionado tratamento seguro contra passagem de valores nulos em strip_tags() na alteração de elencos (time.php)."
+        },
+        {
+          "badge": "design",
+          "title": "Novo Layout de Estado Vazio (Empty State) para Competições",
+          "desc": "Criado um card visual elegante para quando não houver competições cadastradas ou quando a pesquisa não retornar resultados, exibindo ícones temáticos, mensagens orientativas, botão para limpar busca e atalho para criação da primeira competição."
         }
       ]
     },

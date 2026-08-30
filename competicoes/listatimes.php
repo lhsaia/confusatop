@@ -129,6 +129,37 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
 <script>
 
+function showToast(msg, type = 'error') {
+	var isError = (type === 'error' || type === 'danger');
+	var isSuccess = (type === 'success');
+	var icon = isSuccess ? 'check_circle' : (isError ? 'warning' : 'info');
+	var title = isError ? 'Aviso sobre o Time' : (isSuccess ? 'Sucesso' : 'Informação');
+	var toastClass = isError ? 'toast-error' : (isSuccess ? 'toast-success' : 'toast-info');
+	
+	var toastId = 'toast_' + Date.now();
+	var toastHtml = `
+		<div id="${toastId}" class="floating-toast ${toastClass}">
+			<span class="material-symbols-outlined" style="font-size: 1.4rem; flex-shrink: 0; margin-top: 2px;">${icon}</span>
+			<div style="flex: 1; min-width: 0;">
+				<div style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.95rem; margin-bottom: 3px;">${title}</div>
+				<div style="font-size: 0.88rem; color: #334155; word-break: break-word;">${msg}</div>
+			</div>
+			<button type="button" onclick="$('#${toastId}').removeClass('show'); setTimeout(function(){ $('#${toastId}').remove(); }, 300);" style="background: none; border: none; font-size: 1.4rem; line-height: 1; color: #94a3b8; cursor: pointer; padding: 0 0 0 6px; margin-left: auto;">&times;</button>
+		</div>
+	`;
+	
+	$('body').append(toastHtml);
+	setTimeout(function() { $('#' + toastId).addClass('show'); }, 20);
+	
+	var timeoutMs = isError ? 9000 : 4000;
+	setTimeout(function() {
+		if($('#' + toastId).length) {
+			$('#' + toastId).removeClass('show');
+			setTimeout(function() { $('#' + toastId).remove(); }, 350);
+		}
+	}, timeoutMs);
+}
+
 $( document ).ready(function(){
 
 	 $("#toolbar").html('<div id="gerar_tabela"><span class="material-symbols-outlined">grid_view</span><span>Gerar Tabela</span></div>');
@@ -441,13 +472,14 @@ $(document).on("click", "#btn_aplicar_pais_todos", function(e){
     }).done(function(res) {
         $('#loading').hide();
         if(res.success){
+            showToast("País aplicado a todas as vagas com sucesso!", "success");
             load_data();
         } else {
-            $('#errorbox').html("<div class='alert alert-danger'>Não foi possível aplicar o país em lote:</br>" + (res.errors || res.error || "Erro desconhecido") + "</div>");
+            showToast("Não foi possível aplicar o país em lote:<br>" + (res.errors || res.error || "Erro desconhecido"), 'error');
         }
     }).fail(function(xhr, status, error) {
         $('#loading').hide();
-        $('#errorbox').html("<div class='alert alert-danger'>Houve um erro não esperado ao aplicar o país em todas as vagas.<div>");
+        showToast("Houve um erro não esperado ao aplicar o país em todas as vagas.", 'error');
     });
 });
 
@@ -560,12 +592,13 @@ $(document).on("click", ".update_team", function(e){
             }).done(function(new_response) {
 				// console.log("Resposta TIPO 0:", new_response);
                 if(new_response.success){
+					showToast("País alterado com sucesso!", "success");
 					load_data();
                 } else {
-					$('#errorbox').html("<div class='alert alert-danger'>Não foi possível realizar a alteração pelos seguintes motivos:</br>"+new_response.errors+"</div>");
+					showToast("Não foi possível realizar a alteração:<br>" + new_response.errors, 'error');
                 }
 			}).fail(function(new_response) {
-                  $('#errorbox').html("<div class='alert alert-danger'>Houve um erro não esperado, por favor contacte o admin.<div>");
+                  showToast("Houve um erro não esperado, por favor contacte o admin.", 'error');
                 }).always(function(){
 							tbl_row.find('.update_team').prop("disabled", "disabled");
 						});
@@ -613,28 +646,27 @@ $(document).on("click", ".update_team", function(e){
 						// console.log("Resposta Final alterar_times_competicao:", new_response);
 						if(new_response.success){
 							
-							
-							$('#errorbox').html("");
+							showToast("Time inserido com sucesso!", "success");
 							load_data();
 							
 						} else {
 							$('#loading').hide();
-							$('#errorbox').html("<div class='alert alert-danger'>Não foi possível inserir o time pelos seguintes motivos:</br>"+new_response.errors+"</div>");
+							showToast("Não foi possível inserir o time:<br>" + new_response.errors, 'error');
 							
 						}
 					}).fail(function(new_response) {
-						  $('#errorbox').html("<div class='alert alert-danger'>Houve um erro não esperado, por favor contacte o admin.<div>");
+						  showToast("Houve um erro não esperado, por favor contacte o admin.", 'error');
 						}).always(function(){
 							tbl_row.find('.update_team').prop("disabled", "disabled");
 						});
 					
                 } else {
 					$('#loading').hide();
-					$('#errorbox').html("<div class='alert alert-danger'>Não foi possível inserir o time pelos seguintes motivos:</br>"+new_response.errors+"</div>");
+					showToast("Não foi possível inserir o time:<br>" + new_response.errors, 'error');
 					
                 }
 			}).fail(function(new_response) {
-                  $('#errorbox').html("<div class='alert alert-danger'>Houve um erro não esperado, por favor contacte o admin.<div>");
+                  showToast("Houve um erro não esperado, por favor contacte o admin.", 'error');
                 });
 			
 		}
@@ -683,14 +715,15 @@ $(document).on("click", ".update_team", function(e){
         cache: false
     }).done(function(new_response) {
         if(new_response.success){
+			showToast("Arquivo .ymt importado com sucesso!", "success");
 			load_data();
 			update_table();
 		} else {
 			$('#loading').hide();
-			$('#errorbox').html("<div class='alert alert-danger'>Não foi possível inserir o time pelos seguintes motivos:</br>"+new_response.errors+"</div>");
+			showToast("Não foi possível inserir o time:<br>" + new_response.errors, 'error');
 		}
 	}).fail(function(new_response) {
-		$('#errorbox').html("<div class='alert alert-danger'>Houve um erro não esperado, por favor contacte o admin.<div>");
+		showToast("Houve um erro não esperado, por favor contacte o admin.", 'error');
 	});
 
 	});
