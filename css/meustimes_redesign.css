@@ -582,6 +582,11 @@ input[type="number"] {
     font-size: 0.88rem !important;
   }
 
+  /* Garante que o conteúdo do td (exceto o ::before) se alinhe à direita */
+  #tabelaPrincipal td > * {
+    margin-left: auto;
+  }
+
   #tabelaPrincipal td:first-child {
     border-top-left-radius: 0 !important;
     border-bottom-left-radius: 0 !important;
@@ -596,6 +601,7 @@ input[type="number"] {
   #tabelaPrincipal td:first-child .linkNome {
     font-size: 1.05rem !important;
     font-weight: 700 !important;
+    color: #0284c7 !important;
   }
 
   .thumb {
@@ -645,6 +651,7 @@ input[type="number"] {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     text-align: left;
+    margin-right: auto;
   }
 
   #tabelaPrincipal td:nth-child(1)::before {

@@ -495,6 +495,11 @@ html body #logged-user {
     font-size: 0.85rem !important;
   }
 
+  /* Garante que o conteúdo do td (exceto o ::before) se alinhe à direita */
+  #tabelaPrincipal td > * {
+    margin-left: auto;
+  }
+
   #tabelaPrincipal td:first-child {
     border-top-left-radius: 0 !important;
     border-bottom-left-radius: 0 !important;
@@ -509,6 +514,7 @@ html body #logged-user {
   #tabelaPrincipal td:first-child .nomeClima {
     font-size: 1.05rem !important;
     font-weight: 700 !important;
+    color: #0284c7 !important;
   }
 
   #tabelaPrincipal td:last-child {
@@ -541,6 +547,7 @@ html body #logged-user {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     text-align: left;
+    margin-right: auto;
   }
 
   #tabelaPrincipal td:nth-child(1)::before {

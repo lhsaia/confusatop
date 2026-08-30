@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    CONFUSA.top - Quadro de Jogadores Redesign (Light Theme System)
    ========================================================================== */
 
@@ -553,6 +553,11 @@ html body #logged-user {
     font-size: 0.88rem !important;
   }
 
+  /* Garante que o conteúdo do td (exceto o ::before) se alinhe à direita */
+  #tabelaPrincipal td > * {
+    margin-left: auto;
+  }
+
   #tabelaPrincipal td:first-child {
     border-top-left-radius: 0 !important;
     border-bottom-left-radius: 0 !important;
@@ -560,6 +565,12 @@ html body #logged-user {
     border-bottom: 2px solid #0284c7 !important;
     padding-bottom: 10px !important;
     margin-bottom: 4px !important;
+  }
+
+  #tabelaPrincipal td:nth-child(2) .linkNome {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    color: #0284c7 !important;
   }
 
   .playerThumb {
@@ -598,6 +609,7 @@ html body #logged-user {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     text-align: left;
+    margin-right: auto;
   }
 
   #tabelaPrincipal td:nth-child(1)::before {

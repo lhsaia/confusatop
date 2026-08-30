@@ -20,7 +20,7 @@
         {
           "badge": "design",
           "title": "Otimização Visual dos Cards Mobile nas Páginas 'Meus *'",
-          "desc": "Aprimorado o layout mobile dos cards nas telas de Meus Países, Meus Climas, Meus Estádios, Meus Parâmetros, Meus Técnicos, Meus Times e Meus Jogadores, eliminando o amontoamento de elementos com espaçamento ideal (gap: 12px), rótulos não colapsáveis, botões de ação maiores e mais acessíveis, e cabeçalho de destaque para cada registro."
+          "desc": "Aprimorado o layout mobile dos cards nas telas de Meus Países, Meus Climas, Meus Estádios, Meus Parâmetros, Meus Técnicos, Meus Times, Meus Jogadores e Ligas, eliminando o amontoamento de elementos à esquerda com alinhamento chave-valor (rótulos à esquerda com respiro amplo e valores destacados alinhados à direita), títulos em destaque ciano e botões de ação ergonômicos."
         },
         {
           "badge": "bugfix",
