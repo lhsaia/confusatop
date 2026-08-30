@@ -45,14 +45,14 @@ $estadio = new Estadio($db);
 
 // query times
 $info = $liga->readInfo($idLiga);
-$nome_liga = $info['nome'];
-$logo_liga = $info['logo'];
-$pais_liga = $info['Pais'];
-$tier_liga = $info['tier'];
+$nome_liga = (string)($info['nome'] ?? '');
+$logo_liga = (string)($info['logo'] ?? '');
+$pais_liga = (string)($info['Pais'] ?? '');
+$tier_liga = (string)($info['tier'] ?? '');
 $limite_idade_liga = isset($info['limite_idade']) ? $info['limite_idade'] : null;
-$idPais = $info['idPais'];
-$idDonoPais = $info['idDonoPais'];
-$sexoLiga = $info['Sexo'];
+$idPais = (string)($info['idPais'] ?? '');
+$idDonoPais = (string)($info['idDonoPais'] ?? '');
+$sexoLiga = (string)($info['Sexo'] ?? '');
 
 // query caixa de seleção países desse dono
 $stmtPais = $liga->lerPorPais($idPais,$sexoLiga);
@@ -90,10 +90,10 @@ if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais){
 <main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
 <div class="propostas-card">
     <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
-        <img id="bandeiraGrande" src="/images/ligas/<?php echo htmlspecialchars($logo_liga); ?>" style="height: 60px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <img id="bandeiraGrande" src="/images/ligas/<?php echo htmlspecialchars((string)$logo_liga); ?>" style="height: 60px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
         <div>
-            <h2 class="propostas-title" style="margin: 0; text-align: left;"><?php echo htmlspecialchars($nome_liga); ?></h2>
-            <h3 style="margin: 4px 0 0 0; font-size: 1rem;"><a href="paisstatus.php?country=<?php echo $idPais; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars($pais_liga); ?></a> - Tier <?php echo $tier_liga; ?><?php if(!empty($limite_idade_liga)) echo " • <span style='background: rgba(2, 132, 199, 0.1); color: #0284c7; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;'>Sub-" . htmlspecialchars($limite_idade_liga) . "</span>"; ?></h3>
+            <h2 class="propostas-title" style="margin: 0; text-align: left;"><?php echo htmlspecialchars((string)$nome_liga); ?></h2>
+            <h3 style="margin: 4px 0 0 0; font-size: 1rem;"><a href="paisstatus.php?country=<?php echo $idPais; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars((string)$pais_liga); ?></a> - Tier <?php echo $tier_liga; ?><?php if(!empty($limite_idade_liga)) echo " • <span style='background: rgba(2, 132, 199, 0.1); color: #0284c7; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;'>Sub-" . htmlspecialchars((string)$limite_idade_liga) . "</span>"; ?></h3>
         </div>
     </div>
     

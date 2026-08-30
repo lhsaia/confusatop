@@ -208,7 +208,7 @@ class Liga
 
         if ($id > 0) {
             $query = "SELECT
-                    a.nome, a.tier, a.limite_idade, a.logo, p.Nome as Pais, a.Pais as idPais, a.Sexo, p.dono as idDonoPais
+                    a.nome, a.tier, a.limite_idade, a.logo, COALESCE(p.nome, p.Nome, '') as Pais, a.Pais as idPais, a.Sexo, p.dono as idDonoPais
                 FROM
                     " . $this->table_name . " a
                 LEFT JOIN

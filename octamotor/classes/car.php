@@ -146,11 +146,12 @@ class Car extends db_name implements \JsonSerializable{
 
   }
 
-  	public function jsonSerialize()
+  	#[\ReturnTypeWillChange]
+	public function jsonSerialize(): mixed
 	{
-	$vars = get_object_vars($this);
+		$vars = get_object_vars($this);
 
-	return $vars;
+		return $vars;
 	}
 
   public function getCarsList(){

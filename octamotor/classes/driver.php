@@ -610,7 +610,8 @@ class Driver extends db_name implements \JsonSerializable{
       return $this->start_skills;
     }
 
-	public function jsonSerialize()
+	#[\ReturnTypeWillChange]
+	public function jsonSerialize(): mixed
 	{
 		$vars = get_object_vars($this);
 

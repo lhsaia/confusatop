@@ -13,6 +13,16 @@
       "date": "30/08/2026",
       "items": [
         {
+          "badge": "bugfix",
+          "title": "Compatibilidade de Retorno JsonSerializable no Octamotor",
+          "desc": "Adicionado tipo de retorno mixed e atributo #[\\ReturnTypeWillChange] aos métodos jsonSerialize() das classes Driver e Car, eliminando avisos de depreciação do PHP 8.1+."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Tratamento de Deprecation no Status da Liga",
+          "desc": "Adicionada tipagem segura e conversão para string em variáveis passadas ao htmlspecialchars no cabeçalho de leaguestatus.php, prevenindo avisos de depreciação com valores nulos."
+        },
+        {
           "badge": "new",
           "title": "Módulo de Personificação de Usuários (Impersonate) no Painel Admin",
           "desc": "Adicionado seletor no Painel do Administrador (/admin/index.php) que permite personificar instantaneamente qualquer usuário cadastrado com um clique, além de botões e links diretos no menu para encerrar a personificação e retornar à conta de administrador sem necessidade de refazer login."
