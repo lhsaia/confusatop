@@ -1,4 +1,4 @@
-﻿@import url("meuspaises_redesign.css");
+@import url("meuspaises_redesign.css");
 
 /* Adaptations for geral.php */
 .genderSign {
@@ -140,6 +140,16 @@
   }
   
   #tabelaPrincipal td:nth-child(4)::before {
+    content: "Idade Máx.";
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  #tabelaPrincipal td:nth-child(5)::before {
     content: "País";
     font-family: 'Montserrat', sans-serif;
     font-size: 0.8rem;
@@ -148,6 +158,26 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
+
+  #tabelaPrincipal td:nth-child(6)::before {
+    content: "Opções";
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.idade-badge {
+  background: rgba(2, 132, 199, 0.08);
+  color: #0284c7;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  display: inline-block;
 }
 
 /* Form inputs and buttons inside redesign cards */

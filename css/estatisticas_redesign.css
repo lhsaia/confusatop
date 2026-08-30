@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    CONFUSA.top - Estatísticas Redesign (Light Theme System)
    ========================================================================== */
 
@@ -22,7 +22,7 @@ body {
 /* Container Principal */
 .propostas-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1380px;
   margin: 0 auto;
   padding: 3rem 1.5rem;
   flex: 1;
@@ -160,7 +160,7 @@ body {
   width: 100%;
   overflow-x: auto;
   border-radius: 8px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .stats-table {
@@ -176,14 +176,14 @@ body {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 12px 14px;
+  padding: 10px 10px;
   border-bottom: 2px solid rgba(0,0,0,0.06);
   text-align: center;
 }
 
 .stats-table td {
-  padding: 12px 14px;
-  font-size: 0.9rem;
+  padding: 10px 10px;
+  font-size: 0.88rem;
   color: #334155;
   border-bottom: 1px solid rgba(0,0,0,0.05);
   text-align: center;
@@ -197,9 +197,13 @@ body {
 .stats-table td.team-col {
   text-align: left;
   font-weight: 600;
-  display: flex;
+}
+
+.team-cell {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
+  vertical-align: middle;
 }
 
 .stats-table td.player-col {
@@ -236,7 +240,7 @@ body {
 /* Cards de Jogadores */
 .grid-stats-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: 1.5rem;
 }
 
@@ -244,7 +248,7 @@ body {
   background: rgba(255, 255, 255, 0.6) !important;
   border: 1px solid rgba(0, 0, 0, 0.06) !important;
   border-radius: 12px !important;
-  padding: 1.5rem !important;
+  padding: 1.25rem !important;
   box-shadow: 0 4px 12px rgba(0,0,0,0.01);
 }
 

@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    CONFUSA.top - Competition Status Redesign (Light Theme System)
    ========================================================================== */
 
@@ -191,6 +191,12 @@ body {
   background-color: rgba(16, 185, 129, 0.1) !important;
   color: #059669 !important;
   border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.status-finalizada {
+  background-color: rgba(99, 102, 241, 0.1) !important;
+  color: #4f46e5 !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
 }
 
 .status-default {

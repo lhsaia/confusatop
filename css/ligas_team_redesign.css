@@ -1,4 +1,4 @@
-﻿body {
+body {
   font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
   background-color: #f1f5f9 !important;
   color: #0f172a !important;
@@ -1206,3 +1206,28 @@ div[id*="draggable"] img {
         min-width: 12px !important;
     }
 }
+
+/* Jogador bloqueado por limite de idade */
+tr.jogador-bloqueado-idade {
+    background-color: rgba(239, 68, 68, 0.04) !important;
+}
+
+tr.jogador-bloqueado-idade td.nomeJogador a {
+    color: #475569 !important;
+}
+
+.locked-icon {
+    font-size: 16px !important;
+    color: #ef4444 !important;
+    vertical-align: middle !important;
+    margin-left: 4px;
+    cursor: help;
+}
+
+.quick-move-btn.disabled {
+    pointer-events: none;
+    opacity: 0.35 !important;
+    background: #e2e8f0 !important;
+    color: #94a3b8 !important;
+}
+

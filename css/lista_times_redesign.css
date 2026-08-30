@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    CONFUSA.top - Lista de Times Redesign (Light Theme System)
    ========================================================================== */
 
@@ -218,6 +218,44 @@ body {
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
   background-color: #0284c7 !important;
   color: #ffffff !important;
+}
+
+/* Slot / Sorteio Dropdown */
+.selecaoSlot {
+  height: 42px !important;
+  padding: 0 10px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  border-radius: 8px !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  color: #0284c7 !important;
+  outline: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.2s ease !important;
+  min-width: 140px !important;
+}
+
+.selecaoSlot:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12) !important;
+}
+
+.selecaoSlot option:disabled {
+  color: #94a3b8 !important;
+  background: #f8fafc !important;
+}
+
+.selecaoSlot.slot-definido,
+.selecaoSlot:disabled {
+  background: #f8fafc !important;
+  color: #0369a1 !important;
+  border: 1px solid rgba(2, 132, 199, 0.25) !important;
+  font-weight: 700 !important;
+  cursor: not-allowed !important;
+  opacity: 0.9 !important;
 }
 
 /* Action Buttons in Slots */

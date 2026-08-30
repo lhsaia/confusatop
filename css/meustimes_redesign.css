@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    CONFUSA.top - Quadro de Times Redesign (Light Theme System)
    ========================================================================== */
 
@@ -151,12 +151,13 @@ html body #logged-user {
   font-weight: 600 !important;
   color: #475569 !important;
   text-transform: uppercase;
-  font-size: 0.8rem !important;
-  letter-spacing: 0.5px;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.3px;
   border: none !important;
-  padding: 12px 10px !important;
+  padding: 8px 4px !important;
   vertical-align: middle !important;
   text-align: center !important;
+  white-space: nowrap;
 }
 
 #tabelaPrincipal th.headings {
@@ -168,10 +169,10 @@ html body #logged-user {
 }
 
 #tabelaPrincipal td {
-  padding: 10px 10px !important;
+  padding: 6px 4px !important;
   vertical-align: middle !important;
   border: none !important;
-  font-size: 0.85rem !important;
+  font-size: 0.82rem !important;
   color: #334155 !important;
   text-align: center !important;
   background: rgba(255, 255, 255, 0.9) !important;
@@ -385,16 +386,16 @@ input[type="number"] {
 /* Inputs de Edição */
 .editavel {
   border: 1px dashed #0284c7 !important;
-  padding: 4px 6px !important;
+  padding: 3px 5px !important;
   background: rgba(2, 132, 199, 0.05) !important;
   outline: none !important;
   border-radius: 4px !important;
-  max-width: 110px !important; /* Limite do Brand Kit */
+  max-width: 95px !important; /* Limite otimizado para caber na tela */
   box-sizing: border-box;
 }
 
 .nomeEditavel.editavel {
-  max-width: 250px !important;
+  max-width: 140px !important;
   display: inline-block !important;
   white-space: nowrap !important;
   text-overflow: ellipsis;
@@ -402,15 +403,40 @@ input[type="number"] {
   vertical-align: middle;
 }
 
+.siglaEditavel {
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 0.82rem !important;
+  color: #475569 !important;
+  letter-spacing: 0.5px !important;
+  display: inline-block !important;
+}
+
+.siglaEditavel.editavel {
+  text-transform: uppercase !important;
+  max-width: 45px !important;
+  min-width: 36px !important;
+  text-align: center !important;
+}
+
 .comboEstadio, .comboLiga, .comboPais, .comboTorcedores, .fidelidade {
   font-family: 'Montserrat', sans-serif !important;
-  font-size: 0.8rem !important;
+  font-size: 0.75rem !important;
   color: #334155 !important;
   border: 1px solid rgba(0, 0, 0, 0.15) !important;
   border-radius: 6px !important;
-  padding: 4px 8px !important;
+  padding: 3px 4px !important;
   background-color: #fff !important;
-  max-width: 110px !important; /* Limite do Brand Kit */
+  max-width: 95px !important;
+  box-sizing: border-box;
+}
+
+.comboEstadio {
+  max-width: 110px !important;
+}
+
+.comboTorcedores {
+  max-width: 80px !important;
 }
 
 /* Paginação */

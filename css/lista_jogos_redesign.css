@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    CONFUSA.top - Lista de Jogos Redesign (Light Theme System)
    ========================================================================== */
 
@@ -22,7 +22,7 @@ body {
 /* Container Principal */
 .propostas-container {
   width: 100%;
-  max-width: 1300px;
+  max-width: 1420px;
   margin: 0 auto;
   padding: 3rem 1.5rem;
   flex: 1;
@@ -167,10 +167,10 @@ body {
   font-weight: 600 !important;
   color: #475569 !important;
   text-transform: uppercase;
-  font-size: 0.82rem !important;
+  font-size: 0.8rem !important;
   letter-spacing: 0.5px;
   border: none !important;
-  padding: 12px 10px !important;
+  padding: 10px 6px !important;
   text-align: center !important;
 }
 
@@ -188,10 +188,10 @@ body {
 }
 
 #tabelaPrincipal td {
-  padding: 12px 10px !important;
+  padding: 10px 6px !important;
   vertical-align: middle !important;
   border: none !important;
-  font-size: 0.88rem !important;
+  font-size: 0.85rem !important;
   color: #334155 !important;
   text-align: center !important;
 }
@@ -413,8 +413,8 @@ hr {
 #tabelaPrincipal input[type="time"].editavel {
   max-width: 100% !important;
   width: 100% !important;
-  height: 32px !important;
-  padding: 4px 8px !important;
+  height: 30px !important;
+  padding: 2px 6px !important;
   font-size: 0.8rem !important;
   font-family: 'Montserrat', sans-serif !important;
   border-radius: 6px !important;
@@ -424,15 +424,25 @@ hr {
 }
 
 #tabelaPrincipal select.editavel {
-  max-width: 130px !important;
+  max-width: 110px !important;
+}
+
+#tabelaPrincipal select.comboTimeA,
+#tabelaPrincipal select.comboTimeB {
+  max-width: 120px !important;
 }
 
 #tabelaPrincipal input[type="date"].editavel {
-  max-width: 125px !important;
+  max-width: 110px !important;
 }
 
 #tabelaPrincipal input[type="time"].editavel {
-  max-width: 80px !important;
+  max-width: 75px !important;
+}
+
+#tabelaPrincipal td.wide {
+  white-space: nowrap !important;
+  min-width: 80px !important;
 }
 
 /* ==========================================================================

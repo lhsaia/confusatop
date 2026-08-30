@@ -1,4 +1,4 @@
-﻿/* styles for Placar 90s/00s sports magazine layout */
+/* styles for Placar 90s/00s sports magazine layout */
 
 
 /* Top Bar (Header Guidelines 2.0) */
@@ -556,6 +556,350 @@ html {
     object-fit: contain;
 }
 
+/* Recent Matches & Next Match Section */
+.magazine-recent-matches-section {
+    background: white;
+    border-radius: 18px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 26px 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.next-match-highlight-card {
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.06) 0%, rgba(15, 23, 42, 0.03) 100%);
+    border: 1.5px solid rgba(2, 132, 199, 0.25);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.05);
+}
+
+.next-match-stripe {
+    background: #0284c7;
+    color: #ffffff;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.5px;
+}
+
+.next-match-stripe span.material-symbols-outlined {
+    font-size: 1.1rem;
+}
+
+.next-match-content {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.next-match-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.next-match-comp {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #0284c7;
+    text-transform: uppercase;
+}
+
+.next-match-date, .next-match-phase {
+    font-size: 0.82rem;
+    color: #475569;
+    font-weight: 600;
+}
+
+.next-match-duel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex: 2;
+    min-width: 280px;
+}
+
+.next-team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    width: 110px;
+}
+
+.next-team img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+}
+
+.next-team span {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #334155;
+    line-height: 1.2;
+}
+
+.next-team.is-current span {
+    font-weight: 800;
+    color: #0284c7;
+}
+
+.next-versus-tag {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 1.2rem;
+    color: #64748b;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 4px 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+}
+
+.next-match-stadium {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.next-match-stadium span.material-symbols-outlined {
+    font-size: 1.05rem;
+    color: #0284c7;
+}
+
+.recent-matches-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.recent-match-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.recent-match-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.recent-match-card.result-vitoria {
+    border-left: 4px solid #10b981;
+}
+
+.recent-match-card.result-empate {
+    border-left: 4px solid #f59e0b;
+}
+
+.recent-match-card.result-derrota {
+    border-left: 4px solid #ef4444;
+}
+
+.match-meta-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+
+.match-comp-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.match-badge-outcome {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 0.75rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.badge-vitoria {
+    background-color: #10b981;
+}
+
+.badge-empate {
+    background-color: #f59e0b;
+}
+
+.badge-derrota {
+    background-color: #ef4444;
+}
+
+.match-card-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    gap: 12px;
+}
+
+.match-team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    text-align: center;
+}
+
+.match-team-crest {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+}
+
+.match-team-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #334155;
+    line-height: 1.2;
+}
+
+.match-team.is-current-team .match-team-name {
+    font-weight: 800;
+    color: #0284c7;
+}
+
+.match-score-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 8px 14px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+    position: relative;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.match-score {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 1.4rem;
+    color: #0f172a;
+    line-height: 1;
+}
+
+.match-score-divider {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #94a3b8;
+}
+
+.match-penalties-score {
+    width: 100%;
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.match-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 10px;
+    margin-top: 8px;
+}
+
+.match-date {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.match-date .icon-date {
+    font-size: 0.9rem;
+}
+
+.match-origin-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #0284c7;
+    background: rgba(2, 132, 199, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.recent-matches-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    color: #64748b;
+    gap: 8px;
+    text-align: center;
+}
+
+.recent-matches-empty .empty-icon {
+    font-size: 2.5rem;
+    color: #94a3b8;
+}
+
+.recent-matches-empty p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
 /* Trading sticker cards style */
 .magazine-squad-section {
     background: white;
@@ -810,6 +1154,17 @@ html {
     border-radius: 20px;
     font-size: 0.75rem;
     color: #334155;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.reserve-item-tag:hover {
+    background-color: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(2, 132, 199, 0.2);
 }
 
 /* Print and Screenshot Optimization */

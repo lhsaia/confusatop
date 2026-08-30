@@ -1,0 +1,567 @@
+/* ==========================================================================
+   CONFUSA.top - Demografia Redesign (Design System 2.0)
+   ========================================================================== */
+
+html body {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-top: 60px;
+  background-image: 
+    linear-gradient(180deg, rgba(248, 250, 252, 0.85) 0%, rgba(226, 232, 240, 0.95) 100%),
+    url("/images/confusa-blue.png") !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+  overflow-x: hidden;
+}
+
+/* Container Principal */
+.demo-container {
+  width: 100%;
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+  flex: 1;
+  box-sizing: border-box;
+}
+
+.demo-container-form {
+  max-width: 720px !important;
+}
+
+/* Header da Página */
+.demo-header-card {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 18px !important;
+  padding: 1.75rem 2rem !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+  margin-bottom: 2rem;
+}
+
+.demo-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.demo-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.demo-breadcrumb a {
+  color: #0284c7;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.demo-breadcrumb a:hover {
+  color: #0369a1;
+  text-decoration: underline;
+}
+
+.demo-title-area h1 {
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1.85rem !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.demo-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Botões */
+.btn-demo-primary {
+  border: none !important;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  padding: 11px 22px !important;
+  font-weight: 600 !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.95rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.28) !important;
+  transition: all 0.25s ease !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+}
+
+.btn-demo-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.38) !important;
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  color: #ffffff !important;
+}
+
+.btn-demo-secondary {
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  background: #ffffff !important;
+  color: #475569 !important;
+  border-radius: 10px !important;
+  padding: 11px 20px !important;
+  font-weight: 600 !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.92rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+}
+
+.btn-demo-secondary:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Info Banner */
+.demo-info-banner {
+  margin-top: 1.5rem;
+  background: rgba(2, 132, 199, 0.06);
+  border: 1px solid rgba(2, 132, 199, 0.15);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.demo-info-banner .material-symbols-outlined {
+  color: #0284c7;
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.demo-info-content {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.demo-info-content strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* Grid de Composição */
+.demo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.75rem;
+}
+
+@media (max-width: 1024px) {
+  .demo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Cards das Seções & Formulário */
+.demo-section-card, .demo-form-card {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 18px !important;
+  padding: 2rem !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.demo-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.demo-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.demo-section-title h2 {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+}
+
+.demo-count-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(2, 132, 199, 0.1);
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.2);
+}
+
+/* Barra de Composição Empilhada */
+.demo-stacked-bar-container {
+  margin-bottom: 1.5rem;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.demo-stacked-bar-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.demo-stacked-bar {
+  display: flex;
+  height: 22px;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  background: #e2e8f0;
+}
+
+.demo-bar-segment {
+  height: 100%;
+  transition: all 0.3s ease;
+  position: relative;
+  min-width: 4px;
+}
+
+.demo-bar-segment:hover {
+  filter: brightness(1.1);
+  cursor: pointer;
+}
+
+/* Legenda da Barra */
+.demo-bar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 12px;
+  font-size: 0.8rem;
+}
+
+.demo-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: #334155;
+  font-weight: 500;
+}
+
+.demo-legend-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Tabela de Demografia */
+.demo-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+}
+
+.demo-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  margin-top: 0.5rem;
+}
+
+.demo-table th {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  border: none;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.demo-table th.text-center {
+  text-align: center;
+}
+
+.demo-table th.text-right {
+  text-align: right;
+}
+
+.demo-table tbody tr {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.demo-table tbody tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.demo-table tbody tr td {
+  padding: 12px 14px;
+  vertical-align: middle;
+  border: none;
+  font-size: 0.88rem;
+  color: #334155;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.demo-table tbody tr td:first-child {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.demo-table tbody tr td:last-child {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+/* Célula de Origem */
+.demo-origin-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.demo-origin-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8), 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.demo-origin-name {
+  font-weight: 600;
+  color: #0f172a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+}
+
+/* Célula de Porcentagem / Barra */
+.demo-perc-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 100px;
+}
+
+.demo-perc-val {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.demo-perc-track {
+  width: 100%;
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.demo-perc-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+/* Badges de Parâmetros */
+.demo-badge-metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.demo-badge-metric.accent-blue {
+  background: rgba(2, 132, 199, 0.08);
+  color: #0284c7;
+}
+
+.demo-badge-metric.accent-emerald {
+  background: rgba(16, 185, 129, 0.08);
+  color: #059669;
+}
+
+.demo-badge-metric.accent-neutral {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* Botão de Excluir */
+.btn-demo-delete {
+  background: rgba(239, 68, 68, 0.08) !important;
+  color: #ef4444 !important;
+  border: 1px solid rgba(239, 68, 68, 0.15) !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  padding: 0 !important;
+  text-decoration: none !important;
+}
+
+.btn-demo-delete:hover {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  transform: scale(1.08) !important;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3) !important;
+}
+
+.btn-demo-delete .material-symbols-outlined {
+  font-size: 18px !important;
+}
+
+/* Empty State */
+.demo-empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: #64748b;
+}
+
+.demo-empty-state .material-symbols-outlined {
+  font-size: 48px;
+  color: #cbd5e1;
+  margin-bottom: 0.75rem;
+}
+
+.demo-empty-state p {
+  margin: 0 0 1.25rem 0;
+  font-size: 0.95rem;
+}
+
+/* ==========================================================================
+   Estilos de Formulário (Criar Demografia)
+   ========================================================================== */
+
+.demo-form-group {
+  margin-bottom: 1.25rem;
+}
+
+.demo-form-group label {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+  display: block !important;
+  margin-bottom: 6px !important;
+}
+
+.demo-form-group .demo-helper {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.demo-form-group select,
+.demo-form-group input[type="number"],
+.demo-form-group input[type="text"] {
+  width: 100% !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  color: #0f172a !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.95rem !important;
+  outline: none !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+.demo-form-group select:focus,
+.demo-form-group input:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+}
+
+.demo-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Responsividade Mobile */
+@media (max-width: 768px) {
+  .demo-container {
+    padding: 1.5rem 1rem;
+  }
+  .demo-header-card, .demo-section-card, .demo-form-card {
+    padding: 1.25rem !important;
+    border-radius: 14px !important;
+  }
+  .demo-header-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .demo-actions, .demo-form-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+  .btn-demo-primary, .btn-demo-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+}

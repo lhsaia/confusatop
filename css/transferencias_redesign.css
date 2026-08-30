@@ -1,4 +1,4 @@
-﻿@import url("meuspaises_redesign.css");
+@import url("meuspaises_redesign.css");
 
 /* Custom style adaptations for transferencias.php list pages (Light Theme) */
 
@@ -69,15 +69,32 @@
   background: transparent !important;
   font-family: 'Montserrat', sans-serif !important;
 }
-/* Compact wrapper padding and narrower width for Mercado */
+/* Compact wrapper padding and wider width for Mercado */
 .propostas-container {
   padding: 1.5rem 1.5rem !important;
-  max-width: 1020px !important;
+  max-width: 1380px !important;
 }
 
 .propostas-card {
   padding: 1.5rem !important;
   text-align: center !important;
+}
+
+/* Otimização da tabela de Janelas de Transferência */
+.tbl_user_data {
+  width: 100% !important;
+  overflow-x: auto !important;
+}
+
+#tabelaPrincipal th, #tabelaPrincipal td {
+  padding: 8px 6px !important;
+  font-size: 0.85rem !important;
+  vertical-align: middle !important;
+}
+
+#tabelaPrincipal td .nomSM .material-symbols-outlined {
+  font-size: 20px !important;
+  vertical-align: middle !important;
 }
 
 .header-actions-container {
