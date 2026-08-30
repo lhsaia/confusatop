@@ -28,7 +28,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && isset($_SES
       $class_conectado = " admin conectado ";
     } else if($_SESSION['impersonated'] == true){
       $class_conectado = " impersonado conectado ";
-	  $admin_btn = "";
+	  $admin_btn = "<a class='nav-item' href='/elements/login_info.php?stop_impersonation=1' style='color: #fbbf24;'><span class='material-symbols-outlined' style='font-size:18px; vertical-align:middle;'>undo</span> Parar Impersonação</a>";
 	} else {
       $admin_btn = "";
       $class_conectado = " user conectado ";
