@@ -890,9 +890,9 @@ function readInfo($id){
         }
 
         function alterarElenco($idJogador1, $idJogador2,$tipoAlteracao,$posJogador1 = null,$posJogador2 = null, $time = null){
-            $idJogador1 = htmlspecialchars(strip_tags($idJogador1));
-            $idJogador2 = htmlspecialchars(strip_tags($idJogador2));
-            $tipoAlteracao = htmlspecialchars(strip_tags($tipoAlteracao));
+            $idJogador1 = $idJogador1 !== null ? htmlspecialchars(strip_tags((string)$idJogador1)) : null;
+            $idJogador2 = $idJogador2 !== null ? htmlspecialchars(strip_tags((string)$idJogador2)) : null;
+            $tipoAlteracao = $tipoAlteracao !== null ? htmlspecialchars(strip_tags((string)$tipoAlteracao)) : null;
 
             // Verificar se o clube pertence a uma liga com limite de idade
             if($time != null){

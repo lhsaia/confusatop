@@ -106,7 +106,13 @@ if (session_status() === PHP_SESSION_NONE) {
             session_name('confusatop');
         }
 
-        session_start();
+        // Suppress warning if session data is corrupted (PHP auto-destroys corrupt session object)
+        if (!@session_start()) {
+            if (session_status() !== PHP_SESSION_ACTIVE) {
+                session_id(bin2hex(random_bytes(16)));
+                @session_start();
+            }
+        }
     }
 }
 
