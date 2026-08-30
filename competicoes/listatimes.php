@@ -101,9 +101,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
                     <?php endforeach; ?>
                 </select>
             </div>
-            <button type="button" id="btn_aplicar_pais_todos" class="btn-bulk-country" <?php echo $can_bulk_edit ? '' : 'disabled'; ?> title="Atribuir este país a todas as vagas da competição">
-                <span class="material-symbols-outlined">done_all</span>
-                <span>Aplicar a Todas as Vagas</span>
+            <button type="button" id="btn_aplicar_pais_todos" class="btn-bulk-country" <?php echo $can_bulk_edit ? '' : 'disabled'; ?> title="Atribuir este país para todas as vagas da competição">
+                <span class="material-symbols-outlined" style="font-size: 1.1rem;">done_all</span>
+                <span>Aplicar a todos</span>
             </button>
         </div>
 
