@@ -103,7 +103,9 @@ if(!$results) {
                                 5 => 'Semi-final',
                                 6 => 'Disputa de terceiro lugar',
                                 7 => 'Repescagem',
-                                8 => 'Final'
+                                8 => 'Final',
+                                9 => '16-avos-de-final',
+                                10 => '32-avos-de-final'
                             ];
                             $faseId = (int)($results['phase'] ?? 0);
                             if(isset($faseMap[$faseId]) && $faseId != 0) echo " ({$faseMap[$faseId]})";

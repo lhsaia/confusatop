@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -342,7 +342,7 @@ function renderPlayerRow($side, $idx, $p, $allPositions, $isCoach = false) {
                     <label class="form-label">Fase</label>
                     <select name="fase" class="form-control" style="height: 38px;">
                         <?php 
-                        $fases = [0=>'N/A', 1=>'Fase pré', 2=>'Fase de grupos', 3=>'Oitavas', 4=>'Quartas', 5=>'Semi', 6=>'3º Lugar', 7=>'Repescagem', 8=>'Final'];
+                        $fases = [0=>'N/A', 1=>'Fase pré', 2=>'Fase de grupos', 3=>'Oitavas', 4=>'Quartas', 5=>'Semi', 6=>'3º Lugar', 7=>'Repescagem', 8=>'Final', 9=>'16-avos', 10=>'32-avos'];
                         foreach($fases as $id => $name): ?>
                             <option value="<?php echo $id; ?>" <?php echo ($match_info && $match_info['phase'] == $id) ? 'selected' : ''; ?>><?php echo $name; ?></option>
                         <?php endforeach; ?>

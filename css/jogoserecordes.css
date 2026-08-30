@@ -292,3 +292,7 @@ html{
 	font-weight: bold;
 	text-align:center !important;
 }
+
+.sr-only {
+	display: none !important;
+}

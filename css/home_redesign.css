@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    CONFUSA.top - Modern Redesign System (CSS)
    ========================================================================== */
 
@@ -555,5 +555,9 @@ body #hamburger-menu #close-menu[style*="display: block"] {
 
 .headings {
   cursor: pointer !important;
+}
+
+.sr-only {
+  display: none !important;
 }
 

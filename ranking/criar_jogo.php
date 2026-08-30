@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -996,7 +996,7 @@ html body .editor-container .custom-toast button:hover,
                     <label>Fase</label>
                     <select name="fase" class="form-control-custom">
                         <?php 
-                        $fases = [0 => 'N/A', 1 => 'Fase pré', 2 => 'Fase de grupos', 3 => 'Oitavas-de-final', 4 => 'Quartas-de-final', 5 => 'Semi-final', 6 => '3º Lugar', 7 => 'Repescagem', 8 => 'Final'];
+                        $fases = [0 => 'N/A', 1 => 'Fase pré', 2 => 'Fase de grupos', 3 => 'Oitavas-de-final', 4 => 'Quartas-de-final', 5 => 'Semi-final', 6 => '3º Lugar', 7 => 'Repescagem', 8 => 'Final', 9 => '16-avos-de-final', 10 => '32-avos-de-final'];
                         $curFase = $match_info['phase'] ?? 0;
                         foreach($fases as $fId => $fNome): ?>
                             <option value="<?php echo $fId; ?>" <?php echo $curFase == $fId ? 'selected' : ''; ?>><?php echo $fNome; ?></option>

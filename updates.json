@@ -13,6 +13,16 @@
       "date": "30/08/2026",
       "items": [
         {
+          "badge": "new",
+          "title": "Fases 16-avos e 32-avos de Final com Normalização de BYEs",
+          "desc": "Adicionado suporte completo a torneios maiores de mata-mata com as novas fases de 16-avos-de-final (32 times) e 32-avos-de-final (64 times). Implementado algoritmo de normalização de chaveamento com avanço direto por BYE para torneios com números arbitrários de clubes (ex: 56 times com 8 BYEs iniciando em 32-avos)."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ocultação do Rótulo (current) na Paginação",
+          "desc": "Adicionada a classe .sr-only com display: none para ocultar o texto de acessibilidade (current) no item de página ativa da paginação na lista de jogos e demais páginas com paginação."
+        },
+        {
           "badge": "design",
           "title": "Select2 com Campo de Busca nos Filtros do Mercado",
           "desc": "Atualizados os filtros da Busca Avançada no Mercado (transferencias.php), adicionando Select2 com barra de pesquisa para seleção rápida de Nacionalidade, Liga, Mentalidade e Estilo."

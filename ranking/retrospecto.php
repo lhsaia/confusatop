@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
@@ -136,7 +136,7 @@ var localData = [];
 var asc = true;
 var activeSort = '';
 
-var dictFases = {0: "N/A", 1: "Fase pré",2: "Fase de grupos",3: "Oitavas-de-final",4: "Quartas-de-final",5: "Semi-final",6: "Disputa de terceiro lugar",7: "Repescagem",8: "Final"};
+var dictFases = {0: "N/A", 1: "Fase pré",2: "Fase de grupos",3: "Oitavas-de-final",4: "Quartas-de-final",5: "Semi-final",6: "Disputa de terceiro lugar",7: "Repescagem",8: "Final",9: "16-avos-de-final",10: "32-avos-de-final"};
 
 $(document).ready(function($){
 

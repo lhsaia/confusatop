@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 // ini_set( 'display_errors', true );
 // error_reporting( E_ALL );
@@ -221,6 +221,8 @@ $stmtCups->execute();
                         <option value="6">Disputa de terceiro lugar</option>
                         <option value="7">Repescagem</option>
                         <option value="8">Final</option>
+                        <option value="9">16-avos-de-final</option>
+                        <option value="10">32-avos-de-final</option>
                     </select>
                 </p>
 

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 header('Content-Type: text/html; charset=utf-8');
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
@@ -341,6 +341,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true){
                         <option value="6">Disputa de terceiro lugar</option>
                         <option value="7">Repescagem</option>
                         <option value="8">Final</option>
+                        <option value="9">16-avos-de-final</option>
+                        <option value="10">32-avos-de-final</option>
                     </select>
                 </div>
             </div>

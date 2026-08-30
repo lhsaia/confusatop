@@ -101,7 +101,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
       <!-- // numero de times (number) -->
       <label for='input_numero'>Número de equipes:</label>
-      <input type='number' min='2' max='62' id='input_numero' name='timescampeonato' class='smallform'/>
+      <input type='number' min='2' max='64' id='input_numero' name='timescampeonato' class='smallform'/>
 
       <div id="quadro_equipes_torneio">
 
@@ -121,7 +121,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
 <?php
 
-for ($i = 1; $i < 63;$i++){
+for ($i = 1; $i <= 64;$i++){
   echo "<div class='par_pais_equipe' id='par_pais_equipe_{$i}' hidden>";
   echo "<select id='selecaoPais{$i}' name='pais{$i}' class='smallform selecaoPais' placeholder='País...'>";
   echo "<option value=0>Selecione o país...</option>";

@@ -67,7 +67,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     
     // 4. Carregar Jogos e Calcular Tabela de Classificação por Grupo
     // Apenas partidas com status = 1 e cujo término no tempo real já tenha passado
-    $stmtJogos = $db->prepare("SELECT id, timeA_id, timeA_gols, timeB_id, timeB_gols, timeA_penaltis, timeB_penaltis, status, fase, grupo, path 
+    $stmtJogos = $db->prepare("SELECT id, timeA_id, timeA_nome, timeA_gols, timeB_id, timeB_nome, timeB_gols, timeA_penaltis, timeB_penaltis, status, fase, grupo, path 
                                FROM jogos_clube 
                                WHERE competicao_id = :idComp 
                                  AND simulador_interno = 1
@@ -555,9 +555,17 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                 if (empty($fasesKnockout)): 
                     echo "<p style='text-align:center; padding: 2rem; color: #64748b;'>Nenhuma partida de mata-mata registrada.</p>";
                 else:
-                    ksort($fasesKnockout);
+                    // Ordenar fases na ordem cronológica de disputa do mata-mata
+                    $faseOrder = [10 => 1, 9 => 2, 3 => 3, 4 => 4, 5 => 5, 6 => 6, 8 => 7];
+                    uksort($fasesKnockout, function($a, $b) use ($faseOrder) {
+                        $orderA = $faseOrder[$a] ?? (100 + $a);
+                        $orderB = $faseOrder[$b] ?? (100 + $b);
+                        return $orderA - $orderB;
+                    });
                     foreach ($fasesKnockout as $faseId => $partidasFase):
                         $nomeFase = "Fase " . $faseId;
+                        if ($faseId == 10) $nomeFase = "32-avos de Final";
+                        if ($faseId == 9) $nomeFase = "16-avos de Final";
                         if ($faseId == 3) $nomeFase = "Oitavas de Final";
                         if ($faseId == 4) $nomeFase = "Quartas de Final";
                         if ($faseId == 5) $nomeFase = "Semifinal";
@@ -570,6 +578,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                             <?php foreach ($partidasFase as $partida): 
                                 $tA = $clubes[$partida['timeA_id']] ?? null;
                                 $tB = $clubes[$partida['timeB_id']] ?? null;
+                                $nomeTimeA = $tA['Nome'] ?? ($partida['timeA_nome'] ?? 'Indefinido');
+                                $nomeTimeB = $tB['Nome'] ?? ($partida['timeB_nome'] ?? 'Indefinido');
                                 $gA = $partida['status'] == 1 ? $partida['timeA_gols'] : '-';
                                 $gB = $partida['status'] == 1 ? $partida['timeB_gols'] : '-';
                                 
@@ -594,7 +604,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                     <div class="bracket-match-row <?php echo $winA; ?>">
                                         <span class="bracket-team">
                                             <img class="team-logo" src="/images/escudos/<?php echo $tA['Escudo'] ?? '0.png'; ?>" alt="" />
-                                            <?php echo htmlspecialchars($tA['Nome'] ?? 'Indefinido'); ?>
+                                            <?php echo htmlspecialchars($nomeTimeA); ?>
                                         </span>
                                         <span class="bracket-score">
                                             <?php echo $gA; ?>
@@ -606,7 +616,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                     <div class="bracket-match-row <?php echo $winB; ?>">
                                         <span class="bracket-team">
                                             <img class="team-logo" src="/images/escudos/<?php echo $tB['Escudo'] ?? '0.png'; ?>" alt="" />
-                                            <?php echo htmlspecialchars($tB['Nome'] ?? 'Indefinido'); ?>
+                                            <?php echo htmlspecialchars($nomeTimeB); ?>
                                         </span>
                                         <span class="bracket-score">
                                             <?php echo $gB; ?>

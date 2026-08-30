@@ -445,29 +445,24 @@ else{
 <fieldset>
     <legend>Outros requisitos:</legend>
 
-    <div class="form-row">
+    <div class="checkbox-req-row" style="margin-bottom: 15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
         <?php if($pageType === 'busca'){?>
-        <span class="form-group-inline">
-            <label for="checkbox-16">Cobrador de Falta</label>
-            <input type="checkbox" name="cfalta" id="checkbox-16">
-        </span>
-        <span class="form-group-inline">
-            <label for="checkbox-17">Disponível</label>
-            <input type="checkbox" name="disponivel" id="checkbox-17">
-        </span>
+        <label for="checkbox-16">Cobrador de Falta</label>
+        <input type="checkbox" name="cfalta" id="checkbox-16">
+        <label for="checkbox-17">Disponível</label>
+        <input type="checkbox" name="disponivel" id="checkbox-17">
         <?php } ?>
-        <span class="form-group-inline">
-            <label for="checkbox-18">Sem Clube</label>
-            <input type="checkbox" name="semclube" id="checkbox-18">
-        </span>
+        <label for="checkbox-18">Sem Clube</label>
+        <input type="checkbox" name="semclube" id="checkbox-18">
     </div>
 
-    <div class="form-row">
-        <span class="form-group-inline">
+    <div class="form-grid-2col">
+        <div class="search-field-group">
             <label for='input_nome'>Nome:</label>
-            <input type='text' id='input_nome' name='nomejogador' class='smallform'/>
-        </span>
-        <span class="form-group-inline">
+            <input type='text' id='input_nome' name='nomejogador' class='smallform' placeholder='Buscar por nome...' />
+        </div>
+
+        <div class="search-field-group">
             <label for='input_nacionalidade'>Nacionalidade:</label>
             <select name='nacionalidade' id='input_nacionalidade' class='smallform'>
                 <option selected value='0'>Qualquer uma</option>
@@ -480,11 +475,9 @@ else{
                 }
                 ?>
             </select>
-        </span>
-    </div>
-    
-    <div class="form-row">
-        <span class="form-group-inline">
+        </div>
+        
+        <div class="search-field-group">
             <label for='input_mentalidade'>Mentalidade:</label>
             <select id='input_mentalidade' name='mentalidade' class='smallform'>
                 <option selected value='0'>Qualquer uma</option>
@@ -497,29 +490,32 @@ else{
                 <option value='6'>Provocador</option>
                 <option value='7'>Explosivo</option>
                 <?php } else if ($pageType === 'buscaTecnico'){ ?>
-                    <option value='1'>Retranca</option>
-                    <option value='2'>Defensiva</option>
-                    <option value='3'>Balanceada</option>
-                    <option value='4'>Ofensiva</option>
-                    <option value='5'>Ataque Total</option>
-                    </select>
-        </span>
-        <span class="form-group-inline">
-                    <label for='input_estilo'>Estilo:</label>
-                    <select id='input_estilo' name='estilo' class='smallform'>
-                <option selected value='0'>Qualquer um</option>
-                    <option value='1'>Explorar contra-ataques</option>
-                    <option value='2'>Cadenciar o jogo</option>
-                    <option value='3'>Neutro</option>
-                    <option value='4'>Atacar pelas laterais</option>
-                    <option value='5'>Impôr ritmo ofensivo</option>
-        
-                <?php }?>
+                <option value='1'>Retranca</option>
+                <option value='2'>Defensiva</option>
+                <option value='3'>Balanceada</option>
+                <option value='4'>Ofensiva</option>
+                <option value='5'>Ataque Total</option>
+                <?php } ?>
             </select>
-        </span>
-        <span class="form-group-inline">
+        </div>
+        
+        <?php if ($pageType === 'buscaTecnico'){ ?>
+        <div class="search-field-group">
+            <label for='input_estilo'>Estilo:</label>
+            <select id='input_estilo' name='estilo' class='smallform'>
+                <option selected value='0'>Qualquer um</option>
+                <option value='1'>Explorar contra-ataques</option>
+                <option value='2'>Cadenciar o jogo</option>
+                <option value='3'>Neutro</option>
+                <option value='4'>Atacar pelas laterais</option>
+                <option value='5'>Impôr ritmo ofensivo</option>
+            </select>
+        </div>
+        <?php } ?>
+
+        <div class="search-field-group">
             <label for='input_liga'>Liga:</label>
-                <select name='liga' id='input_liga' class='smallform'>
+            <select name='liga' id='input_liga' class='smallform'>
                 <option selected value='0'>Qualquer uma</option>
                 <?php
                 // query caixa de seleção países desse dono
@@ -530,7 +526,7 @@ else{
                 }
                 ?>
             </select>
-        </span>
+        </div>
     </div>
 
   </fieldset>

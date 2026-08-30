@@ -245,30 +245,84 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
         $drawTeams = $teams;
     }
     
-    // Determinar fase inicial baseada na quantidade de times
-    $fase = 3; // Oitavas
-    if($numTeams <= 16 && $numTeams > 8) $fase = 3; // Oitavas
-    else if($numTeams <= 8 && $numTeams > 4) $fase = 4; // Quartas
-    else if($numTeams <= 4 && $numTeams > 2) $fase = 5; // Semifinal
-    else if($numTeams <= 2) $fase = 8; // Final
-    
-    for($i = 0; $i < $numTeams; $i += 2){
-        if(isset($drawTeams[$i+1])){
-            $home = $drawTeams[$i];
-            $away = $drawTeams[$i+1];
-            $arbId = count($arbitros) > 0 ? $arbitros[array_rand($arbitros)]['ID'] : 0;
-            $dateMatch = date("Y-m-d 16:00:00", strtotime($currentDate . " +" . floor($i/2) . " days"));
-            
-            if ($isSlots) {
-                $tA_id = isset($assignedSlotTeams[$home]) ? $assignedSlotTeams[$home] : 0;
-                $tA_nome = ($tA_id == 0) ? $home : null;
-                $tB_id = isset($assignedSlotTeams[$away]) ? $assignedSlotTeams[$away] : 0;
-                $tB_nome = ($tB_id == 0) ? $away : null;
-                $estId = ($tA_id > 0) ? getStadiumForMatch($ldb, $tA_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
-                $competicao->inserirJogo($idCompeticao, $tA_id, $tB_id, $fase, $arbId, $estId, $dateMatch, "true", null, null, $tA_nome, $tB_nome);
-            } else {
-                $estId = getStadiumForMatch($ldb, $home, $estadios_times, $estadios);
-                $competicao->inserirJogo($idCompeticao, $home, $away, $fase, $arbId, $estId, $dateMatch, "true", null);
+    // 1. Determinar tamanho padrão da chave (potência de 2 mais próxima acima)
+    $bracketSize = 2;
+    if ($numTeams > 32) {
+        $bracketSize = 64;
+    } else if ($numTeams > 16) {
+        $bracketSize = 32;
+    } else if ($numTeams > 8) {
+        $bracketSize = 16;
+    } else if ($numTeams > 4) {
+        $bracketSize = 8;
+    } else if ($numTeams > 2) {
+        $bracketSize = 4;
+    } else {
+        $bracketSize = 2;
+    }
+
+    // Determinar fase inicial baseada no tamanho da chave
+    $faseMapSize = [
+        64 => 10, // 32-avos-de-final
+        32 => 9,  // 16-avos-de-final
+        16 => 3,  // Oitavas
+        8  => 4,  // Quartas
+        4  => 5,  // Semifinal
+        2  => 8   // Final
+    ];
+    $fase = $faseMapSize[$bracketSize] ?? 3;
+
+    // Calcular quantidade de BYEs (times que avançam direto para a fase seguinte)
+    $numByes = $bracketSize - $numTeams;
+
+    if ($numByes > 0 && $bracketSize > 2) {
+        // Times com BYE (os primeiros $numByes times) avançam direto para a próxima fase
+        // Os demais ($numTeams - $numByes) disputam a primeira fase ($fase)
+        $teamsWithBye = array_slice($drawTeams, 0, $numByes);
+        $teamsPlayingFirstRound = array_slice($drawTeams, $numByes);
+        $numMatchesRound1 = count($teamsPlayingFirstRound) / 2;
+
+        // Inserir os jogos da primeira fase
+        for ($i = 0; $i < count($teamsPlayingFirstRound); $i += 2) {
+            if (isset($teamsPlayingFirstRound[$i+1])) {
+                $home = $teamsPlayingFirstRound[$i];
+                $away = $teamsPlayingFirstRound[$i+1];
+                $arbId = count($arbitros) > 0 ? $arbitros[array_rand($arbitros)]['ID'] : 0;
+                $dateMatch = date("Y-m-d 16:00:00", strtotime($currentDate . " +" . floor($i/2) . " days"));
+
+                if ($isSlots) {
+                    $tA_id = isset($assignedSlotTeams[$home]) ? $assignedSlotTeams[$home] : 0;
+                    $tA_nome = ($tA_id == 0) ? $home : null;
+                    $tB_id = isset($assignedSlotTeams[$away]) ? $assignedSlotTeams[$away] : 0;
+                    $tB_nome = ($tB_id == 0) ? $away : null;
+                    $estId = ($tA_id > 0) ? getStadiumForMatch($ldb, $tA_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
+                    $competicao->inserirJogo($idCompeticao, $tA_id, $tB_id, $fase, $arbId, $estId, $dateMatch, "true", null, null, $tA_nome, $tB_nome);
+                } else {
+                    $estId = getStadiumForMatch($ldb, $home, $estadios_times, $estadios);
+                    $competicao->inserirJogo($idCompeticao, $home, $away, $fase, $arbId, $estId, $dateMatch, "true", null);
+                }
+            }
+        }
+    } else {
+        // Chave perfeita sem BYEs (ex: 64, 32, 16, 8, 4, 2)
+        for ($i = 0; $i < $numTeams; $i += 2) {
+            if (isset($drawTeams[$i+1])) {
+                $home = $drawTeams[$i];
+                $away = $drawTeams[$i+1];
+                $arbId = count($arbitros) > 0 ? $arbitros[array_rand($arbitros)]['ID'] : 0;
+                $dateMatch = date("Y-m-d 16:00:00", strtotime($currentDate . " +" . floor($i/2) . " days"));
+                
+                if ($isSlots) {
+                    $tA_id = isset($assignedSlotTeams[$home]) ? $assignedSlotTeams[$home] : 0;
+                    $tA_nome = ($tA_id == 0) ? $home : null;
+                    $tB_id = isset($assignedSlotTeams[$away]) ? $assignedSlotTeams[$away] : 0;
+                    $tB_nome = ($tB_id == 0) ? $away : null;
+                    $estId = ($tA_id > 0) ? getStadiumForMatch($ldb, $tA_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
+                    $competicao->inserirJogo($idCompeticao, $tA_id, $tB_id, $fase, $arbId, $estId, $dateMatch, "true", null, null, $tA_nome, $tB_nome);
+                } else {
+                    $estId = getStadiumForMatch($ldb, $home, $estadios_times, $estadios);
+                    $competicao->inserirJogo($idCompeticao, $home, $away, $fase, $arbId, $estId, $dateMatch, "true", null);
+                }
             }
         }
     }
