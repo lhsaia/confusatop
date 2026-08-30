@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    CONFUSA.top - Índice de Competições Redesign (Light Theme System)
    ========================================================================== */
 
@@ -645,5 +645,126 @@ hr {
   transform: translateX(120%) !important;
   transition: opacity 0.4s ease, transform 0.4s ease !important;
 }
+
+/* Empty State Moderno para Lista de Competições */
+.empty-state-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding: 3.5rem 1.5rem !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  border: 1px dashed rgba(2, 132, 199, 0.25) !important;
+  border-radius: 16px !important;
+  margin: 1.5rem 0 !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
+}
+
+.empty-state-icon-wrapper {
+  width: 72px !important;
+  height: 72px !important;
+  border-radius: 50% !important;
+  background: rgba(2, 132, 199, 0.1) !important;
+  color: #0284c7 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 1.25rem !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.12) !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.empty-state-card:hover .empty-state-icon-wrapper {
+  transform: translateY(-4px) scale(1.06) !important;
+}
+
+.empty-state-icon-wrapper .material-symbols-outlined {
+  font-size: 38px !important;
+  line-height: 1 !important;
+}
+
+.empty-state-title {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 1.35rem !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  margin: 0 0 0.5rem 0 !important;
+}
+
+.empty-state-desc {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.92rem !important;
+  color: #64748b !important;
+  max-width: 500px !important;
+  margin: 0 auto 1.5rem auto !important;
+  line-height: 1.6 !important;
+}
+
+.empty-state-desc strong {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+.empty-state-actions {
+  display: flex !important;
+  gap: 12px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+}
+
+.empty-state-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  padding: 10px 22px !important;
+  border-radius: 10px !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  box-shadow: 0 3px 10px rgba(2, 132, 199, 0.25) !important;
+  transition: all 0.25s ease !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+.empty-state-btn:hover {
+  background: #0369a1 !important;
+  color: #ffffff !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.35) !important;
+}
+
+.empty-state-clear-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: #ffffff !important;
+  color: #475569 !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  padding: 9px 18px !important;
+  border-radius: 10px !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.92rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.2s ease !important;
+  text-decoration: none !important;
+}
+
+.empty-state-clear-btn:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
+  transform: translateY(-1px) !important;
+}
+
 
 

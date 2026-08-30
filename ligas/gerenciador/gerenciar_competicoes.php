@@ -103,7 +103,13 @@ $stmtUserCups->execute();
                 </table>
             </div>
         <?php else: ?>
-            <p>Nenhuma competição encontrada.</p>
+            <div style="text-align: center; padding: 2.5rem 1.5rem; background: rgba(2, 132, 199, 0.03); border: 1px dashed rgba(2, 132, 199, 0.25); border-radius: 14px; margin-top: 1rem;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(2, 132, 199, 0.1); color: #0284c7; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                    <span class="material-symbols-outlined" style="font-size: 32px;">emoji_events</span>
+                </div>
+                <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 600; color: #1e293b; margin: 0 0 6px 0;">Nenhuma copa encontrada</h3>
+                <p style="font-family: 'Montserrat', sans-serif; font-size: 0.9rem; color: #64748b; margin: 0;">Você ainda não possui copas cadastradas para gerenciar. Utilize o formulário acima para criar sua primeira copa.</p>
+            </div>
         <?php endif; ?>
     </div>
 </main>

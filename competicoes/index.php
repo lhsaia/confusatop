@@ -149,6 +149,46 @@ $.ajax({
 
 function updateTable(ajax_data, current_page, highlighted, direction){
 
+    if (!ajax_data || ajax_data.length === 0) {
+        var searchText = ($('#caixa_pesquisa').val() || '').trim();
+        var emptyHtml = '';
+        emptyHtml += '<div class="empty-state-card">';
+        emptyHtml += '  <div class="empty-state-icon-wrapper">';
+        emptyHtml += '    <span class="material-symbols-outlined">emoji_events</span>';
+        emptyHtml += '  </div>';
+        if (searchText !== '') {
+            var escapedSearch = $('<div>').text(searchText).html();
+            emptyHtml += '  <h3 class="empty-state-title">Nenhuma competição encontrada</h3>';
+            emptyHtml += '  <p class="empty-state-desc">Não encontramos nenhuma competição correspondente à pesquisa "<strong>' + escapedSearch + '</strong>". Tente buscar por outros termos ou limpe o filtro.</p>';
+            emptyHtml += '  <div class="empty-state-actions">';
+            emptyHtml += '    <button type="button" class="empty-state-clear-btn" id="btn-limpar-pesquisa">';
+            emptyHtml += '      <span class="material-symbols-outlined">backspace</span>';
+            emptyHtml += '      <span>Limpar Pesquisa</span>';
+            emptyHtml += '    </button>';
+            emptyHtml += '  </div>';
+        } else {
+            emptyHtml += '  <h3 class="empty-state-title">Nenhuma competição cadastrada</h3>';
+            emptyHtml += '  <p class="empty-state-desc">Ainda não há competições cadastradas no sistema. Crie sua primeira competição para gerenciar clubes, tabelas e partidas!</p>';
+            if (logged == "true") {
+                emptyHtml += '  <div class="empty-state-actions">';
+                emptyHtml += '    <a href="/competicoes/criar_competicao.php" class="empty-state-btn">';
+                emptyHtml += '      <span class="material-symbols-outlined">add_circle</span>';
+                emptyHtml += '      <span>Criar Primeira Competição</span>';
+                emptyHtml += '    </a>';
+                emptyHtml += '  </div>';
+            }
+        }
+        emptyHtml += '</div>';
+
+        $(document).find('.tbl_user_data').html(emptyHtml);
+
+        $('#btn-limpar-pesquisa').on('click', function() {
+            $('#caixa_pesquisa').val('');
+            load_data();
+        });
+        return;
+    }
+
     var results_per_page = 18;
     var total_results = ajax_data.length;
     var total_pages = Math.ceil(total_results/results_per_page);
