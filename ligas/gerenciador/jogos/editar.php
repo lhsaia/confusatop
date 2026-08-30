@@ -852,7 +852,7 @@ function initPlayerSelect($el, side) {
             dataType: 'json',
             delay: 250,
             data: function(params) {
-                console.log("Searching API with term:", params.term);
+                // console.log("Searching API with term:", params.term);
                 return { 
                     q: params.term, 
                     team_id: teamId 

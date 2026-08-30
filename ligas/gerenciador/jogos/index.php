@@ -45,7 +45,7 @@ $(document).ready(function($){
                     localData = parsedData;
                     updateTable(parsedData,1,0,0);
                 } catch(e) {
-                    console.error("Error parsing JSON", e);
+                    // console.error("Error parsing JSON", e);
                 }
             }
         });
