@@ -366,7 +366,7 @@ var competition_owner = parseInt($("#select-driver option:selected").attr("data-
   })
   .done(function(data) {
   
-  console.log(data);
+  // console.log(data);
   
   	if(data.can_edit && $('#edit-driver').length == 0){
 		$("#driver-viewer > .container-control").append("<a id='edit-driver' class='editor-button'>Editar</a>");	
@@ -480,8 +480,8 @@ var competition_owner = parseInt($("#select-driver option:selected").attr("data-
     }
   })
           .fail(function(xhr, status, error) {
-            console.log("error");
-			console.log(xhr.responseText);
+            // console.log("error");
+			// console.log(xhr.responseText);
   });
 
 }
@@ -804,19 +804,19 @@ $("[id^=container-driver-profile]").on("click", function(){
 
   $("#save-driver").on("click", function(){
 
-    console.log($("#car-id").html());
+    // console.log($("#car-id").html());
     if($("#car-id").html() != ""){
       var driver_owner = parseInt($("#select-driver option:selected").attr("data-owner"));
 	  var competition_owner = parseInt($("#select-driver option:selected").attr("data-compowner"));
       if(!verifyLoggedUser(driver_owner, competition_owner)){
-        console.log("Não é dono");
+        // console.log("Não é dono");
         return false;
 
       }
     }
 
     if($("label").hasClass("invalid")){
-      console.log("Imagem inválida");
+      // console.log("Imagem inválida");
       return false;
 
     }

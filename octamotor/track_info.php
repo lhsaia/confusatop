@@ -248,7 +248,7 @@ function display_track(updateEditor){
     }
   })
   .fail(function() {
-    console.log("error");
+    // console.log("error");
   });
 
 }
@@ -328,7 +328,7 @@ function populate_editor(changeBar){
 
   $("#track-pit-lane").val(pit_lane_time);
 
-  console.log(style);
+  // console.log(style);
 
 }
 

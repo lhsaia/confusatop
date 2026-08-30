@@ -541,7 +541,7 @@ if(best_grid_position){
     }
   })
   .fail(function() {
-    console.log("error");
+    // console.log("error");
   });
 
 }
@@ -800,14 +800,14 @@ if($(this).get(0).files.length > 0){ // only if a file is selected
 	  	var competition_owner = parseInt($("#select-driver option:selected").attr("data-compowner"));
 
       if(!verifyLoggedUser(driver_owner, competition_owner)){
-        console.log("Não é dono");
+        // console.log("Não é dono");
         return false;
 
       }
     }
 
     if($("label").hasClass("invalid")){
-      console.log("Imagem inválida");
+      // console.log("Imagem inválida");
       return false;
 
     }

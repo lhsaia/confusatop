@@ -351,7 +351,7 @@ function retrieveRaces(season_id, panel_element){
            this.classList.toggle("active-race");
         let driver_owner = parseInt($("#select-driver option:selected").attr("data-owner"));
         if(this.getAttribute("data-status") == 0 && verifyLoggedUser(driver_owner)){
-          console.log(data.races_data);
+          // console.log(data.races_data);
           createRaceInputs(cached_data);
 
           for(let item of data.races_data){
@@ -395,17 +395,17 @@ function retrieveRaces(season_id, panel_element){
                 })
                 .done(function(data) {
                   if(data.success){
-                    console.log("success");
+                    // console.log("success");
                   retrieveSeasons();
                   //retrieveRaces(season_id, panel_element);
                   } else {
-                    console.log("data error");
+                    // console.log("data error");
                   }
 
                 })
           .fail(function(xhr, status, error) {
-            console.log("error");
-			console.log(xhr.responseText);
+            // console.log("error");
+			// console.log(xhr.responseText);
                 });
 
 
@@ -522,16 +522,16 @@ function retrieveSeasons(){
           })
           .done(function(data) {
             if(data.success){
-              console.log("success");
+              // console.log("success");
               retrieveSeasons();
             } else {
-              console.log("data error");
+              // console.log("data error");
             }
 
           })
           .fail(function(xhr, status, error) {
-            console.log("error");
-			console.log(xhr.responseText);
+            // console.log("error");
+			// console.log(xhr.responseText);
           });
 
 
@@ -574,16 +574,16 @@ function retrieveSeasons(){
           })
           .done(function(data) {
             if(data.success){
-              console.log("success");
+              // console.log("success");
               retrieveSeasons();
             } else {
-              console.log("data error");
+              // console.log("data error");
             }
 
           })
           .fail(function(xhr, status, error) {
-            console.log("error");
-			console.log(xhr.responseText);
+            // console.log("error");
+			// console.log(xhr.responseText);
           });
 
 
@@ -730,8 +730,8 @@ function display_competition(updateEditor){
     }
   })
           .fail(function(xhr, status, error) {
-            console.log("error");
-			console.log(xhr.responseText);
+            // console.log("error");
+			// console.log(xhr.responseText);
   });
 
 }

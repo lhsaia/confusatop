@@ -192,8 +192,8 @@ $("document").ready(function(){
       //console.log(data);
     })
           .fail(function(xhr, status, error) {
-            console.log("error");
-			console.log(xhr.responseText);
+            // console.log("error");
+			// console.log(xhr.responseText);
     });
 
   });
@@ -367,8 +367,8 @@ function get_ajax_data(){
     bestLap();
   })
           .fail(function(xhr, status, error) {
-            console.log("error");
-			console.log(xhr.responseText);
+            // console.log("error");
+			// console.log(xhr.responseText);
   });
 }
 
@@ -810,8 +810,8 @@ function clearPodium(data){
 		  
 		})
 		  .fail(function(xhr, status, error) {
-			console.log("error");
-			console.log(xhr.responseText);
+			// console.log("error");
+			// console.log(xhr.responseText);
 		});
 	
 }
@@ -833,7 +833,7 @@ function createPodium(data){
 			})
 		.done(function(podium_data) {
 			
-			console.log(podium_data);
+			// console.log(podium_data);
 		  
 			$(".first-place").find(".podium-name").html("<span>" + data.total_data[0].tv_name == "" ? data.total_data[0].tv_name : data.total_data[0].name + "</span>");
 			$(".first-place").find(".podium-flag").html("<img src='/images/bandeiras/" + data.total_data[0].nationality + "'/></span>");
@@ -852,8 +852,8 @@ function createPodium(data){
 		  
 		})
 		  .fail(function(xhr, status, error) {
-			console.log("error");
-			console.log(xhr.responseText);
+			// console.log("error");
+			// console.log(xhr.responseText);
 		});
 	
 	$.ajax({
@@ -871,8 +871,8 @@ function createPodium(data){
 		  
 		})
 		  .fail(function(xhr, status, error) {
-			console.log("error");
-			console.log(xhr.responseText);
+			// console.log("error");
+			// console.log(xhr.responseText);
 		});
 	
 		$("#raceNameBar").addClass("animated");

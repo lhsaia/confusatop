@@ -98,11 +98,11 @@ $("document").ready(function(){
     .done(function(data) {
 		$('#loadingDiv').hide();
       display_table(data);
-      console.log(data);
+      // console.log(data);
     })
           .fail(function(xhr, status, error) {
-            console.log("error");
-			console.log(xhr.responseText);
+            // console.log("error");
+			// console.log(xhr.responseText);
     });
 
   });

@@ -200,8 +200,8 @@ function verifyLoggedUser(user){
 
 setLoggedUser();
 
-console.log(logged_user);
-console.log(verifyLoggedUser(-1));
+// console.log(logged_user);
+// console.log(verifyLoggedUser(-1));
 	
 	if(verifyLoggedUser(-1)){
 		$("#toolbar").append("<a id='botaoPaginaStressTest' href='stress_test.php'>Stress test</a>");

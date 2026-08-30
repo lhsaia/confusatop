@@ -30,22 +30,20 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
   function imageImporter($file_name, $target_filename, $maxDim){
     list($width, $height, $type, $attr) = getimagesize( $file_name );
     if ( $width > $maxDim || $height > $maxDim ) {
-    //  $target_filename = $file_name;
       $ratio = $width/$height;
       if( $ratio > 1) {
-        $new_width = $maxDim;
-        $new_height = $maxDim/$ratio;
+        $new_width = (int) $maxDim;
+        $new_height = (int) round($maxDim/$ratio);
       } else {
-        $new_width = $maxDim*$ratio;
-        $new_height = $maxDim;
+        $new_width = (int) round($maxDim*$ratio);
+        $new_height = (int) $maxDim;
       }
   } else {
-    $new_width = $width;
-    $new_height = $height;
+    $new_width = (int) $width;
+    $new_height = (int) $height;
   }
 
     $dst = imagecreatetruecolor( $new_width, $new_height );
-      //$save_to_path = "uploads/compressed_file.png";
       if($type != 3){
         $src = imagecreatefromstring( file_get_contents( $file_name ) );
       } else {
@@ -56,9 +54,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         imagesavealpha($dst, true);
       }
 
-      imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, $width, $height );
+      imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
       imagedestroy( $src );
-      imagepng( $dst, $target_filename ); // adjust format as needed
+      imagepng( $dst, $target_filename );
       imagedestroy( $dst );
 
   }
