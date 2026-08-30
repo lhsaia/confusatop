@@ -28,15 +28,15 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
       if ( $width > $maxDim || $height > $maxDim ) {
         $ratio = $width/$height;
         if( $ratio > 1) {
-          $new_width = round($maxDim);
-          $new_height = round($maxDim/$ratio);
+          $new_width = (int) $maxDim;
+          $new_height = (int) round($maxDim/$ratio);
         } else {
-          $new_width = round($maxDim*$ratio);
-          $new_height = round($maxDim);
+          $new_width = (int) round($maxDim*$ratio);
+          $new_height = (int) $maxDim;
         }
       } else {
-        $new_width = $width;
-        $new_height = $height;
+        $new_width = (int) $width;
+        $new_height = (int) $height;
       }
 
       $src = null;
@@ -72,7 +72,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
       imagecolortransparent($dst, $background);
       imagealphablending($dst, false);
       imagesavealpha($dst, true);
-      imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, $width, $height );
+      imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
       imagedestroy( $src );
       imagepng( $dst, $target_filename );
       imagedestroy( $dst );

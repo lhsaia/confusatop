@@ -27,6 +27,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
     $time->id = $_POST['id'];
     $time->nome = $_POST['nomeTime'];
+    if (isset($_POST['sigla']) && trim($_POST['sigla']) !== '') {
+        $time->sigla = trim($_POST['sigla']);
+    }
     $time->estadio = $_POST['estadio'];
     $time->uniforme1cor1 = $_POST['uni1cor1'];
     $time->uniforme1cor2 = $_POST['uni1cor2'];
@@ -46,20 +49,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
       $maxDim = 200;
       list($width, $height, $type, $attr) = getimagesize( $file_name );
       if ( $width > $maxDim || $height > $maxDim ) {
-      //  $target_filename = $file_name;
         $ratio = $width/$height;
         if( $ratio > 1) {
-          $new_width = $maxDim;
-          $new_height = $maxDim/$ratio;
+          $new_width = (int) $maxDim;
+          $new_height = (int) round($maxDim/$ratio);
         } else {
-          $new_width = $maxDim*$ratio;
-          $new_height = $maxDim;
+          $new_width = (int) round($maxDim*$ratio);
+          $new_height = (int) $maxDim;
         }
     } else {
-      $new_width = $width;
-      $new_height = $height;
+      $new_width = (int) $width;
+      $new_height = (int) $height;
     }
-        //$save_to_path = "uploads/compressed_file.png";
         if($type != IMAGETYPE_PNG){
           $src = imagecreatefromstring( file_get_contents( $file_name ) );
         } else {
@@ -67,132 +68,129 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
           $src = imagecreatefromstring($compressed_png_content);
         }
 
-        //file_put_contents($save_to_path, $compressed_png_content);
         $dst = imagecreatetruecolor( $new_width, $new_height );
-        //start changes
         $background = imagecolorallocate($dst , 0, 0, 0);
         imagecolortransparent($dst, $background);
         imagealphablending($dst, false);
         imagesavealpha($dst, true);
-        //end changes
-        imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, $width, $height );
+        imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
         imagedestroy( $src );
-        imagepng( $dst, $target_filename ); // adjust format as needed
+        imagepng( $dst, $target_filename );
         imagedestroy( $dst );
 
     }
 
 
-    if(isset($_FILES['escudo']) && !empty($_FILES['escudo'])){
-        $fileName = $_FILES['escudo']['name'];
-        $fileExplode = explode(".",$fileName);
-        $fileName = $fileExplode[0] . mt_rand(1,10000)."." .$fileExplode[1];
+    $allowed_image_exts = array("png", "jpg", "jpeg", "webp");
+    $allowed_mimes = array("image/png", "image/jpg", "image/jpeg", "image/pjpeg", "image/x-png", "image/webp");
+
+    if(isset($_FILES['escudo']) && is_array($_FILES['escudo']) && $_FILES['escudo']['error'] === UPLOAD_ERR_OK){
+        $origName = $_FILES['escudo']['name'];
         $fileSize = $_FILES['escudo']['size'];
         $filePath = $_FILES['escudo']['tmp_name'];
-        $fileType = $_FILES['escudo']['type'];
-        $fileExt = strtolower( end($fileExplode));
-        $correct_extensions = array("image/png","image/jpg","image/jpeg");
+        $fileExt = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+        $fileBase = pathinfo($origName, PATHINFO_FILENAME);
+        $fileName = $fileBase . mt_rand(1, 10000) . "." . $fileExt;
         $upload_dir = "/images/escudos/";
 
-        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 2000000){
+        $mime = '';
+        if (function_exists('mime_content_type') && file_exists($filePath)) {
+            $mime = mime_content_type($filePath);
+        } else if (isset($_FILES['escudo']['type'])) {
+            $mime = $_FILES['escudo']['type'];
+        }
 
-            $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
+        $isValidExt = in_array($fileExt, $allowed_image_exts);
+        $isValidMime = empty($mime) || in_array($mime, $allowed_mimes);
+
+        if($filePath != "" && $isValidExt && $isValidMime && $fileSize <= 2000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
             imageImporter($filePath, $upload_path);
-
-            //$fileData = file_get_contents($filePath);
-            //$time->escudo = base64_encode($fileData).".".$fileExt;
-
+            $time->escudo = $_SESSION['user_id'] . "-" . $fileName;
         } else {
-
             $error_msg .= "Não foi possível inserir o escudo. ";
             if($fileSize > 2000000){
-                $error_msg .= "Arquivo deve ser menor que 2Mb.";
+                $error_msg .= "Arquivo deve ser menor que 2Mb. ";
             }
             if($filePath == ''){
-                $error_msg .= "Falha no nome do arquivo.";
+                $error_msg .= "Falha no envio do arquivo. ";
             }
-            if(in_array($fileType,$correct_extensions) == false){
-                $error_msg .= "Extensão ".$fileExt." não é permitida.";
+            if(!$isValidExt || !$isValidMime){
+                $error_msg .= "Extensão ou formato '".$fileExt."' não é permitido. ";
             }
         }
     }
 
-    if(isset($_FILES['uni1']) && !empty($_FILES['uni1'])){
-        $fileName = $_FILES['uni1']['name'];
-        $fileExplode = explode(".",$fileName);
-        $fileName = $fileExplode[0] . mt_rand(1,10000)."." .$fileExplode[1];
+    if(isset($_FILES['uni1']) && is_array($_FILES['uni1']) && $_FILES['uni1']['error'] === UPLOAD_ERR_OK){
+        $origName = $_FILES['uni1']['name'];
         $fileSize = $_FILES['uni1']['size'];
         $filePath = $_FILES['uni1']['tmp_name'];
-        $fileType = $_FILES['uni1']['type'];
-        $fileExt = strtolower( end($fileExplode));
-        $correct_extensions = array("image/png","image/jpg","image/jpeg");
+        $fileExt = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+        $fileBase = pathinfo($origName, PATHINFO_FILENAME);
+        $fileName = $fileBase . mt_rand(1, 10000) . "." . $fileExt;
         $upload_dir = "/images/uniformes/";
 
-        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 2000000){
+        $mime = '';
+        if (function_exists('mime_content_type') && file_exists($filePath)) {
+            $mime = mime_content_type($filePath);
+        } else if (isset($_FILES['uni1']['type'])) {
+            $mime = $_FILES['uni1']['type'];
+        }
 
-                     // $fileData = file_get_contents($filePath);
-           // $time->uniforme1 = base64_encode($fileData).".".$fileExt;
-           $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-           imageImporter($filePath, $upload_path);
-           //$result = move_uploaded_file($filePath, $upload_path);
-            //   if (!$result) {
-              //     $error_msg .= "Não foi possível inserir o uniforme, erro na inserção.";
+        $isValidExt = in_array($fileExt, $allowed_image_exts);
+        $isValidMime = empty($mime) || in_array($mime, $allowed_mimes);
 
-          //     } else {
-                   $time->uniforme1 = $_SESSION['user_id'] ."-" .$fileName;
-          //     }
-
-
+        if($filePath != "" && $isValidExt && $isValidMime && $fileSize <= 2000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
+            imageImporter($filePath, $upload_path);
+            $time->uniforme1 = $_SESSION['user_id'] . "-" . $fileName;
         } else {
             $error_msg .= "Não foi possível inserir o uniforme 1. ";
             if($fileSize > 2000000){
-                $error_msg .= "Arquivo deve ser menor que 2Mb.";
+                $error_msg .= "Arquivo deve ser menor que 2Mb. ";
             }
             if($filePath == ''){
-                $error_msg .= "Falha no nome do arquivo.";
+                $error_msg .= "Falha no envio do arquivo. ";
             }
-            if(in_array($fileType,$correct_extensions) == false){
-                $error_msg .= "Extensão ".$fileExt." não é permitida.";
+            if(!$isValidExt || !$isValidMime){
+                $error_msg .= "Extensão ou formato '".$fileExt."' não é permitido. ";
             }
         }
     }
 
-    if(isset($_FILES['uni2']) && !empty($_FILES['uni2'])){
-        $fileName = $_FILES['uni2']['name'];
-        $fileExplode = explode(".",$fileName);
-        $fileName = $fileExplode[0] . mt_rand(1,10000) ."." .$fileExplode[1];
+    if(isset($_FILES['uni2']) && is_array($_FILES['uni2']) && $_FILES['uni2']['error'] === UPLOAD_ERR_OK){
+        $origName = $_FILES['uni2']['name'];
         $fileSize = $_FILES['uni2']['size'];
         $filePath = $_FILES['uni2']['tmp_name'];
-        $fileType = $_FILES['uni2']['type'];
-        $fileExt = strtolower( end($fileExplode));
-        $correct_extensions = array("image/png","image/jpg","image/jpeg");
+        $fileExt = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+        $fileBase = pathinfo($origName, PATHINFO_FILENAME);
+        $fileName = $fileBase . mt_rand(1, 10000) . "." . $fileExt;
         $upload_dir = "/images/uniformes/";
 
-        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 2000000){
+        $mime = '';
+        if (function_exists('mime_content_type') && file_exists($filePath)) {
+            $mime = mime_content_type($filePath);
+        } else if (isset($_FILES['uni2']['type'])) {
+            $mime = $_FILES['uni2']['type'];
+        }
 
-                        //$fileData = file_get_contents($filePath);
-            //$time->uniforme2 = base64_encode($fileData).".".$fileExt;
-            $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName ;
+        $isValidExt = in_array($fileExt, $allowed_image_exts);
+        $isValidMime = empty($mime) || in_array($mime, $allowed_mimes);
+
+        if($filePath != "" && $isValidExt && $isValidMime && $fileSize <= 2000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
             imageImporter($filePath, $upload_path);
-          //  $result = move_uploaded_file($filePath, $upload_path);
-            //    if (!$result) {
-              //      $error_msg .= "Não foi possível inserir o uniforme, erro na inserção.";
-
-                //} else {
-                    $time->uniforme2 = $_SESSION['user_id'] ."-" .$fileName;
-                //}
-
-
+            $time->uniforme2 = $_SESSION['user_id'] . "-" . $fileName;
         } else {
             $error_msg .= "Não foi possível inserir o uniforme 2. ";
             if($fileSize > 2000000){
-                $error_msg .= "Arquivo deve ser menor que 2Mb.";
+                $error_msg .= "Arquivo deve ser menor que 2Mb. ";
             }
             if($filePath == ''){
-                $error_msg .= "Falha no nome do arquivo.";
+                $error_msg .= "Falha no envio do arquivo. ";
             }
-            if(in_array($fileType,$correct_extensions) == false){
-                $error_msg .= "Extensão ".$fileExt." não é permitida.";
+            if(!$isValidExt || !$isValidMime){
+                $error_msg .= "Extensão ou formato '".$fileExt."' não é permitido. ";
             }
         }
     }
@@ -203,15 +201,15 @@ function imageImporterWebP($file_name, $target_filename){
       if ( $width > $maxDim || $height > $maxDim ) {
         $ratio = $width/$height;
         if( $ratio > 1) {
-          $new_width = $maxDim;
-          $new_height = $maxDim/$ratio;
+          $new_width = (int) $maxDim;
+          $new_height = (int) round($maxDim/$ratio);
         } else {
-          $new_width = $maxDim*$ratio;
-          $new_height = $maxDim;
+          $new_width = (int) round($maxDim*$ratio);
+          $new_height = (int) $maxDim;
         }
     } else {
-      $new_width = $width;
-      $new_height = $height;
+      $new_width = (int) $width;
+      $new_height = (int) $height;
     }
         if($type == IMAGETYPE_PNG){
 			$compressed_png_content = compress_png($file_name);
@@ -230,37 +228,45 @@ function imageImporterWebP($file_name, $target_filename){
         imagecolortransparent($dst, $background);
         imagealphablending($dst, false);
         imagesavealpha($dst, true);
-        imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, $width, $height );
+        imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
         imagedestroy( $src );
 		imagewebp($dst, $target_filename);
         imagedestroy( $dst );
     }
 
-    if(isset($_FILES['mascote']) && !empty($_FILES['mascote'])){
-        $fileName = $_FILES['mascote']['name'];
-        $fileExplode = explode(".",$fileName);
-        $fileName = $fileExplode[0] . mt_rand(1,10000) .".webp";
+    if(isset($_FILES['mascote']) && is_array($_FILES['mascote']) && $_FILES['mascote']['error'] === UPLOAD_ERR_OK){
+        $origName = $_FILES['mascote']['name'];
         $fileSize = $_FILES['mascote']['size'];
         $filePath = $_FILES['mascote']['tmp_name'];
-        $fileType = $_FILES['mascote']['type'];
-        $fileExt = strtolower( end($fileExplode));
-        $correct_extensions = array("image/png","image/jpg","image/jpeg", "image/webp");
+        $fileExt = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+        $fileBase = pathinfo($origName, PATHINFO_FILENAME);
+        $fileName = $fileBase . mt_rand(1, 10000) . ".webp";
         $upload_dir = "/images/mascotes/";
 
-        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 3000000){
-            $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName ;
+        $mime = '';
+        if (function_exists('mime_content_type') && file_exists($filePath)) {
+            $mime = mime_content_type($filePath);
+        } else if (isset($_FILES['mascote']['type'])) {
+            $mime = $_FILES['mascote']['type'];
+        }
+
+        $isValidExt = in_array($fileExt, $allowed_image_exts);
+        $isValidMime = empty($mime) || in_array($mime, $allowed_mimes);
+
+        if($filePath != "" && $isValidExt && $isValidMime && $fileSize <= 3000000){
+            $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $_SESSION['user_id'] . "-" . $fileName;
             imageImporterWebP($filePath, $upload_path);
-            $time->mascote = $_SESSION['user_id'] ."-" .$fileName;
+            $time->mascote = $_SESSION['user_id'] . "-" . $fileName;
         } else {
             $error_msg .= "Não foi possível inserir o mascote. ";
             if($fileSize > 3000000){
-                $error_msg .= "Arquivo deve ser menor que 3Mb.";
+                $error_msg .= "Arquivo deve ser menor que 3Mb. ";
             }
             if($filePath == ''){
-                $error_msg .= "Falha no nome do arquivo.";
+                $error_msg .= "Falha no envio do arquivo. ";
             }
-            if(in_array($fileType,$correct_extensions) == false){
-                $error_msg .= "Extensão ".$fileExt." não é permitida.";
+            if(!$isValidExt || !$isValidMime){
+                $error_msg .= "Extensão ou formato '".$fileExt."' não é permitido. ";
             }
         }
     }

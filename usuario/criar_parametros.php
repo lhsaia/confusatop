@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
@@ -13,19 +13,14 @@ $db = $database->getConnection();
 $parametro = new Parametro($db);
 $pais = new Pais($db);
 
-$page_title = "Criar Parâmetros HYMT";
-$css_filename = "home_redesign";
-$css_login = "login";
-$aux_css = 'home_redesign';
-$extra_css = 'criar_parametros_redesign';
-$css_versao = date('h:i:s');
-include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+$feedback_html = '';
+if(isset($_SESSION['flash_msg'])){
+    $feedback_html = $_SESSION['flash_msg'];
+    unset($_SESSION['flash_msg']);
+}
 
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
-
-    $msg = '';
-
-    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
+    if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
         if(!empty($_POST['nome'])){
             $parametro->nome = $_POST['nome'];
             $parametro->dono = $_SESSION['user_id'];
@@ -39,14 +34,31 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
             $parametro->exibirBandeiras = isset($_POST['exibirBandeiras']) ? 1 : 0;
 
             if($parametro->inserir()){
-                $msg = "<div class='alert alert-success'><span class='closebtn'>&times;</span>Parâmetros inseridos com sucesso!</div>";
+                $_SESSION['flash_msg'] = "<div class='alert alert-success'><span class='closebtn'>&times;</span>Parâmetros inseridos com sucesso!</div>";
+                header("Location: " . $_SERVER['PHP_SELF']);
+                exit;
             } else {
-                $msg = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>Houve um erro ao inserir os parâmetros!</div>";
+                $_SESSION['flash_msg'] = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>Houve um erro ao inserir os parâmetros!</div>";
+                header("Location: " . $_SERVER['PHP_SELF']);
+                exit;
             }
         } else {
-            $msg = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>Preencha o nome dos parâmetros!</div>";
+            $_SESSION['flash_msg'] = "<div class='alert alert-danger'><span class='closebtn'>&times;</span>Preencha o nome dos parâmetros!</div>";
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit;
         }
     }
+}
+
+$page_title = "Criar Parâmetros HYMT";
+$css_filename = "home_redesign";
+$css_login = "login";
+$aux_css = 'home_redesign';
+$extra_css = 'criar_parametros_redesign';
+$css_versao = date('h:i:s');
+include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 ?>
 
 <main class="propostas-container">
@@ -62,7 +74,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
             </div>
         </div>
 
-        <?php if(!empty($msg)) echo $msg; ?>
+        <?php if(!empty($feedback_html)) echo $feedback_html; ?>
 
         <form method="POST" action="<?php echo $_SERVER['PHP_SELF']; ?>">
             <input type="hidden" name="dono" value="<?php echo $_SESSION['user_id']; ?>"/>

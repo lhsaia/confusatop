@@ -15,11 +15,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $time = new Time($db);
 	$liga = new Liga($db);
     $error_msg = "";
-	$listaLigas = $_POST['ligasSelecionadas'];
+	$listaLigas = $_POST['ligasSelecionadas'] ?? [];
 	$usuarioConectado = $_SESSION['user_id'];
 	
 	// verificar se as ligas são do usuário
-	$ligasUsuario = $liga->isFromUser($listaLigas, $usuarioConectado);
+	$ligasUsuario = !empty($listaLigas) && $liga->isFromUser($listaLigas, $usuarioConectado);
 	
 	if($ligasUsuario){
 		// criar lista de times das ligas
@@ -78,6 +78,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 		if($tecnicosTimes = $time->verificarTecnicos(null, $listaTimes)){
 			$error_msg .= "Há times sem técnico ou com técnicos demais. </br>";
 			foreach($tecnicosTimes as $timeErro){
+				$error_msg .= $timeErro[0] . "</br>";
+			}
+		}
+
+		if($climaEstadioTimes = $time->verificarClimaEstadio(null, $listaTimes)){
+			$error_msg .= "Há times com estádio sem clima cadastrado ou sem estádio associado. </br>";
+			foreach($climaEstadioTimes as $timeErro){
 				$error_msg .= $timeErro[0] . "</br>";
 			}
 		}

@@ -190,7 +190,7 @@ echo('</div>');
 		$(".example").each(function(){
 			let picker_id = $(this).attr("data-id");
 			let container_name = "#mapContainer" + picker_id;
-			console.log(container_name);
+			// console.log(container_name);
 			
 			$(this).leafletLocationPicker({
 				alwaysOpen:true,
@@ -223,10 +223,10 @@ echo('</div>');
                          //location.reload();
                      }
                  }).fail(function(jqXHR, textStatus, errorThrown ){
-                     console.log("Erro");
-                     console.log(jqXHR);
-                     console.log(textStatus);
-                     console.log(errorThrown);
+                     // console.log("Erro");
+                     // console.log(jqXHR);
+                     // console.log(textStatus);
+                     // console.log(errorThrown);
                  });;
         });
 
@@ -266,7 +266,7 @@ echo('</div>');
             var inputArquivo = (tbl_row.find('.inputfile'))[0];
             var escudo;
 
-            console.log(inputArquivo.files);
+            // console.log(inputArquivo.files);
 
             if (inputArquivo.files.length > 0) {
                planilha_importada = inputArquivo.files[0];
@@ -303,10 +303,10 @@ echo('</div>');
                          //location.reload();
                      }
                  }).fail(function(jqXHR, textStatus, errorThrown ){
-                     console.log("Erro");
-                     console.log(jqXHR);
-                     console.log(textStatus);
-                     console.log(errorThrown);
+                     // console.log("Erro");
+                     // console.log(jqXHR);
+                     // console.log(textStatus);
+                     // console.log(errorThrown);
                  });
 
                  tbl_row.find('.confirmarimport').hide();

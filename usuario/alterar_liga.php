@@ -9,6 +9,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $idLiga = $_POST['id'];
     $nomeLiga = $_POST['nomeLiga'];
     $tierLiga = $_POST['tierLiga'];
+    $limiteIdade = isset($_POST['limiteIdade']) ? $_POST['limiteIdade'] : null;
     $pais = $_POST['pais'];
     $error_msg = "";
     $new_logo_path = null;
@@ -17,20 +18,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
       $maxDim = 200;
       list($width, $height, $type, $attr) = getimagesize( $file_name );
       if ( $width > $maxDim || $height > $maxDim ) {
-      //  $target_filename = $file_name;
         $ratio = $width/$height;
         if( $ratio > 1) {
-          $new_width = $maxDim;
-          $new_height = $maxDim/$ratio;
+          $new_width = (int) $maxDim;
+          $new_height = (int) round($maxDim/$ratio);
         } else {
-          $new_width = $maxDim*$ratio;
-          $new_height = $maxDim;
+          $new_width = (int) round($maxDim*$ratio);
+          $new_height = (int) $maxDim;
         }
     } else {
-      $new_width = $width;
-      $new_height = $height;
+      $new_width = (int) $width;
+      $new_height = (int) $height;
     }
-        //$save_to_path = "uploads/compressed_file.png";
         if($type != "image/png"){
           $src = imagecreatefromstring( file_get_contents( $file_name ) );
         } else {
@@ -38,17 +37,14 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
           $src = imagecreatefromstring($compressed_png_content);
         }
 
-        //file_put_contents($save_to_path, $compressed_png_content);
         $dst = imagecreatetruecolor( $new_width, $new_height );
-        //start changes
         $background = imagecolorallocate($dst , 0, 0, 0);
         imagecolortransparent($dst, $background);
         imagealphablending($dst, false);
         imagesavealpha($dst, true);
-        //end changes
-        imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, $width, $height );
+        imagecopyresampled( $dst, $src, 0, 0, 0, 0, $new_width, $new_height, (int)$width, (int)$height );
         imagedestroy( $src );
-        imagepng( $dst, $target_filename ); // adjust format as needed
+        imagepng( $dst, $target_filename );
         imagedestroy( $dst );
 
     }
@@ -95,8 +91,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $liga = new Liga($db);
 
 
-    //alterar arbitro
-    if($liga->alterar($idLiga,$nomeLiga,$tierLiga,$pais,$new_logo_path)){
+    //alterar liga
+    if($liga->alterar($idLiga,$nomeLiga,$tierLiga,$pais,$new_logo_path,$limiteIdade)){
         $is_success = true;
         $error_msg .= "";
     } else {

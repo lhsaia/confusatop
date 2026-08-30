@@ -145,16 +145,29 @@ if (!empty($countries_with_pending)) {
 $(document).ready(function() {
     // Enviar time do portal
     $(document).on('click', '.btn-save-portal', function() {
-        var item = $(this).closest('.pending-roster-item');
+        var btn = $(this);
+        var item = btn.closest('.pending-roster-item');
+
+        if (btn.prop('disabled') || item.hasClass('is-submitting')) {
+            return;
+        }
+
         var compId = item.data('comp-id');
         var slotId = item.data('slot-id');
         var paisId = item.data('pais-id');
-        var timePortal = item.find('.select-portal-time').val();
+        var select = item.find('.select-portal-time');
+        var timePortal = select.val();
 
         if (timePortal == "0") {
             alert("Selecione um time do portal.");
             return;
         }
+
+        // Travar item e botões para evitar duplo envio
+        item.addClass('is-submitting');
+        btn.prop('disabled', true).text('Enviando...');
+        select.prop('disabled', true);
+        item.find('.btn-upload-ymt').css('pointer-events', 'none').css('opacity', '0.5');
 
         var formData = new FormData();
         formData.append('tipo_alteracao', 1);
@@ -173,26 +186,49 @@ $(document).ready(function() {
             cache: false
         }).done(function(response) {
             if (response.success) {
+                btn.text('Enviado!');
                 item.fadeOut(300, function() {
                     $(this).remove();
                     checkEmptyList();
                 });
             } else {
                 alert("Erro ao salvar: " + (response.errors || response.error || "Erro desconhecido"));
+                btn.prop('disabled', false).text('Enviar');
+                select.prop('disabled', false);
+                item.removeClass('is-submitting');
+                item.find('.btn-upload-ymt').css('pointer-events', 'auto').css('opacity', '1');
             }
         }).fail(function() {
             alert("Erro não esperado ao salvar.");
+            btn.prop('disabled', false).text('Enviar');
+            select.prop('disabled', false);
+            item.removeClass('is-submitting');
+            item.find('.btn-upload-ymt').css('pointer-events', 'auto').css('opacity', '1');
         });
     });
 
     // Upload de arquivo .ymt
     $(document).on('change', '.input-ymt-file', function() {
-        var item = $(this).closest('.pending-roster-item');
+        var input = $(this);
+        var label = input.closest('.btn-upload-ymt');
+        var item = input.closest('.pending-roster-item');
+
+        if (item.hasClass('is-submitting')) {
+            return;
+        }
+
         var compId = item.data('comp-id');
         var slotId = item.data('slot-id');
         var paisId = item.data('pais-id');
         var file = this.files[0];
         if (!file) return;
+
+        // Travar item e botões para evitar duplo upload
+        item.addClass('is-submitting');
+        var originalLabelText = label.text().trim();
+        label.css('pointer-events', 'none').css('opacity', '0.7').text('Importando...');
+        item.find('.btn-save-portal').prop('disabled', true);
+        item.find('.select-portal-time').prop('disabled', true);
 
         var formData = new FormData();
         formData.append('files', file);
@@ -210,15 +246,24 @@ $(document).ready(function() {
             cache: false
         }).done(function(response) {
             if (response.success) {
+                label.text('Importado!');
                 item.fadeOut(300, function() {
                     $(this).remove();
                     checkEmptyList();
                 });
             } else {
                 alert("Erro ao importar: " + (response.error || "Erro desconhecido"));
+                label.css('pointer-events', 'auto').css('opacity', '1').html(originalLabelText + '<input type="file" class="input-ymt-file" accept=".ymt" style="display: none;" />');
+                item.find('.btn-save-portal').prop('disabled', false);
+                item.find('.select-portal-time').prop('disabled', false);
+                item.removeClass('is-submitting');
             }
         }).fail(function() {
             alert("Erro não esperado durante o upload.");
+            label.css('pointer-events', 'auto').css('opacity', '1').html(originalLabelText + '<input type="file" class="input-ymt-file" accept=".ymt" style="display: none;" />');
+            item.find('.btn-save-portal').prop('disabled', false);
+            item.find('.select-portal-time').prop('disabled', false);
+            item.removeClass('is-submitting');
         });
     });
 

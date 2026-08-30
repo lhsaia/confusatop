@@ -86,11 +86,12 @@ if($num>0){
     echo "<thead>";
         echo "<tr>";
            // echo "<th>Id</th>";
-            echo "<th width='30%'>Liga</th>";
-            echo "<th width='20%'>Logo</th>";
+            echo "<th width='28%'>Liga</th>";
+            echo "<th width='15%'>Logo</th>";
             echo "<th width='10%'>Tier</th>";
-            echo "<th width='20%'class='wide'>País</th>";
-            echo "<th width='20%' class='wide'>Opções</th>";
+            echo "<th width='12%'>Idade Máx.</th>";
+            echo "<th width='18%' class='wide'>País</th>";
+            echo "<th width='17%' class='wide'>Opções</th>";
 
         echo "</tr>";
         echo "</thead>";
@@ -111,11 +112,14 @@ if($num>0){
                 $genderClass = "genderFem";
             }
 
+            $limiteIdadeDisplay = (!empty($limite_idade) && intval($limite_idade) > 0) ? $limite_idade : '-';
+
             echo "<tr id='".$id."' data-sexo='".$sexo."'>";
                 //echo "<td><span id=".$id.">{$id}</span></td>";
                 echo "<td><span class='nomeEditavel' id='nom".$id."'><a class='nomeLiga fw-bold' href='../ligas/leaguestatus.php?league=".$id."' style='text-decoration:none;'>{$nome}</a></span><span class=' {$genderClass} genderSign'>{$genderCode}</span></td>";
-                echo "<td><img class='logoimage' id='log".$id."' src='../images/ligas/".$logo."' height='35px'/><div class='newlogoedit' hidden> <input type='file' id='newlogo".$id."' class=' custom-file-upload' name='file' accept='.jpg,.png,.jpeg'/></div></td>";
+                echo "<td><img class='logoimage' id='log".$id."' src='../images/ligas/".$logo."' height='35px'/><div class='newlogoedit' hidden> <input type='file' id='newlogo".$id."' class=' custom-file-upload' name='file' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
                 echo "<td><span class='tier-badge nomeEditavel' id='tie".$id."'>{$tier}</span></td>";
+                echo "<td><span class='idade-badge nomeEditavel' id='ida".$id."' title='Limite de idade (vazio ou - para sem limite)'>{$limiteIdadeDisplay}</span></td>";
                 if($idPais != 0){
                     echo "<td class='wide'><img src='/images/bandeiras/{$bandeiraPais}' class='bandeira nomePais' id='ban".$id."'>  <span class='nomePais' id='pai".$id."'>{$siglaPais}</span>";
                 } else {
@@ -224,6 +228,10 @@ echo "</main>"; // closes propostas-container
         var id = tbl_row.attr('id');
         var nomeLiga = tbl_row.find('#nom'+id).html();
         var tierLiga = tbl_row.find('#tie'+id).html();
+        var limiteIdade = tbl_row.find('#ida'+id).text().trim();
+        if (limiteIdade === '-' || limiteIdade === '') {
+            limiteIdade = '';
+        }
         var pais = tbl_row.find('.comboPais').val();
 
         var input = (tbl_row.find('#newlogo'+id))[0];
@@ -241,6 +249,7 @@ echo "</main>"; // closes propostas-container
          formData.append('id', id);
          formData.append('nomeLiga', nomeLiga);
          formData.append('tierLiga', tierLiga);
+         formData.append('limiteIdade', limiteIdade);
          formData.append('pais', pais);
          if(logo != null){
             formData.append('logo', logo);
@@ -324,7 +333,7 @@ $('.draftar').click(function(){
                     .done(function(data) {
 
             // log data to the console so we can see
-            console.log(data);
+            // console.log(data);
 
 
             if (data.success) {
@@ -334,10 +343,10 @@ $('.draftar').click(function(){
             }
 
 }).fail(function(jqXHR, textStatus, errorThrown ){
-            console.log("Erro");
-            console.log(jqXHR);
-            console.log(textStatus);
-            console.log(errorThrown);
+            // console.log("Erro");
+            // console.log(jqXHR);
+            // console.log(textStatus);
+            // console.log(errorThrown);
             });
 
 });

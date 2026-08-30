@@ -3,9 +3,9 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 $logged_user = $_SESSION['user_id'];
 
-require_once("/home/lhsaia/confusa.top/vendor/autoload.php");
-include_once("/home/lhsaia/confusa.top/config/database.php");
-include_once("/home/lhsaia/confusa.top/objetos/jogador.php");
+require_once $_SERVER['DOCUMENT_ROOT'] . '/lib/simplexlsx/SimpleXLSX.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/config/database.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/objetos/jogador.php';
 
 //conexão para obter dados do MySQL
 $mainDatabase = new Database();
@@ -18,7 +18,7 @@ $failed_players = "";
 $is_success = false;
 $player_list = array();
 
-use PhpOffice\PhpSpreadsheet\IOFactory;
+use Shuchkin\SimpleXLSX;
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
@@ -29,12 +29,26 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
       if($filePath != "" && in_array($fileType,$correct_extensions)){
 
-        $inputFileName = $filePath;
-        $spreadsheet = IOFactory::load($inputFileName);
-        $sheetData = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
+        $xlsx = SimpleXLSX::parse($filePath);
+        if (!$xlsx) {
+            die(json_encode([ 'success'=> false , 'error_msg' => SimpleXLSX::parseError()]));
+        }
+
+        $rawRows = $xlsx->rows();
+        $sheetData = [];
+        $colLetters = range('A', 'Z');
+        foreach ($rawRows as $rIdx => $rowValues) {
+            $rowNum = $rIdx + 1;
+            $sheetData[$rowNum] = [];
+            foreach ($rowValues as $cIdx => $val) {
+                if (isset($colLetters[$cIdx])) {
+                    $sheetData[$rowNum][$colLetters[$cIdx]] = $val;
+                }
+            }
+        }
 
         $cell_scan = 2;
-        $index_data = isset($sheetData[$cell_scan]["A"]) ? $sheetData[$cell_scan]["A"] : "";
+        $index_data = isset($sheetData[$cell_scan]["A"]) ? trim((string)$sheetData[$cell_scan]["A"]) : "";
 
         while( $index_data != ""){
           $player_index = $index_data;
@@ -51,7 +65,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
           (integer)$sheetData[$cell_scan]["Q"] . (integer)$sheetData[$cell_scan]["R"] . (integer)$sheetData[$cell_scan]["T"] . (integer)$sheetData[$cell_scan]["U"] .
           (integer)$sheetData[$cell_scan]["S"] . (integer)$sheetData[$cell_scan]["V"] . (integer)$sheetData[$cell_scan]["W"];
 
-          //$player_list[] = [$player_index, $player_name, $player_birth, $player_origin, $player_level, $player_ment, $player_fk, $player_det, $player_pos];
           if($jogador->modificarPlanilhaImportada($logged_user, $player_index, $player_name, $player_birth, $player_origin, $player_level, $player_ment, $player_fk, $player_det, $player_pos)){
 
           } else {
@@ -60,7 +73,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
           }
 
           $cell_scan = $cell_scan + 1;
-          $index_data = isset($sheetData[$cell_scan]["A"]) ? $sheetData[$cell_scan]["A"] : "";
+          $index_data = isset($sheetData[$cell_scan]["A"]) ? trim((string)$sheetData[$cell_scan]["A"]) : "";
         }
 
         if($error_count == 0){
@@ -70,11 +83,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
           $error_msg .= "Houve erros com " . $error_count . " jogadores: \n" . $failed_players;
         }
 
-        // deleting new spreadsheet
-         $spreadsheet->disconnectWorksheets();
-         unset($spreadsheet);
-
-die(json_encode([ 'success'=> $is_success, 'error_msg' => $error_msg]));
+        die(json_encode([ 'success'=> $is_success, 'error_msg' => $error_msg]));
 
       } else {
 
@@ -94,7 +103,5 @@ die(json_encode([ 'success'=> $is_success, 'error_msg' => $error_msg]));
 } else {
   die(json_encode([ 'success'=> false , 'error_msg' => "Usuário não logado"]));
 }
-
-
 
 ?>

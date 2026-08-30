@@ -69,12 +69,12 @@ $horas = round($tempoDesatualizado/3600,1);
 
 // Consulta para contar partidas ativas e desfalques de times do usuário
 $query_count_jogos_ativos = "
-    SELECT j.id, j.competicao,
+    SELECT j.id, j.competicao_id as competicao,
            
            -- Check if time A has injured or suspended players
            (SELECT COUNT(*) FROM contratos_jogador cj 
             INNER JOIN jogador jog ON cj.jogador = jog.ID 
-            LEFT JOIN competicao_suspensos cs ON cs.id_jogador = jog.ID AND cs.id_competicao = j.competicao AND cs.suspenso = 1
+            LEFT JOIN competicao_suspensos cs ON cs.id_jogador = jog.ID AND cs.id_competicao = j.competicao_id AND cs.suspenso = 1
             WHERE cj.clube = j.timeA_id AND cj.tipoContrato = 0 
               AND ((jog.lesionado_ate IS NOT NULL AND jog.lesionado_ate >= CURDATE()) OR cs.suspenso = 1)
            ) as desfalques_timeA,
@@ -82,19 +82,24 @@ $query_count_jogos_ativos = "
            -- Check if time B has injured or suspended players
            (SELECT COUNT(*) FROM contratos_jogador cj 
             INNER JOIN jogador jog ON cj.jogador = jog.ID 
-            LEFT JOIN competicao_suspensos cs ON cs.id_jogador = jog.ID AND cs.id_competicao = j.competicao AND cs.suspenso = 1
+            LEFT JOIN competicao_suspensos cs ON cs.id_jogador = jog.ID AND cs.id_competicao = j.competicao_id AND cs.suspenso = 1
             WHERE cj.clube = j.timeB_id AND cj.tipoContrato = 0 
               AND ((jog.lesionado_ate IS NOT NULL AND jog.lesionado_ate >= CURDATE()) OR cs.suspenso = 1)
            ) as desfalques_timeB,
            
            pA.dono as donoA, pB.dono as donoB
 
-    FROM competicao_jogos j
+    FROM jogos_clube j
     INNER JOIN clube cA ON j.timeA_id = cA.ID
     INNER JOIN paises pA ON cA.Pais = pA.id
     INNER JOIN clube cB ON j.timeB_id = cB.ID
     INNER JOIN paises pB ON cB.Pais = pB.id
-    WHERE j.status = 0
+    WHERE j.simulador_interno = 1
+      AND (
+          j.status = 0
+          OR (j.timeA_penaltis IS NULL AND DATE_ADD(j.data, INTERVAL 120 MINUTE) > NOW())
+          OR (j.timeA_penaltis IS NOT NULL AND DATE_ADD(j.data, INTERVAL 150 MINUTE) > NOW())
+      )
       AND (pA.dono = ? OR pB.dono = ?)
 ";
 $stmt_count_jogos_ativos = $db->prepare($query_count_jogos_ativos);
@@ -113,6 +118,70 @@ foreach ($jogos_ativos as $ja) {
     if ($temDesfalque) {
         $jogosComDesfalque++;
     }
+}
+
+// Consulta para contar total de desfalques ativos (DM + Suspensos) nos clubes do usuário
+$totalDesfalquesAtivos = 0;
+try {
+    $db->exec("CREATE TABLE IF NOT EXISTS `competicao_suspensos` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `id_competicao` INT NOT NULL,
+        `id_jogador` INT NOT NULL,
+        `cartoes_amarelos` INT DEFAULT 0,
+        `suspenso` TINYINT(1) DEFAULT 0,
+        `jogos_restantes` INT DEFAULT 0,
+        `lesionado_ate` DATE DEFAULT NULL,
+        INDEX (`id_competicao`),
+        INDEX (`id_jogador`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    // Contar lesionados ativos no DM
+    $stmt_dm = $db->prepare("
+        SELECT COUNT(DISTINCT j.ID) as total_dm
+        FROM contratos_jogador cj
+        INNER JOIN jogador j ON cj.jogador = j.ID
+        INNER JOIN clube c ON cj.clube = c.ID
+        INNER JOIN paises p ON c.Pais = p.id
+        WHERE p.dono = ? AND cj.tipoContrato = 0 
+          AND j.lesionado_ate IS NOT NULL AND j.lesionado_ate >= CURDATE()
+    ");
+    $stmt_dm->execute([$idUsuario]);
+    $total_dm = (int)($stmt_dm->fetch(PDO::FETCH_ASSOC)['total_dm'] ?? 0);
+
+    // Contar suspensos efetivos de clubes e competições ativas
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/competicao_clube.php");
+    $competicaoHelperDash = new Competicao_clube($db);
+
+    $stmt_susp = $db->prepare("
+        SELECT DISTINCT cs.id_competicao, c.ID as clube_id, cs.id_jogador
+        FROM competicao_suspensos cs
+        INNER JOIN contratos_jogador cj ON cs.id_jogador = cj.jogador AND cj.tipoContrato = 0
+        INNER JOIN clube c ON cj.clube = c.ID
+        INNER JOIN paises p ON c.Pais = p.id
+        WHERE p.dono = ? AND (cs.suspenso = 1 OR cs.jogos_restantes > 0)
+    ");
+    $stmt_susp->execute([$idUsuario]);
+    $suspensosRaw = $stmt_susp->fetchAll(PDO::FETCH_ASSOC);
+
+    $suspensosUnicos = [];
+    $cacheClubesAtivos = [];
+    foreach ($suspensosRaw as $sr) {
+        $cId = (int)$sr['id_competicao'];
+        $tId = (int)$sr['clube_id'];
+        $pId = (int)$sr['id_jogador'];
+        $key = "{$cId}_{$tId}";
+        if (!isset($cacheClubesAtivos[$key])) {
+            $cacheClubesAtivos[$key] = $competicaoHelperDash->isClubeAtivoNaCompeticao($cId, $tId);
+        }
+        if ($cacheClubesAtivos[$key] === true) {
+            $suspensosUnicos[$pId] = true;
+        }
+    }
+    $total_suspensos = count($suspensosUnicos);
+    $totalDesfalquesAtivos = $total_dm + $total_suspensos;
+} catch (Exception $e) {
+    error_log("Erro ao contar desfalques ativos no dashboard: " . $e->getMessage());
+    $totalDesfalquesAtivos = 0;
 }
 
 // Consulta direta e precisa para contar fichas pendentes de envio
@@ -192,6 +261,24 @@ $fichasPendentes = (int)($res_fichas['total'] ?? 0);
                     <?php endif; ?>
                 </h3>
                 <p class="hub-card-desc">Escalar equipes e gerenciar desfalques ativos nos seus confrontos.</p>
+            </div>
+        </a>
+
+        <!-- Central de Desfalques -->
+        <a href='desfalques.php' id="centralDesfalques" class='hub-card'>
+            <div class="hub-card-hero-image">
+                <img src="/images/jogos_ativos.webp" alt="Central de Desfalques" />
+            </div>
+            <div class="hub-card-body">
+                <h3 class="hub-card-title">
+                    <span>Central de Desfalques</span>
+                    <?php if ($totalDesfalquesAtivos > 0): ?>
+                        <span class="badge-status counter" style="background-color: #ef4444 !important; color: #fff !important;"><?php echo $totalDesfalquesAtivos; ?></span>
+                    <?php else: ?>
+                        <span class="material-symbols-outlined hub-card-arrow">arrow_forward</span>
+                    <?php endif; ?>
+                </h3>
+                <p class="hub-card-desc">Acompanhe atletas no Departamento Médico e punições disciplinares ativas.</p>
             </div>
         </a>
 

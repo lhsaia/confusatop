@@ -13,185 +13,187 @@ $db = $database->getConnection();
 // pass connection to objects
 $pais = new Pais($db);
 
-$pais->id = $_GET['idTime'];
+$pais->id = isset($_GET['idTime']) ? (int)$_GET['idTime'] : 0;
+$pais->readName();
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
+
+$feedback_html = '';
+if(isset($_SESSION['flash_msg'])){
+    $feedback_html = $_SESSION['flash_msg'];
+    unset($_SESSION['flash_msg']);
+}
+
+// if the form was submitted
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
+    if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && $pais->checarDono($pais->id,$_SESSION['user_id'])){
+        if(isset($_POST['origem']) && isset($_POST['fatorPercentual']) ){
+
+            $error_msg = '';
+            $origem = $_POST['origem'];
+            $fatorPercentual = (int)$_POST['fatorPercentual'];
+            $ocorrenciaNomeDuplo = (int)$_POST['ocorrenciaNomeDuplo'];
+            $indiceMiscigenacao = (int)$_POST['indiceMiscigenacao'];
+            if($fatorPercentual > 100){
+                $fatorPercentual = 100;
+            }
+
+            if($fatorPercentual < 1){
+                $fatorPercentual = 1;
+            }
+            if($ocorrenciaNomeDuplo > 100){
+                $ocorrenciaNomeDuplo = 100;
+            }
+
+            if($ocorrenciaNomeDuplo < 0){
+                $ocorrenciaNomeDuplo = 0;
+            }
+            if($indiceMiscigenacao > 100){
+                $indiceMiscigenacao = 100;
+            }
+
+            if($indiceMiscigenacao < 0){
+                $indiceMiscigenacao = 0;
+            }
+
+            if($_POST['nomeOuSobrenome'] > 10){
+                $nome = 1;
+                $sobrenome = 1;
+            } else if ($_POST['nomeOuSobrenome'] == 10){
+                $sobrenome = 0;
+                $nome = 1;
+            } else {
+                $nome = 0;
+                $sobrenome = 1;
+            }
+
+            // create the product
+            if($pais->novaDemografia($pais->id, $nome, $sobrenome, $origem, $fatorPercentual, $ocorrenciaNomeDuplo, $indiceMiscigenacao)){
+                $_SESSION['flash_msg'] = "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Fatia demográfica inserida com sucesso. <a href='/usuario/alterar_demografia.php?idPais=" . $pais->id . "' style='color: #0284c7; font-weight: bold; margin-left: 8px;'>Ver demografia &rarr;</a> " . $error_msg . "</div>";
+                header("Location: " . $_SERVER['REQUEST_URI']);
+                exit;
+            } else {
+                $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>".$error_msg."</div>";
+                header("Location: " . $_SERVER['REQUEST_URI']);
+                exit;
+            }
+        } else {
+            $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>".$error_msg." Campos em branco</div>";
+            header("Location: " . $_SERVER['REQUEST_URI']);
+            exit;
+        }
+    }
+}
 
 $page_title = "Inserir fatia demográfica";
 $css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'criar_pais_redesign';
+$aux_css = 'home_redesign';
+$extra_css = 'criar_pais_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && $pais->checarDono($pais->id,$_SESSION['user_id'])){
 ?>
 
-<div class="propostas-container">
-<div class="propostas-card">
-<h2 class="propostas-title">➕ Inserir Fatia Demográfica</h2>
-<div id='errorbox'></div>
+<main class="propostas-container">
+    <div class="propostas-card">
+        <h2 class="propostas-title">➕ Inserir Fatia Demográfica</h2>
+        <?php echo $feedback_html; ?>
+        <div id='inscricao'>
+            <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF'] . "?idTime=" . $pais->id; ?>'>
 
-<?php
-    $error_msg = '';
+                <label for="origem">Origem</label>
+                <?php
+                $stmt = $pais->listaOrigens();
+                echo "<select class='form-control' id='origem' name='origem'>";
+                while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
+                    extract($row_category);
+                    echo "<option value='{$ID}' data-nomeMasc='{$nomeM}' data-sobrenomeMasc='{$sobrenomeM}'>{$Origem}</option>";
+                }
+                echo "</select>";
+                ?>
 
-// if the form was submitted
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
-    
-    // print_r($_POST);
-if(isset($_POST['origem']) && isset($_POST['fatorPercentual']) ){
+                <label for="fatorPercentual">Fator percentual (%)</label>
+                <input type="number" class='form-control' min='1' max='100' value='10' name='fatorPercentual' id='fatorPercentual'>
 
-    // set product property values
-    $origem = $_POST['origem'];
-    $fatorPercentual = (int)$_POST['fatorPercentual'];
-    $ocorrenciaNomeDuplo = (int)$_POST['ocorrenciaNomeDuplo'];
-    $indiceMiscigenacao = (int)$_POST['indiceMiscigenacao'];
-    if($fatorPercentual > 100){
-        $fatorPercentual = 100;
-    }
+                <label for="ocorrenciaNomeDuplo">Ocorrência de nome duplo (%)</label>
+                <input type="number" class='form-control' min='0' max='100' value='0' name='ocorrenciaNomeDuplo' id='ocorrenciaNomeDuplo'>
 
-    if($fatorPercentual < 1){
-        $fatorPercentual = 1;
-    }
-    if($ocorrenciaNomeDuplo > 100){
-        $ocorrenciaNomeDuplo = 100;
-    }
+                <label for="indiceMiscigenacao">Índice de miscigenação (%)</label>
+                <input type="number" class='form-control' min='0' max='100' value='0' id='indiceMiscigenacao' name='indiceMiscigenacao'>
 
-    if($ocorrenciaNomeDuplo < 0){
-        $ocorrenciaNomeDuplo = 0;
-    }
-    if($indiceMiscigenacao > 100){
-        $indiceMiscigenacao = 100;
-    }
+                <label for="nomeOuSobrenome">Nome ou Sobrenome</label>
+                <select class='form-control' id='nomeOuSobrenome' name='nomeOuSobrenome'>
+                    <option id='opcaoNome' value='10'>Nome apenas</option>
+                    <option id='opcaoSobrenome' value='1'>Sobrenome apenas</option>
+                    <option id='opcaoAmbos' value='11'>Ambos</option>
+                </select>
 
-    if($indiceMiscigenacao < 0){
-        $indiceMiscigenacao = 0;
-    }
-
-    if($_POST['nomeOuSobrenome'] > 10){
-        $nome = 1;
-        $sobrenome = 1;
-    } else if ($_POST['nomeOuSobrenome'] == 10){
-        $sobrenome = 0;
-        $nome = 1;
-    } else {
-        $nome = 0;
-        $sobrenome = 1;
-    }
-
-    // create the product
-    if($pais->novaDemografia($pais->id, $nome, $sobrenome, $origem, $fatorPercentual, $ocorrenciaNomeDuplo, $indiceMiscigenacao)){
-
-        echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Fatia demográfica inserida com sucesso. ".$error_msg."</div>";
-    }
-    // if unable to create the product, tell the user
-    else{
-        echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>".$error_msg."</div>";
-    }
-}  else {
-
-    echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>".$error_msg." Campos em branco</div>";
-}
-}
-?>
-
-<script type="application/javascript">
-var close = document.getElementsByClassName("closebtn");
-var i;
-
-for (i = 0; i < close.length; i++) {
-    close[i].onclick = function(){
-        var div = this.parentElement;
-        div.style.opacity = "0";
-        setTimeout(function(){ div.style.display = "none"; }, 600);
-    }
-}
-</script>
-
-<div id='inscricao'>
-<form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF'] . "?idTime=" . $pais->id ?>'>
-
-    <label for="origem">Origem</label>
-    <?php
-    $stmt = $pais->listaOrigens();
-    echo "<select class='form-control' id='origem' name='origem'>";
-    while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
-        extract($row_category);
-        echo "<option value='{$ID}' data-nomeMasc='{$nomeM}' data-sobrenomeMasc='{$sobrenomeM}'>{$Origem}</option>";
-    }
-    echo "</select>";
-    ?>
-
-    <label for="fatorPercentual">Fator percentual (%)</label>
-    <input type="number" class='form-control inputHerdeiro' min='1' max='100' value='10' name='fatorPercentual' id='fatorPercentual'>
-
-    <label for="ocorrenciaNomeDuplo">Ocorrência de nome duplo (%)</label>
-    <input type="number" class='form-control inputHerdeiro' min='0' max='100' value='0' name='ocorrenciaNomeDuplo' id='ocorrenciaNomeDuplo'>
-
-    <label for="indiceMiscigenacao">Índice de miscigenação (%)</label>
-    <input type="number" class='form-control inputHerdeiro' min='0' max='100' value='0' id='indiceMiscigenacao' name='indiceMiscigenacao'>
-
-    <label for="nomeOuSobrenome">Nome ou Sobrenome</label>
-    <select class='form-control' id='nomeOuSobrenome' name='nomeOuSobrenome'>
-        <option id='opcaoNome' value='10'>Nome apenas</option>
-        <option id='opcaoSobrenome' value='1'>Sobrenome apenas</option>
-        <option id='opcaoAmbos' value='11'>Ambos</option>
-    </select>
-
-    <input type='hidden' name='pais' value='<?php echo $pais->id ?>'/>
-    <div style="margin-top: 24px;">
-        <button type="submit" name="criar" class="btn-submit">Inserir</button>
+                <input type='hidden' name='pais' value='<?php echo $pais->id; ?>'/>
+                
+                <div class="form-actions">
+                    <button type="submit" name="criar" id="salvar" class="btn">
+                        <span class="material-symbols-outlined">add_circle</span> Inserir
+                    </button>
+                    <button type="button" onclick="window.location='/usuario/alterar_demografia.php?idPais=<?php echo $pais->id; ?>';" class="btn">
+                        <span class="material-symbols-outlined">arrow_back</span> Voltar
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-</form>
-</div>
+</main>
 
 <script>
-$("#origem").on("change",function(){
-    var temNomeMasc = $('option:selected', this).attr("data-nomeMasc");
-    var temSobrenomeMasc = $('option:selected', this).attr("data-sobrenomeMasc");
-    if(temNomeMasc < 1){
-        $("#opcaoNome").hide();
-    } else {
-        $("#opcaoNome").show();
-        $("#nomeOuSobrenome").val(10).change();
-    }
-    if(temSobrenomeMasc < 1){
-        $("#opcaoSobrenome").hide();
-    } else {
-        $("#opcaoSobrenome").show();
-        $("#nomeOuSobrenome").val(1).change();
-    }
+$(document).ready(function(){
+    $(document).on('click', '.closebtn', function(){
+        var div = $(this).parent();
+        div.fadeOut(300, function(){ $(this).remove(); });
+    });
 
-    if(temNomeMasc >= 1 && temSobrenomeMasc >= 1){
-        $("#opcaoAmbos").show();
-        $("#nomeOuSobrenome").val(11).change();
-    } else {
-        $("#opcaoAmbos").hide();
-    }
-});
+    $("#origem").on("change",function(){
+        var temNomeMasc = $('option:selected', this).attr("data-nomeMasc");
+        var temSobrenomeMasc = $('option:selected', this).attr("data-sobrenomeMasc");
+        if(temNomeMasc < 1){
+            $("#opcaoNome").hide();
+        } else {
+            $("#opcaoNome").show();
+            $("#nomeOuSobrenome").val(10).change();
+        }
+        if(temSobrenomeMasc < 1){
+            $("#opcaoSobrenome").hide();
+        } else {
+            $("#opcaoSobrenome").show();
+            $("#nomeOuSobrenome").val(1).change();
+        }
 
-$("#nomeOuSobrenome").val(11);
+        if(temNomeMasc >= 1 && temSobrenomeMasc >= 1){
+            $("#opcaoAmbos").show();
+            $("#nomeOuSobrenome").val(11).change();
+        } else {
+            $("#opcaoAmbos").hide();
+        }
+    });
 
-$("#nomeOuSobrenome").on("change", function(){
-    if($(this).val() != 11){
-        $("#indiceMiscigenacao").val(100);
-        $("#indiceMiscigenacao").prop("readonly", true).change();
-    } else {
-        $("#indiceMiscigenacao").val(0);
-        $("#indiceMiscigenacao").prop("readonly", false).change();
-    }
+    $("#origem").trigger("change");
+
+    $("#nomeOuSobrenome").on("change", function(){
+        if($(this).val() != 11){
+            $("#indiceMiscigenacao").val(100);
+            $("#indiceMiscigenacao").prop("readonly", true).change();
+        } else {
+            $("#indiceMiscigenacao").val(0);
+            $("#indiceMiscigenacao").prop("readonly", false).change();
+        }
+    });
 });
 </script>
 
 <?php
 } else {
-    echo "<div class='alert alert-danger'>Usuário sem permissão para inserir demografia nesse país, por favor faça o login.</div>";
+    echo "<div class='propostas-container'><div class='alert alert-danger'>Usuário sem permissão para inserir demografia nesse país, por favor faça o login.</div></div>";
 }
-?>
 
-</div>
-</div>
-
-<?php
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 ?>

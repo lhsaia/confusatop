@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
@@ -179,8 +179,16 @@ $(document).ready(function() {
         });
     
     $("#importar_time").on("click", function(){
-        var paisesSelecionados = $('#paises').val() || [];
-        var ligasSelecionadas = $('#ligas').val() || [];
+        var paisesSelecionados = [];
+        $('#paises option:selected').each(function() {
+            paisesSelecionados.push($(this).val());
+        });
+
+        var ligasSelecionadas = [];
+        $('#ligas option:selected').each(function() {
+            ligasSelecionadas.push($(this).val());
+        });
+
         var opcaoSelecionada = $('#opcoes').val();
         
         var ligaPais = [];

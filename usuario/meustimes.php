@@ -188,19 +188,20 @@ function updateTable(ajax_data, current_page, highlighted, direction){
     tbl += "<table id='tabelaPrincipal' class='table'>";
         tbl += "<thead id='headings'>";
 			tbl += "<tr>";
-				tbl += "<th id='Nome' asc='' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspTime</th>";
-				tbl += "<th asc='' class='headings' width='2%'>Escudo</th>";
-				tbl += "<th asc='' class='headings' width='2%'>Mascote</th>";
-				tbl += "<th asc='' class='headings' width='2%'>Uniforme 1</th>";
-				tbl += "<th asc='' class='headings' width='2%'>Cores 1</th>";
-				tbl += "<th asc='' class='headings' width='2%'>Uniforme 2</th>";
-				tbl += "<th asc='' class='headings' width='2%'>Cores 2</th>";
-				tbl += "<th id='nomeEstadio' asc='' class='headings' width='15%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspEstadio</th>";
-				tbl += "<th id='MaxTorcedores' asc='' class='headings' width='2%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspMax Torcida</th>";
-				tbl += "<th id='Fidelidade' asc='' class='headings' width='2%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspFidelidade</th>";
-				tbl += "<th id='nomeLiga' asc='' class='headings' width='20%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspLiga</th>";
-				tbl += "<th id='siglaPais' asc='' class='headings' width='20%' class=''><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspPaís</th>";
-				tbl += "<th asc='' class='headings' width='5%' class=''>Opções</th>";
+				tbl += "<th id='Nome' asc='' class='headings' width='14%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Time</th>";
+				tbl += "<th id='TresLetras' asc='' class='headings' width='4%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Sigla</th>";
+				tbl += "<th asc='' class='headings' width='3%'>Escudo</th>";
+				tbl += "<th asc='' class='headings' width='3%'>Mascote</th>";
+				tbl += "<th asc='' class='headings' width='3%'>Uniforme 1</th>";
+				tbl += "<th asc='' class='headings' width='4%'>Cores 1</th>";
+				tbl += "<th asc='' class='headings' width='3%'>Uniforme 2</th>";
+				tbl += "<th asc='' class='headings' width='4%'>Cores 2</th>";
+				tbl += "<th id='nomeEstadio' asc='' class='headings' width='14%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Estádio</th>";
+				tbl += "<th id='MaxTorcedores' asc='' class='headings' width='7%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Max Torcida</th>";
+				tbl += "<th id='Fidelidade' asc='' class='headings' width='4%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Fidelidade</th>";
+				tbl += "<th id='nomeLiga' asc='' class='headings' width='14%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Liga</th>";
+				tbl += "<th id='siglaPais' asc='' class='headings' width='14%' class=''><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;País</th>";
+				tbl += "<th asc='' class='headings' width='9%' class=''>Opções</th>";
 			tbl += "</tr>";
         tbl +=  "</thead>";
         tbl +=  "<tbody>";
@@ -224,6 +225,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 			// geração da tabela
 			tbl += "<tr id='"+val['id']+"' data-sexo='"+val['sexo']+"' >";
 				tbl +=  "<td><span class='nomeEditavel' id='nom"+val['id']+"'><a class='linkNome' href='/ligas/teamstatus.php?team="+val['id']+"' >"+val['Nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span></td>";
+				tbl += "<td><span class='siglaEditavel' id='sig"+val['id']+"'>"+(val['TresLetras'] ? val['TresLetras'] : '')+"</span></td>";
 				tbl += "<td><div class='imageUpload'><img class='thumb' src='/images/escudos/"+val['Escudo']+"' /> <input type='file' hidden id='escudo"+val['id']+"' class='hiddenInput custom-file-upload' name='escudo' accept='.jpg,.png,.jpeg'/></div></td>";
 
 				let mascoteThumb = val['mascote'] && val['mascote'] != 'null' ? '/images/mascotes/' + val['mascote'] : '/images/mascotes/placeholder.png';
@@ -359,6 +361,7 @@ $('.quadrado-uniforme').each(function(i, obj) {
     tbl_row.find('.linkNome').css("cursor","text");
     tbl_row.find('.linkNome').css("pointer-events","none");
     tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
+    tbl_row.find('.siglaEditavel').attr('contenteditable', 'true').addClass('editavel');
     tbl_row.find('.salvar').show();
     tbl_row.find('.cancelar').show();
     tbl_row.find('.editar').hide();
@@ -403,6 +406,7 @@ $('.quadrado-uniforme').each(function(i, obj) {
     tbl_row.find('.linkNome').css("pointer-events","auto");
 
     tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+    tbl_row.find('.siglaEditavel').attr('contenteditable', 'false').removeClass('editavel');
     tbl_row.find('.comboPais').hide();
     tbl_row.find('.comboLiga').hide();
     tbl_row.find('.comboEstadio').hide();
@@ -446,6 +450,18 @@ $('.quadrado-uniforme').each(function(i, obj) {
 
 
   });
+
+  $(document).on('keypress', '.siglaEditavel.editavel', function(e){
+    if ($(this).text().length >= 3 && window.getSelection().toString().length === 0) {
+      e.preventDefault();
+    }
+  });
+
+  $(document).on('paste', '.siglaEditavel.editavel', function(e){
+    e.preventDefault();
+    var text = (e.originalEvent || e).clipboardData.getData('text/plain').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 3);
+    document.execCommand('insertText', false, text);
+  });
   
      
 $('.salvar').click(function(){
@@ -454,6 +470,7 @@ $('.salvar').click(function(){
     tbl_row.find('.linkNome').css("pointer-events","auto");
 
     tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+    tbl_row.find('.siglaEditavel').attr('contenteditable', 'false').removeClass('editavel');
     tbl_row.find('.comboPais').hide();
     tbl_row.find('.comboLiga').hide();
     tbl_row.find('.comboEstadio').hide();
@@ -473,6 +490,7 @@ $('.salvar').click(function(){
 
     var id = tbl_row.attr('id');
     var nomeTime = tbl_row.find('#nom'+id).html();
+    var sigla = tbl_row.find('#sig'+id).text().trim().toUpperCase().substring(0, 3);
     var maxTorcedores = tbl_row.find('.comboTorcedores').val();
     var fidelidade = tbl_row.find('#fid'+id).val();
     var estadio = tbl_row.find('.comboEstadio').val();
@@ -540,6 +558,7 @@ $('.salvar').click(function(){
     var formData = new FormData();
     formData.append('id', id);
     formData.append('nomeTime', nomeTime);
+    formData.append('sigla', sigla);
     formData.append('maxTorcedores', maxTorcedores);
     formData.append('fidelidade', fidelidade);
     formData.append('pais', pais);
@@ -566,7 +585,7 @@ $('.salvar').click(function(){
 
 
 for (var key of formData.entries()) {
-     console.log(key[0] + ', ' + key[1]);
+     // console.log(key[0] + ', ' + key[1]);
  }
 
      $.ajax({
@@ -617,7 +636,7 @@ $('.promover').click(function(){
                     .done(function(data) {
 
             // log data to the console so we can see
-            console.log(data);
+            // console.log(data);
 
 
             if (data.success) {
@@ -627,10 +646,10 @@ $('.promover').click(function(){
             }
 
 }).fail(function(jqXHR, textStatus, errorThrown ){
-            console.log("Erro");
-            console.log(jqXHR);
-            console.log(textStatus);
-            console.log(errorThrown);
+            // console.log("Erro");
+            // console.log(jqXHR);
+            // console.log(textStatus);
+            // console.log(errorThrown);
             });
 
 });

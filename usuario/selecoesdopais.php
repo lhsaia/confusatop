@@ -178,7 +178,7 @@ if($num>0){
                 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                     if($_SESSION['admin_status'] == '1' || $_SESSION['user_id'] === $idDonoPais){
                         $optionsString .= "<a id='edi".$ID."' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
-                        $optionsString .= "<a id='dow".$id."' title='Baixar arquivo .ymt' class='clickable exportar'><span class='material-symbols-outlined inlineButton azul'>download</span></a>";
+                        $optionsString .= "<a id='dow".$ID."' title='Baixar arquivo .ymt' class='clickable exportar'><span class='material-symbols-outlined inlineButton azul'>download</span></a>";
 
                         $optionsString .= "<a hidden id='sal".$ID."' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
                         $optionsString .= "<a hidden id='can".$ID."' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
@@ -246,9 +246,21 @@ $(document).ready(function() {
     })
     .done(function(response) {
 
+        if(response.error){
+            window.scrollTo(0, 0);
+            $('#errorbox').html('<div class="alert alert-danger"><span class="closebtn" style="float: right; cursor: pointer; font-weight: bold;" onclick="$(this).parent().fadeOut();">&times;</span>' + response.error + '</div>');
+            return;
+        }
+
         if(!response[2] || response[2].length === 0) {
             window.scrollTo(0, 0);
-            $('#errorbox').html('<div class="alert alert-danger">Esta seleção não possui nenhum técnico registrado. Para exportar um time, é obrigatório contratar um técnico primeiro.</div>');
+            $('#errorbox').html('<div class="alert alert-danger"><span class="closebtn" style="float: right; cursor: pointer; font-weight: bold;" onclick="$(this).parent().fadeOut();">&times;</span>Esta seleção não possui nenhum técnico registrado. Para exportar um time, é obrigatório contratar um técnico primeiro.</div>');
+            return;
+        }
+
+        if(!response[3] || response[3].length === 0 || !response[4] || response[4].length === 0) {
+            window.scrollTo(0, 0);
+            $('#errorbox').html('<div class="alert alert-danger"><span class="closebtn" style="float: right; cursor: pointer; font-weight: bold;" onclick="$(this).parent().fadeOut();">&times;</span>O estádio desta seleção não possui clima associado/cadastrado. Para exportar o arquivo .ymt, é obrigatório cadastrar e vincular um clima ao estádio.</div>');
             return;
         }
 		
@@ -475,8 +487,10 @@ $(document).ready(function() {
 
       download(fileName,xmlData);
     })
-    .fail(function() {
-      console.log("error");
+    .fail(function(xhr, status, error) {
+      // console.log("error: ", error, xhr.responseText);
+      window.scrollTo(0, 0);
+      $('#errorbox').html('<div class="alert alert-danger"><span class="closebtn" style="float: right; cursor: pointer; font-weight: bold;" onclick="$(this).parent().fadeOut();">&times;</span>Ocorreu um erro no servidor ao gerar a exportação da seleção.</div>');
     });
 
 
@@ -683,7 +697,7 @@ $('.salvar').click(function(){
 
 
 for (var key of formData.entries()) {
-     console.log(key[0] + ', ' + key[1]);
+     // console.log(key[0] + ', ' + key[1]);
  }
 
      $.ajax({
@@ -696,7 +710,7 @@ for (var key of formData.entries()) {
          data: formData,
               success: function(data) {
                   if(data.error != ''){
-                    console.log(data.error)
+                    // console.log(data.error)
                   } else {
                     location.reload();
                   }

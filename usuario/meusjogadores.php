@@ -252,7 +252,7 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 				var nascimentoDisplay = dataNascimento.toLocaleDateString("pt-BR", options);
 				
 				var valorDisplay = "F$ " +  Math.round((parseInt(val['valor'])/1000), 2) + "k";
-				console.log(val['valorAtualizado']);
+				// console.log(val['valorAtualizado']);
 				if(val['valorAtualizado'] != null){
 					var valorCalcDisplay = " <br>[F$ " +  Math.round((parseInt(val['valorAtualizado'])/1000), 2) + "k] ";
 				} else {
@@ -553,7 +553,7 @@ $('.cancelar').click(function(){
                 data: {jogadorId:jogadorId},
                 dataType: 'json',
                 success: function(data) {
-                  console.log(data.error);
+                  // console.log(data.error);
                   if(!data.success){
                     $('#errorbox').append('<div class="alert alert-danger">Não foi possível apagar o jogador. '+ data.error +'</div>');
                   } else {
@@ -712,7 +712,7 @@ $.ajax({
                 .done(function(data) {
 
         // log data to the console so we can see
-        console.log(data);
+        // console.log(data);
 
 
         if (! data.success) {
@@ -732,10 +732,10 @@ $.ajax({
 
         // here we will handle errors and validation messages
         }).fail(function(jqXHR, textStatus, errorThrown ){
-            console.log("Erro");
-            console.log(jqXHR);
-            console.log(textStatus);
-            console.log(errorThrown);
+            // console.log("Erro");
+            // console.log(jqXHR);
+            // console.log(textStatus);
+            // console.log(errorThrown);
             $('#modalProposta').hide();
             $('#errorbox').append('<div class="alert alert-danger">Não foi possível editar o jogador, '+errorThrown+'</div>');
         });

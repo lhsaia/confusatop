@@ -17,8 +17,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $idUsuario = $_SESSION['user_id'];
 
     // Query to pull all pending matches for the user's teams in active competitions
+    // Inclui partidas com status = 0 OU partidas simuladas com antecedência que ainda não terminaram no mundo real
     $query = "
-        SELECT j.id as match_id, j.competicao as comp_id, cl.nome as comp_nome, cl.ano as comp_ano,
+        SELECT j.id as match_id, j.competicao_id as comp_id, cl.nome as comp_nome, cl.ano as comp_ano,
                j.timeA_id, cA.Nome as timeA_nome, pA.dono as timeA_dono, cA.Escudo as timeA_escudo,
                j.timeB_id, cB.Nome as timeB_nome, pB.dono as timeB_dono, cB.Escudo as timeB_escudo,
                j.data, j.fase, j.grupo, f.nome as fase_nome,
@@ -26,7 +27,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                -- Check if time A has injured or suspended players
                (SELECT COUNT(*) FROM contratos_jogador cj 
                 INNER JOIN jogador jog ON cj.jogador = jog.ID 
-                LEFT JOIN competicao_suspensos cs ON cs.id_jogador = jog.ID AND cs.id_competicao = j.competicao AND cs.suspenso = 1
+                LEFT JOIN competicao_suspensos cs ON cs.id_jogador = jog.ID AND cs.id_competicao = j.competicao_id AND cs.suspenso = 1
                 WHERE cj.clube = j.timeA_id AND cj.tipoContrato = 0 
                   AND ((jog.lesionado_ate IS NOT NULL AND jog.lesionado_ate >= CURDATE()) OR cs.suspenso = 1)
                ) as desfalques_timeA,
@@ -34,19 +35,24 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                -- Check if time B has injured or suspended players
                (SELECT COUNT(*) FROM contratos_jogador cj 
                 INNER JOIN jogador jog ON cj.jogador = jog.ID 
-                LEFT JOIN competicao_suspensos cs ON cs.id_jogador = jog.ID AND cs.id_competicao = j.competicao AND cs.suspenso = 1
+                LEFT JOIN competicao_suspensos cs ON cs.id_jogador = jog.ID AND cs.id_competicao = j.competicao_id AND cs.suspenso = 1
                 WHERE cj.clube = j.timeB_id AND cj.tipoContrato = 0 
                   AND ((jog.lesionado_ate IS NOT NULL AND jog.lesionado_ate >= CURDATE()) OR cs.suspenso = 1)
                ) as desfalques_timeB
 
-        FROM competicao_jogos j
-        INNER JOIN competicao_lista cl ON j.competicao = cl.id
+        FROM jogos_clube j
+        INNER JOIN competicao_lista cl ON j.competicao_id = cl.id
         INNER JOIN clube cA ON j.timeA_id = cA.ID
         INNER JOIN paises pA ON cA.Pais = pA.id
         INNER JOIN clube cB ON j.timeB_id = cB.ID
         INNER JOIN paises pB ON cB.Pais = pB.id
         LEFT JOIN fase f ON j.fase = f.id
-        WHERE j.status = 0
+        WHERE j.simulador_interno = 1
+          AND (
+              j.status = 0
+              OR (j.timeA_penaltis IS NULL AND DATE_ADD(j.data, INTERVAL 120 MINUTE) > NOW())
+              OR (j.timeA_penaltis IS NOT NULL AND DATE_ADD(j.data, INTERVAL 150 MINUTE) > NOW())
+          )
           AND (pA.dono = :user_id_a OR pB.dono = :user_id_b)
         ORDER BY j.data ASC
     ";
