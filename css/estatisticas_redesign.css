@@ -377,6 +377,28 @@ body {
   text-align: center;
 }
 
+.bracket-bye-card {
+  background: rgba(2, 132, 199, 0.03);
+  border: 1px dashed rgba(2, 132, 199, 0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.bracket-bye-badge {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
   .propostas-container {

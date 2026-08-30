@@ -26,6 +26,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $sede_competicao = $info['sede'];
     $federacao_nome = $info['federacao'];
     
+    $optionsComp = $competicao->getOptions($idCompeticao);
+    $tipoCompeticao = isset($optionsComp['tipocompeticao']) ? (int)$optionsComp['tipocompeticao'] : 0;
+    $numTeamsComp = isset($optionsComp['numero_times']) ? (int)$optionsComp['numero_times'] : 0;
+
     // Conectar ao SQLite da competição
     $compDatabase = new SQLiteDatabase();
     $compDatabase->fileName = $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$idCompeticao."-database.db3";
@@ -43,6 +47,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             $row['Escudo'] = basename($row['Escudo']);
         }
         $clubes[$row['ID']] = $row;
+    }
+
+    // Carregar vagas / slots atribuídos do MariaDB
+    $assignedSlotTeams = [];
+    $stmtTimesSlots = $competicao->carregarListaTimes($idCompeticao);
+    while ($rSlot = $stmtTimesSlots->fetch(PDO::FETCH_ASSOC)) {
+        $sName = !empty($rSlot['slot']) ? $rSlot['slot'] : ("Slot " . $rSlot['codigo_time']);
+        if (!empty($rSlot['id_time_portal']) && intval($rSlot['id_time_portal']) > 0) {
+            $assignedSlotTeams[$sName] = intval($rSlot['id_time_portal']);
+        } else if ($rSlot['has_team'] == 1 || $rSlot['has_team'] == '1') {
+            $assignedSlotTeams[$sName] = -1 * abs(intval($rSlot['codigo_time']));
+        }
     }
     
     // 2. Carregar Jogadores do SQLite
@@ -65,18 +81,12 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         }
     }
     
-    // 4. Carregar Jogos e Calcular Tabela de Classificação por Grupo
-    // Apenas partidas com status = 1 e cujo término no tempo real já tenha passado
-    $stmtJogos = $db->prepare("SELECT id, timeA_id, timeA_nome, timeA_gols, timeB_id, timeB_nome, timeB_gols, timeA_penaltis, timeB_penaltis, status, fase, grupo, path 
+    // 4. Carregar Jogos da Competição
+    $stmtJogos = $db->prepare("SELECT id, timeA_id, timeA_nome, timeA_gols, timeB_id, timeB_nome, timeB_gols, timeA_penaltis, timeB_penaltis, data, status, fase, grupo, path 
                                FROM jogos_clube 
                                WHERE competicao_id = :idComp 
                                  AND simulador_interno = 1
-                                 AND status = 1
-                                 AND (
-                                     (timeA_penaltis IS NULL AND DATE_ADD(data, INTERVAL 120 MINUTE) <= NOW())
-                                     OR
-                                     (timeA_penaltis IS NOT NULL AND DATE_ADD(data, INTERVAL 150 MINUTE) <= NOW())
-                                 )");
+                               ORDER BY data ASC, id ASC");
     $stmtJogos->bindParam(':idComp', $idCompeticao, PDO::PARAM_INT);
     $stmtJogos->execute();
     $jogos = $stmtJogos->fetchAll(PDO::FETCH_ASSOC);
@@ -155,8 +165,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $fasesKnockout = [];
     
     foreach ($jogos as $j) {
-        // Se já foi simulado
-        if ($j['status'] == 1) {
+        $dataJogo = !empty($j['data']) ? strtotime($j['data']) : time();
+        $temPen = ($j['timeA_penaltis'] !== null && $j['timeA_penaltis'] !== '');
+        $duracaoSegundos = $temPen ? (150 * 60) : (120 * 60);
+        $jaTerminou = (time() >= ($dataJogo + $duracaoSegundos));
+
+        // Se já foi simulado e o tempo real da partida terminou
+        if ($j['status'] == 1 && $jaTerminou) {
             $idA = (int)$j['timeA_id'];
             $idB = (int)$j['timeB_id'];
             $golsA = (int)$j['timeA_gols'];
@@ -199,7 +214,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             }
         }
         
-        // Separar jogos de mata-mata
+        // Separar todos os jogos de mata-mata (agendados e concluídos)
         if ($j['fase'] > 2) {
             $fasesKnockout[$j['fase']][] = $j;
         }
@@ -562,6 +577,35 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                         $orderB = $faseOrder[$b] ?? (100 + $b);
                         return $orderA - $orderB;
                     });
+                    // Determinar se há BYEs no chaveamento de mata-mata
+                    $primeiraFaseId = array_key_first($fasesKnockout);
+                    $listaByesPrimeiraFase = [];
+                    if ($tipoCompeticao == 1 && $numTeamsComp > 0) {
+                        $bracketSizeComp = 2;
+                        if ($numTeamsComp > 32) $bracketSizeComp = 64;
+                        else if ($numTeamsComp > 16) $bracketSizeComp = 32;
+                        else if ($numTeamsComp > 8) $bracketSizeComp = 16;
+                        else if ($numTeamsComp > 4) $bracketSizeComp = 8;
+                        else if ($numTeamsComp > 2) $bracketSizeComp = 4;
+
+                        $numByesComp = $bracketSizeComp - $numTeamsComp;
+                        if ($numByesComp > 0) {
+                            for ($b = 1; $b <= $numByesComp; $b++) {
+                                $slotByeName = "Slot " . $b;
+                                $clubeByeId = $assignedSlotTeams[$slotByeName] ?? 0;
+                                $clubeByeObj = ($clubeByeId > 0 && isset($clubes[$clubeByeId])) ? $clubes[$clubeByeId] : null;
+                                $nomeBye = $clubeByeObj ? $clubeByeObj['Nome'] : $slotByeName;
+                                $escudoBye = $clubeByeObj ? ($clubeByeObj['Escudo'] ?? '0.png') : '0.png';
+
+                                $listaByesPrimeiraFase[] = [
+                                    'slot' => $slotByeName,
+                                    'nome' => $nomeBye,
+                                    'escudo' => $escudoBye
+                                ];
+                            }
+                        }
+                    }
+
                     foreach ($fasesKnockout as $faseId => $partidasFase):
                         $nomeFase = "Fase " . $faseId;
                         if ($faseId == 10) $nomeFase = "32-avos de Final";
@@ -575,21 +619,49 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                     <div class="bracket-phase">
                         <h3 class="bracket-phase-title"><?php echo $nomeFase; ?></h3>
                         <div class="bracket-matches-grid">
+                            <?php 
+                            // Na primeira fase, se existirem BYEs, exibi-los
+                            if ($faseId == $primeiraFaseId && !empty($listaByesPrimeiraFase)):
+                                foreach ($listaByesPrimeiraFase as $byeItem):
+                            ?>
+                                <div class="bracket-bye-card">
+                                    <div class="bracket-match-row">
+                                        <span class="bracket-team">
+                                            <img class="team-logo" src="/images/escudos/<?php echo $byeItem['escudo']; ?>" alt="" />
+                                            <?php echo htmlspecialchars($byeItem['nome']); ?>
+                                        </span>
+                                        <span class="bracket-bye-badge">BYE</span>
+                                    </div>
+                                    <div class="bracket-match-info" style="color: #0284c7; font-weight: 500;">
+                                        Classificado direto para a próxima fase
+                                    </div>
+                                </div>
+                            <?php 
+                                endforeach;
+                            endif;
+                            ?>
+
                             <?php foreach ($partidasFase as $partida): 
                                 $tA = $clubes[$partida['timeA_id']] ?? null;
                                 $tB = $clubes[$partida['timeB_id']] ?? null;
                                 $nomeTimeA = $tA['Nome'] ?? ($partida['timeA_nome'] ?? 'Indefinido');
                                 $nomeTimeB = $tB['Nome'] ?? ($partida['timeB_nome'] ?? 'Indefinido');
-                                $gA = $partida['status'] == 1 ? $partida['timeA_gols'] : '-';
-                                $gB = $partida['status'] == 1 ? $partida['timeB_gols'] : '-';
                                 
+                                $dtMatch = !empty($partida['data']) ? strtotime($partida['data']) : time();
                                 $temPenaltis = ($partida['status'] == 1 && $partida['timeA_penaltis'] !== null && $partida['timeB_penaltis'] !== null);
-                                $pA = $temPenaltis ? (int)$partida['timeA_penaltis'] : null;
-                                $pB = $temPenaltis ? (int)$partida['timeB_penaltis'] : null;
+                                $durMatchSec = $temPenaltis ? (150 * 60) : (120 * 60);
+                                $matchTerminou = (time() >= ($dtMatch + $durMatchSec));
+                                $podeRevelar = ($partida['status'] == 1 && $matchTerminou);
+
+                                $gA = $podeRevelar ? $partida['timeA_gols'] : '-';
+                                $gB = $podeRevelar ? $partida['timeB_gols'] : '-';
+                                
+                                $pA = ($podeRevelar && $temPenaltis) ? (int)$partida['timeA_penaltis'] : null;
+                                $pB = ($podeRevelar && $temPenaltis) ? (int)$partida['timeB_penaltis'] : null;
 
                                 $winA = "";
                                 $winB = "";
-                                if ($partida['status'] == 1) {
+                                if ($podeRevelar) {
                                     if ($gA > $gB) {
                                         $winA = "winner";
                                     } elseif ($gB > $gA) {
@@ -626,11 +698,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                         </span>
                                     </div>
                                     <div class="bracket-match-info">
-                                        <?php if($temPenaltis): ?>
+                                        <?php if($podeRevelar && $temPenaltis): ?>
                                             <span style="color: #0284c7; font-weight: 600; font-size: 0.78rem;">Pên: <?php echo $pA . " × " . $pB; ?></span>
+                                        <?php elseif(!empty($partida['data'])): ?>
+                                            <span><?php echo date('d/m/Y H:i', strtotime($partida['data'])); ?></span>
                                         <?php endif; ?>
                                         <?php if($partida['grupo']): ?>
-                                            <span>Grupo <?php echo htmlspecialchars($partida['grupo']); ?></span>
+                                            <span> • Grupo <?php echo htmlspecialchars($partida['grupo']); ?></span>
                                         <?php endif; ?>
                                     </div>
                                 </div>
