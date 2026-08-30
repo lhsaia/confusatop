@@ -81,6 +81,8 @@ if (!$isAjax) {
 }
 
 ?>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.12/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.12/dist/js/select2.min.js"></script>
 
 <?php if (!$isAjax): ?>
 <main class="propostas-container">
@@ -953,9 +955,8 @@ $(document).on("click", '.salvar', function(event){
       $(this).prop("checked", false).change();
   });
   $("#input_nome").val("");
-  $("select").each(function(){
-      $(this).val("0");
-      $(this).selectmenu("refresh");
+  $("select.smallform").each(function(){
+      $(this).val("0").trigger('change');
   });
 
 $('span', '#toggleButtonLabel').text('Qualquer dentre as posições marcadas');
@@ -964,12 +965,22 @@ $('span', '#toggleButtonLabel3').text('Masculino');
 
     });
 
-    $('#input_mentalidade').selectmenu();
-    $('#input_nacionalidade').selectmenu();
-	$('#input_liga').selectmenu();
+    $('#input_nacionalidade').select2({
+        placeholder: "Qualquer uma",
+        width: '100%'
+    });
+    $('#input_liga').select2({
+        placeholder: "Qualquer uma",
+        width: '100%'
+    });
+    $('#input_mentalidade').select2({
+        width: '100%'
+    });
     if($("#input_estilo").length != 0) {
-        $('#input_estilo').selectmenu();
-      }
+        $('#input_estilo').select2({
+            width: '100%'
+        });
+    }
 
 
 

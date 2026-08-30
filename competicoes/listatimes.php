@@ -132,32 +132,42 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 function showToast(msg, type = 'error') {
 	var isError = (type === 'error' || type === 'danger');
 	var isSuccess = (type === 'success');
-	var icon = isSuccess ? 'check_circle' : (isError ? 'warning' : 'info');
-	var title = isError ? 'Aviso sobre o Time' : (isSuccess ? 'Sucesso' : 'Informação');
-	var toastClass = isError ? 'toast-error' : (isSuccess ? 'toast-success' : 'toast-info');
+	var color = isSuccess ? '#059669' : isError ? '#dc2626' : '#0284c7';
+	var icon = isSuccess ? '✓' : isError ? '⚠' : 'ℹ';
 	
-	var toastId = 'toast_' + Date.now();
-	var toastHtml = `
-		<div id="${toastId}" class="floating-toast ${toastClass}">
-			<span class="material-symbols-outlined" style="font-size: 1.4rem; flex-shrink: 0; margin-top: 2px;">${icon}</span>
-			<div style="flex: 1; min-width: 0;">
-				<div style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.95rem; margin-bottom: 3px;">${title}</div>
-				<div style="font-size: 0.88rem; color: #334155; word-break: break-word;">${msg}</div>
-			</div>
-			<button type="button" onclick="$('#${toastId}').removeClass('show'); setTimeout(function(){ $('#${toastId}').remove(); }, 300);" style="background: none; border: none; font-size: 1.4rem; line-height: 1; color: #94a3b8; cursor: pointer; padding: 0 0 0 6px; margin-left: auto;">&times;</button>
-		</div>
-	`;
+	var toast = $('<div>').css({
+		position: 'fixed',
+		top: '80px',
+		right: '24px',
+		zIndex: 999999,
+		background: color,
+		color: '#ffffff',
+		padding: '14px 20px',
+		borderRadius: '12px',
+		fontFamily: 'Montserrat, sans-serif',
+		fontWeight: '600',
+		fontSize: '0.9rem',
+		lineHeight: '1.45',
+		boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
+		maxWidth: 'min(480px, calc(100vw - 48px))',
+		minWidth: '280px',
+		width: 'max-content',
+		display: 'block',
+		whiteSpace: 'normal',
+		wordBreak: 'normal',
+		opacity: 0,
+		transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+		boxSizing: 'border-box'
+	}).html('<div style="display:flex; align-items:flex-start; gap:10px; width:100%;"><span style="font-size:1.25rem; flex-shrink:0; line-height:1.2;">' + icon + '</span><div style="flex:1; min-width:0; color:#ffffff; font-size:0.88rem; font-weight:500;">' + msg + '</div><span style="cursor:pointer; margin-left:8px; font-size:1.3rem; line-height:1; opacity:0.8;" onclick="$(this).parent().parent().remove();">&times;</span></div>');
+
+	$('body').append(toast);
+	setTimeout(function() { toast.css('opacity', 1); }, 10);
 	
-	$('body').append(toastHtml);
-	setTimeout(function() { $('#' + toastId).addClass('show'); }, 20);
-	
-	var timeoutMs = isError ? 9000 : 4000;
+	var timeout = isError ? 9000 : 3500;
 	setTimeout(function() {
-		if($('#' + toastId).length) {
-			$('#' + toastId).removeClass('show');
-			setTimeout(function() { $('#' + toastId).remove(); }, 350);
-		}
-	}, timeoutMs);
+		toast.css('opacity', 0);
+		setTimeout(function() { toast.remove(); }, 350);
+	}, timeout);
 }
 
 $( document ).ready(function(){
@@ -358,18 +368,23 @@ $( document ).ready(function(){
 			let disabledStatus = (admin === "true" || parseInt(dono_competicao) === parseInt(user_id) || selectedOwner == user_id) ? "" : "disabled";
 			tbl += "<select id='selecaoTime"+i+"' name='equipe"+i+"' class='smallform selecaoTime' placeholder='Equipe...' "+disabledStatus+">";
 				tbl += "<option data-flag='/images/escudos/0.png' value=0>Selecione o time...</option>";
-				$.each(lista_times, function(index, val){
 				
-					if(val[2] == selectedCountry){
-						if(matchData && val[0] == matchData.id_time_portal){
-							var selectedTeam = " selected ";
-						} else {
-							var selectedTeam = "";
-						}
-						tbl += "<option data-flag='/images/escudos/"+val[5]+"' data-genero='"+val[3]+"' data-pais='"+val[2]+"' value='"+val[0]+"' "+selectedTeam+">"+val[1]+"</option>";
-						
-					}
+				var timesUsadosOutrasVagas = [];
+				if(Array.isArray(localData)){
+					timesUsadosOutrasVagas = localData
+						.filter(function(d){ return d.codigo_time != i && d.id_time_portal; })
+						.map(function(d){ return parseInt(d.id_time_portal); });
+				}
 
+				$.each(lista_times, function(index, val){
+					if(val[2] == selectedCountry){
+						var isCurrentTeam = (matchData && val[0] == matchData.id_time_portal);
+						if(!isCurrentTeam && timesUsadosOutrasVagas.indexOf(parseInt(val[0])) !== -1){
+							return; // Oculta time já selecionado em outra vaga desta competição
+						}
+						var selectedTeam = isCurrentTeam ? " selected " : "";
+						tbl += "<option data-flag='/images/escudos/"+val[5]+"' data-genero='"+val[3]+"' data-pais='"+val[2]+"' value='"+val[0]+"' "+selectedTeam+">"+val[1]+"</option>";
+					}
 				});
 				if(matchData && matchData.has_team == 1 && matchData.id_time_portal == null){
 					tbl += "<option data-flag='0.png'  value='' selected>Teste</option>";
@@ -541,10 +556,32 @@ $(document).on("change", ".selecaoPais", function(e, unlock){
     var codigo_time = parseInt($(this).attr('id').replace( /^\D+/g, ''));
     var pais_selecionado = parseInt($(this).val());
     var opt = "<option data-flag='/images/escudos/0.png' value=0>Selecione o time...</option>";
+    
+    var timesUsadosOutrasVagas = [];
+    $(".selecaoTime").each(function(){
+        var otherSlot = parseInt($(this).attr('id').replace(/^\D+/g, ''));
+        var otherVal = parseInt($(this).val());
+        if(otherSlot !== codigo_time && otherVal > 0 && otherVal !== 99999999) {
+            timesUsadosOutrasVagas.push(otherVal);
+        }
+    });
+    if(Array.isArray(localData)){
+        localData.forEach(function(d){
+            if(d.codigo_time != codigo_time && d.id_time_portal){
+                var tid = parseInt(d.id_time_portal);
+                if(timesUsadosOutrasVagas.indexOf(tid) === -1) timesUsadosOutrasVagas.push(tid);
+            }
+        });
+    }
+
     $.each(lista_times, function(index, val){
         if(val[2] == pais_selecionado){
             var match = localData.find(element => element.codigo_time == codigo_time);
-            var selectedTeam = (match && val[0] == match.id_time_portal) ? " selected " : "";
+            var isCurrentTeam = (match && val[0] == match.id_time_portal);
+            if(!isCurrentTeam && timesUsadosOutrasVagas.indexOf(parseInt(val[0])) !== -1){
+                return; // Oculta time já selecionado em outra vaga
+            }
+            var selectedTeam = isCurrentTeam ? " selected " : "";
             opt += "<option data-flag='/images/escudos/"+val[5]+"' data-genero='"+val[3]+"' data-pais='"+val[2]+"' value='"+val[0]+"' "+selectedTeam+">"+val[1]+"</option>";
         }
     });

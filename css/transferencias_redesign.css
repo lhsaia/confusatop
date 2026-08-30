@@ -178,31 +178,96 @@
   box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1) !important;
 }
 
-/* Customizando o botão gerado pelo jQuery UI Selectmenu */
-#form_busca_jogador .ui-selectmenu-button.ui-button {
-  width: auto !important;
-  min-width: 200px !important;
-  max-width: 300px !important;
-  display: inline-flex !important;
+#form_busca_jogador .form-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px 16px !important;
+  justify-content: center !important;
   align-items: center !important;
-  justify-content: space-between !important;
-  padding: 8px 12px !important;
-  margin: 6px 12px 6px 0 !important;
-  font-family: 'Montserrat', sans-serif !important;
-  font-size: 0.85rem !important;
-  border: 1px solid rgba(0, 0, 0, 0.15) !important;
-  border-radius: 6px !important;
-  background: #fff !important;
-  background-image: none !important;
-  color: #334155 !important;
-  height: auto !important;
-  box-sizing: border-box !important;
-  vertical-align: middle !important;
+  width: 100% !important;
+  margin-bottom: 8px !important;
 }
 
-#form_busca_jogador .ui-selectmenu-button.ui-button:focus {
+#form_busca_jogador .form-group-inline {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex: 1 1 240px !important;
+  max-width: 320px !important;
+  text-align: left !important;
+}
+
+#form_busca_jogador .form-group-inline label {
+  white-space: nowrap !important;
+  margin: 0 !important;
+  min-width: fit-content !important;
+}
+
+#form_busca_jogador .select2-container {
+  flex: 1 !important;
+  min-width: 180px !important;
+  width: 100% !important;
+}
+
+#form_busca_jogador .select2-container .select2-selection--single {
+  height: 38px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.2s ease !important;
+}
+
+#form_busca_jogador .select2-container--open .select2-selection--single,
+#form_busca_jogador .select2-container--focus .select2-selection--single {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12) !important;
+}
+
+#form_busca_jogador .select2-selection__rendered {
+  line-height: normal !important;
+  padding-left: 10px !important;
+  padding-right: 24px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.85rem !important;
+  color: #334155 !important;
+  text-align: left !important;
+}
+
+#form_busca_jogador .select2-selection__arrow {
+  height: 36px !important;
+  top: 1px !important;
+  right: 4px !important;
+}
+
+.select2-dropdown {
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.85rem !important;
+  z-index: 99999 !important;
+}
+
+.select2-search--dropdown .select2-search__field {
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.85rem !important;
+  outline: none !important;
+}
+
+.select2-search--dropdown .select2-search__field:focus {
   border-color: #0284c7 !important;
   box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1) !important;
+}
+
+.select2-results__option--highlighted[aria-selected] {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
 }
 
 /* Checkbox do jQuery UI checkboxradio para posições e requisitos */

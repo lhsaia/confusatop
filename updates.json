@@ -14,6 +14,16 @@
       "items": [
         {
           "badge": "design",
+          "title": "Select2 com Campo de Busca nos Filtros do Mercado",
+          "desc": "Atualizados os filtros da Busca Avançada no Mercado (transferencias.php), adicionando Select2 com barra de pesquisa para seleção rápida de Nacionalidade, Liga, Mentalidade e Estilo."
+        },
+        {
+          "badge": "new",
+          "title": "Filtro Dinâmico de Times Já Selecionados na Competição",
+          "desc": "Na tela de gerenciamento de vagas (listatimes.php), times que já estão escalados em alguma vaga deixam de aparecer nas opções das outras vagas, evitando seleções duplicadas acidentais."
+        },
+        {
+          "badge": "design",
           "title": "Toasts Flutuantes de Validação em Lista de Times",
           "desc": "Substituídas as mensagens estáticas de erro do topo da página em listatimes.php por toasts flutuantes modernos e fixos na viewport, permitindo que o usuário visualize avisos e validações de times sem precisar rolar até o início da tela."
         },
