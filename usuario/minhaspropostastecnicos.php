@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 ini_set( 'display_errors', true );
 error_reporting( E_ALL );
@@ -109,8 +109,20 @@ if($num>0){
                 echo "<td><img src='/images/icons/".$direcao.".png' width='30px' height='30px'/></td>";
                 echo "<td data-label='Técnico'><a href='/ligas/coachstatus.php?coach={$idJogador}' style='color:#0284c7; text-decoration:none; font-weight:600;'><span class='nomeEditavel'>{$nomeJogador}</span></a></td>";
                 echo "<td data-label='Nível'><span class='nomeEditavel'>{$nivelJogador}</span></td>";
-                echo "<td data-label='Origem'><img class='thumb' src='/images/escudos/".$escudoOrigem . "' /><span class='nomeEditavel'>{$clubeOrigem}</span></td>";
-                echo "<td data-label='Destino'><img class='thumb' src='/images/escudos/".$escudoDestino . "' /><span class='nomeEditavel'>{$clubeDestino}</span></td>";
+                echo "<td data-label='Origem'><img class='thumb' src='/images/escudos/".$escudoOrigem . "' />";
+                if(!empty($idClubeOrigem)){
+                  echo "<a href='/ligas/teamstatus.php?team={$idClubeOrigem}' class='nomeEditavel'>{$clubeOrigem}</a>";
+                } else {
+                  echo "<span class='nomeEditavel'>{$clubeOrigem}</span>";
+                }
+                echo "</td>";
+                echo "<td data-label='Destino'><img class='thumb' src='/images/escudos/".$escudoDestino . "' />";
+                if(!empty($idClubeDestino)){
+                  echo "<a href='/ligas/teamstatus.php?team={$idClubeDestino}' class='nomeEditavel'>{$clubeDestino}</a>";
+                } else {
+                  echo "<span class='nomeEditavel'>{$clubeDestino}</span>";
+                }
+                echo "</td>";
                 echo "<td data-label='Data Prop.'><span class='nomeEditavel'>{$formattedDataProp}</span></td>";
                 echo "<td data-label='Data Concl.'><span class='nomeEditavel'>{$formattedDataConcl}</span></td>";
                 

@@ -14,6 +14,11 @@
       "items": [
         {
           "badge": "bugfix",
+          "title": "Links de Clubes de Origem e Destino em Propostas de Técnicos",
+          "desc": "Os nomes dos clubes de origem e destino na tabela de Propostas de Técnicos agora são clicáveis e direcionam para o perfil do respectivo clube, padronizando a navegação com a tela de propostas de jogadores."
+        },
+        {
+          "badge": "bugfix",
           "title": "Compatibilidade de Retorno JsonSerializable no Octamotor",
           "desc": "Adicionado tipo de retorno mixed e atributo #[\\ReturnTypeWillChange] aos métodos jsonSerialize() das classes Driver e Car, eliminando avisos de depreciação do PHP 8.1+."
         },

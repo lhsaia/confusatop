@@ -814,7 +814,7 @@ class Tecnico{
         function lerPropostasPendentes($idUsuario,$from_record_num,$records_per_page){
             $idUsuario = htmlspecialchars(strip_tags($idUsuario));
 
-            $query = "SELECT j.Nome as nomeJogador, c.Nome as clubeOrigem, d.Nome as clubeDestino, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 when t.status_execucao = 3 then 2 end) as precedencia, t.mensagens
+            $query = "SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem, d.Nome as clubeDestino, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 when t.status_execucao = 3 then 2 end) as precedencia, t.mensagens
             FROM transferencias_tecnico t
             LEFT JOIN clube c ON t.clubeOrigem = c.id
             LEFT JOIN tecnico j ON t.tecnico = j.id
@@ -823,7 +823,7 @@ class Tecnico{
             LEFT JOIN paises q ON j.Pais = q.id
             WHERE ((p.dono = ? AND (t.status_execucao = 0 OR t.status_execucao = 3)) OR (c.id = 0 AND q.dono = ? AND (t.status_execucao = 0 OR t.status_execucao = 3)))
             UNION
-            SELECT j.Nome as nomeJogador, c.Nome as clubeOrigem, d.Nome as clubeDestino, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'outbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao, t.id as idTransferencia, (case when t.status_execucao = 2 then 1 else 2 end) as precedencia, t.mensagens
+            SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem, d.Nome as clubeDestino, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'outbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao, t.id as idTransferencia, (case when t.status_execucao = 2 then 1 else 2 end) as precedencia, t.mensagens
             FROM transferencias_tecnico t
             LEFT JOIN clube d ON t.clubeDestino = d.id
             LEFT JOIN tecnico j ON t.tecnico = j.id
