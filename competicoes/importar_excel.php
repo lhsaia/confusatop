@@ -6,6 +6,10 @@ if(!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true){
     die(json_encode(['success' => false, 'error' => 'Acesso negado.']));
 }
 
+if($_SESSION['emTestes'] ?? false){
+    die(json_encode(['success' => false, 'error' => 'Usuários em período de testes não podem importar planilhas.']));
+}
+
 $idCompeticao = isset($_POST['id']) ? intval($_POST['id']) : 0;
 if (!$idCompeticao) {
     die(json_encode(['success' => false, 'error' => 'ID da competição não fornecido.']));

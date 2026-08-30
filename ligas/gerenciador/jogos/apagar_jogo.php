@@ -12,6 +12,12 @@ if(!isset($_SESSION['loggedin']) || !$_SESSION['loggedin']){
     exit;
 }
 
+if($_SESSION['emTestes'] ?? false){
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Usuários em período de testes não podem excluir jogos.']);
+    exit;
+}
+
 $database = new Database();
 $db = $database->getConnection();
 $jogo = new Jogo($db);

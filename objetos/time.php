@@ -254,7 +254,7 @@ function readInfo($id){
     }
 
          // used by select drop-down list
-         function read($dono = null, $selecao = null){
+         function read($dono = null, $selecao = null, $apenasConfusa = false){
 
             if($selecao === false){
                 $subquery = " ";
@@ -268,6 +268,10 @@ function readInfo($id){
               $donoQuery = " p.dono = ? ";
             } else {
               $donoQuery = " 1 = 1 ";
+            }
+
+            if($apenasConfusa){
+              $donoQuery .= " AND p.federacao > 0 AND p.federacao IN (1, 2, 3, 4) ";
             }
 
             //select all data

@@ -25,10 +25,21 @@ $arbitro_read = new TrioArbitragem($db);
 $estadio_read = new Estadio($db);
 $clima_read = new Clima($db);
 
+if(!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] != true){
+    header("Location: /index.php");
+    exit;
+}
+
+if($_SESSION['emTestes'] ?? false){
+    $_SESSION['flash_msg'] = "<div class='alert alert-warning' style='background: rgba(251, 191, 36, 0.15); color: #d97706; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-weight: 500;'>Usuários em período de testes não possuem permissão para criar competições.</div>";
+    header("Location: /competicoes/index.php");
+    exit;
+}
+
 $error_msg = '';
 $alert_html = '';
 
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && !($_SESSION['emTestes'] ?? false)){
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
         if(isset($_POST['nome']) && isset($_POST['ano']) ){
             $competicao->nome = $_POST['nome'];

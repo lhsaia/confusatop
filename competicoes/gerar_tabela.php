@@ -4,6 +4,10 @@ if(!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true){
     die(json_encode(['success' => false, 'error' => 'Login required']));
 }
 
+if($_SESSION['emTestes'] ?? false){
+    die(json_encode(['success' => false, 'error' => 'Usuários em período de testes não podem gerar tabelas de competições.']));
+}
+
 $idCompeticao = intval($_POST['id']);
 $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : 0; // 0: Misto, 1: Mata-mata, 2: Round-robin
 

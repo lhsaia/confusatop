@@ -34,6 +34,12 @@ echo '<link rel="stylesheet" href="/css/importacao_moderna.css?v=' . $css_versao
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
+if($_SESSION['emTestes'] ?? false){
+    echo "<div class='propostas-container'><div class='propostas-card'><div class='alert alert-warning' style='background: rgba(251, 191, 36, 0.15); color: #d97706; padding: 16px; border-radius: 8px;'>Usuários em período de testes não possuem permissão para importar jogos de clubes.</div></div></div>";
+    include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
+    exit;
+}
+
 // Fetch User's Leagues (Private)
 $stmtLigas = $liga->read($_SESSION['user_id']);
 

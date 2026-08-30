@@ -104,7 +104,7 @@ var listaFederacoes =  <?php echo json_encode($listaFederacoes); ?>;
 $(document).ready(function($){
 	
 		 <?php
-	 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
+	 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && !($_SESSION['emTestes'] ?? false)){
 		 echo "$('#toolbar').html('<div id=\"criar_competicao\"><span class=\"material-symbols-outlined\">add_circle</span><span>Competição</span></div>')";
 	 }
     

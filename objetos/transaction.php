@@ -22,7 +22,6 @@ class Transaction{
 	public function getOptions(){
 		$query = "SELECT id, nome, icone FROM " . $this->table_name . "_opcoes";
 		$stmt = $this->conn->prepare( $query );
-		$stmt->bindParam(1, $idClube);
 		$stmt->execute();
 		return $stmt;
 	}
@@ -32,9 +31,9 @@ class Transaction{
 		if ($teamId <= 0) {
 			return null;
 		}
-		$transactionType = htmlspecialchars(strip_tags($transactionType));
-		$startDate = htmlspecialchars(strip_tags($startDate));
-		$endDate = htmlspecialchars(strip_tags($endDate));
+		$transactionType = htmlspecialchars(strip_tags((string)$transactionType));
+		$startDate = !empty($startDate) ? htmlspecialchars(strip_tags((string)$startDate)) : null;
+		$endDate = !empty($endDate) ? htmlspecialchars(strip_tags((string)$endDate)) : null;
 		
 		$filters = "";
 		$in_filters = "";
@@ -45,13 +44,13 @@ class Transaction{
 			$tr_filters .= " WHERE tipo_movimentacao = :movType ";
 		} 
 		
-		if($startDate != null){
+		if($startDate !== null){
 			$filters .= " AND data >:startDate ";
 			$in_filters .= " AND data > :startDate2 ";
 			$out_filters .= " AND data > :startDate3 ";
 		} 
 		
-		if($endDate != null){
+		if($endDate !== null){
 			$filters .= " AND data <:endDate ";
 			$in_filters .= " AND data < :endDate2 ";
 			$out_filters .= " AND data < :endDate3 ";
@@ -108,12 +107,12 @@ class Transaction{
         $stmt = $this->conn->prepare($query);
 
         // posted values
-        $this->timestamp=htmlspecialchars(strip_tags($this->timestamp));
-        $this->transaction_type=htmlspecialchars(strip_tags($this->transaction_type));
-        $this->cash_flow=htmlspecialchars(strip_tags($this->cash_flow));
-        $this->value=htmlspecialchars(strip_tags($this->value));
-        $this->comment=htmlspecialchars(strip_tags($this->comment));
-        $this->team=htmlspecialchars(strip_tags($this->team));
+        $this->timestamp=htmlspecialchars(strip_tags((string)$this->timestamp));
+        $this->transaction_type=htmlspecialchars(strip_tags((string)$this->transaction_type));
+        $this->cash_flow=htmlspecialchars(strip_tags((string)$this->cash_flow));
+        $this->value=htmlspecialchars(strip_tags((string)$this->value));
+        $this->comment=htmlspecialchars(strip_tags((string)$this->comment));
+        $this->team=htmlspecialchars(strip_tags((string)$this->team));
         
 
         // bind values
@@ -134,7 +133,7 @@ class Transaction{
 	
 	    //apagar transação
     function apagar($idApagar){
-        $idApagar = htmlspecialchars(strip_tags($idApagar));
+        $idApagar = htmlspecialchars(strip_tags((string)$idApagar));
         $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
         $stmt = $this->conn->prepare( $query );
         $stmt->bindParam(1, $idApagar);

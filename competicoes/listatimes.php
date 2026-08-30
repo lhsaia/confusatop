@@ -30,7 +30,7 @@ $dono_competicao = $info['dono'];
 $options = $competicao->getOptions($idCompeticao);
 
 // query caixa de seleção países
-$stmtPais = $pais->read(null,null,false);
+$stmtPais = $pais->read(null,null,false,true);
 $listaPaises = array();
 while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
     extract($row_pais);
@@ -51,7 +51,7 @@ while ($row_torneios = $stmtTorneio->fetch(PDO::FETCH_ASSOC)){
 
 // query caixa de seleção times
 
-$stmtTime = $time->read(null,false);
+$stmtTime = $time->read(null,false,true);
 $listaTimes = array();
 while ($row_times = $stmtTime->fetch(PDO::FETCH_ASSOC)){
     extract($row_times);

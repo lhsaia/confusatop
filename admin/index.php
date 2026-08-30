@@ -183,6 +183,18 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
             <span style="display: inline-block; margin-top: 16px; color: #c084fc; font-weight: 600; font-size: 14px;">Gerenciar Scraper &rarr;</span>
         </a>
 
+        <!-- Card 5: Teste Discord Notifier -->
+        <a href="/admin/teste_discord.php" class="admin-card" style="border-top: 3px solid #5865F2 !important;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <span class="material-symbols-outlined" style="font-size: 32px; color: #5865F2;">notifications_active</span>
+                <h2>Teste Discord Notifier</h2>
+            </div>
+            <p>
+                Simule e envie notificações fakes de transferências para testar a comunicação com o Webhook do Discord em produção.
+            </p>
+            <span style="display: inline-block; margin-top: 16px; color: #5865F2; font-weight: 600; font-size: 14px;">Testar notificação &rarr;</span>
+        </a>
+
     </div>
     
     <div style="margin-top: 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">

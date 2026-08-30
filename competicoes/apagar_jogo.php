@@ -1,5 +1,14 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
+
+if(!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true){
+    die(json_encode(['success' => false, 'error' => 'Acesso negado.']));
+}
+
+if($_SESSION['emTestes'] ?? false){
+    die(json_encode(['success' => false, 'error' => 'Usuários em período de testes não podem apagar partidas.']));
+}
+
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/competicao_clube.php");
 

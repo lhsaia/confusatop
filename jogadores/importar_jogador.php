@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 header('Content-Type: text/html; charset=utf-8');
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -21,6 +21,14 @@ $css_versao = date('h:i:s');
 $_SESSION[ 'jogadorTime' ] = 1;
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
+
+if($_SESSION['emTestes'] ?? false){
+    include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+    echo '<main class="propostas-container narrow-container" style="padding-top: 80px; padding-bottom: 60px;"><div class="propostas-card"><div class="alert alert-warning" style="background: rgba(251, 191, 36, 0.15); color: #d97706; padding: 16px; border-radius: 8px;">Usuários em período de testes não possuem permissão para importar jogadores.</div></div></main>';
+    include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
+    exit;
+}
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");

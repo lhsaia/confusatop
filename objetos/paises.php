@@ -286,7 +286,7 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
 
 
     // used by select drop-down list
-    function read($dono = null,$jogos = null, $incluirReais = null){
+    function read($dono = null,$jogos = null, $incluirReais = null, $apenasConfusa = false){
 
         $conditions = array();
         if($dono != null){
@@ -295,7 +295,9 @@ function readFromFederation($from_record_num, $records_per_page, $federation_ind
         if($jogos != null){
             $conditions[] = "ranqueavel = 0";
         }
-        if($incluirReais === false){
+        if($apenasConfusa){
+            $conditions[] = "federacao > 0 AND federacao IN (1, 2, 3, 4) AND dono != 0";
+        } else if($incluirReais === false){
             $conditions[] = "dono != 0";
         } else if($incluirReais === true){
             // No specific condition needed if we include everything, 

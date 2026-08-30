@@ -60,7 +60,7 @@ $num = $stmt->rowCount();
 <div class="header-actions-container">
     <h2 class="propostas-title">Quadro de países - <?php echo $_SESSION['nomereal']?></h2>
     <?php
-    if(!$_SESSION['emTestes'] || $num < 1){
+    if(!($_SESSION['emTestes'] ?? false)){
         $onclick = "window.location='/ligas/criar_pais.php'";
         echo "<button id='importar_time' class='btn-action-primary' onclick=\"".$onclick."\">Criar país</button>";
     }

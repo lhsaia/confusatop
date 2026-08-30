@@ -6,6 +6,10 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
+    if($_SESSION['emTestes'] ?? false){
+        die(json_encode(['success' => false, 'error' => 'Usuários em período de testes não podem alterar competições.']));
+    }
+
     $tipo = $_POST['tipo_alteracao'];
     
     // LOG DE DEBUG
@@ -39,7 +43,16 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 			//alterar pais do time
 			$idCompeticao = $_POST['codigo_competicao'];
 			$codigoTime = $_POST['codigo_time'];
-			$paisTime = $_POST['pais_time'];
+			$paisTime = intval($_POST['pais_time']);
+			
+			if($paisTime > 0){
+				$stCheckPais = $db->prepare("SELECT federacao, dono FROM paises WHERE id = ? LIMIT 1");
+				$stCheckPais->execute([$paisTime]);
+				$rCheckPais = $stCheckPais->fetch(PDO::FETCH_ASSOC);
+				if(!$rCheckPais || empty($rCheckPais['federacao']) || intval($rCheckPais['dono']) === 0 || !in_array(intval($rCheckPais['federacao']), [1, 2, 3, 4])){
+					die(json_encode(['success' => false, 'error' => 'Apenas países membros oficiais da CONFUSA são permitidos em competições.']));
+				}
+			}
 			
 			$prevTeamId = 0;
 			try {
@@ -68,8 +81,17 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 			//alterar time baseado no portal
 			$idCompeticao = $_POST['codigo_competicao'];
 			$codigoTime = $_POST['codigo_time'];
-			$paisTime = $_POST['pais_time'];
-			$timePortal = $_POST['time_portal'];
+			$paisTime = intval($_POST['pais_time']);
+			$timePortal = intval($_POST['time_portal']);
+			
+			if($timePortal > 0){
+				$stCheckClub = $db->prepare("SELECT p.federacao, p.dono FROM clube c JOIN paises p ON c.Pais = p.id WHERE c.ID = ? LIMIT 1");
+				$stCheckClub->execute([$timePortal]);
+				$rCheckClub = $stCheckClub->fetch(PDO::FETCH_ASSOC);
+				if(!$rCheckClub || empty($rCheckClub['federacao']) || intval($rCheckClub['dono']) === 0 || !in_array(intval($rCheckClub['federacao']), [1, 2, 3, 4])){
+					die(json_encode(['success' => false, 'error' => 'Apenas clubes de países membros oficiais da CONFUSA são permitidos em competições.']));
+				}
+			}
 			
 			$prevTeamId = 0;
 			try {

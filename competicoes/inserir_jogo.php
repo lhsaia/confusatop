@@ -5,6 +5,10 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
+    if($_SESSION['emTestes'] ?? false){
+        die(json_encode(['success' => false, 'error' => 'Usuários em período de testes não podem inserir partidas.']));
+    }
+
     $id_competicao = $_POST['codigo_competicao'];
     $timeA = $_POST['timeA'];
     $timeB = $_POST['timeB'];

@@ -6,6 +6,10 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
     
+    if($_SESSION['emTestes'] ?? false){
+        die(json_encode(['success' => false, 'error' => 'Usuários em período de testes não podem alterar opções de competições.']));
+    }
+    
 $error_msg = "";
    
 // include database and object files

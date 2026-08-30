@@ -14,6 +14,10 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     json_fail('Sem permissão. Faça o login para importar partidas.');
 }
 
+if ($_SESSION['emTestes'] ?? false) {
+    json_fail('Usuários em período de testes não podem importar partidas.');
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_fail('Método inválido.');
 }

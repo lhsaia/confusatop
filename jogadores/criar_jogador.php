@@ -21,6 +21,17 @@ $pais = new Pais($db);
 $usuario = new Usuario($db);
 $time = new Time($db);
 
+if(!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] != true){
+    header("Location: /index.php");
+    exit;
+}
+
+if($_SESSION['emTestes'] ?? false){
+    $_SESSION['flash_msg'] = "<div class='alert alert-warning' style='background: rgba(251, 191, 36, 0.15); color: #d97706; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-weight: 500;'>Usuários em período de testes não possuem permissão para criar jogadores.</div>";
+    header("Location: /usuario/meusjogadores.php");
+    exit;
+}
+
 $feedback_html = '';
 if(isset($_SESSION['flash_msg'])){
     $feedback_html = $_SESSION['flash_msg'];
@@ -29,7 +40,7 @@ if(isset($_SESSION['flash_msg'])){
 
 // se jogador foi submetido
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && !($_SESSION['emTestes'] ?? false)){
 if(isset($_POST['nome']) && isset($_POST['nascimento']) && $_POST['pais'] != 0 && !empty($_POST['comboPosicoes'])){
 
     $error_msg = '';

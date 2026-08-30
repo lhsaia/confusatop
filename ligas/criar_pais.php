@@ -20,6 +20,17 @@ $db = $database->getConnection();
 $pais = new Pais($db);
 $usuario = new Usuario($db);
 
+if(!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] != true){
+    header("Location: /index.php");
+    exit;
+}
+
+if($_SESSION['emTestes'] ?? false){
+    $_SESSION['flash_msg'] = "<div class='alert alert-warning' style='background: rgba(251, 191, 36, 0.15); color: #d97706; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-weight: 500;'>Usuários em período de testes não possuem permissão para criar novos países.</div>";
+    header("Location: /usuario/meuspaises.php");
+    exit;
+}
+
 $feedback_html = '';
 if(isset($_SESSION['flash_msg'])){
     $feedback_html = $_SESSION['flash_msg'];
@@ -28,7 +39,7 @@ if(isset($_SESSION['flash_msg'])){
 
 // if the form was submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
-if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
+if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && !($_SESSION['emTestes'] ?? false)){
 if(isset($_POST['nome']) && !empty($_POST['sigla']) && !empty($_POST['nome']) ){
 	
     $error_msg = '';

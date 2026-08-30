@@ -11,6 +11,10 @@ if(!isset($_POST['criar'])){
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
+    if($_SESSION['emTestes'] ?? false){
+        die(json_encode(['success' => false, 'error' => 'Usuários em período de testes não podem gerar jogadores via Hexagen.']));
+    }
+
     if(isset($_POST['criar'])){
         $nacionalidade = $_POST['pais'];
     } else {

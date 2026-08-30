@@ -3,6 +3,14 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 ini_set( 'display_errors', true );
 error_reporting( E_ALL );
+
+if(!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true){
+    die(json_encode(['success' => false, 'error' => 'Acesso negado.']));
+}
+
+if($_SESSION['emTestes'] ?? false){
+    die(json_encode(['success' => false, 'error' => 'Usuários em período de testes não podem importar arquivos YMT.']));
+}
 	
 $pais_time = $_POST['pais_time'];
 $idCompeticao = $_POST['id_competicao'];

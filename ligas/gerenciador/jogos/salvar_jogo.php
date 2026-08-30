@@ -8,6 +8,16 @@ $database = new Database();
 $db = $database->getConnection();
 $jogo = new Jogo($db);
 
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    echo json_encode(['success' => false, 'message' => 'Usuário não autenticado.']);
+    exit;
+}
+
+if ($_SESSION['emTestes'] ?? false) {
+    echo json_encode(['success' => false, 'message' => 'Usuários em período de testes não podem criar ou alterar jogos de clubes.']);
+    exit;
+}
+
 if ($_POST) {
     $db->beginTransaction();
     try {
