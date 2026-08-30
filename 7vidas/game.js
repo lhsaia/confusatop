@@ -214,7 +214,7 @@ function initGame() {
             loadGlobalRankings();
             return;
         } catch(e) {
-            console.error("Failed to load saved state", e);
+            // console.error("Failed to load saved state", e);
         }
     }
     showSetup();

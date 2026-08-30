@@ -266,7 +266,7 @@ $("#input_nome").change(function(){
       $(this).val(0);
     });
   }
-  console.log(competicao_selecionada);
+  // console.log(competicao_selecionada);
   if(competicao_selecionada != 0){
     var federacao_selecionada = parseInt($("option:selected", this).attr("data-federacao"));
     var genero_selecionado = parseInt($("option:selected", this).attr("data-genero"));

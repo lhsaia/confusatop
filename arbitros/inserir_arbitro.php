@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 ?>
 <!DOCTYPE html>
@@ -21,6 +21,45 @@ $pais = new Pais($db);
 $arbitro = new TrioArbitragem($db);
 $usuario = new Usuario($db);
 
+$feedback_html = '';
+if(isset($_SESSION['flash_msg'])){
+    $feedback_html = $_SESSION['flash_msg'];
+    unset($_SESSION['flash_msg']);
+}
+
+// if the form was submitted
+if ($_SERVER['REQUEST_METHOD'] == 'POST'){
+    if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
+        if(isset($_POST['nome_arbitro']) && !empty($_POST['nome_aux2']) && !empty($_POST['nome_aux1']) && !empty($_POST['nome_arbitro'])){
+
+            // set product property values
+            $arbitro->nomeArbitro = $_POST['nome_arbitro'];
+            $arbitro->nomeAuxiliarUm = $_POST['nome_aux1'];
+            $arbitro->nomeAuxiliarDois = $_POST['nome_aux2'];
+            $arbitro->estilo = $_POST['estilo_arbitro'];
+            $arbitro->pais = $_POST['nacionalidade_arbitro'];
+            $arbitro->nivel = $_POST['nivel_arbitro'];
+            $arbitro->nascimento = $_POST['nascimento_arbitro'];
+
+            // create the product
+            if($arbitro->create()){
+                $usuario->atualizarAlteracao($_SESSION['user_id']);
+                $_SESSION['flash_msg'] = "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Árbitro inserido com sucesso</div>";
+                header("Location: " . $_SERVER['PHP_SELF']);
+                exit;
+            } else{
+                $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Não foi possível inserir o árbitro, possível duplicata</div>";
+                header("Location: " . $_SERVER['PHP_SELF']);
+                exit;
+            }
+        }  else {
+            $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Não foi possível inserir o árbitro, campos em branco</div>";
+            header("Location: " . $_SERVER['PHP_SELF']);
+            exit;
+        }
+    }
+}
+
 $page_title = "Inserir árbitro";
 $css_filename = "home_redesign";
 $css_login = 'login';
@@ -29,35 +68,6 @@ $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
-
-
-// if the form was submitted
-if ($_SERVER['REQUEST_METHOD'] == 'POST'){
-if(isset($_POST['nome_arbitro']) && !empty($_POST['nome_aux2']) && !empty($_POST['nome_aux1']) && !empty($_POST['nome_arbitro'])){
-
-    // set product property values
-    $arbitro->nomeArbitro = $_POST['nome_arbitro'];
-    $arbitro->nomeAuxiliarUm = $_POST['nome_aux1'];
-    $arbitro->nomeAuxiliarDois = $_POST['nome_aux2'];
-    $arbitro->estilo = $_POST['estilo_arbitro'];
-    $arbitro->pais = $_POST['nacionalidade_arbitro'];
-	$arbitro->nivel = $_POST['nivel_arbitro'];
-	$arbitro->nascimento = $_POST['nascimento_arbitro'];
-
-
-
-    // create the product
-    if($arbitro->create()){
-        echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Árbitro inserido com sucesso</div>";
-        $usuario->atualizarAlteracao($_SESSION['user_id']);
-    } else{
-        echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Não foi possível inserir o árbitro, possível duplicata</div>";
-    }
-}  else {
-
-    echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Não foi possível inserir o árbitro, campos em branco</div>";
-}
-}
 ?>
 
 <script type="application/javascript">
@@ -94,7 +104,7 @@ if(isset($_POST['nome_arbitro']) && !empty($_POST['nome_aux2']) && !empty($_POST
                 $("#nascimento_arbitro").val(data.arb_info.nascimento);
             }
         }).fail(function(jqXHR, textStatus, errorThrown ){
-            console.log("Erro");
+            // console.log("Erro");
         });
     });
  });
@@ -114,6 +124,7 @@ if(isset($_POST['nome_arbitro']) && !empty($_POST['nome_aux2']) && !empty($_POST
             <a href="/arbitros" class="btn-voltar">Voltar</a>
         </div>
     </div>
+<?php echo $feedback_html; ?>
 <div id='inscricao'>
 
 <form method="POST" action='<?php echo $_SERVER['PHP_SELF']; ?>'>

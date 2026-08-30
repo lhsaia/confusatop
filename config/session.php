@@ -1,11 +1,20 @@
 <?php
 // Centralized PHP error logging configuration
-$isLocalhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']) 
-    || (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost:') === 0);
+$prodLogDir = '/home/lhsaia/confusa.top/logs';
+$prodLogPath = $prodLogDir . '/php_errors.log';
 
-$logPath = $isLocalhost 
-    ? dirname(__DIR__) . '/php_errors.log' 
-    : '/home/lhsaia/confusa.top/logs/php_errors.log';
+$host = $_SERVER['HTTP_HOST'] ?? '';
+$isWindows = (PHP_OS_FAMILY === 'Windows' || DIRECTORY_SEPARATOR === '\\');
+
+// Identifica produção: não é Windows, pasta de logs de prod existe e não é domínio local
+$isProduction = !$isWindows 
+    && is_dir($prodLogDir) 
+    && (strpos($host, 'confusa.top') !== false)
+    && (strpos($host, 'local') === false);
+
+$logPath = $isProduction 
+    ? $prodLogPath 
+    : dirname(__DIR__) . '/php_errors.log';
 
 ini_set('log_errors', '1');
 ini_set('error_log', $logPath);
@@ -33,74 +42,72 @@ if (file_exists($session_dir) && is_writable($session_dir)) {
     }
 }
 
-if ($use_custom_path) {
-    ini_set('session.save_path', $session_dir);
-}
-
-// Set session garbage collection and cookie lifetime to 30 days
-$session_lifetime = 60 * 60 * 24 * 30; // 30 days
-ini_set('session.gc_maxlifetime', $session_lifetime);
-ini_set('session.cookie_lifetime', $session_lifetime);
-
-// Custom Garbage Collection: 1% de chance de limpar arquivos de sessão com mais de 30 dias
-if ($use_custom_path && mt_rand(1, 100) === 1) {
-    $now = time();
-    foreach (glob($session_dir . '/sess_*') as $file) {
-        if (is_file($file) && ($now - filemtime($file) > $session_lifetime)) {
-            @unlink($file);
-        }
-    }
-}
-
-// Retrieve default cookie parameters
-$params = session_get_cookie_params();
-
-// Normalize host domain to share cookies across www and non-www subdomains
-$host = $_SERVER['HTTP_HOST'] ?? '';
-$host = explode(':', $host)[0];
-$cookie_domain = null;
-
-if (filter_var($host, FILTER_VALIDATE_IP) === false && strpos($host, '.') !== false) {
-    if (substr($host, 0, 4) === 'www.') {
-        $cookie_domain = '.' . substr($host, 4);
-    } else {
-        $cookie_domain = '.' . $host;
-    }
-}
-
-// Configure session cookie params for security and longevity
-$is_secure = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
-
-if (PHP_VERSION_ID >= 70300) {
-    session_set_cookie_params([
-        'lifetime' => $session_lifetime,
-        'path' => '/',
-        'domain' => $cookie_domain,
-        'secure' => $is_secure,
-        'httponly' => true,
-        'samesite' => 'Lax'
-    ]);
-} else {
-    // Fallback for older PHP versions
-    session_set_cookie_params(
-        $session_lifetime,
-        '/; SameSite=Lax',
-        $cookie_domain ?: '',
-        $is_secure,
-        true // httponly
-    );
-}
-
-// Set a custom session name to avoid conflicts and clean up browser cookies
-if (strpos($host, 'local') !== false || $host === 'localhost' || $host === '127.0.0.1') {
-    session_name('confusatop_local');
-} else {
-    session_name('confusatop');
-}
-
-// Start the session if not already started
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    if (!headers_sent()) {
+        if ($use_custom_path) {
+            ini_set('session.save_path', $session_dir);
+        }
+
+        // Set session garbage collection and cookie lifetime to 30 days
+        $session_lifetime = 60 * 60 * 24 * 30; // 30 days
+        ini_set('session.gc_maxlifetime', (string)$session_lifetime);
+        ini_set('session.cookie_lifetime', (string)$session_lifetime);
+
+        // Custom Garbage Collection: 1% de chance de limpar arquivos de sessão com mais de 30 dias
+        if ($use_custom_path && mt_rand(1, 100) === 1) {
+            $now = time();
+            foreach (glob($session_dir . '/sess_*') as $file) {
+                if (is_file($file) && ($now - filemtime($file) > $session_lifetime)) {
+                    @unlink($file);
+                }
+            }
+        }
+
+        // Normalize host domain to share cookies across www and non-www subdomains
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        $host = explode(':', $host)[0];
+        $cookie_domain = null;
+
+        if (filter_var($host, FILTER_VALIDATE_IP) === false && strpos($host, '.') !== false) {
+            if (substr($host, 0, 4) === 'www.') {
+                $cookie_domain = '.' . substr($host, 4);
+            } else {
+                $cookie_domain = '.' . $host;
+            }
+        }
+
+        // Configure session cookie params for security and longevity
+        $is_secure = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+
+        if (PHP_VERSION_ID >= 70300) {
+            session_set_cookie_params([
+                'lifetime' => $session_lifetime,
+                'path' => '/',
+                'domain' => $cookie_domain,
+                'secure' => $is_secure,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+        } else {
+            // Fallback for older PHP versions
+            session_set_cookie_params(
+                $session_lifetime,
+                '/; SameSite=Lax',
+                $cookie_domain ?: '',
+                $is_secure,
+                true // httponly
+            );
+        }
+
+        // Set a custom session name to avoid conflicts and clean up browser cookies
+        if (strpos($host, 'local') !== false || $host === 'localhost' || $host === '127.0.0.1') {
+            session_name('confusatop_local');
+        } else {
+            session_name('confusatop');
+        }
+
+        session_start();
+    }
 }
 
 /*

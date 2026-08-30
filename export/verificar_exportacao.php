@@ -92,6 +92,13 @@ if(session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['loggedin']) && $_
         }
     }
 
+    if($climaEstadioTimes = $time->verificarClimaEstadio(null,$listaTimes)){
+        $error_msg .= "Há times com estádio sem clima cadastrado ou sem estádio associado. </br>";
+        foreach($climaEstadioTimes as $timeErro){
+            $error_msg .= $timeErro[0] . "</br>";
+        }
+    }
+
     //exec('php exportar_database.php ' . $_SESSION['user_id']);
 
 
@@ -158,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if($escalacaoTime = $time->verificarEscalacoes(null,$listaTimes)){
-        $error_msg .= "Há times sem os onze jogadores escalados. </br>";
+        $error_msg .= "Há times sem os onde jogadores escalados. </br>";
         foreach($escalacaoTime as $timeErro){
             $error_msg .= $timeErro[0] . "</br>";
         }
@@ -174,6 +181,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if($tecnicosTimes = $time->verificarTecnicos(null,$listaTimes)){
         $error_msg .= "Há times sem técnico. </br>";
         foreach($tecnicosTimes as $timeErro){
+            $error_msg .= $timeErro[0] . "</br>";
+        }
+    }
+
+    if($climaEstadioTimes = $time->verificarClimaEstadio(null,$listaTimes)){
+        $error_msg .= "Há times com estádio sem clima cadastrado ou sem estádio associado. </br>";
+        foreach($climaEstadioTimes as $timeErro){
             $error_msg .= $timeErro[0] . "</br>";
         }
     }

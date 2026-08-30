@@ -22,8 +22,44 @@ try {
     
     // 2. Get Next Matches (ordered chronologically ASC - soonest first)
     $stmtNext = $conn->query("SELECT * FROM poltrona_matches WHERE status = 'next' ORDER BY match_date ASC, match_time ASC, id ASC");
-    $nextMatches = $stmtNext->fetchAll(PDO::FETCH_ASSOC);
-    
+    $allNextMatches = $stmtNext->fetchAll(PDO::FETCH_ASSOC);
+
+    // Filter out "next" matches whose date+time has already passed (stale status from source).
+    // match_date is "DD/MM", match_time is "HH:MM". Year is inferred as current year (or next if month already passed).
+    $nowTs = time();
+    $currentYear = (int)date('Y');
+    $nextMatches = [];
+    $staleNextIds = [];
+    foreach ($allNextMatches as $m) {
+        $dateParts = explode('/', $m['match_date'] ?? '');
+        if (count($dateParts) === 2) {
+            $day   = (int)$dateParts[0];
+            $month = (int)$dateParts[1];
+            $timeParts = explode(':', $m['match_time'] ?? '00:00');
+            $hour   = isset($timeParts[0]) ? (int)$timeParts[0] : 0;
+            $minute = isset($timeParts[1]) ? (int)$timeParts[1] : 0;
+            // If the month already passed this year, assume next year
+            $year = ($month < (int)date('n')) ? $currentYear + 1 : $currentYear;
+            $matchTs = mktime($hour, $minute, 0, $month, $day, $year);
+            if ($matchTs !== false && $matchTs < $nowTs) {
+                // This "next" match is in the past — auto-correct status in DB
+                $staleNextIds[] = (int)$m['id'];
+                // Treat it as previous for this response
+                $m['status'] = 'previous';
+                // Add to previous list (will be sorted below)
+                // We'll collect them into $prevMatches after fetching
+                continue;
+            }
+        }
+        $nextMatches[] = $m;
+    }
+    // Auto-correct stale "next" matches to "previous" in the database
+    if (!empty($staleNextIds)) {
+        $placeholdersFix = implode(',', array_fill(0, count($staleNextIds), '?'));
+        $stmtFix = $conn->prepare("UPDATE poltrona_matches SET status = 'previous' WHERE id IN ($placeholdersFix)");
+        $stmtFix->execute($staleNextIds);
+    }
+
     // 3. Get Previous Matches (we will sort them robustly in PHP next)
     $stmtPrev = $conn->query("SELECT * FROM poltrona_matches WHERE status = 'previous'");
     $prevMatches = $stmtPrev->fetchAll(PDO::FETCH_ASSOC);

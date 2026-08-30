@@ -83,7 +83,7 @@ var check_guess = (function () {
       }
     })
     .fail(function() {
-      console.log("loading error");
+      // console.log("loading error");
     });
   }
 
@@ -117,10 +117,10 @@ var check_guess = (function () {
                 }
         })
         .done(function() {
-          console.log("saving success");
+          // console.log("saving success");
         })
         .fail(function() {
-          console.log("saving error");
+          // console.log("saving error");
         });
 
       }

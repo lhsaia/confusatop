@@ -11,30 +11,133 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || (int)$_SE
     exit;
 }
 
-// Determinar o arquivo de log
-function normalizeLogEntry(string $entry): string {
-    $clean = str_replace("\r", "", $entry);
-    $lines = explode("\n", $clean);
-    $cleanLines = [];
-    foreach ($lines as $line) {
-        $trimmed = trim($line);
-        if ($trimmed !== '') {
-            $cleanLines[] = $trimmed;
+// Função para parsear a entrada de erro do PHP
+function parseLogLine(string $entry): array {
+    $rawLines = explode("\n", str_replace("\r", "", $entry));
+    $lines = [];
+    foreach ($rawLines as $l) {
+        if (trim($l) !== '') {
+            $lines[] = trim($l);
         }
     }
-    $normalized = implode("\n", $cleanLines);
-    return preg_replace('/^\[[^\]]+\]\s*/', '', $normalized);
+    
+    $dateTime = 'N/A';
+    $type = 'Unknown';
+    $message = '';
+    $file = '';
+    $lineNum = '';
+    $stackTrace = [];
+    
+    if (!empty($lines)) {
+        $firstLine = $lines[0];
+        
+        // Extrai data/hora da primeira linha: [29-Aug-2026 16:36:22 America/Sao_Paulo] ...
+        if (preg_match('/^\[([^\]]+)\]\s*(.*)$/', $firstLine, $matches)) {
+            $dateTime = $matches[1];
+            $rest = $matches[2];
+            
+            // Identifica o tipo do erro (ex: PHP Deprecated:, PHP Warning:, PHP Fatal error:, PHP Notice:, etc.)
+            if (preg_match('/^(PHP [a-zA-Z0-9_\s]+?):\s*(.*)$/i', $rest, $typeMatches)) {
+                $type = $typeMatches[1];
+                $message = $typeMatches[2];
+            } else {
+                $message = $rest;
+            }
+            
+            // Extrai arquivo e linha se houver (ex: "... in /caminho/arquivo.php on line 123" ou "... in D:\path\file.php:123")
+            if (preg_match('/\s+in\s+(.+?)(?:\s+on\s+line\s+(\d+)|:(\d+))$/i', $message, $fileMatches)) {
+                $file = $fileMatches[1];
+                $lineNum = !empty($fileMatches[2]) ? $fileMatches[2] : ($fileMatches[3] ?? '');
+                $message = preg_replace('/\s+in\s+.+?(?:\s+on\s+line\s+\d+|:\d+)$/i', '', $message);
+            }
+        } else {
+            $message = $firstLine;
+            if (preg_match('/\s+in\s+(.+?)(?:\s+on\s+line\s+(\d+)|:(\d+))$/i', $message, $fileMatches)) {
+                $file = $fileMatches[1];
+                $lineNum = !empty($fileMatches[2]) ? $fileMatches[2] : ($fileMatches[3] ?? '');
+                $message = preg_replace('/\s+in\s+.+?(?:\s+on\s+line\s+\d+|:\d+)$/i', '', $message);
+            }
+        }
+        
+        // Trata linhas seguintes como stack trace
+        for ($k = 1; $k < count($lines); $k++) {
+            $sLine = $lines[$k];
+            // Remove timestamp repetido do log em cada linha do stack trace
+            $sLineClean = preg_replace('/^\[[^\]]+\]\s*/', '', $sLine);
+            $stackTrace[] = $sLineClean;
+        }
+    }
+    
+    return [
+        'datetime' => $dateTime,
+        'type' => trim($type),
+        'message' => trim($message),
+        'file' => trim($file),
+        'line' => trim($lineNum),
+        'stack' => implode("\n", $stackTrace)
+    ];
 }
 
-$isLocalhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1']) 
-    || (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost:') === 0);
+// Gera hash de identificação única do erro baseando-se estritamente na Mensagem, Arquivo e Linha (sem stack trace)
+function computeLogEntryHash(string $entry): string {
+    $parsed = parseLogLine($entry);
+    
+    $type = strtolower(trim($parsed['type']));
+    $msg = strtolower(preg_replace('/\s+/', ' ', trim($parsed['message'])));
+    $file = strtolower(str_replace('\\', '/', trim($parsed['file'])));
+    $line = trim((string)$parsed['line']);
+    
+    // Se temos a mensagem e ao menos arquivo ou linha, o hash compara apenas erro + arquivo + linha
+    if ($msg !== '' && ($file !== '' || $line !== '')) {
+        return md5($type . '|' . $msg . '|' . $file . '|' . $line);
+    }
+    
+    // Fallback caso não seja possível extrair arquivo e linha da primeira linha
+    $cleanFirstLine = '';
+    $clean = str_replace("\r", "", $entry);
+    $lines = explode("\n", $clean);
+    foreach ($lines as $l) {
+        $t = trim($l);
+        if ($t !== '') {
+            $cleanFirstLine = preg_replace('/^\[[^\]]+\]\s*/', '', $t);
+            break;
+        }
+    }
+    return md5(strtolower(trim($cleanFirstLine)));
+}
 
-$logPath = $isLocalhost 
-    ? $_SERVER['DOCUMENT_ROOT'] . '/php_errors.log' 
-    : '/home/lhsaia/confusa.top/logs/php_errors.log';
+$prodLogDir = '/home/lhsaia/confusa.top/logs';
+$prodLogPath = $prodLogDir . '/php_errors.log';
+
+$host = $_SERVER['HTTP_HOST'] ?? '';
+$isWindows = (PHP_OS_FAMILY === 'Windows' || DIRECTORY_SEPARATOR === '\\');
+
+$isProduction = !$isWindows 
+    && is_dir($prodLogDir) 
+    && (strpos($host, 'confusa.top') !== false)
+    && (strpos($host, 'local') === false);
+
+$logPath = $isProduction 
+    ? $prodLogPath 
+    : dirname(__DIR__) . '/php_errors.log';
 
 $message = '';
 $messageType = '';
+
+// Verifica se uma linha inicia um novo erro (ex: [data] PHP Warning/Notice/Deprecated/Fatal...)
+function isLogEntryStart(string $line): bool {
+    $trimmed = trim($line);
+    // Início de erro padrão do PHP (ex: [29-Aug-2026 16:36:22 America/Sao_Paulo] PHP Deprecated: ...)
+    // Ignora linhas que são continuação de Stack trace: "PHP Stack trace:", "PHP   1. {main}()"
+    if (preg_match('/^\[[^\]]+\]\s+PHP\s+(?:Stack\s+trace|\d+\.)/i', $trimmed)) {
+        return false;
+    }
+    // Caso padrão de início de log com data
+    if (preg_match('/^\[[^\]]+\]/', $trimmed)) {
+        return true;
+    }
+    return false;
+}
 
 // Ação de Limpar ou Excluir Logs
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -50,18 +153,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
         } else {
             // Se não existir, tenta criar vazio
-            $dir = dirname($logPath);
-            if (!is_dir($dir)) {
-                mkdir($dir, 0755, true);
-            }
-            file_put_contents($logPath, '');
-            $message = 'Arquivo de logs inicializado vazio!';
+            @file_put_contents($logPath, '');
+            $message = 'Arquivo de logs criado e limpo com sucesso!';
             $messageType = 'success';
         }
-    } elseif ($_POST['action'] === 'delete_single' && isset($_POST['entry_hash'])) {
-        $hashToDelete = $_POST['entry_hash'];
+    } elseif ($_POST['action'] === 'delete_single' && !empty($_POST['entry_hash'])) {
+        $hashToDelete = trim((string)$_POST['entry_hash']);
+        
         if (file_exists($logPath) && is_writable($logPath)) {
-            $tempPath = $logPath . '.tmp';
+            $tempPath = $logPath . '.tmp.' . uniqid();
             $in = fopen($logPath, 'r');
             $out = fopen($tempPath, 'w');
             
@@ -71,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 
                 $writeGroup = function($entry) use ($out, $hashToDelete, &$countDeleted) {
                     if (trim($entry) === '') return;
-                    if (md5(normalizeLogEntry($entry)) === $hashToDelete) {
+                    if (computeLogEntryHash($entry) === $hashToDelete) {
                         $countDeleted++;
                     } else {
                         fwrite($out, $entry);
@@ -79,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 };
                 
                 while (($line = fgets($in)) !== false) {
-                    if (preg_match('/^\[[^\]]+\]/', trim($line))) {
+                    if (isLogEntryStart($line)) {
                         $writeGroup($currentEntry);
                         $currentEntry = $line;
                     } else {
@@ -115,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Função eficiente para ler as últimas N entradas do log do final para o início (Tail)
+// Função para ler as últimas N entradas do log do final para o início agrupando blocos de erro e somando ocorrências idênticas
 function getLatestLogEntries(string $filePath, int $limit): array {
     if (!file_exists($filePath) || !is_readable($filePath)) {
         return [];
@@ -130,14 +230,15 @@ function getLatestLogEntries(string $filePath, int $limit): array {
     $pos = ftell($handle);
     
     $buffer = '';
-    $groupedEntries = [];
+    $chunkSize = 4096;
+    $groupedMap = []; // hash => ['hash' => ..., 'raw' => ..., 'count' => N, 'last_seen' => timestamp]
     $currentEntryLines = [];
-    $chunkSize = 8192;
+    $totalRead = 0;
     
-    while ($pos > 0 && count($groupedEntries) < $limit) {
+    while ($pos > 0 && $totalRead < $limit) {
         $readSize = min($pos, $chunkSize);
         $pos -= $readSize;
-        fseek($handle, $pos, SEEK_SET);
+        fseek($handle, $pos);
         $chunk = fread($handle, $readSize);
         
         $buffer = $chunk . $buffer;
@@ -156,85 +257,50 @@ function getLatestLogEntries(string $filePath, int $limit): array {
                 continue;
             }
             
-            if (preg_match('/^\[[^\]]+\]/', $trimmed)) {
-                array_unshift($currentEntryLines, $line);
+            array_unshift($currentEntryLines, $line);
+            
+            if (isLogEntryStart($line)) {
                 $entryText = implode("\n", $currentEntryLines);
+                $hash = computeLogEntryHash($entryText);
                 
-                $groupedEntries[] = [
-                    'hash' => md5(normalizeLogEntry($entryText)),
-                    'raw' => $entryText
-                ];
-                
-                $currentEntryLines = [];
-                if (count($groupedEntries) >= $limit) {
-                    break;
+                if (isset($groupedMap[$hash])) {
+                    $groupedMap[$hash]['count']++;
+                } else {
+                    $groupedMap[$hash] = [
+                        'hash' => $hash,
+                        'raw' => $entryText,
+                        'count' => 1
+                    ];
                 }
-            } else {
-                array_unshift($currentEntryLines, $line);
+                
+                $totalRead++;
+                $currentEntryLines = [];
             }
         }
     }
     
-    if (count($groupedEntries) < $limit && !empty($currentEntryLines)) {
+    if (!empty($currentEntryLines)) {
         $entryText = implode("\n", $currentEntryLines);
-        if (preg_match('/^\[[^\]]+\]/', trim($entryText))) {
-            $groupedEntries[] = [
-                'hash' => md5(normalizeLogEntry($entryText)),
-                'raw' => $entryText
-            ];
+        if (trim($entryText) !== '') {
+            $hash = computeLogEntryHash($entryText);
+            if (isset($groupedMap[$hash])) {
+                $groupedMap[$hash]['count']++;
+            } else {
+                $groupedMap[$hash] = [
+                    'hash' => $hash,
+                    'raw' => $entryText,
+                    'count' => 1
+                ];
+            }
         }
     }
     
     fclose($handle);
-    return $groupedEntries;
+    return array_values($groupedMap);
 }
 
 $maxLines = 1000;
 $logEntries = getLatestLogEntries($logPath, $maxLines);
-
-// Função para parsear a linha de erro padrão do PHP
-function parseLogLine(string $entry): array {
-    $parts = explode("\n", $entry);
-    $mainLine = trim($parts[0]);
-    $stackTrace = array_filter(array_slice($parts, 1), function($s) {
-        return trim($s) !== '';
-    });
-    
-    $dateTime = 'N/A';
-    $type = 'Unknown';
-    $message = $mainLine;
-    $file = '';
-    $lineNum = '';
-    
-    // Extrai data e hora
-    if (preg_match('/^\[([^\]]+)\]\s+(.+)$/', $mainLine, $matches)) {
-        $dateTime = $matches[1];
-        $rest = $matches[2];
-        
-        // Identifica o tipo do erro
-        if (preg_match('/^(PHP [a-zA-Z\s]+):/i', $rest, $typeMatches)) {
-            $type = $typeMatches[1];
-            $message = substr($rest, strlen($type) + 2); // remove o tipo e os dois pontos
-        }
-        
-        // Extrai arquivo e linha se houver
-        if (preg_match('/in\s+(.+)\s+on\s+line\s+(\d+)$/i', $message, $fileMatches)) {
-            $file = $fileMatches[1];
-            $lineNum = $fileMatches[2];
-            // Remove a info do arquivo do corpo da mensagem
-            $message = preg_replace('/\s+in\s+.+\s+on\s+line\s+\d+$/i', '', $message);
-        }
-    }
-    
-    return [
-        'datetime' => $dateTime,
-        'type' => trim($type),
-        'message' => trim($message),
-        'file' => $file,
-        'line' => $lineNum,
-        'stack' => implode("\n", $stackTrace)
-    ];
-}
 
 // Títulos e estilos
 $page_title = "Agregador de Logs de Erros";
@@ -344,11 +410,16 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
                             <td style="font-family: monospace; white-space: nowrap;">
                                 <?= htmlspecialchars($parsed['datetime']) ?>
                             </td>
-                            <!-- Badge de Tipo -->
+                            <!-- Badge de Tipo e Ocorrências -->
                             <td style="white-space: nowrap;">
                                 <span class="admin-badge <?= $badgeClass ?>">
                                     <?= htmlspecialchars($parsed['type']) ?>
                                 </span>
+                                <?php if (($entry['count'] ?? 1) > 1): ?>
+                                    <span style="display: inline-block; margin-left: 6px; padding: 2px 7px; background: rgba(56, 189, 248, 0.2); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 11px; font-weight: 700; border-radius: 12px;" title="<?= $entry['count'] ?> ocorrências idênticas">
+                                        <?= $entry['count'] ?>x
+                                    </span>
+                                <?php endif; ?>
                             </td>
                             <!-- Mensagem -->
                             <td style="word-break: break-word; font-family: 'Consolas', 'Courier New', monospace; font-size: 13px;">
@@ -372,10 +443,10 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
                             </td>
                             <!-- Ações -->
                             <td style="text-align: center; vertical-align: middle;">
-                                <form method="POST" style="margin: 0; display: inline;" onsubmit="return confirm('Deseja realmente excluir este registro de erro específico?');">
+                                <form method="POST" style="margin: 0; display: inline;" onsubmit="return confirm('Deseja realmente excluir <?= (($entry['count'] ?? 1) > 1) ? "todas as " . $entry['count'] . " ocorrências deste erro" : "este registro de erro" ?>?');">
                                     <input type="hidden" name="action" value="delete_single">
                                     <input type="hidden" name="entry_hash" value="<?= $originalIdx ?>">
-                                    <button type="submit" style="background: transparent; color: #ef4444; border: none; cursor: pointer; padding: 4px; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.15)'" onmouseout="this.style.background='transparent'" title="Excluir este erro">
+                                    <button type="submit" style="background: transparent; color: #ef4444; border: none; cursor: pointer; padding: 4px; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.15)'" onmouseout="this.style.background='transparent'" title="Excluir este erro (<?= ($entry['count'] ?? 1) ?> ocorrência(s))">
                                         <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle;">delete</span>
                                     </button>
                                 </form>

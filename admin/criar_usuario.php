@@ -20,6 +20,112 @@ $usuario = new Usuario($db);
 $paises = new Pais($db);
 
 
+$feedback_html = '';
+if(isset($_SESSION['flash_msg'])){
+    $feedback_html = $_SESSION['flash_msg'];
+    unset($_SESSION['flash_msg']);
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
+    if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && (int)$_SESSION['admin_status']===1){
+        if ( isset( $_POST['nomeusuario'] ) && !empty( $_POST['nomeusuario'] ) && !empty ( $_POST['email'] ) ) {
+
+            if (!function_exists('random_str')) {
+                function random_str($length, $keyspace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+                {
+                    $pieces = [];
+                    $max = mb_strlen($keyspace, '8bit') - 1;
+                    for ($i = 0; $i < $length; ++$i) {
+                        $pieces []= $keyspace[random_int(0, $max)];
+                    }
+                    return implode('', $pieces);
+                }
+            }
+
+            //senha hash
+            $presenha = random_str(12);
+            $senhahash = password_hash($presenha,PASSWORD_DEFAULT);
+
+            $usuario->nomeusuario = $_POST['nomeusuario'];
+            $usuario->senha = $senhahash;
+            $usuario->email = $_POST['email'];
+            $usuario->nome = $_POST['nomereal'];
+            if(isset($_POST['membro'])) {
+                $usuario->emTeste = 0;
+            } else {
+                $usuario->emTeste = 1;
+            }
+            
+            // criar usuario
+            if($usuario->inserir()){
+                $msg_extra = '';
+                //Enviar email com senha para usuário
+                $novoemail = $usuario->email;
+                $novonome = $usuario->nome;
+                $nomeusuario = $usuario->nomeusuario;
+                
+
+                $body = "Olá " . $novonome . "!\r\n" .
+                    "Suas informações para login seguem abaixo:\r\n".
+                    "Usuário: " . $nomeusuario . "\r\n" .
+                    "Senha: ". $presenha. "\r\n" .
+                    "Você conseguirá trocar sua senha escolhendo a opção 'Trocar senha' na barra de tarefas do site";
+                    
+                    
+                $mail->setFrom('admin@confusa.top', 'Confusa.top');
+                $mail->addAddress($novoemail);               //Name is optional
+                $mail->Subject = "Seja bem-vindo ao site CONFUSA.TOP!";
+                $mail->Body    = $body;
+                try {
+                    if ($mail->send())
+                    {
+                        $email_success = true;
+                    }
+                } catch (\Throwable $e) {
+                    error_log("Erro ao enviar email de criar usuario: " . $e->getMessage() . " / Mailer Error: " . ($mail->ErrorInfo ?? ''));
+                    $email_success = false;
+                }
+
+                //Pesquisar usuário e vincular países
+
+                $novoIdUsuario = $usuario->idByEmail($novoemail);
+
+                if(isset($_POST['paises_vinculados'])){
+                    foreach($_POST['paises_vinculados'] as $vincular){
+                        $paises->vincularUsuario($vincular, $novoIdUsuario);
+                    }
+                }
+
+                // Se veio de uma solicitação de inscrição, atualizar o status dela no banco
+                if (isset($_GET['solicitacao_id'])) {
+                    try {
+                        $solicitacao_id = (int)$_GET['solicitacao_id'];
+                        $stmt_upd = $db->prepare("UPDATE `solicitacoes_cadastro` SET status = 'aprovado' WHERE id = ?");
+                        $stmt_upd->execute([$solicitacao_id]);
+                        $msg_extra = " (Solicitação de cadastro aprovada)";
+                    } catch (PDOException $e) {
+                        // ignora erros silenciosamente
+                    }
+                }
+
+                $_SESSION['flash_msg'] = "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Usuário inserido com sucesso" . $msg_extra . "</div>";
+                header("Location: " . $_SERVER['REQUEST_URI']);
+                exit;
+
+            } else {
+                $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Não foi possível inserir o usuário, possível duplicata</div>";
+                header("Location: " . $_SERVER['REQUEST_URI']);
+                exit;
+            }
+
+        } else {
+            $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Não foi possível inserir o usuário, campos em branco</div>";
+            header("Location: " . $_SERVER['REQUEST_URI']);
+            exit;
+        }
+    }
+}
+
 $page_title = "Inserir usuário";
 $css_filename = "home_redesign";
 $css_login = 'login';
@@ -40,105 +146,9 @@ echo "<div class='criar-usuario-container'>";
     </div>
 </div>
 <?php
+echo $feedback_html;
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && (int)$_SESSION['admin_status']===1){
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
-    if ( isset( $_POST['nomeusuario'] ) && !empty( $_POST['nomeusuario'] ) && !empty ( $_POST['email'] ) ) {
-
-
-
-
-        if (!function_exists('random_str')) {
-            function random_str($length, $keyspace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-            {
-                $pieces = [];
-                $max = mb_strlen($keyspace, '8bit') - 1;
-                for ($i = 0; $i < $length; ++$i) {
-                    $pieces []= $keyspace[random_int(0, $max)];
-                }
-                return implode('', $pieces);
-            }
-        }
-
-        //senha hash
-        $presenha = random_str(12);
-        $senhahash = password_hash($presenha,PASSWORD_DEFAULT);
-
-        $usuario->nomeusuario = $_POST['nomeusuario'];
-        $usuario->senha = $senhahash;
-        $usuario->email = $_POST['email'];
-        $usuario->nome = $_POST['nomereal'];
-		if(isset($_POST['membro'])) {
-			$usuario->emTeste = 0;
-		} else {
-			$usuario->emTeste = 1;
-		}
-		
-        // criar usuario
-        if($usuario->inserir()){
-            echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Usuário inserido com sucesso</div>";
-            //Enviar email com senha para usuário
-            $novoemail = $usuario->email;
-            $novonome = $usuario->nome;
-            $nomeusuario = $usuario->nomeusuario;
-            
-
-            $body = "Olá " . $novonome . "!\r\n" .
-                "Suas informações para login seguem abaixo:\r\n".
-                "Usuário: " . $nomeusuario . "\r\n" .
-                "Senha: ". $presenha. "\r\n" .
-                "Você conseguirá trocar sua senha escolhendo a opção 'Trocar senha' na barra de tarefas do site";
-                
-                
-            $mail->setFrom('admin@confusa.top', 'Confusa.top');
-            $mail->addAddress($novoemail);               //Name is optional
-            $mail->Subject = "Seja bem-vindo ao site CONFUSA.TOP!";
-            $mail->Body    = $body;
-            try {
-                if ($mail->send())
-                {
-                    $email_success = true;
-                }
-            } catch (\Throwable $e) {
-                error_log("Erro ao enviar email de criar usuario: " . $e->getMessage() . " / Mailer Error: " . ($mail->ErrorInfo ?? ''));
-                $email_success = false;
-            }
-
-            //Pesquisar usuário e vincular países
-
-            $novoIdUsuario = $usuario->idByEmail($novoemail);
-
-			if(isset($_POST['paises_vinculados'])){
-				foreach($_POST['paises_vinculados'] as $vincular){
-					$paises->vincularUsuario($vincular, $novoIdUsuario);
-				}
-			}
-
-            // Se veio de uma solicitação de inscrição, atualizar o status dela no banco
-            if (isset($_GET['solicitacao_id'])) {
-                try {
-                    $solicitacao_id = (int)$_GET['solicitacao_id'];
-                    $stmt_upd = $db->prepare("UPDATE `solicitacoes_cadastro` SET status = 'aprovado' WHERE id = ?");
-                    $stmt_upd->execute([$solicitacao_id]);
-                    echo "<div class='alert alert-success alert-btn'><span class='closebtn'>&times;</span>Solicitação de cadastro marcada como aprovada!</div>";
-                } catch (PDOException $e) {
-                    // ignora erros silenciosamente
-                }
-            }
-
-
-
-        } else {
-            echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Não foi possível inserir o usuário, possível duplicata</div>";
-
-        }
-
-        } else {
-            echo "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Não foi possível inserir o usuário, campos em branco</div>";
-        }
-}
-
 ?>
 
 <script type="application/javascript">
