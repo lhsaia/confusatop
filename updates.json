@@ -14,13 +14,18 @@
       "items": [
         {
           "badge": "new",
+          "title": "Módulo de Personificação de Usuários (Impersonate) no Painel Admin",
+          "desc": "Adicionado seletor no Painel do Administrador (/admin/index.php) que permite personificar instantaneamente qualquer usuário cadastrado com um clique, além de botões e links diretos no menu para encerrar a personificação e retornar à conta de administrador sem necessidade de refazer login."
+        },
+        {
+          "badge": "new",
           "title": "Padronização Global de Otimização e Conversão WebP de Imagens",
           "desc": "Unificado e ativado o processamento automático de imagens para formato .webp em todo o sistema (escudos, uniformes, mascotes, logos de ligas, competições, bandeiras, estádios, fotos de jogadores/técnicos, capa da revista e Octamotor), garantindo redimensionamento proporcional e preservação de transparência/canal alfa, eliminando dependências legadas do pngquant."
         },
         {
           "badge": "design",
           "title": "Otimização Visual dos Cards Mobile nas Páginas 'Meus *'",
-          "desc": "Aprimorado o layout mobile dos cards nas telas de Meus Países, Meus Climas, Meus Estádios, Meus Parâmetros, Meus Técnicos, Meus Times, Meus Jogadores e Ligas, eliminando o amontoamento de elementos à esquerda com alinhamento chave-valor (rótulos à esquerda com respiro amplo e valores destacados alinhados à direita), títulos em destaque ciano e botões de ação ergonômicos."
+          "desc": "Aprimorado o layout mobile dos cards nas telas de Meus Países, Meus Climas, Meus Estádios, Meus Parâmetros, Meus Técnicos, Meus Times, Meus Jogadores e Ligas: contenção e quebra segura de nomes longos para evitar sobreposição, alinhamento compacto dos bloquinhos de cores e bandeiras à direita, e agrupamento horizontal dos botões de opções."
         },
         {
           "badge": "bugfix",

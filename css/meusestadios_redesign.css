@@ -514,42 +514,65 @@ html body #logged-user {
 
   #tabelaPrincipal td {
     display: flex !important;
-    justify-content: space-between !important;
+    justify-content: flex-end !important;
     align-items: center !important;
-    gap: 12px !important;
-    padding: 9px 0 !important;
+    gap: 10px !important;
+    padding: 8px 0 !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
     width: 100% !important;
     text-align: right !important;
     background: transparent !important;
     box-sizing: border-box !important;
     font-size: 0.88rem !important;
+    min-height: 38px !important;
   }
 
-  /* Garante que o conteúdo do td (exceto o ::before) se alinhe à direita */
-  #tabelaPrincipal td > * {
+  /* Garante que o texto de valor ocupe o espaço restante com quebra de linha sem sobrepor o label */
+  #tabelaPrincipal td > span:not(.material-symbols-outlined),
+  #tabelaPrincipal td > a,
+  #tabelaPrincipal td > div {
     margin-left: auto;
+    text-align: right;
+    word-break: break-word;
+    max-width: 60%;
+  }
+
+  #tabelaPrincipal td > img.bandeira {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+  }
+
+  #tabelaPrincipal td > span.nomePais {
+    margin-left: 6px !important;
   }
 
   #tabelaPrincipal td:first-child {
     border-top-left-radius: 0 !important;
     border-bottom-left-radius: 0 !important;
     border-left: none !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 0 !important;
+  }
+
+  #tabelaPrincipal td:nth-child(2) {
     border-bottom: 2px solid #0284c7 !important;
     padding-bottom: 10px !important;
     margin-bottom: 4px !important;
   }
 
-  #tabelaPrincipal td:first-child .nomeEstadio {
+  #tabelaPrincipal td:nth-child(2) .nomeEstadio {
     font-size: 1.05rem !important;
     font-weight: 700 !important;
     color: #0284c7 !important;
+    max-width: 75% !important;
   }
 
   .stadiumThumb {
     width: 56px !important;
     height: 40px !important;
     border-radius: 8px !important;
+    margin-left: auto !important;
   }
 
   #tabelaPrincipal td:last-child {
@@ -559,17 +582,28 @@ html body #logged-user {
     border-bottom-right-radius: 0 !important;
     padding-top: 12px !important;
     margin-top: 4px !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
     justify-content: flex-end !important;
+    align-items: center !important;
+  }
+
+  #tabelaPrincipal td:last-child > a {
+    margin-left: 0 !important;
+    max-width: none !important;
   }
 
   .inlineButton {
-    min-width: 32px !important;
-    height: 32px !important;
+    min-width: 34px !important;
+    height: 34px !important;
     font-size: 18px !important;
     border-radius: 8px !important;
-    margin: 2px !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   /* Labels dos atributos */
@@ -583,6 +617,7 @@ html body #logged-user {
     letter-spacing: 0.5px;
     text-align: left;
     margin-right: auto;
+    max-width: 38%;
   }
 
   #tabelaPrincipal td:nth-child(1)::before {

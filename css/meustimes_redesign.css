@@ -570,9 +570,9 @@ input[type="number"] {
 
   #tabelaPrincipal td {
     display: flex !important;
-    justify-content: space-between !important;
+    justify-content: flex-end !important;
     align-items: center !important;
-    gap: 12px !important;
+    gap: 10px !important;
     padding: 8px 0 !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
     width: 100% !important;
@@ -580,11 +580,26 @@ input[type="number"] {
     background: transparent !important;
     box-sizing: border-box !important;
     font-size: 0.88rem !important;
+    min-height: 38px !important;
   }
 
-  /* Garante que o conteúdo do td (exceto o ::before) se alinhe à direita */
-  #tabelaPrincipal td > * {
+  /* Garante que o texto de valor ocupe o espaço restante com quebra de linha sem sobrepor o label */
+  #tabelaPrincipal td > span:not(.material-symbols-outlined),
+  #tabelaPrincipal td > a,
+  #tabelaPrincipal td > div {
     margin-left: auto;
+    text-align: right;
+    word-break: break-word;
+    max-width: 60%;
+  }
+
+  #tabelaPrincipal td > img.bandeira {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+  }
+
+  #tabelaPrincipal td > span.nomePais {
+    margin-left: 6px !important;
   }
 
   #tabelaPrincipal td:first-child {
@@ -602,22 +617,29 @@ input[type="number"] {
     font-size: 1.05rem !important;
     font-weight: 700 !important;
     color: #0284c7 !important;
+    max-width: 80% !important;
   }
 
   .thumb {
     width: 36px !important;
     height: 36px !important;
     border-radius: 6px !important;
+    margin-left: auto !important;
   }
 
   .quadrado-uniforme {
     width: 22px !important;
     height: 22px !important;
     border-radius: 4px !important;
-    margin: 0 2px !important;
+    margin: 0 !important;
   }
 
   .celula-uniforme {
+    margin-left: auto !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
     gap: 4px !important;
   }
 
@@ -628,17 +650,28 @@ input[type="number"] {
     border-bottom-right-radius: 0 !important;
     padding-top: 12px !important;
     margin-top: 4px !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
     justify-content: flex-end !important;
+    align-items: center !important;
+  }
+
+  #tabelaPrincipal td:last-child > a {
+    margin-left: 0 !important;
+    max-width: none !important;
   }
 
   .inlineButton {
-    min-width: 32px !important;
-    height: 32px !important;
+    min-width: 34px !important;
+    height: 34px !important;
     font-size: 18px !important;
     border-radius: 8px !important;
-    margin: 2px !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   /* Labels dos atributos */
@@ -652,6 +685,7 @@ input[type="number"] {
     letter-spacing: 0.5px;
     text-align: left;
     margin-right: auto;
+    max-width: 38%;
   }
 
   #tabelaPrincipal td:nth-child(1)::before {
