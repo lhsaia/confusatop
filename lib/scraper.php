@@ -144,7 +144,8 @@ class PoltronaScraper {
                     
                     // Parse the text content of the link
                     // e.g. "08/08 - 20:00 - Carbonera X Asimália - Arena Talheres"
-                    $linkText = trim($link->nodeValue);
+                    // html_entity_decode ensures &amp; in team/stadium names is stored as &
+                    $linkText = html_entity_decode(trim($link->nodeValue), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                     $parts = array_map('trim', explode(' - ', $linkText));
                     
                     $date = isset($parts[0]) ? $parts[0] : '';
@@ -157,7 +158,7 @@ class PoltronaScraper {
                     $curr = $link->parentNode; // span.rodada-texto
                     while ($curr = $curr->previousSibling) {
                         if ($curr instanceof DOMElement && $curr->nodeName === 'span' && strpos($curr->getAttribute('class'), 'campeonato-nome') !== false) {
-                            $championship = trim($curr->nodeValue);
+                            $championship = html_entity_decode(trim($curr->nodeValue), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                             break;
                         }
                     }
@@ -190,6 +191,13 @@ class PoltronaScraper {
                         $stmtUpdate->execute([$status, $matchId]);
                     }
                 }
+            }
+            
+            // Deletar partidas que não existem mais na origem (CONFUSALive)
+            if (!empty($allMatchIdsFound)) {
+                $placeholders = implode(',', array_fill(0, count($allMatchIdsFound), '?'));
+                $stmtDelete = $this->db->prepare("DELETE FROM poltrona_matches WHERE id NOT IN ($placeholders)");
+                $stmtDelete->execute($allMatchIdsFound);
             }
             
             $duration = round((microtime(true) - $startTime) * 1000);
@@ -228,10 +236,10 @@ class PoltronaScraper {
         
         // Extract teams and scores
         $homeTeamNode = $xpath->query("//span[contains(@class, 'nome-time-mandante')]");
-        $homeTeam = $homeTeamNode->length ? trim($homeTeamNode->item(0)->nodeValue) : '';
+        $homeTeam = $homeTeamNode->length ? html_entity_decode(trim($homeTeamNode->item(0)->nodeValue), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
         
         $awayTeamNode = $xpath->query("//span[contains(@class, 'nome-time-visitante')]");
-        $awayTeam = $awayTeamNode->length ? trim($awayTeamNode->item(0)->nodeValue) : '';
+        $awayTeam = $awayTeamNode->length ? html_entity_decode(trim($awayTeamNode->item(0)->nodeValue), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
         
         // If not parsed from details, fall back or default
         if (empty($homeTeam) || empty($awayTeam)) {
@@ -252,10 +260,10 @@ class PoltronaScraper {
         
         // Scorers
         $homeScorersNode = $xpath->query("//span[@id='marcadores-mandante']");
-        $homeScorers = $homeScorersNode->length ? trim($homeScorersNode->item(0)->nodeValue) : '';
+        $homeScorers = $homeScorersNode->length ? html_entity_decode(trim($homeScorersNode->item(0)->nodeValue), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
         
         $awayScorersNode = $xpath->query("//span[@id='marcadores-visitante']");
-        $awayScorers = $awayScorersNode->length ? trim($awayScorersNode->item(0)->nodeValue) : '';
+        $awayScorers = $awayScorersNode->length ? html_entity_decode(trim($awayScorersNode->item(0)->nodeValue), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
         
         // Logos/Shields
         $homeLogoNode = $xpath->query("//img[contains(@class, 'escudo-time-mandante')]");
@@ -272,10 +280,10 @@ class PoltronaScraper {
         
         // Formations
         $homeFormationNode = $xpath->query("//div[contains(@class, 'escalacao-equipe-mandante')]//span[contains(@class, 'formacao-equipe')]");
-        $homeFormation = $homeFormationNode->length ? trim($homeFormationNode->item(0)->nodeValue) : null;
+        $homeFormation = $homeFormationNode->length ? html_entity_decode(trim($homeFormationNode->item(0)->nodeValue), ENT_QUOTES | ENT_HTML5, 'UTF-8') : null;
         
         $awayFormationNode = $xpath->query("//div[contains(@class, 'escalacao-equipe-visitante')]//span[contains(@class, 'formacao-equipe')]");
-        $awayFormation = $awayFormationNode->length ? trim($awayFormationNode->item(0)->nodeValue) : null;
+        $awayFormation = $awayFormationNode->length ? html_entity_decode(trim($awayFormationNode->item(0)->nodeValue), ENT_QUOTES | ENT_HTML5, 'UTF-8') : null;
         
         $lineupsScraped = ($homeFormation || $awayFormation) ? 1 : 0;
         
@@ -355,15 +363,15 @@ class PoltronaScraper {
                 
                 // Team (chapeu)
                 $teamNode = $xpath->query(".//span[@class='titulo-chapeu']", $eventNode);
-                $teamName = $teamNode->length ? trim($teamNode->item(0)->nodeValue) : null;
+                $teamName = $teamNode->length ? html_entity_decode(trim($teamNode->item(0)->nodeValue), ENT_QUOTES | ENT_HTML5, 'UTF-8') : null;
                 
                 // Player Name
                 $playerNode = $xpath->query(".//strong[@class='jogador-nome']", $eventNode);
-                $playerName = $playerNode->length ? trim($playerNode->item(0)->nodeValue) : null;
+                $playerName = $playerNode->length ? html_entity_decode(trim($playerNode->item(0)->nodeValue), ENT_QUOTES | ENT_HTML5, 'UTF-8') : null;
                 
                 // Description
                 $descNode = $xpath->query(".//span[@class='descricao-lance']", $eventNode);
-                $description = $descNode->length ? trim($descNode->item(0)->nodeValue) : '';
+                $description = $descNode->length ? html_entity_decode(trim($descNode->item(0)->nodeValue), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
                 
                 $stmtEvent->execute([
                     $matchId, $eventExtId, $minute, $period, $type, $teamName, $playerName, $description

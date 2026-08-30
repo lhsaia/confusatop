@@ -59,23 +59,23 @@
 
       // Event handling
       onLoaded: function(map) {
-        console.log(map);
+        // console.log(map);
       },
       onViewportChange: function(x, y, z) {
-        console.log(x, y, z);
+        // console.log(x, y, z);
       },
       onRegionSelected: function (index, isSelected, selectedRegions) {
-        console.log(index, isSelected, selectedRegions)
+        // console.log(index, isSelected, selectedRegions)
       },
       onRegionTooltipShow: function (tooltip, index) {
-        console.log(tooltip, index)
+        // console.log(tooltip, index)
 
         tooltip.css({ backgroundColor: 'white', color: '#35373e' }).text(
           tooltip.text() + ' (Hello World `region`)'
         )
       },
       onMarkerSelected: function (code, isSelected, selectedMarkers) {
-        console.log(code, isSelected, selectedMarkers)
+        // console.log(code, isSelected, selectedMarkers)
       },
       onMarkerTooltipShow: function (tooltip, code) {
         tooltip.text(
