@@ -90,14 +90,14 @@
 		die(json_encode(['success' => false, 'error' => 'O estádio selecionado (#'.$idEstadio.') não foi encontrado no banco de dados da competição. Por favor, edite a partida e selecione um estádio válido.']));
 	}
 	
-	// Garantir tabela de compatibilidade com as versões necessárias
+	// Garantir tabela de compatibilidade com as versões necessárias e limpeza de pendências
 	try {
 		$ldb->exec("DROP TABLE IF EXISTS `comp10_temp_table`");
 		$ldb->exec("CREATE TABLE IF NOT EXISTS `compatibilidade` (`versao` TEXT)");
 		$stmtCheck = $ldb->query("SELECT `versao` FROM `compatibilidade`");
 		$existingVersions = $stmtCheck->fetchAll(PDO::FETCH_COLUMN);
 		
-		$requiredVersions = ['2.8', '2.9.1', '2.10', '2.13'];
+		$requiredVersions = ['2.8', '2.9.1', '2.10', '2.13', '2.14'];
 		$stmtInsert = $ldb->prepare("INSERT INTO `compatibilidade` (`versao`) VALUES (:versao)");
 		foreach ($requiredVersions as $v) {
 			if (!in_array($v, $existingVersions)) {
@@ -105,6 +105,8 @@
 				$stmtInsert->execute();
 			}
 		}
+		// Evita que a engine Java tente abrir diálogo interativo de sincronização web (HeadlessException)
+		$ldb->exec("DELETE FROM `jogadorpendente`");
 	} catch (Exception $e) {
 		error_log("Erro ao aplicar compatibilidade no SQLite: " . $e->getMessage());
 	}
@@ -414,12 +416,14 @@
 		}
 
 		$output = shell_exec($cmd . "\n");
+		$output = ($output !== null) ? (string)$output : '';
 		
 		// Caso o motor execute apenas a rotina de compatibilidade/migração no primeiro disparo, reenviar a simulação
 		$tentativas = 1;
 		while ($tentativas < 3 && stripos($output, 'compatibilidade com o portal web') !== false) {
 			$outputRetry = shell_exec($cmd . "\n");
-			$output .= "\n[REENVIO AUTOMÁTICO #" . $tentativas . "]:\n" . $outputRetry;
+			$outputRetryStr = ($outputRetry !== null) ? (string)$outputRetry : '';
+			$output .= "\n[REENVIO AUTOMÁTICO #" . $tentativas . "]:\n" . $outputRetryStr;
 			$tentativas++;
 		}
 		

@@ -34,8 +34,8 @@
         },
         {
           "badge": "bugfix",
-          "title": "Correção de Diretório de Execução no Cron de Simulação",
-          "desc": "Adicionado posicionamento prévio no diretório do Hexacolor (cd) antes da chamada do comando Java no cron_simular_jogos.php, garantindo que os caminhos relativos de banco de dados e arquivos de súmula sejam encontrados corretamente na execução via terminal/agendador."
+          "title": "Correção de HeadlessException na Simulação de Partidas",
+          "desc": "Adicionada limpeza automática da tabela jogadorpendente e inclusão de versões adicionais de compatibilidade no SQLite temporário antes da execução da engine Java, impedindo que o motor dispare janelas de diálogo gráficas (JOptionPane) em ambiente headless de servidor."
         }
       ]
     },

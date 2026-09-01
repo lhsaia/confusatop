@@ -1,9 +1,17 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // CLI/Cron runner for next-day matches simulation
 if (php_sapi_name() !== 'cli' && !isset($_GET['cron_key'])) {
     // Permitir execução via CLI ou via Web se cron_key estiver presente
     header('HTTP/1.0 403 Forbidden');
     die("Acesso restrito ao agendador (Cron CLI).");
+}
+
+if (php_sapi_name() !== 'cli') {
+    header('Content-Type: text/plain; charset=utf-8');
 }
 
 date_default_timezone_set('America/Sao_Paulo');
@@ -91,14 +99,14 @@ foreach ($partidas as $matchInfo) {
         continue;
     }
 
-    // Garantir tabela de compatibilidade com as versões necessárias
+    // Garantir tabela de compatibilidade com as versões necessárias e limpeza de pendências
     try {
         $ldb->exec("DROP TABLE IF EXISTS `comp10_temp_table`");
         $ldb->exec("CREATE TABLE IF NOT EXISTS `compatibilidade` (`versao` TEXT)");
         $stmtCheck = $ldb->query("SELECT `versao` FROM `compatibilidade`");
         $existingVersions = $stmtCheck->fetchAll(PDO::FETCH_COLUMN);
         
-        $requiredVersions = ['2.8', '2.9.1', '2.10', '2.13'];
+        $requiredVersions = ['2.8', '2.9.1', '2.10', '2.13', '2.14'];
         $stmtInsert = $ldb->prepare("INSERT INTO `compatibilidade` (`versao`) VALUES (:versao)");
         foreach ($requiredVersions as $v) {
             if (!in_array($v, $existingVersions)) {
@@ -106,6 +114,8 @@ foreach ($partidas as $matchInfo) {
                 $stmtInsert->execute();
             }
         }
+        // Evita que a engine Java tente abrir diálogo interativo de sincronização web (HeadlessException)
+        $ldb->exec("DELETE FROM `jogadorpendente`");
     } catch (Exception $e) {
         error_log("Erro ao aplicar compatibilidade no SQLite: " . $e->getMessage());
     }
@@ -405,12 +415,14 @@ foreach ($partidas as $matchInfo) {
     }
     
     $output = shell_exec($cmd . "\n");
+    $output = ($output !== null) ? (string)$output : '';
     
     // Caso o motor execute apenas a rotina de compatibilidade/migração no primeiro disparo, reenviar a simulação
     $tentativas = 1;
     while ($tentativas < 3 && stripos($output, 'compatibilidade com o portal web') !== false) {
         $outputRetry = shell_exec($cmd . "\n");
-        $output .= "\n[REENVIO AUTOMÁTICO #" . $tentativas . "]:\n" . $outputRetry;
+        $outputRetryStr = ($outputRetry !== null) ? (string)$outputRetry : '';
+        $output .= "\n[REENVIO AUTOMÁTICO #" . $tentativas . "]:\n" . $outputRetryStr;
         $tentativas++;
     }
     
