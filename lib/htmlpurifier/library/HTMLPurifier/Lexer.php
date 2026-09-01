@@ -48,6 +48,11 @@ class HTMLPurifier_Lexer
      */
     public $tracksLineNumbers = false;
 
+    /**
+     * Entity parser instance
+     */
+    public $_entity_parser;
+
     // -- STATIC ----------------------------------------------------------
 
     /**

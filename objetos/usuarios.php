@@ -68,53 +68,53 @@ class Usuario{
     // used to read category name by its ID
     function readName(){
 
-    $query = "SELECT nome FROM " . $this->table_name . " WHERE id = ? limit 0,1";
+        $query = "SELECT nome FROM " . $this->table_name . " WHERE id = ? limit 0,1";
 
-    $stmt = $this->conn->prepare( $query );
-    $stmt->bindParam(1, $this->id);
-    $stmt->execute();
+        $stmt = $this->conn->prepare( $query );
+        $stmt->bindParam(1, $this->id);
+        $stmt->execute();
 
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $this->nome = $row['nome'];
-}
+        $this->nome = is_array($row) && isset($row['nome']) ? $row['nome'] : null;
+    }
 
     function password(){
 
-    $query = "SELECT senha FROM " . $this->table_name . " WHERE id = ? limit 0,1";
+        $query = "SELECT senha FROM " . $this->table_name . " WHERE id = ? limit 0,1";
 
-    $stmt = $this->conn->prepare( $query );
-    $stmt->bindParam(1, $this->id);
-    $stmt->execute();
+        $stmt = $this->conn->prepare( $query );
+        $stmt->bindParam(1, $this->id);
+        $stmt->execute();
 
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $this->senha = $row['senha'];
+        $this->senha = is_array($row) && isset($row['senha']) ? $row['senha'] : null;
 
     }
 
 
     function ID($name){
 
-        $name = htmlspecialchars(strip_tags($name));
+        $name = htmlspecialchars(strip_tags((string)$name));
 
-    $query = "SELECT id FROM " . $this->table_name . " WHERE nomeusuario = ? OR email = ? limit 0,1";
+        $query = "SELECT id FROM " . $this->table_name . " WHERE nomeusuario = ? OR email = ? limit 0,1";
 
-    $stmt = $this->conn->prepare( $query );
-    $stmt->bindParam(1, $name);
-    $stmt->bindParam(2, $name);
-    $stmt->execute();
+        $stmt = $this->conn->prepare( $query );
+        $stmt->bindParam(1, $name);
+        $stmt->bindParam(2, $name);
+        $stmt->execute();
 
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    $id_usuario = $row['id'];
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $id_usuario = is_array($row) && isset($row['id']) ? $row['id'] : null;
 
-    return $id_usuario;
+        return $id_usuario;
 
     }
 
     function idByEmail($email){
 
-        $email = htmlspecialchars(strip_tags($email));
+        $email = htmlspecialchars(strip_tags((string)$email));
 
         $query = "SELECT id FROM " . $this->table_name . " WHERE email = ? limit 0,1";
 
@@ -123,11 +123,11 @@ class Usuario{
         $stmt->execute();
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        $id_usuario = $row['id'];
+        $id_usuario = is_array($row) && isset($row['id']) ? $row['id'] : null;
 
         return $id_usuario;
 
-        }
+    }
 
     function passById($id){
 
@@ -295,7 +295,7 @@ class Usuario{
     }
 
 	function obterApiKey($userId){
-		$userId = htmlspecialchars(strip_tags($userId));
+		$userId = htmlspecialchars(strip_tags((string)$userId));
 
         $query = "SELECT apiKey FROM " . $this->table_name . " WHERE id = ? limit 0,1";
 
@@ -304,7 +304,7 @@ class Usuario{
         $stmt->execute();
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        $apiKey = $row['apiKey'];
+        $apiKey = is_array($row) && isset($row['apiKey']) ? $row['apiKey'] : null;
 
         return $apiKey;
 	

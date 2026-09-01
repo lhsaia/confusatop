@@ -9,6 +9,37 @@
   },
   "days": [
     {
+      "id": "day_01_09_2026",
+      "date": "01/09/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção de Redeclaração de Função na Criação de Times",
+          "desc": "Removida a declaração duplicada da função hexToRgb() no fluxo de submissão do formulário em criar_time.php, eliminando o erro fatal Cannot redeclare hexToRgb()."
+        },
+        {
+          "badge": "security",
+          "title": "Inclusão do PHPMailer no .gitignore",
+          "desc": "Adicionada a pasta utils/PHPMailer e PHPMailer no .gitignore para evitar o versionamento desnecessário da biblioteca de terceiros."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Tratamento de Retorno Nulo em Métodos de Usuário",
+          "desc": "Adicionada checagem is_array nos retornos de consulta dos métodos idByEmail(), ID(), readName(), password() e obterApiKey() na classe Usuario, prevenindo o aviso de array offset on value of type bool quando o usuário ou e-mail não é encontrado."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Compatibilidade com PHP 8.2+ no HTMLPurifier",
+          "desc": "Declaradas explicitamente as propriedades $idDef e $_entity_parser nas classes do HTMLPurifier, eliminando os avisos de depreciação de criação de propriedades dinâmicas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Diretório de Execução no Cron de Simulação",
+          "desc": "Adicionado posicionamento prévio no diretório do Hexacolor (cd) antes da chamada do comando Java no cron_simular_jogos.php, garantindo que os caminhos relativos de banco de dados e arquivos de súmula sejam encontrados corretamente na execução via terminal/agendador."
+        }
+      ]
+    },
+    {
       "id": "day_30_08_2026",
       "date": "30/08/2026",
       "items": [

@@ -393,15 +393,15 @@ foreach ($partidas as $matchInfo) {
     if ($isWindows) {
         $jarPath = $dir . "/HexacolorYMTv2.jar";
         $jsonPath = $dir . "/agenda/json.txt";
-        $cmd = "java -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.awt.headless=true -jar \"$jarPath\" -m \"$jsonPath\" 2>&1";
+        $cmd = "cd /d \"$dir\" && java -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.awt.headless=true -jar \"$jarPath\" -m \"$jsonPath\" 2>&1";
     } else {
-        $docRoot = dirname(__DIR__);
+        $docRoot = dirname(__DIR__); // raiz do site /home/lhsaia/confusa.top
         $javaBin = $docRoot . "/java_station/jdk/jdk1.8.0_231/bin/java";
         $libPath = $hexacolorDir . "/lib";
         $tmpDir = $docRoot . "/java_station/tmp";
         $jarPath = $hexacolorDir . "/HexacolorYMTv2.jar";
         $jsonPath = $hexacolorDir . "/agenda/json.txt";
-        $cmd = "export LANG=en_US.UTF-8; export LC_ALL=en_US.UTF-8; $javaBin -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.awt.headless=true -Djava.library.path=$libPath -Djava.io.tmpdir=$tmpDir -jar $jarPath -m $jsonPath 2>&1";
+        $cmd = "cd {$hexacolorDir} && export LANG=en_US.UTF-8; export LC_ALL=en_US.UTF-8; $javaBin -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.awt.headless=true -Djava.library.path=$libPath -Djava.io.tmpdir=$tmpDir -jar $jarPath -m $jsonPath 2>&1";
     }
     
     $output = shell_exec($cmd . "\n");
@@ -457,7 +457,11 @@ foreach ($partidas as $matchInfo) {
     
     if (!file_exists($hylFile)) {
         error_log("PHP Simulador: [ERRO] Cron falhou na partida #{$idPartida}. Comando: " . $cmd . " | Output: " . trim($output));
-        echo "   [ERRO] A simulação da Partida #{$idPartida} falhou. O arquivo .hyl não foi gerado. Pulando...\n";
+        echo "   [ERRO] A simulação da Partida #{$idPartida} falhou. O arquivo .hyl não foi gerado.\n";
+        if (!empty($output)) {
+            echo "   [DETALHE ENGINE]: " . trim($output) . "\n";
+        }
+        echo "   Pulando...\n";
         continue;
     }
     

@@ -22,10 +22,11 @@ competicoes/hexacolor/**
 lib/jsvectormap-master/
 lib/leaflet-locationpicker/
 lib/htmlpurifier/
+utils/PHPMailer/
+PHPMailer/
 js/jquery.soccerfield.js
 js/jquery.soccerfield.min.js
 full hexa suite/
-
 
 # Data & Exports
 sqlitedb/

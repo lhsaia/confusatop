@@ -54,12 +54,6 @@ if(isset($_POST['nome']) && isset($_POST['sigla']) && $_POST['pais'] != 0){
     $time->estadio = $_POST['estadio'];
 
     //cores
-
-    function hexToRgb($hex){
-        list($r, $g, $b) = sscanf($hex, "#%02x%02x%02x");
-        return str_pad($r, 3, "0", STR_PAD_LEFT) . str_pad($g, 3, "0", STR_PAD_LEFT) . str_pad($b, 3, "0", STR_PAD_LEFT);
-    }
-
     $time->uniforme1cor1 = hexToRgb($_POST['cor1uni1']);
     $time->uniforme1cor2 = hexToRgb($_POST['cor2uni1']);
     $time->uniforme1cor3 = hexToRgb($_POST['cor3uni1']);
