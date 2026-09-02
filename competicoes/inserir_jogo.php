@@ -17,6 +17,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 	$estadio = $_POST['estadio'];
 	$datetime = $_POST['datetime'];
 	$neutro = $_POST['neutro'];
+    $subir_live = isset($_POST['subir_live']) ? ($_POST['subir_live'] === 'true' || $_POST['subir_live'] == 1 ? 1 : 0) : null;
     $error_msg = "";
 	
 	//estabelecer conexão com bancos de dados
@@ -48,7 +49,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
 
     //alterar arbitro
-    if($competicao->inserirJogo($id_competicao,$timeA,$timeB,$fase,$arbitro,$estadio, $datetime, $neutro)){
+    if($competicao->inserirJogo($id_competicao,$timeA,$timeB,$fase,$arbitro,$estadio, $datetime, $neutro, null, null, null, null, $subir_live)){
         $is_success = true;
         $error_msg .= "";
     } else {

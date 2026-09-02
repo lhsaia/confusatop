@@ -13,6 +13,16 @@
       "date": "01/09/2026",
       "items": [
         {
+          "badge": "bugfix",
+          "title": "Tratamento de Valores Nulos em Funções de Jogador e Status do Time",
+          "desc": "Adicionada proteção contra valores nulos em strip_tags, strpos e strtotime nos métodos da classe Jogador e na página teamstatus.php, eliminando avisos de depreciação do PHP 8.1+."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Sintaxe na Consulta de Propostas de Técnicos",
+          "desc": "Ajustada a interpolação de limites e tipagem de parâmetros no método lerPropostasPendentes da classe Tecnico, eliminando erros de sintaxe de compilação."
+        },
+        {
           "badge": "design",
           "title": "Identificação de Jogadores Emprestados na Busca do Mercado",
           "desc": "Jogadores sob empréstimo (clubeVinculado ativo) agora exibem badge 'EMPRESTADO', menção ao clube de origem e botão de proposta bloqueado para terceiros, mantendo-se acessível para o clube que detém o empréstimo negociar compra definitiva ou extensão."

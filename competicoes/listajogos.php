@@ -519,6 +519,7 @@ $(document).ready(function($){
 					tbl += "<th asc='' class='headings' width='5%'>Data</th>";
 					tbl += "<th asc='' class='headings' width='5%'>Hora</th>";
 					tbl += "<th asc='' class='headings' width='5%'>Neutro</th>";
+					tbl += "<th asc='' class='headings' width='5%'>Live</th>";
 					tbl += "<th asc='' class='headings' width='5%'>Simular</th>";
 					tbl += "<th asc='' class='headings' width='5%'>Status</th>";
 					tbl += "<th asc='' class='headings' width='10%' class=''>Opções</th>";
@@ -634,11 +635,13 @@ $(document).ready(function($){
 						tbl += "<td data-label='Data'>-</td>";
 						tbl += "<td data-label='Hora'>-</td>";
 						tbl += "<td data-label='Neutro'>-</td>";
+						tbl += "<td data-label='Live'>-</td>";
 						tbl += "<td data-label='Simular'>-</td>";
 						tbl += "<td data-label='Status'><span class='status-badge status-simulado'>Classificado</span></td>";
 						tbl += "<td class='wide' data-label='Opções'>-</td>";
 					tbl += "</tr>";
 				} else {
+					let isLiveChecked = (val['subir_live'] == 1 || val['subir_live'] === '1' || val['subir_live'] === true);
 					tbl += "<tr id='"+val['id']+"'>";
 						tbl += "<td class='time-casa' data-label='Time A'><div style='display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px;'><span class='nomeTimeA' id='timeA"+ val['id']+"'>"+ nomeTimeA +"</span>" + escLinkA + "</div><select id='selTimeA"+val['id']+"' class='comboTimeA editavel' style='display:none;'>"+timeAOptions+"</select></td>";
 						let scoreClass = (val['status'] == 1 && podeVerResultado) ? 'gameScore placar-celula' : 'placar-celula-agendado';
@@ -651,6 +654,7 @@ $(document).ready(function($){
 						tbl += "<td data-label='Data'><span class='dataPartida' id='dat"+ val['id']+"'>"+ dataDisplay+" </span><input id='selDat"+val['id']+"' class='dataEditavel editavel' type='date' value='"+dateOnly+"' style='display:none;'/></td>";
 						tbl += "<td data-label='Hora'><span class='horaPartida' id='hor"+ val['id']+"'>"+ horaDisplay+" </span><input id='selHor"+val['id']+"' class='horaEditavel editavel' type='time' value='"+hora+"' style='display:none;'/></td>";
 						tbl += "<td data-label='Neutro'><input type='checkbox' class='neutro' id='alt"+ val['id']+"' "+ (val['neutro'] == 1? 'checked' : '')+" disabled></td>";
+						tbl += "<td data-label='Live'><input type='checkbox' class='subir_live_chk' id='live"+ val['id']+"' "+ (isLiveChecked ? 'checked' : '')+" disabled></td>";
 						let temEstadioValido = parseInt(val['estadio']) > 0 && estObj !== undefined;
 						let simularBtnHtml = "";
 						if (logged == "true" && is_admin_user == "true" && val['status'] == 0) {
@@ -715,6 +719,7 @@ $(document).ready(function($){
 		tbl_row.find(".apagar").hide();
 		
 		tbl_row.find('.neutro').prop('disabled', false);
+		tbl_row.find('.subir_live_chk').prop('disabled', false);
 	});
 
 	$(document).on("click", ".cancelar", function(){
@@ -729,6 +734,7 @@ $(document).ready(function($){
 		tbl_row.find(".apagar").show();
 		
 		tbl_row.find('.neutro').prop('disabled', true);
+		tbl_row.find('.subir_live_chk').prop('disabled', true);
 	});
 
 	$(document).on("click", ".salvar", function(){
@@ -744,6 +750,7 @@ $(document).ready(function($){
 		var data = tbl_row.find(".dataEditavel").val();
 		var hora = tbl_row.find(".horaEditavel").val();
 		var neutro = tbl_row.find(".neutro").is(":checked") ? 1 : 0;
+		var subir_live = tbl_row.find(".subir_live_chk").is(":checked") ? 1 : 0;
 
 		$.ajax({
 			type: "POST",
@@ -758,7 +765,8 @@ $(document).ready(function($){
 				grupo: grupo,
 				data: data,
 				hora: hora,
-				neutro: neutro
+				neutro: neutro,
+				subir_live: subir_live
 			},
 			dataType: 'json',
 			success: function(data) {
@@ -839,6 +847,7 @@ $(document).ready(function($){
 		let datetime = $("#new_date").val() + " " + $("#new_time").val() + ":00";
 		let hora = $("#new_time").val();
 		let neutro = $("#new_neutro").is(":checked");
+		let subir_live = $("#new_subir_live").is(":checked") ? 1 : 0;
 
 		var formData = new FormData();
 		
@@ -850,6 +859,7 @@ $(document).ready(function($){
 		formData.append('estadio',estadio);
 		formData.append('datetime',datetime);
 		formData.append('neutro',neutro);
+		formData.append('subir_live',subir_live);
 
 
 		// for (var key of formData.entries()) {
@@ -990,6 +1000,10 @@ $(document).ready(function($){
             <label for="new_neutro">
                 Campo neutro
                 <input type="checkbox" id="new_neutro"/>
+            </label>
+            <label for="new_subir_live">
+                Live
+                <input type="checkbox" id="new_subir_live" <?php echo (!empty($options['subir_live']) ? 'checked' : ''); ?>/>
             </label>
             <a id="confirmar_insercao" title="Salvar" class="clickable">
                 <span class="material-symbols-outlined inlineButton positive">check</span>

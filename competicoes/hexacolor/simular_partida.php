@@ -520,8 +520,12 @@
 			}
 		}
 
-		// Se a opção subir_live estiver ativada na competição, enviar partida para o CONFUSA Live
-		if (!empty($options['subir_live'])) {
+		// Se a opção subir_live estiver ativada na partida (ou na competição se null), enviar partida para o CONFUSA Live
+		$deveSubirLive = isset($matchInfo['subir_live']) && $matchInfo['subir_live'] !== null 
+			? (!empty($matchInfo['subir_live'])) 
+			: (!empty($options['subir_live']));
+
+		if ($deveSubirLive) {
 			try {
 				$uploaderPath = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__, 2)) . '/lib/ConfusaLiveUploader.php';
 				if (file_exists($uploaderPath)) {

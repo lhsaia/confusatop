@@ -32,7 +32,7 @@ $fimBusca    = date('Y-m-d H:i:s', strtotime('+24 hours')); // 24 horas à frent
 echo "[" . date('Y-m-d H:i:s') . "] Iniciando Cron de Simulação para partidas entre {$inicioBusca} e {$fimBusca}...\n";
 
 // Buscar jogos programados para as próximas X horas
-$query = "SELECT id, competicao_id AS competicao, timeA_id AS timeA, timeB_id AS timeB, estadio_id AS estadio, neutro, fase, data 
+$query = "SELECT id, competicao_id AS competicao, timeA_id AS timeA, timeB_id AS timeB, estadio_id AS estadio, neutro, fase, data, subir_live 
           FROM jogos_clube 
           WHERE status = 0 
             AND simulador_interno = 1
@@ -521,8 +521,12 @@ foreach ($partidas as $matchInfo) {
         }
     }
 
-    // Se a opção subir_live estiver ativada na competição, enviar partida para o CONFUSA Live
-    if (!empty($options['subir_live'])) {
+    // Se a opção subir_live estiver ativada na partida (ou na competição se null), enviar partida para o CONFUSA Live
+    $deveSubirLive = isset($matchInfo['subir_live']) && $matchInfo['subir_live'] !== null 
+        ? (!empty($matchInfo['subir_live'])) 
+        : (!empty($options['subir_live']));
+
+    if ($deveSubirLive) {
         try {
             require_once $docRoot . '/lib/ConfusaLiveUploader.php';
             $faseNome = "Rodada " . (isset($matchInfo['fase']) ? $matchInfo['fase'] : '1');
