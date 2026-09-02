@@ -90,8 +90,7 @@ class Tecnico{
              " . $subquery . "
             ORDER BY
                 a.Nome ASC
-            LIMIT
-                {$from_record_num}, {$records_per_page}";
+            LIMIT " . (int)$from_record_num . ", " . (int)$records_per_page;
 
     $stmt = $this->conn->prepare( $query );
     $stmt->execute();
@@ -811,8 +810,8 @@ class Tecnico{
         return $num;
         }
 
-        function lerPropostasPendentes($idUsuario,$from_record_num,$records_per_page){
-            $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+        function lerPropostasPendentes($idUsuario, $from_record_num, $records_per_page){
+            $idUsuario = htmlspecialchars(strip_tags((string)($idUsuario ?? '')));
 
             $query = "SELECT j.Nome as nomeJogador, c.id as idClubeOrigem, d.id as idClubeDestino, c.Nome as clubeOrigem, d.Nome as clubeDestino, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, j.id as idJogador, 'inbox' as direcao, t.data as data, t.dataConclusao as dataConclusao, j.Nivel as nivelJogador, t.status_execucao as status_execucao, t.id as idTransferencia, (case when t.status_execucao = 0 then 1 when t.status_execucao = 3 then 2 end) as precedencia, t.mensagens
             FROM transferencias_tecnico t
@@ -831,8 +830,7 @@ class Tecnico{
             LEFT JOIN clube c ON t.clubeOrigem = c.id
             WHERE p.dono = ?
             ORDER BY precedencia ASC, data DESC
-                    LIMIT
-                        {$from_record_num}, {$records_per_page}";
+            LIMIT " . (int)$from_record_num . ", " . (int)$records_per_page;
 
             $stmt = $this->conn->prepare( $query );
             $stmt->bindParam(1,$idUsuario);

@@ -766,7 +766,7 @@ return $stmt;
 
         public function countAllSingleTeam($timeId){
 
-            $timeId = htmlspecialchars(strip_tags($timeId));
+            $timeId = htmlspecialchars(strip_tags((string)($timeId ?? '')));
 
         $query = "SELECT jogador FROM contratos_jogador WHERE clube = ? ";
 
@@ -781,8 +781,8 @@ return $stmt;
 
         function ultimaTransferencia($id_jogador, $id_time){
 
-            $id_jogador = htmlspecialchars(strip_tags($id_jogador));
-            $id_time = htmlspecialchars(strip_tags($id_time));
+            $id_jogador = htmlspecialchars(strip_tags((string)($id_jogador ?? '')));
+            $id_time = htmlspecialchars(strip_tags((string)($id_time ?? '')));
 
 
         $query = "SELECT c.Nome, t.data, c.ID FROM transferencias t
@@ -797,7 +797,7 @@ return $stmt;
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if($row) {
-            $row['data'] = date("d-m-Y", strtotime($row['data']));
+            $row['data'] = !empty($row['data']) ? date("d-m-Y", strtotime($row['data'])) : 'indet.';
             $nomeClube = isset($row['Nome']) ? $row['Nome'] : '';
             if($nomeClube == ""){
                 $nomeClube = "Sem clube";
@@ -811,7 +811,10 @@ return $stmt;
         }
 
         function listaPosicoes($stringPosicoes){
-            $html = $stringPosicoes;
+            if (empty($stringPosicoes)) {
+                return '';
+            }
+            $html = (string)$stringPosicoes;
             $needle = "1";
             $lastPos = 0;
             $positions = array();

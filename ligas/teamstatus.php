@@ -385,7 +385,7 @@ if($rowTec) {
     $transferenciaTecnico = $tecnico->ultimaTransferencia($rowTec['ID'], $idTime);
     $encerramentoTecnico = ( $rowTec['encerramento'] == "0" ) ? 'indet.' : $rowTec['encerramento'] ;
 
-    $rowTec['Nascimento'] = date("d-m-Y", strtotime($rowTec['Nascimento']));
+    $rowTec['Nascimento'] = !empty($rowTec['Nascimento']) ? date("d-m-Y", strtotime($rowTec['Nascimento'])) : '';
 
     echo "<tr id='tec".$rowTec['ID']."' data-sexo='".$rowTec['Sexo']."'>";
     echo "<td class='nopadding'><div class='foto_jogador'><a href='/ligas/coachstatus.php?coach={$rowTec['ID']}'><img class='playerThumb' src='/images/tecnicos/".$rowTec['foto']."'></a></div></td>";
@@ -449,10 +449,10 @@ $agora = date('Y-m-d');
             extract($row);
 
 
-            $Nascimento = date("d-m-Y", strtotime($Nascimento));
+            $Nascimento = !empty($Nascimento) ? date("d-m-Y", strtotime($Nascimento)) : '';
             $valor = ($valor/1000);
             $valor = "F$ ".number_format($valor,0,".","") . " k" ;
-            if($encerramento != "0000-00-00"){
+            if(!empty($encerramento) && $encerramento != "0000-00-00"){
                 $encerramento = date("d-m-Y", strtotime($encerramento));
             } else {
                 $encerramento = "indet.";
