@@ -721,7 +721,7 @@ class Tecnico{
             '-' as valor, t.Nivel as nivel, '-' as disponibilidade, p.bandeira, q.bandeira as bandeiraClube, q.ID as paisClube, CASE WHEN b.ID is not NULL THEN b.ID ELSE 0 END as idClube, b.liga as idLiga, l.Nome as ligaClube, '-' as posicaoBaseJogador, t.Mentalidade as mentalidadeIndex, t.Estilo as estiloIndex, p.ranqueavel, CASE WHEN p.dono <> :usuarioLogado THEN 0 ELSE 1 END as donoJogador, c.tipoContrato
             FROM tecnico t
             LEFT JOIN paises p ON t.Pais = p.id
-            LEFT JOIN contratos_tecnico c ON t.ID = c.tecnico
+            LEFT JOIN contratos_tecnico c ON t.ID = c.tecnico AND c.tipoContrato = 0
             LEFT JOIN clube b ON b.ID = c.clube
             LEFT JOIN paises q ON b.Pais = q.ID
             LEFT JOIN mentalidade_tecnico m ON t.Mentalidade = m.ID

@@ -13,6 +13,41 @@
       "date": "01/09/2026",
       "items": [
         {
+          "badge": "design",
+          "title": "Identificação de Jogadores Emprestados na Busca do Mercado",
+          "desc": "Jogadores sob empréstimo (clubeVinculado ativo) agora exibem badge 'EMPRESTADO', menção ao clube de origem e botão de proposta bloqueado para terceiros, mantendo-se acessível para o clube que detém o empréstimo negociar compra definitiva ou extensão."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Exibição no Mercado de Atletas Convocados Sem Clube",
+          "desc": "Ajustadas as consultas de busca avançada de jogadores e técnicos para filtrar contratos de clube (tipoContrato = 0) na junção principal, garantindo que atletas convocados para seleções nacionais mas sem clube apareçam normalmente como livres no mercado."
+        },
+        {
+          "badge": "new",
+          "title": "Opção de Jogador Falecido e Badge Mortuário",
+          "desc": "Adicionada opção para marcar jogadores como Falecidos na tabela de Meus Jogadores, com badge mortuário contendo cruz pontuda (†), data de falecimento, sinal de luto, aplicação de filtro preto e branco (grayscale) e bloqueio total com efeito grayed out na edição de atributos de jogadores falecidos."
+        },
+        {
+          "badge": "new",
+          "title": "Controle Individual de Envio ao CONFUSA Live por Jogo",
+          "desc": "Adicionada a opção de ativar ou desativar o envio de partidas para o CONFUSA Live individualmente por jogo na tabela de competições, respeitando o padrão configurado na competição e permitindo ajustes na edição inline ou ao criar novas partidas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Inicialização da Busca de Transferências",
+          "desc": "Ajustada a conversão booleana da variável JS emTestes na página de transferências e busca avançada, eliminando o erro de sintaxe que impedia o carregamento dos sliders, checkboxes e estilos de busca em produção."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Demissão Involuntária ao Editar Jogador",
+          "desc": "Removida a chamada automática a demitir() no método de edição geral de jogadores ao salvar atributos ou posições, prevenindo que atletas sejam removidos indevidamente de seus clubes."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Tratamento de Parâmetro Ausente em Transferências",
+          "desc": "Adicionado fallback seguro para o parâmetro GET 'type' em mercado/transferencias.php, eliminando o aviso de Undefined array key ao acessar a listagem."
+        },
+        {
           "badge": "bugfix",
           "title": "Correção de Redeclaração de Função na Criação de Times",
           "desc": "Removida a declaração duplicada da função hexToRgb() no fluxo de submissão do formulário em criar_time.php, eliminando o erro fatal Cannot redeclare hexToRgb()."

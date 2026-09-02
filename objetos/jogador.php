@@ -41,6 +41,20 @@ class Jogador{
 
     public function __construct($db){
         $this->conn = $db;
+        $this->ensureDataFalecimentoColumn();
+    }
+
+    private function ensureDataFalecimentoColumn() {
+        try {
+            $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN IF NOT EXISTS data_falecimento DATE DEFAULT NULL");
+        } catch (Exception $e) {
+            try {
+                $check = $this->conn->query("SHOW COLUMNS FROM " . $this->table_name . " LIKE 'data_falecimento'");
+                if ($check && $check->rowCount() == 0) {
+                    $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN data_falecimento DATE DEFAULT NULL");
+                }
+            } catch (Exception $ex) {}
+        }
     }
 
     // criar trio de arbitragem
@@ -1247,7 +1261,7 @@ return $stmt;
             if($disponivel != null){
                 $subquery .= ' AND disponibilidade = "Sim" ';
             } else {
-              $subquery .= ' AND disponibilidade <> "Aposentado" AND disponibilidade <> "Expatriado" ';
+              $subquery .= ' AND disponibilidade <> "Aposentado" AND disponibilidade <> "Expatriado" AND disponibilidade <> "Falecido" ';
             }
 
             if($nome != null){
@@ -1294,7 +1308,7 @@ return $stmt;
             }
 
 
-            $query = "SELECT t1.*, d.Nome as nomeClube, d.Escudo as escudoClube  FROM (SELECT j.ID as idJogador, j.Nome as nomeJogador, FLOOR(DATEDIFF(NOW(),j.Nascimento)/365) as idadeJogador, m.Nome as mentalidade, r.Nome as cobrancaFalta, j.Sexo as sexoJogador, j.Pais as nacionalidade,
+            $query = "SELECT t1.*, d.Nome as nomeClube, d.Escudo as escudoClube FROM (SELECT j.ID as idJogador, j.Nome as nomeJogador, FLOOR(DATEDIFF(NOW(),j.Nascimento)/365) as idadeJogador, m.Nome as mentalidade, r.Nome as cobrancaFalta, j.Sexo as sexoJogador, j.Pais as nacionalidade,
             CONCAT(CASE WHEN SUBSTRING(j.StringPosicoes,1,1) = 0 THEN '' ELSE 'G-' END,
             CASE WHEN SUBSTRING(j.StringPosicoes,2,1) = 0 THEN '' ELSE 'LD-' END,
             CASE WHEN SUBSTRING(j.StringPosicoes,3,1) = 0 THEN '' ELSE 'LE-' END,
@@ -1310,11 +1324,12 @@ return $stmt;
             CASE WHEN SUBSTRING(j.StringPosicoes,13,1) = 0 THEN '' ELSE 'MA-' END,
             CASE WHEN SUBSTRING(j.StringPosicoes,14,1) = 0 THEN '' ELSE 'Am-' END,
             CASE WHEN SUBSTRING(j.StringPosicoes,15,1) = 0 THEN '' ELSE 'Aa-' END) as posicoes, j.StringPosicoes as stringPosicoes,
-            j.valor, j.Nivel as nivel, CASE WHEN j.disponibilidade = -1 THEN 'Aposentado' WHEN j.disponibilidade = 0 THEN 'Não' WHEN j.disponibilidade = -2 THEN 'Expatriado' ELSE 'Sim' END as disponibilidade, p.bandeira, q.bandeira as bandeiraClube, q.ID as paisClube, CASE WHEN b.ID is not NULL THEN b.ID ELSE 0 END as idClube, b.liga as idLiga, l.Nome as ligaClube,  CASE WHEN c.posicaoBase <> 0 THEN o.Nome ELSE '' END as posicaoBaseJogador, j.Mentalidade as mentalidadeIndex, p.ranqueavel, CASE WHEN p.dono <> :usuarioLogado THEN 0 ELSE 1 END as donoJogador, c.tipoContrato, COALESCE(c.clubeVinculado, 0) as idDonoVinculado
+            j.valor, j.Nivel as nivel, CASE WHEN j.disponibilidade = -1 THEN 'Aposentado' WHEN j.disponibilidade = 0 THEN 'Não' WHEN j.disponibilidade = -2 THEN 'Expatriado' WHEN j.disponibilidade = -3 THEN 'Falecido' ELSE 'Sim' END as disponibilidade, p.bandeira, q.bandeira as bandeiraClube, q.ID as paisClube, CASE WHEN b.ID is not NULL THEN b.ID ELSE 0 END as idClube, b.liga as idLiga, l.Nome as ligaClube, CASE WHEN c.posicaoBase <> 0 THEN o.Nome ELSE '' END as posicaoBaseJogador, j.Mentalidade as mentalidadeIndex, p.ranqueavel, CASE WHEN p.dono <> :usuarioLogado THEN 0 ELSE 1 END as donoJogador, CASE WHEN q.dono = :usuarioLogado THEN 1 ELSE 0 END as donoClubeAtual, c.tipoContrato, COALESCE(c.clubeVinculado, 0) as idClubeVinculado, COALESCE(c.clubeVinculado, 0) as idDonoVinculado, clOrig.Nome as nomeClubeOrigem, CASE WHEN c.clubeVinculado IS NOT NULL AND c.clubeVinculado <> 0 THEN 1 ELSE 0 END as estaEmprestado
             FROM jogador j
             LEFT JOIN paises p ON j.Pais = p.id
-            LEFT JOIN contratos_jogador c ON j.ID = c.jogador
+            LEFT JOIN contratos_jogador c ON j.ID = c.jogador AND c.tipoContrato = 0
             LEFT JOIN clube b ON b.ID = c.clube
+            LEFT JOIN clube clOrig ON clOrig.ID = c.clubeVinculado
             LEFT JOIN paises q ON b.Pais = q.ID
             LEFT JOIN liga l ON l.ID = b.liga
             LEFT JOIN posicoes o ON o.ID = c.posicaoBase
@@ -1421,27 +1436,62 @@ return $stmt;
 
         }
 
+        function falecer($idJogador, $idClube = null, $dataFalecimento = null){
+            $idJogador = htmlspecialchars(strip_tags((string)$idJogador));
+            if (empty($dataFalecimento)) {
+                $dataFalecimento = date('Y-m-d');
+            } else {
+                $dataFalecimento = htmlspecialchars(strip_tags((string)$dataFalecimento));
+            }
+
+            $error_count = 0;
+            $query = "UPDATE jogador SET disponibilidade = -3, data_falecimento = ? WHERE ID = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $dataFalecimento);
+            $stmt->bindParam(2, $idJogador);
+            if(!$stmt->execute()){
+                $error_count++;
+            }
+
+            if($idClube != null && $idClube != 0){
+                if(!$this->demitir($idJogador, $idClube)){
+                    $error_count++;
+                }
+            }
+
+            if($error_count > 0){
+                return false;
+            } else {
+                return true;
+            }
+        }
+
 
 
         function demitir($idJogador,$idClube){
+            $idJogador = (int)$idJogador;
+            $idClube = (int)$idClube;
 
-        //verificar tipo transferencia
-                $query_origem = "SELECT tipoContrato, clubeVinculado FROM contratos_jogador WHERE jogador=:jogador AND clube=:clube";
+            if ($idJogador <= 0 || $idClube <= 0) {
+                return true;
+            }
 
-                $stmt = $this->conn->prepare( $query_origem );
-                $stmt->bindParam(":jogador", $idJogador);
-                $stmt->bindParam(":clube", $idClube);
-                $stmt->execute();
-                $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                if($row == false){
-                    $tipoContrato = 0;
-                    $clubeVinculado = 0;
-                } else {
-                    $tipoContrato = $row['tipoContrato'];
-                    $clubeVinculado = $row['clubeVinculado'];
-                }
+            //verificar tipo transferencia
+            $query_origem = "SELECT tipoContrato, clubeVinculado FROM contratos_jogador WHERE jogador=:jogador AND clube=:clube";
 
-                $error_count = 0;
+            $stmt = $this->conn->prepare( $query_origem );
+            $stmt->bindParam(":jogador", $idJogador);
+            $stmt->bindParam(":clube", $idClube);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if($row == false){
+                return true;
+            }
+
+            $tipoContrato = $row['tipoContrato'];
+            $clubeVinculado = $row['clubeVinculado'];
+
+            $error_count = 0;
 				
 		
             if($clubeVinculado == 0){
@@ -1547,7 +1597,7 @@ return $stmt;
 
         }
 
-        function editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono, $atividadeJogador, $mentalidadeJogador = null, $determinacaoJogador = null, $cobrancaFaltaJogador = null, $encerramentoContrato = null, $foto = null, $desdeContrato = null, $numeroCamisa = null){
+        function editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono, $atividadeJogador, $mentalidadeJogador = null, $determinacaoJogador = null, $cobrancaFaltaJogador = null, $encerramentoContrato = null, $foto = null, $desdeContrato = null, $numeroCamisa = null, $dataFalecimento = null){
 
             $idJogador = htmlspecialchars(strip_tags((string)($idJogador ?? '')));
             $idTime = ($idTime !== null && $idTime !== '') ? htmlspecialchars(strip_tags((string)$idTime)) : null;
@@ -1564,6 +1614,7 @@ return $stmt;
 			$foto = ($foto !== null && $foto !== '') ? htmlspecialchars(strip_tags((string)$foto)) : null;
 			$desdeContrato = ($desdeContrato !== null && $desdeContrato !== '') ? htmlspecialchars(strip_tags((string)$desdeContrato)) : null;
 			$numeroCamisa = ($numeroCamisa !== null && $numeroCamisa !== '') ? htmlspecialchars(strip_tags((string)$numeroCamisa)) : null;
+			$dataFalecimento = ($dataFalecimento !== null && $dataFalecimento !== '') ? htmlspecialchars(strip_tags((string)$dataFalecimento)) : null;
 			
 			if(!is_array($posicoesJogador)){
 				$posicoesJogador = explode(",", $posicoesJogador);
@@ -1596,6 +1647,13 @@ return $stmt;
                     $determinacao = $determinacaoJogador;
                     $cobrancaFalta = $cobrancaFaltaJogador;
 					
+                    if((int)$atividade === -3){
+                        if(empty($dataFalecimento)){
+                            $dataFalecimento = date('Y-m-d');
+                        }
+                    } else {
+                        $dataFalecimento = null;
+                    }
 					
 
                     if(sizeOf($posicoesJogador)== 0 ){
@@ -1624,7 +1682,7 @@ return $stmt;
 						$query_foto = "";
 					}
 
-                $query = "UPDATE jogador SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, StringPosicoes=:stringPosicoes, valor=:valor, valorAtualizado=:valorAtualizado, Nivel=:nivel, Mentalidade=:mentalidade, Determinacao=:determinacao, DeterminacaoOriginal=:determinacaoOriginal, CobradorFalta=:cobradorFalta, disponibilidade =:disponibilidade ".$query_foto." WHERE ID = :id";
+                $query = "UPDATE jogador SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, StringPosicoes=:stringPosicoes, valor=:valor, valorAtualizado=:valorAtualizado, Nivel=:nivel, Mentalidade=:mentalidade, Determinacao=:determinacao, DeterminacaoOriginal=:determinacaoOriginal, CobradorFalta=:cobradorFalta, disponibilidade =:disponibilidade, data_falecimento =:dataFalecimento ".$query_foto." WHERE ID = :id";
                     $stmt = $this->conn->prepare($query);
                     $stmt->bindParam(":nome", $nome);
                     $stmt->bindParam(":nascimento", $nascimento);
@@ -1639,6 +1697,7 @@ return $stmt;
                     $stmt->bindParam(":determinacaoOriginal", $determinacao);
                     $stmt->bindParam(":mentalidade", $mentalidade);
                     $stmt->bindParam(":disponibilidade", $atividade);
+                    $stmt->bindParam(":dataFalecimento", $dataFalecimento);
 					if($foto != "" && $foto != null){
 						$stmt->bindParam(":foto", $foto);
 					} 
@@ -1647,6 +1706,10 @@ return $stmt;
 
                     } else {
                         $error_count++;
+                    }
+
+                    if((int)$atividade === -3 && $idTime != null && $idTime != 0){
+                        $this->demitir($idJogador, $idTime);
                     }
 
                     if($numeroCamisa !== null){
@@ -1892,15 +1955,7 @@ return $stmt;
 
         }
 		
-		if($atividadeJogador < 0 && $isDono){
-			if($this->demitir($idJogador,$idTime)){
-
-            } else {
-                $error_count++;
-            }
-		}
-		
-		if($isDono && $encerramentoContrato != null){
+		if($isDono && $encerramentoContrato != null && !empty($idTime)){
 			if($this->alterarContrato($idJogador,$idTime, $encerramentoContrato)){
 
             } else {
@@ -1941,7 +1996,7 @@ return $stmt;
 
             $idJogador = htmlspecialchars(strip_tags($idJogador));
 
-            $queryBase = "SELECT j.Nome as nome, j.Pais as idPais, j.Nascimento as nascimento, j.StringPosicoes as stringPosicoes, j.valor, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as idade, p.bandeira as bandeiraPais, p.nome as Pais, j.Marcacao, j.Desarme, j.VisaoJogo, j.Movimentacao, j.Cruzamentos, j.Cabeceamento, j.Tecnica, j.ControleBola, j.Finalizacao, j.FaroGol, j.Velocidade, j.Forca, j.Reflexos, j.Seguranca, j.Saidas, j.JogoAereo, j.Lancamentos, j.DefesaPenaltis, j.Nivel, j.foto, p.dono as donoPais, j.lesionado_ate FROM jogador j LEFT JOIN paises p ON j.Pais = p.id WHERE j.ID = ?";
+            $queryBase = "SELECT j.Nome as nome, j.Pais as idPais, j.Nascimento as nascimento, j.StringPosicoes as stringPosicoes, j.valor, j.disponibilidade, j.data_falecimento, CASE WHEN j.data_falecimento IS NOT NULL THEN FLOOR((DATEDIFF(j.data_falecimento, j.Nascimento))/365) ELSE FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) END as idade, p.bandeira as bandeiraPais, p.nome as Pais, j.Marcacao, j.Desarme, j.VisaoJogo, j.Movimentacao, j.Cruzamentos, j.Cabeceamento, j.Tecnica, j.ControleBola, j.Finalizacao, j.FaroGol, j.Velocidade, j.Forca, j.Reflexos, j.Seguranca, j.Saidas, j.JogoAereo, j.Lancamentos, j.DefesaPenaltis, j.Nivel, j.foto, p.dono as donoPais, j.lesionado_ate FROM jogador j LEFT JOIN paises p ON j.Pais = p.id WHERE j.ID = ?";
             $stmt = $this->conn->prepare($queryBase);
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
@@ -1952,7 +2007,8 @@ return $stmt;
                     'bandeiraPais' => '', 'Pais' => '', 'Marcacao' => 0, 'Desarme' => 0, 'VisaoJogo' => 0, 'Movimentacao' => 0,
                     'Cruzamentos' => 0, 'Cabeceamento' => 0, 'Tecnica' => 0, 'ControleBola' => 0, 'Finalizacao' => 0, 'FaroGol' => 0,
                     'Velocidade' => 0, 'Forca' => 0, 'Reflexos' => 0, 'Seguranca' => 0, 'Saidas' => 0, 'JogoAereo' => 0,
-                    'Lancamentos' => 0, 'DefesaPenaltis' => 0, 'Nivel' => 0, 'foto' => '', 'donoPais' => 0, 'lesionado_ate' => null
+                    'Lancamentos' => 0, 'DefesaPenaltis' => 0, 'Nivel' => 0, 'foto' => '', 'donoPais' => 0, 'lesionado_ate' => null,
+                    'disponibilidade' => 0, 'data_falecimento' => null
                 ];
             }
 
@@ -3435,8 +3491,8 @@ public function resolverEmprestimos(){
 
         } 
 
-    $query = $sub_query_inicio."SELECT tf.ID, tf.Nome, tf.Nascimento, tf.Mentalidade, tf.CobradorFalta, tf.StringPosicoes, tf.valor, tf.valorAtualizado, tf.Nivel, tf.disponibilidade, tf.idPais, tf.idDonoPais, tf.siglaPais, tf.bandeiraPais, tf.posicaoBase as posicaoBase, tf.titularidade, b.Nome as clubeVinculado, d.Nome as clubeEmprestimo, f.Nome as clubeSelecao, tf.determinacaoOriginal, tf.sexo, b.Escudo as escudoClubeVinculado, b.ID as idClubeVinculado, tf.Idade, q.dono as donoClubeVinculado, tf.foto, tf.referencia FROM ( SELECT
-            a.ID, a.Nome, a.Nascimento, m.Nome as Mentalidade, r.Nome as CobradorFalta, a.StringPosicoes, a.valor,a.valorAtualizado, a.Nivel, a.disponibilidade, p.id as idPais, p.dono as idDonoPais, p.sigla as siglaPais, p.bandeira as bandeiraPais, c.clube as clubeVinculado, e.clube as clubeEmprestimo, s.clube as clubeSelecao, c.posicaoBase as posicaoBase, c.titularidade, a.Sexo as sexo, a.determinacaoOriginal, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, foto, a.referencia 
+    $query = $sub_query_inicio."SELECT tf.ID, tf.Nome, tf.Nascimento, tf.Mentalidade, tf.CobradorFalta, tf.StringPosicoes, tf.valor, tf.valorAtualizado, tf.Nivel, tf.disponibilidade, tf.data_falecimento, tf.idPais, tf.idDonoPais, tf.siglaPais, tf.bandeiraPais, tf.posicaoBase as posicaoBase, tf.titularidade, b.Nome as clubeVinculado, d.Nome as clubeEmprestimo, f.Nome as clubeSelecao, tf.determinacaoOriginal, tf.sexo, b.Escudo as escudoClubeVinculado, b.ID as idClubeVinculado, tf.Idade, q.dono as donoClubeVinculado, tf.foto, tf.referencia FROM ( SELECT
+            a.ID, a.Nome, a.Nascimento, m.Nome as Mentalidade, r.Nome as CobradorFalta, a.StringPosicoes, a.valor,a.valorAtualizado, a.Nivel, a.disponibilidade, a.data_falecimento, p.id as idPais, p.dono as idDonoPais, p.sigla as siglaPais, p.bandeira as bandeiraPais, c.clube as clubeVinculado, e.clube as clubeEmprestimo, s.clube as clubeSelecao, c.posicaoBase as posicaoBase, c.titularidade, a.Sexo as sexo, a.determinacaoOriginal, CASE WHEN a.data_falecimento IS NOT NULL THEN FLOOR((DATEDIFF(a.data_falecimento, a.Nascimento))/365) ELSE FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) END as Idade, foto, a.referencia 
         FROM
             " . $this->table_name . " a
         LEFT JOIN paises p ON a.Pais = p.id

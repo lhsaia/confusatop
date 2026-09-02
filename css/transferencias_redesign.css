@@ -831,3 +831,30 @@
     transform: translateY(-20px) scale(0.95);
   }
 }
+
+/* Estilos de Jogadores Emprestados */
+.jogador-emprestado {
+  background-color: rgba(245, 158, 11, 0.04) !important;
+}
+
+.jogador-emprestado:hover {
+  background-color: rgba(245, 158, 11, 0.08) !important;
+}
+
+.jogador-emprestado .nomeJogador a {
+  color: #475569 !important;
+}
+
+.badge-emprestado {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #d97706 !important;
+  font-size: 0.65rem !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-weight: 700 !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  margin-left: 6px !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  letter-spacing: 0.02em !important;
+}

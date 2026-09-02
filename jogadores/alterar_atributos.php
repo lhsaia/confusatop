@@ -28,6 +28,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 	//salvar
 	if($salvar){
 		$idJogador = $_POST['idJogador'];
+		$infoJogador = $jogador->readInfo($idJogador);
+		if ((int)($infoJogador['disponibilidade'] ?? 0) === -3 || !empty($infoJogador['data_falecimento'])) {
+			die(json_encode(['success' => false, 'attributeArray' => [], 'error' => 'Jogador falecido não pode ter seus atributos alterados.', 'personalidade' => '']));
+		}
 		
 		if($_POST['isGoleiro']){
 			$attribute_array = adjustAttributes(true, $_POST['level'], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, $_POST['reflexos'], $_POST['seguranca'],  $_POST['saida_bola'],  $_POST['jogo_aereo'],  $_POST['lancamentos'],  $_POST['penaltis']);

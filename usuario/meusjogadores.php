@@ -260,8 +260,11 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 				}
 				
 				// geração da tabela
+				let isFalecido = (parseInt(val['disponibilidade']) === -3);
+				let fotoClass = isFalecido ? "playerThumb foto-falecido" : "playerThumb";
+
 				tbl += "<tr id='"+val['ID']+"' data-sexo='"+val['sexo']+"' data-dono-pais='"+val['idDonoPais']+"' >";
-					tbl += "<td><div class='imageUpload'><img class='playerThumb' src='/images/jogadores/"+val['foto']+"' /> <input type='file' hidden id='foto"+val['ID']+"' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
+					tbl += "<td><div class='imageUpload'><img class='"+fotoClass+"' src='/images/jogadores/"+val['foto']+"' /> <input type='file' hidden id='foto"+val['ID']+"' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
 					tbl +=  "<td><span class='nomeEditavel' id='nom"+val['ID']+"'><a class='linkNome' href='/ligas/playerstatus.php?player="+val['ID']+"' >"+val['Nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span></td>";
 					tbl += "<td><span class='nomeNascimento' id='nas"+ val['ID']+"'>"+ nascimentoDisplay + " (" +val['Idade']+") "+" </span><input id='selnas"+val['ID']+"' class='nascimentoEditavel editavel' type='date' value='"+val['Nascimento']+"' hidden/></td>";
 					tbl += "<td><span class='nomeMentalidade' id='men"+ val['ID']+"'>"+ val['Mentalidade'] +"</span><select id='selmen"+val['ID']+"' class='comboMentalidade editavel' value='"+val['Mentalidade']+"' hidden>";
@@ -314,8 +317,17 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 					
 					
 					var nomeDisponibilidade = "";
+					var dataFalecFmt = "";
+					if(val['data_falecimento']){
+						var dF = new Date(val['data_falecimento'].replace(/-/g, '\/'));
+						dataFalecFmt = dF.toLocaleDateString("pt-BR", options);
+					}
 					
 					switch(parseInt(val['disponibilidade'])){
+						case -3:
+							var txtDataFalec = dataFalecFmt ? dataFalecFmt : "Falecido";
+							nomeDisponibilidade = "<span class='badge-falecido' title='Falecido em " + (dataFalecFmt || "data não informada") + "'><span class='cruz-morte'>†</span> <svg class='luto-icon' viewBox='0 0 24 24' width='13' height='13' fill='currentColor'><path d='M12 2C8.69 2 6 4.69 6 8c0 2.21 1.2 4.15 3 5.19V22l3-2 3 2v-8.81c1.8-1.04 3-2.98 3-5.19 0-3.31-2.69-6-6-6zm0 2c2.21 0 4 1.79 4 4 0 1.25-.58 2.37-1.49 3.1-.47.38-.51 1.07-.09 1.5.42.43 1.12.43 1.58.01C17.26 11.45 18 9.82 18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 1.82.74 3.45 1.99 4.61.47.42 1.16.42 1.59-.01.42-.43.38-1.12-.09-1.5C8.58 10.37 8 9.25 8 8c0-2.21 1.79-4 4-4z'/></svg> " + txtDataFalec + "</span>";
+							break;
 						case -2:
 							nomeDisponibilidade = "Expatriado";
 							break;
@@ -330,13 +342,19 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 							break;
 					}
 					
+					var valDataFalecimento = val['data_falecimento'] ? val['data_falecimento'] : new Date().toISOString().split('T')[0];
 
-					tbl += "<td><span class='nomeAtividade' id='dis"+val['ID']+"'>"+nomeDisponibilidade+"</span><select data-idTime='"+val['idClubeVinculado']+"' class='comboAtividade editavel' id='seldis"+val['ID']+"' hidden >";
+					tbl += "<td><span class='nomeAtividade' id='dis"+val['ID']+"'>"+nomeDisponibilidade+"</span>";
+					tbl += "<div class='container-edit-atividade' style='display:inline-flex; flex-direction:column; gap:4px;'>";
+					tbl += "<select data-idTime='"+(val['idClubeVinculado'] ? val['idClubeVinculado'] : 0)+"' class='comboAtividade editavel' id='seldis"+val['ID']+"' hidden >";
 					tbl += "<option value='1' title='Ativo e disponível para negociar'>Ativo (disponível)</option>";
 					tbl += "<option value='0' title='Ativo'>Ativo</option>";
 					tbl += "<option value='-1' title='Aposentado, não pode ser contratado'>Aposentado</option>";
 					tbl += "<option value='-2' title='Jogando em clubes fora do Portal, não pode ser contratado'>Expatriado</option>";
-					tbl += "</select></td>";
+					tbl += "<option value='-3' title='Falecido'>Falecido</option>";
+					tbl += "</select>";
+					tbl += "<input type='date' class='falecimentoEditavel editavel' id='selfalec"+val['ID']+"' value='"+valDataFalecimento+"' title='Data de Falecimento' hidden style='font-size:0.75rem; padding:2px 4px; max-width:125px;' />";
+					tbl += "</div></td>";
 
 					
 					let optionsString = "<td class='wide'>";
@@ -463,16 +481,27 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 tbl_row.find('.nivelEditavel').attr('contenteditable', 'true').addClass('editavel');
 
 tbl_row.find('.comboCobrador option').filter(function() {
-    return $(this).text() == tbl_row.find('.nomeCobrador').html();
+    return $(this).text().trim() == tbl_row.find('.nomeCobrador').text().trim();
 }).prop("selected", true);
 
 tbl_row.find('.comboMentalidade option').filter(function() {
-    return $(this).text() == tbl_row.find('.nomeMentalidade').html();
+    return $(this).text().trim() == tbl_row.find('.nomeMentalidade').text().trim();
 }).prop("selected", true);
 
-tbl_row.find('.comboAtividade option').filter(function() {
-    return $(this).text() == tbl_row.find('.nomeAtividade').html();
-}).prop("selected", true);
+let currentDisponibilidade = tbl_row.find('.comboAtividade option').filter(function() {
+    return $(this).text().trim() == tbl_row.find('.nomeAtividade').text().trim();
+});
+if(currentDisponibilidade.length > 0) {
+    currentDisponibilidade.prop("selected", true);
+} else if(tbl_row.find('.badge-falecido').length > 0) {
+    tbl_row.find('.comboAtividade').val("-3");
+}
+
+if(tbl_row.find('.comboAtividade').val() == "-3"){
+    tbl_row.find('.falecimentoEditavel').show();
+} else {
+    tbl_row.find('.falecimentoEditavel').hide();
+}
 
 //verificar se é goleiro
 var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
@@ -497,6 +526,15 @@ tbl_row.find('.comboPosicoes option').each(function(){
 
 });
 
+$(document).on("change", ".comboAtividade", function(){
+    let tbl_row = $(this).closest("tr");
+    if($(this).val() == "-3"){
+        tbl_row.find(".falecimentoEditavel").show();
+    } else {
+        tbl_row.find(".falecimentoEditavel").hide();
+    }
+});
+
 $('.cancelar').click(function(){
         var tbl_row =  $(this).closest('tr');
         tbl_row.find(".salvar").hide();
@@ -514,6 +552,7 @@ $('.cancelar').click(function(){
         tbl_row.find('.comboMentalidade').hide();
         tbl_row.find('.comboPais').hide();
         tbl_row.find('.comboAtividade').hide();
+        tbl_row.find('.falecimentoEditavel').hide();
         tbl_row.find('.nomeCobrador').show();
         tbl_row.find('.nomeMentalidade').show();
         tbl_row.find('.nomePais').show();
@@ -586,6 +625,7 @@ $('.cancelar').click(function(){
         tbl_row.find('.comboMentalidade').hide();
         tbl_row.find('.comboPais').hide();
         tbl_row.find('.comboAtividade').hide();
+        tbl_row.find('.falecimentoEditavel').hide();
         tbl_row.find('.nomeCobrador').show();
         tbl_row.find('.nomeMentalidade').show();
         tbl_row.find('.nomePais').show();
@@ -629,7 +669,9 @@ $('.cancelar').click(function(){
             var mentalidade = tbl_row.find(".comboMentalidade").val();
             var cobrancaFalta = tbl_row.find(".comboCobrador").val();
             var atividade = tbl_row.find(".comboAtividade").val();
-			var timeParaDemissao = tbl_row.find(".comboAtividade").attr("data-idTime");
+			var rawTime = tbl_row.find(".comboAtividade").attr("data-idTime");
+			var timeParaDemissao = (rawTime && rawTime !== "null" && rawTime !== "undefined") ? parseInt(rawTime) : 0;
+            var dataFalecimento = tbl_row.find(".falecimentoEditavel").val();
         }
 		
 		//override para permitir repaginação de Praias
@@ -676,6 +718,7 @@ if(isDono){
 	formData.append('cobrancaFalta',cobrancaFalta);
 	formData.append('atividade',atividade);
 	formData.append('timeParaDemissao',timeParaDemissao);
+	formData.append('dataFalecimento',dataFalecimento);
 }
 
      if(foto != null){

@@ -522,3 +522,63 @@ body {
     margin: 15px auto !important;
   }
 }
+
+/* ==========================================================================
+   Estilos de Luto / Jogador Falecido
+   ========================================================================== */
+.foto-falecido {
+  filter: grayscale(100%) contrast(108%) brightness(95%) !important;
+  opacity: 0.92;
+  transition: filter 0.3s ease;
+}
+
+.stamp-falecido,
+.badge-falecido {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  border-radius: 6px !important;
+  padding: 4px 10px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.2px;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+.cruz-morte {
+  font-family: serif, 'Times New Roman', Georgia !important;
+  font-size: 1.15rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  color: #f1f5f9 !important;
+  display: inline-block;
+  transform: translateY(-1px);
+}
+
+.luto-icon {
+  display: inline-block;
+  vertical-align: middle;
+  color: #cbd5e1;
+  flex-shrink: 0;
+}
+
+.bloqueado-falecido {
+  filter: grayscale(100%) opacity(0.55) !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  cursor: not-allowed !important;
+}
+
+.bloqueado-falecido input,
+.bloqueado-falecido select,
+.bloqueado-falecido button {
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+

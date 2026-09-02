@@ -198,6 +198,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
               $cobrancaFaltaJogador = isset($_POST['cobrancaFalta']) ? $_POST['cobrancaFalta'] : null;
               $mentalidadeJogador = isset($_POST['mentalidade']) ? $_POST['mentalidade'] : null;
               $atividadeJogador = isset($_POST['atividade']) ? $_POST['atividade'] : null;
+              $dataFalecimentoJogador = isset($_POST['dataFalecimento']) ? $_POST['dataFalecimento'] : (isset($_POST['data_falecimento']) ? $_POST['data_falecimento'] : null);
 			  $timeEnviado = $timeParaDemissao;
               $isDono = (!empty($nomeJogador)) ? true : false;
           } else {
@@ -209,6 +210,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
               $cobrancaFaltaJogador = null;
               $mentalidadeJogador = "none";
               $atividadeJogador = null;
+              $dataFalecimentoJogador = null;
               $isDono = false;
 			  $timeEnviado = null;
           }
@@ -257,7 +259,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     }
 
 
-          if($jogador->editar($idJogador,$timeEnviado,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono,$atividadeJogador, $mentalidadeJogador, $determinacaoJogador, $cobrancaFaltaJogador,null, $localizacao_foto)){
+          if($jogador->editar($idJogador,$timeEnviado,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono,$atividadeJogador, $mentalidadeJogador, $determinacaoJogador, $cobrancaFaltaJogador,null, $localizacao_foto, null, null, $dataFalecimentoJogador)){
             $usuario->atualizarAlteracao($_SESSION['user_id']);
               $is_success = true;
               $error_msg = "";

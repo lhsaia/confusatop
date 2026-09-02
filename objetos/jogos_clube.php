@@ -28,6 +28,7 @@ class Jogo{
     public $grupo;
     public $path;
     public $arbitro_id;
+    public $subir_live;
 
 
     public function __construct($db){

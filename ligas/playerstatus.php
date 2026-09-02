@@ -66,6 +66,9 @@ $bandeira_pais_time = $info['bandeiraPaisTime']; //ok
 $nivel_jogador = $info['Nivel'];
 $lesionado_ate = $info['lesionado_ate'] ?? null;
 $numero_camisa = $info['numeroCamisa'] ?? null;
+$disponibilidade_jogador = $info['disponibilidade'] ?? 0;
+$data_falecimento = $info['data_falecimento'] ?? null;
+$isFalecido = ((int)$disponibilidade_jogador === -3 || !empty($data_falecimento));
 
 
 if(isset($_SESSION['user_id']) && $donoPais == $_SESSION["user_id"]){
@@ -122,20 +125,18 @@ $("document").ready(function(){
 	var results = <?php echo json_encode($attribute_array); ?>;
 	var isGoleiro = <?php echo $isGoleiro; ?>;
 
+	var isFalecido = <?php echo $isFalecido ? 1 : 0; ?>;
+
 	attribute_chart(results, isGoleiro);
 	
-
-		
-		
-		if(donoLogado){
-		// Botão inline agora, não precisa colocar no toolbar
-		}
-	
-	  $("#form-atributos :input").change(function() {
-
-    level_distributor();
-	$("#container-salvar-atributos").show();
-    });
+	if(donoLogado && !isFalecido){
+		$("#form-atributos :input").change(function() {
+			level_distributor();
+			$("#container-salvar-atributos").show();
+		});
+	} else if(isFalecido){
+		$("#form-atributos :input").prop("disabled", true);
+	}
 	
 function update_personality(personalidade){
 	
@@ -432,6 +433,11 @@ if ($numero_camisa !== null && $numero_camisa !== '') {
     echo "<span class='jersey-icon' title='Número da camisa'>{$numero_camisa}</span> ";
 }
 echo $nome_jogador;
+if ($isFalecido) {
+    $dataFalecFmt = !empty($data_falecimento) ? date('d/m/Y', strtotime($data_falecimento)) : "";
+    $labelFalec = $dataFalecFmt ? "Falecido em " . $dataFalecFmt : "Falecido";
+    echo " <span class='stamp stamp-falecido' title='{$labelFalec}'><span class='cruz-morte'>†</span> <svg class='luto-icon' viewBox='0 0 24 24' width='14' height='14' fill='currentColor'><path d='M12 2C8.69 2 6 4.69 6 8c0 2.21 1.2 4.15 3 5.19V22l3-2 3 2v-8.81c1.8-1.04 3-2.98 3-5.19 0-3.31-2.69-6-6-6zm0 2c2.21 0 4 1.79 4 4 0 1.25-.58 2.37-1.49 3.1-.47.38-.51 1.07-.09 1.5.42.43 1.12.43 1.58.01C17.26 11.45 18 9.82 18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 1.82.74 3.45 1.99 4.61.47.42 1.16.42 1.59-.01.42-.43.38-1.12-.09-1.5C8.58 10.37 8 9.25 8 8c0-2.21 1.79-4 4-4z'/></svg> " . $labelFalec . "</span>";
+}
 if (!empty($lesionado_ate) && strtotime($lesionado_ate) >= strtotime(date('Y-m-d'))) {
     echo " <span class='stamp stamp-fim' style='background-color:#d32f2f; color:#fff;'><span class='material-symbols-outlined' style='font-size:0.8rem; vertical-align:middle;'>medical_services</span> Lesionado até " . date('d/m/Y', strtotime($lesionado_ate)) . "</span>";
 }
@@ -442,7 +448,8 @@ if ($id_time == 0) {
     echo "<h3><a href='paisstatus.php?country=".$pais_time."'><img class='smallthumb' src='/images/bandeiras/{$bandeira_pais_time}'>&nbsp" . $nome_pais_time ."</a><a href='leaguestatus.php?league=".$id_liga."'> - <img class='smallthumb' src='/images/ligas/{$logo_liga}'>&nbsp" . $liga_time ." (tier {$tier_liga})</a><a href='teamstatus.php?team=".$id_time."'> - <img class='smallthumb' src='/images/escudos/{$escudo_time}'>&nbsp".$time_jogador." </a></h3> ";
 }
 echo "</div>";
-echo "<div id='quadro-foto'><img id='bandeiraGrande' class='margin-left' src='/images/jogadores/".$foto_jogador."' height='100px'></div>";
+$fotoClass = $isFalecido ? 'margin-left foto-falecido' : 'margin-left';
+echo "<div id='quadro-foto'><img id='bandeiraGrande' class='{$fotoClass}' src='/images/jogadores/".$foto_jogador."' height='100px'></div>";
 echo "</div>";
 echo "<hr>";
 
@@ -477,7 +484,13 @@ if(empty($desde_quando)){
 echo "<div id='info_geral'>";
  echo "<div id='info-jogos' class='info_jogador'>";
   echo "<div id='nacionalidade' class='infoblock large' title='Nacionalidade'><span class='material-symbols-outlined'>flag</span><div><span class='informacao'>{$pais_jogador}&nbsp<img class='smallthumb' src='/images/bandeiras/{$bandeira_pais}'></span><span style='font-size: 0.75rem; color: #64748b;'>Nacionalidade</span></div></div>";
-  echo "<div id='idade' class='infoblock large' title='Nascimento (idade)'><span class='material-symbols-outlined'>cake</span><div><span class='informacao'>{$nascimento_jogador} ({$idade_jogador} anos)</span><span style='font-size: 0.75rem; color: #64748b;'>Nascimento (idade)</span></div></div>";
+  if ($isFalecido && !empty($data_falecimento)) {
+      $dataFalecFmt = date('d/m/Y', strtotime($data_falecimento));
+      $nascimento_display_full = "{$nascimento_jogador} &bull; &dagger; {$dataFalecFmt} ({$idade_jogador} anos)";
+      echo "<div id='idade' class='infoblock large' title='Nascimento e Falecimento'><span class='material-symbols-outlined'>church</span><div><span class='informacao' style='font-size:0.85rem;'>{$nascimento_display_full}</span><span style='font-size: 0.75rem; color: #64748b;'>Nascimento &bull; Falecimento</span></div></div>";
+  } else {
+      echo "<div id='idade' class='infoblock large' title='Nascimento (idade)'><span class='material-symbols-outlined'>cake</span><div><span class='informacao'>{$nascimento_jogador} ({$idade_jogador} anos)</span><span style='font-size: 0.75rem; color: #64748b;'>Nascimento (idade)</span></div></div>";
+  }
   echo "<div id='valor' class='infoblock large' title='Valor (em F$)'><span class='material-symbols-outlined'>price_change</span><div><span class='informacao'>{$valor_jogador} k</span><span style='font-size: 0.75rem; color: #64748b;'>Valor de Mercado</span></div></div>";
   echo "<div id='salario' class='infoblock large' title='Salário (em F$)'><span class='material-symbols-outlined'>paid</span><div><span class='informacao'>{$salario_jogador} k</span><span style='font-size: 0.75rem; color: #64748b;'>Salário</span></div></div>";
   echo "<div id='inicioContrato' class='infoblock large' title='Início do contrato'><span class='material-symbols-outlined'>contract_edit</span><div><span class='informacao'>{$desde_quando}</span><span style='font-size: 0.75rem; color: #64748b;'>Início do Contrato</span></div></div>";
@@ -515,9 +528,10 @@ echo "<div id='info_geral'>";
   echo "</div>";
   echo "<div id='secao-atributos'>";
  if($donoLogado){
-	 
+	 $disabledAttr = $isFalecido ? "disabled" : "";
+	 $formClass = $isFalecido ? "bloqueado-falecido" : "";
  ?>
- <form id="form-atributos">
+ <form id="form-atributos" class="<?php echo $formClass; ?>">
  <div class="form-master-group">
             <div class='form-group'>
               <label>Atributos</label>
@@ -527,27 +541,27 @@ echo "<div id='info_geral'>";
 	
             <div class='form-group'>
               <label for="jogo-aereo">Jogo Aéreo</label>
-              <input type="range" min="1" max="10" id="jogo-aereo"/>
+              <input type="range" min="1" max="10" id="jogo-aereo" <?php echo $disabledAttr; ?>/>
             </div>
             <div class='form-group'>
               <label for="saida-bola">Saída de Bola</label>
-              <input type="range" min="1" max="10" id="saida-bola"/>
+              <input type="range" min="1" max="10" id="saida-bola" <?php echo $disabledAttr; ?>/>
             </div>
             <div class='form-group'>
               <label for="seguranca">Segurança</label>
-              <input type="range" min="1" max="10" id="seguranca"/>
+              <input type="range" min="1" max="10" id="seguranca" <?php echo $disabledAttr; ?>/>
             </div>
             <div class='form-group'>
               <label for="reflexos">Reflexos</label>
-              <input type="range" min="1" max="10" id="reflexos"/>
+              <input type="range" min="1" max="10" id="reflexos" <?php echo $disabledAttr; ?>/>
             </div>
             <div class='form-group'>
               <label for="penaltis">Defesa de Pênaltis</label>
-              <input type="range" min="1" max="10" id="penaltis"/>
+              <input type="range" min="1" max="10" id="penaltis" <?php echo $disabledAttr; ?>/>
             </div>
             <div class='form-group'>
               <label for="lancamentos">Lançamentos</label>
-              <input type="range" min="1" max="10" id="lancamentos"/>
+              <input type="range" min="1" max="10" id="lancamentos" <?php echo $disabledAttr; ?>/>
             </div>
 			
 			<?php 
@@ -555,73 +569,70 @@ echo "<div id='info_geral'>";
 	?>
 	            <div class='form-group'>
               <label for="movimentacao">Movimentação</label>
-              <input type="range" min="1" max="7" id="movimentacao"/>
+              <input type="range" min="1" max="7" id="movimentacao" <?php echo $disabledAttr; ?>/>
             </div>
             <div class='form-group'>
               <label for="visao">Visão de Jogo</label>
-              <input type="range" min="1" max="7" id="visao"/>
+              <input type="range" min="1" max="7" id="visao" <?php echo $disabledAttr; ?>/>
             </div>
             <div class='form-group'>
               <label for="desarme">Desarme</label>
-              <input type="range" min="1" max="7" id="desarme"/>
+              <input type="range" min="1" max="7" id="desarme" <?php echo $disabledAttr; ?>/>
             </div>
             <div class='form-group'>
               <label for="marcacao">Marcação</label>
-              <input type="range" min="1" max="7" id="marcacao"/>
+              <input type="range" min="1" max="7" id="marcacao" <?php echo $disabledAttr; ?>/>
             </div>
             <div class='form-group'>
               <label for="forca">Força</label>
-              <input type="range" min="1" max="5" id="forca"/>
+              <input type="range" min="1" max="5" id="forca" <?php echo $disabledAttr; ?>/>
             </div>
             <div class='form-group'>
               <label for="velocidade">Velocidade</label>
-              <input type="range" min="1" max="5" id="velocidade"/>
+              <input type="range" min="1" max="5" id="velocidade" <?php echo $disabledAttr; ?>/>
             </div>
 			<div class='form-group'>
               <label for="faroGol">Faro de Gol</label>
-              <input type="range" min="1" max="7" id="faroGol"/>
+              <input type="range" min="1" max="7" id="faroGol" <?php echo $disabledAttr; ?>/>
             </div>
 			<div class='form-group'>
               <label for="finalizacao">Finalização</label>
-              <input type="range" min="1" max="7" id="finalizacao"/>
+              <input type="range" min="1" max="7" id="finalizacao" <?php echo $disabledAttr; ?>/>
             </div>
 						<div class='form-group'>
               <label for="controle">Controle de Bola</label>
-              <input type="range" min="1" max="7" id="controle"/>
+              <input type="range" min="1" max="7" id="controle" <?php echo $disabledAttr; ?>/>
             </div>
 						<div class='form-group'>
               <label for="tecnica">Técnica</label>
-              <input type="range" min="1" max="7" id="tecnica"/>
+              <input type="range" min="1" max="7" id="tecnica" <?php echo $disabledAttr; ?>/>
             </div>
 						<div class='form-group'>
               <label for="cabeceamento">Cabeceamento</label>
-              <input type="range" min="1" max="7" id="cabeceamento"/>
+              <input type="range" min="1" max="7" id="cabeceamento" <?php echo $disabledAttr; ?>/>
             </div>
 						<div class='form-group'>
               <label for="cruzamentos">Cruzamentos</label>
-              <input type="range" min="1" max="7" id="cruzamentos"/>
+              <input type="range" min="1" max="7" id="cruzamentos" <?php echo $disabledAttr; ?>/>
             </div>
 			
-			
-			
-			
-			
-			
-	
 	<?php
 	
 }
 
 			
      echo "</div>";
-     echo "<div id='container-salvar-atributos' style='display:none; text-align:right; margin-top:20px;'>";
-     echo "  <button type='button' id='salvarDados' class='btn-historico'><span class='material-symbols-outlined' style='font-size:1.1rem; vertical-align:middle; color:#fff !important; background:none !important; padding:0 !important;'>save</span> Salvar Atributos</button>";
-     echo "</div>";
+     if(!$isFalecido){
+         echo "<div id='container-salvar-atributos' style='display:none; text-align:right; margin-top:20px;'>";
+         echo "  <button type='button' id='salvarDados' class='btn-historico'><span class='material-symbols-outlined' style='font-size:1.1rem; vertical-align:middle; color:#fff !important; background:none !important; padding:0 !important;'>save</span> Salvar Atributos</button>";
+         echo "</div>";
+     }
 	 echo "</form>";
 	 
  }
 		  
- echo "<div id='mostrador-atributos'>";
+ $mostradorClass = $isFalecido ? "bloqueado-falecido" : "";
+ echo "<div id='mostrador-atributos' class='{$mostradorClass}'>";
 	 echo "<div id='attribute-chart'></div>";
 	 echo "<div id='personalidade'>";
 		echo "<div class='fundo-barra'><div class='barra-cheia' style='width:" . array_values($personalidade)[0]. "%'></div><p class='texto-barra'>".array_keys($personalidade)[0] ." (".array_values($personalidade)[0]."%)"."</p></div>";
@@ -646,7 +657,7 @@ $transferencias_stmt = $jogador->readTransferencias($from_record_num,$records_pe
 echo "<div style='clear:both; float:center'></div>";
 echo "<hr>";
 echo "<p align='center'>Transferências</p>";
-if ($donoLogado) {
+if ($donoLogado && !$isFalecido) {
     echo "<div align='center' style='margin-bottom: 15px;'>";
     echo "<button type='button' onclick='abrirModalNovo()' class='btn-historico'>+ Adicionar Transferência Histórica</button>";
     echo "</div>";

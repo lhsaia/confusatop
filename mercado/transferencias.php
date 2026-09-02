@@ -16,7 +16,7 @@ $time = new Time($db);
 $pais = new Pais($db);
 $liga = new Liga($db);
 
-$pageType = $_GET['type'];
+$pageType = $_GET['type'] ?? 'maiores';
 $page = isset($_GET['page']) ? $_GET['page'] : 1;
 $records_per_page = 18;
 $from_record_num = ($records_per_page * $page) - $records_per_page;
@@ -755,12 +755,7 @@ echo $date->format('Y-m-d');
 
 <script>
 
-var emTestes = <?php 
-						if(isset($_SESSION['emTestes'])){
-							echo $_SESSION['emTestes'];
-							} else {
-								echo "1";
-								}; ?>;
+var emTestes = <?php echo (!empty($_SESSION['emTestes'])) ? 'true' : 'false'; ?>;
 
 $(document).ready(function(){
 
@@ -1096,7 +1091,10 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 
                 var valor = "F$ " + Math.round(parseFloat(val['valor']/10000))/100 + " M";
 
-            tbl += "<tr id='"+val['idJogador']+"'>";
+                var isEmprestado = (val['estaEmprestado'] == 1 || (val['idClubeVinculado'] && val['idClubeVinculado'] != 0));
+                var rowClass = isEmprestado ? "class='jogador-emprestado'" : "";
+
+            tbl += "<tr id='"+val['idJogador']+"' "+rowClass+">";
                 if(tipoPagina.localeCompare('busca') == 0){
                     tbl += "<td class='nopadding nomeJogador'>";
                     // Player Link
@@ -1107,8 +1105,13 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                         tbl += " <span class='posicao' style='display:inline-block !important;'>("+val['posicaoBaseJogador']+")</span>";
                     }
                     
+                    // Emprestado Badge
+                    if(isEmprestado){
+                        tbl += " <span class='badge-emprestado' title='Jogador atualmente emprestado'><span class='material-symbols-outlined' style='font-size: 11px; vertical-align: -1px; margin-right: 2px;'>lock</span>EMPRESTADO</span>";
+                    }
+                    
                     // Disponibilidade Badge
-                    if(val['disponibilidade'] && (val['disponibilidade'] === 'Sim' || val['disponibilidade'] === '1')){
+                    if(!isEmprestado && val['disponibilidade'] && (val['disponibilidade'] === 'Sim' || val['disponibilidade'] === '1')){
                         tbl += " <span style='background-color: rgba(52, 211, 153, 0.15); color: #059669; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; display: inline-block; vertical-align: middle; margin-left: 6px;'>DISP.</span>";
                     }
                     
@@ -1122,6 +1125,9 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                     tbl += "<br><span class='sub-info' style='font-size: 0.72rem; color: #64748b; font-weight: 500;'>";
                     if(val['idClube'] != 0){
                         tbl += "<a href='/ligas/teamstatus.php?team="+val['idClube']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/escudos/"+val['escudoClube']+"' class='minithumb'/>"+val['nomeClube']+"</a>";
+                        if(isEmprestado && val['nomeClubeOrigem'] && val['nomeClubeOrigem'] !== val['nomeClube']){
+                            tbl += " <span style='font-size: 0.7rem; color: #d97706; font-weight: 600;'>(Empréstimo de "+val['nomeClubeOrigem']+")</span>";
+                        }
                         tbl += " | <a href='/ligas/leaguestatus.php?league="+val['idLiga']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/bandeiras/"+val['bandeiraClube']+"' class='minithumb' id='ban"+val['paisClube']+"'/>"+val['ligaClube']+"</a>";
                     } else {
                         tbl += "Sem Clube";
@@ -1168,8 +1174,13 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                 }
                 tbl +=  "<td class='nopadding'>";
 
-                if((tipoPagina.localeCompare('busca') == 0 && !emTestes) || (tipoPagina.localeCompare('busca') == 0 && emTestes && val['donoJogador'] == 1) ){
-                    tbl += "<a id='pro"+val['idJogador']+"' title='Fazer Proposta' class='clickable proposta'><span class='material-symbols-outlined inlineButton'>payments</span></a>";
+                var isDonoClubeAtual = (val['donoClubeAtual'] == 1 || val['donoClubeAtual'] === true);
+
+                if(isEmprestado && !isDonoClubeAtual){
+                    tbl += "<span title='Jogador emprestado ao "+val['nomeClube']+" - Apenas o clube atual pode negociar durante o empréstimo' class='inlineButton disabled' style='opacity: 0.45; cursor: not-allowed; display: inline-flex; align-items: center; justify-content: center;'><span class='material-symbols-outlined'>lock</span></span>";
+                } else if((tipoPagina.localeCompare('busca') == 0 && !emTestes) || (tipoPagina.localeCompare('busca') == 0 && emTestes && val['donoJogador'] == 1) ){
+                    var titleProposta = isEmprestado ? 'Fazer Proposta (Comprar em definitivo / Estender empréstimo)' : 'Fazer Proposta';
+                    tbl += "<a id='pro"+val['idJogador']+"' title='"+titleProposta+"' class='clickable proposta'><span class='material-symbols-outlined inlineButton'>payments</span></a>";
                 } else if((tipoPagina.localeCompare('buscaTecnico') == 0 && !emTestes) || (tipoPagina.localeCompare('buscaTecnico') == 0 && emTestes && val['donoJogador'] == 1)){
                     tbl += "<a id='pro"+val['idJogador']+"' title='Fazer Proposta' class='clickable propostaTecnico'><span class='material-symbols-outlined inlineButton'>payments</span></a>";
                 }

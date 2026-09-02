@@ -345,7 +345,7 @@ class Competicao_clube{
 		
 		$query = "SELECT j.id, j.timeA_id, j.timeB_id, j.timeA_nome, j.timeB_nome, j.timeA_gols, j.timeB_gols, j.timeA_penaltis, j.timeB_penaltis,
 		                 j.data, j.competicao_id as competicao, j.estadio_id as estadio, j.neutro, j.arbitro_id as arbitro,
-		                 j.fase, j.grupo, j.path, j.status, j.simulador_interno,
+		                 j.fase, j.grupo, j.path, j.status, j.simulador_interno, j.subir_live,
 		                 (SELECT p.dono FROM clube c LEFT JOIN paises p ON c.Pais = p.id WHERE c.ID = j.timeA_id LIMIT 1) as idDonoPais
 		          FROM jogos_clube j
 		          WHERE j.competicao_id = :id_competicao AND j.simulador_interno = 1
@@ -363,7 +363,7 @@ class Competicao_clube{
 		
 		$query = "SELECT j.id, j.timeA_id, j.timeB_id, j.timeA_gols, j.timeB_gols, j.timeA_penaltis, j.timeB_penaltis,
 		                 j.data, j.competicao_id as competicao, j.estadio_id as estadio, j.neutro, j.arbitro_id as arbitro,
-		                 j.fase, j.grupo, j.path, j.status, j.simulador_interno,
+		                 j.fase, j.grupo, j.path, j.status, j.simulador_interno, j.subir_live,
 		                 COALESCE(j.timeA_nome, cA.Nome) as timeA_nome,
 		                 COALESCE(j.timeB_nome, cB.Nome) as timeB_nome
 		          FROM jogos_clube j
@@ -450,7 +450,7 @@ class Competicao_clube{
 		
 	}
 	
-	function inserirJogo($id_competicao,$timeA,$timeB,$fase,$arbitro,$estadio, $datetime, $neutro, $grupo = null, $dono = null, $nomeA = null, $nomeB = null){
+	function inserirJogo($id_competicao,$timeA,$timeB,$fase,$arbitro,$estadio, $datetime, $neutro, $grupo = null, $dono = null, $nomeA = null, $nomeB = null, $subir_live = null){
 		
 		$id_competicao = htmlspecialchars(strip_tags($id_competicao));
 		$fase = htmlspecialchars(strip_tags($fase));
@@ -475,8 +475,8 @@ class Competicao_clube{
 		$timeA_nome = $nomeA ? htmlspecialchars(strip_tags($nomeA)) : (!is_numeric($timeA) && !empty($timeA) ? htmlspecialchars(strip_tags($timeA)) : null);
 		$timeB_nome = $nomeB ? htmlspecialchars(strip_tags($nomeB)) : (!is_numeric($timeB) && !empty($timeB) ? htmlspecialchars(strip_tags($timeB)) : null);
 		
-		$query = "INSERT INTO jogos_clube (timeA_id, timeA_nome, timeB_id, timeB_nome, data, competicao_id, estadio_id, neutro, arbitro_id, fase, grupo, competicao_tipo, simulador_interno, status, dono) 
-		          VALUES (:timeA, :nomeA, :timeB, :nomeB, :data, :competicao, :estadio, :neutro, :arbitro, :fase, :grupo, 1, 1, 0, COALESCE(:dono, (SELECT dono FROM " . $this->table_name . " WHERE id = :competicao_dono LIMIT 1), 0))";
+		$query = "INSERT INTO jogos_clube (timeA_id, timeA_nome, timeB_id, timeB_nome, data, competicao_id, estadio_id, neutro, arbitro_id, fase, grupo, competicao_tipo, simulador_interno, status, subir_live, dono) 
+		          VALUES (:timeA, :nomeA, :timeB, :nomeB, :data, :competicao, :estadio, :neutro, :arbitro, :fase, :grupo, 1, 1, 0, COALESCE(:subir_live, (SELECT subir_live FROM competicao_opcoes WHERE id_competicao = :id_comp_opt LIMIT 1), 0), COALESCE(:dono, (SELECT dono FROM " . $this->table_name . " WHERE id = :competicao_dono LIMIT 1), 0))";
         $stmt = $this->conn->prepare( $query );
 
         $stmt->bindParam(":timeA", $timeA_id);
@@ -485,12 +485,18 @@ class Competicao_clube{
         $stmt->bindParam(":nomeB", $timeB_nome);
 		$stmt->bindParam(":data", $datetime);
 		$stmt->bindParam(":competicao", $id_competicao);
+		$stmt->bindParam(":id_comp_opt", $id_competicao);
 		$stmt->bindParam(":competicao_dono", $id_competicao);
 		$stmt->bindParam(":estadio", $estadio);
 		$stmt->bindParam(":neutro", $neutro);
 		$stmt->bindParam(":arbitro", $arbitro);
 		$stmt->bindParam(":fase", $fase);
 		$stmt->bindParam(":grupo", $grupo);
+		if ($subir_live !== null) {
+			$stmt->bindValue(":subir_live", intval($subir_live), PDO::PARAM_INT);
+		} else {
+			$stmt->bindValue(":subir_live", null, PDO::PARAM_NULL);
+		}
 		$stmt->bindValue(":dono", $dono, $dono === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
 
         if($stmt->execute()){
