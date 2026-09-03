@@ -645,6 +645,135 @@ echo "<div id='info_geral'>";
 
  echo "<br>";
 
+ // Buscar as últimas partidas em que o jogador foi escalado
+ $ultimas_partidas_jogador = method_exists($jogador, 'buscarUltimasPartidasJogador') 
+     ? $jogador->buscarUltimasPartidasJogador($id_jogador, 4) 
+     : [];
+
+ if (!empty($ultimas_partidas_jogador)) {
+     echo "<div class='player-recent-matches-section'>";
+     echo "  <div class='section-title-container' style='display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid rgba(0,0,0,0.08); padding-bottom:8px;'>";
+     echo "    <h3 style='font-family:\"Outfit\", sans-serif; font-size:1.15rem; font-weight:700; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;'>";
+     echo "      <span class='material-symbols-outlined' style='color:#0284c7; font-size:1.4rem;'>sports_soccer</span> Últimas Partidas Escalado";
+     echo "    </h3>";
+     echo "    <span style='font-size:0.8rem; color:#64748b; font-weight:500;'>Total de " . count($ultimas_partidas_jogador) . " partida(s) recente(s)</span>";
+     echo "  </div>";
+
+     echo "  <div class='player-matches-grid'>";
+     foreach ($ultimas_partidas_jogador as $partida) {
+         $mId = (int)$partida['match_id'];
+         $isHome = ((int)$partida['timeA_id'] === (int)$partida['jogador_time_id']);
+         $isAway = ((int)$partida['timeB_id'] === (int)$partida['jogador_time_id']);
+         
+         $golsPro = $isHome ? $partida['timeA_gols'] : ($isAway ? $partida['timeB_gols'] : null);
+         $golsContra = $isHome ? $partida['timeB_gols'] : ($isAway ? $partida['timeA_gols'] : null);
+
+         $resultado_classe = 'empate';
+         $resultado_rotulo = 'E';
+         if ($golsPro !== null && $golsContra !== null) {
+             if ($golsPro > $golsContra) {
+                 $resultado_classe = 'vitoria';
+                 $resultado_rotulo = 'V';
+             } elseif ($golsPro < $golsContra) {
+                 $resultado_classe = 'derrota';
+                 $resultado_rotulo = 'D';
+             }
+         }
+
+         $dataFormatada = !empty($partida['data_jogo']) ? date('d/m/Y', strtotime($partida['data_jogo'])) : '-';
+         
+         $numGols = count($partida['gols_jogador']);
+         $numAmarelos = count($partida['amarelos_jogador']);
+         $numVermelhos = count($partida['vermelhos_jogador']);
+
+         $titularStatus = (!empty($partida['jogador_titular'])) ? "Titular" : "Banco / Substituto";
+         if (empty($partida['jogador_titular']) && !empty($partida['jogador_entrada_minuto'])) {
+             $titularStatus = "Entrou aos " . $partida['jogador_entrada_minuto'] . "'";
+         }
+
+         echo "<a href='/competicoes/sumula_partida.php?id={$mId}' class='player-match-card-link' title='Ver Súmula Oficial'>";
+         echo "  <div class='player-match-card result-{$resultado_classe}'>";
+         
+         // Cabeçalho do Card (Competição + Desfecho)
+         echo "    <div class='match-card-top'>";
+         echo "      <span class='match-comp-title' title='".htmlspecialchars($partida['competicao_nome'])."'>".htmlspecialchars($partida['competicao_nome'])."</span>";
+         echo "      <span class='match-outcome-badge badge-{$resultado_classe}'>{$resultado_rotulo}</span>";
+         echo "    </div>";
+
+         // Duelo / Placar
+         echo "    <div class='match-duel-container'>";
+         
+         // Time A
+         $teamAClass = ($isHome) ? "is-player-team" : "";
+         $nomeTimeA = function_exists('abreviarNomeClube') ? abreviarNomeClube($partida['timeA_nome']) : $partida['timeA_nome'];
+         echo "      <div class='match-duel-team {$teamAClass}'>";
+         echo "        <img src='/images/escudos/{$partida['timeA_escudo']}' class='match-crest' alt='".htmlspecialchars($partida['timeA_nome'])."' />";
+         echo "        <span class='match-team-label'>".htmlspecialchars($nomeTimeA)."</span>";
+         echo "      </div>";
+
+         // Placar
+         echo "      <div class='match-score-pill'>";
+         echo "        <span class='score-num'>".(isset($partida['timeA_gols']) ? $partida['timeA_gols'] : 0)."</span>";
+         echo "        <span class='score-sep'>-</span>";
+         echo "        <span class='score-num'>".(isset($partida['timeB_gols']) ? $partida['timeB_gols'] : 0)."</span>";
+         if (($partida['timeA_penaltis'] !== null && $partida['timeA_penaltis'] !== '') || ($partida['timeB_penaltis'] !== null && $partida['timeB_penaltis'] !== '')) {
+             echo "      <span class='pen-score'>({$partida['timeA_penaltis']} x {$partida['timeB_penaltis']} p)</span>";
+         }
+         echo "      </div>";
+
+         // Time B
+         $teamBClass = ($isAway) ? "is-player-team" : "";
+         $nomeTimeB = function_exists('abreviarNomeClube') ? abreviarNomeClube($partida['timeB_nome']) : $partida['timeB_nome'];
+         echo "      <div class='match-duel-team {$teamBClass}'>";
+         echo "        <img src='/images/escudos/{$partida['timeB_escudo']}' class='match-crest' alt='".htmlspecialchars($partida['timeB_nome'])."' />";
+         echo "        <span class='match-team-label'>".htmlspecialchars($nomeTimeB)."</span>";
+         echo "      </div>";
+         echo "    </div>";
+
+         // Eventos e Atuação Individual do Jogador
+         echo "    <div class='player-performance-box'>";
+         echo "      <div class='player-status-line'>";
+         echo "        <span class='player-role-badge'><span class='material-symbols-outlined' style='font-size:13px;'>person</span> {$titularStatus}</span>";
+         if (!empty($partida['jogador_posicao'])) {
+             echo "    <span class='player-pos-badge'>{$partida['jogador_posicao']}</span>";
+         }
+         echo "      </div>";
+
+         // Destaque de Gols e Cartões
+         echo "      <div class='player-events-row'>";
+         if ($numGols > 0) {
+             $txtGols = $numGols > 1 ? "{$numGols} gols" : "1 gol";
+             $minsGols = implode("', ", $partida['gols_jogador']) . "'";
+             echo "    <span class='player-event-pill pill-goal' title='Marcou gol aos {$minsGols}'><span class='material-symbols-outlined' style='font-size:14px;'>sports_soccer</span> {$txtGols}</span>";
+         }
+         if ($numAmarelos > 0) {
+             $minsCA = implode("', ", $partida['amarelos_jogador']) . "'";
+             echo "    <span class='player-event-pill pill-yellow' title='Cartão amarelo aos {$minsCA}'><span class='material-symbols-outlined icon-card-yellow'>crop_portrait</span> Cartão Amarelo</span>";
+         }
+         if ($numVermelhos > 0) {
+             $minsCV = implode("', ", $partida['vermelhos_jogador']) . "'";
+             echo "    <span class='player-event-pill pill-red' title='Cartão vermelho aos {$minsCV}'><span class='material-symbols-outlined icon-card-red'>crop_portrait</span> Cartão Vermelho</span>";
+         }
+         if ($numGols == 0 && $numAmarelos == 0 && $numVermelhos == 0) {
+             echo "    <span class='player-event-pill pill-clean'><span class='material-symbols-outlined' style='font-size:13px; color:#10b981;'>check_circle</span> Sem advertências</span>";
+         }
+         echo "      </div>";
+         echo "    </div>";
+
+         // Rodapé do Card
+         echo "    <div class='match-card-bottom'>";
+         echo "      <span class='match-date-tag'><span class='material-symbols-outlined' style='font-size:14px;'>calendar_today</span> {$dataFormatada}</span>";
+         echo "      <span class='view-sumula-tag'>Súmula <span class='material-symbols-outlined' style='font-size:13px;'>arrow_forward</span></span>";
+         echo "    </div>";
+
+         echo "  </div>";
+         echo "</a>";
+     }
+     echo "  </div>";
+     echo "</div>";
+     echo "<br>";
+ }
+
 //query transferencias jogador
 $transferencias_stmt = $jogador->readTransferencias($from_record_num,$records_per_page,$id_jogador);
 

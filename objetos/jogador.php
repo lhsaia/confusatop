@@ -1233,19 +1233,19 @@ return $stmt;
             $nivelMax = htmlspecialchars(strip_tags((string)($nivelMax ?? '')));
             $idadeMin = htmlspecialchars(strip_tags((string)($idadeMin ?? '')));
             $idadeMax = htmlspecialchars(strip_tags((string)($idadeMax ?? '')));
-            $cobrancaFalta = htmlspecialchars(strip_tags((string)($cobrancaFalta ?? '')));
-            $disponivel = htmlspecialchars(strip_tags((string)($disponivel ?? '')));
-            $nome = htmlspecialchars(strip_tags((string)($nome ?? '')));
-            $nacionalidade = htmlspecialchars(strip_tags((string)($nacionalidade ?? '')));
-            $mentalidade = htmlspecialchars(strip_tags((string)($mentalidade ?? '')));
+            $cobrancaFalta = (!empty($cobrancaFalta)) ? 1 : null;
+            $disponivel = (!empty($disponivel)) ? 1 : null;
+            $nome = (!empty($nome) && trim((string)$nome) !== '') ? trim(htmlspecialchars(strip_tags((string)$nome))) : null;
+            $nacionalidade = (!empty($nacionalidade) && (int)$nacionalidade > 0) ? (int)$nacionalidade : null;
+            $mentalidade = (!empty($mentalidade) && (int)$mentalidade > 0) ? (int)$mentalidade : null;
             $stringPosicoes = htmlspecialchars(strip_tags((string)($stringPosicoes ?? '')));
-            $seletorPosicoes = htmlspecialchars(strip_tags((string)($seletorPosicoes ?? '')));
-            $semclube = htmlspecialchars(strip_tags((string)($semclube ?? '')));
+            $seletorPosicoes = (!empty($seletorPosicoes)) ? 1 : null;
+            $semclube = (!empty($semclube)) ? 1 : null;
             $valorMin = htmlspecialchars(strip_tags((string)($valorMin ?? '')));
             $valorMax = htmlspecialchars(strip_tags((string)($valorMax ?? '')));
             $sexo = htmlspecialchars(strip_tags((string)($sexo ?? '')));
-            $apenasConfusa = htmlspecialchars(strip_tags((string)($apenasConfusa ?? '')));
-			$liga = htmlspecialchars(strip_tags((string)($liga ?? '')));
+            $apenasConfusa = (!empty($apenasConfusa)) ? 1 : null;
+            $liga = (!empty($liga) && (int)$liga > 0) ? (int)$liga : null;
 
             //converter stringPosicoes para cada posicao
             $splitPosicoes = str_split($stringPosicoes);
@@ -1257,42 +1257,42 @@ return $stmt;
             }
 
             $subquery = '';
-            if($cobrancaFalta != null){
+            if($cobrancaFalta !== null){
                 $subquery .= ' AND cobrancaFalta <> "-" ';
             }
 
-            if($disponivel != null){
+            if($disponivel !== null){
                 $subquery .= ' AND disponibilidade = "Sim" ';
             } else {
               $subquery .= ' AND disponibilidade <> "Aposentado" AND disponibilidade <> "Expatriado" AND disponibilidade <> "Falecido" ';
             }
 
-            if($nome != null){
+            if($nome !== null){
                 $subquery .= ' AND nomeJogador LIKE :nome ';
             }
 
-            if($nacionalidade != null){
+            if($nacionalidade !== null){
                 $subquery .= ' AND nacionalidade = :nacionalidade ';
             }
 
-            if($mentalidade != null){
+            if($mentalidade !== null){
                 $subquery .= ' AND mentalidadeIndex = :mentalidade ';
             }
 			
-			if($liga != null){
+            if($liga !== null){
                 $subquery .= ' AND idLiga = :liga ';
             }
 
-            if($semclube != null){
+            if($semclube !== null){
                 $subquery .= ' AND idClube = 0  ';
             }
 
-            if($apenasConfusa == null){
+            if($apenasConfusa === null){
                 $subquery .= ' AND ranqueavel = 0 ';
             }
 
             if(strcmp($stringPosicoes,"000000000000000") != 0){
-                if($seletorPosicoes != null){
+                if($seletorPosicoes !== null){
                     //contem todas as posicoes
                     foreach($arrayPosicoes as $pos){
                         $subquery .= ' AND posicoes LIKE "%'.$pos.'%" ';
@@ -1327,7 +1327,7 @@ return $stmt;
             CASE WHEN SUBSTRING(j.StringPosicoes,13,1) = 0 THEN '' ELSE 'MA-' END,
             CASE WHEN SUBSTRING(j.StringPosicoes,14,1) = 0 THEN '' ELSE 'Am-' END,
             CASE WHEN SUBSTRING(j.StringPosicoes,15,1) = 0 THEN '' ELSE 'Aa-' END) as posicoes, j.StringPosicoes as stringPosicoes,
-            j.valor, j.Nivel as nivel, CASE WHEN j.disponibilidade = -1 THEN 'Aposentado' WHEN j.disponibilidade = 0 THEN 'Não' WHEN j.disponibilidade = -2 THEN 'Expatriado' WHEN j.disponibilidade = -3 THEN 'Falecido' ELSE 'Sim' END as disponibilidade, p.bandeira, q.bandeira as bandeiraClube, q.ID as paisClube, CASE WHEN b.ID is not NULL THEN b.ID ELSE 0 END as idClube, b.liga as idLiga, l.Nome as ligaClube, CASE WHEN c.posicaoBase <> 0 THEN o.Nome ELSE '' END as posicaoBaseJogador, j.Mentalidade as mentalidadeIndex, p.ranqueavel, CASE WHEN p.dono <> :usuarioLogado THEN 0 ELSE 1 END as donoJogador, CASE WHEN q.dono = :usuarioLogado THEN 1 ELSE 0 END as donoClubeAtual, c.tipoContrato, COALESCE(c.clubeVinculado, 0) as idClubeVinculado, COALESCE(c.clubeVinculado, 0) as idDonoVinculado, clOrig.Nome as nomeClubeOrigem, CASE WHEN c.clubeVinculado IS NOT NULL AND c.clubeVinculado <> 0 THEN 1 ELSE 0 END as estaEmprestado
+            j.valor, j.Nivel as nivel, CASE WHEN j.disponibilidade = -1 THEN 'Aposentado' WHEN j.disponibilidade = 0 THEN 'Não' WHEN j.disponibilidade = -2 THEN 'Expatriado' WHEN j.disponibilidade = -3 THEN 'Falecido' ELSE 'Sim' END as disponibilidade, p.bandeira, q.bandeira as bandeiraClube, q.ID as paisClube, CASE WHEN b.ID is not NULL THEN b.ID ELSE 0 END as idClube, b.liga as idLiga, l.Nome as ligaClube, CASE WHEN c.posicaoBase <> 0 THEN o.Nome ELSE '' END as posicaoBaseJogador, j.Mentalidade as mentalidadeIndex, p.ranqueavel, CASE WHEN p.dono <> :usuarioLogado THEN 0 ELSE 1 END as donoJogador, CASE WHEN q.dono = :usuarioLogadoClube THEN 1 ELSE 0 END as donoClubeAtual, c.tipoContrato, COALESCE(c.clubeVinculado, 0) as idClubeVinculado, COALESCE(c.clubeVinculado, 0) as idDonoVinculado, clOrig.Nome as nomeClubeOrigem, CASE WHEN c.clubeVinculado IS NOT NULL AND c.clubeVinculado <> 0 THEN 1 ELSE 0 END as estaEmprestado
             FROM jogador j
             LEFT JOIN paises p ON j.Pais = p.id
             LEFT JOIN contratos_jogador c ON j.ID = c.jogador AND c.tipoContrato = 0
@@ -1351,18 +1351,19 @@ return $stmt;
             $stmt->bindParam(':valorMin',$valorMin);
             $stmt->bindParam(':valorMax',$valorMax);
             $stmt->bindParam(':usuarioLogado',$usuarioLogado);
+            $stmt->bindParam(':usuarioLogadoClube',$usuarioLogado);
             $stmt->bindParam(':sexo',$sexo);
-            if($mentalidade != null){
+            if($mentalidade !== null){
                 $stmt->bindParam(':mentalidade',$mentalidade);
             }
-			if($liga != null){
+            if($liga !== null){
                 $stmt->bindParam(':liga',$liga);
             }
-            if($nome != null){
-                $nome = "%".$nome."%";
-                $stmt->bindParam(':nome',$nome);
+            if($nome !== null){
+                $nomeParam = "%".$nome."%";
+                $stmt->bindParam(':nome',$nomeParam);
             }
-            if($nacionalidade != null){
+            if($nacionalidade !== null){
                 $stmt->bindParam(':nacionalidade',$nacionalidade);
             }
             $stmt->execute();
@@ -1440,7 +1441,7 @@ return $stmt;
         }
 
         function falecer($idJogador, $idClube = null, $dataFalecimento = null){
-            $idJogador = htmlspecialchars(strip_tags((string)$idJogador));
+            $idJogador = (int)htmlspecialchars(strip_tags((string)$idJogador));
             if (empty($dataFalecimento)) {
                 $dataFalecimento = date('Y-m-d');
             } else {
@@ -1456,11 +1457,26 @@ return $stmt;
                 $error_count++;
             }
 
-            if($idClube != null && $idClube != 0){
-                if(!$this->demitir($idJogador, $idClube)){
-                    $error_count++;
+            // Buscar todos os contratos existentes (clubes e seleções) para demitir e registrar histórico
+            $queryContratos = "SELECT clube FROM contratos_jogador WHERE jogador = ?";
+            $stmtContratos = $this->conn->prepare($queryContratos);
+            $stmtContratos->bindParam(1, $idJogador);
+            $stmtContratos->execute();
+            $clubes = $stmtContratos->fetchAll(PDO::FETCH_COLUMN);
+
+            if(!empty($clubes)){
+                foreach($clubes as $clubeId){
+                    if((int)$clubeId > 0){
+                        $this->demitir($idJogador, (int)$clubeId);
+                    }
                 }
             }
+
+            // Garantir a remoção de qualquer contrato residual (incluindo tipoContrato de seleções)
+            $queryLimparContratos = "DELETE FROM contratos_jogador WHERE jogador = ?";
+            $stmtLimpar = $this->conn->prepare($queryLimparContratos);
+            $stmtLimpar->bindParam(1, $idJogador);
+            $stmtLimpar->execute();
 
             if($error_count > 0){
                 return false;
@@ -1711,8 +1727,27 @@ return $stmt;
                         $error_count++;
                     }
 
-                    if((int)$atividade === -3 && $idTime != null && $idTime != 0){
-                        $this->demitir($idJogador, $idTime);
+                    if((int)$atividade === -3){
+                        // Remover de qualquer contrato existente incluindo clubes e seleções
+                        $queryContratos = "SELECT clube FROM contratos_jogador WHERE jogador = ?";
+                        $stmtContratos = $this->conn->prepare($queryContratos);
+                        $stmtContratos->bindParam(1, $idJogador);
+                        $stmtContratos->execute();
+                        $clubes = $stmtContratos->fetchAll(PDO::FETCH_COLUMN);
+
+                        if(!empty($clubes)){
+                            foreach($clubes as $clubeId){
+                                if((int)$clubeId > 0){
+                                    $this->demitir($idJogador, (int)$clubeId);
+                                }
+                            }
+                        }
+
+                        // Garantir a remoção de qualquer contrato residual (incluindo seleções)
+                        $queryLimparContratos = "DELETE FROM contratos_jogador WHERE jogador = ?";
+                        $stmtLimpar = $this->conn->prepare($queryLimparContratos);
+                        $stmtLimpar->bindParam(1, $idJogador);
+                        $stmtLimpar->execute();
                     }
 
                     if($numeroCamisa !== null){
@@ -2377,6 +2412,108 @@ return $stmt;
             }
 
             return $estats;
+        }
+
+        public function buscarUltimasPartidasJogador($idJogador, $limite = 4){
+            $idJogador = (int)$idJogador;
+            $limite = (int)$limite;
+
+            $query = "
+                SELECT 
+                    j.id as match_id,
+                    j.data as data_jogo,
+                    COALESCE(cl.nome, li.nome, cc.nome, 'Competição') as competicao_nome,
+                    j.timeA_id,
+                    COALESCE(cA.Nome, j.timeA_nome) as timeA_nome,
+                    COALESCE(cA.Escudo, '0.png') as timeA_escudo,
+                    j.timeA_gols,
+                    j.timeB_id,
+                    COALESCE(cB.Nome, j.timeB_nome) as timeB_nome,
+                    COALESCE(cB.Escudo, '0.png') as timeB_escudo,
+                    j.timeB_gols,
+                    j.timeA_penaltis,
+                    j.timeB_penaltis,
+                    j.fase,
+                    j.grupo,
+                    f.nome as fase_nome,
+                    j.simulador_interno,
+                    j.competicao_id,
+                    j.competicao_tipo,
+                    esc.id_time as jogador_time_id,
+                    esc.titular as jogador_titular,
+                    esc.posicao as jogador_posicao,
+                    esc.numero as jogador_numero,
+                    esc.entrada_minuto as jogador_entrada_minuto,
+                    esc.saida_minuto as jogador_saida_minuto
+                FROM jogos_clube_escalacao esc
+                INNER JOIN jogos_clube j ON esc.id_partida = j.id
+                LEFT JOIN clube cA ON j.timeA_id = cA.ID
+                LEFT JOIN clube cB ON j.timeB_id = cB.ID
+                LEFT JOIN fase f ON j.fase = f.id
+                LEFT JOIN competicao_lista cl ON j.competicao_id = cl.id AND j.simulador_interno = 1
+                LEFT JOIN liga li ON j.competicao_id = li.id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 0
+                LEFT JOIN campeonatos_clube cc ON j.competicao_id = cc.id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 1
+                WHERE esc.id_jogador = :idJogador
+                  AND j.status = 1
+                  AND (
+                      (j.timeA_penaltis IS NULL AND DATE_ADD(j.data, INTERVAL 120 MINUTE) <= NOW())
+                      OR
+                      (j.timeA_penaltis IS NOT NULL AND DATE_ADD(j.data, INTERVAL 150 MINUTE) <= NOW())
+                  )
+                ORDER BY j.data DESC, j.id DESC
+                LIMIT :limite
+            ";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':idJogador', $idJogador, PDO::PARAM_INT);
+            $stmt->bindParam(':limite', $limite, PDO::PARAM_INT);
+            $stmt->execute();
+            $partidas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (!empty($partidas)) {
+                $matchIds = array_map(function($p) { return (int)$p['match_id']; }, $partidas);
+                $inMatches = implode(',', array_unique($matchIds));
+
+                $queryEvents = "
+                    SELECT id_jogo, tipo, minutos, tempo
+                    FROM jogos_clube_eventos
+                    WHERE id_jogador = :idJogador AND id_jogo IN ($inMatches)
+                    ORDER BY tempo ASC, minutos ASC
+                ";
+                $stmtEv = $this->conn->prepare($queryEvents);
+                $stmtEv->bindParam(':idJogador', $idJogador, PDO::PARAM_INT);
+                $stmtEv->execute();
+                
+                $eventosPorJogo = [];
+                while ($ev = $stmtEv->fetch(PDO::FETCH_ASSOC)) {
+                    $mId = (int)$ev['id_jogo'];
+                    if (!isset($eventosPorJogo[$mId])) {
+                        $eventosPorJogo[$mId] = [
+                            'gols' => [],
+                            'amarelos' => [],
+                            'vermelhos' => []
+                        ];
+                    }
+                    $tipo = (int)$ev['tipo'];
+                    $min = (int)$ev['minutos'];
+                    if ($tipo === 1) {
+                        $eventosPorJogo[$mId]['gols'][] = $min;
+                    } elseif ($tipo === 2) {
+                        $eventosPorJogo[$mId]['amarelos'][] = $min;
+                    } elseif ($tipo === 3) {
+                        $eventosPorJogo[$mId]['vermelhos'][] = $min;
+                    }
+                }
+
+                foreach ($partidas as &$p) {
+                    $mId = (int)$p['match_id'];
+                    $p['gols_jogador'] = isset($eventosPorJogo[$mId]['gols']) ? $eventosPorJogo[$mId]['gols'] : [];
+                    $p['amarelos_jogador'] = isset($eventosPorJogo[$mId]['amarelos']) ? $eventosPorJogo[$mId]['amarelos'] : [];
+                    $p['vermelhos_jogador'] = isset($eventosPorJogo[$mId]['vermelhos']) ? $eventosPorJogo[$mId]['vermelhos'] : [];
+                }
+            }
+
+            return $partidas;
         }
 
         function desconvocarSub21ForaIdade(){

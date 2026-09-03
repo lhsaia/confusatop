@@ -581,4 +581,294 @@ body {
   pointer-events: none !important;
 }
 
+/* ==========================================================================
+   Últimas Partidas do Jogador (Cards Modernos)
+   ========================================================================== */
+.player-recent-matches-section {
+  margin-top: 15px !important;
+  margin-bottom: 25px !important;
+  width: 100% !important;
+}
+
+.player-matches-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 16px !important;
+  width: 100% !important;
+}
+
+.player-match-card-link {
+  text-decoration: none !important;
+  color: inherit !important;
+  display: block !important;
+}
+
+.player-match-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 14px !important;
+  padding: 14px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03) !important;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  height: 100% !important;
+  position: relative !important;
+}
+
+.player-match-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 10px 24px rgba(2, 132, 199, 0.12) !important;
+  border-color: rgba(56, 189, 248, 0.4) !important;
+}
+
+/* Borda lateral por resultado */
+.player-match-card.result-vitoria {
+  border-left: 4px solid #10b981 !important;
+}
+.player-match-card.result-empate {
+  border-left: 4px solid #f59e0b !important;
+}
+.player-match-card.result-derrota {
+  border-left: 4px solid #ef4444 !important;
+}
+
+.match-card-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+.match-comp-title {
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+}
+
+.match-outcome-badge {
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+  text-transform: uppercase !important;
+  flex-shrink: 0 !important;
+}
+.badge-vitoria {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #059669 !important;
+}
+.badge-empate {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #d97706 !important;
+}
+.badge-derrota {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #dc2626 !important;
+}
+
+/* Confronto */
+.match-duel-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  background: rgba(241, 245, 249, 0.6) !important;
+  border: 1px solid rgba(0, 0, 0, 0.04) !important;
+  border-radius: 10px !important;
+  padding: 10px 12px !important;
+}
+
+.match-duel-team {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  gap: 4px !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+}
+
+.match-duel-team.is-player-team .match-team-label {
+  font-weight: 700 !important;
+  color: #0284c7 !important;
+}
+
+.match-crest {
+  width: 32px !important;
+  height: 32px !important;
+  object-fit: contain !important;
+}
+
+.match-team-label {
+  font-size: 0.8rem !important;
+  color: #334155 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 90px !important;
+  font-weight: 500 !important;
+}
+
+.match-score-pill {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-direction: column !important;
+  padding: 4px 10px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  min-width: 65px !important;
+}
+
+.score-num {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  line-height: 1 !important;
+}
+
+.score-sep {
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+  margin: 0 4px !important;
+  display: none !important;
+}
+
+.pen-score {
+  font-size: 0.65rem !important;
+  color: #64748b !important;
+  font-weight: 600 !important;
+  margin-top: 2px !important;
+}
+
+/* Desempenho do Jogador */
+.player-performance-box {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+
+.player-status-line {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  font-size: 0.75rem !important;
+}
+
+.player-role-badge {
+  color: #475569 !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+}
+
+.player-pos-badge {
+  background: rgba(15, 23, 42, 0.06) !important;
+  color: #334155 !important;
+  padding: 1px 6px !important;
+  border-radius: 4px !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+}
+
+.player-events-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  align-items: center !important;
+}
+
+.player-event-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+}
+
+.pill-goal {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(5, 150, 105, 0.25)) !important;
+  color: #047857 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+.pill-yellow {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #b45309 !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+.pill-red {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #b91c1c !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+.icon-card-yellow {
+  color: #f59e0b !important;
+  font-variation-settings: "FILL" 1 !important;
+  font-size: 14px !important;
+}
+
+.icon-card-red {
+  color: #ef4444 !important;
+  font-variation-settings: "FILL" 1 !important;
+  font-size: 14px !important;
+}
+
+.pill-clean {
+  background: rgba(15, 23, 42, 0.03) !important;
+  color: #64748b !important;
+  font-weight: 500 !important;
+  border: 1px dashed rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Rodapé */
+.match-card-bottom {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
+  padding-top: 8px !important;
+  font-size: 0.75rem !important;
+}
+
+.match-date-tag {
+  color: #64748b !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.view-sumula-tag {
+  color: #0284c7 !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+}
+
+@media (max-width: 768px) {
+  .player-matches-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
 

@@ -134,3 +134,36 @@ function adjustAttributes($isGoleiro, $nivelJogador, $marcacao, $desarme, $visao
    }
 
 //end of attribute handling function
+
+if (!function_exists('abreviarNomeClube')) {
+    function abreviarNomeClube($nome) {
+        if (empty($nome)) return '';
+        $substituicoes = [
+            'Red Bull' => 'RB',
+            'Esporte Clube' => 'EC',
+            'Sport Club' => 'SC',
+            'Futebol Clube' => 'FC',
+            'Football Club' => 'FC',
+            'Futebol e Regatas' => 'FR',
+            'Associação Atlética' => 'AA',
+            'Associação Atletica' => 'AA',
+            'Club de Regatas' => 'CR',
+            'Clube de Regatas' => 'CR',
+            'Athletico Paranaense' => 'Athletico-PR',
+            'Atlético Paranaense' => 'Atlético-PR',
+            'Manchester United' => 'Man. United',
+            'Manchester City' => 'Man. City',
+            'Borussia Dortmund' => 'B. Dortmund',
+            'Atlético de Madrid' => 'Atl. de Madrid',
+            'Atletico de Madrid' => 'Atl. de Madrid',
+            'Atlético Madrid' => 'Atl. Madrid',
+            'Atletico Madrid' => 'Atl. Madrid',
+            'Independiente' => 'Indep.',
+            'Real Sociedad' => 'R. Sociedad',
+        ];
+        foreach ($substituicoes as $longo => $curto) {
+            $nome = str_ireplace($longo, $curto, $nome);
+        }
+        return trim($nome);
+    }
+}
