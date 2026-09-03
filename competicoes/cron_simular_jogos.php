@@ -44,8 +44,23 @@ $stmt->execute();
 
 $partidas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Função auxiliar para verificar e avançar fases de mata-mata concluídas
+function checarAvancoMataMataAtivos($db, $competicaoObj) {
+    try {
+        $stmtFases = $db->query("SELECT DISTINCT competicao_id, fase FROM jogos_clube WHERE simulador_interno = 1 AND fase > 2 ORDER BY competicao_id, fase");
+        if ($stmtFases) {
+            while ($rFase = $stmtFases->fetch(PDO::FETCH_ASSOC)) {
+                $competicaoObj->verificarEAvancarMataMata((int)$rFase['competicao_id'], (int)$rFase['fase']);
+            }
+        }
+    } catch (\Throwable $e) {
+        error_log("PHP Simulador: [ERRO AVANÇO MATA-MATA CRON GERAL] " . $e->getMessage());
+    }
+}
+
 if (empty($partidas)) {
     echo "[" . date('Y-m-d H:i:s') . "] Nenhuma partida pendente encontrada até {$fimBusca}.\n";
+    checarAvancoMataMataAtivos($db, $competicaoObj);
     exit(0);
 }
 
@@ -509,7 +524,7 @@ foreach ($partidas as $matchInfo) {
     require_once __DIR__ . '/hexacolor/processar_desfalques.php';
     processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $suspensos);
 
-    // Se for partida de mata-mata, verificar se todos os confrontos da fase terminaram e avançar automaticamente
+    // Se for partida de mata-mata, verificar se todos os confrontos da fase terminaram no tempo real e avançar
     if (isset($matchInfo['fase']) && (int)$matchInfo['fase'] > 2) {
         try {
             $competicaoObj->verificarEAvancarMataMata($idCompeticao, (int)$matchInfo['fase']);
@@ -554,6 +569,8 @@ foreach ($partidas as $matchInfo) {
     $penMsg = ($penA !== null) ? " (Pên: {$penA}x{$penB})" : "";
     echo "   [SUCESSO] Partida #{$idPartida} simulada! Placar: {$siglaA} {$golsTimeA} x {$golsTimeB} {$siglaB}{$penMsg}\n";
 }
+
+checarAvancoMataMataAtivos($db, $competicaoObj);
 
 echo "[" . date('Y-m-d H:i:s') . "] Processamento do Cron concluído com sucesso.\n";
 ?>

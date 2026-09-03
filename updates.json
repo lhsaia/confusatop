@@ -14,6 +14,11 @@
       "items": [
         {
           "badge": "bugfix",
+          "title": "Chaveamento de Mata-Mata com BYEs e Avanço de Fase",
+          "desc": "Ajustada a lógica de avanço de mata-mata para respeitar o chaveamento consolidado com times de BYE e condicionada a criação automática da fase seguinte ao término do tempo de jogo das partidas da fase atual (120min ou 150min com pênaltis)."
+        },
+        {
+          "badge": "bugfix",
           "title": "Exibição de Ações de Edição de Times na Liga e em Meus Times",
           "desc": "Corrigida a verificação de permissões do dono do país e de administradores na página da liga e na listagem de Meus Times, normalizando os tipos de dados para que os botões de edição, movimentação e upload de uniformes/escudos sejam exibidos corretamente."
         },

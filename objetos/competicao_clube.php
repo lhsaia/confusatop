@@ -1054,10 +1054,17 @@ class Competicao_clube{
 		$jogosFase = $stmtJogosFase->fetchAll(PDO::FETCH_ASSOC);
 		if (empty($jogosFase)) return false;
 
-		// 3. Verificar se todos os jogos da fase atual já foram simulados (status = 1)
+		// 3. Verificar se todos os jogos da fase atual já foram simulados (status = 1) e já terminaram no tempo real
+		$now = time();
 		foreach ($jogosFase as $jg) {
 			if ((int)$jg['status'] !== 1) {
-				return false; // Ainda há jogos pendentes na fase atual
+				return false; // Ainda há jogos não simulados na fase atual
+			}
+			$dtMatch = !empty($jg['data']) ? strtotime($jg['data']) : $now;
+			$temPenaltis = ($jg['timeA_penaltis'] !== null && $jg['timeB_penaltis'] !== null);
+			$durMatchSec = $temPenaltis ? (150 * 60) : (120 * 60);
+			if ($now < ($dtMatch + $durMatchSec)) {
+				return false; // A partida ainda está acontecendo ou não encerrou no tempo real
 			}
 		}
 
@@ -1098,7 +1105,7 @@ class Competicao_clube{
 			];
 		}
 
-		// 5. Identificar se há times de BYE (somente aplicável na primeira fase da competição)
+		// 5. Identificar se há times de BYE (somente aplicável na primeira fase da competição de mata-mata)
 		$byes = [];
 		$stmtMinFase = $this->conn->prepare("SELECT MIN(fase) as min_fase FROM jogos_clube WHERE competicao_id = :idComp AND fase > 2");
 		$stmtMinFase->execute([':idComp' => $idCompeticao]);
@@ -1115,21 +1122,57 @@ class Competicao_clube{
 				if (!empty($jg['timeB_nome'])) $jogandoNomes[trim($jg['timeB_nome'])] = true;
 			}
 
-			// Verificar slots da competição
-			$stSlots = $this->conn->prepare("SELECT slot, id_time_portal FROM competicao_times WHERE id_competicao = :id AND slot IS NOT NULL AND slot != ''");
-			$stSlots->execute([':id' => $idCompeticao]);
-			while ($rSlot = $stSlots->fetch(PDO::FETCH_ASSOC)) {
-				$sName = trim($rSlot['slot']);
-				$cId = (int)$rSlot['id_time_portal'];
-				$isNoJogo = false;
-				if ($cId > 0 && isset($jogandoIds[$cId])) $isNoJogo = true;
-				if (isset($jogandoNomes[$sName])) $isNoJogo = true;
+			// Carregar todos os participantes / slots da competição
+			$assignedSlotTeams = [];
+			$stTimesSlots = $this->carregarListaTimes($idCompeticao);
+			while ($rSlot = $stTimesSlots->fetch(PDO::FETCH_ASSOC)) {
+				$sName = !empty($rSlot['slot']) ? trim($rSlot['slot']) : ("Slot " . $rSlot['codigo_time']);
+				if (!empty($rSlot['id_time_portal']) && intval($rSlot['id_time_portal']) > 0) {
+					$assignedSlotTeams[$sName] = intval($rSlot['id_time_portal']);
+				} else if ($rSlot['has_team'] == 1 || $rSlot['has_team'] == '1') {
+					$assignedSlotTeams[$sName] = -1 * abs(intval($rSlot['codigo_time']));
+				}
+			}
 
-				if (!$isNoJogo) {
-					$byes[] = [
-						'id' => $cId,
-						'nome' => ($cId == 0) ? $sName : null
-					];
+			// Carregar clubes do SQLite caso existam
+			$docRoot = isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__);
+			$db3File = $docRoot . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+			$clubesDb = [];
+			if (file_exists($db3File)) {
+				try {
+					$cdb = new PDO("sqlite:" . $db3File);
+					$stmtClubes = $cdb->query("SELECT ID, Nome FROM clube");
+					if ($stmtClubes) {
+						while ($rClube = $stmtClubes->fetch(PDO::FETCH_ASSOC)) {
+							$clubesDb[(int)$rClube['ID']] = $rClube['Nome'];
+						}
+					}
+				} catch (\Throwable $e) {}
+			}
+
+			if (!empty($assignedSlotTeams)) {
+				foreach ($assignedSlotTeams as $sName => $cId) {
+					$cIdInt = (int)$cId;
+					$isNoJogo = false;
+					if ($cIdInt > 0 && isset($jogandoIds[$cIdInt])) $isNoJogo = true;
+					if (isset($jogandoNomes[$sName])) $isNoJogo = true;
+
+					if (!$isNoJogo) {
+						$nomeClube = isset($clubesDb[$cIdInt]) ? $clubesDb[$cIdInt] : $sName;
+						$byes[] = [
+							'id' => ($cIdInt > 0) ? $cIdInt : 0,
+							'nome' => ($cIdInt > 0) ? null : $nomeClube
+						];
+					}
+				}
+			} else if (!empty($clubesDb)) {
+				foreach ($clubesDb as $cId => $nomeClube) {
+					if (!isset($jogandoIds[$cId])) {
+						$byes[] = [
+							'id' => $cId,
+							'nome' => null
+						];
+					}
 				}
 			}
 		}
