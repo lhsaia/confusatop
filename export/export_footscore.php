@@ -102,10 +102,10 @@ foreach($lista_times as $numero_time => $time_footscore){
             
             $isGoleiro = ($row['StringPosicoes'][0] == "1" ? true : false);
             
-            $testePosicao = ($row['titularidade'] == 0 ? "S" : $row['posicao']);
-            
             $listaPosicoes = $jogador->listaPosicoes($row['StringPosicoes']);
-            $listaPosicoes = explode("-", $listaPosicoes);
+            $listaPosicoes = !empty($listaPosicoes) ? explode("-", $listaPosicoes) : [];
+            
+            $testePosicao = !empty($row['posicao']) ? $row['posicao'] : (isset($listaPosicoes[0]) ? $listaPosicoes[0] : "");
                    
             $array_jogador_unico = [];
             array_push($array_jogador_unico, $testePosicao, $row['nomeJogador'], $row['Nivel'], $row['Idade'], $testeNacionalidade);

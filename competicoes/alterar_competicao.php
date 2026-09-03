@@ -11,6 +11,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $sede = $_POST['sede'];
     $ano = $_POST['ano'];
     $federacao = $_POST['federacao'];
+    $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : null;
     $error_msg = "";
     $new_logo_path = null;
 
@@ -43,8 +44,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $competicao = new Competicao_clube($db);
 
 
-    //alterar arbitro
-    if($competicao->alterar($id,$nome,$sede,$ano,$federacao,$new_logo_path)){
+    //alterar competicao
+    if($competicao->alterar($id,$nome,$sede,$ano,$federacao,$new_logo_path, $tipo)){
         $is_success = true;
         $error_msg .= "";
     } else {

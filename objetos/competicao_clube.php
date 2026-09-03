@@ -14,6 +14,7 @@ class Competicao_clube{
 	public $path;
 	public $logo;
 	public $genero;
+	public $tipo;
 	public $dono;
  
     public function __construct($db){
@@ -25,7 +26,7 @@ class Competicao_clube{
     function read(){
         //select all data
         $query = "SELECT
-                    id, nome, ano, federacao, sede, path, logo, genero 
+                    id, nome, ano, federacao, sede, path, logo, genero, tipo 
                 FROM
                     " . $this->table_name . "
                 ORDER BY
@@ -76,7 +77,7 @@ class Competicao_clube{
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    nome=:nome, ano=:ano, federacao=:federacao, logo=:logo, sede=:sede, genero=:genero, dono=:dono, path=:path ";
+                    nome=:nome, ano=:ano, federacao=:federacao, logo=:logo, sede=:sede, genero=:genero, tipo=:tipo, dono=:dono, path=:path ";
 					
 		if($this->logo == ""){
 			$this->logo = "0.png";
@@ -93,6 +94,7 @@ class Competicao_clube{
         $this->federacao=htmlspecialchars(strip_tags($this->federacao));
         $this->sede=htmlspecialchars(strip_tags($this->sede));
         $this->genero=htmlspecialchars(strip_tags($this->genero));
+        $this->tipo=intval($this->tipo ?? 0);
 		$this->logo=htmlspecialchars(strip_tags($this->logo));
 		$this->dono=htmlspecialchars(strip_tags($this->dono));
         $this->path=htmlspecialchars(strip_tags($this->path));
@@ -103,6 +105,7 @@ class Competicao_clube{
         $stmt->bindParam(":logo", $this->logo);
         $stmt->bindParam(":sede", $this->sede);
         $stmt->bindParam(":genero", $this->genero);
+        $stmt->bindParam(":tipo", $this->tipo);
 		$stmt->bindParam(":federacao", $this->federacao);
 		$stmt->bindParam(":dono", $this->dono);
         $stmt->bindParam(":path", $this->path);
@@ -120,7 +123,7 @@ class Competicao_clube{
 		$item_pesquisado = htmlspecialchars(strip_tags($item_pesquisado));
 
 		$query = "SELECT * FROM (SELECT
-					a.id, a.nome, a.logo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede
+					a.id, a.nome, a.logo, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede
 					FROM " . $this->table_name . " a
 					LEFT JOIN paises p ON a.sede = p.id
 					LEFT JOIN federacoes f ON a.federacao = f.id
@@ -138,7 +141,7 @@ class Competicao_clube{
 }
 
 
-    function alterar($id,$nome,$sede,$ano,$federacao,$logo = null){
+    function alterar($id,$nome,$sede,$ano,$federacao,$logo = null, $tipo = null){
 
         $id = htmlspecialchars(strip_tags($id));
         $nome = htmlspecialchars(strip_tags($nome));
@@ -147,10 +150,12 @@ class Competicao_clube{
 		$federacao = htmlspecialchars(strip_tags($federacao));
         $logo = htmlspecialchars(strip_tags($logo));
 
+        $subquery = "";
         if($logo != null){
-            $subquery = ", logo=:logo";
-        } else {
-            $subquery = "";
+            $subquery .= ", logo=:logo";
+        }
+        if($tipo !== null){
+            $subquery .= ", tipo=:tipo";
         }
 
         $query = "UPDATE " . $this->table_name . " SET nome=:nome, sede=:sede, federacao=:federacao, ano=:ano ".$subquery." WHERE id=:id";
@@ -162,6 +167,10 @@ class Competicao_clube{
 		$stmt->bindParam(":federacao", $federacao);
         if($logo != null){
             $stmt->bindParam(":logo", $logo);
+        }
+        if($tipo !== null){
+            $tipo = intval($tipo);
+            $stmt->bindParam(":tipo", $tipo);
         }
         $stmt->bindParam(":id", $id);
 
@@ -179,7 +188,7 @@ class Competicao_clube{
         $id = intval($id);
 
 		$query = "SELECT
-					a.nome, a.ano, f.nome as federacao, p.bandeira as sede, a.logo, a.genero, f.id as federacaoId, a.dono, o.numero_times as total_times, 
+					a.nome, a.ano, a.tipo, a.sede as sedeId, f.nome as federacao, p.bandeira as sede, p.nome as sedeNome, a.logo, a.genero, f.id as federacaoId, a.dono, o.numero_times as total_times, 
 					(SELECT COUNT(DISTINCT codigo_time) FROM competicao_times WHERE id_competicao = a.id AND has_team = '1') as times_inseridos     
 				FROM
 					" . $this->table_name . " a

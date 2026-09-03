@@ -9,9 +9,60 @@
   },
   "days": [
     {
+      "id": "day_02_09_2026",
+      "date": "02/09/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Exibição de Ações de Edição de Times na Liga e em Meus Times",
+          "desc": "Corrigida a verificação de permissões do dono do país e de administradores na página da liga e na listagem de Meus Times, normalizando os tipos de dados para que os botões de edição, movimentação e upload de uniformes/escudos sejam exibidos corretamente."
+        },
+        {
+          "badge": "new",
+          "title": "Suporte a Competições Nacionais e Internacionais",
+          "desc": "Adicionada a opção de escolher entre competições Internacionais e Nacionais durante o cadastro. Competições nacionais têm país e sede vinculados automaticamente e desativam a importação de arquivos .ymt temporários, utilizando exclusivamente os clubes registrados no país."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Rescisão Automática de Contratos e Seleção ao Registrar Falecimento de Jogador",
+          "desc": "Garantido que, ao ser registrado o falecimento de um atleta (ou técnico), todos os contratos ativos em clubes e convocações em seleções sejam devidamente rescindidos e removidos do banco de dados."
+        },
+        {
+          "badge": "new",
+          "title": "Cards de Últimas Partidas Escalado no Perfil do Jogador",
+          "desc": "Adicionada uma nova seção em cards no perfil do jogador exibindo suas últimas partidas disputadas, com placar, escudos, resultado da equipe, status de titularidade e destaques individuais para gols marcados, cartões amarelos e cartões vermelhos com link para a súmula oficial."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Simulação de Jogos Pendentes no Passado via Cron",
+          "desc": "Ajustada a rotina automática (cron_simular_jogos.php) para buscar e simular todas as partidas com status pendente (status = 0) agendadas até as próximas 24 horas, incluindo jogos atrasados com data no passado que ainda não haviam sido simulados."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Posição Real de Jogadores em Exportações",
+          "desc": "Garantido que na exportação de times e jogadores (ex: Footscore) a posição do jogador utilize sua posição base ou primeira posição de ofício, sem registrar 'S' de suplente."
+        },
+        {
+          "badge": "security",
+          "title": "Atualização da Biblioteca PHPMailer (v6.9.3)",
+          "desc": "Atualizada a biblioteca de envio de e-mails para a versão 6.9.3, garantindo compatibilidade total com o PHP 8.2+ e prevenindo avisos de depreciação e incompatibilidades."
+        }
+      ]
+    },
+    {
       "id": "day_01_09_2026",
       "date": "01/09/2026",
       "items": [
+        {
+          "badge": "new",
+          "title": "Opção de Técnico Falecido e Identidade Visual de Luto",
+          "desc": "Adicionado suporte completo ao status de Falecido para técnicos na tabela de Meus Técnicos e no perfil individual (coachstatus.php), com data de falecimento, badge mortuário com cruz (†), filtro em escala de cinza na foto e demissão automática do clube atual."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Parâmetros PDO na Busca Avançada do Mercado",
+          "desc": "Corrigida a duplicação do placeholder de usuário logado e normalizado o tratamento de filtros nulos e vazios nos métodos de busca avançada de jogadores e técnicos, eliminando a exceção SQLSTATE[HY093]."
+        },
         {
           "badge": "bugfix",
           "title": "Tratamento de Valores Nulos em Funções de Jogador e Status do Time",

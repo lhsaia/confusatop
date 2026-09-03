@@ -44,10 +44,29 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && !($_SESSION['e
         if(isset($_POST['nome']) && isset($_POST['ano']) ){
             $competicao->nome = $_POST['nome'];
             $competicao->ano = $_POST['ano'];
-            $competicao->federacao = $_POST['federacao'];
-            $competicao->sede = $_POST['sede'];
+            $tipo_comp = isset($_POST['tipo']) ? intval($_POST['tipo']) : 0;
+            $competicao->tipo = $tipo_comp;
             $competicao->genero = $_POST['genero'];
             $competicao->dono = $_SESSION['user_id'];
+            
+            if($tipo_comp == 1){
+                // Competição Nacional: vinculada a um país obrigatório, que também é a sede
+                $pais_nacional_id = isset($_POST['pais_nacional']) ? intval($_POST['pais_nacional']) : 0;
+                if($pais_nacional_id <= 0){
+                    $error_msg .= "Para competições nacionais, selecione o país da competição.<br>";
+                }
+                $competicao->sede = $pais_nacional_id;
+                
+                // Buscar federação do país no banco de dados
+                $stPaisFed = $db->prepare("SELECT federacao FROM paises WHERE id = ? LIMIT 1");
+                $stPaisFed->execute([$pais_nacional_id]);
+                $rPaisFed = $stPaisFed->fetch(PDO::FETCH_ASSOC);
+                $competicao->federacao = ($rPaisFed && !empty($rPaisFed['federacao'])) ? intval($rPaisFed['federacao']) : 0;
+            } else {
+                // Competição Internacional
+                $competicao->federacao = isset($_POST['federacao']) ? intval($_POST['federacao']) : 0;
+                $competicao->sede = isset($_POST['sede']) ? intval($_POST['sede']) : 0;
+            }
             
             if($competicao->federacao != 0){
                 $nivelCompeticao = 1;
@@ -349,33 +368,58 @@ main.redesign-container {
             <label for='ano'>Ano</label>
             <input type='number' id='ano' name='ano' value='<?php echo date("Y")?>' min='1900' max='2100' class='form-control inputHerdeiro' required />
 
-            <label for='federacao'>Federação</label>
-            <?php
-                echo "<select class='form-control' id='federacao' name='federacao'>";
-                echo "<option selected value='0'>Sem federação</option>";
-                echo "<option value='1'>FEASCO</option>";
-                echo "<option value='2'>FEMIFUS</option>";
-                echo "<option value='3'>COMPACTA</option>";
-                echo "</select>";
-            ?>
+            <label for='tipo'>Abrangência / Tipo</label>
+            <select class='form-control' id='tipo' name='tipo'>
+                <option value='0' selected>Internacional</option>
+                <option value='1'>Nacional</option>
+            </select>
+
+            <div id='bloco-federacao'>
+                <label for='federacao'>Federação</label>
+                <?php
+                    echo "<select class='form-control' id='federacao' name='federacao'>";
+                    echo "<option selected value='0'>Sem federação</option>";
+                    echo "<option value='1'>FEASCO</option>";
+                    echo "<option value='2'>FEMIFUS</option>";
+                    echo "<option value='3'>COMPACTA</option>";
+                    echo "</select>";
+                ?>
+            </div>
+
+            <div id='bloco-sede'>
+                <label for='sede'>País Sede</label>
+                <?php
+                    $stmt = $pais->read(null, null, false);
+                    $paisesArray = array();
+                    echo "<select class='form-control' id='sede' name='sede'>";
+                    echo "<option value='0'>Sem sede fixa</option>";
+                    while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
+                        extract($row_category);
+                        $paisesArray[] = array('id' => $id, 'nome' => $nome);
+                        echo "<option value='{$id}'>{$nome}</option>";
+                    }
+                    echo "</select>";
+                ?>
+            </div>
+
+            <div id='bloco-pais-nacional' style='display: none;'>
+                <label for='pais_nacional'>País da Competição</label>
+                <select class='form-control' id='pais_nacional' name='pais_nacional'>
+                    <option value='' disabled selected>Selecione o país...</option>
+                    <?php
+                        foreach($paisesArray as $pItem){
+                            echo "<option value='{$pItem['id']}'>{$pItem['nome']}</option>";
+                        }
+                    ?>
+                </select>
+                <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 4px;">A sede e federação serão associadas automaticamente ao país selecionado.</small>
+            </div>
 
             <label class='custom-file-upload' for='logo'>
                 <img id='logo-preview' style="display:none;">
                 <span id='nomeLogo'>Clique para selecionar a Logo</span>
             </label>
             <input type="file" id='logo' class='form-control custom-file-upload' name='logo' data-max-size="2048" multiple='false' accept='image/*' placeholder=''>
-			
-            <label for='sede'>País Sede</label>
-            <?php
-                $stmt = $pais->read(null, null, false);
-                echo "<select class='form-control' id='sede' name='sede'>";
-                echo "<option value='0'>Sem sede fixa</option>";
-                while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
-                    extract($row_category);
-                    echo "<option value='{$id}'>{$nome}</option>";
-                }
-                echo "</select>";
-            ?>
 
             <label for='genero'>Masculina/Feminina</label>
             <?php
@@ -407,8 +451,24 @@ $(document).ready(function(){
   });
 });
 
+    // Alternar campos entre Internacional e Nacional
+    function atualizarCamposTipo() {
+        var tipo = $('#tipo').val();
+        if (tipo === '1') { // Nacional
+            $('#bloco-federacao').hide();
+            $('#bloco-sede').hide();
+            $('#bloco-pais-nacional').show();
+            $('#pais_nacional').prop('required', true);
+        } else { // Internacional
+            $('#bloco-federacao').show();
+            $('#bloco-sede').show();
+            $('#bloco-pais-nacional').hide();
+            $('#pais_nacional').prop('required', false);
+        }
+    }
 
-
+    $('#tipo').on('change', atualizarCamposTipo);
+    atualizarCamposTipo();
     
     function readURL(input, target_div) {
        if (input.files && input.files[0]) {
@@ -416,11 +476,7 @@ $(document).ready(function(){
             
            reader.onload = function (e) {
                $('#'+target_div + "-preview")
-                   .attr('src', e.target.result).removeClass("hidden");
-              //$('#' + target_div + '-text').addClass("hidden");
-              //$('label[for="car-'+target_div+'"]').addClass("no-padding");
-                   // .width(200)
-                   // .height(200);
+                   .attr('src', e.target.result).removeClass("hidden").show();
            };
 
            reader.readAsDataURL(input.files[0]);
@@ -430,11 +486,10 @@ $(document).ready(function(){
     $('#logo').change(function(){
         $("#nomeLogo").text("");
         readURL(this, 'logo');
-        
     });
 	
 });
-  </script>
+</script>
 
 <?php
 

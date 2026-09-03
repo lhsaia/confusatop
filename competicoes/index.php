@@ -240,8 +240,9 @@ function updateTable(ajax_data, current_page, highlighted, direction){
             }
 			
 			// geração da tabela
+			let tipoBadge = (parseInt(val['tipo']) === 1) ? "<span style='display:inline-block; font-size:0.68rem; font-weight:600; padding:1px 6px; border-radius:4px; background:rgba(2,132,199,0.1); color:#0284c7; margin-left:6px; vertical-align:middle;'>Nacional</span>" : "";
 			tbl += "<tr id='"+val['id']+"' data-sexo='"+val['sexo']+"' >";
-				tbl +=  "<td data-label='Competição'><span class='nomeEditavel' id='nom"+val['id']+"'><a class='linkNome' href='/competicoes/competitionstatus.php?id="+val['id']+"' >"+val['nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span></td>";
+				tbl +=  "<td data-label='Competição'><span class='nomeEditavel' id='nom"+val['id']+"'><a class='linkNome' href='/competicoes/competitionstatus.php?id="+val['id']+"' >"+val['nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span>" + tipoBadge + "</td>";
 				tbl += "<td data-label='Logo'><div class='imageUpload'><img class='thumb' src='/images/competicoes/"+val['logo']+"' /> <input type='file' hidden id='logo"+val['id']+"' class='hiddenInput custom-file-upload' name='logo' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
 				tbl += "<td data-label='Ano'><span class='fidelidadeFixo'>"+val['ano']+"</span><input type='number' min='1' max='2100' class=' fidelidade inputHerdeiro' value="+val['ano']+" id='ano"+val['id']+"' hidden></td>";
                 

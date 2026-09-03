@@ -42,6 +42,11 @@ $pais = new Pais($db);
 $usuario = new Usuario($db);
 $competicao = new Competicao_clube($db);
 
+$compInfo = $competicao->readInfo($idCompeticao);
+if($compInfo && isset($compInfo['tipo']) && intval($compInfo['tipo']) === 1){
+    die(json_encode(['success' => false, 'error' => 'Competições nacionais não permitem a importação de arquivos .ymt. Utilize os clubes cadastrados no país da competição.']));
+}
+
 $jogador = new Jogador($ldb);
 $time = new Time($ldb);
 $estadio = new Estadio($ldb);

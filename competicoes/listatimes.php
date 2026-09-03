@@ -27,6 +27,11 @@ $logo_competicao = $info['logo'];
 $genero_competicao = $info['genero'];
 $dono_competicao = $info['dono'];
 
+$tipo_competicao_escopo = intval($info['tipo'] ?? 0);
+$is_nacional = ($tipo_competicao_escopo === 1);
+$pais_nacional_id = intval($info['sedeId'] ?? 0);
+$pais_nacional_nome = $info['sedeNome'] ?? '';
+
 $options = $competicao->getOptions($idCompeticao);
 
 // query caixa de seleção países
@@ -35,8 +40,14 @@ $listaPaises = array();
 while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
     extract($row_pais);
     $addArray = array($id, $nome, $federacao, $dono, $bandeira);
-	if($addArray[2] == $federacao_id || $federacao_id == 0){
-		$listaPaises[] = $addArray;
+	if($is_nacional){
+		if($addArray[0] == $pais_nacional_id){
+			$listaPaises[] = $addArray;
+		}
+	} else {
+		if($addArray[2] == $federacao_id || $federacao_id == 0){
+			$listaPaises[] = $addArray;
+		}
 	}
 }
 
@@ -57,7 +68,9 @@ while ($row_times = $stmtTime->fetch(PDO::FETCH_ASSOC)){
     extract($row_times);
     $addArray = array($id, $nome, $paisTime, $Sexo, $nomePais, $escudo);
 	if($addArray[3] == $genero_competicao){
-		$listaTimes[] = $addArray;
+		if(!$is_nacional || $addArray[2] == $pais_nacional_id){
+			$listaTimes[] = $addArray;
+		}
 	}
     
 }
@@ -89,23 +102,34 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
         <h2 class="propostas-title"><?php echo $page_title; ?></h2>
         <hr>
         
-        <?php $can_bulk_edit = ((isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) || (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $dono_competicao)); ?>
-        <div class="bulk-country-bar">
-            <div class="bulk-country-left">
-                <span class="material-symbols-outlined icon-bulk">public</span>
-                <span class="bulk-title">Definir mesmo país para todas as vagas:</span>
-                <select id="bulk_selecao_pais" class="smallform selecaoPaisBulk" <?php echo $can_bulk_edit ? '' : 'disabled'; ?>>
-                    <option data-flag="flag.png" value="0">Selecione o país...</option>
-                    <?php foreach($listaPaises as $p): ?>
-                        <option data-flag="<?php echo htmlspecialchars($p[4]); ?>" data-dono="<?php echo htmlspecialchars($p[3]); ?>" data-federacao="<?php echo htmlspecialchars($p[2]); ?>" value="<?php echo htmlspecialchars($p[0]); ?>"><?php echo htmlspecialchars($p[1]); ?></option>
-                    <?php endforeach; ?>
-                </select>
+        <?php if($is_nacional): ?>
+            <div class="bulk-country-bar" style="background: rgba(2, 132, 199, 0.06); border-color: rgba(2, 132, 199, 0.25);">
+                <div class="bulk-country-left" style="width: 100%;">
+                    <span class="material-symbols-outlined icon-bulk" style="color: #0284c7;">flag</span>
+                    <span class="bulk-title" style="color: #0369a1; font-size: 0.95rem;">
+                        <strong>Competição Nacional:</strong> Vagas vinculadas exclusivamente a <strong><?php echo htmlspecialchars($pais_nacional_nome ?: 'País Sede'); ?></strong>. (Importação de arquivos YMT desabilitada)
+                    </span>
+                </div>
             </div>
-            <button type="button" id="btn_aplicar_pais_todos" class="btn-bulk-country" <?php echo $can_bulk_edit ? '' : 'disabled'; ?> title="Atribuir este país para todas as vagas da competição">
-                <span class="material-symbols-outlined" style="font-size: 1.1rem;">done_all</span>
-                <span>Aplicar a todos</span>
-            </button>
-        </div>
+        <?php else: ?>
+            <?php $can_bulk_edit = ((isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) || (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $dono_competicao)); ?>
+            <div class="bulk-country-bar">
+                <div class="bulk-country-left">
+                    <span class="material-symbols-outlined icon-bulk">public</span>
+                    <span class="bulk-title">Definir mesmo país para todas as vagas:</span>
+                    <select id="bulk_selecao_pais" class="smallform selecaoPaisBulk" <?php echo $can_bulk_edit ? '' : 'disabled'; ?>>
+                        <option data-flag="flag.png" value="0">Selecione o país...</option>
+                        <?php foreach($listaPaises as $p): ?>
+                            <option data-flag="<?php echo htmlspecialchars($p[4]); ?>" data-dono="<?php echo htmlspecialchars($p[3]); ?>" data-federacao="<?php echo htmlspecialchars($p[2]); ?>" value="<?php echo htmlspecialchars($p[0]); ?>"><?php echo htmlspecialchars($p[1]); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="button" id="btn_aplicar_pais_todos" class="btn-bulk-country" <?php echo $can_bulk_edit ? '' : 'disabled'; ?> title="Atribuir este país para todas as vagas da competição">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">done_all</span>
+                    <span>Aplicar a todos</span>
+                </button>
+            </div>
+        <?php endif; ?>
 
         <?php $random_loader = rand(1,5); ?>
         <div id='loading'><img src='/images/loaders/loader_style<?php echo $random_loader; ?>.gif'/></div>
@@ -205,6 +229,8 @@ $( document ).ready(function(){
 
 	var codigo_competicao = '<?php echo $idCompeticao ?>';
 	var numero_times = '<?php echo $options['numero_times'] ?>';
+	var is_nacional = <?php echo $is_nacional ? 'true' : 'false'; ?>;
+	var pais_nacional_id = parseInt('<?php echo (int)$pais_nacional_id; ?>') || 0;
 	var lista_paises = <?php echo json_encode($listaPaises) ?>;
 	var lista_times = <?php echo json_encode($listaTimes) ?>;
 	var dono_competicao = '<?php echo $dono_competicao ?>';
@@ -348,13 +374,17 @@ $( document ).ready(function(){
 
 		// geração da tabela
 		var selectedOwner = 0;
-		var selectedCountry = 0;
+		var selectedCountry = is_nacional ? pais_nacional_id : 0;
 		tbl += "<div class='par_pais_equipe' id='par_pais_equipe"+i+"'>";
 			tbl += "<span class='slot-badge'>Vaga #" + i + "</span>";
-			tbl += "<select id='selecaoPais"+i+"' name='pais"+i+"' class='smallform selecaoPais' placeholder='País...' "+adminStatus+">";
-				tbl += "<option data-flag='flag.png' value=0 >Selecione o país...</option>";
+			
+			let countryDisabled = (is_nacional || adminStatus === "disabled") ? "disabled" : "";
+			tbl += "<select id='selecaoPais"+i+"' name='pais"+i+"' class='smallform selecaoPais' placeholder='País...' "+countryDisabled+">";
+				if(!is_nacional){
+					tbl += "<option data-flag='flag.png' value=0 >Selecione o país...</option>";
+				}
 				$.each(lista_paises, function(index, val){
-					if(matchData && val[0] == matchData.pais_time){
+					if((matchData && val[0] == matchData.pais_time) || (is_nacional && val[0] == pais_nacional_id)){
 						var selected = " selected ";
 						selectedOwner = val[3];
 						selectedCountry = val[0];
@@ -392,7 +422,9 @@ $( document ).ready(function(){
 			tbl += "</select>";
   
 			tbl += "<select id='selecaoSlot"+i+"' name='slot"+i+"' class='"+slotClass+"' data-vaga='"+i+"' "+slotDisabled+" title='"+slotTitle+"'>"+slotOptions+"</select>";
-			tbl += "<span class='fileUploader ui-button ui-widget'>Importar .ymt temporário</span><input id='import_team"+i+"' type='file' accept='.ymt' value='Importar .ymt temporário' hidden class='hiddenInput import_team' />";
+			if(!is_nacional){
+				tbl += "<span class='fileUploader ui-button ui-widget'>Importar .ymt temporário</span><input id='import_team"+i+"' type='file' accept='.ymt' value='Importar .ymt temporário' hidden class='hiddenInput import_team' />";
+			}
 			tbl += "<input id='update_team"+i+"' type='submit' value='Salvar' class='ui-button ui-widget update_team' disabled/>";
 			tbl += "<span class='status_competicao' style='background-color:"+cor_status+" !important; color:"+font_status+" !important; border: 1px solid "+font_status+"20 !important;'>" +status_time + "</span>";
 			

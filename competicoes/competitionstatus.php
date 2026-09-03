@@ -96,6 +96,10 @@ $aux_css = 'competition_status_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
+$tipo_competicao = intval($info['tipo'] ?? 0);
+$is_nacional = ($tipo_competicao === 1);
+$sede_nome = $info['sedeNome'] ?? '';
+
 // Calculate percentage for progress bar
 $percentual_times = ($total_times > 0) ? min(100, round(($times_inseridos / $total_times) * 100)) : 0;
 ?>
@@ -110,7 +114,7 @@ $percentual_times = ($total_times > 0) ? min(100, round(($times_inseridos / $tot
 				<h2 class="hero-title"><?php echo $nome_competicao . " " . $ano_competicao; ?></h2>
 				<span class="hero-subtitle">
 					<span class="material-symbols-outlined">emoji_events</span>
-					Painel da Competição
+					Painel da Competição <?php if($is_nacional): ?>• <strong style="color: #0284c7;">Nacional (<?php echo htmlspecialchars($sede_nome); ?>)</strong><?php else: ?>• <span>Internacional</span><?php endif; ?>
 				</span>
 			</div>
 		</div>

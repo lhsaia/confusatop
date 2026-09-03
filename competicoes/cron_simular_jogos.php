@@ -25,30 +25,27 @@ $database = new Database();
 $db = $database->getConnection();
 $competicaoObj = new Competicao_clube($db);
 
-// Selecionar jogos pendentes (status = 0) agendados para as próximas 24 horas
-$inicioBusca = date('Y-m-d H:i:s'); // Momento atual
-$fimBusca    = date('Y-m-d H:i:s', strtotime('+24 hours')); // 24 horas à frente
+// Selecionar jogos pendentes (status = 0) agendados até as próximas 24 horas (incluindo partidas atrasadas no passado)
+$fimBusca = date('Y-m-d H:i:s', strtotime('+24 hours')); // Até 24 horas à frente
 
-echo "[" . date('Y-m-d H:i:s') . "] Iniciando Cron de Simulação para partidas entre {$inicioBusca} e {$fimBusca}...\n";
+echo "[" . date('Y-m-d H:i:s') . "] Iniciando Cron de Simulação para partidas pendentes até {$fimBusca}...\n";
 
-// Buscar jogos programados para as próximas X horas
+// Buscar jogos pendentes com data até o limite estipulado
 $query = "SELECT id, competicao_id AS competicao, timeA_id AS timeA, timeB_id AS timeB, estadio_id AS estadio, neutro, fase, data, subir_live 
           FROM jogos_clube 
           WHERE status = 0 
             AND simulador_interno = 1
-            AND data >= :inicio 
             AND data <= :fim 
           ORDER BY data ASC";
 
 $stmt = $db->prepare($query);
-$stmt->bindParam(':inicio', $inicioBusca);
 $stmt->bindParam(':fim', $fimBusca);
 $stmt->execute();
 
 $partidas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if (empty($partidas)) {
-    echo "[" . date('Y-m-d H:i:s') . "] Nenhuma partida pendente encontrada nas próximas 24 horas.\n";
+    echo "[" . date('Y-m-d H:i:s') . "] Nenhuma partida pendente encontrada até {$fimBusca}.\n";
     exit(0);
 }
 
