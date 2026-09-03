@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
@@ -46,6 +46,9 @@ $nivel_tecnico = (int)$info['nivel'];
 $mentalidade_idx = (int)$info['mentalidade'];
 $estilo_idx = (int)$info['estilo'];
 $sexo = (int)$info['sexo'];
+$disponibilidade_tecnico = $info['disponibilidade'] ?? 1;
+$data_falecimento = $info['data_falecimento'] ?? null;
+$isFalecido = ((int)$disponibilidade_tecnico === -3 || !empty($data_falecimento));
 
 // Dados do clube
 $id_time = (int)$info['idTime'];
@@ -121,6 +124,7 @@ if (!empty($desde_quando)) {
 
 // Histórico de transferências
 $transf_stmt = $tecnicoObj->readAllTransferencias($id_tecnico, 0, 100);
+$fotoClass = $isFalecido ? 'margin-left foto-falecido' : 'margin-left';
 ?>
 
 <main class='propostas-container' style='padding-top: 80px; padding-bottom: 60px;'>
@@ -128,9 +132,18 @@ $transf_stmt = $tecnicoObj->readAllTransferencias($id_tecnico, 0, 100);
         <div id='quadro-container'>
             <div id='quadro-superior'>
                 <div id='quadro-nomes'>
-                    <h2><?php echo htmlspecialchars($nome_tecnico); ?></h2>
+                    <h2>
+                        <?php 
+                        echo htmlspecialchars($nome_tecnico);
+                        if ($isFalecido) {
+                            $dataFalecFmt = !empty($data_falecimento) ? date('d/m/Y', strtotime($data_falecimento)) : "";
+                            $labelFalec = $dataFalecFmt ? "Falecido em " . $dataFalecFmt : "Falecido";
+                            echo " <span class='stamp stamp-falecido' title='{$labelFalec}'><span class='cruz-morte'>†</span> <svg class='luto-icon' viewBox='0 0 24 24' width='14' height='14' fill='currentColor'><path d='M12 2C8.69 2 6 4.69 6 8c0 2.21 1.2 4.15 3 5.19V22l3-2 3 2v-8.81c1.8-1.04 3-2.98 3-5.19 0-3.31-2.69-6-6-6zm0 2c2.21 0 4 1.79 4 4 0 1.25-.58 2.37-1.49 3.1-.47.38-.51 1.07-.09 1.5.42.43 1.12.43 1.58.01C17.26 11.45 18 9.82 18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 1.82.74 3.45 1.99 4.61.47.42 1.16.42 1.59-.01.42-.43.38-1.12-.09-1.5C8.58 10.37 8 9.25 8 8c0-2.21 1.79-4 4-4z'/></svg> " . $labelFalec . "</span>";
+                        }
+                        ?>
+                    </h2>
                     <?php if ($id_time <= 0): ?>
-                        <h3><span style="color:#64748b;">Sem Clube (Disponível no Mercado)</span></h3>
+                        <h3><span style="color:#64748b;"><?php echo $isFalecido ? 'Falecido' : 'Sem Clube (Disponível no Mercado)'; ?></span></h3>
                     <?php else: ?>
                         <h3>
                             <a href='paisstatus.php?country=<?php echo $pais_time; ?>'>
@@ -146,7 +159,7 @@ $transf_stmt = $tecnicoObj->readAllTransferencias($id_tecnico, 0, 100);
                     <?php endif; ?>
                 </div>
                 <div id='quadro-foto'>
-                    <img id='bandeiraGrande' class='margin-left' src='/images/tecnicos/<?php echo htmlspecialchars($foto_tecnico); ?>' onerror="this.src='/images/jogadores/avatar.png';" height='100px'>
+                    <img id='bandeiraGrande' class='<?php echo $fotoClass; ?>' src='/images/tecnicos/<?php echo htmlspecialchars($foto_tecnico); ?>' onerror="this.src='/images/jogadores/avatar.png';" height='100px'>
                 </div>
             </div>
 
@@ -155,13 +168,15 @@ $transf_stmt = $tecnicoObj->readAllTransferencias($id_tecnico, 0, 100);
             <div id='info_geral'>
                 <!-- Bloco de Informações do Treinador -->
                 <div id='info-jogos'>
-                    <div id='idade' class='infoblock' title='Idade e Data de Nascimento'>
-                        <span class="material-symbols-outlined">cake</span>
-                        <div>
-                            <span class='tituloinformacao'>Idade</span>
-                            <span class='informacao'><?php echo $idade_tecnico; ?> anos (<?php echo $nascimento_formatado; ?>)</span>
-                        </div>
-                    </div>
+                    <?php
+                    if ($isFalecido && !empty($data_falecimento)) {
+                        $dataFalecFmt = date('d/m/Y', strtotime($data_falecimento));
+                        $nascimento_display_full = "{$nascimento_formatado} &bull; &dagger; {$dataFalecFmt} ({$idade_tecnico} anos)";
+                        echo "<div id='idade' class='infoblock large' title='Nascimento e Falecimento'><span class='material-symbols-outlined'>church</span><div><span class='informacao' style='font-size:0.85rem;'>{$nascimento_display_full}</span><span style='font-size: 0.75rem; color: #64748b;'>Nascimento &bull; Falecimento</span></div></div>";
+                    } else {
+                        echo "<div id='idade' class='infoblock' title='Idade e Data de Nascimento'><span class='material-symbols-outlined'>cake</span><div><span class='tituloinformacao'>Idade</span><span class='informacao'>{$idade_tecnico} anos ({$nascimento_formatado})</span></div></div>";
+                    }
+                    ?>
 
                     <div id='nacionalidade' class='infoblock' title='Nacionalidade'>
                         <span class="material-symbols-outlined">flag</span>
@@ -219,7 +234,11 @@ $transf_stmt = $tecnicoObj->readAllTransferencias($id_tecnico, 0, 100);
                 <div id='info-clube'>
                     <div class='infoblock' style="flex-direction: column; align-items: flex-start; gap: 12px;">
                         <span class='tituloinformacao' style="font-size: 1rem; color: #0f172a; font-weight: 700;">Situação Atual</span>
-                        <?php if ($id_time > 0): ?>
+                        <?php if ($isFalecido): ?>
+                            <p style="color: #64748b; font-size: 0.9rem; margin: 0; display:flex; align-items:center; gap:6px;">
+                                <span class='cruz-morte'>†</span> Treinador falecido.
+                            </p>
+                        <?php elseif ($id_time > 0): ?>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <img src='/images/escudos/<?php echo $escudo_time; ?>' style="width: 48px; height: 48px; object-fit: contain;">
                                 <div>

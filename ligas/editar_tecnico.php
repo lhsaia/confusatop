@@ -78,39 +78,39 @@ $localizacao_foto = null;
             $error_msg = "Falha ao editar técnico na tela de time";
         }
     } else if($tipo == 4){
-        // //criar transferencia pendente
-        // $idTime = $_POST['idTime'];
-        // if($jogador->aposentar($idJogador,$idTime)){
-        //     $is_success = true;
-        //     $error_msg = "";
-        // } else {
-        //     $is_success = false;
-        //     $error_msg = "Falha ao aposentar jogador";
-        // }
-    } else if($tipo == 5){
-        // //criar transferencia pendente
-        // $idTime = $_POST['idTime'];
-        // if($jogador->transferir($idJogador,$idTime,0,0,-1,0,0,0,0)){
-        //     $is_success = true;
-        //     $error_msg = "";
-        // } else {
-        //     $is_success = false;
-        //     $error_msg = "Falha ao repatriar jogador";
-        // }
-    } else if($tipo == 6){
-        // //criar transferencia pendente
-        // $novoNivel = $_POST['novoNivel'];
-        // if($jogador->incorporarModificador($idJogador,$novoNivel)){
-        //     $is_success = true;
-        //     $error_msg = "";
-        // } else {
-        //     $is_success = false;
-        //     $error_msg = "Falha ao incorporar modificador";
-        // }
+        // Aposentar técnico
+        $idTime = isset($_POST['idTime']) ? $_POST['idTime'] : null;
+        if($tecnico->aposentar($idTecnico,$idTime)){
+            $is_success = true;
+            $error_msg = "";
+        } else {
+            $is_success = false;
+            $error_msg = "Falha ao aposentar técnico";
+        }
+    } else if($tipo == 7){
+        // Expatriar técnico
+        $idTime = isset($_POST['idTime']) ? $_POST['idTime'] : null;
+        if($tecnico->expatriar($idTecnico,$idTime)){
+            $is_success = true;
+            $error_msg = "";
+        } else {
+            $is_success = false;
+            $error_msg = "Falha ao expatriar técnico";
+        }
+    } else if($tipo == 8){
+        // Falecer técnico
+        $idTime = isset($_POST['idTime']) ? $_POST['idTime'] : null;
+        $dataFalecimento = isset($_POST['dataFalecimento']) ? $_POST['dataFalecimento'] : (isset($_POST['data_falecimento']) ? $_POST['data_falecimento'] : null);
+        if($tecnico->falecer($idTecnico,$idTime, $dataFalecimento)){
+            $is_success = true;
+            $error_msg = "";
+        } else {
+            $is_success = false;
+            $error_msg = "Falha ao registrar falecimento do técnico";
+        }
     } else if($tipo == 9){
-          //colocar aqui dados sobre edição de jogador
+          //colocar aqui dados sobre edição de técnico
           $idDonoTecnico = $_SESSION['user_id'];
-          //$idDonoTime = 9;
           $idDonoTime = $tecnico->verificarDonoTimeVinculado($idTecnico);
           $idDonoPais = $tecnico->verificarDono($idTecnico);
 
@@ -124,6 +124,8 @@ $localizacao_foto = null;
               $nascimentoTecnico = isset($_POST['nascimento']) ? $_POST['nascimento'] : null;
               $mentalidadeTecnico = isset($_POST['mentalidade']) ? $_POST['mentalidade'] : null;
               $estiloTecnico = isset($_POST['estilo']) ? $_POST['estilo'] : null;
+              $atividadeTecnico = isset($_POST['atividade']) ? $_POST['atividade'] : null;
+              $dataFalecimentoTecnico = isset($_POST['dataFalecimento']) ? $_POST['dataFalecimento'] : (isset($_POST['data_falecimento']) ? $_POST['data_falecimento'] : null);
 
               $isDono = (!empty($nomeTecnico)) ? true : false;
           } else {
@@ -132,45 +134,43 @@ $localizacao_foto = null;
               $nascimentoTecnico = null;
               $mentalidadeTecnico = null;
               $estiloTecnico = null;
+              $atividadeTecnico = null;
+              $dataFalecimentoTecnico = null;
               $isDono = false;
           }
 
-		  		      if(isset($_FILES['foto']) && !empty($_FILES['foto'])){
-        $fileName = $_FILES['foto']['name'];
-        $fileExplode = explode(".",$fileName);
-        $fileName = $fileExplode[0] . mt_rand(1,10000).".webp";// .$fileExplode[1];
-        $fileSize = $_FILES['foto']['size'];
-        $filePath = $_FILES['foto']['tmp_name'];
-        $fileType = $_FILES['foto']['type'];
-        $fileExt = strtolower( end($fileExplode));
-        $correct_extensions = array("image/png","image/jpg","image/jpeg", "image/webp");
-        $upload_dir = "/images/tecnicos/";
+		  if(isset($_FILES['foto']) && !empty($_FILES['foto'])){
+            $fileName = $_FILES['foto']['name'];
+            $fileExplode = explode(".",$fileName);
+            $fileName = $fileExplode[0] . mt_rand(1,10000).".webp";
+            $fileSize = $_FILES['foto']['size'];
+            $filePath = $_FILES['foto']['tmp_name'];
+            $fileType = $_FILES['foto']['type'];
+            $fileExt = strtolower( end($fileExplode));
+            $correct_extensions = array("image/png","image/jpg","image/jpeg", "image/webp");
+            $upload_dir = "/images/tecnicos/";
 
-        if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 8000000){
-
-            $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-            processAndSaveWebPImage($filePath, $upload_path, 300, 90);
-            $localizacao_foto = $_SESSION['user_id'] ."-" .$fileName;
-
-
-        } else {
-
-            $error_msg .= "Não foi possível inserir a foto. ";
-            if($fileSize > 8000000){
-                $error_msg .= "Arquivo deve ser menor que 8Mb.";
+            if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 8000000){
+                $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
+                processAndSaveWebPImage($filePath, $upload_path, 300, 90);
+                $localizacao_foto = $_SESSION['user_id'] ."-" .$fileName;
+            } else {
+                $error_msg .= "Não foi possível inserir a foto. ";
+                if($fileSize > 8000000){
+                    $error_msg .= "Arquivo deve ser menor que 8Mb.";
+                }
+                if($filePath == ''){
+                    $error_msg .= "Falha no nome do arquivo.";
+                }
+                if(in_array($fileType,$correct_extensions) == false){
+                    $error_msg .= "Extensão ".$fileExt." não é permitida.";
+                }
             }
-            if($filePath == ''){
-                $error_msg .= "Falha no nome do arquivo.";
-            }
-            if(in_array($fileType,$correct_extensions) == false){
-                $error_msg .= "Extensão ".$fileExt." não é permitida.";
-            }
-        }
-    }
+          }
 			
           $nivelTecnico = $_POST['nivel'];
 
-          if($tecnico->editar($idTecnico,null,$nomeTecnico,$nacionalidadeTecnico,$nascimentoTecnico,$nivelTecnico,$isDono,$mentalidadeTecnico, $estiloTecnico, $localizacao_foto)){
+          if($tecnico->editar($idTecnico,null,$nomeTecnico,$nacionalidadeTecnico,$nascimentoTecnico,$nivelTecnico,$isDono,$mentalidadeTecnico, $estiloTecnico, $localizacao_foto, null, $atividadeTecnico, $dataFalecimentoTecnico)){
               $is_success = true;
               $error_msg = "";
           } else {

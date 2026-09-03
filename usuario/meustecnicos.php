@@ -137,20 +137,21 @@ $(document).ready(function($){
         tbl += "<thead>";
         tbl += "<tr>";
         tbl += "<th width='5%'>Foto</th>";
-        tbl += "<th id='Nome' class='headings' width='22%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Nome</th>";
-        tbl += "<th id='Nascimento' class='headings' width='14%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Nascimento</th>";
-        tbl += "<th id='Nivel' class='headings' width='7%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Nível</th>";
-        tbl += "<th id='Mentalidade' class='headings' width='12%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Mentalidade</th>";
-        tbl += "<th id='Estilo' class='headings' width='16%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Estilo</th>";
+        tbl += "<th id='Nome' class='headings' width='18%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Nome</th>";
+        tbl += "<th id='Nascimento' class='headings' width='12%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Nascimento</th>";
+        tbl += "<th id='Nivel' class='headings' width='6%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Nível</th>";
+        tbl += "<th id='Mentalidade' class='headings' width='11%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Mentalidade</th>";
+        tbl += "<th id='Estilo' class='headings' width='14%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Estilo</th>";
         tbl += "<th id='siglaPais' class='headings' width='8%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;País</th>";
         tbl += "<th id='clubeVinculado' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Clube</th>";
+        tbl += "<th id='disponibilidade' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Status</th>";
         tbl += "<th width='6%'>Opções</th>";
         tbl += "</tr>";
         tbl += "</thead>";
         tbl += "<tbody>";
 
         if(total_results === 0){
-            tbl += "<tr><td colspan='9' style='text-align:center; padding: 2rem;'>Nenhum técnico encontrado.</td></tr>";
+            tbl += "<tr><td colspan='10' style='text-align:center; padding: 2rem;'>Nenhum técnico encontrado.</td></tr>";
         } else {
             $.each(ajax_data, function(index, val){
                 if(index >= (from_result_num) && index < (from_result_num + results_per_page)){
@@ -160,13 +161,44 @@ $(document).ready(function($){
                     var options = { year: 'numeric', month: '2-digit', day: '2-digit' };
                     var dataNascimento = new Date(val['Nascimento'].replace(/-/g, '\/'));
                     var nascimentoDisplay = dataNascimento.toLocaleDateString("pt-BR", options);
+                    var isFalecido = (parseInt(val['disponibilidade']) === -3 || Boolean(val['data_falecimento']));
                     var fotoSrc = val['foto'] ? '/images/tecnicos/' + val['foto'] : '/images/tecnicos/semfoto.png';
+                    var fotoClass = isFalecido ? "playerThumb foto-falecido" : "playerThumb";
 
                     var mentTexto = mentalidadeMap[val['Mentalidade']] || "Balanceada";
                     var estiloTexto = estiloMap[val['Estilo']] || "Neutro";
 
+                    var nomeDisponibilidade = "";
+                    var dataFalecFmt = "";
+                    if(val['data_falecimento']){
+                        var dF = new Date(val['data_falecimento'].replace(/-/g, '\/'));
+                        dataFalecFmt = dF.toLocaleDateString("pt-BR", options);
+                    }
+
+                    switch(parseInt(val['disponibilidade'])){
+                        case -3:
+                            var txtDataFalec = dataFalecFmt ? dataFalecFmt : "Falecido";
+                            nomeDisponibilidade = "<span class='badge-falecido' title='Falecido em " + (dataFalecFmt || "data não informada") + "'><span class='cruz-morte'>†</span> <svg class='luto-icon' viewBox='0 0 24 24' width='13' height='13' fill='currentColor'><path d='M12 2C8.69 2 6 4.69 6 8c0 2.21 1.2 4.15 3 5.19V22l3-2 3 2v-8.81c1.8-1.04 3-2.98 3-5.19 0-3.31-2.69-6-6-6zm0 2c2.21 0 4 1.79 4 4 0 1.25-.58 2.37-1.49 3.1-.47.38-.51 1.07-.09 1.5.42.43 1.12.43 1.58.01C17.26 11.45 18 9.82 18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 1.82.74 3.45 1.99 4.61.47.42 1.16.42 1.59-.01.42-.43.38-1.12-.09-1.5C8.58 10.37 8 9.25 8 8c0-2.21 1.79-4 4-4z'/></svg> " + txtDataFalec + "</span>";
+                            break;
+                        case -2:
+                            nomeDisponibilidade = "Expatriado";
+                            break;
+                        case -1:
+                            nomeDisponibilidade = "Aposentado";
+                            break;
+                        case 0:
+                            nomeDisponibilidade = "Ativo";
+                            break;
+                        case 1:
+                        default:
+                            nomeDisponibilidade = "Ativo (disponível)";
+                            break;
+                    }
+
+                    var valDataFalecimento = val['data_falecimento'] ? val['data_falecimento'] : new Date().toISOString().split('T')[0];
+
                     tbl += "<tr id='" + val['ID'] + "' data-sexo='" + val['Sexo'] + "' data-dono-pais='" + val['idDonoPais'] + "'>";
-                    tbl += "<td><div class='imageUpload'><img class='playerThumb' src='" + fotoSrc + "' /> <input type='file' hidden id='foto" + val['ID'] + "' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
+                    tbl += "<td><div class='imageUpload'><img class='" + fotoClass + "' src='" + fotoSrc + "' /> <input type='file' hidden id='foto" + val['ID'] + "' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
                     tbl += "<td><a href='/ligas/coachstatus.php?coach=" + val['ID'] + "' class='player-name-link' style='color:#0f172a; text-decoration:none; font-weight:600;'><span class='nomeEditavel' id='nom" + val['ID'] + "'>" + val['Nome'] + "</span></a><span class='" + genderClass + " genderSign'>" + genderCode + "</span></td>";
                     tbl += "<td><span class='nomeNascimento' id='nas" + val['ID'] + "'>" + nascimentoDisplay + " (" + val['idade'] + ")</span><input id='selnas" + val['ID'] + "' class='nascimentoEditavel editavel' type='date' value='" + val['Nascimento'] + "' hidden/></td>";
                     tbl += "<td><span class='nivelEditavel' id='niv" + val['ID'] + "'>" + val['Nivel'] + "</span></td>";
@@ -203,6 +235,20 @@ $(document).ready(function($){
                     } else {
                         tbl += "<td><span style='color:#94a3b8; font-style:italic;'>Sem clube</span></td>";
                     }
+
+                    // Status / Disponibilidade
+                    tbl += "<td>";
+                    tbl += "<span class='nomeAtividade' id='dis" + val['ID'] + "'>" + nomeDisponibilidade + "</span>";
+                    tbl += "<div class='container-edit-atividade' style='display:inline-flex; flex-direction:column; gap:4px;'>";
+                    tbl += "<select class='comboAtividade editavel' id='seldis" + val['ID'] + "' hidden>";
+                    tbl += "<option value='1' " + (val['disponibilidade'] == 1 ? 'selected' : '') + ">Ativo (disponível)</option>";
+                    tbl += "<option value='0' " + (val['disponibilidade'] == 0 ? 'selected' : '') + ">Ativo</option>";
+                    tbl += "<option value='-1' " + (val['disponibilidade'] == -1 ? 'selected' : '') + ">Aposentado</option>";
+                    tbl += "<option value='-2' " + (val['disponibilidade'] == -2 ? 'selected' : '') + ">Expatriado</option>";
+                    tbl += "<option value='-3' " + (val['disponibilidade'] == -3 ? 'selected' : '') + ">Falecido</option>";
+                    tbl += "</select>";
+                    tbl += "<input type='date' class='falecimentoEditavel editavel' id='selfalec" + val['ID'] + "' value='" + valDataFalecimento + "' title='Data de Falecimento' hidden style='font-size:0.75rem; padding:2px 4px; max-width:125px;' />";
+                    tbl += "</div></td>";
 
                     // Ações
                     tbl += "<td class='actions-col'>";
@@ -278,9 +324,26 @@ $(document).ready(function($){
 
                 tbl_row.find('.nomeNascimento').hide();
                 tbl_row.find('.nascimentoEditavel').show();
+
+                tbl_row.find('.nomeAtividade').hide();
+                tbl_row.find('.comboAtividade').show();
+                if(tbl_row.find('.comboAtividade').val() == "-3" || tbl_row.find('.badge-falecido').length > 0){
+                    tbl_row.find('.falecimentoEditavel').show();
+                } else {
+                    tbl_row.find('.falecimentoEditavel').hide();
+                }
             }
 
             tbl_row.find('.nivelEditavel').attr('contenteditable', 'true').addClass('editavel');
+        });
+
+        $(document).on('change', '.comboAtividade', function(){
+            var tbl_row = $(this).closest('tr');
+            if($(this).val() == "-3"){
+                tbl_row.find('.falecimentoEditavel').show();
+            } else {
+                tbl_row.find('.falecimentoEditavel').hide();
+            }
         });
 
         $('.cancelar').off('click').on('click', function(){
@@ -299,6 +362,10 @@ $(document).ready(function($){
 
             tbl_row.find('.comboMentalidade').hide();
             tbl_row.find('.nomeMentalidade').show();
+
+            tbl_row.find('.comboAtividade').hide();
+            tbl_row.find('.falecimentoEditavel').hide();
+            tbl_row.find('.nomeAtividade').show();
 
             tbl_row.find('.salvar').hide();
             tbl_row.find('.cancelar').hide();
@@ -329,12 +396,16 @@ $(document).ready(function($){
                 var pais = tbl_row.find('.comboPais').val();
                 var estilo = tbl_row.find('.comboEstilo').val();
                 var mentalidade = tbl_row.find('.comboMentalidade').val();
+                var atividade = tbl_row.find('.comboAtividade').val();
+                var dataFalecimento = tbl_row.find('.falecimentoEditavel').val();
 
                 formData.append('pais', pais);
                 formData.append('estilo', estilo);
                 formData.append('mentalidade', mentalidade);
                 formData.append('nascimento', nascimento);
                 formData.append('nome', nome);
+                formData.append('atividade', atividade);
+                formData.append('dataFalecimento', dataFalecimento);
             }
 
             var inputFoto = (tbl_row.find('#foto' + id))[0];

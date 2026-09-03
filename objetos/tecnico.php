@@ -17,6 +17,30 @@ class Tecnico{
 
     public function __construct($db){
         $this->conn = $db;
+        $this->ensureDataFalecimentoColumn();
+    }
+
+    private function ensureDataFalecimentoColumn() {
+        try {
+            $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN IF NOT EXISTS data_falecimento DATE DEFAULT NULL");
+        } catch (Exception $e) {
+            try {
+                $check = $this->conn->query("SHOW COLUMNS FROM " . $this->table_name . " LIKE 'data_falecimento'");
+                if ($check && $check->rowCount() == 0) {
+                    $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN data_falecimento DATE DEFAULT NULL");
+                }
+            } catch (Exception $ex) {}
+        }
+        try {
+            $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN IF NOT EXISTS disponibilidade INT(11) DEFAULT 1");
+        } catch (Exception $e) {
+            try {
+                $check = $this->conn->query("SHOW COLUMNS FROM " . $this->table_name . " LIKE 'disponibilidade'");
+                if ($check && $check->rowCount() == 0) {
+                    $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN disponibilidade INT(11) DEFAULT 1");
+                }
+            } catch (Exception $ex) {}
+        }
     }
 
     // criar time
@@ -677,47 +701,49 @@ class Tecnico{
 
             $nivelMin = htmlspecialchars(strip_tags((string)($nivelMin ?? '')));
             $nivelMax = htmlspecialchars(strip_tags((string)($nivelMax ?? '')));
-            $nome = htmlspecialchars(strip_tags((string)($nome ?? '')));
-            $nacionalidade = htmlspecialchars(strip_tags((string)($nacionalidade ?? '')));
-            $mentalidade = htmlspecialchars(strip_tags((string)($mentalidade ?? '')));
-            $estilo = htmlspecialchars(strip_tags((string)($estilo ?? '')));
-            $semclube = htmlspecialchars(strip_tags((string)($semclube ?? '')));
+            $nome = (!empty($nome) && trim((string)$nome) !== '') ? trim(htmlspecialchars(strip_tags((string)$nome))) : null;
+            $nacionalidade = (!empty($nacionalidade) && (int)$nacionalidade > 0) ? (int)$nacionalidade : null;
+            $mentalidade = (!empty($mentalidade) && (int)$mentalidade > 0) ? (int)$mentalidade : null;
+            $estilo = (!empty($estilo) && (int)$estilo > 0) ? (int)$estilo : null;
+            $semclube = (!empty($semclube)) ? 1 : null;
             $sexo = htmlspecialchars(strip_tags((string)($sexo ?? '')));
-            $apenasConfusa = htmlspecialchars(strip_tags((string)($apenasConfusa ?? '')));
-			$liga = htmlspecialchars(strip_tags((string)($liga ?? '')));
+            $apenasConfusa = (!empty($apenasConfusa)) ? 1 : null;
+            $liga = (!empty($liga) && (int)$liga > 0) ? (int)$liga : null;
 
             $subquery = '';
-            if($estilo != null){
+            if($estilo !== null){
                 $subquery .= ' AND estiloIndex = :estilo ';
             }
 
-            if($nome != null){
+            if($nome !== null){
                 $subquery .= ' AND nomeJogador LIKE :nome ';
             }
 
-            if($nacionalidade != null){
+            if($nacionalidade !== null){
                 $subquery .= ' AND nacionalidade = :nacionalidade ';
             }
 
-            if($mentalidade != null){
+            if($mentalidade !== null){
                 $subquery .= ' AND mentalidadeIndex = :mentalidade ';
             }
 			
-			if($liga != null){
+            if($liga !== null){
                 $subquery .= ' AND idLiga = :liga ';
             }
 
-            if($semclube != null){
+            if($semclube !== null){
                 $subquery .= ' AND idClube = 0  ';
             }
 
-            if($apenasConfusa == null){
+            if($apenasConfusa === null){
                 $subquery .= ' AND ranqueavel = 0 ';
             }
 
+            $subquery .= ' AND disponibilidade <> "Aposentado" AND disponibilidade <> "Expatriado" AND disponibilidade <> "Falecido" ';
+
 
             $query = "SELECT t1.*, d.Nome as nomeClube, d.Escudo as escudoClube  FROM (SELECT t.ID as idJogador, t.Nome as nomeJogador, FLOOR(DATEDIFF(NOW(),t.Nascimento)/365) as idadeJogador, m.Nome as mentalidade, e.Nome as estilo, '-' as cobrancaFalta, t.Sexo as sexoJogador, t.Pais as nacionalidade, 'T' as stringPosicoes,
-            '-' as valor, t.Nivel as nivel, '-' as disponibilidade, p.bandeira, q.bandeira as bandeiraClube, q.ID as paisClube, CASE WHEN b.ID is not NULL THEN b.ID ELSE 0 END as idClube, b.liga as idLiga, l.Nome as ligaClube, '-' as posicaoBaseJogador, t.Mentalidade as mentalidadeIndex, t.Estilo as estiloIndex, p.ranqueavel, CASE WHEN p.dono <> :usuarioLogado THEN 0 ELSE 1 END as donoJogador, c.tipoContrato
+            '-' as valor, t.Nivel as nivel, CASE WHEN t.disponibilidade = -1 THEN 'Aposentado' WHEN t.disponibilidade = 0 THEN 'Não' WHEN t.disponibilidade = -2 THEN 'Expatriado' WHEN t.disponibilidade = -3 THEN 'Falecido' ELSE 'Sim' END as disponibilidade, p.bandeira, q.bandeira as bandeiraClube, q.ID as paisClube, CASE WHEN b.ID is not NULL THEN b.ID ELSE 0 END as idClube, b.liga as idLiga, l.Nome as ligaClube, '-' as posicaoBaseJogador, t.Mentalidade as mentalidadeIndex, t.Estilo as estiloIndex, p.ranqueavel, CASE WHEN p.dono <> :usuarioLogado THEN 0 ELSE 1 END as donoJogador, c.tipoContrato
             FROM tecnico t
             LEFT JOIN paises p ON t.Pais = p.id
             LEFT JOIN contratos_tecnico c ON t.ID = c.tecnico AND c.tipoContrato = 0
@@ -736,24 +762,105 @@ class Tecnico{
             $stmt->bindParam(':nivelMax',$nivelMax);
             $stmt->bindParam(':usuarioLogado',$usuarioLogado);
             $stmt->bindParam(':sexo',$sexo);
-            if($mentalidade != null){
+            if($mentalidade !== null){
                 $stmt->bindParam(':mentalidade',$mentalidade);
             }
-            if($liga != null){
+            if($liga !== null){
                 $stmt->bindParam(':liga',$liga);
             }
-            if($estilo != null){
+            if($estilo !== null){
                 $stmt->bindParam(':estilo',$estilo);
             }
-            if($nome != null){
-                $nome = "%".$nome."%";
-                $stmt->bindParam(':nome',$nome);
+            if($nome !== null){
+                $nomeParam = "%".$nome."%";
+                $stmt->bindParam(':nome',$nomeParam);
             }
-            if($nacionalidade != null){
+            if($nacionalidade !== null){
                 $stmt->bindParam(':nacionalidade',$nacionalidade);
             }
             $stmt->execute();
             return $stmt;
+        }
+
+        function falecer($idTecnico, $idClube = null, $dataFalecimento = null){
+            $idTecnico = htmlspecialchars(strip_tags((string)$idTecnico));
+            if (empty($dataFalecimento)) {
+                $dataFalecimento = date('Y-m-d');
+            } else {
+                $dataFalecimento = htmlspecialchars(strip_tags((string)$dataFalecimento));
+            }
+
+            $error_count = 0;
+            $query = "UPDATE " . $this->table_name . " SET disponibilidade = -3, data_falecimento = ? WHERE ID = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $dataFalecimento);
+            $stmt->bindParam(2, $idTecnico);
+            if(!$stmt->execute()){
+                $error_count++;
+            }
+
+            // Buscar todos os contratos existentes (clubes e seleções) para demitir e registrar histórico
+            $queryContratos = "SELECT clube FROM contratos_tecnico WHERE tecnico = ?";
+            $stmtContratos = $this->conn->prepare($queryContratos);
+            $stmtContratos->bindParam(1, $idTecnico);
+            $stmtContratos->execute();
+            $clubes = $stmtContratos->fetchAll(PDO::FETCH_COLUMN);
+
+            if(!empty($clubes)){
+                foreach($clubes as $clubeId){
+                    if((int)$clubeId > 0){
+                        $this->demitir($idTecnico, (int)$clubeId);
+                    }
+                }
+            }
+
+            // Garantir a remoção de qualquer contrato residual (incluindo seleções)
+            $queryLimparContratos = "DELETE FROM contratos_tecnico WHERE tecnico = ?";
+            $stmtLimpar = $this->conn->prepare($queryLimparContratos);
+            $stmtLimpar->bindParam(1, $idTecnico);
+            $stmtLimpar->execute();
+
+            if($error_count > 0){
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        function aposentar($idTecnico, $idClube = null){
+            $idTecnico = htmlspecialchars(strip_tags((string)$idTecnico));
+            $error_count = 0;
+            $query = "UPDATE " . $this->table_name . " SET disponibilidade = -1, data_falecimento = NULL WHERE ID = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $idTecnico);
+            if(!$stmt->execute()){
+                $error_count++;
+            }
+
+            if($idClube != null && $idClube != 0){
+                if(!$this->demitir($idTecnico, $idClube)){
+                    $error_count++;
+                }
+            }
+            return ($error_count === 0);
+        }
+
+        function expatriar($idTecnico, $idClube = null){
+            $idTecnico = htmlspecialchars(strip_tags((string)$idTecnico));
+            $error_count = 0;
+            $query = "UPDATE " . $this->table_name . " SET disponibilidade = -2, data_falecimento = NULL WHERE ID = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $idTecnico);
+            if(!$stmt->execute()){
+                $error_count++;
+            }
+
+            if($idClube != null && $idClube != 0){
+                if(!$this->demitir($idTecnico, $idClube)){
+                    $error_count++;
+                }
+            }
+            return ($error_count === 0);
         }
 
         function convocar($idTecnico, $selecaoDestino,$tipoContrato){
@@ -871,7 +978,7 @@ class Tecnico{
         }
 
 
-        function editar($idTecnico,$idTime,$nomeTecnico,$nacionalidadeTecnico,$nascimentoTecnico,$nivelTecnico,$isDono,$mentalidadeTecnico = null, $estiloTecnico = null, $foto = null,  $desdeContrato = null){
+        function editar($idTecnico,$idTime,$nomeTecnico,$nacionalidadeTecnico,$nascimentoTecnico,$nivelTecnico,$isDono,$mentalidadeTecnico = null, $estiloTecnico = null, $foto = null,  $desdeContrato = null, $atividadeTecnico = null, $dataFalecimento = null){
 
             $idTecnico = htmlspecialchars(strip_tags((string)($idTecnico ?? '')));
             $idTime = ($idTime !== null && $idTime !== '') ? htmlspecialchars(strip_tags((string)$idTime)) : null;
@@ -883,6 +990,8 @@ class Tecnico{
             $estiloTecnico = ($estiloTecnico !== null && $estiloTecnico !== '') ? htmlspecialchars(strip_tags((string)$estiloTecnico)) : null;
 			$foto = ($foto !== null && $foto !== '') ? htmlspecialchars(strip_tags((string)$foto)) : null;
 			$desdeContrato = ($desdeContrato !== null && $desdeContrato !== '') ? htmlspecialchars(strip_tags((string)$desdeContrato)) : null;
+            $atividadeTecnico = ($atividadeTecnico !== null && $atividadeTecnico !== '') ? (int)$atividadeTecnico : null;
+            $dataFalecimento = ($dataFalecimento !== null && $dataFalecimento !== '') ? htmlspecialchars(strip_tags((string)$dataFalecimento)) : null;
 
             if($nivelTecnico > 10){
               $nivelTecnico = 10;
@@ -896,6 +1005,20 @@ class Tecnico{
               $nome = $nomeTecnico;
               $nacionalidade = $nacionalidadeTecnico;
               $nascimento = $nascimentoTecnico;
+
+              if($atividadeTecnico !== null){
+                  if($atividadeTecnico === -3){
+                      if(empty($dataFalecimento)){
+                          $dataFalecimento = date('Y-m-d');
+                      }
+                      $queryAtividade = " disponibilidade=-3, data_falecimento=:dataFalecimento, ";
+                  } else {
+                      $dataFalecimento = null;
+                      $queryAtividade = " disponibilidade=:disponibilidade, data_falecimento=NULL, ";
+                  }
+              } else {
+                  $queryAtividade = "";
+              }
 
               if($mentalidadeTecnico != null){
                 $mentalidade = $mentalidadeTecnico;
@@ -916,10 +1039,8 @@ class Tecnico{
 			  } else {
 				$query_foto = "";
 			  }
-					
-					
 
-              $query = "UPDATE tecnico SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, ".$queryMentalidade ." " .$queryEstilo .  " Nivel=:nivel ".$query_foto. " WHERE ID = :id";
+              $query = "UPDATE tecnico SET Nome=:nome, Nascimento=:nascimento, Pais=:nacionalidade, ".$queryMentalidade ." " .$queryEstilo . $queryAtividade . " Nivel=:nivel ".$query_foto. " WHERE ID = :id";
             } else {
               $query = "UPDATE tecnico SET Nivel=:nivel WHERE ID = :id";
             }
@@ -940,6 +1061,14 @@ class Tecnico{
               $stmt->bindParam(":nascimento", $nascimento);
               $stmt->bindParam(":nacionalidade",$nacionalidade);
 
+              if($atividadeTecnico !== null){
+                  if($atividadeTecnico === -3){
+                      $stmt->bindParam(":dataFalecimento", $dataFalecimento);
+                  } else {
+                      $stmt->bindParam(":disponibilidade", $atividadeTecnico);
+                  }
+              }
+
               if(isset($mentalidade)){
                 $stmt->bindParam(":mentalidade", $mentalidade);
               }
@@ -956,16 +1085,34 @@ class Tecnico{
                 $error_count++;
             }
 			
-			
 			if($isDono && $desdeContrato != null){
 				if($this->alterarInicioContrato($idTecnico,$idTime, $desdeContrato)){
 
 				} else {
 					$error_count++;
 				}
-			
-
 			}
+
+            if($isDono && $atividadeTecnico === -3){
+                $queryContratos = "SELECT clube FROM contratos_tecnico WHERE tecnico = ?";
+                $stmtContratos = $this->conn->prepare($queryContratos);
+                $stmtContratos->bindParam(1, $idTecnico);
+                $stmtContratos->execute();
+                $clubes = $stmtContratos->fetchAll(PDO::FETCH_COLUMN);
+
+                if(!empty($clubes)){
+                    foreach($clubes as $clubeId){
+                        if((int)$clubeId > 0){
+                            $this->demitir($idTecnico, (int)$clubeId);
+                        }
+                    }
+                }
+
+                $queryLimparContratos = "DELETE FROM contratos_tecnico WHERE tecnico = ?";
+                $stmtLimpar = $this->conn->prepare($queryLimparContratos);
+                $stmtLimpar->bindParam(1, $idTecnico);
+                $stmtLimpar->execute();
+            }
 			
 			if($error_count == 0){
 				return true;
@@ -1173,7 +1320,7 @@ class Tecnico{
         } 
 
         $query = "SELECT
-                    a.ID, a.Nome, a.Nascimento, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as idade, a.Mentalidade, a.Nivel, a.Estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.Sexo, q.dono as donoClubeVinculado, b.nome as clubeVinculado, b.escudo as escudoClubeVinculado, b.id as idClubeVinculado, a.foto 
+                    a.ID, a.Nome, a.Nascimento, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as idade, a.Mentalidade, a.Nivel, a.Estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.Sexo, q.dono as donoClubeVinculado, b.nome as clubeVinculado, b.escudo as escudoClubeVinculado, b.id as idClubeVinculado, a.foto, a.disponibilidade, a.data_falecimento 
                 FROM
                     " . $this->table_name . " a
                 LEFT JOIN paises p ON a.pais = p.id
@@ -1203,7 +1350,7 @@ class Tecnico{
         $queryBase = "SELECT t.ID as id, t.Nome as nome, t.Pais as idPais, t.Nascimento as nascimento, 
                              FLOOR((DATEDIFF(CURDATE(), t.Nascimento))/365) as idade, 
                              t.Nivel as nivel, t.Mentalidade as mentalidade, t.Estilo as estilo, 
-                             t.Sexo as sexo, t.foto as foto, 
+                             t.Sexo as sexo, t.foto as foto, t.disponibilidade as disponibilidade, t.data_falecimento as data_falecimento,
                              p.nome as Pais, p.bandeira as bandeiraPais, p.sigla as siglaPais, p.dono as donoPais 
                       FROM " . $this->table_name . " t 
                       LEFT JOIN paises p ON t.Pais = p.id 
@@ -1217,6 +1364,7 @@ class Tecnico{
             $resultBase = [
                 'id' => 0, 'nome' => '', 'idPais' => 0, 'nascimento' => '', 'idade' => 0,
                 'nivel' => 0, 'mentalidade' => 0, 'estilo' => 0, 'sexo' => 0, 'foto' => '',
+                'disponibilidade' => 1, 'data_falecimento' => null,
                 'Pais' => '', 'bandeiraPais' => '', 'siglaPais' => '', 'donoPais' => 0
             ];
         }
