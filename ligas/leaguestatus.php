@@ -78,7 +78,12 @@ $aux_css = 'ligas_status_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
-if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais){     
+$isOwnerOrAdmin = (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && (
+    (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$idDonoPais) ||
+    (!empty($_SESSION['admin_status']) && (int)$_SESSION['admin_status'] === 1)
+));
+
+if($isOwnerOrAdmin){     
 	$baseLink = "/ligas/teamstatus";
 } else {
 	$baseLink = "/times/team_presentation_magazine";
@@ -181,7 +186,7 @@ if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais){
                     <th>Nível (titulares)</th>
                     <th>Valor Mercado</th>
                     <th>Média / Jogador</th>
-                    <?php if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['user_id'] === $idDonoPais): ?>
+                    <?php if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true): ?>
                         <th class="wide">Opções</th>
                     <?php endif; ?>
                 </tr>
@@ -215,7 +220,7 @@ if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais){
                         <td class="cell-clube">
                             <div class="imageUpload">
                                 <img class="logoliga thumb" src="/images/escudos/<?php echo htmlspecialchars($escudos); ?>" height="30px"/>
-                                <?php if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais): ?>
+                                <?php if($isOwnerOrAdmin): ?>
                                     <input type="file" hidden id="escudo<?php echo $idTime; ?>" class="hiddenInput" name="escudo" accept=".jpg,.png,.jpeg"/>
                                 <?php endif; ?>
                             </div>
@@ -227,13 +232,13 @@ if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais){
                             <span class="cell-value">
                                 <div class="imageUpload" style="margin-right: 5px;">
                                     <img class="thumb thumb-uni1" src="<?php echo !empty($uniforme1) ? '/images/uniformes/' . htmlspecialchars($uniforme1) : '/images/placeholder.png'; ?>" height="30px"/>
-                                    <?php if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais): ?>
+                                    <?php if($isOwnerOrAdmin): ?>
                                         <input type="file" hidden id="uni1<?php echo $idTime; ?>" class="hiddenInput" name="uni1" accept=".jpg,.png,.jpeg"/>
                                     <?php endif; ?>
                                 </div>
                                 <div class="imageUpload">
                                     <img class="thumb thumb-uni2" src="<?php echo !empty($uniforme2) ? '/images/uniformes/' . htmlspecialchars($uniforme2) : '/images/placeholder.png'; ?>" height="30px"/>
-                                    <?php if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais): ?>
+                                    <?php if($isOwnerOrAdmin): ?>
                                         <input type="file" hidden id="uni2<?php echo $idTime; ?>" class="hiddenInput" name="uni2" accept=".jpg,.png,.jpeg"/>
                                     <?php endif; ?>
                                 </div>
@@ -266,7 +271,7 @@ if(isset($_SESSION['user_id']) && $_SESSION['user_id'] === $idDonoPais){
                                     <a id="dow<?php echo $idTime; ?>" title="Baixar arquivo .ymt" class="clickable exportar" style="cursor: pointer; margin-right: 8px;">
                                         <span class="material-symbols-outlined inlineButton azul">download</span>
                                     </a>
-                                    <?php if($_SESSION['user_id'] === $idDonoPais): ?>
+                                    <?php if($isOwnerOrAdmin): ?>
                                         <a id="edi<?php echo $idTime; ?>" title="Editar Time" class="clickable editar" style="cursor: pointer; margin-right: 8px;">
                                             <span class="material-symbols-outlined inlineButton azul">edit</span>
                                         </a>
