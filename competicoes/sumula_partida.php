@@ -158,26 +158,37 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	$compDatabase->fileName = $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$idCompeticao."-database.db3";
 	$cdb = $compDatabase->getConnection();
 	
-	$lite_competicao = new Competicao_clube($cdb);
+	if (!isset($competitionInfo) || empty($competitionInfo)) {
+		$competitionInfo = $competicao->readInfo($idCompeticao);
+	}
+	if (!isset($nomeComposto) && !empty($competitionInfo)) {
+		$nomeComposto = $competitionInfo['ano'] . " - " . $competitionInfo['nome'];
+	}
+	if (!isset($nomeComposto)) {
+		$nomeComposto = "Partidas";
+	}
 	
-	$path_hyl = "/hexacolor/Partidas/" . $nomeComposto . "/1º Rodada/" . $matchInfo['path'] . ".hyl";
-	$path_hyj = "/hexacolor/Partidas/" . $nomeComposto . "/1º Rodada/" . $matchInfo['path'] . ".hyj";
+	$path_hyl = "/hexacolor/Partidas/" . $nomeComposto . "/1º Rodada/" . ($matchInfo['path'] ?? '') . ".hyl";
+	$path_hyj = "/hexacolor/Partidas/" . $nomeComposto . "/1º Rodada/" . ($matchInfo['path'] ?? '') . ".hyj";
 	
+	$file_hyj_path = str_replace('\\', '/', __DIR__ . $path_hyj);
+	$file_hyl_path = str_replace('\\', '/', __DIR__ . $path_hyl);
+
 	// read path
-	$xml_hyj = json_decode(file_get_contents( str_replace('\\', '/', __DIR__ . $path_hyj)));
-	$xml_hyl = json_decode(file_get_contents( str_replace('\\', '/', __DIR__ . $path_hyl)));
+	$xml_hyj = file_exists($file_hyj_path) ? json_decode(file_get_contents($file_hyj_path)) : null;
+	$xml_hyl = file_exists($file_hyl_path) ? json_decode(file_get_contents($file_hyl_path)) : null;
 
 	// get data from hyl
-	$golsTimeA = (int)$xml_hyl->placarTime1;
-	$golsTimeB = (int)$xml_hyl->placarTime2;
+	$golsTimeA = (int)($xml_hyl->placarTime1 ?? ($matchInfo['timeA_gols'] ?? 0));
+	$golsTimeB = (int)($xml_hyl->placarTime2 ?? ($matchInfo['timeB_gols'] ?? 0));
 	
-	$escudoTimeA = (string) $xml_hyl->escudoTime1;
-	$escudoTimeB = (string) $xml_hyl->escudoTime2;
+	$escudoTimeA = (string) ($xml_hyl->escudoTime1 ?? '');
+	$escudoTimeB = (string) ($xml_hyl->escudoTime2 ?? '');
 	
-	$nomeTimeA = (string) $xml_hyl->time1;
-	$nomeTimeB = (string) $xml_hyl->time2;
+	$nomeTimeA = (string) ($xml_hyl->time1 ?? ($matchInfo['timeA_nome'] ?? 'Time A'));
+	$nomeTimeB = (string) ($xml_hyl->time2 ?? ($matchInfo['timeB_nome'] ?? 'Time B'));
 	
-	$eventosJogo = $xml_hyl->eventos;
+	$eventosJogo = (isset($xml_hyl->eventos) && is_array($xml_hyl->eventos)) ? $xml_hyl->eventos : [];
 	
 	function hex($rgb_color){
 		return "#" . str_pad(dechex(substr($rgb_color, 0, 3)),2,"0", STR_PAD_LEFT) . str_pad(dechex(substr($rgb_color, 3, 3)),2,"0", STR_PAD_LEFT) . str_pad(dechex(substr($rgb_color, 6, 3)),2,"0", STR_PAD_LEFT);
@@ -254,15 +265,15 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	$penaltisDefendidos = array_filter($eventosJogo, "penaltisDefendidos");
 	$penaltisPerdidos = array_filter($eventosJogo, "penaltisPerdidos");
 	
-	$kitTime1 = $xml_hyl->uniformeTime1;
-	$kitTime2 = $xml_hyl->uniformeTime2;
+	$kitTime1 = (int)($xml_hyl->uniformeTime1 ?? 1);
+	$kitTime2 = (int)($xml_hyl->uniformeTime2 ?? 1);
 	
 	if($kitTime1 == 0){
 		$kitTime1 = 1;
 	}
 	
 	if($kitTime2 == 0){
-		if($xml_hyl->trocarUniformeTime2){
+		if(!empty($xml_hyl->trocarUniformeTime2)){
 			$kitTime2 = 2;
 		} else {
 			$kitTime2 = 1;
@@ -270,17 +281,16 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	}
 	
 	// siglas times
-	$siglaA = (string)$xml_hyl->tresLetrasTime1;
-	$siglaB = (string)$xml_hyl->tresLetrasTime2;
+	$siglaA = (string)($xml_hyl->tresLetrasTime1 ?? substr($nomeTimeA, 0, 3));
+	$siglaB = (string)($xml_hyl->tresLetrasTime2 ?? substr($nomeTimeB, 0, 3));
 	
 	// get data from hyj
-	
-	$clima = (string)$xml_hyj->clima;
-	$temperatura = (int)$xml_hyj->temperatura;
-	$publico = (int)$xml_hyj->publico;
-	$idArbitragem = (int)$xml_hyj->idArbitragem;
-	$idEstadio = (int)$xml_hyj->idEstadio;
-	$data = (string)$xml_hyj->data;
+	$clima = (string)($xml_hyj->clima ?? 'CeuLimpo');
+	$temperatura = (int)($xml_hyj->temperatura ?? 20);
+	$publico = (int)($xml_hyj->publico ?? 0);
+	$idArbitragem = (int)($xml_hyj->idArbitragem ?? ($matchInfo['arbitro'] ?? 0));
+	$idEstadio = (int)($xml_hyj->idEstadio ?? ($matchInfo['estadio'] ?? 0));
+	$data = (string)($xml_hyj->data ?? ($matchInfo['data'] ?? ''));
 	
 	switch($clima){
 		case 'CeuLimpo':
@@ -290,41 +300,41 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 			$climaCerto = $clima;
 	}
 	
-	$tecnicoTimeA = (int)$xml_hyj->time1->idTreinador;
-	$tecnicoTimeB = (int)$xml_hyj->time2->idTreinador;
+	$tecnicoTimeA = (int)($xml_hyj->time1->idTreinador ?? 0);
+	$tecnicoTimeB = (int)($xml_hyj->time2->idTreinador ?? 0);
 	
-	$idTimeA = (int)$xml_hyj->time1->idTime;
-	$idTimeB = (int)$xml_hyj->time2->idTime;
+	$idTimeA = (int)($xml_hyj->time1->idTime ?? ($matchInfo['timeA_id'] ?? 0));
+	$idTimeB = (int)($xml_hyj->time2->idTime ?? ($matchInfo['timeB_id'] ?? 0));
 	
 	//stats time A
-	$statsTimeA['chutes'] = (int)$xml_hyj->time1->chutes;
-	$statsTimeA['chutesGol'] = (int)$xml_hyj->time1->chutesGol;
-	$statsTimeA['escanteios'] = (int)$xml_hyj->time1->escanteios;
-	$statsTimeA['faltas'] = (int)$xml_hyj->time1->faltas;
-	$statsTimeA['penaltis'] = (int)$xml_hyj->time1->penaltis;
-	$statsTimeA['impedimentos'] = (int)$xml_hyj->time1->impedimentos;
-	$statsTimeA['amarelos'] = (int)$xml_hyj->time1->amarelos;
-	$statsTimeA['vermelhos'] = (int)$xml_hyj->time1->vermelhos;
-	$statsTimeA['posseBola'] = (int)$xml_hyj->time1->posseBola;
-	$statsTimeA['placarPenaltis'] = (int)$xml_hyj->time1->placarPenaltis;
-	$statsTimeA['placarProrrogacao'] = (int)$xml_hyj->time1->placarProrrogacao;
+	$statsTimeA['chutes'] = (int)($xml_hyj->time1->chutes ?? 0);
+	$statsTimeA['chutesGol'] = (int)($xml_hyj->time1->chutesGol ?? 0);
+	$statsTimeA['escanteios'] = (int)($xml_hyj->time1->escanteios ?? 0);
+	$statsTimeA['faltas'] = (int)($xml_hyj->time1->faltas ?? 0);
+	$statsTimeA['penaltis'] = (int)($xml_hyj->time1->penaltis ?? 0);
+	$statsTimeA['impedimentos'] = (int)($xml_hyj->time1->impedimentos ?? 0);
+	$statsTimeA['amarelos'] = (int)($xml_hyj->time1->amarelos ?? 0);
+	$statsTimeA['vermelhos'] = (int)($xml_hyj->time1->vermelhos ?? 0);
+	$statsTimeA['posseBola'] = (int)($xml_hyj->time1->posseBola ?? 50);
+	$statsTimeA['placarPenaltis'] = (int)($xml_hyj->time1->placarPenaltis ?? 0);
+	$statsTimeA['placarProrrogacao'] = (int)($xml_hyj->time1->placarProrrogacao ?? 0);
 	
 	//stats time B
-	$statsTimeB['chutes'] = (int)$xml_hyj->time2->chutes;
-	$statsTimeB['chutesGol'] = (int)$xml_hyj->time2->chutesGol;
-	$statsTimeB['escanteios'] = (int)$xml_hyj->time2->escanteios;
-	$statsTimeB['faltas'] = (int)$xml_hyj->time2->faltas;
-	$statsTimeB['penaltis'] = (int)$xml_hyj->time2->penaltis;
-	$statsTimeB['impedimentos'] = (int)$xml_hyj->time2->impedimentos;
-	$statsTimeB['amarelos'] = (int)$xml_hyj->time2->amarelos;
-	$statsTimeB['vermelhos'] = (int)$xml_hyj->time2->vermelhos;
-	$statsTimeB['posseBola'] = (int)$xml_hyj->time2->posseBola;
-	$statsTimeB['placarPenaltis'] = (int)$xml_hyj->time2->placarPenaltis;
-	$statsTimeB['placarProrrogacao'] = (int)$xml_hyj->time2->placarProrrogacao;
+	$statsTimeB['chutes'] = (int)($xml_hyj->time2->chutes ?? 0);
+	$statsTimeB['chutesGol'] = (int)($xml_hyj->time2->chutesGol ?? 0);
+	$statsTimeB['escanteios'] = (int)($xml_hyj->time2->escanteios ?? 0);
+	$statsTimeB['faltas'] = (int)($xml_hyj->time2->faltas ?? 0);
+	$statsTimeB['penaltis'] = (int)($xml_hyj->time2->penaltis ?? 0);
+	$statsTimeB['impedimentos'] = (int)($xml_hyj->time2->impedimentos ?? 0);
+	$statsTimeB['amarelos'] = (int)($xml_hyj->time2->amarelos ?? 0);
+	$statsTimeB['vermelhos'] = (int)($xml_hyj->time2->vermelhos ?? 0);
+	$statsTimeB['posseBola'] = (int)($xml_hyj->time2->posseBola ?? 50);
+	$statsTimeB['placarPenaltis'] = (int)($xml_hyj->time2->placarPenaltis ?? 0);
+	$statsTimeB['placarProrrogacao'] = (int)($xml_hyj->time2->placarProrrogacao ?? 0);
 	
 	//jogadores
-	$jogadoresTimeA = json_decode(json_encode($xml_hyj->time1->jogadores), true);
-	$jogadoresTimeB = json_decode(json_encode($xml_hyj->time2->jogadores), true);
+	$jogadoresTimeA = isset($xml_hyj->time1->jogadores) ? json_decode(json_encode($xml_hyj->time1->jogadores), true) : [];
+	$jogadoresTimeB = isset($xml_hyj->time2->jogadores) ? json_decode(json_encode($xml_hyj->time2->jogadores), true) : [];
 
 	
 	// get additional data from DBs

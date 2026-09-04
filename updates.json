@@ -9,6 +9,27 @@
   },
   "days": [
     {
+      "id": "day_03_09_2026",
+      "date": "03/09/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Tratamento de Dados e Nulidade na Visualização da Súmula",
+          "desc": "Adicionada verificação segura para carregamento dos arquivos de súmula e proteção contra erros fatais de tipo e propriedades nulas em partidas antigas ou sem dados gravados."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Deprecation no Perfil de Técnicos",
+          "desc": "Ajustado o tratamento de campos nulos de liga e país de técnicos sem clube para evitar advertências e manter compatibilidade com PHP moderno."
+        },
+        {
+          "badge": "new",
+          "title": "Identificação de Usuário nos Logs de Erros",
+          "desc": "Adicionada uma nova coluna na Central de Logs do painel administrativo exibindo o nome real e usuário que gerou cada erro registrado no sistema."
+        }
+      ]
+    },
+    {
       "id": "day_02_09_2026",
       "date": "02/09/2026",
       "items": [

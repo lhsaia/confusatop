@@ -22,6 +22,7 @@ function parseLogLine(string $entry): array {
     }
     
     $dateTime = 'N/A';
+    $user = '-';
     $type = 'Unknown';
     $message = '';
     $file = '';
@@ -35,6 +36,12 @@ function parseLogLine(string $entry): array {
         if (preg_match('/^\[([^\]]+)\]\s*(.*)$/', $firstLine, $matches)) {
             $dateTime = $matches[1];
             $rest = $matches[2];
+            
+            // Extrai identificação do usuário se presente: [User: Nome do Usuário] ...
+            if (preg_match('/^\[User:\s*([^\]]+)\]\s*(.*)$/i', $rest, $userMatches)) {
+                $user = trim($userMatches[1]);
+                $rest = $userMatches[2];
+            }
             
             // Identifica o tipo do erro (ex: PHP Deprecated:, PHP Warning:, PHP Fatal error:, PHP Notice:, etc.)
             if (preg_match('/^(PHP [a-zA-Z0-9_\s]+?):\s*(.*)$/i', $rest, $typeMatches)) {
@@ -52,6 +59,11 @@ function parseLogLine(string $entry): array {
             }
         } else {
             $message = $firstLine;
+            // Verifica se tem [User: ...] mesmo sem timestamp no formato padrão
+            if (preg_match('/^\[User:\s*([^\]]+)\]\s*(.*)$/i', $message, $userMatches)) {
+                $user = trim($userMatches[1]);
+                $message = $userMatches[2];
+            }
             if (preg_match('/\s+in\s+(.+?)(?:\s+on\s+line\s+(\d+)|:(\d+))$/i', $message, $fileMatches)) {
                 $file = $fileMatches[1];
                 $lineNum = !empty($fileMatches[2]) ? $fileMatches[2] : ($fileMatches[3] ?? '');
@@ -70,6 +82,7 @@ function parseLogLine(string $entry): array {
     
     return [
         'datetime' => $dateTime,
+        'user' => trim($user),
         'type' => trim($type),
         'message' => trim($message),
         'file' => trim($file),
@@ -78,7 +91,7 @@ function parseLogLine(string $entry): array {
     ];
 }
 
-// Gera hash de identificação única do erro baseando-se estritamente na Mensagem, Arquivo e Linha (sem stack trace)
+// Gera hash de identificação única do erro baseando-se estritamente na Mensagem, Arquivo, Linha e Usuário (sem stack trace)
 function computeLogEntryHash(string $entry): string {
     $parsed = parseLogLine($entry);
     
@@ -86,10 +99,11 @@ function computeLogEntryHash(string $entry): string {
     $msg = strtolower(preg_replace('/\s+/', ' ', trim($parsed['message'])));
     $file = strtolower(str_replace('\\', '/', trim($parsed['file'])));
     $line = trim((string)$parsed['line']);
+    $user = strtolower(trim($parsed['user']));
     
-    // Se temos a mensagem e ao menos arquivo ou linha, o hash compara apenas erro + arquivo + linha
+    // Se temos a mensagem e ao menos arquivo ou linha, o hash compara erro + arquivo + linha + usuário
     if ($msg !== '' && ($file !== '' || $line !== '')) {
-        return md5($type . '|' . $msg . '|' . $file . '|' . $line);
+        return md5($type . '|' . $msg . '|' . $file . '|' . $line . '|' . $user);
     }
     
     // Fallback caso não seja possível extrair arquivo e linha da primeira linha
@@ -369,17 +383,18 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
         <table id="logTable" class="admin-table">
             <thead>
                 <tr>
-                    <th style="width: 180px;">Data/Hora (UTC)</th>
-                    <th style="width: 140px;">Tipo de Erro</th>
+                    <th style="width: 170px;">Data/Hora (UTC)</th>
+                    <th style="width: 130px;">Tipo de Erro</th>
+                    <th style="width: 160px;">Usuário</th>
                     <th>Detalhes e Mensagem</th>
-                    <th style="width: 220px;">Arquivo / Linha</th>
-                    <th style="width: 80px; text-align: center;">Ações</th>
+                    <th style="width: 210px;">Arquivo / Linha</th>
+                    <th style="width: 70px; text-align: center;">Ações</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($logEntries)): ?>
                     <tr>
-                        <td colspan="5" style="padding: 40px; text-align: center; color: #64748b;">Nenhum erro registrado no arquivo de log.</td>
+                        <td colspan="6" style="padding: 40px; text-align: center; color: #64748b;">Nenhum erro registrado no arquivo de log.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($logEntries as $entry): 
@@ -419,6 +434,17 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
                                     <span style="display: inline-block; margin-left: 6px; padding: 2px 7px; background: rgba(56, 189, 248, 0.2); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 11px; font-weight: 700; border-radius: 12px;" title="<?= $entry['count'] ?> ocorrências idênticas">
                                         <?= $entry['count'] ?>x
                                     </span>
+                                <?php endif; ?>
+                            </td>
+                            <!-- Usuário -->
+                            <td style="white-space: nowrap;">
+                                <?php if (!empty($parsed['user']) && $parsed['user'] !== '-' && $parsed['user'] !== 'N/A'): ?>
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <span class="material-symbols-outlined" style="font-size: 16px; color: #38bdf8;">person</span>
+                                        <span style="color: #f1f5f9; font-weight: 600; font-size: 13px;" title="<?= htmlspecialchars($parsed['user']) ?>"><?= htmlspecialchars($parsed['user']) ?></span>
+                                    </div>
+                                <?php else: ?>
+                                    <span style="color: #64748b; font-size: 12px; font-style: italic;">Sistema / N/A</span>
                                 <?php endif; ?>
                             </td>
                             <!-- Mensagem -->
