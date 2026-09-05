@@ -9,6 +9,93 @@
   },
   "days": [
     {
+      "id": "day_05_09_2026",
+      "date": "05/09/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção na Atualização de Clubes",
+          "desc": "Corrigida a execução da atualização de dados do clube no método Time::alterar(), garantindo que os parâmetros de texto e entidades HTML sejam sanitizados previamente e vinculados por referência válida na query SQL."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Prepared Statements em Competições",
+          "desc": "Corrigida a chamada de consultas SQL parametrizadas em getTeamColors, getTeamUniform, getTeamPlayers e getNomeEstadio para utilizar prepare() em vez de query(), evitando erros fatais de execução no PDO."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Transferência Efetiva no Evento Maior Rival no TOPERO",
+          "desc": "Ajustado o evento 'Proposta do Maior Rival' no TOPERO para que a escolha de aceitar a proposta transfira o atleta para um clube rival da mesma liga ou país, atualizando o clube atual e histórico da carreira."
+        }
+      ]
+    },
+    {
+      "id": "day_04_09_2026",
+      "date": "04/09/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Aposentadoria Fixada aos 40 Anos no TOPERO",
+          "desc": "Ajustada a longevidade da carreira no TOPERO para que todos os atletas atuem até os 40 anos completos de idade, eliminando aposentadorias prematuras aleatórias."
+        },
+        {
+          "badge": "design",
+          "title": "Logos, Troféus e Estatísticas no Card Exportado do TOPERO",
+          "desc": "Corrigido o buffer de subpaths do Canvas com isolamento estrito via beginPath(), carregamento prévio garantido de fontes Google (Outfit e Montserrat), vetores Path2D para troféus e contraste reforçado, assegurando que as 5 caixas de estatísticas, o badge de OVR, todos os títulos e todos os clubes defendidos apareçam nítidos, vibrantes e destacados."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Maior Paciência com Jovens Atletas no TOPERO",
+          "desc": "Ajustada a regra de renovação contratual para que clubes tenham paciência com atletas em início de carreira (abaixo de 21 anos), garantindo sempre a opção de permanecer e se desenvolver no clube sem dispensas prematuras."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Escolha de Clubes de Base no TOPERO",
+          "desc": "Corrigida a seleção de propostas de clubes de formação ao escolher países sem liga cadastrada ou com ligas de gênero específico, garantindo que as opções pertençam estritamente ao país mais próximo determinado geograficamente em vez de clubes aleatórios globais."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Avanço de Temporada do TOPERO",
+          "desc": "Corrigida referência de variável indefinida na filtragem de clubes do mercado de transferências que impedia o processamento e travava o botão de avançar temporada."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Status e Avanço de Fases no Mata-Mata",
+          "desc": "Corrigido falso status de competição 'Finalizada' ao término de rodadas preliminares como 32-avos de final, garantindo que torneios eliminatórios só sejam dados como concluídos após a Final (fase 8). Corrigida também a detecção da primeira fase e a ordem de processamento das fases eliminatórias (32-avos ➔ 16-avos ➔ Oitavas ➔ Quartas ➔ Semis ➔ Final) no Cron de simulação automática, ajustando o intervalo entre fases para 7 dias."
+        },
+        {
+          "badge": "design",
+          "title": "Ajuste de Responsividade e Centralização no TOPERO",
+          "desc": "Ajustado o layout mobile do TOPERO com correção de centralização, padding seguro, quebra e alinhamento flexível de tags, chips de opções, cards de estatísticas, modais de decisão e histórico de temporadas sem sobreposição de elementos ou overflow."
+        },
+        {
+          "badge": "new",
+          "title": "Lançamento do Jogo TOPERO (Simulador de Carreira PWA)",
+          "desc": "Criado o novo jogo TOPERO como Web App (PWA) Standalone independente em Dark Theme (com manifest, service worker e instalação na tela inicial no estilo do Poltrona Score). Inclui escolha de gênero (Masculino e Feminino) com separação estrita de ligas e clubes para cada modalidade, início com 3 propostas de base em países ativos e ranqueados do CONFUSA, métricas dedicadas para goleiros (Gols Sofridos e Clean Sheets), primeiras temporadas sem transferências precoces, dilemas raros exclusivos, renovações contratuais realistas e correção de contraste no card da Carreira Histórica."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Deprecation na Propriedade de Foto de Estádio",
+          "desc": "Declarada explicitamente a propriedade pública foto na classe Estadio e garantida a gravação correta do arquivo ao alterar estádio."
+        },
+        {
+          "badge": "design",
+          "title": "Ajuste na Coluna de Usuário da Central de Logs",
+          "desc": "Limitada a largura e adicionada quebra de linha automática (word-wrap) para a identificação e e-mail dos usuários na tabela de logs de erro, mantendo a tabela compacta e legível."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Inicialização na Súmula da Partida",
+          "desc": "Corrigido erro fatal por variável não definida ($lite_competicao) ao carregar cores, uniformes, elencos e dados da partida na tela de súmula, além de adicionar proteções e fallbacks para registros vazios."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correlação de Jogadores na Importação de Jogos",
+          "desc": "Corrigida a importação de partidas em Gerenciador > Jogos, garantindo que os IDs de jogadores e eventos sejam mapeados pelo elenco do clube cadastrado no banco de dados e não por IDs locais do arquivo simulado, além de ajustar o link de comissão técnica para a página correta de técnicos."
+        }
+      ]
+    },
+    {
       "id": "day_03_09_2026",
       "date": "03/09/2026",
       "items": [

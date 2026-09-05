@@ -184,6 +184,21 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
             </div>
         </a>
 
+        <!-- TOPERO (Simulador de Carreira) -->
+        <a href="/topero" class="hub-card">
+            <div class="hub-card-hero-image">
+                <img src="/images/topero.jpg" alt="TOPERO" />
+            </div>
+            <div class="hub-card-body">
+                <h3 class="hub-card-title">
+                    <span><strong style="color: #38bdf8;">TOP</strong>ERO</span>
+                    <span class="badge-status" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">Novo</span>
+                    <span class="material-symbols-outlined hub-card-arrow">arrow_forward</span>
+                </h3>
+                <p class="hub-card-desc">Simulador de carreira: tome decisões, dispute títulos e construa sua lenda.</p>
+            </div>
+        </a>
+
     </section>
 
     <!-- Outros Links e Ecossistema -->
