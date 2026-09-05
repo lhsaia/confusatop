@@ -158,6 +158,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	$compDatabase->fileName = $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$idCompeticao."-database.db3";
 	$cdb = $compDatabase->getConnection();
 	
+	$lite_competicao = new Competicao_clube($cdb);
+	
 	if (!isset($competitionInfo) || empty($competitionInfo)) {
 		$competitionInfo = $competicao->readInfo($idCompeticao);
 	}
@@ -339,26 +341,26 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	
 	// get additional data from DBs
 		//cores dos times
-		$coresTimeA = $lite_competicao->getTeamColors($kitTime1 , $idTimeA);
-		$coresTimeB = $lite_competicao->getTeamColors($kitTime2 , $idTimeB);
+		$coresTimeA = $lite_competicao->getTeamColors($kitTime1 , $idTimeA) ?: ['cor1' => '255255255', 'cor2' => '000000000', 'cor3' => '100100100'];
+		$coresTimeB = $lite_competicao->getTeamColors($kitTime2 , $idTimeB) ?: ['cor1' => '000000000', 'cor2' => '255255255', 'cor3' => '100100100'];
 		
 		//uniformes dos times
-		$uniformeTimeA = $lite_competicao->getTeamUniform($kitTime1 , $idTimeA);
-		$uniformeTimeB = $lite_competicao->getTeamUniform($kitTime2 , $idTimeB);
+		$uniformeTimeA = $lite_competicao->getTeamUniform($kitTime1 , $idTimeA) ?: ['uniforme' => ''];
+		$uniformeTimeB = $lite_competicao->getTeamUniform($kitTime2 , $idTimeB) ?: ['uniforme' => ''];
 		
 		//nome, nivel e idade (na data do jogo!) jogadores
-		$escalacaoTimeA = $lite_competicao->getTeamPlayers($idTimeA);
-		$escalacaoTimeB = $lite_competicao->getTeamPlayers($idTimeB);
+		$escalacaoTimeA = $lite_competicao->getTeamPlayers($idTimeA) ?: [];
+		$escalacaoTimeB = $lite_competicao->getTeamPlayers($idTimeB) ?: [];
 		
 		//estadio
-		$nomeEstadio = $lite_competicao->getNomeEstadio($idEstadio);
+		$nomeEstadio = $lite_competicao->getNomeEstadio($idEstadio) ?: 'Não informado';
 		
 		//arbitro
-		$trioArbitragem = $arbitro->getTrioArbitragem($idArbitragem);
+		$trioArbitragem = $arbitro->getTrioArbitragem($idArbitragem) ?: ['nomeArbitro' => 'Não informado', 'nomeAuxiliarUm' => 'Não informado', 'nomeAuxiliarDois' => 'Não informado'];
 		
 			
 		//cores da competicao
-		$coresJogo = $lite_competicao->getColors();
+		$coresJogo = $competicao->getColors() ?: ['partidaCor1' => 0x1A1469, 'partidaCor2' => 0xFFFFFF, 'partidaCor3' => 0x000000];
 		
 
 		
