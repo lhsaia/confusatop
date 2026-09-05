@@ -374,11 +374,15 @@ $(document).ready(function(){
 	
 	var donoLogado = <?php echo $donoLogado?1:0 ?>;
 	
-	$("#toolbar").html('<div id="irDetalhes"><span class="material-symbols-outlined">assignment</span><span>Detalhes</span></div>');
+	$("#toolbar").html('<div id="irDetalhes"><span class="material-symbols-outlined">assignment</span><span>Detalhes</span></div><div id="irTimeTraveler"><span class="material-symbols-outlined">history_toggle_off</span><span>Time Traveler</span></div>');
 	
-			$("#irDetalhes").on("click", function(){
-			window.location = "/ligas/teamstatus.php?team=" + <?php echo $idTime ?>;
-		});
+	$("#irDetalhes").on("click", function(){
+		window.location = "/ligas/teamstatus.php?team=" + <?php echo $idTime ?>;
+	});
+
+	$("#irTimeTraveler").on("click", function(){
+		window.location = "/times/time_traveler.php?team=" + <?php echo $idTime ?>;
+	});
 	
 	if(donoLogado){
 		$("#toolbar").append('<div id="salvarDados"><span class="material-symbols-outlined">save</span><span>Salvar</span></div><div id="tirarPrint"><span class="material-symbols-outlined">print</span><span>Print</span></div>');
