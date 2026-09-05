@@ -314,7 +314,7 @@ if(!$results) {
                         <?php foreach($teamData['tecnico'] as $p): 
                             $coachName = stripslashes($p['nome_jogador'] ?? '');
                             if(isset($p['id_jogador']) && $p['id_jogador'] > 0) {
-                                 $coachName = '<a href="/ligas/playerstatus.php?player='.$p['id_jogador'].'" class="player-link-clean">'.$coachName.'</a>';
+                                 $coachName = '<a href="/ligas/coachstatus.php?coach='.$p['id_jogador'].'" class="player-link-clean">'.$coachName.'</a>';
                             }
                         ?>
                             <div class="player-item-row">

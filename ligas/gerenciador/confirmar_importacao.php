@@ -136,6 +136,36 @@ try {
         $escalacaoTime2 = $game['escalacaoTime2'] ?? [];
         $raw_eventos    = $game['eventos']         ?? [];
 
+        // Pre-mapear id_jogador correto no banco para cada atleta das escalações
+        $dbPlayerMapA = [];
+        $dbPlayerMapB = [];
+
+        foreach ($escalacaoTime1 as $p) {
+            $pNome = trim((string)($p['nome'] ?? ''));
+            if (empty($pNome)) continue;
+            $pos = $p['posicao'] ?? '';
+            $tempId = (int)($p['id'] ?? 0);
+            if ($pos === 'T') {
+                $dbPlayerMapA[$tempId] = 0;
+            } else {
+                $dbId = $jogadorObj->idPorNomeClube($pNome, $timeA_id, $tempId);
+                $dbPlayerMapA[$tempId] = $dbId > 0 ? $dbId : 0;
+            }
+        }
+
+        foreach ($escalacaoTime2 as $p) {
+            $pNome = trim((string)($p['nome'] ?? ''));
+            if (empty($pNome)) continue;
+            $pos = $p['posicao'] ?? '';
+            $tempId = (int)($p['id'] ?? 0);
+            if ($pos === 'T') {
+                $dbPlayerMapB[$tempId] = 0;
+            } else {
+                $dbId = $jogadorObj->idPorNomeClube($pNome, $timeB_id, $tempId);
+                $dbPlayerMapB[$tempId] = $dbId > 0 ? $dbId : 0;
+            }
+        }
+
         if (!empty($raw_eventos)) {
             $jogoClube->limparEventos($idJogo);
             $stmtEv = $db->prepare("INSERT INTO jogos_clube_eventos (id_jogo, tempo, minutos, tipo, id_jogador, nome_jogador, id_time, nome_time) VALUES (?,?,?,?,?,?,?,?)");
@@ -154,12 +184,14 @@ try {
                     $idTime = 0;
                     $nomeTime = '';
                     $tempId = (int)($ev['idJogador'] ?? 0);
+                    $dbJogadorId = 0;
 
                     foreach ($escalacaoTime1 as $p) {
                         if ($tempId === (int)($p['id'] ?? 0)) {
                             $nomeJogador = $p['nome'] ?? '';
                             $idTime = $timeA_id;
                             $nomeTime = $nome_time_A;
+                            $dbJogadorId = $dbPlayerMapA[$tempId] ?? 0;
                             break;
                         }
                     }
@@ -169,12 +201,17 @@ try {
                                 $nomeJogador = $p['nome'] ?? '';
                                 $idTime = $timeB_id;
                                 $nomeTime = $nome_time_B;
+                                $dbJogadorId = $dbPlayerMapB[$tempId] ?? 0;
                                 break;
                             }
                         }
                     }
 
                     if ($idTime > 0) {
+                        if ($dbJogadorId <= 0 && !empty($nomeJogador)) {
+                            $dbJogadorId = $jogadorObj->idPorNomeClube($nomeJogador, $idTime, $tempId);
+                        }
+
                         $rawMin = $ev['minutos'] ?? null;
                         $minutosVal = ($rawMin !== null && $rawMin !== '' && is_numeric($rawMin)) ? (int)$rawMin : null;
                         $tempoVal = (int)($ev['tempo'] ?? 1);
@@ -187,7 +224,7 @@ try {
                             $tempoVal,
                             $minutosVal,
                             $tipoEvento,
-                            $tempId,
+                            $dbJogadorId > 0 ? $dbJogadorId : 0,
                             mb_substr($nomeJogador, 0, 40),
                             $idTime,
                             $nomeTime
@@ -205,11 +242,14 @@ try {
             foreach ($escalacaoTime1 as $p) {
                 $pNome = trim((string)($p['nome'] ?? ''));
                 if (empty($pNome)) continue;
+                $tempId = (int)($p['id'] ?? 0);
+                $finalId = $dbPlayerMapA[$tempId] ?? 0;
+
                 $stmtEsc->execute([
                     $idJogo,
                     $timeA_id,
                     $nome_time_A,
-                    (int)($p['id'] ?? 0),
+                    $finalId > 0 ? $finalId : 0,
                     mb_substr($pNome, 0, 40),
                     isset($p['numero']) && is_numeric($p['numero']) ? (int)$p['numero'] : null,
                     $p['posicao'] ?? '',
@@ -222,11 +262,14 @@ try {
             foreach ($escalacaoTime2 as $p) {
                 $pNome = trim((string)($p['nome'] ?? ''));
                 if (empty($pNome)) continue;
+                $tempId = (int)($p['id'] ?? 0);
+                $finalId = $dbPlayerMapB[$tempId] ?? 0;
+
                 $stmtEsc->execute([
                     $idJogo,
                     $timeB_id,
                     $nome_time_B,
-                    (int)($p['id'] ?? 0),
+                    $finalId > 0 ? $finalId : 0,
                     mb_substr($pNome, 0, 40),
                     isset($p['numero']) && is_numeric($p['numero']) ? (int)$p['numero'] : null,
                     $p['posicao'] ?? '',
