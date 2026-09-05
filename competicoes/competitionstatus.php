@@ -47,11 +47,23 @@ $jogosSimulados = (int)($statsJogos['jogos_simulados'] ?? 0);
 $jogosPendentes = (int)($statsJogos['jogos_pendentes'] ?? 0);
 $finalSimulada = (int)($statsJogos['final_simulada'] ?? 0);
 
+// Se a competição tem mata-mata (tipo 0 ou 1, ou possui jogos com fase > 2), só finaliza quando a Final (fase 8) for simulada.
+$stmtHasKnockout = $db->prepare("SELECT 1 FROM jogos_clube WHERE competicao_id = :idComp AND fase > 2 LIMIT 1");
+$stmtHasKnockout->execute([':idComp' => $idCompeticao]);
+$hasKnockout = (bool)$stmtHasKnockout->fetch();
+
+$isFinalizada = false;
+if ($hasKnockout) {
+	$isFinalizada = ($finalSimulada > 0);
+} else {
+	$isFinalizada = ($totalJogos > 0 && $jogosPendentes === 0 && $jogosSimulados > 0);
+}
+
 if ($all_options != null) {
 	$codigo_status_competicao = 0; // Em criação (opções não preenchidas)
 } elseif ($times_inseridos < $total_times) {
 	$codigo_status_competicao = 1; // Aguardando times
-} elseif ($finalSimulada > 0 || ($totalJogos > 0 && $jogosPendentes === 0 && $jogosSimulados > 0)) {
+} elseif ($isFinalizada) {
 	$codigo_status_competicao = 4; // Finalizada
 } elseif ($jogosSimulados > 0) {
 	$codigo_status_competicao = 3; // Em andamento (já teve jogos simulados)
