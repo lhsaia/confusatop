@@ -385,7 +385,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
                 <tr>
                     <th style="width: 170px;">Data/Hora (UTC)</th>
                     <th style="width: 130px;">Tipo de Erro</th>
-                    <th style="width: 160px;">Usuário</th>
+                    <th style="width: 170px; max-width: 180px;">Usuário</th>
                     <th>Detalhes e Mensagem</th>
                     <th style="width: 210px;">Arquivo / Linha</th>
                     <th style="width: 70px; text-align: center;">Ações</th>
@@ -437,11 +437,11 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
                                 <?php endif; ?>
                             </td>
                             <!-- Usuário -->
-                            <td style="white-space: nowrap;">
+                            <td style="width: 170px; max-width: 180px; word-break: break-word; overflow-wrap: break-word; white-space: normal;">
                                 <?php if (!empty($parsed['user']) && $parsed['user'] !== '-' && $parsed['user'] !== 'N/A'): ?>
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <span class="material-symbols-outlined" style="font-size: 16px; color: #38bdf8;">person</span>
-                                        <span style="color: #f1f5f9; font-weight: 600; font-size: 13px;" title="<?= htmlspecialchars($parsed['user']) ?>"><?= htmlspecialchars($parsed['user']) ?></span>
+                                    <div style="display: flex; align-items: flex-start; gap: 6px;">
+                                        <span class="material-symbols-outlined" style="font-size: 16px; color: #38bdf8; flex-shrink: 0; margin-top: 2px;">person</span>
+                                        <span style="color: #f1f5f9; font-weight: 600; font-size: 13px; word-break: break-word; overflow-wrap: anywhere;" title="<?= htmlspecialchars($parsed['user']) ?>"><?= htmlspecialchars($parsed['user']) ?></span>
                                     </div>
                                 <?php else: ?>
                                     <span style="color: #64748b; font-size: 12px; font-style: italic;">Sistema / N/A</span>
