@@ -1,4 +1,4 @@
-﻿# Regras do Projeto CONFUSA.top
+# Regras do Projeto CONFUSA.top
 
 ## Atualização do Histórico de Novidades (updates.json)
 
@@ -78,5 +78,8 @@ Use os seguintes tokens e estilos conforme a área do site:
 ## Diretrizes de Escopo e Modificação Segura
 * **Foco no Pedido:** Você **não deve** fazer qualquer tipo de alteração em trechos de código, textos, traduções ou arquivos que não tenham sido explicitamente solicitados pelo usuário.
 * **Preservação de Layouts Estáveis:** Elementos que já foram validados e aprovados pelo usuário não devem soar novas modificações ou reestruturações desnecessárias ao implementar novas demandas.
+* **Integridade de IDs em Importações de Jogos/Súmulas:** IDs contidos em arquivos externos (como `.hyl`, `.ymt`, JSON) são índices temporários ou de contexto local do simulador. Nunca insira esses IDs diretamente em colunas de chaves estrangeiras (`id_jogador`, `id_time`, `id_arbitro`, etc.) sem antes correlacioná-los com as entidades reais cadastradas no banco de dados através dos métodos de busca por nome e clube (`idPorNomeClube`, `idPorNomePais`, etc.). Se uma entidade não for encontrada no banco, grave `0` ou `NULL` para evitar que páginas e súmulas vinculem registros a pessoas ou clubes aleatórios.
 * **Case-Sensitivity em Consultas SQL:** Como o servidor de produção (Linux) diferencia maiúsculas de minúsculas em apelidos (aliases) e nomes de tabelas, garanta que todas as referências SQL usem exatamente a mesma caixa da declaração (ex: se declarou `cd`, use `cd`, nunca `CD`).
 * **Fallback de Comandos de Sistema:** Chamadas a comandos de sistema/executáveis via `shell_exec` (como o otimizador `pngquant`) devem sempre possuir tratamento de erro e fallback nativo em PHP (ex: retornar o arquivo sem compressão) para evitar erros fatais se o utilitário estiver ausente ou desativado no servidor.
+* **Prevenção de Sobrescrita Acidental e Edição Cirúrgica:** Ao utilizar ferramentas de edição (`replace_file_content`), nunca selecione blocos contendo declarações de variáveis ou instanciações vizinhas no `TargetContent` a menos que elas sejam explicitamente o alvo da modificação. Após qualquer edição, é **obrigatório** inspecionar o `git diff` do arquivo modificado para verificar se nenhuma linha ou inicialização preexistente foi apagada involuntariamente antes de dar a tarefa como concluída.
+
