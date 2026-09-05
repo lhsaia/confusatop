@@ -13,6 +13,7 @@ class Estadio{
     public $altitude;
     public $caldeirao;
     public $pais;
+    public $foto;
 
     public function __construct($db){
         $this->conn = $db;

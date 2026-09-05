@@ -37,7 +37,8 @@ $localizacao_foto = null;
         if($fileSize <= 10485760){
             $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
             if(processAndSaveWebPImage($filePath, $upload_path, 1200, 90)){
-                $estadio->foto = $_SESSION['user_id'] ."-" .$fileName;
+                $localizacao_foto = $_SESSION['user_id'] ."-" .$fileName;
+                $estadio->foto = $localizacao_foto;
             } else {
                 $error_msg .= "Não foi possível processar a imagem do estádio em WebP.";
             }
