@@ -103,17 +103,6 @@ var listaFederacoes =  <?php echo json_encode($listaFederacoes); ?>;
 
 $(document).ready(function($){
 	
-		 <?php
-	 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && !($_SESSION['emTestes'] ?? false)){
-		 echo "$('#toolbar').html('<div id=\"criar_competicao\"><span class=\"material-symbols-outlined\">add_circle</span><span>Competição</span></div>')";
-	 }
-    
-	?>
-	
-	$("#criar_competicao").click(function(){
-		window.location.href= '/competicoes/criar_competicao.php';
-	});
-
 load_data();
 
 	function delay(fn, ms){
@@ -240,7 +229,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
             }
 			
 			// geração da tabela
-			let tipoBadge = (parseInt(val['tipo']) === 1) ? "<span style='display:inline-block; font-size:0.68rem; font-weight:600; padding:1px 6px; border-radius:4px; background:rgba(2,132,199,0.1); color:#0284c7; margin-left:6px; vertical-align:middle;'>Nacional</span>" : "";
+			let tipoBadge = (parseInt(val['tipo']) === 1) ? "<span class='badge-tipo-nacional'>Nacional</span>" : "";
 			tbl += "<tr id='"+val['id']+"' data-sexo='"+val['sexo']+"' >";
 				tbl +=  "<td data-label='Competição'><span class='nomeEditavel' id='nom"+val['id']+"'><a class='linkNome' href='/competicoes/competitionstatus.php?id="+val['id']+"' >"+val['nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span>" + tipoBadge + "</td>";
 				tbl += "<td data-label='Logo'><div class='imageUpload'><img class='thumb' src='/images/competicoes/"+val['logo']+"' /> <input type='file' hidden id='logo"+val['id']+"' class='hiddenInput custom-file-upload' name='logo' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
@@ -249,7 +238,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 				if(val['federacao'] != null){
                     tbl += "<td class='wide' data-label='Federação'>  <span class='nomePais' id='fed"+val['id']+"'>"+val['federacao']+"</span>";
                 } else {
-                    tbl += "<td data-label='Federação'>";
+                    tbl += "<td data-label='Federação'><span class='nomePais' id='fed"+val['id']+"'>-</span>";
                 }
                 tbl += " <select class='comboLiga editavel ' id='selfed"+val['idFederacao']+"' hidden>'  ";
 				tbl += "<option value='0'>-</option>";
@@ -263,7 +252,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 				if(val['idSede'] != 0){
                     tbl += "<td class='wide' data-label='Sede'><img src='/images/bandeiras/"+val['bandeiraSede']+"' class='bandeira nomePais' id='ban"+val['id']+"'>  <span class='nomePais' id='pai"+val['id']+"'>"+val['siglaSede']+"</span>";
                 } else {
-                    tbl += "<td data-label='Sede'>";
+                    tbl += "<td data-label='Sede'><span class='nomePais' id='pai"+val['id']+"'>Sem sede fixa</span>";
                 }
                 tbl += "<select class='comboPais editavel' id='"+val['idSede']+"' hidden>'  ";
 						tbl += "<option value='0'>Sem sede fixa</option>";
@@ -282,9 +271,9 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                         optionsString += "<a hidden id='sal"+val['id']+"' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
                         optionsString += "<a hidden id='can"+val['id']+"' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
                     }
-                    optionsString += "</td>";
-                    tbl += optionsString;
                 }
+                optionsString += "</td>";
+                tbl += optionsString;
 
                  tbl += "</tr>";
 
@@ -585,18 +574,24 @@ if(prop == 'pontos'){
     <div id='error_box'></div>
 
     <div class="propostas-card">
-        <div class="header-search-container">
-            <h2 class="propostas-title">Índice de Competições</h2>
-            <div id='search_wrapper'>
-                <input type="text" id='caixa_pesquisa' placeholder='Pesquisar...'>
-                <span class='material-symbols-outlined'>search</span>
+        <div class="header-actions-container">
+            <h2 class="propostas-title">🏆 Índice de Competições</h2>
+            <div class="header-buttons-wrapper">
+                <div id='search_wrapper'>
+                    <input type="text" id='caixa_pesquisa' placeholder='Pesquisar...'>
+                    <span class='material-symbols-outlined'>search</span>
+                </div>
+                <?php if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && !($_SESSION['emTestes'] ?? false)): ?>
+                    <a href="/competicoes/criar_competicao.php" class="btn-action-primary" id="btn-criar-competicao">
+                        <span class="material-symbols-outlined">add_circle</span>
+                        <span>Criar Competição</span>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
 
-        <div style='clear:both;'></div>
-        <hr>
         <div class='tbl_user_data'>
-            <img id='loading' src='/images/icons/ajax-loader.gif'>
+            <div id='loading' style='display:none; text-align:center; padding: 2rem;'><img src='/images/icons/ajax-loader.gif'></div>
         </div>
     </div>
 </main>
