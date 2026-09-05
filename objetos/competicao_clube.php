@@ -575,7 +575,7 @@ class Competicao_clube{
 			$query = "SELECT Uni1Cor1 as cor1, Uni1Cor2 as cor2, Uni1Cor3 as cor3 FROM clube WHERE ID = :id";
 		}
 		
-		$stmt = $this->conn->query($query);
+		$stmt = $this->conn->prepare($query);
 		$stmt->bindParam(":id", $idTime);
 		$stmt->execute();
 		$result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -593,7 +593,7 @@ class Competicao_clube{
 			$query = "SELECT Uniforme1 as uniforme FROM clube WHERE ID = :id";
 		}
 		
-		$stmt = $this->conn->query($query);
+		$stmt = $this->conn->prepare($query);
 		$stmt->bindParam(":id", $idTime);
 		$stmt->execute();
 		$result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -651,7 +651,7 @@ class Competicao_clube{
 
 			LEFT JOIN jogador j ON t1.jogador = j.ID";
 
-		$stmt = $this->conn->query($query);
+		$stmt = $this->conn->prepare($query);
 		for($i = 1;$i <= 23; $i++){
 			$stmt->bindValue($i, $idTime);
 		}
@@ -671,7 +671,7 @@ class Competicao_clube{
 		$idEstadio = htmlspecialchars(strip_tags($idEstadio));
 		
 		$query = "SELECT  Nome from estadio WHERE ID = :id";
-		$stmt = $this->conn->query($query);
+		$stmt = $this->conn->prepare($query);
 		$stmt->bindParam(":id", $idEstadio);
 		$stmt->execute();
 		$result = $stmt->fetch(PDO::FETCH_ASSOC);

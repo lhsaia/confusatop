@@ -1261,6 +1261,26 @@ function readInfo($id){
 
         $stmt = $this->conn->prepare($query);
 
+        // posted values
+        $this->nome = htmlspecialchars(strip_tags((string)($this->nome ?? '')), $double_encode = false);
+        $this->nome = str_replace("amp;amp;","amp;",$this->nome);
+        $this->estadio = htmlspecialchars(strip_tags((string)($this->estadio ?? '')));
+        $this->uniforme1cor1 = htmlspecialchars(strip_tags((string)($this->uniforme1cor1 ?? '')));
+        $this->uniforme1cor2 = htmlspecialchars(strip_tags((string)($this->uniforme1cor2 ?? '')));
+        $this->uniforme1cor3 = htmlspecialchars(strip_tags((string)($this->uniforme1cor3 ?? '')));
+        $this->uniforme2cor1 = htmlspecialchars(strip_tags((string)($this->uniforme2cor1 ?? '')));
+        $this->uniforme2cor2 = htmlspecialchars(strip_tags((string)($this->uniforme2cor2 ?? '')));
+        $this->uniforme2cor3 = htmlspecialchars(strip_tags((string)($this->uniforme2cor3 ?? '')));
+        $this->maxTorcedores = htmlspecialchars(strip_tags((string)($this->maxTorcedores ?? '')));
+        $this->fidelidade = htmlspecialchars(strip_tags((string)($this->fidelidade ?? '')));
+        $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
+        $this->liga = htmlspecialchars(strip_tags((string)($this->liga ?? '')));
+        if ($this->liga === '') {
+            $this->liga = null;
+        }
+        $this->id = htmlspecialchars(strip_tags((string)($this->id ?? '')));
+
+        // bind values
         if(isset($this->escudo)){
             $this->escudo = htmlspecialchars(strip_tags((string)$this->escudo));
             $stmt->bindParam(":escudo", $this->escudo);
@@ -1286,25 +1306,6 @@ function readInfo($id){
             $stmt->bindParam(":sigla", $this->sigla);
         }
 
-        // posted values
-        $this->nome = htmlspecialchars(strip_tags((string)($this->nome ?? '')), $double_encode = false);
-        $this->estadio = htmlspecialchars(strip_tags((string)($this->estadio ?? '')));
-        $this->uniforme1cor1 = htmlspecialchars(strip_tags((string)($this->uniforme1cor1 ?? '')));
-        $this->uniforme1cor2 = htmlspecialchars(strip_tags((string)($this->uniforme1cor2 ?? '')));
-        $this->uniforme1cor3 = htmlspecialchars(strip_tags((string)($this->uniforme1cor3 ?? '')));
-        $this->uniforme2cor1 = htmlspecialchars(strip_tags((string)($this->uniforme2cor1 ?? '')));
-        $this->uniforme2cor2 = htmlspecialchars(strip_tags((string)($this->uniforme2cor2 ?? '')));
-        $this->uniforme2cor3 = htmlspecialchars(strip_tags((string)($this->uniforme2cor3 ?? '')));
-        $this->maxTorcedores = htmlspecialchars(strip_tags((string)($this->maxTorcedores ?? '')));
-        $this->fidelidade = htmlspecialchars(strip_tags((string)($this->fidelidade ?? '')));
-        $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
-        $this->liga = htmlspecialchars(strip_tags((string)($this->liga ?? '')));
-        if ($this->liga === '') {
-            $this->liga = null;
-        }
-        $this->id = htmlspecialchars(strip_tags((string)($this->id ?? '')));
-
-        // bind values
         $stmt->bindParam(":nome", $this->nome);
         $stmt->bindParam(":estadio", $this->estadio);
         $stmt->bindParam(":uniforme1cor1", $this->uniforme1cor1);
@@ -1318,8 +1319,6 @@ function readInfo($id){
         $stmt->bindParam(":pais", $this->pais);
         $stmt->bindParam(":liga", $this->liga);
         $stmt->bindParam(":id", $this->id);
-		
-		$this->nome = str_replace("amp;amp;","amp;",$this->nome);
 
         if($stmt->execute()){
             return true;
