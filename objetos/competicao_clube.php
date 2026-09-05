@@ -1107,10 +1107,17 @@ class Competicao_clube{
 
 		// 5. Identificar se há times de BYE (somente aplicável na primeira fase da competição de mata-mata)
 		$byes = [];
-		$stmtMinFase = $this->conn->prepare("SELECT MIN(fase) as min_fase FROM jogos_clube WHERE competicao_id = :idComp AND fase > 2");
+		// As fases de mata-mata em ordem cronológica: 10 (32-avos), 9 (16-avos), 3 (Oitavas), 4 (Quartas), 5 (Semi), 8 (Final)
+		$stmtMinFase = $this->conn->prepare("
+			SELECT fase 
+			FROM jogos_clube 
+			WHERE competicao_id = :idComp AND fase IN (10, 9, 3, 4, 5, 8) 
+			ORDER BY FIELD(fase, 10, 9, 3, 4, 5, 8) ASC 
+			LIMIT 1
+		");
 		$stmtMinFase->execute([':idComp' => $idCompeticao]);
 		$minFaseRow = $stmtMinFase->fetch(PDO::FETCH_ASSOC);
-		$isFirstRoundOfComp = ($minFaseRow && (int)$minFaseRow['min_fase'] === $faseAtual);
+		$isFirstRoundOfComp = ($minFaseRow && (int)$minFaseRow['fase'] === $faseAtual);
 
 		if ($isFirstRoundOfComp) {
 			$jogandoIds = [];
@@ -1220,9 +1227,9 @@ class Competicao_clube{
 			} catch (\Throwable $e) {}
 		}
 
-		// Data inicial para a próxima fase: 3 dias após a data do último jogo da fase atual
+		// Data inicial para a próxima fase: 7 dias após a data do último jogo da fase atual
 		$lastDate = !empty($jogosFase[count($jogosFase)-1]['data']) ? $jogosFase[count($jogosFase)-1]['data'] : date('Y-m-d H:i:s');
-		$baseDate = date('Y-m-d 16:00:00', strtotime($lastDate . ' +3 days'));
+		$baseDate = date('Y-m-d 16:00:00', strtotime($lastDate . ' +7 days'));
 
 		$usedStadiumsInPhase = [];
 
