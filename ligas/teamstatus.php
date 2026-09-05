@@ -270,6 +270,11 @@ $perc_estrangeiros = $total_rows > 0 ? number_format(($estrangeiros / $total_row
                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">auto_stories</span>
                 <span>Apresentação</span>
             </a>
+            <!-- Botão Time Traveler -->
+            <a href="/times/time_traveler.php?team=<?php echo $idTime; ?>" class="btn-time-traveler" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: #0f172a; color: #fff; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 0.9rem; transition: background 0.2s;" title="Reconstituir o elenco do time em qualquer data do passado">
+                <span class="material-symbols-outlined" style="font-size: 1.1rem; color: #38bdf8;">history_toggle_off</span>
+                <span>Time Traveler</span>
+            </a>
         </div>
     </div>
     

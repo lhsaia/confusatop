@@ -13,6 +13,16 @@
       "date": "05/09/2026",
       "items": [
         {
+          "badge": "new",
+          "title": "Nova Funcionalidade: Time Traveler",
+          "desc": "Lançada a funcionalidade Time Traveler para reconstituição histórica de elencos de clubes em qualquer data do passado a partir do histórico de transferências, com estatísticas da época, linha do tempo de entradas/saídas, visualização tática por setores e exportação direta do clube em .ymt."
+        },
+        {
+          "badge": "design",
+          "title": "Redesign Responsivo da Lista de Competições",
+          "desc": "Reformulado o layout da página de índice de competições para dispositivos móveis com transformação em cards dinâmicos elegantes, alinhamento flexível de atributos sem sobreposição de rótulos, paginação touch e botão de criação integrado ao cabeçalho."
+        },
+        {
           "badge": "bugfix",
           "title": "Correção na Atualização de Clubes",
           "desc": "Corrigida a execução da atualização de dados do clube no método Time::alterar(), garantindo que os parâmetros de texto e entidades HTML sejam sanitizados previamente e vinculados por referência válida na query SQL."
@@ -26,6 +36,11 @@
           "badge": "bugfix",
           "title": "Transferência Efetiva no Evento Maior Rival no TOPERO",
           "desc": "Ajustado o evento 'Proposta do Maior Rival' no TOPERO para que a escolha de aceitar a proposta transfira o atleta para um clube rival da mesma liga ou país, atualizando o clube atual e histórico da carreira."
+        },
+        {
+          "badge": "security",
+          "title": "Criação da Licença Não-Comercial (CC BY-NC-SA 4.0) e Atualização do README",
+          "desc": "Criado o arquivo LICENSE oficial com a licença Creative Commons Não-Comercial (CC BY-NC-SA 4.0), proibindo o uso e cópia com fins lucrativos de qualquer código ou ativos do projeto, e atualizado o README.md com as novas funcionalidades e módulos do sistema."
         }
       ]
     },

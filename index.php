@@ -136,6 +136,20 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
             </div>
         </a>
 
+        <!-- Time Traveler -->
+        <a href="/times/time_traveler.php" class="hub-card">
+            <div class="hub-card-hero-image">
+                <img src="/images/time-traveler.webp" alt="Time Traveler" />
+            </div>
+            <div class="hub-card-body">
+                <h3 class="hub-card-title">
+                    <span>Time Traveler</span>
+                    <span class="material-symbols-outlined hub-card-arrow">arrow_forward</span>
+                </h3>
+                <p class="hub-card-desc">Reconstitua e baixe o elenco de qualquer clube em datas do passado.</p>
+            </div>
+        </a>
+
     </section>
 
     <!-- Modalidades & Ferramentas Secundárias -->
