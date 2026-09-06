@@ -202,14 +202,31 @@ if (!empty($candidatosList)) {
             $posicaoNome = $jogadorObj->listaPosicoes($posicoesStr);
             $posicaoSigla = !empty($posicaoNome) ? explode('-', $posicaoNome)[0] : 'JOG';
 
-            // Setor tático
+            // Setor tático conforme especificação oficial do CONFUSA:
+            // - Goleiro: G
+            // - Defensor: LD, LE, Z, AD, AE
+            // - Meio-campista: V, MD, ME, MC, MA
+            // - Atacante: PD, PE, Am, Aa
             $setor = 'Atacante';
-            if (strpos($posicaoSigla, 'GK') !== false || (strlen($posicoesStr) > 0 && $posicoesStr[0] === '1')) {
+            if ($posicaoSigla === 'G' || (isset($posicoesStr[0]) && $posicoesStr[0] === '1')) {
                 $setor = 'Goleiro';
-            } elseif (strpos($posicaoSigla, 'DF') !== false || strpos($posicaoSigla, 'ZAG') !== false || strpos($posicaoSigla, 'LAT') !== false || strpos($posicaoSigla, 'SW') !== false || strpos($posicaoSigla, 'LB') !== false || strpos($posicaoSigla, 'RB') !== false || strpos($posicaoSigla, 'CB') !== false) {
+            } elseif (in_array($posicaoSigla, ['LD', 'LE', 'Z', 'AD', 'AE'])) {
                 $setor = 'Defensor';
-            } elseif (strpos($posicaoSigla, 'VOL') !== false || strpos($posicaoSigla, 'MEI') !== false || strpos($posicaoSigla, 'MC') !== false || strpos($posicaoSigla, 'ML') !== false || strpos($posicaoSigla, 'MR') !== false || strpos($posicaoSigla, 'DM') !== false || strpos($posicaoSigla, 'AM') !== false) {
+            } elseif (in_array($posicaoSigla, ['V', 'MD', 'ME', 'MC', 'MA'])) {
                 $setor = 'Meio-campista';
+            } elseif (in_array($posicaoSigla, ['PD', 'PE', 'Am', 'Aa'])) {
+                $setor = 'Atacante';
+            } else {
+                // Fallback por índice do StringPosicoes se a sigla for composta/custom
+                if (isset($posicoesStr[0]) && $posicoesStr[0] === '1') {
+                    $setor = 'Goleiro';
+                } elseif ((isset($posicoesStr[1]) && $posicoesStr[1] === '1') || (isset($posicoesStr[2]) && $posicoesStr[2] === '1') || (isset($posicoesStr[3]) && $posicoesStr[3] === '1') || (isset($posicoesStr[4]) && $posicoesStr[4] === '1') || (isset($posicoesStr[5]) && $posicoesStr[5] === '1')) {
+                    $setor = 'Defensor';
+                } elseif ((isset($posicoesStr[6]) && $posicoesStr[6] === '1') || (isset($posicoesStr[7]) && $posicoesStr[7] === '1') || (isset($posicoesStr[8]) && $posicoesStr[8] === '1') || (isset($posicoesStr[9]) && $posicoesStr[9] === '1') || (isset($posicoesStr[12]) && $posicoesStr[12] === '1')) {
+                    $setor = 'Meio-campista';
+                } else {
+                    $setor = 'Atacante';
+                }
             }
 
             // Destino atual / Onde está hoje
