@@ -1,18 +1,18 @@
 # CONFUSA.top
 
-**CONFUSA.top** is a comprehensive web portal designed for the management of the **Confederação de Futebol Solitário Associado (CONFUSA)**. It serves as a central hub for managing football teams, players, transfers, and rankings, designed to integrate seamlessly with the **Hexacolor YMT** desktop suite.
+O **CONFUSA.top** é um portal web completo desenvolvido para a gestão da **Confederação de Futebol Solitário Associado (CONFUSA)**. Ele atua como um hub central para gerenciamento de clubes, jogadores, transferências e rankings, integrado de forma nativa à suíte desktop **Hexacolor YMT**.
 
-## 📖 About
-Originally developed to provide a centralized ranking system, the project evolved into a full-featured management system. It allows users to:
-- Maintain a secure, centralized database of their teams.
-- Manage squads with unlimited players (titulars, reserves, substitutes).
-- Automate player aging and retirement.
-- Negotiate transfers and loans in a global market.
-- Generate teams and players using the integrated **Hexagen** algorithm.
+## 📖 Sobre o Projeto
+Desenvolvido originalmente para fornecer um sistema centralizado de ranking, o projeto evoluiu para uma plataforma robusta de gestão. Ele permite aos usuários:
+- Manter um banco de dados seguro e centralizado de suas equipes.
+- Gerenciar elencos com atletas ilimitados (titulares, reservas e suplentes).
+- Automatizar o envelhecimento e aposentadoria de jogadores.
+- Negociar transferências e empréstimos em um mercado global.
+- Gerar times e atletas utilizando o algoritmo integrado **Hexagen**.
 
-## ✨ Principais Funcionalidades / Key Features
+## ✨ Principais Funcionalidades
 
-### ⚽ Gestão de Futebol & Ligas (Football Management)
+### ⚽ Gestão de Futebol & Ligas
 - **Ligas e Clubes**: Criação e gestão de ligas (masculinas e femininas), clubes, seleções nacionais e federações (FEASCO, FEMIFUS, COMPACTA).
 - **Elencos e Táticas**: Edição detalhada de atributos, posições táticas com campinho visual, histórico de transferências e geração de fatias demográficas por país.
 - **Mercado da Bola**: Sistema dinâmico de propostas, empréstimos, janelas de transferências e busca avançada com filtros por estilo e mentalidade.
@@ -27,13 +27,13 @@ Originally developed to provide a centralized ranking system, the project evolve
 - **Apresentação Placar (Revista)**: Formato revista visual em estilo figurinha com histórico, títulos e estatísticas do time.
 - **Octamotor**: Módulo dedicado à gestão de automobilismo (pilotos, equipes, circuitos e temporadas).
 
-## 🛠️ Tecnologias / Technology Stack
+## 🛠️ Tecnologias Utilizadas
 - **Backend**: PHP 8.x (Vanilla / MVC modular)
-- **Database**: MySQL / MariaDB, SQLite3 (exportações de dados do simulador)
+- **Banco de Dados**: MySQL / MariaDB, SQLite3 (exportações de dados do simulador)
 - **Frontend**: HTML5, CSS3 (Design 2.0 Glassmorphism, responsivo), JavaScript / jQuery
-- **Libraries**: SimpleXLSX / SimpleXLSXGen, PHPMailer, Plotly
+- **Bibliotecas**: SimpleXLSX / SimpleXLSXGen, PHPMailer, Plotly
 
-## 🚀 Instalação & Configuração / Setup
+## 🚀 Instalação & Configuração
 1. **Clonar o repositório**:
    ```bash
    git clone https://github.com/yourusername/confusatop.git
@@ -48,9 +48,9 @@ Originally developed to provide a centralized ranking system, the project evolve
    - Certifique-se de que os diretórios `export/` e `wp-content/uploads/` tenham permissão de escrita.
 
 ## 🤝 Contribuição
-Este projeto é desenvolvido para o ecossistema e comunidade da CONFUSA.
+Este projeto é desenvolvido para o ecossistema e a comunidade da CONFUSA.
 
-## 📜 Licença / License
+## 📜 Licença
 Distribuído sob a licença **Creative Commons Atribuição-NãoComercial-CompartilhaIgual 4.0 Internacional (CC BY-NC-SA 4.0)**.
 
 - ❌ **Uso Comercial Proibido**: É expressamente proibida a cópia, redistribuição ou uso do código, banco de dados e ativos deste projeto com o intuito de obter lucro, comercializar ou monetizar direta ou indiretamente.
