@@ -68,6 +68,19 @@ $user_avatar = !empty($_SESSION['avatar']) ? $_SESSION['avatar'] : '/images/defa
     <div class="topero-brand">
       <h1 class="topero-title"><span class="top-highlight">TOP</span>ERO</h1>
       <p class="topero-subtitle">O Simulador de Carreira Profissional no Universo CONFUSA.top</p>
+      
+      <!-- Abas Principais de Navegação -->
+      <div class="topero-nav-tabs">
+        <button id="tab-btn-jogar" class="topero-tab-btn active">
+          <span class="material-symbols-outlined">sports_soccer</span> Novo Jogo
+        </button>
+        <button id="tab-btn-minhas-carreiras" class="topero-tab-btn">
+          <span class="material-symbols-outlined">badge</span> Minhas Carreiras
+        </button>
+        <button id="tab-btn-hall-fama" class="topero-tab-btn">
+          <span class="material-symbols-outlined">trophy</span> Hall da Fama
+        </button>
+      </div>
     </div>
 
     <!-- Loading Inicial -->
@@ -352,6 +365,30 @@ $user_avatar = !empty($_SESSION['avatar']) ? $_SESSION['avatar'] : '/images/defa
         </button>
         <button id="btn-jogar-novamente" class="btn-secondary">
           🔄 Jogar Novamente
+        </button>
+      </div>
+    </section>
+
+    <!-- TELA 4: MINHAS CARREIRAS & HALL DA FAMA -->
+    <section id="view-hall-fama" style="display: none;">
+      
+      <div id="container-minhas-carreiras-wrap" style="display: none;">
+        <h3 style="font-family:'Outfit', sans-serif; color:#f8fafc; margin-top:0; margin-bottom:12px; font-size:1.35rem; display:flex; align-items:center; gap:8px;">
+          <span>🎖️</span> Minhas Carreiras Salvas
+        </h3>
+        <div id="minhas-carreiras-lista" class="carreiras-grid-cards" style="margin-bottom: 2.5rem;"></div>
+      </div>
+
+      <div>
+        <h3 style="font-family:'Outfit', sans-serif; color:#f8fafc; margin-top:0; margin-bottom:12px; font-size:1.35rem; display:flex; align-items:center; gap:8px;">
+          <span>🏆</span> Hall da Fama Global (Top 25 CONFUSA)
+        </h3>
+        <div id="ranking-global-lista" class="carreiras-grid-cards"></div>
+      </div>
+
+      <div style="text-align:center; margin-top:2.5rem;">
+        <button id="btn-voltar-criacao" class="btn-primary">
+          ⚽ Iniciar Nova Carreira
         </button>
       </div>
     </section>

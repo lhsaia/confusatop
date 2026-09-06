@@ -207,6 +207,114 @@ html body {
   margin: 0;
 }
 
+/* Abas de Navegação Superiores */
+.topero-nav-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.topero-tab-btn {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.topero-tab-btn span.material-symbols-outlined {
+  font-size: 18px;
+}
+
+.topero-tab-btn:hover {
+  background: rgba(56, 189, 248, 0.15);
+  color: #f8fafc;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.topero-tab-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #38bdf8;
+  box-shadow: 0 0 15px rgba(2, 132, 199, 0.5);
+}
+
+/* Grid de Cards de Carreiras Salvas / Hall da Fama */
+.carreiras-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.carreira-mini-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.carreira-mini-card:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(56, 189, 248, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.cm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cm-nome {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.cm-pos {
+  font-size: 0.75rem;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.cm-stats {
+  display: flex;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  padding-top: 8px;
+}
+
+.cm-autor {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
 /* Formulário de Criação */
 .form-section-title {
   font-family: var(--font-heading);
@@ -676,6 +784,20 @@ html body {
   margin-left: 6px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.badge-status-selecao {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-left: 6px;
+  letter-spacing: 0.03em;
 }
 
 /* Ícones de Troféus SVG */

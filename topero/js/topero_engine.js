@@ -13,7 +13,7 @@ window.ToperoEngine = class ToperoEngine {
       sexo: dadosJogador.sexo !== undefined ? parseInt(dadosJogador.sexo, 10) : 0, // 0 = Masc, 1 = Fem
       pe: dadosJogador.pe || 'Destro',
       posicao: dadosJogador.posicao || 'ST',
-      pais: dadosJogador.pais, // { id, nome, sigla, bandeira, federacao }
+      pais: dadosJogador.pais, // { id, nome, sigla, bandeira, federacao, forcaSelecaoMasc, forcaSelecaoFem }
       clubeAtual: dadosJogador.clubeInicial, // { id, nome, sigla, escudo, tierLiga, nomeLiga, idPais, nomePais }
       idade: 17,
       nivel: Math.floor(62 + Math.random() * 6), // 62 a 67 no início
@@ -26,6 +26,9 @@ window.ToperoEngine = class ToperoEngine {
         jogosSemSofrerGol: 0,
         titulos: 0,
         bolasOuro: 0,
+        jogosSelecao: 0,
+        golsSelecao: 0,
+        titulosSelecao: 0,
         titulosDetalhados: []
       },
       historicoClubes: [
@@ -75,6 +78,21 @@ window.ToperoEngine = class ToperoEngine {
       idades.push(sorteada);
     });
     return idades;
+  }
+
+  // Obtém o nome da competição continental de seleções com base na federação do país
+  obterCompeticaoSelecao(idFederacao) {
+    const fed = parseInt(idFederacao, 10);
+    switch (fed) {
+      case 1:
+        return { nome: 'FEASCOPA', federacaoNome: 'FEASCO', icone: 'trofeu_continental_selecao' };
+      case 2:
+        return { nome: 'Copa dos Três Mares', federacaoNome: 'FEMIFUS', icone: 'trofeu_continental_selecao' };
+      case 3:
+        return { nome: 'Taça dos Hemisférios', federacaoNome: 'COMPACTA', icone: 'trofeu_continental_selecao' };
+      default:
+        return { nome: 'Copa Continental de Seleções', federacaoNome: 'CONFUSA', icone: 'trofeu_continental_selecao' };
+    }
   }
 
   // Multiplicadores estatísticos por posição
@@ -128,7 +146,7 @@ window.ToperoEngine = class ToperoEngine {
       this.jogador.ovrMaximo = this.jogador.nivel;
     }
 
-    // 2. Estatísticas em campo
+    // 2. Estatísticas em campo no clube
     const pesos = this.obterPesosPosicao(this.jogador.posicao);
     const fatorNivel = (this.jogador.nivel - 50) / 45; // 0.2 a 1.05
 
@@ -136,7 +154,7 @@ window.ToperoEngine = class ToperoEngine {
     const multMinutos = this.modTemporada.minutosMult || 1.0;
     const statusAtivo = this.modTemporada.rotuloStatus || (this.modTemporada.suspenso ? 'Suspenso' : (this.modTemporada.lesao ? 'Lesionado' : null));
 
-    // Jogos disputados no ano
+    // Jogos disputados no ano no clube
     const minJogos = pesos.jogos[0];
     const maxJogos = pesos.jogos[1];
     let jogosBase = Math.round(minJogos + (maxJogos - minJogos) * Math.min(1.0, fatorNivel * (0.7 + Math.random() * 0.5)));
@@ -149,71 +167,141 @@ window.ToperoEngine = class ToperoEngine {
     let jogosSemSofrerGol = 0;
 
     if (this.jogador.posicao === 'GK') {
-      // Para goleiro:
-      // Gols sofridos: menor quanto maior o nível do goleiro e do time
-      // Média de 0.7 a 1.4 gols por jogo
       const taxaGolsSofridos = Math.max(0.55, 1.45 - (this.jogador.nivel - 50) * 0.015);
       golsSofridos = jogos === 0 ? 0 : Math.max(0, Math.round(jogos * taxaGolsSofridos * (0.85 + Math.random() * 0.3)));
-
-      // Jogos sem sofrer gol (Clean Sheets): 20% a 48% das partidas conforme nível
       const taxaCleanSheets = Math.min(0.52, Math.max(0.12, 0.18 + (this.jogador.nivel - 50) * 0.007));
       jogosSemSofrerGol = jogos === 0 ? 0 : Math.max(0, Math.round(jogos * taxaCleanSheets * (0.85 + Math.random() * 0.3)));
     } else {
-      // Gols proporcionais ao número de partidas disputadas
       const minGols = pesos.gols[0];
       const maxGols = pesos.gols[1];
       let golsBase = Math.round(minGols + (maxGols - minGols) * Math.max(0.05, fatorNivel * (0.6 + Math.random() * 0.7)));
       gols = jogos === 0 ? 0 : Math.max(0, Math.round(golsBase * multMinutos));
 
-      // Assistências proporcionais
       const minAss = pesos.assists[0];
       const maxAss = pesos.assists[1];
       let assistsBase = Math.round(minAss + (maxAss - minAss) * Math.max(0.05, fatorNivel * (0.6 + Math.random() * 0.7)));
       assists = jogos === 0 ? 0 : Math.max(0, Math.round(assistsBase * multMinutos));
     }
 
-    // 3. Conquista de Troféus na Temporada
-    const titulosAno = [];
-    const tierClube = this.jogador.clubeAtual.tierLiga || 1;
-    // Se suspenso ou com quase nenhum jogo, chance de títulos é penalizada
-    const fatorParticipacao = Math.min(1.0, multMinutos);
+    // 3. Simulação de Seleção Nacional (Convocação e Partidas Internacionais)
+    const sexo = this.jogador.sexo || 0;
+    const forcaPaisBase = (sexo === 1 ? this.jogador.pais.forcaSelecaoFem : this.jogador.pais.forcaSelecaoMasc) || 64;
+    
+    // Jogador é convocado se tiver OVR suficiente em relação ao nível da seleção do seu país
+    // (ex: seleções menores convocam com OVR mais baixo, seleções de ponta exigem OVR maior)
+    const limiteConvocacao = Math.max(65, forcaPaisBase - 4);
+    let convocadoSelecao = false;
+    let jogosSelecaoAno = 0;
+    let golsSelecaoAno = 0;
 
-    // Probabilidade de título da liga (clubes de tier 1 e alto nível têm mais chance)
-    const probLiga = (this.jogador.nivel / 100) * (tierClube === 1 ? 0.35 : 0.20) * fatorParticipacao;
-    if (Math.random() < probLiga) {
-      titulosAno.push({
-        tipo: 'liga',
-        nome: `${this.jogador.clubeAtual.nomeLiga || 'Liga Nacional'}`,
-        categoria: 'Liga Nacional',
-        icone: 'trofeu_ouro'
-      });
+    if (this.jogador.nivel >= limiteConvocacao && jogos >= 15 && !this.modTemporada.suspenso) {
+      convocadoSelecao = true;
+      jogosSelecaoAno = Math.floor(Math.random() * 5) + 4; // 4 a 8 jogos pela seleção no ano
+      if (this.jogador.posicao !== 'GK') {
+        const taxaGolSelecao = this.jogador.posicao === 'ST' ? 0.45 : (['RW','LW','CAM'].includes(this.jogador.posicao) ? 0.28 : 0.12);
+        golsSelecaoAno = Math.round(jogosSelecaoAno * taxaGolSelecao * (this.jogador.nivel / 80) * (0.6 + Math.random() * 0.8));
+      }
     }
 
-    // Probabilidade de Copa Nacional
-    if (Math.random() < 0.22 * (this.jogador.nivel / 80) * fatorParticipacao) {
+    // 4. Conquista de Troféus na Temporada
+    const titulosAno = [];
+    const tierClube = this.jogador.clubeAtual.tierLiga || 1;
+    const fatorParticipacao = Math.min(1.0, multMinutos);
+
+    // Liga Nacional
+    if (tierClube === 1) {
+      // 1ª Divisão
+      const probLiga = (this.jogador.nivel / 100) * 0.32 * fatorParticipacao;
+      if (Math.random() < probLiga) {
+        titulosAno.push({
+          tipo: 'liga',
+          nome: `${this.jogador.clubeAtual.nomeLiga || 'Liga Nacional'}`,
+          categoria: 'Liga Nacional',
+          icone: 'trofeu_ouro'
+        });
+      }
+    } else {
+      // 2ª ou 3ª Divisão (Título de Acesso)
+      const probLigaAcesso = (this.jogador.nivel / 90) * 0.38 * fatorParticipacao;
+      if (Math.random() < probLigaAcesso) {
+        titulosAno.push({
+          tipo: 'liga_acesso',
+          nome: `${this.jogador.clubeAtual.nomeLiga || 'Segunda Divisão'} (Acesso)`,
+          categoria: 'Divisão de Acesso',
+          icone: 'trofeu_bronze'
+        });
+      }
+    }
+
+    // Copa Nacional (Taça do País)
+    // Times de Tier 1 têm probabilidade normal. Times de Tier 2/3 têm chance residual de "zebra histórica" (3% a 5%)
+    let probCopa = 0;
+    if (tierClube === 1) {
+      probCopa = 0.20 * (this.jogador.nivel / 80) * fatorParticipacao;
+    } else {
+      probCopa = 0.04 * (this.jogador.nivel / 85) * fatorParticipacao; // Zebra rara
+    }
+
+    if (Math.random() < probCopa) {
+      const prefixoZebra = tierClube > 1 ? ' [Zebra Épica]' : '';
       titulosAno.push({
         tipo: 'copa',
-        nome: `Copa de ${this.jogador.clubeAtual.nomePais || 'País'}`,
+        nome: `Copa de ${this.jogador.clubeAtual.nomePais || 'País'}${prefixoZebra}`,
         categoria: 'Copa Nacional',
         icone: 'trofeu_prata'
       });
     }
 
-    // Se estiver em time forte de tier 1 e nível alto: chance de Torneio Continental
-    if (tierClube === 1 && this.jogador.nivel >= 76 && Math.random() < 0.16 * fatorParticipacao) {
+    // Copa do Mundo CONFUSA de Clubes (apenas Tier 1 com OVR alto >= 80 e time de ponta)
+    if (tierClube === 1 && this.jogador.nivel >= 80 && Math.random() < 0.14 * fatorParticipacao) {
       titulosAno.push({
-        tipo: 'continental',
-        nome: `Copa dos Campeões CONFUSA`,
-        categoria: 'Continental de Clubes',
+        tipo: 'mundial_clubes',
+        nome: `Copa do Mundo CONFUSA de Clubes`,
+        categoria: 'Mundial de Clubes',
         icone: 'trofeu_continental'
       });
     }
 
-    // Bola de Ouro CONFUSA (Melhor Atleta do Mundo): se nível >= 88 e teve grande temporada e jogou regularmente
+    // Torneios de Seleções Nacionais (se convocado)
+    if (convocadoSelecao) {
+      const forcaTotalSelecao = (forcaPaisBase * 0.65) + (this.jogador.nivel * 0.35);
+
+      // Torneio Continental de Seleções (ocorre a cada ciclo bienal de anos pares)
+      if (this.temporadaAtual % 2 === 0 && (this.temporadaAtual % 4 !== 0)) {
+        const torneioFed = this.obterCompeticaoSelecao(this.jogador.pais.federacao);
+        const probContinentalSelecao = (forcaTotalSelecao / 100) * 0.24 * fatorParticipacao;
+        if (Math.random() < probContinentalSelecao) {
+          titulosAno.push({
+            tipo: 'torneio_selecao',
+            nome: `${torneioFed.nome} (${this.jogador.pais.nome})`,
+            categoria: `Seleções • ${torneioFed.federacaoNome}`,
+            icone: 'trofeu_selecao'
+          });
+          this.jogador.estatisticasTotais.titulosSelecao++;
+        }
+      }
+
+      // Copa do Mundo de Seleções CONFUSA (ocorre a cada 4 anos)
+      if (this.temporadaAtual % 4 === 0) {
+        const probMundialSelecao = Math.pow(forcaTotalSelecao / 100, 2) * 0.20 * fatorParticipacao;
+        if (Math.random() < probMundialSelecao) {
+          titulosAno.push({
+            tipo: 'copa_mundo_selecao',
+            nome: `Copa do Mundo de Seleções (${this.jogador.pais.nome})`,
+            categoria: 'Seleções • Mundial',
+            icone: 'trofeu_copa_mundo'
+          });
+          this.jogador.estatisticasTotais.titulosSelecao++;
+        }
+      }
+    }
+
+    // Bola de Ouro CONFUSA (Melhor Atleta do Mundo):
+    // REGRA ESTRITA: O atleta DEVE estar na 1ª Divisão (tierClube === 1), OVR >= 88 e ter feito temporada dominante
     let bolaDeOuro = false;
     const destaqueGK = this.jogador.posicao === 'GK' && jogosSemSofrerGol >= 20;
     const destaqueLinha = (gols + assists >= 35 || this.jogador.posicao === 'CB');
-    if (jogos >= 25 && this.jogador.nivel >= 88 && (destaqueGK || destaqueLinha) && Math.random() < (this.jogador.nivel - 85) * 0.08) {
+    if (tierClube === 1 && jogos >= 25 && this.jogador.nivel >= 88 && (destaqueGK || destaqueLinha) && Math.random() < (this.jogador.nivel - 86) * 0.08) {
       bolaDeOuro = true;
       titulosAno.push({
         tipo: 'bola_ouro',
@@ -230,6 +318,8 @@ window.ToperoEngine = class ToperoEngine {
     this.jogador.estatisticasTotais.assists += assists;
     this.jogador.estatisticasTotais.golsSofridos += golsSofridos;
     this.jogador.estatisticasTotais.jogosSemSofrerGol += jogosSemSofrerGol;
+    this.jogador.estatisticasTotais.jogosSelecao += jogosSelecaoAno;
+    this.jogador.estatisticasTotais.golsSelecao += golsSelecaoAno;
     this.jogador.estatisticasTotais.titulos += titulosAno.length;
     titulosAno.forEach(t => this.jogador.estatisticasTotais.titulosDetalhados.push(t));
 
@@ -243,6 +333,9 @@ window.ToperoEngine = class ToperoEngine {
       assists,
       golsSofridos,
       jogosSemSofrerGol,
+      convocadoSelecao,
+      jogosSelecao: jogosSelecaoAno,
+      golsSelecao: golsSelecaoAno,
       titulos: titulosAno,
       bolaDeOuro,
       status: statusAtivo
@@ -278,67 +371,108 @@ window.ToperoEngine = class ToperoEngine {
   }
 
   // Gera 2 ou 3 ofertas de clubes para o jogador escolher se quer se transferir
-  // e define se o clube atual ofereceu renovação de contrato
+  // e define se o clube atual ofereceu renovação de contrato com critérios realistas
   gerarOfertasTransferencia() {
     if (!this.mundo || !this.mundo.clubes || this.mundo.clubes.length === 0) {
       return { ofertas: [], podeRenovar: true };
     }
     const nivel = this.jogador.nivel;
+    const idade = this.jogador.idade;
     const sexoJogador = this.jogador.sexo !== undefined ? this.jogador.sexo : 0;
-    const clubeAtualId = this.jogador.clubeAtual ? this.jogador.clubeAtual.id : null;
+    const clubeAtual = this.jogador.clubeAtual;
+    const clubeAtualId = clubeAtual ? clubeAtual.id : null;
+    const tierClubeAtual = (clubeAtual && clubeAtual.tierLiga) ? clubeAtual.tierLiga : 1;
 
-    // Filtra clubes disponíveis do mesmo sexo (masculino vs feminino) e diferentes do atual
+    // Filtra clubes disponíveis do mesmo sexo e diferentes do atual
     const potenciais = this.mundo.clubes.filter(c => {
       if (clubeAtualId && c.id === clubeAtualId) return false;
       const sexoClube = c.sexo !== undefined ? parseInt(c.sexo, 10) : 0;
       return sexoClube === sexoJogador;
     });
 
-    // Ordena ou pontua clubes com base na adequação ao nível do atleta
-    // Nível alto (>= 80): clubes de tier 1
-    // Nível médio (68-79): clubes de tier 1 e tier 2
-    // Nível baixo (< 68): clubes de tier 2 ou tier 3
-    const embaralhados = [...potenciais].sort(() => Math.random() - 0.5);
+    const tier1Clubes = potenciais.filter(c => (c.tierLiga || 1) === 1);
+    const tier2Clubes = potenciais.filter(c => (c.tierLiga || 1) >= 2);
+
     const selecionados = [];
 
-    for (const c of embaralhados) {
-      if (selecionados.length >= 3) break;
-      const tier = c.tierLiga || 1;
-      if (nivel >= 82 && tier <= 1) {
+    // Lógica de mercado estruturada por patamar do atleta e idade:
+    // A) Atleta Veterano (35+ anos):
+    //    Não recebe propostas de superclubes de Tier 1 no auge, a não ser propostas ocasionais de Tier 1 médio,
+    //    priorizando clubes de tier 2, ligas alternativas ou seu país de origem.
+    if (idade >= 35) {
+      const embaralhadosT2 = [...tier2Clubes].sort(() => Math.random() - 0.5);
+      const embaralhadosT1 = [...tier1Clubes].sort(() => Math.random() - 0.5);
+      
+      // Proposta 1: Clube de Tier 2 (experiência para buscar acesso)
+      if (embaralhadosT2.length > 0) selecionados.push(embaralhadosT2[0]);
+      // Proposta 2: Clube do mesmo país ou alternativo
+      const clubeMesmoPais = potenciais.find(c => c.idPais === this.jogador.pais.id && !selecionados.some(s => s.id === c.id));
+      if (clubeMesmoPais) selecionados.push(clubeMesmoPais);
+      else if (embaralhadosT2.length > 1) selecionados.push(embaralhadosT2[1]);
+      // Proposta 3: Tier 1 modesto se OVR ainda for razoável (>= 72), ou outro Tier 2
+      if (nivel >= 72 && embaralhadosT1.length > 0) selecionados.push(embaralhadosT1[0]);
+      else if (embaralhadosT2.length > 2) selecionados.push(embaralhadosT2[2]);
+    }
+    // B) Atleta no Auge ou Grande Promessa com Alto Nível (OVR >= 78 e idade < 35):
+    //    Recebe propostas de elite de Tier 1 de diversos países competitivos.
+    else if (nivel >= 78) {
+      const embaralhadosT1 = [...tier1Clubes].sort(() => Math.random() - 0.5);
+      // Pega os primeiros 3 clubes de Tier 1 disponíveis
+      for (const c of embaralhadosT1) {
+        if (selecionados.length >= 3) break;
         selecionados.push(c);
-      } else if (nivel >= 72 && tier <= 2) {
-        selecionados.push(c);
-      } else if (nivel < 72) {
+      }
+    }
+    // C) Atleta em Desenvolvimento / Nível Médio (OVR 68 a 77):
+    //    Mix balanceado entre clubes de Tier 1 médios e clubes de ponta de Tier 2
+    else if (nivel >= 68) {
+      const embaralhadosT1 = [...tier1Clubes].sort(() => Math.random() - 0.5);
+      const embaralhadosT2 = [...tier2Clubes].sort(() => Math.random() - 0.5);
+      if (embaralhadosT1.length > 0) selecionados.push(embaralhadosT1[0]);
+      if (embaralhadosT1.length > 1) selecionados.push(embaralhadosT1[1]);
+      if (embaralhadosT2.length > 0) selecionados.push(embaralhadosT2[0]);
+    }
+    // D) Atleta em Início / Nível Baixo (OVR < 68):
+    //    Clubes de Tier 2/3 para buscar rodagem e desenvolvimento
+    else {
+      const embaralhadosT2 = [...tier2Clubes].sort(() => Math.random() - 0.5);
+      for (const c of embaralhadosT2) {
+        if (selecionados.length >= 3) break;
         selecionados.push(c);
       }
     }
 
-    // Fallback se não preencheu 3
+    // Fallback garantido se ainda faltar alguma proposta
+    const todosEmbaralhados = [...potenciais].sort(() => Math.random() - 0.5);
     while (selecionados.length < Math.min(3, potenciais.length)) {
-      const extra = embaralhados.find(c => !selecionados.some(s => s.id === c.id));
+      const extra = todosEmbaralhados.find(c => !selecionados.some(s => s.id === c.id));
       if (extra) selecionados.push(extra);
       else break;
     }
 
-    // Regra: nem sempre deve haver opção de continuar no próprio time (renovação negada pelo clube)
-    // No início da carreira (abaixo de 21 anos), os clubes têm paciência para maturação da promessa e sempre aceitam renovar/manter.
-    // Acima disso: se o jogador estiver com nível baixo em clube forte de tier 1, veterano, ou por decisão da diretoria (~28% de chance)
+    // LÓGICA DE RENOVAÇÃO CONTRATUAL CONSCIENTE:
+    // Nunca demitir jovens promessas ou atletas que acabaram de ser campeões/titulares importantes.
     let podeRenovar = true;
-    const idade = this.jogador.idade;
-    const tierClubeAtual = this.jogador.clubeAtual.tierLiga || 1;
+    const ultimasTemporadas = this.jogador.temporadas.slice(-this.intervaloDecisao);
+    const teveTitulosRecentes = ultimasTemporadas.some(t => t.titulos && t.titulos.length > 0);
+    const mediaJogosRecente = ultimasTemporadas.length > 0 
+      ? ultimasTemporadas.reduce((acc, t) => acc + (t.jogos || 0), 0) / ultimasTemporadas.length 
+      : 30;
 
-    if (idade < 21) {
-      // Jogador jovem em formação: clube mantém o atleta para desenvolvimento
+    if (idade < 22) {
+      // Jovem em formação: clube sempre oferece renovação
       podeRenovar = true;
-    } else if (tierClubeAtual === 1 && nivel < 68) {
-      // Dispensado por baixo rendimento
+    } else if (teveTitulosRecentes && mediaJogosRecente >= 20) {
+      // Campeão e peça atuante do elenco: clube quer manter a qualquer custo
+      podeRenovar = true;
+    } else if (tierClubeAtual === 1 && nivel < 66) {
+      // Nível muito baixo para a primeira divisão: dispensa técnica real
       podeRenovar = false;
-    } else if (idade >= 34 && Math.random() < 0.45) {
-      // Diretoria optou por rejuvenescimento do elenco
+    } else if (idade >= 36 && mediaJogosRecente < 18 && Math.random() < 0.35) {
+      // Veterano em fim de ciclo com pouca minutagem: não renovação por renovação de elenco
       podeRenovar = false;
-    } else if (Math.random() < 0.28) {
-      // Fim de contrato sem acordo de renovação
-      podeRenovar = false;
+    } else {
+      podeRenovar = true;
     }
 
     return {

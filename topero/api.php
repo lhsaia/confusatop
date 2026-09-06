@@ -98,7 +98,40 @@ if ($action === 'bootstrap') {
         $clubes[] = $row;
     }
 
-    // 4. Mapear para cada país qual o país com liga mais próximo para Masc (0) e Fem (1)
+    // 4. Calcular força das seleções nacionais (baseado na média de nível dos atletas do país em ligas Tier 1 da CONFUSA)
+    $queryForcaSelecoes = "SELECT 
+                               j.Pais as idPais,
+                               COALESCE(j.sexo, 0) as sexo,
+                               COUNT(j.ID) as totalJogadores,
+                               ROUND(AVG(j.Nivel)) as mediaNivel,
+                               MAX(j.Nivel) as maxNivel
+                           FROM jogador j
+                           INNER JOIN contratos_jogador cj ON cj.jogador = j.ID AND cj.tipoContrato IN (0, 1, 2)
+                           INNER JOIN clube c ON cj.clube = c.ID
+                           INNER JOIN liga l ON c.liga = l.ID
+                           WHERE l.tier = 1 AND (c.status = 0 OR c.status IS NULL) AND (l.status = 0 OR l.status IS NULL)
+                           GROUP BY j.Pais, COALESCE(j.sexo, 0)";
+    $stmtFS = $db->prepare($queryForcaSelecoes);
+    $stmtFS->execute();
+    $forcaPorPais = [];
+    while ($row = $stmtFS->fetch(PDO::FETCH_ASSOC)) {
+        $pId = (int)$row['idPais'];
+        $sexoP = (int)$row['sexo'];
+        if (!isset($forcaPorPais[$pId])) {
+            $forcaPorPais[$pId] = [0 => null, 1 => null];
+        }
+        $forcaPorPais[$pId][$sexoP] = (int)$row['mediaNivel'];
+    }
+
+    // Atribui força da seleção aos países
+    foreach ($paises as &$p) {
+        $pId = $p['id'];
+        $p['forcaSelecaoMasc'] = (isset($forcaPorPais[$pId]) && $forcaPorPais[$pId][0] !== null) ? $forcaPorPais[$pId][0] : 64;
+        $p['forcaSelecaoFem'] = (isset($forcaPorPais[$pId]) && $forcaPorPais[$pId][1] !== null) ? $forcaPorPais[$pId][1] : 62;
+    }
+    unset($p);
+
+    // 5. Mapear para cada país qual o país com liga mais próximo para Masc (0) e Fem (1)
     $calcularMapeamento = function($listaPaisesComLiga) use ($paises, $paisesPorId, $ligas) {
         $mapa = [];
         foreach ($paises as $p) {
@@ -247,6 +280,60 @@ if ($action === 'salvar_carreira') {
     exit;
 }
 
+if ($action === 'minhas_carreiras') {
+    if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+        echo json_encode(['success' => false, 'message' => 'Usuário não autenticado.']);
+        exit;
+    }
+    try {
+        $sql = "SELECT c.id, c.nome_jogador, c.numero, c.posicao, c.sexo, c.idade_final, c.ovr_maximo,
+                       c.partidas_totais, c.gols_totais, c.assistencias_totais, c.gols_sofridos, c.clean_sheets,
+                       c.titulos_totais, c.bolas_ouro, c.data_criacao,
+                       p.nome as nomePais, p.bandeira as bandeiraPais
+                FROM topero_carreiras c
+                LEFT JOIN paises p ON c.id_pais_origem = p.id
+                WHERE c.id_usuario = :uid
+                ORDER BY c.data_criacao DESC";
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(':uid', $_SESSION['user_id'], PDO::PARAM_INT);
+        $stmt->execute();
+        $carreiras = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'carreiras' => $carreiras], JSON_UNESCAPED_UNICODE);
+    } catch (Exception $e) {
+        echo json_encode(['success' => true, 'carreiras' => []]);
+    }
+    exit;
+}
+
+if ($action === 'carregar_carreira') {
+    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+    if (!$id) {
+        echo json_encode(['success' => false, 'message' => 'ID inválido.']);
+        exit;
+    }
+    try {
+        $sql = "SELECT c.*, p.nome as nomePais, p.bandeira as bandeiraPais, u.nome as nomeUsuario
+                FROM topero_carreiras c
+                LEFT JOIN paises p ON c.id_pais_origem = p.id
+                LEFT JOIN usuario u ON c.id_usuario = u.id
+                WHERE c.id = :id";
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $c = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($c) {
+            $c['detalhes'] = json_decode($c['detalhes_json'], true);
+            unset($c['detalhes_json']);
+            echo json_encode(['success' => true, 'carreira' => $c], JSON_UNESCAPED_UNICODE);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Carreira não encontrada.']);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Erro ao carregar carreira.']);
+    }
+    exit;
+}
+
 if ($action === 'ranking_carreiras') {
     try {
         $sql = "SELECT c.id, c.nome_jogador, c.numero, c.posicao, c.idade_final, c.ovr_maximo,
@@ -256,7 +343,7 @@ if ($action === 'ranking_carreiras') {
                 LEFT JOIN paises p ON c.id_pais_origem = p.id
                 LEFT JOIN usuario u ON c.id_usuario = u.id
                 ORDER BY c.titulos_totais DESC, c.bolas_ouro DESC, c.ovr_maximo DESC, c.gols_totais DESC
-                LIMIT 20";
+                LIMIT 25";
         $stmt = $db->prepare($sql);
         $stmt->execute();
         $rank = $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -289,6 +289,9 @@
 
     let htmlEscudo = t.clube.escudo ? `<img src="/images/escudos/${t.clube.escudo}" class="mini-escudo" alt="">` : '';
     let htmlStatus = t.status ? `<span class="badge-status-alerta" title="Impacto na temporada">${t.status}</span>` : '';
+    let htmlSelecaoBadge = t.convocadoSelecao 
+      ? `<span class="badge-status-selecao" title="Convocado pela Seleção Nacional">⭐ Seleção (${t.jogosSelecao || 0}J ${t.golsSelecao ? `• ${t.golsSelecao}G` : ''})</span>` 
+      : '';
 
     const isGK = motor.jogador.posicao === 'GK';
     const stat2Html = isGK
@@ -301,7 +304,7 @@
     card.innerHTML = `
       <div class="temp-header">
         <div class="temp-ano-badge">Ano ${t.ano} (${t.idade} anos)</div>
-        <div class="temp-clube-info">${htmlEscudo} <strong>${t.clube.nome}</strong> (${t.clube.nomeLiga || 'Liga'}) ${htmlStatus}</div>
+        <div class="temp-clube-info">${htmlEscudo} <strong>${t.clube.nome}</strong> (${t.clube.nomeLiga || 'Liga'}) ${htmlStatus} ${htmlSelecaoBadge}</div>
         <div class="temp-ovr-badge">OVR ${t.nivel}</div>
       </div>
       <div class="temp-stats">
@@ -323,8 +326,14 @@
         return `<svg class="svg-trophy gold" viewBox="0 0 24 24"><path fill="#f59e0b" d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H8v2h8v-2h-3v-3.1c1.86-.41 3.28-1.89 3.61-3.96C19.08 11.63 21 9.55 21 7V5c0-1.1-.9-2-2-2m-14 3V7h2v3.82C5.84 10.4 5 9.3 5 8m14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>`;
       case 'trofeu_prata':
         return `<svg class="svg-trophy silver" viewBox="0 0 24 24"><path fill="#94a3b8" d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H8v2h8v-2h-3v-3.1c1.86-.41 3.28-1.89 3.61-3.96C19.08 11.63 21 9.55 21 7V5c0-1.1-.9-2-2-2m-14 3V7h2v3.82C5.84 10.4 5 9.3 5 8m14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>`;
+      case 'trofeu_bronze':
+        return `<svg class="svg-trophy bronze" viewBox="0 0 24 24"><path fill="#d97706" d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H8v2h8v-2h-3v-3.1c1.86-.41 3.28-1.89 3.61-3.96C19.08 11.63 21 9.55 21 7V5c0-1.1-.9-2-2-2m-14 3V7h2v3.82C5.84 10.4 5 9.3 5 8m14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>`;
       case 'trofeu_continental':
         return `<svg class="svg-trophy cyan" viewBox="0 0 24 24"><path fill="#0284c7" d="M12 2L9 7h6l-3-5zm0 18l-5-4h10l-5 4zM2 9l3 2 1-3H3c-.55 0-1 .45-1 1zm19-1h-3l1 3 3-2c0-.55-.45-1-1-1zm-9-1c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z"/></svg>`;
+      case 'trofeu_continental_selecao':
+        return `<svg class="svg-trophy green" viewBox="0 0 24 24"><path fill="#10b981" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.93V19h-2v-2.07a8 8 0 0 1-5.93-5.93H7v-2H5.07A8 8 0 0 1 11 5.07V7h2V5.07a8 8 0 0 1 5.93 5.93H17v2h1.93A8 8 0 0 1 13 16.93z"/></svg>`;
+      case 'trofeu_copa_mundo':
+        return `<svg class="svg-trophy gold" viewBox="0 0 24 24"><path fill="#fbbf24" d="M12 2L9 6h6l-3-4zM5 8h14v2H5V8zm2 4h10v2H7v-2zm2 4h6v4H9v-4z"/></svg>`;
       case 'bola_ouro':
         return `<svg class="svg-trophy gold" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#eab308"/><path fill="#ca8a04" d="M12 2a10 10 0 0 0-10 10c0 5.52 4.48 10 10 10 5.52 0 10-4.48 10-10A10 10 0 0 0 12 2zm1 17.93V17l2-2-1-2 2-2-2-2 1-2-2-2V4.07c3.84.47 6.9 3.53 7.37 7.37.06.56.06 1.12 0 1.68-.47 3.84-3.53 6.9-7.37 7.37z"/></svg>`;
       default:
@@ -697,7 +706,275 @@
   function reiniciarJogo() {
     viewAposentadoria.style.display = 'none';
     viewJogo.style.display = 'none';
+    const viewHallFama = document.getElementById('view-hall-fama');
+    if (viewHallFama) viewHallFama.style.display = 'none';
     viewCriacao.style.display = 'block';
+    
+    // Atualiza abas ativas
+    ativarAba('tab-btn-jogar');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Controle de Abas Superiores
+  const tabJogar = document.getElementById('tab-btn-jogar');
+  const tabMinhas = document.getElementById('tab-btn-minhas-carreiras');
+  const tabHall = document.getElementById('tab-btn-hall-fama');
+  const btnVoltarCriacao = document.getElementById('btn-voltar-criacao');
+  const viewHallFama = document.getElementById('view-hall-fama');
+
+  function ativarAba(tabId) {
+    [tabJogar, tabMinhas, tabHall].forEach(t => {
+      if (t) t.classList.remove('active');
+    });
+    const el = document.getElementById(tabId);
+    if (el) el.classList.add('active');
+  }
+
+  if (tabJogar) {
+    tabJogar.addEventListener('click', () => {
+      reiniciarJogo();
+    });
+  }
+
+  if (btnVoltarCriacao) {
+    btnVoltarCriacao.addEventListener('click', () => {
+      reiniciarJogo();
+    });
+  }
+
+  if (tabMinhas) {
+    tabMinhas.addEventListener('click', () => {
+      ativarAba('tab-btn-minhas-carreiras');
+      abrirMinhasCarreiras();
+    });
+  }
+
+  if (tabHall) {
+    tabHall.addEventListener('click', () => {
+      ativarAba('tab-btn-hall-fama');
+      abrirHallDaFama();
+    });
+  }
+
+  async function abrirMinhasCarreiras() {
+    viewCriacao.style.display = 'none';
+    viewJogo.style.display = 'none';
+    viewAposentadoria.style.display = 'none';
+    viewHallFama.style.display = 'block';
+
+    const wrapMinhas = document.getElementById('container-minhas-carreiras-wrap');
+    wrapMinhas.style.display = 'block';
+
+    const containerMinhas = document.getElementById('minhas-carreiras-lista');
+    containerMinhas.innerHTML = '<div style="color:#94a3b8; padding:10px;">Carregando suas carreiras salvas...</div>';
+
+    carregarRankingGlobal();
+
+    try {
+      const res = await fetch('/topero/api.php?action=minhas_carreiras');
+      const data = await res.json();
+      if (data.success && data.carreiras && data.carreiras.length > 0) {
+        containerMinhas.innerHTML = '';
+        data.carreiras.forEach(c => {
+          containerMinhas.appendChild(criarCardResumoCarreira(c));
+        });
+      } else {
+        containerMinhas.innerHTML = '<div style="color:#94a3b8; font-size:0.9rem; padding:10px;">Você ainda não possui carreiras salvas. Conclua uma carreira até o fim e salve-a!</div>';
+      }
+    } catch (e) {
+      containerMinhas.innerHTML = '<div style="color:#ef4444; padding:10px;">Erro ao carregar suas carreiras.</div>';
+    }
+  }
+
+  async function abrirHallDaFama() {
+    viewCriacao.style.display = 'none';
+    viewJogo.style.display = 'none';
+    viewAposentadoria.style.display = 'none';
+    viewHallFama.style.display = 'block';
+
+    const wrapMinhas = document.getElementById('container-minhas-carreiras-wrap');
+    if (mundo && mundo.user && mundo.user.logged) {
+      wrapMinhas.style.display = 'block';
+      abrirMinhasCarreiras();
+    } else {
+      wrapMinhas.style.display = 'none';
+      carregarRankingGlobal();
+    }
+  }
+
+  async function carregarRankingGlobal() {
+    const containerRank = document.getElementById('ranking-global-lista');
+    containerRank.innerHTML = '<div style="color:#94a3b8; padding:10px;">Carregando ranking global...</div>';
+
+    try {
+      const res = await fetch('/topero/api.php?action=ranking_carreiras');
+      const data = await res.json();
+      if (data.success && data.ranking && data.ranking.length > 0) {
+        containerRank.innerHTML = '';
+        data.ranking.forEach((c, idx) => {
+          containerRank.appendChild(criarCardResumoCarreira(c, idx + 1));
+        });
+      } else {
+        containerRank.innerHTML = '<div style="color:#94a3b8; font-size:0.9rem; padding:10px;">Nenhuma carreira lendária gravada ainda no Hall da Fama.</div>';
+      }
+    } catch (e) {
+      containerRank.innerHTML = '<div style="color:#ef4444; padding:10px;">Erro ao carregar Hall da Fama.</div>';
+    }
+  }
+
+  function criarCardResumoCarreira(c, rankIndex = null) {
+    const card = document.createElement('div');
+    card.className = 'carreira-mini-card animate-fade-in';
+    
+    const rankBadge = rankIndex ? `<span style="font-size:0.8rem; font-weight:800; color:#fbbf24; margin-right:4px;">#${rankIndex}</span>` : '';
+    const bandeira = c.bandeiraPais ? `<img src="/images/bandeiras/${c.bandeiraPais}" class="mini-bandeira" style="margin-right:4px;" alt="">` : '';
+    const autorTxt = c.nomeUsuario ? `Por <strong>${c.nomeUsuario}</strong>` : (c.data_criacao ? c.data_criacao.substring(0,10) : '');
+    
+    const isGK = c.posicao === 'GK';
+    const stat1 = `<span title="Partidas Totais">🎮 <strong>${c.partidas_totais}</strong></span>`;
+    const stat2 = isGK 
+      ? `<span title="Sem Levar Gol">🧤 <strong>${c.clean_sheets || 0}</strong> CS</span>` 
+      : `<span title="Gols Marcados">⚽ <strong>${c.gols_totais}</strong> G</span>`;
+    const stat3 = `<span title="Títulos Conquistados" style="color:#fcd34d;">🏆 <strong>${c.titulos_totais}</strong></span>`;
+    const stat4 = (c.bolas_ouro > 0) ? `<span title="Bolas de Ouro" style="color:#38bdf8;">🥇 <strong>${c.bolas_ouro}</strong></span>` : '';
+
+    card.innerHTML = `
+      <div class="cm-header">
+        <div class="cm-nome">${rankBadge}${bandeira}${c.nome_jogador} <span style="font-size:0.8rem; color:#94a3b8; font-weight:normal;">#${c.numero}</span></div>
+        <div class="cm-pos">${c.posicao} • OVR ${c.ovr_maximo}</div>
+      </div>
+      <div class="cm-stats">
+        ${stat1}
+        ${stat2}
+        ${stat3}
+        ${stat4}
+      </div>
+      <div class="cm-autor">
+        <span>${autorTxt}</span>
+        <span style="color:#38bdf8; font-weight:600;">Ver Detalhes ➔</span>
+      </div>
+    `;
+
+    card.addEventListener('click', () => {
+      abrirDetalhesCarreiraSalva(c.id);
+    });
+
+    return card;
+  }
+
+  async function abrirDetalhesCarreiraSalva(idCarreira) {
+    try {
+      const res = await fetch(`/topero/api.php?action=carregar_carreira&id=${idCarreira}`);
+      const data = await res.json();
+      if (data.success && data.carreira) {
+        const c = data.carreira;
+        renderizarCarreiraCarregada(c);
+      } else {
+        alert('Não foi possível carregar os detalhes desta carreira.');
+      }
+    } catch (e) {
+      alert('Erro de conexão ao carregar carreira.');
+    }
+  }
+
+  function renderizarCarreiraCarregada(c) {
+    viewCriacao.style.display = 'none';
+    viewJogo.style.display = 'none';
+    viewHallFama.style.display = 'none';
+    viewAposentadoria.style.display = 'block';
+
+    document.getElementById('final-nome').textContent = c.nome_jogador;
+    document.getElementById('final-numero-pos').textContent = `#${c.numero} • ${c.posicao}`;
+    document.getElementById('final-pais').textContent = c.nomePais || 'País';
+    document.getElementById('final-idade').textContent = `${c.idade_final} anos`;
+    document.getElementById('final-ovr-pico').textContent = c.ovr_maximo;
+
+    document.getElementById('final-jogos').textContent = c.partidas_totais;
+
+    const isGK = c.posicao === 'GK';
+    if (isGK) {
+      document.getElementById('lbl-final-gols').textContent = 'Gols Sofridos';
+      document.getElementById('final-gols').textContent = c.gols_sofridos || 0;
+      document.getElementById('lbl-final-assists').textContent = 'Jogos s/ Sofrer Gol';
+      document.getElementById('final-assists').textContent = c.clean_sheets || 0;
+    } else {
+      document.getElementById('lbl-final-gols').textContent = 'Gols na Carreira';
+      document.getElementById('final-gols').textContent = c.gols_totais;
+      document.getElementById('lbl-final-assists').textContent = 'Assistências';
+      document.getElementById('final-assists').textContent = c.assistencias_totais;
+    }
+
+    document.getElementById('final-titulos').textContent = c.titulos_totais;
+
+    const elBolasOuro = document.getElementById('final-bolas-ouro');
+    if (elBolasOuro) {
+      elBolasOuro.textContent = c.bolas_ouro || 0;
+    }
+
+    const bandFinal = document.getElementById('final-pais-bandeira');
+    if (bandFinal && c.bandeiraPais) {
+      bandFinal.src = `/images/bandeiras/${c.bandeiraPais}`;
+      bandFinal.style.display = 'inline-block';
+    }
+
+    // Botão de salvar no perfil é ocultado ou desabilitado pois já está salva
+    const btnSalvar = document.getElementById('btn-salvar-carreira');
+    if (btnSalvar) {
+      btnSalvar.textContent = '✓ Carreira Gravada no Banco';
+      btnSalvar.disabled = true;
+      btnSalvar.classList.add('btn-sucesso');
+    }
+
+    // Processa troféus a partir do JSON de temporadas
+    const containerTrofeus = document.getElementById('final-trofeus-lista');
+    containerTrofeus.innerHTML = '';
+    
+    const contagem = {};
+    const iconesMap = {};
+    if (c.detalhes && c.detalhes.temporadas) {
+      c.detalhes.temporadas.forEach(temp => {
+        if (temp.titulos && Array.isArray(temp.titulos)) {
+          temp.titulos.forEach(t => {
+            contagem[t.nome] = (contagem[t.nome] || 0) + 1;
+            iconesMap[t.nome] = t.icone;
+          });
+        }
+      });
+    }
+
+    const nomesTrofeus = Object.keys(contagem);
+    if (nomesTrofeus.length === 0) {
+      containerTrofeus.innerHTML = '<p class="text-muted" style="color:#94a3b8; font-size:0.9rem;">Nenhum título expressivo registrado.</p>';
+    } else {
+      nomesTrofeus.forEach(nome => {
+        const qtd = contagem[nome];
+        const iconeTipo = iconesMap[nome] || 'trofeu_ouro';
+        const badge = document.createElement('div');
+        badge.className = 'trofeu-final-card';
+        badge.innerHTML = `
+          ${obterSvgTrofeu(iconeTipo)}
+          <div class="trofeu-final-qtd">x${qtd}</div>
+          <div class="trofeu-final-nome">${nome}</div>
+        `;
+        containerTrofeus.appendChild(badge);
+      });
+    }
+
+    // Processa clubes
+    const containerClubes = document.getElementById('final-clubes-lista');
+    containerClubes.innerHTML = '';
+    if (c.detalhes && c.detalhes.historicoClubes) {
+      c.detalhes.historicoClubes.forEach(h => {
+        const el = document.createElement('div');
+        el.className = 'clube-hist-badge';
+        const escudo = h.clube && h.clube.escudo ? `<img src="/images/escudos/${h.clube.escudo}" class="mini-escudo" alt="">` : '⚽ ';
+        const nomeClube = h.clube ? h.clube.nome : 'Clube';
+        const anos = h.anoFim ? (h.anoInicio === h.anoFim ? `Ano ${h.anoInicio}` : `Anos ${h.anoInicio}-${h.anoFim}`) : `Ano ${h.anoInicio}+`;
+        el.innerHTML = `${escudo} <strong>${nomeClube}</strong> (${anos})`;
+        containerClubes.appendChild(el);
+      });
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 })();
