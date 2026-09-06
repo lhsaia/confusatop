@@ -23,7 +23,8 @@ Desenvolvido originalmente para fornecer um sistema centralizado de ranking, o p
 - **Árbitros & Exportação**: Gerenciamento e importação/exportação de trios de arbitragem (`.tda`) e compatibilidade com a suíte **Hexacolor YMT** / banco SQLite (`.db3`).
 
 ### 🎮 Jogos Integrados & Módulos
-- **TOPERO**: Simulador de carreira de atleta standalone em PWA (Progressive Web App) Dark Theme, com progressão realista até os 40 anos, métricas de goleiro e exportação de card de carreira.
+- **TOPERO** *(Inspirado no jogo Copero)*: Simulador de carreira de atleta standalone em PWA (Progressive Web App) Dark Theme, com progressão realista até os 40 anos, eventos dinâmicos de carreira, métricas para jogadores e goleiros, além de exportação visual do card de encerramento de carreira.
+- **7vidas** *(Inspirado no jogo 7a0)*: Desafio de sobrevivência tática e escalação ágil contra o relógio, onde o treinador monta sua formação sob limite de vidas/gols sofridos e disputa pontuações no ranking global.
 - **Apresentação Placar (Revista)**: Formato revista visual em estilo figurinha com histórico, títulos e estatísticas do time.
 - **Octamotor**: Módulo dedicado à gestão de automobilismo (pilotos, equipes, circuitos e temporadas).
 
