@@ -56,11 +56,17 @@ function checarAvancoMataMataAtivos($db, $competicaoObj) {
         ");
         if ($stmtFases) {
             while ($rFase = $stmtFases->fetch(PDO::FETCH_ASSOC)) {
-                $competicaoObj->verificarEAvancarMataMata((int)$rFase['competicao_id'], (int)$rFase['fase']);
+                $compId = (int)$rFase['competicao_id'];
+                $faseId = (int)$rFase['fase'];
+                $avancou = $competicaoObj->verificarEAvancarMataMata($compId, $faseId);
+                if ($avancou) {
+                    echo "[" . date('Y-m-d H:i:s') . "] [MATA-MATA CRON] Competição #{$compId}: Fase {$faseId} avançada com sucesso para a próxima fase.\n";
+                }
             }
         }
     } catch (\Throwable $e) {
         error_log("PHP Simulador: [ERRO AVANÇO MATA-MATA CRON GERAL] " . $e->getMessage());
+        echo "[" . date('Y-m-d H:i:s') . "] [ERRO MATA-MATA CRON] " . $e->getMessage() . "\n";
     }
 }
 

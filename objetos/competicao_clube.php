@@ -1142,8 +1142,12 @@ class Competicao_clube{
 			}
 
 			// Carregar clubes do SQLite caso existam
-			$docRoot = isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__);
-			$db3File = $docRoot . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+			$baseDir = dirname(__DIR__);
+			$docRoot = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') ? $_SERVER['DOCUMENT_ROOT'] : $baseDir;
+			$db3File = $baseDir . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+			if (!file_exists($db3File)) {
+				$db3File = $docRoot . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+			}
 			$clubesDb = [];
 			if (file_exists($db3File)) {
 				try {
@@ -1211,8 +1215,12 @@ class Competicao_clube{
 		if (empty($confrontosProximaFase)) return false;
 
 		// 7. Obter estádios e árbitros para a nova fase
-		$docRoot = isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__);
-		$db3File = $docRoot . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+		$baseDir = dirname(__DIR__);
+		$docRoot = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') ? $_SERVER['DOCUMENT_ROOT'] : $baseDir;
+		$db3File = $baseDir . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+		if (!file_exists($db3File)) {
+			$db3File = $docRoot . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+		}
 		$ldb = null;
 		$estadios = [];
 		$arbitros = [];
