@@ -157,6 +157,7 @@ class Jogador{
         $stmt->bindParam(":progressao", $this->progressao);
 
         if($stmt->execute()){
+            $this->id = (int)$this->conn->lastInsertId();
             return true;
         } else {
             return false;
@@ -165,6 +166,7 @@ class Jogador{
     }
 
     function updateImported($idJogador, $fromScratch = null){
+        $this->id = (int)$idJogador;
         $subquery = ", Valor=:valor";
         $this->valor = htmlspecialchars(strip_tags((string)($this->valor ?? '')));
         $this->condicao = "true";
@@ -252,6 +254,7 @@ class Jogador{
         $stmt->bindParam(":sexo", $this->sexo);
 
         if($stmt->execute()){
+            $this->id = (int)$idJogador;
             return true;
         } else {
             return false;

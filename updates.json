@@ -9,9 +9,71 @@
   },
   "days": [
     {
+      "id": "day_07_09_2026",
+      "date": "07/09/2026",
+      "items": [
+        {
+          "badge": "security",
+          "title": "Travas de Segurança e Isolamento na Importação de Times",
+          "desc": "Implementadas travas de escopo que impedem usuários comuns (e admins impersonando) de sobrescrever clubes de outros usuários ou de ligas diferentes, permitindo atualização somente em clubes do próprio usuário dentro da mesma liga."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Vínculo de Jogadores na Importação de Times",
+          "desc": "Corrigida a persistência e recuperação do ID dos jogadores recém-criados durante a importação (.ymt), garantindo que todo o elenco seja corretamente transferido, escalado e vinculado ao clube."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Caracteres Especiais e Aspas em Nomes de Estádios",
+          "desc": "Corrigida a importação, cadastro e exibição de estádios contendo apóstrofos e aspas simples (ex: Ka'ai Fa'alulu), garantindo a decodificação de entidades HTML e evitando a gravação de códigos como &#039; no banco de dados."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Preservação da Data de Início de Contrato na Importação de Times",
+          "desc": "Corrigida a importação de times (.ymt) para manter a data de início de contrato original dos jogadores que já pertenciam ao clube, evitando que uma nova transferência com data atual seja registrada indevidamente."
+        }
+      ]
+    },
+    {
+      "id": "day_06_09_2026",
+      "date": "06/09/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção no Salvamento de Foto, Altitude e Caldeirão de Estádios",
+          "desc": "Corrigida a gravação da coluna 'foto' e a validação booleana das propriedades 'altitude' e 'caldeirao' no método Estadio::create(), além de resolver a inclusão de funções de imagem."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Tratamento de Exceções e Siglas Duplicadas em Clubes",
+          "desc": "Adicionado tratamento de PDOException no método Time::alterar() com captura de erro de integridade (1062 - entrada duplicada) na chave única de sigla por país/sexo, retornando aviso amigável ao usuário e prevenindo travamentos fatais."
+        }
+      ]
+    },
+    {
       "id": "day_05_09_2026",
       "date": "05/09/2026",
       "items": [
+        {
+          "badge": "new",
+          "title": "Minhas Carreiras & Hall da Fama no TOPERO",
+          "desc": "Adicionada interface com abas no TOPERO para visualizar o histórico de carreiras salvas pelo usuário e o Hall da Fama global do CONFUSA.top, permitindo reabrir os cards completos de carreira, rever a galeria de troféus e os clubes defendidos."
+        },
+        {
+          "badge": "new",
+          "title": "Convocações e Torneios de Seleções no TOPERO",
+          "desc": "Adicionada a mecânica de convocação para seleções nacionais no TOPERO, com cálculo de força baseado em atletas em ligas Tier 1 da CONFUSA (mesmo para nações sem liga local) e disputa de torneios continentais de federações (FEASCOPA, Copa dos Três Mares, Taça dos Hemisférios) e Copa do Mundo de Seleções."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Rebalanceamento do Mercado e Simulação do TOPERO",
+          "desc": "Refinadas as ofertas de transferências com base na idade e patamar do atleta, restrita a Bola de Ouro apenas para atletas da 1ª divisão (Tier 1), eliminadas dispensas arbitrárias de jovens e campeões, balanceada a Taça Nacional e renomeado o torneio continental de clubes para Copa do Mundo CONFUSA de Clubes."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Sincronização de Chaveamento e Cruzamentos de Mata-Mata",
+          "desc": "Corrigida a correspondência de confrontos e BYEs no chaveamento em estatísticas para refletir fielmente os jogos gerados na fase seguinte, além de gravar a identificação da chave na geração inicial e no cron de avanço."
+        },
         {
           "badge": "new",
           "title": "Nova Funcionalidade: Time Traveler",

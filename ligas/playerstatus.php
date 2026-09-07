@@ -34,7 +34,6 @@ $jogador = new Jogador($db);
 $time = new Time($db);
 $tecnico = new Tecnico($db);
 $liga = new Liga($db);
-$estadio = new Estadio($db);
 
 // query times
 $info = $jogador->readInfo($id_jogador);

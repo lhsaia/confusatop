@@ -28,7 +28,7 @@
 
             
                 //criar e vincular estadio
-                $estadio->nome = (string)$xml->estadio->Nome;
+                $estadio->nome = trim(html_entity_decode((string)$xml->estadio->Nome, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
                 $estadio->capacidade = (int)$xml->estadio->Capacidade;
                 $estadio->altitude = (string)$xml->estadio->Altitude;
                 $estadio->caldeirao = (string)$xml->estadio->Caldeirao;

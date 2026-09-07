@@ -6,6 +6,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
 // include database and object files
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");

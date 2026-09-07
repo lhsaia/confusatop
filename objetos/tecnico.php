@@ -78,6 +78,7 @@ class Tecnico{
         $stmt->bindParam(":sexo", $this->sexo);
 
         if($stmt->execute()){
+            $this->id = (int)$this->conn->lastInsertId();
             return true;
         } else {
             return false;

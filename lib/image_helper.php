@@ -97,3 +97,10 @@ if (!function_exists('imageImporterWebP')) {
         return processAndSaveWebPImage($file_name, $target_filename, $maxDim, $quality);
     }
 }
+
+if (!function_exists('imageImporterEstadio')) {
+    function imageImporterEstadio($file_name, $target_filename, $maxDim = 1200, $quality = 90) {
+        return processAndSaveWebPImage($file_name, $target_filename, $maxDim, $quality);
+    }
+}
+

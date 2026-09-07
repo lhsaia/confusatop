@@ -323,8 +323,10 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
         $numMatchesRound1 = count($teamsPlayingFirstRound) / 2;
 
         // Inserir os jogos da primeira fase
+        $matchIndex = 0;
         for ($i = 0; $i < count($teamsPlayingFirstRound); $i += 2) {
             if (isset($teamsPlayingFirstRound[$i+1])) {
+                $matchIndex++;
                 $home = $teamsPlayingFirstRound[$i];
                 $away = $teamsPlayingFirstRound[$i+1];
                 $arbId = count($arbitros) > 0 ? $arbitros[array_rand($arbitros)]['ID'] : 0;
@@ -336,18 +338,20 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
                     $tB_id = isset($assignedSlotTeams[$away]) ? $assignedSlotTeams[$away] : 0;
                     $tB_nome = ($tB_id == 0) ? $away : null;
                     $estId = getNeutralStadiumForMatch($ldb, $tA_id, $tB_id, $estadios, $usedStadiumsInPhase);
-                    $competicao->inserirJogo($idCompeticao, $tA_id, $tB_id, $fase, $arbId, $estId, $dateMatch, "true", null, null, $tA_nome, $tB_nome);
+                    $competicao->inserirJogo($idCompeticao, $tA_id, $tB_id, $fase, $arbId, $estId, $dateMatch, "true", (string)$matchIndex, null, $tA_nome, $tB_nome);
                 } else {
                     $estId = getNeutralStadiumForMatch($ldb, $home, $away, $estadios, $usedStadiumsInPhase);
-                    $competicao->inserirJogo($idCompeticao, $home, $away, $fase, $arbId, $estId, $dateMatch, "true", null);
+                    $competicao->inserirJogo($idCompeticao, $home, $away, $fase, $arbId, $estId, $dateMatch, "true", (string)$matchIndex, null);
                 }
             }
         }
     } else {
         // Chave perfeita sem BYEs (ex: 64, 32, 16, 8, 4, 2)
         shuffle($drawTeams);
+        $matchIndex = 0;
         for ($i = 0; $i < $numTeams; $i += 2) {
             if (isset($drawTeams[$i+1])) {
+                $matchIndex++;
                 $home = $drawTeams[$i];
                 $away = $drawTeams[$i+1];
                 $arbId = count($arbitros) > 0 ? $arbitros[array_rand($arbitros)]['ID'] : 0;
@@ -359,10 +363,10 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
                     $tB_id = isset($assignedSlotTeams[$away]) ? $assignedSlotTeams[$away] : 0;
                     $tB_nome = ($tB_id == 0) ? $away : null;
                     $estId = getNeutralStadiumForMatch($ldb, $tA_id, $tB_id, $estadios, $usedStadiumsInPhase);
-                    $competicao->inserirJogo($idCompeticao, $tA_id, $tB_id, $fase, $arbId, $estId, $dateMatch, "true", null, null, $tA_nome, $tB_nome);
+                    $competicao->inserirJogo($idCompeticao, $tA_id, $tB_id, $fase, $arbId, $estId, $dateMatch, "true", (string)$matchIndex, null, $tA_nome, $tB_nome);
                 } else {
                     $estId = getNeutralStadiumForMatch($ldb, $home, $away, $estadios, $usedStadiumsInPhase);
-                    $competicao->inserirJogo($idCompeticao, $home, $away, $fase, $arbId, $estId, $dateMatch, "true", null);
+                    $competicao->inserirJogo($idCompeticao, $home, $away, $fase, $arbId, $estId, $dateMatch, "true", (string)$matchIndex, null);
                 }
             }
         }

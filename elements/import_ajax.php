@@ -586,12 +586,13 @@ if (isset($_POST['ajax'])) {
                         $c_matches = array_slice(array_unique(array_merge($c_exact, $c_fuzzy), SORT_REGULAR), 0, 5);
 
                         // Stadium matches
-                        $s_name = (string)$xml->estadio->Nome;
-                        $stmt_s_exact = $db->prepare("SELECT ID, Nome FROM estadio WHERE Nome = ?");
-                        $stmt_s_exact->execute([$s_name]);
+                        $s_name = trim(html_entity_decode((string)$xml->estadio->Nome, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                        $s_name_html = htmlspecialchars($s_name, ENT_QUOTES, 'UTF-8');
+                        $stmt_s_exact = $db->prepare("SELECT ID, Nome FROM estadio WHERE Nome = ? OR Nome = ?");
+                        $stmt_s_exact->execute([$s_name, $s_name_html]);
                         $s_exact = $stmt_s_exact->fetchAll(PDO::FETCH_ASSOC);
-                        $stmt_s_fuzzy = $db->prepare("SELECT ID, Nome FROM estadio WHERE Nome LIKE ?");
-                        $stmt_s_fuzzy->execute(['%' . $s_name . '%']);
+                        $stmt_s_fuzzy = $db->prepare("SELECT ID, Nome FROM estadio WHERE Nome LIKE ? OR Nome LIKE ?");
+                        $stmt_s_fuzzy->execute(['%' . $s_name . '%', '%' . $s_name_html . '%']);
                         $s_fuzzy = $stmt_s_fuzzy->fetchAll(PDO::FETCH_ASSOC);
                         $s_matches = array_slice(array_unique(array_merge($s_exact, $s_fuzzy), SORT_REGULAR), 0, 5);
 

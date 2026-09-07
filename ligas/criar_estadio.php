@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
     if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
         if(!empty($_POST['nome']) && !empty($_POST['capacidade']) && !empty($_POST['clima']) && !empty($_POST['pais'])){
 
-            $estadio->nome = $_POST['nome'];
+            $estadio->nome = trim(html_entity_decode((string)$_POST['nome'], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
             $estadio->capacidade = $_POST['capacidade'];
             $estadio->clima = $_POST['clima'];
             $estadio->pais = $_POST['pais'];
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
                     }
                     $newFileName = $_SESSION['user_id'] . "-" . strtolower($cleanBase) . mt_rand(1000, 9999) . ".webp";
                     $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $newFileName;
-                    if(imageImporterEstadio($filePath, $upload_path)){
+                    if(processAndSaveWebPImage($filePath, $upload_path, 1200, 90)){
                         $estadio->foto = $newFileName;
                     }
                 } else if ($fileSize > 10485760) {

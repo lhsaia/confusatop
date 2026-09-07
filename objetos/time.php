@@ -29,6 +29,7 @@ class Time{
     public $sobre_titulo;
     public $sobre_subtitulo;
     public $sobre_texto;
+    public $ultimo_erro;
 
 
     public function __construct($db){
@@ -1320,10 +1321,21 @@ function readInfo($id){
         $stmt->bindParam(":liga", $this->liga);
         $stmt->bindParam(":id", $this->id);
 
-        if($stmt->execute()){
-            return true;
-        } else {
-            error_log(print_r($stmt->errorInfo(), true));
+        try {
+            if($stmt->execute()){
+                return true;
+            } else {
+                error_log(print_r($stmt->errorInfo(), true));
+                return false;
+            }
+        } catch (\PDOException $e) {
+            error_log("Erro em Time::alterar(): " . $e->getMessage());
+            if ($e->getCode() == 23000 || (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062)) {
+                $siglaStr = !empty($this->sigla) ? " '{$this->sigla}'" : "";
+                $this->ultimo_erro = "A sigla{$siglaStr} já está em uso por outro time deste país.";
+            } else {
+                $this->ultimo_erro = "Erro ao atualizar time no banco de dados.";
+            }
             return false;
         }
 

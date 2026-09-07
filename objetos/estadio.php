@@ -25,28 +25,31 @@ class Estadio{
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    Nome=:nome, Capacidade=:capacidade, Clima=:clima, Altitude=:altitude, Caldeirao=:caldeirao, Pais=:pais";
+                    Nome=:nome, Capacidade=:capacidade, Clima=:clima, Altitude=:altitude, Caldeirao=:caldeirao, Pais=:pais, foto=:foto";
 
         $stmt = $this->conn->prepare($query);
 
         // posted values
-        $this->nome = htmlspecialchars(strip_tags((string)($this->nome ?? '')));
+        $this->nome = trim(html_entity_decode(strip_tags((string)($this->nome ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         $this->capacidade = htmlspecialchars(strip_tags((string)($this->capacidade ?? '')));
         $this->clima = htmlspecialchars(strip_tags((string)($this->clima ?? '')));
         $this->altitude = htmlspecialchars(strip_tags((string)($this->altitude ?? '')));
         $this->caldeirao = htmlspecialchars(strip_tags((string)($this->caldeirao ?? '')));
         $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
+        $this->foto = ($this->foto !== null && $this->foto !== '') ? htmlspecialchars(strip_tags((string)$this->foto)) : null;
         
-        if($this->altitude == "false"){
-            $this->altitude = 0;
-        } else {
+        $altVal = strtolower(trim((string)$this->altitude));
+        if ($altVal === '1' || $altVal === 'true' || $this->altitude === 1 || $this->altitude === true) {
             $this->altitude = 1;
+        } else {
+            $this->altitude = 0;
         }
         
-        if($this->caldeirao == "false"){
-            $this->caldeirao = 0;
-        } else {
+        $caldVal = strtolower(trim((string)$this->caldeirao));
+        if ($caldVal === '1' || $caldVal === 'true' || $this->caldeirao === 1 || $this->caldeirao === true) {
             $this->caldeirao = 1;
+        } else {
+            $this->caldeirao = 0;
         }
 
 
@@ -57,6 +60,7 @@ class Estadio{
         $stmt->bindParam(":altitude", $this->altitude);
         $stmt->bindParam(":caldeirao", $this->caldeirao);
         $stmt->bindParam(":pais", $this->pais);
+        $stmt->bindParam(":foto", $this->foto);
 
         if($stmt->execute()){
             return true;
@@ -127,11 +131,11 @@ class Estadio{
 
     }
 
-    //alterar jogador
+    //alterar estádio
     function alterar($idEstadio,$nomeEstadio,$capacidade,$pais,$altitude, $caldeirao, $clima, $foto = null){
 
         $idEstadio = htmlspecialchars(strip_tags((string)($idEstadio ?? '')));
-        $nomeEstadio = htmlspecialchars(strip_tags((string)($nomeEstadio ?? '')));
+        $nomeEstadio = trim(html_entity_decode(strip_tags((string)($nomeEstadio ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         $capacidade = htmlspecialchars(strip_tags((string)($capacidade ?? '')));
         $pais = htmlspecialchars(strip_tags((string)($pais ?? '')));
         $altitude = htmlspecialchars(strip_tags((string)($altitude ?? '')));
@@ -195,27 +199,33 @@ class Estadio{
 
         //verificar se já existe
         function verificar(){
+            $nomeLimpo = trim(html_entity_decode(strip_tags((string)($this->nome ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            $nomeHtml = htmlspecialchars($nomeLimpo, ENT_QUOTES, 'UTF-8');
 
-            $query = "SELECT count(ID) as total FROM estadio WHERE Nome = ? AND Pais = ?";
+            $query = "SELECT count(ID) as total FROM estadio WHERE (Nome = ? OR Nome = ?) AND Pais = ?";
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(1,$this->nome);
-            $stmt->bindParam(2,$this->pais);
+            $stmt->bindParam(1, $nomeLimpo);
+            $stmt->bindParam(2, $nomeHtml);
+            $stmt->bindParam(3, $this->pais);
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $total = $row['total'];
+            $total = $row['total'] ?? 0;
 
             return $total;
         }
 
         function codigoPorNomeEPais(){
+            $nomeLimpo = trim(html_entity_decode(strip_tags((string)($this->nome ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            $nomeHtml = htmlspecialchars($nomeLimpo, ENT_QUOTES, 'UTF-8');
 
-            $query = "SELECT ID FROM estadio WHERE Nome = ? AND Pais = ? LIMIT 0,1";
+            $query = "SELECT ID FROM estadio WHERE (Nome = ? OR Nome = ?) AND Pais = ? LIMIT 0,1";
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(1,$this->nome);
-            $stmt->bindParam(2,$this->pais);
+            $stmt->bindParam(1, $nomeLimpo);
+            $stmt->bindParam(2, $nomeHtml);
+            $stmt->bindParam(3, $this->pais);
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $ID = $row['ID'];
+            $ID = $row['ID'] ?? null;
 
             return $ID;
         }
@@ -267,7 +277,7 @@ class Estadio{
 
         // posted values
 		$this->id=htmlspecialchars(strip_tags($this->id));
-        $this->nome=htmlspecialchars(strip_tags($this->nome));
+        $this->nome=trim(html_entity_decode(strip_tags((string)($this->nome ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         $this->capacidade=htmlspecialchars(strip_tags($this->capacidade));
         $this->clima=htmlspecialchars(strip_tags($this->clima));
         $this->altitude=htmlspecialchars(strip_tags($this->altitude));
@@ -314,13 +324,14 @@ class Estadio{
 	}
 
     function readAllAjax($item_pesquisado, $dono = null){
-        $item_pesquisado = htmlspecialchars(strip_tags($item_pesquisado));
-        $dono = htmlspecialchars(strip_tags($dono));
+        $item_pesquisado_limpo = trim(html_entity_decode(strip_tags((string)$item_pesquisado), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $item_pesquisado_html = htmlspecialchars($item_pesquisado_limpo, ENT_QUOTES, 'UTF-8');
+        $dono = htmlspecialchars(strip_tags((string)$dono));
 
         if($dono === null || $dono == 0){
-            $sub_query_fim = " WHERE (a.Nome LIKE ?) ORDER BY a.Capacidade DESC, a.Nome ASC LIMIT 150";
+            $sub_query_fim = " WHERE (a.Nome LIKE ? OR a.Nome LIKE ?) ORDER BY a.Capacidade DESC, a.Nome ASC LIMIT 150";
         } else {
-            $sub_query_fim = " WHERE p.dono = ? AND (a.Nome LIKE ?) ORDER BY a.Capacidade DESC, a.Nome ASC LIMIT 150";
+            $sub_query_fim = " WHERE p.dono = ? AND (a.Nome LIKE ? OR a.Nome LIKE ?) ORDER BY a.Capacidade DESC, a.Nome ASC LIMIT 150";
         } 
 
         $query = "SELECT
@@ -332,13 +343,16 @@ class Estadio{
                 " . $sub_query_fim;
 
         $stmt = $this->conn->prepare( $query );
-        $item_pesquisado = "%" . $item_pesquisado . "%";
+        $param1 = "%" . $item_pesquisado_limpo . "%";
+        $param2 = "%" . $item_pesquisado_html . "%";
             
         if($dono === null || $dono == 0){
-            $stmt->bindParam(1, $item_pesquisado);
+            $stmt->bindParam(1, $param1);
+            $stmt->bindParam(2, $param2);
         } else {
             $stmt->bindParam(1, $dono);
-            $stmt->bindParam(2, $item_pesquisado);
+            $stmt->bindParam(2, $param1);
+            $stmt->bindParam(3, $param2);
         } 
 
         $stmt->execute();

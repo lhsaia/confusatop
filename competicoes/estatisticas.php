@@ -629,6 +629,19 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                         $orderB = $faseOrder[$b] ?? (100 + $b);
                         return $orderA - $orderB;
                     });
+
+                    // Ordenar os jogos de cada fase pela chave/grupo (ou ID de criação) para manter o pareamento da chave
+                    foreach ($fasesKnockout as $fId => &$partidasDaFase) {
+                        usort($partidasDaFase, function($a, $b) {
+                            $grpA = (int)($a['grupo'] ?? 0);
+                            $grpB = (int)($b['grupo'] ?? 0);
+                            if ($grpA > 0 && $grpB > 0 && $grpA !== $grpB) {
+                                return $grpA - $grpB;
+                            }
+                            return ((int)$a['id']) - ((int)$b['id']);
+                        });
+                    }
+                    unset($partidasDaFase);
                     // Determinar se há BYEs no chaveamento de mata-mata
                     $primeiraFaseId = array_key_first($fasesKnockout);
                     $listaByesPrimeiraFase = [];
@@ -657,6 +670,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                     $escudoBye = $clubeObj ? ($clubeObj['Escudo'] ?? '0.png') : '0.png';
 
                                     $listaByesPrimeiraFase[] = [
+                                        'id' => $cIdInt,
                                         'slot' => $sName,
                                         'nome' => $nomeBye,
                                         'escudo' => $escudoBye
@@ -667,12 +681,36 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                             foreach ($clubes as $cId => $cObj) {
                                 if (!isset($jogandoPrimeiraFaseIds[$cId])) {
                                     $listaByesPrimeiraFase[] = [
+                                        'id' => (int)$cId,
                                         'slot' => $cObj['Nome'],
                                         'nome' => $cObj['Nome'],
                                         'escudo' => $cObj['Escudo'] ?? '0.png'
                                     ];
                                 }
                             }
+                        }
+                        // Se já existem jogos na próxima fase, ordenar a lista de BYEs para bater exatamente com a ordem dos jogos criados
+                        $proximaFaseIdCheck = [10 => 9, 9 => 3, 3 => 4, 4 => 5, 5 => 8][$primeiraFaseId] ?? null;
+                        if ($proximaFaseIdCheck && !empty($fasesKnockout[$proximaFaseIdCheck])) {
+                            $jogosProxFase = $fasesKnockout[$proximaFaseIdCheck];
+                            $byeOrderMap = [];
+                            foreach ($jogosProxFase as $idxJg => $jgProx) {
+                                $tA_id = (int)$jgProx['timeA_id'];
+                                $tA_nome = trim($jgProx['timeA_nome'] ?? '');
+                                $tB_id = (int)$jgProx['timeB_id'];
+                                $tB_nome = trim($jgProx['timeB_nome'] ?? '');
+                                if ($tA_id > 0) $byeOrderMap['id_' . $tA_id] = $idxJg;
+                                if ($tA_nome !== '') $byeOrderMap['name_' . $tA_nome] = $idxJg;
+                                if ($tB_id > 0) $byeOrderMap['id_' . $tB_id] = $idxJg;
+                                if ($tB_nome !== '') $byeOrderMap['name_' . $tB_nome] = $idxJg;
+                            }
+                            usort($listaByesPrimeiraFase, function($a, $b) use ($byeOrderMap, $assignedSlotTeams) {
+                                $idA = isset($assignedSlotTeams[$a['slot']]) ? (int)$assignedSlotTeams[$a['slot']] : 0;
+                                $idB = isset($assignedSlotTeams[$b['slot']]) ? (int)$assignedSlotTeams[$b['slot']] : 0;
+                                $ordA = $byeOrderMap['id_' . $idA] ?? ($byeOrderMap['name_' . $a['nome']] ?? ($byeOrderMap['name_' . $a['slot']] ?? 999));
+                                $ordB = $byeOrderMap['id_' . $idB] ?? ($byeOrderMap['name_' . $b['nome']] ?? ($byeOrderMap['name_' . $b['slot']] ?? 999));
+                                return $ordA - $ordB;
+                            });
                         }
                     }
 
@@ -693,6 +731,27 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                         4  => 5,  // Quartas -> Semifinal
                         5  => 8   // Semifinal -> Final
                     ];
+
+                    // Mapeamento dos confrontos da próxima fase para resolver destinos exatos
+                    $mapDestinosFase1 = [];
+                    $proximaFaseIdCheck = [10 => 9, 9 => 3, 3 => 4, 4 => 5, 5 => 8][$primeiraFaseId] ?? null;
+                    if ($proximaFaseIdCheck && !empty($fasesKnockout[$proximaFaseIdCheck])) {
+                        foreach ($fasesKnockout[$proximaFaseIdCheck] as $idxJgProx => $jgProx) {
+                            $chaveDest = $idxJgProx + 1;
+                            $tA_id = (int)$jgProx['timeA_id'];
+                            $tA_nome = trim($jgProx['timeA_nome'] ?? '');
+                            $tB_id = (int)$jgProx['timeB_id'];
+                            $tB_nome = trim($jgProx['timeB_nome'] ?? '');
+                            
+                            $infoA = ['chave' => $chaveDest, 'adversario_id' => $tB_id, 'adversario_nome' => $tB_nome];
+                            $infoB = ['chave' => $chaveDest, 'adversario_id' => $tA_id, 'adversario_nome' => $tA_nome];
+                            
+                            if ($tA_id > 0) $mapDestinosFase1['id_' . $tA_id] = $infoA;
+                            if ($tA_nome !== '') $mapDestinosFase1['name_' . $tA_nome] = $infoA;
+                            if ($tB_id > 0) $mapDestinosFase1['id_' . $tB_id] = $infoB;
+                            if ($tB_nome !== '') $mapDestinosFase1['name_' . $tB_nome] = $infoB;
+                        }
+                    }
 
                     foreach ($fasesKnockout as $faseId => $partidasFase):
                         $nomeFase = $faseNamesMap[$faseId] ?? ("Fase " . $faseId);
@@ -715,6 +774,21 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                             if ($faseId == $primeiraFaseId && !empty($listaByesPrimeiraFase)):
                                 foreach ($listaByesPrimeiraFase as $idxBye => $byeItem):
                                     $destChaveBye = $idxBye + 1;
+                                    $labelDestinoBye = "➔ Enfrenta Vencedor na Chave #{$destChaveBye}";
+                                    $idBye = (int)($byeItem['id'] ?? 0);
+                                    $destInfo = null;
+                                    if ($idBye > 0 && isset($mapDestinosFase1['id_' . $idBye])) {
+                                        $destInfo = $mapDestinosFase1['id_' . $idBye];
+                                    } elseif (!empty($byeItem['slot']) && isset($mapDestinosFase1['name_' . $byeItem['slot']])) {
+                                        $destInfo = $mapDestinosFase1['name_' . $byeItem['slot']];
+                                    } elseif (!empty($byeItem['nome']) && isset($mapDestinosFase1['name_' . $byeItem['nome']])) {
+                                        $destInfo = $mapDestinosFase1['name_' . $byeItem['nome']];
+                                    }
+                                    if ($destInfo) {
+                                        $destChaveBye = $destInfo['chave'];
+                                        $advNome = !empty($destInfo['adversario_nome']) ? $destInfo['adversario_nome'] : ($destInfo['adversario_id'] > 0 && isset($clubes[$destInfo['adversario_id']]) ? $clubes[$destInfo['adversario_id']]['Nome'] : 'A definir');
+                                        $labelDestinoBye = "➔ Chave #{$destChaveBye} (vs {$advNome})";
+                                    }
                             ?>
                                 <div class="bracket-bye-card">
                                     <div class="bracket-match-row">
@@ -726,7 +800,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                     </div>
                                     <div class="bracket-match-info" style="color: #0284c7; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
                                         <span>BYE #<?php echo ($idxBye + 1); ?></span>
-                                        <span style="font-size: 0.72rem; color: #0284c7; font-weight: 700;">➔ Enfrenta Vencedor do Jogo #<?php echo ($idxBye + 1); ?> na Chave #<?php echo $destChaveBye; ?></span>
+                                        <span style="font-size: 0.72rem; color: #0284c7; font-weight: 700;"><?php echo $labelDestinoBye; ?></span>
                                     </div>
                                 </div>
                             <?php 
@@ -755,20 +829,44 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
                                 $winA = "";
                                 $winB = "";
+                                $vencedorId = 0;
+                                $vencedorNome = null;
                                 if ($podeRevelar) {
                                     if ($gA > $gB) {
                                         $winA = "winner";
+                                        $vencedorId = (int)$partida['timeA_id'];
+                                        $vencedorNome = $nomeTimeA;
                                     } elseif ($gB > $gA) {
                                         $winB = "winner";
+                                        $vencedorId = (int)$partida['timeB_id'];
+                                        $vencedorNome = $nomeTimeB;
                                     } elseif ($temPenaltis) {
-                                        if ($pA > $pB) $winA = "winner";
-                                        elseif ($pB > $pA) $winB = "winner";
+                                        if ($pA > $pB) {
+                                            $winA = "winner";
+                                            $vencedorId = (int)$partida['timeA_id'];
+                                            $vencedorNome = $nomeTimeA;
+                                        } elseif ($pB > $pA) {
+                                            $winB = "winner";
+                                            $vencedorId = (int)$partida['timeB_id'];
+                                            $vencedorNome = $nomeTimeB;
+                                        }
                                     }
                                 }
 
                                 // Identificador do chaveamento e destino
                                 $jogoNum = $idxMatch + 1;
-                                if ($faseId == $primeiraFaseId && $numTotalByes > 0) {
+                                $destChaveMatch = null;
+                                if ($faseId == $primeiraFaseId && !empty($mapDestinosFase1)) {
+                                    if ($vencedorId > 0 && isset($mapDestinosFase1['id_' . $vencedorId])) {
+                                        $destChaveMatch = $mapDestinosFase1['id_' . $vencedorId]['chave'];
+                                    } elseif ($vencedorNome && isset($mapDestinosFase1['name_' . $vencedorNome])) {
+                                        $destChaveMatch = $mapDestinosFase1['name_' . $vencedorNome]['chave'];
+                                    }
+                                }
+
+                                if ($destChaveMatch !== null) {
+                                    $labelDestino = "➔ Chave #{$destChaveMatch}";
+                                } elseif ($faseId == $primeiraFaseId && $numTotalByes > 0) {
                                     if ($idxMatch < $numTotalByes) {
                                         $chaveDestinoNum = $idxMatch + 1;
                                         $labelDestino = "➔ Enfrenta BYE #" . ($idxMatch + 1) . " (Chave #{$chaveDestinoNum})";

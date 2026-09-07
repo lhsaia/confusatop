@@ -88,7 +88,7 @@ if(!function_exists('changeName')){
 
             
                 //criar e vincular estadio
-                $estadio->nome = (string)$xml->estadio->Nome;
+                $estadio->nome = trim(html_entity_decode((string)$xml->estadio->Nome, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
                 $estadio->capacidade = (int)$xml->estadio->Capacidade;
                 $estadio->altitude = (string)$xml->estadio->Altitude;
                 $estadio->caldeirao = (string)$xml->estadio->Caldeirao;
@@ -185,7 +185,7 @@ if(!function_exists('changeName')){
 
              $assoc_clube = isset($team_associations['clube']) ? $team_associations['clube'] : null;
              if ($assoc_clube && $assoc_clube['action'] === 'match' && !empty($assoc_clube['player_id'])) {
-                 $codigo_time = $assoc_clube['player_id'];
+                 $codigo_time = (int)$assoc_clube['player_id'];
                  $time->id = $codigo_time;
                  if (empty($ligaSelecionada)) {
                      $stmt_current_liga = $db->prepare("SELECT liga FROM clube WHERE id = ?");
@@ -203,10 +203,27 @@ if(!function_exists('changeName')){
                      die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
                  }
              } else {
-                 $existing_time_id = $time->idPorNome($time->nome);
+                 $is_admin_check = (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && empty($_SESSION['impersonated']));
+                 $current_user_id = (int)($_SESSION['user_id'] ?? 0);
+                 $target_liga_id = !empty($ligaSelecionada) ? (int)$ligaSelecionada : 0;
+                 
+                 $existing_time_id = null;
+                 if ($target_liga_id > 0) {
+                     if ($is_admin_check) {
+                         $stmt_check_time = $db->prepare("SELECT id FROM clube WHERE Nome = ? AND liga = ? LIMIT 1");
+                         $stmt_check_time->execute([$time->nome, $target_liga_id]);
+                         $existing_time_id = $stmt_check_time->fetchColumn();
+                     } else {
+                         // Para usuário comum: só sobrescreve se o time pertencer à MESMA LIGA e for de um país/liga pertencente ao próprio usuário
+                         $stmt_check_time = $db->prepare("SELECT c.id FROM clube c INNER JOIN liga l ON c.liga = l.id INNER JOIN paises p ON l.pais = p.id WHERE c.Nome = ? AND c.liga = ? AND p.dono = ? LIMIT 1");
+                         $stmt_check_time->execute([$time->nome, $target_liga_id, $current_user_id]);
+                         $existing_time_id = $stmt_check_time->fetchColumn();
+                     }
+                 }
+
                  if ($existing_time_id) {
-                     $codigo_time = $existing_time_id;
-                     $time->id = $existing_time_id;
+                     $codigo_time = (int)$existing_time_id;
+                     $time->id = $codigo_time;
                      if (empty($ligaSelecionada)) {
                          $stmt_current_liga = $db->prepare("SELECT liga FROM clube WHERE id = ?");
                          $stmt_current_liga->execute([$codigo_time]);
@@ -225,7 +242,7 @@ if(!function_exists('changeName')){
                  } else {
                      if($time->create()){
                          $is_success = true;
-                         $codigo_time = $db->lastInsertId();
+                         $codigo_time = (int)($time->id ?: $db->lastInsertId());
                      } else {
                          $is_success = false;
                          $error_msg .= 'Houve erros durante a inserção do time, possivelmente duplicado. O processo para os times que viriam na sequência foi interrompido';
@@ -244,12 +261,13 @@ if(!function_exists('changeName')){
 
              $assoc_tecnico = isset($team_associations['tecnico']) ? $team_associations['tecnico'] : null;
              if ($assoc_tecnico && $assoc_tecnico['action'] === 'match' && !empty($assoc_tecnico['player_id'])) {
-                 $codigo_tecnico = $assoc_tecnico['player_id'];
+                 $codigo_tecnico = (int)$assoc_tecnico['player_id'];
              } else {
                  if($tecnico->create()){
-                    $codigo_tecnico = $db->lastInsertId();
+                    $codigo_tecnico = (int)($tecnico->id ?: $db->lastInsertId());
                  } else {
                      $error_msg .= 'Houve erros durante a inserção do tecnico. ';
+                     $codigo_tecnico = 0;
                  }
              }
 
@@ -264,7 +282,9 @@ if(!function_exists('changeName')){
                  }
              }
 
-            $tecnico->transferir($codigo_tecnico,$codigo_time);
+            if ($codigo_tecnico > 0) {
+                $tecnico->transferir($codigo_tecnico,$codigo_time);
+            }
 
             //importar jogadores
 
@@ -356,9 +376,12 @@ if(!function_exists('changeName')){
                      unset($id_jogador_existente);
                  }
                  
+                 unset($timeSelecionado);
                  include($_SERVER['DOCUMENT_ROOT']."/jogadores/tratamento_jogador.php");
-                 $codigo_jogador = (isset($id_jogador_existente) && $id_jogador_existente > 0) ? $id_jogador_existente : $db->lastInsertId();
-                 $imported_player_ids[] = (int)$codigo_jogador;
+                 $codigo_jogador = (isset($id_jogador_existente) && $id_jogador_existente > 0) ? (int)$id_jogador_existente : (int)($jogador->id ?: $db->lastInsertId());
+                 if ($codigo_jogador > 0) {
+                     $imported_player_ids[] = (int)$codigo_jogador;
+                 }
 
                  //verificar se é capitao ou penaltis (+ posicao base)
                  $idVerificacao = $xml->jogador->ID;
@@ -389,7 +412,9 @@ if(!function_exists('changeName')){
                  }
 
                  //transferir
-                 $jogador->transferir($codigo_jogador,$codigo_time,$isCapitao,$isPenalti,$titularidade,$posicaoBase);
+                 if ($codigo_jogador > 0 && $codigo_time > 0) {
+                     $jogador->transferir($codigo_jogador,$codigo_time,$isCapitao,$isPenalti,$titularidade,$posicaoBase);
+                 }
 
              }
 

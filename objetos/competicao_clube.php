@@ -1263,7 +1263,8 @@ class Competicao_clube{
 				$usedStadiumsInPhase[] = $estId;
 			}
 
-			$this->inserirJogo($idCompeticao, $tA_id, $tB_id, $proximaFase, $arbId, $estId, $dateMatch, "true", null, null, $tA_nome, $tB_nome);
+			$chaveProxNum = (string)($idxConf + 1);
+			$this->inserirJogo($idCompeticao, $tA_id, $tB_id, $proximaFase, $arbId, $estId, $dateMatch, "true", $chaveProxNum, null, $tA_nome, $tB_nome);
 		}
 
 		return true;

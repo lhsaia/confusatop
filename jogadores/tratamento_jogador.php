@@ -104,8 +104,8 @@
              }
 
              if($success_action){
+                 $codigo_jogador = $already_exists ? (int)$id_jogador_existente : (int)$jogador->id;
                  if(isset($timeSelecionado) && $timeSelecionado != 0){
-                    $codigo_jogador = $already_exists ? $id_jogador_existente : $db->lastInsertId();
                     if($jogador->transferir($codigo_jogador,$timeSelecionado,0,0,-1)){
                         $is_success = true;  
                     } else {

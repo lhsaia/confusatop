@@ -224,7 +224,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $usuario->atualizarAlteracao($_SESSION['user_id']);
     } else {
         $is_success = false;
-        $error_msg .= "Falha ao alterar time no banco de dados";
+        $falhaMsg = !empty($time->ultimo_erro) ? $time->ultimo_erro : "Falha ao alterar time no banco de dados";
+        $error_msg .= ($error_msg !== "" ? " " : "") . $falhaMsg;
     }
 
 } else {

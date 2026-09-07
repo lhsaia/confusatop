@@ -17,7 +17,7 @@ $results = [];
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $results[] = [
         'id' => $row['ID'],
-        'text' => $row['Nome']
+        'text' => html_entity_decode((string)$row['Nome'], ENT_QUOTES | ENT_HTML5, 'UTF-8')
     ];
 }
 

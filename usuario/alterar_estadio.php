@@ -7,7 +7,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
 $localizacao_foto = null;
     $idEstadio = $_POST['id'];
-    $nomeEstadio = $_POST['nomeEstadio'];
+    $nomeEstadio = trim(html_entity_decode((string)$_POST['nomeEstadio'], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
     $capacidade = $_POST['capacidade'];
     $pais = $_POST['pais'];
 	$altitude = $_POST['altitude'];
