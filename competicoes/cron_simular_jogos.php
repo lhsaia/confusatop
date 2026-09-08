@@ -47,12 +47,12 @@ $partidas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 // Função auxiliar para verificar e avançar fases de mata-mata concluídas
 function checarAvancoMataMataAtivos($db, $competicaoObj) {
     try {
-        // Ordena pela ordem cronológica do mata-mata (32-avos=10, 16-avos=9, Oitavas=3, Quartas=4, Semi=5)
+        // Ordena pela ordem cronológica do mata-mata (64-avos=11, 32-avos=10, 16-avos=9, Oitavas=3, Quartas=4, Semi=5)
         $stmtFases = $db->query("
             SELECT DISTINCT competicao_id, fase 
             FROM jogos_clube 
-            WHERE simulador_interno = 1 AND fase IN (10, 9, 3, 4, 5) 
-            ORDER BY competicao_id, FIELD(fase, 10, 9, 3, 4, 5)
+            WHERE simulador_interno = 1 AND fase IN (11, 10, 9, 3, 4, 5) 
+            ORDER BY competicao_id, FIELD(fase, 11, 10, 9, 3, 4, 5)
         ");
         if ($stmtFases) {
             while ($rFase = $stmtFases->fetch(PDO::FETCH_ASSOC)) {

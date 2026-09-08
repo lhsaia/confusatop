@@ -125,14 +125,16 @@ if(!function_exists('changeName')){
                 $formato_arquivo = (string)$xml->formatoEscudoBase64[0];
                 $conferencia_arquivo = (string)$xml->escudoBase64[0];
 
+                $clean_club_file = preg_replace('/[^A-Za-z0-9_-]/', '', str_replace([' ', "'", '"'], ['_', '', ''], $time->nome)) ?: 'clube_' . time();
+
                 if($formato_arquivo !== "null" && strlen($conferencia_arquivo) > 0){
-                    $output_file = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $time->nome . "." . $formato_arquivo;
+                    $output_file = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $clean_club_file . "." . $formato_arquivo;
                     $preEscudo = (string)$xml->escudoBase64[0];
                     $preEscudoDecoded = base64_decode($preEscudo);
                     $escudo_file = fopen($output_file, "wb");
                     fwrite($escudo_file, $preEscudoDecoded);
                     fclose($escudo_file);
-                    $time->escudo = $_SESSION['user_id']. "-". $time->nome. "." . $formato_arquivo;
+                    $time->escudo = $_SESSION['user_id']. "-". $clean_club_file. "." . $formato_arquivo;
                 } else {
                     $time->escudo = $time->escudoPadrao();
                 }
@@ -144,13 +146,13 @@ if(!function_exists('changeName')){
                 $upload_dir = "/images/uniformes/";
                 $formato_arquivo = (string)$xml->formatoUniforme1Base64[0];
                 if($formato_arquivo !== "null"){
-                    $output_file = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $time->nome . "-1." . $formato_arquivo;
+                    $output_file = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $clean_club_file . "-1." . $formato_arquivo;
                     $preUniforme1 = (string)$xml->uniforme1Base64[0];
                     $preUniforme1Decoded = base64_decode($preUniforme1);
                     $uniforme1_file = fopen($output_file, "wb");
                     fwrite($uniforme1_file, $preUniforme1Decoded);
                     fclose($uniforme1_file);
-                    $time->uniforme1 = $_SESSION['user_id']. "-". $time->nome. "-1." . $formato_arquivo;
+                    $time->uniforme1 = $_SESSION['user_id']. "-". $clean_club_file. "-1." . $formato_arquivo;
                 } else {
                     $time->uniforme1 = $time->uniforme1Padrao();
                 }
@@ -163,13 +165,13 @@ if(!function_exists('changeName')){
                 $formato_arquivo = (string)$xml->formatoUniforme2Base64[0];
                 if($formato_arquivo !== "null"){
                 
-                $output_file = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $time->nome . "-2." . $formato_arquivo;
+                $output_file = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $clean_club_file . "-2." . $formato_arquivo;
                 $preUniforme2 = (string)$xml->uniforme2Base64[0];
                 $preUniforme2Decoded = base64_decode($preUniforme2);
                 $uniforme2_file = fopen($output_file, "wb");
                 fwrite($uniforme2_file, $preUniforme2Decoded);
                 fclose($uniforme2_file);
-                $time->uniforme2 = $_SESSION['user_id']. "-". $time->nome. "-2." . $formato_arquivo;
+                $time->uniforme2 = $_SESSION['user_id']. "-". $clean_club_file. "-2." . $formato_arquivo;
                 } else {
                     $time->uniforme2 = $time->uniforme2Padrao();
                 }
@@ -209,14 +211,16 @@ if(!function_exists('changeName')){
                  
                  $existing_time_id = null;
                  if ($target_liga_id > 0) {
+                     $time_nome_decoded = html_entity_decode((string)$time->nome, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                     $time_nome_html = htmlspecialchars($time_nome_decoded, ENT_QUOTES, 'UTF-8');
                      if ($is_admin_check) {
-                         $stmt_check_time = $db->prepare("SELECT id FROM clube WHERE Nome = ? AND liga = ? LIMIT 1");
-                         $stmt_check_time->execute([$time->nome, $target_liga_id]);
+                         $stmt_check_time = $db->prepare("SELECT id FROM clube WHERE (Nome = ? OR Nome = ?) AND liga = ? LIMIT 1");
+                         $stmt_check_time->execute([$time_nome_decoded, $time_nome_html, $target_liga_id]);
                          $existing_time_id = $stmt_check_time->fetchColumn();
                      } else {
                          // Para usuário comum: só sobrescreve se o time pertencer à MESMA LIGA e for de um país/liga pertencente ao próprio usuário
-                         $stmt_check_time = $db->prepare("SELECT c.id FROM clube c INNER JOIN liga l ON c.liga = l.id INNER JOIN paises p ON l.pais = p.id WHERE c.Nome = ? AND c.liga = ? AND p.dono = ? LIMIT 1");
-                         $stmt_check_time->execute([$time->nome, $target_liga_id, $current_user_id]);
+                         $stmt_check_time = $db->prepare("SELECT c.id FROM clube c INNER JOIN liga l ON c.liga = l.id INNER JOIN paises p ON l.pais = p.id WHERE (c.Nome = ? OR c.Nome = ?) AND c.liga = ? AND p.dono = ? LIMIT 1");
+                         $stmt_check_time->execute([$time_nome_decoded, $time_nome_html, $target_liga_id, $current_user_id]);
                          $existing_time_id = $stmt_check_time->fetchColumn();
                      }
                  }

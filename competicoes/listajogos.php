@@ -410,9 +410,9 @@ $(document).ready(function($){
 				}
 			});
 
-			let faseOrder = {10: 1, 9: 2, 3: 3, 4: 4, 5: 5, 6: 6, 8: 7};
+			let faseOrder = {11: 0, 10: 1, 9: 2, 3: 3, 4: 4, 5: 5, 6: 6, 8: 7};
 			fasesPresentes.sort(function(a, b){
-				return (faseOrder[a] || 100) - (faseOrder[b] || 100);
+				return (faseOrder[a] !== undefined ? faseOrder[a] : 100) - (faseOrder[b] !== undefined ? faseOrder[b] : 100);
 			});
 
 			let primeiraFaseId = fasesPresentes.length > 0 ? fasesPresentes[0] : 0;

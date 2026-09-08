@@ -194,7 +194,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && !($_SESSION['e
 $page_title = "Criar Competição";
 $css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'competicoes_redesign';
+$aux_css = 'home_redesign';
+$extra_css = 'criar_pais_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -204,233 +205,93 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
     echo $alert_html;
 ?>
 
-<script type="application/javascript">
-var close = document.getElementsByClassName("closebtn");
-var i;
-
-for (i = 0; i < close.length; i++) {
-    close[i].onclick = function(){
-        var div = this.parentElement;
-        div.classList.add('fade-out');
-        setTimeout(function(){ div.style.display = "none"; }, 400);
-    }
-}
-
-function readURL(input, target_div) {
-       if (input.files && input.files[0]) {
-           var reader = new FileReader();
-
-           reader.onload = function (e) {
-               $('#driver-'+target_div + "-preview")
-                   .attr('src', e.target.result).removeClass("hidden");
-              $('#driver-' + target_div + '-text').addClass("hidden");
-              $('label[for="driver-'+target_div+'"]').addClass("no-padding");
-                   // .width(200)
-                   // .height(200);
-           };
-
-           reader.readAsDataURL(input.files[0]);
-       }
-   }
-</script>
-
-<style>
-main.redesign-container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 3rem 1.5rem;
-}
-
-#inscricao {
-    background: rgba(255, 255, 255, 0.85) !important;
-    border: 1px solid rgba(0, 0, 0, 0.08) !important;
-    border-radius: 18px !important;
-    padding: 30px !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
-    color: #1e293b !important;
-}
-
-#inscricao label {
-    font-family: 'Outfit', sans-serif !important;
-    font-size: 0.9rem !important;
-    font-weight: 500 !important;
-    color: #0284c7 !important;
-    display: block !important;
-    margin-top: 15px !important;
-    margin-bottom: 5px !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-}
-
-#inscricao input[type='text'],
-#inscricao input[type='number'],
-#inscricao select {
-    width: 100% !important;
-    background: #ffffff !important;
-    border: 1px solid rgba(0, 0, 0, 0.15) !important;
-    border-radius: 8px !important;
-    padding: 10px 14px !important;
-    color: #334155 !important;
-    font-family: 'Montserrat', sans-serif !important;
-    font-size: 0.95rem !important;
-    outline: none !important;
-    transition: all 0.25s ease !important;
-    box-sizing: border-box !important;
-}
-
-#inscricao input[type='text']:focus,
-#inscricao input[type='number']:focus,
-#inscricao select:focus {
-    border-color: #0284c7 !important;
-    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
-}
-
-/* Custom file upload styling */
-.custom-file-upload {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 10px !important;
-    background: rgba(2, 132, 199, 0.04) !important;
-    border: 1px dashed rgba(2, 132, 199, 0.3) !important;
-    border-radius: 8px !important;
-    padding: 15px !important;
-    cursor: pointer !important;
-    transition: all 0.25s ease !important;
-    margin-top: 15px !important;
-    box-sizing: border-box !important;
-    width: 100% !important;
-    color: #0369a1 !important;
-}
-
-.custom-file-upload:hover {
-    background: rgba(2, 132, 199, 0.08) !important;
-    border-color: #0284c7 !important;
-}
-
-#logo {
-    display: none !important;
-}
-
-#logo-preview {
-    max-height: 40px !important;
-    max-width: 40px !important;
-    object-fit: contain !important;
-    border-radius: 4px !important;
-}
-
-#inscricao input[type='submit'] {
-    width: 100% !important;
-    background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-    border: none !important;
-    color: #fff !important;
-    padding: 12px 20px !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    font-family: 'Outfit', sans-serif !important;
-    font-size: 1.05rem !important;
-    cursor: pointer !important;
-    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;
-    transition: all 0.25s ease !important;
-    margin-top: 25px !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-}
-
-#inscricao input[type='submit']:hover {
-    background: linear-gradient(135deg, #0369a1, #075985) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 16px rgba(2, 132, 199, 0.45) !important;
-}
-
-.hub-section-title {
-    font-family: 'Outfit', sans-serif !important;
-    font-weight: 600 !important;
-    color: #1e293b !important;
-    text-align: center !important;
-    margin-bottom: 25px !important;
-    font-size: 2rem !important;
-}
-</style>
-
 <div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
 
-<main class="redesign-container">
-    <h2 class="hub-section-title">Criar Competição</h2>
-    <div id='inscricao'>
-        <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
+<main class="propostas-container">
+    <div class="propostas-card">
+        <h2 class="propostas-title">➕ Criar Competição</h2>
+        <div id='inscricao'>
+            <form method="POST" enctype="multipart/form-data" action='<?php echo $_SERVER['PHP_SELF']; ?>'>
 
-            <label for='nome'>Nome</label>
-            <input type='text' name='nome' id='nome' class='form-control inputHerdeiro' required />
+                <label for='nome'>Nome</label>
+                <input type='text' name='nome' id='nome' class='form-control' required />
 
-            <label for='ano'>Ano</label>
-            <input type='number' id='ano' name='ano' value='<?php echo date("Y")?>' min='1900' max='2100' class='form-control inputHerdeiro' required />
+                <label for='ano'>Ano</label>
+                <input type='number' id='ano' name='ano' value='<?php echo date("Y")?>' min='1900' max='2100' class='form-control' required />
 
-            <label for='tipo'>Abrangência / Tipo</label>
-            <select class='form-control' id='tipo' name='tipo'>
-                <option value='0' selected>Internacional</option>
-                <option value='1'>Nacional</option>
-            </select>
-
-            <div id='bloco-federacao'>
-                <label for='federacao'>Federação</label>
-                <?php
-                    echo "<select class='form-control' id='federacao' name='federacao'>";
-                    echo "<option selected value='0'>Sem federação</option>";
-                    echo "<option value='1'>FEASCO</option>";
-                    echo "<option value='2'>FEMIFUS</option>";
-                    echo "<option value='3'>COMPACTA</option>";
-                    echo "</select>";
-                ?>
-            </div>
-
-            <div id='bloco-sede'>
-                <label for='sede'>País Sede</label>
-                <?php
-                    $stmt = $pais->read(null, null, false);
-                    $paisesArray = array();
-                    echo "<select class='form-control' id='sede' name='sede'>";
-                    echo "<option value='0'>Sem sede fixa</option>";
-                    while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
-                        extract($row_category);
-                        $paisesArray[] = array('id' => $id, 'nome' => $nome);
-                        echo "<option value='{$id}'>{$nome}</option>";
-                    }
-                    echo "</select>";
-                ?>
-            </div>
-
-            <div id='bloco-pais-nacional' style='display: none;'>
-                <label for='pais_nacional'>País da Competição</label>
-                <select class='form-control' id='pais_nacional' name='pais_nacional'>
-                    <option value='' disabled selected>Selecione o país...</option>
-                    <?php
-                        foreach($paisesArray as $pItem){
-                            echo "<option value='{$pItem['id']}'>{$pItem['nome']}</option>";
-                        }
-                    ?>
+                <label for='tipo'>Abrangência / Tipo</label>
+                <select class='form-control' id='tipo' name='tipo'>
+                    <option value='0' selected>Internacional</option>
+                    <option value='1'>Nacional</option>
                 </select>
-                <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 4px;">A sede e federação serão associadas automaticamente ao país selecionado.</small>
-            </div>
 
-            <label class='custom-file-upload' for='logo'>
-                <img id='logo-preview' style="display:none;">
-                <span id='nomeLogo'>Clique para selecionar a Logo</span>
-            </label>
-            <input type="file" id='logo' class='form-control custom-file-upload' name='logo' data-max-size="2048" multiple='false' accept='image/*' placeholder=''>
+                <div id='bloco-federacao'>
+                    <label for='federacao'>Federação</label>
+                    <?php
+                        echo "<select class='form-control' id='federacao' name='federacao'>";
+                        echo "<option selected value='0'>Sem federação</option>";
+                        echo "<option value='1'>FEASCO</option>";
+                        echo "<option value='2'>FEMIFUS</option>";
+                        echo "<option value='3'>COMPACTA</option>";
+                        echo "</select>";
+                    ?>
+                </div>
 
-            <label for='genero'>Masculina/Feminina</label>
-            <?php
-                echo "<select class='form-control' id='genero' name='genero'>";
-                echo "<option value='0'>Masculina</option>";
-                echo "<option value='1'>Feminina</option>";
-                echo "</select>";
-            ?>
+                <div id='bloco-sede'>
+                    <label for='sede'>País Sede</label>
+                    <?php
+                        $stmt = $pais->read(null, null, false);
+                        $paisesArray = array();
+                        echo "<select class='form-control' id='sede' name='sede'>";
+                        echo "<option value='0'>Sem sede fixa</option>";
+                        while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
+                            extract($row_category);
+                            $paisesArray[] = array('id' => $id, 'nome' => $nome);
+                            echo "<option value='{$id}'>{$nome}</option>";
+                        }
+                        echo "</select>";
+                    ?>
+                </div>
 
-            <input type="submit" name="criar" value='Inserir Competição' class="btn"/>
-        </form>
+                <div id='bloco-pais-nacional' style='display: none;'>
+                    <label for='pais_nacional'>País da Competição</label>
+                    <select class='form-control' id='pais_nacional' name='pais_nacional'>
+                        <option value='' disabled selected>Selecione o país...</option>
+                        <?php
+                            foreach($paisesArray as $pItem){
+                                echo "<option value='{$pItem['id']}'>{$pItem['nome']}</option>";
+                            }
+                        ?>
+                    </select>
+                    <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 4px;">A sede e federação serão associadas automaticamente ao país selecionado.</small>
+                </div>
+
+                <label>Logo</label>
+                <label class='custom-file-upload' for='logo'>
+                    <span class="material-symbols-outlined" style="font-size: 24px; color: #0284c7;">cloud_upload</span>
+                    <img id='logo-preview' style="display:none; max-height:40px; max-width:60px; object-fit:contain; border-radius:4px;">
+                    <span id='nomeLogo'>Clique para selecionar a Logo</span>
+                </label>
+                <input type="file" id='logo' class='form-control' name='logo' data-max-size="2048" multiple='false' accept='image/*' style="display: none !important;">
+
+                <label for='genero'>Masculina/Feminina</label>
+                <?php
+                    echo "<select class='form-control' id='genero' name='genero'>";
+                    echo "<option value='0'>Masculina</option>";
+                    echo "<option value='1'>Feminina</option>";
+                    echo "</select>";
+                ?>
+
+                <div class="form-actions">
+                    <button type="submit" name="criar" id="salvar" class="btn">
+                        <span class="material-symbols-outlined">add_circle</span> Inserir Competição
+                    </button>
+                    <button type="reset" name="reset" class="btn">
+                        <span class="material-symbols-outlined">restart_alt</span> Limpar
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </main>
   <script>

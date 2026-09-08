@@ -191,20 +191,52 @@ try {
 }
 
 // Consulta direta e precisa para contar fichas pendentes de envio
-$query_count_fichas = "
-    SELECT COUNT(*) as total
-    FROM competicao_times ct
-    INNER JOIN competicao_lista c ON ct.id_competicao = c.id
-    INNER JOIN competicao_opcoes co ON c.id = co.id_competicao
-    INNER JOIN paises p ON ct.pais_time = p.id
-    WHERE p.dono = ? 
-      AND (ct.has_team IS NULL OR ct.has_team <> '1')
-      AND (co.limite_fichas >= CURDATE() OR co.limite_fichas IS NULL OR co.limite_fichas = '0000-00-00' OR co.limite_fichas = '')
-";
-$stmt_count_fichas = $db->prepare($query_count_fichas);
-$stmt_count_fichas->execute([$idUsuario]);
-$res_fichas = $stmt_count_fichas->fetch(PDO::FETCH_ASSOC);
-$fichasPendentes = (int)($res_fichas['total'] ?? 0);
+$fichasPendentes = 0;
+try {
+    $query_count_fichas = "
+        SELECT COUNT(*) as total
+        FROM competicao_times ct
+        INNER JOIN competicao_lista c ON ct.id_competicao = c.id
+        INNER JOIN competicao_opcoes co ON c.id = co.id_competicao
+        INNER JOIN paises p ON ct.pais_time = p.id
+        WHERE p.dono = ? 
+          AND (ct.has_team IS NULL OR ct.has_team <> '1')
+          AND (co.limite_fichas >= CURDATE() OR co.limite_fichas IS NULL OR co.limite_fichas = '0000-00-00' OR co.limite_fichas = '')
+    ";
+    $stmt_count_fichas = $db->prepare($query_count_fichas);
+    $stmt_count_fichas->execute([$idUsuario]);
+    $res_fichas = $stmt_count_fichas->fetch(PDO::FETCH_ASSOC);
+    $fichasPendentes = (int)($res_fichas['total'] ?? 0);
+} catch (Exception $e) {
+    error_log("Erro ao contar fichas pendentes: " . $e->getMessage());
+    $fichasPendentes = 0;
+}
+
+// Consulta para contar competições com janela de alterações de elenco aberta para os times do usuário
+$alteracoesAbertas = 0;
+try {
+    $query_count_alteracoes = "
+        SELECT COUNT(DISTINCT c.id) as total
+        FROM competicao_times ct
+        INNER JOIN competicao_lista c ON ct.id_competicao = c.id
+        INNER JOIN competicao_opcoes co ON c.id = co.id_competicao
+        INNER JOIN clube cl ON ct.time_portal = cl.ID
+        INNER JOIN paises p ON cl.Pais = p.id
+        WHERE p.dono = ? 
+          AND ct.has_team = '1'
+          AND co.alteracoeselenco = 1
+          AND (co.inicioalteracoes IS NULL OR co.inicioalteracoes = '0000-00-00' OR co.inicioalteracoes <= CURDATE())
+          AND (co.fimalteracoes IS NULL OR co.fimalteracoes = '0000-00-00' OR co.fimalteracoes >= CURDATE())
+    ";
+    $stmt_count_alteracoes = $db->prepare($query_count_alteracoes);
+    $stmt_count_alteracoes->execute([$idUsuario]);
+    $res_alteracoes = $stmt_count_alteracoes->fetch(PDO::FETCH_ASSOC);
+    $alteracoesAbertas = (int)($res_alteracoes['total'] ?? 0);
+} catch (Exception $e) {
+    error_log("Erro ao contar alterações de elenco abertas: " . $e->getMessage());
+    $alteracoesAbertas = 0;
+}
+
 
 ?>
 
@@ -303,6 +335,24 @@ $fichasPendentes = (int)($res_fichas['total'] ?? 0);
                     <?php endif; ?>
                 </h3>
                 <p class="hub-card-desc">Faça o upload das fichas pendentes dos seus países.</p>
+            </div>
+        </a>
+
+        <!-- Alterações de Elenco -->
+        <a href='alteracoes_elenco.php' id="alteracoesElenco" class='hub-card'>
+            <div class="hub-card-hero-image">
+                <img src="/images/substituicao.webp" alt="Alterações de Elenco" />
+            </div>
+            <div class="hub-card-body">
+                <h3 class="hub-card-title">
+                    <span>Alterações de Elenco</span>
+                    <?php if ($alteracoesAbertas > 0): ?>
+                        <span class="badge-status counter" style="background-color: #0284c7 !important; color: #fff !important;"><?php echo $alteracoesAbertas; ?></span>
+                    <?php else: ?>
+                        <span class="material-symbols-outlined hub-card-arrow">arrow_forward</span>
+                    <?php endif; ?>
+                </h3>
+                <p class="hub-card-desc">Substitua, adicione ou remova atletas inscritos durante janelas abertas.</p>
             </div>
         </a>
     </section>

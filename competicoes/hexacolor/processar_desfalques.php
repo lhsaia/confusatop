@@ -2,11 +2,12 @@
 // Function to process player cards, injuries, and suspensions after a match simulation
 function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $suspensosAntesPartida) {
     // 1. Obter opções de suspensão da competição
-    $stmtOpt = $db->prepare("SELECT suspensao FROM competicao_opcoes WHERE id_competicao = :idComp LIMIT 1");
+    $stmtOpt = $db->prepare("SELECT suspensao, expulso_dois_amarelos FROM competicao_opcoes WHERE id_competicao = :idComp LIMIT 1");
     $stmtOpt->bindValue(':idComp', $idCompeticao, PDO::PARAM_INT);
     $stmtOpt->execute();
     $options = $stmtOpt->fetch(PDO::FETCH_ASSOC);
     $criterioSuspensao = isset($options['suspensao']) ? (int)$options['suspensao'] : 0; // 0=apenas vermelho, 1=2 amarelos, 2=3 amarelos
+    $expulsoDoisAmarelos = isset($options['expulso_dois_amarelos']) ? (int)$options['expulso_dois_amarelos'] : 0; // 0=não contabilizar (descarta ambos), 1=contabilizar 1 amarelo, 2=contabilizar ambos (2 amarelos)
 
     // Definir limite de cartões amarelos para suspensão
     $limiteAmarelos = 0;
@@ -98,7 +99,16 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
                         $novoSuspenso = 1;
                         $novoRestantes = max($novoRestantes, 1);
                         if ($amarelosPartida >= 2) {
-                            $novoAmarelos = max(0, $novoAmarelos - 2);
+                            if ($expulsoDoisAmarelos == 0) {
+                                // Não contabilizar nenhum dos 2 amarelos
+                                $novoAmarelos = max(0, $novoAmarelos - 2);
+                            } elseif ($expulsoDoisAmarelos == 1) {
+                                // Contabilizar 1 amarelo (descarta 1 dos 2)
+                                $novoAmarelos = max(0, $novoAmarelos - 1);
+                            } elseif ($expulsoDoisAmarelos == 2) {
+                                // Contabilizar ambos os amarelos
+                                // Mantém os 2 amarelos somados em $novoAmarelos
+                            }
                         }
                     }
 

@@ -13,6 +13,91 @@
       "date": "07/09/2026",
       "items": [
         {
+          "badge": "design",
+          "title": "Elencos em Accordion e Confirmação de Remoção",
+          "desc": "Os elencos dos clubes na tela de Alterações de Elenco agora iniciam recolhidos em formato accordion clicável para melhor organização visual, e as desinscrições agora contam com modal popup estilizado de confirmação antes de efetivar a ação."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Restrição de Alterações de Elenco a Torneios Internacionais",
+          "desc": "Ajustada a exibição das opções de alteração de elenco e listagem em Minha Área para restringir essa dinâmica exclusivamente a competições internacionais."
+        },
+        {
+          "badge": "new",
+          "title": "Desinscrição Livre e Gestão de Elencos em Minha Área",
+          "desc": "Atualizada a tela de Alterações de Elenco para listar todas as competições dos clubes do usuário. As desinscrições (remoções) são livres a qualquer momento, preservam o histórico e estatísticas do atleta no torneio e bloqueiam sua re-inscrição posterior na mesma competição."
+        },
+        {
+          "badge": "new",
+          "title": "Central de Alterações de Elenco em Minha Área",
+          "desc": "Criado novo card e painel dedicado em Minha Área para gerenciar substituições, inclusões de atletas em vagas abertas e remoções de elenco durante janelas ativas de transferências nas competições."
+        },
+        {
+          "badge": "new",
+          "title": "Configuração de Cartões por Expulsão com 2 Amarelos",
+          "desc": "Adicionada opção nas regras de Cartões & Suspensões da competição para definir o destino dos amarelos em expulsões por duplo amarelo no mesmo jogo: descartar ambos os cartões (padrão), contabilizar 1 amarelo ou contabilizar ambos no acumulado individual do atleta."
+        },
+        {
+          "badge": "new",
+          "title": "Troca Inteligente nos Critérios de Desempate de Grupos",
+          "desc": "Implementada troca automática inteligente (swap) entre os 4 critérios de desempate da fase de grupos para evitar que o usuário selecione regras repetidas acidentalmente."
+        },
+        {
+          "badge": "new",
+          "title": "Validação e Ocultação Condicional de Alterações de Elenco",
+          "desc": "Reorganizada a seção de Alterações de Elenco com a flag de permissão no topo (ocultando datas e quantidade quando inativa) e validações estritas de datas que impedem início antes do início da competição ou término anterior ao início das trocas."
+        },
+        {
+          "badge": "new",
+          "title": "Configuração de Formato dos Jogos (Ida/Volta) e Validação de Grupos",
+          "desc": "Adicionada a escolha de formato de jogos (Apenas Ida ou Ida e Volta) para grupos e mata-mata em torneios mistos e eliminatórios, posicionamento da 'Final em jogo único' no formato, reorganização da seção 'Regras de Desempate' e validação dinâmica para impedir que o número de vagas dos grupos exceda o total de times."
+        },
+        {
+          "badge": "new",
+          "title": "Suporte a até 128 Times e Fase 64-avos de Final",
+          "desc": "Expandido o limite de participantes das competições para entre 2 e 128 times, com criação e suporte completo à fase 64-avos-de-final no chaveamento automático de mata-mata e no simulador."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste na Digitação do Número de Times e Alterações",
+          "desc": "Corrigida a validação de formulário nas opções da competição para não resetar nem bloquear a digitação intermediária de valores (ex: digitar 16 sem travar no 1)."
+        },
+        {
+          "badge": "new",
+          "title": "Edição de Opções e Parâmetros do Hexacolor por Competição",
+          "desc": "Adicionada a personalização completa do simulador Hexacolor nas opções da competição: escolha de Balizamento (Tradicional ou Internacional 2022 com descrição de comportamento), substituições e paradas, prorrogação, VAR, limite de lesões, cores do simulador e sliders de frequências de gols, faltas, impedimentos, cartões, estilo de jogo e bandeiras."
+        },
+        {
+          "badge": "design",
+          "title": "Padronização Visual da Criação de Competições",
+          "desc": "Ajustado o título da página para o padrão com emoji ('➕ Criar Competição') e corrigida a largura dos campos de Nome e Ano para ocuparem 100% da largura do formulário com preenchimento confortável."
+        },
+        {
+          "badge": "new",
+          "title": "Agendamento Avançado de Jogos e Calendário nas Competições",
+          "desc": "Adicionadas opções para definir data inicial da competição, limite máximo de jogos por dia, seleção de múltiplos dias da semana permitidos, intervalo entre rodadas em semanas e horários alternados de partidas para a geração automática de tabelas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Depreciação de Parâmetros Nulos no PHP 8.1+",
+          "desc": "Tratados valores nulos passados para funções nativas como strlen() e htmlspecialchars() no perfil de clubes e técnicos, evitando warnings de depreciação."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Envio de Notificação de Proposta por E-mail",
+          "desc": "Adicionado tratamento defensivo nas consultas de dados de jogador, clube e usuário em transferências, prevenindo avisos de tipo booleano (array offset on bool) e falhas no disparo de e-mails."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Salvamento de Escudos e Uniformes com Apóstrofos",
+          "desc": "Corrigida a geração dos nomes de arquivos de escudo e uniformes na importação de times (.ymt) contendo apóstrofos e aspas no nome, sanitizando os caracteres especiais e garantindo o salvamento correto no disco e banco."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Reconhecimento de Jogadores com Apóstrofos na Importação",
+          "desc": "Ajustada a busca exata e similar no assistente de importação para reconhecer jogadores, clubes e técnicos existentes que contenham apóstrofos ou entidades HTML no nome (ex: Ka'ai), evitando duplicações desnecessárias."
+        },
+        {
           "badge": "security",
           "title": "Travas de Segurança e Isolamento na Importação de Times",
           "desc": "Implementadas travas de escopo que impedem usuários comuns (e admins impersonando) de sobrescrever clubes de outros usuários ou de ligas diferentes, permitindo atualização somente em clubes do próprio usuário dentro da mesma liga."

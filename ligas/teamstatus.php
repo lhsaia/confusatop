@@ -66,16 +66,16 @@ $idTime = $id;
 
 // query times
 $info = $time->readInfo($id);
-$nome_time = $info['Nome'] ?? '';
-$sigla_time = $info['TresLetras'] ?? '';
-$estadio_time = $info['Estadio'] ?? '';
+$nome_time = html_entity_decode((string)($info['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+$sigla_time = html_entity_decode((string)($info['TresLetras'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+$estadio_time = html_entity_decode((string)($info['Estadio'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 $estadio_capacidade = $info['Capacidade'] ?? 0;
 $escudo_time = $info['Escudo'] ?? '';
 $foto_estadio = $info['fotoEstadio'] ?? '';
 $uniforme1_time = $info['Uniforme1'] ?? '';
 $uniforme2_time = $info['Uniforme2'] ?? '';
-$pais_time = $info['Pais'] ?? '';
-$liga_time = $info['liga'] ?? '';
+$pais_time = html_entity_decode((string)($info['Pais'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+$liga_time = html_entity_decode((string)($info['liga'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 $liga_id = $info['liga_id'] ?? null;
 $pais_id = $info['pais_id'] ?? null;
 $donoPais = $info['donoPais'] ?? null;
@@ -700,14 +700,14 @@ $meia = array();
 $armador = array();
 $atacante = array();
 foreach($lista_titulares as $jogador){
-	
-	if(strlen($jogador["nome"]) > 15){
-		$temp_nome = explode(" ", $jogador["nome"]);
+	$nomeTitular = $jogador["nome"] ?? "";
+	if(strlen($nomeTitular) > 15){
+		$temp_nome = explode(" ", $nomeTitular);
 		$sobrenome_jogador = end($temp_nome);
 		$primeira_letra = mb_substr($temp_nome[0], 0 ,1);
 		$nome_final = $primeira_letra . ". " . $sobrenome_jogador;
 	} else {
-		$nome_final = $jogador["nome"];
+		$nome_final = $nomeTitular;
 	}
 	
     switch($jogador['posicaoBase']){

@@ -19,6 +19,89 @@ class Competicao_clube{
  
     public function __construct($db){
         $this->conn = $db;
+        $this->checkAndMigrateSchema();
+    }
+
+    public function checkAndMigrateSchema(){
+        try {
+            // 1. Garantir tabela competicao_alteracoes_log
+            $this->conn->exec("
+                CREATE TABLE IF NOT EXISTS competicao_alteracoes_log (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    id_competicao INT NOT NULL,
+                    id_time INT NOT NULL,
+                    tipo_acao VARCHAR(30) NOT NULL,
+                    id_jogador_saiu INT NULL,
+                    id_jogador_entrou INT NULL,
+                    data_alteracao DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    INDEX (id_competicao),
+                    INDEX (id_time)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+
+            // 2. Garantir colunas em competicao_opcoes
+            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'alteracoeselenco'");
+            if ($res && $res->rowCount() == 0) {
+                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN alteracoeselenco TINYINT(1) DEFAULT 0");
+            }
+
+            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'inicioalteracoes'");
+            if ($res && $res->rowCount() == 0) {
+                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN inicioalteracoes DATE NULL");
+            }
+
+            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'fimalteracoes'");
+            if ($res && $res->rowCount() == 0) {
+                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN fimalteracoes DATE NULL");
+            }
+
+            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'jogadoresadicionais'");
+            if ($res && $res->rowCount() == 0) {
+                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN jogadoresadicionais INT DEFAULT 0");
+            }
+
+            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'expulso_dois_amarelos'");
+            if ($res && $res->rowCount() == 0) {
+                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN expulso_dois_amarelos TINYINT(1) DEFAULT 0");
+            }
+
+            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'tipo_preliminar'");
+            if ($res && $res->rowCount() == 0) {
+                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN tipo_preliminar TINYINT(1) DEFAULT 1");
+            }
+
+            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'turnos_pontos_corridos'");
+            if ($res && $res->rowCount() == 0) {
+                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN turnos_pontos_corridos TINYINT(1) DEFAULT 2");
+            }
+
+            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'data_inicial'");
+            if ($res && $res->rowCount() == 0) {
+                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN data_inicial DATE NULL");
+            }
+
+            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'max_jogos_dia'");
+            if ($res && $res->rowCount() == 0) {
+                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN max_jogos_dia INT DEFAULT 0");
+            }
+
+            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'dias_semana'");
+            if ($res && $res->rowCount() == 0) {
+                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN dias_semana VARCHAR(50) DEFAULT ''");
+            }
+
+            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'intervalo_rodadas'");
+            if ($res && $res->rowCount() == 0) {
+                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN intervalo_rodadas INT DEFAULT 1");
+            }
+
+            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'horarios_jogos'");
+            if ($res && $res->rowCount() == 0) {
+                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN horarios_jogos VARCHAR(255) DEFAULT '16:00'");
+            }
+        } catch (Exception $e) {
+            error_log("Erro ao verificar/migrar schema de competicao_opcoes: " . $e->getMessage());
+        }
     }
  
     
@@ -236,7 +319,7 @@ class Competicao_clube{
 
 		$id = htmlspecialchars(strip_tags($id));
 		$query = "SELECT
-                numero_times, limite_fichas, subir_live, sorteio, golfora, finalunica, tipocompeticao, criteriodesempate, criteriodesempatefinal, suspensao, zeraramarelos, alteracoeselenco, inicioalteracoes, fimalteracoes, jogadoresadicionais, estadios_times, desempate_grupos, num_grupos, times_por_grupo, tipo_preliminar, turnos_pontos_corridos  
+                numero_times, limite_fichas, subir_live, sorteio, golfora, finalunica, tipocompeticao, criteriodesempate, criteriodesempatefinal, suspensao, zeraramarelos, expulso_dois_amarelos, alteracoeselenco, inicioalteracoes, fimalteracoes, jogadoresadicionais, estadios_times, desempate_grupos, num_grupos, times_por_grupo, tipo_preliminar, turnos_pontos_corridos, data_inicial, max_jogos_dia, dias_semana, intervalo_rodadas, horarios_jogos  
             FROM
                 competicao_opcoes 
             WHERE
@@ -249,7 +332,7 @@ class Competicao_clube{
 		return $options;
     }
 	
-	function alterarOpcoes($idUsuario, $numero_times, $data_limite, $subir_live, $sorteio, $gol_fora, $final_unica, $tipo_competicao, $criterio_desempate, $criterio_desempate_final, $criterio_suspensao, $zerar_amarelos, $permitir_alteracoes, $inicio_alteracoes, $fim_alteracoes, $numero_alteracoes, $id_competicao, $estadios_times = 1, $desempate_grupos = 'SG,GP,VI,CD', $num_grupos = 4, $times_por_grupo = 4, $tipo_preliminar = 1, $turnos_pontos_corridos = 2){
+	function alterarOpcoes($idUsuario, $numero_times, $data_limite, $subir_live, $sorteio, $gol_fora, $final_unica, $tipo_competicao, $criterio_desempate, $criterio_desempate_final, $criterio_suspensao, $zerar_amarelos, $permitir_alteracoes, $inicio_alteracoes, $fim_alteracoes, $numero_alteracoes, $id_competicao, $estadios_times = 1, $desempate_grupos = 'SG,GP,VI,CD', $num_grupos = 4, $times_por_grupo = 4, $tipo_preliminar = 1, $turnos_pontos_corridos = 2, $data_inicial = null, $max_jogos_dia = 0, $dias_semana = '', $intervalo_rodadas = 1, $horarios_jogos = '16:00', $expulso_dois_amarelos = 0){
 	
 			$idUsuario = htmlspecialchars(strip_tags($idUsuario));
 			$numero_times = htmlspecialchars(strip_tags($numero_times));
@@ -263,6 +346,7 @@ class Competicao_clube{
 			$criterio_desempate_final = htmlspecialchars(strip_tags($criterio_desempate_final));
 			$criterio_suspensao = htmlspecialchars(strip_tags($criterio_suspensao));
 			$zerar_amarelos = htmlspecialchars(strip_tags($zerar_amarelos));
+			$expulso_dois_amarelos = intval($expulso_dois_amarelos);
 			$permitir_alteracoes = htmlspecialchars(strip_tags($permitir_alteracoes));
 			$inicio_alteracoes = htmlspecialchars(strip_tags($inicio_alteracoes));
 			$fim_alteracoes = htmlspecialchars(strip_tags($fim_alteracoes));
@@ -273,6 +357,11 @@ class Competicao_clube{
 			$times_por_grupo = intval($times_por_grupo) > 0 ? intval($times_por_grupo) : 4;
 			$tipo_preliminar = intval($tipo_preliminar);
 			$turnos_pontos_corridos = (intval($turnos_pontos_corridos) >= 1 && intval($turnos_pontos_corridos) <= 4) ? intval($turnos_pontos_corridos) : 2;
+			$data_inicial = !empty($data_inicial) ? htmlspecialchars(strip_tags($data_inicial)) : null;
+			$max_jogos_dia = intval($max_jogos_dia) >= 0 ? intval($max_jogos_dia) : 0;
+			$dias_semana = htmlspecialchars(strip_tags($dias_semana));
+			$intervalo_rodadas = intval($intervalo_rodadas) > 0 ? intval($intervalo_rodadas) : 1;
+			$horarios_jogos = !empty($horarios_jogos) ? htmlspecialchars(strip_tags($horarios_jogos)) : '16:00';
 
 			if($numero_alteracoes == "") $numero_alteracoes = 0;
 			if($inicio_alteracoes == "") $inicio_alteracoes = null;
@@ -282,7 +371,7 @@ class Competicao_clube{
 			
 			$query = "UPDATE competicao_opcoes 
             SET
-                 numero_times =:numero_times, limite_fichas=:limite_fichas, subir_live=:subir_live, sorteio=:sorteio, golfora=:golfora, finalunica=:finalunica, tipocompeticao=:tipocompeticao, criteriodesempate=:criteriodesempate, criteriodesempatefinal=:criteriodesempatefinal, suspensao=:suspensao, zeraramarelos=:zeraramarelos, alteracoeselenco=:alteracoeselenco, inicioalteracoes=:inicioalteracoes, fimalteracoes=:fimalteracoes, jogadoresadicionais=:numeroalteracoes, estadios_times=:estadios_times, desempate_grupos=:desempate_grupos, num_grupos=:num_grupos, times_por_grupo=:times_por_grupo, tipo_preliminar=:tipo_preliminar, turnos_pontos_corridos=:turnos_pontos_corridos   
+                 numero_times =:numero_times, limite_fichas=:limite_fichas, subir_live=:subir_live, sorteio=:sorteio, golfora=:golfora, finalunica=:finalunica, tipocompeticao=:tipocompeticao, criteriodesempate=:criteriodesempate, criteriodesempatefinal=:criteriodesempatefinal, suspensao=:suspensao, zeraramarelos=:zeraramarelos, expulso_dois_amarelos=:expulso_dois_amarelos, alteracoeselenco=:alteracoeselenco, inicioalteracoes=:inicioalteracoes, fimalteracoes=:fimalteracoes, jogadoresadicionais=:numeroalteracoes, estadios_times=:estadios_times, desempate_grupos=:desempate_grupos, num_grupos=:num_grupos, times_por_grupo=:times_por_grupo, tipo_preliminar=:tipo_preliminar, turnos_pontos_corridos=:turnos_pontos_corridos, data_inicial=:data_inicial, max_jogos_dia=:max_jogos_dia, dias_semana=:dias_semana, intervalo_rodadas=:intervalo_rodadas, horarios_jogos=:horarios_jogos   
              WHERE
                 id_competicao = :idComp";
 
@@ -299,6 +388,7 @@ class Competicao_clube{
 		$stmt->bindParam(":criteriodesempatefinal", $criterio_desempate_final);
 		$stmt->bindParam(":suspensao", $criterio_suspensao);
 		$stmt->bindParam(":zeraramarelos", $zerar_amarelos);
+		$stmt->bindParam(":expulso_dois_amarelos", $expulso_dois_amarelos);
 		$stmt->bindParam(":alteracoeselenco", $permitir_alteracoes);
 		$stmt->bindParam(":inicioalteracoes", $inicio_alteracoes);
 		$stmt->bindParam(":fimalteracoes", $fim_alteracoes);
@@ -309,6 +399,11 @@ class Competicao_clube{
 		$stmt->bindParam(":times_por_grupo", $times_por_grupo);
 		$stmt->bindParam(":tipo_preliminar", $tipo_preliminar);
 		$stmt->bindParam(":turnos_pontos_corridos", $turnos_pontos_corridos);
+		$stmt->bindParam(":data_inicial", $data_inicial);
+		$stmt->bindParam(":max_jogos_dia", $max_jogos_dia);
+		$stmt->bindParam(":dias_semana", $dias_semana);
+		$stmt->bindParam(":intervalo_rodadas", $intervalo_rodadas);
+		$stmt->bindParam(":horarios_jogos", $horarios_jogos);
 		
 		if($stmt->execute()){
 			return true;
@@ -1031,6 +1126,7 @@ class Competicao_clube{
 		if ($idCompeticao <= 0 || $faseAtual <= 2) return false;
 
 		$nextFaseMap = [
+			11 => 10, // 64-avos -> 32-avos
 			10 => 9,  // 32-avos -> 16-avos
 			9  => 3,  // 16-avos -> Oitavas
 			3  => 4,  // Oitavas -> Quartas
@@ -1107,12 +1203,12 @@ class Competicao_clube{
 
 		// 5. Identificar se há times de BYE (somente aplicável na primeira fase da competição de mata-mata)
 		$byes = [];
-		// As fases de mata-mata em ordem cronológica: 10 (32-avos), 9 (16-avos), 3 (Oitavas), 4 (Quartas), 5 (Semi), 8 (Final)
+		// As fases de mata-mata em ordem cronológica: 11 (64-avos), 10 (32-avos), 9 (16-avos), 3 (Oitavas), 4 (Quartas), 5 (Semi), 8 (Final)
 		$stmtMinFase = $this->conn->prepare("
 			SELECT fase 
 			FROM jogos_clube 
-			WHERE competicao_id = :idComp AND fase IN (10, 9, 3, 4, 5, 8) 
-			ORDER BY FIELD(fase, 10, 9, 3, 4, 5, 8) ASC 
+			WHERE competicao_id = :idComp AND fase IN (11, 10, 9, 3, 4, 5, 8) 
+			ORDER BY FIELD(fase, 11, 10, 9, 3, 4, 5, 8) ASC 
 			LIMIT 1
 		");
 		$stmtMinFase->execute([':idComp' => $idCompeticao]);

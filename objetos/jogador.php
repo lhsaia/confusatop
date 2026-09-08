@@ -3447,9 +3447,13 @@ return $stmt;
 
     //return $result;
 
-    $to = $result['email'];
+    $to = (!empty($result) && is_array($result)) ? ($result['email'] ?? '') : '';
     //$to = "lhsaia@gmail.com";
     $from = "no-reply@confusa.top";
+
+    if (empty($to)) {
+        return false;
+    }
 
     // informações jogador
         $query = "SELECT Nome FROM jogador WHERE ID = ?";
@@ -3457,7 +3461,7 @@ return $stmt;
         $stmt->bindParam(1,$idJogador);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $nomeJogador = $result["Nome"];
+        $nomeJogador = (!empty($result) && is_array($result)) ? ($result["Nome"] ?? "") : "";
     
     // informações clube destino
         $query = "SELECT Nome, Escudo FROM clube WHERE ID = ?";
@@ -3465,9 +3469,9 @@ return $stmt;
         $stmt->bindParam(1,$clubeDestino);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $nomeClube = $result["Nome"];
-        $escudoClube = $result["Escudo"];
-        $extEscudoClube = substr($escudoClube, -3, 3);
+        $nomeClube = (!empty($result) && is_array($result)) ? ($result["Nome"] ?? "") : "";
+        $escudoClube = (!empty($result) && is_array($result)) ? ($result["Escudo"] ?? "") : "";
+        $extEscudoClube = $escudoClube ? substr($escudoClube, -3, 3) : '';
         $data = '';
         if ($escudoClube) {
             $imgPath = $_SERVER['DOCUMENT_ROOT'] . "/images/escudos/" . $escudoClube;
@@ -3485,10 +3489,11 @@ return $stmt;
         $stmt->bindParam(1,$idTransferencia);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $valor = number_format((float)($result["valor"] ?? 0), 0, ',', ' ');
-        $emprestimo = $result["emprestimo"] ?? false;
-        $encerramento = $result["encerramento"];
-        $mensagens = $result["mensagens"];
+        $resArray = (!empty($result) && is_array($result)) ? $result : [];
+        $valor = number_format((float)($resArray["valor"] ?? 0), 0, ',', ' ');
+        $emprestimo = $resArray["emprestimo"] ?? false;
+        $encerramento = $resArray["encerramento"] ?? "0000-00-00";
+        $mensagens = $resArray["mensagens"] ?? "";
         
         if($emprestimo){
             $tipoTransferencia = "empréstimo";
@@ -3509,8 +3514,10 @@ return $stmt;
         
         if ($data !== '') {
             $imgHtml = "<img align='middle' height='60' src='data:image/" . $extEscudoClube . ";base64," . $data . "'/>";
-        } else {
+        } elseif (!empty($escudoClube)) {
             $imgHtml = "<img align='middle' height='60' src='https://confusa.top/images/escudos/" . urlencode($escudoClube) . "'/>";
+        } else {
+            $imgHtml = "";
         }
 
         $mensagemExtraHtml = "";
