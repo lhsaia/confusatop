@@ -220,7 +220,7 @@ try {
         FROM competicao_times ct
         INNER JOIN competicao_lista c ON ct.id_competicao = c.id
         INNER JOIN competicao_opcoes co ON c.id = co.id_competicao
-        INNER JOIN clube cl ON ct.time_portal = cl.ID
+        INNER JOIN clube cl ON ct.id_time_portal = cl.ID
         INNER JOIN paises p ON cl.Pais = p.id
         WHERE p.dono = ? 
           AND ct.has_team = '1'
