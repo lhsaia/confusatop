@@ -18,6 +18,20 @@ class Tecnico{
     public function __construct($db){
         $this->conn = $db;
         $this->ensureDataFalecimentoColumn();
+        $this->ensureReferenciaColumn();
+    }
+
+    private function ensureReferenciaColumn() {
+        try {
+            $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN IF NOT EXISTS referencia VARCHAR(255) DEFAULT NULL");
+        } catch (Exception $e) {
+            try {
+                $check = $this->conn->query("SHOW COLUMNS FROM " . $this->table_name . " LIKE 'referencia'");
+                if ($check && $check->rowCount() == 0) {
+                    $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN referencia VARCHAR(255) DEFAULT NULL");
+                }
+            } catch (Exception $ex) {}
+        }
     }
 
     private function ensureDataFalecimentoColumn() {
@@ -1321,7 +1335,7 @@ class Tecnico{
         } 
 
         $query = "SELECT
-                    a.ID, a.Nome, a.Nascimento, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as idade, a.Mentalidade, a.Nivel, a.Estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.Sexo, q.dono as donoClubeVinculado, b.nome as clubeVinculado, b.escudo as escudoClubeVinculado, b.id as idClubeVinculado, a.foto, a.disponibilidade, a.data_falecimento 
+                    a.ID, a.Nome, a.Nascimento, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as idade, a.Mentalidade, a.Nivel, a.Estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.Sexo, q.dono as donoClubeVinculado, b.nome as clubeVinculado, b.escudo as escudoClubeVinculado, b.id as idClubeVinculado, a.foto, a.disponibilidade, a.data_falecimento, a.referencia 
                 FROM
                     " . $this->table_name . " a
                 LEFT JOIN paises p ON a.pais = p.id
@@ -1351,7 +1365,7 @@ class Tecnico{
         $queryBase = "SELECT t.ID as id, t.Nome as nome, t.Pais as idPais, t.Nascimento as nascimento, 
                              FLOOR((DATEDIFF(CURDATE(), t.Nascimento))/365) as idade, 
                              t.Nivel as nivel, t.Mentalidade as mentalidade, t.Estilo as estilo, 
-                             t.Sexo as sexo, t.foto as foto, t.disponibilidade as disponibilidade, t.data_falecimento as data_falecimento,
+                             t.Sexo as sexo, t.foto as foto, t.disponibilidade as disponibilidade, t.data_falecimento as data_falecimento, t.referencia as referencia,
                              p.nome as Pais, p.bandeira as bandeiraPais, p.sigla as siglaPais, p.dono as donoPais 
                       FROM " . $this->table_name . " t 
                       LEFT JOIN paises p ON t.Pais = p.id 
@@ -1365,7 +1379,7 @@ class Tecnico{
             $resultBase = [
                 'id' => 0, 'nome' => '', 'idPais' => 0, 'nascimento' => '', 'idade' => 0,
                 'nivel' => 0, 'mentalidade' => 0, 'estilo' => 0, 'sexo' => 0, 'foto' => '',
-                'disponibilidade' => 1, 'data_falecimento' => null,
+                'disponibilidade' => 1, 'data_falecimento' => null, 'referencia' => null,
                 'Pais' => '', 'bandeiraPais' => '', 'siglaPais' => '', 'donoPais' => 0
             ];
         }
@@ -1440,6 +1454,25 @@ class Tecnico{
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row['total'] ?? 0;
+    }
+
+    public function atualizarReferencia($idTecnico, $referencia) {
+        try {
+            $query = "UPDATE " . $this->table_name . " SET referencia = :referencia WHERE ID = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":referencia", $referencia);
+            $stmt->bindParam(":id", $idTecnico);
+
+            if ($stmt->execute()) {
+                return true;
+            }
+            return false;
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000) {
+                return "DUPLICATE";
+            }
+            return false;
+        }
     }
 
 }

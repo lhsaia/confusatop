@@ -253,6 +253,13 @@ $(document).ready(function($){
                     // Ações
                     tbl += "<td class='actions-col'>";
                     if(logged === "true"){
+                        if(admin === "true" || user_id == val['idDonoPais'] || (typeof val['donoClubeVinculado'] !== 'undefined' && user_id == val['donoClubeVinculado']) || !val['donoClubeVinculado']){
+                            if(val['referencia'] && val['referencia'].trim() !== ''){
+                                tbl += "<a href='" + val['referencia'] + "' target='_blank' id='ref" + val['ID'] + "' title='Ver Referência' class='clickable'><span class='material-symbols-outlined inlineButton positive'>link</span></a>";
+                            } else {
+                                tbl += "<a id='ref" + val['ID'] + "' title='Adicionar Referência' class='clickable add-referencia' data-id='" + val['ID'] + "'><span class='material-symbols-outlined inlineButton'>link</span></a>";
+                            }
+                        }
                         tbl += "<a id='edi" + val['ID'] + "' title='Editar técnico' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
                         tbl += "<a hidden id='sal" + val['ID'] + "' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
                         tbl += "<a hidden id='can" + val['ID'] + "' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
@@ -304,6 +311,8 @@ $(document).ready(function($){
             tbl_row.find(".salvar").show();
             tbl_row.find(".cancelar").show();
             tbl_row.find(".editar").hide();
+            tbl_row.find(".add-referencia").hide();
+            tbl_row.find("a[id^='ref']").hide();
             tbl_row.find('.hiddenInput').show();
 
             var donoTime = tbl_row.find(".donoClubeVinculado").html();
@@ -370,6 +379,8 @@ $(document).ready(function($){
             tbl_row.find('.salvar').hide();
             tbl_row.find('.cancelar').hide();
             tbl_row.find('.editar').show();
+            tbl_row.find('.add-referencia').show();
+            tbl_row.find("a[id^='ref']").show();
             tbl_row.find('.hiddenInput').hide();
 
             tbl_row.find('span').each(function(){
@@ -517,6 +528,29 @@ $(document).ready(function($){
         pgn += '</ul>';
         return pgn;
     }
+
+    $(document).on('click', '.add-referencia', function(){
+        var tecnicoId = $(this).attr('data-id');
+        var referencia = prompt("Insira o link de referência para este técnico:");
+        if (referencia !== null && referencia.trim() !== "") {
+            $.ajax({
+                type: "POST",
+                url: '/ligas/editar_tecnico.php',
+                data: {idTecnico: tecnicoId, alteracao: 10, referencia: referencia},
+                dataType: 'json',
+                success: function(data) {
+                    if(!data.success){
+                        alert(data.error || "Não foi possível adicionar a referência.");
+                    } else {
+                        load_data();
+                    }
+                },
+                error: function() {
+                    alert("Não foi possível adicionar a referência.");
+                }
+            });
+        }
+    });
 
 });
 </script>

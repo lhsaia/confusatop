@@ -177,6 +177,20 @@ $localizacao_foto = null;
               $is_success = false;
               $error_msg = "Falha ao editar técnico";
           }
+    } else if($tipo == 10){
+        // Atualizar link de referencia
+        $referencia = isset($_POST['referencia']) ? trim($_POST['referencia']) : '';
+        $resultado = $tecnico->atualizarReferencia($idTecnico, $referencia);
+        if ($resultado === true) {
+            $is_success = true;
+            $error_msg = "";
+        } else if ($resultado === "DUPLICATE") {
+            $is_success = false;
+            $error_msg = "Esse link já está sendo usado por outro técnico.";
+        } else {
+            $is_success = false;
+            $error_msg = "Falha ao adicionar link de referência.";
+        }
     }
 
 

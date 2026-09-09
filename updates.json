@@ -13,6 +13,11 @@
       "date": "08/09/2026",
       "items": [
         {
+          "badge": "new",
+          "title": "Link de Referência para Técnicos",
+          "desc": "Adicionado suporte a links de referência externa para técnicos na tela Meus Técnicos, permitindo vincular e consultar links diretamente pela listagem."
+        },
+        {
           "badge": "bugfix",
           "title": "Correção na Contagem de Janelas de Alterações de Elenco",
           "desc": "Corrigido o nome da coluna de relacionamento com clubes na consulta SQL que contabiliza as janelas abertas de alteração de elenco em Minha Área."
