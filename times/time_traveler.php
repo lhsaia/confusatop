@@ -19,13 +19,21 @@ $timeObj = new Time($db);
 
 // Carregar lista de todos os clubes para a seleção
 $stmtTimes = $db->query("
-    SELECT c.ID, c.Nome, c.Escudo, p.nome as nomePais, p.bandeira as bandeiraPais 
+    SELECT c.ID, c.Nome, c.Escudo, COALESCE(c.Sexo, l.Sexo, 0) as Sexo, p.nome as nomePais, p.bandeira as bandeiraPais 
     FROM clube c 
     LEFT JOIN paises p ON c.Pais = p.id 
+    LEFT JOIN liga l ON c.liga = l.id
     WHERE c.status = 0 
     ORDER BY c.Nome ASC
 ");
 $todosClubes = $stmtTimes->fetchAll(PDO::FETCH_ASSOC);
+
+// Mapear contagem de nomes para identificar duplicatas e diferenciar masculino/feminino
+$contagemNomesClubes = [];
+foreach ($todosClubes as $c) {
+    $nomeChave = trim($c['Nome']);
+    $contagemNomesClubes[$nomeChave] = ($contagemNomesClubes[$nomeChave] ?? 0) + 1;
+}
 
 $preselectedTeam = isset($_GET['team']) ? (int)$_GET['team'] : 0;
 $preselectedDate = isset($_GET['date']) ? trim($_GET['date']) : date('Y-m-d', strtotime('-1 year'));
@@ -50,9 +58,13 @@ include_once($_SERVER['DOCUMENT_ROOT'] . "/elements/header.php");
                     <label><span class="material-symbols-outlined">shield</span> Escolha o Clube</label>
                     <select id="ttSelectTeam" class="tt-select select2-enable no-capture" required>
                         <option value="">Selecione um clube...</option>
-                        <?php foreach ($todosClubes as $c): ?>
+                        <?php foreach ($todosClubes as $c): 
+                            $nomeChave = trim($c['Nome']);
+                            $isDuplicado = ($contagemNomesClubes[$nomeChave] ?? 0) > 1;
+                            $sufixoSexo = $isDuplicado ? (((int)$c['Sexo'] === 1) ? ' [Feminino]' : ' [Masculino]') : '';
+                        ?>
                             <option value="<?php echo $c['ID']; ?>" <?php echo ($preselectedTeam == $c['ID']) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($c['Nome']); ?> (<?php echo htmlspecialchars($c['nomePais'] ?: 'Sem País'); ?>)
+                                <?php echo htmlspecialchars($c['Nome'] . $sufixoSexo); ?> (<?php echo htmlspecialchars($c['nomePais'] ?: 'Sem País'); ?>)
                             </option>
                         <?php endforeach; ?>
                     </select>
