@@ -9,6 +9,22 @@
   },
   "days": [
     {
+      "id": "day_09_09_2026",
+      "date": "09/09/2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Lançamento do Módulo de Competições",
+          "desc": "O módulo de Competições foi disponibilizado na tela inicial, permitindo criar, estruturar formatos, gerenciar partidas e simular torneios completos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Tratamento de Sessão e Sanitização na Exportação de Database",
+          "desc": "Corrigidos avisos de parâmetros nulos em strip_tags nos objetos de usuários e parâmetros, e adicionada validação de sessão ativa na exportação de database."
+        }
+      ]
+    },
+    {
       "id": "day_08_09_2026",
       "date": "08/09/2026",
       "items": [

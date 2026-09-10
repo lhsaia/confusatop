@@ -35,7 +35,7 @@ class Usuario{
 
     function passByName($name){
 
-        $name = htmlspecialchars(strip_tags($name));
+        $name = htmlspecialchars(strip_tags((string)$name));
         //select all data
         $query = "SELECT
                     senha, nome, admin_status, avatar
@@ -131,7 +131,7 @@ class Usuario{
 
     function passById($id){
 
-        $id = htmlspecialchars(strip_tags($id));
+        $id = htmlspecialchars(strip_tags((string)$id));
         //select all data
         $query = "SELECT
                     senha
@@ -154,7 +154,7 @@ class Usuario{
 
     function alterarSenha($idInformada, $senhaNovaInformada){
 
-        $idInformada = htmlspecialchars(strip_tags($idInformada));
+        $idInformada = htmlspecialchars(strip_tags((string)$idInformada));
 
         $query = "UPDATE " . $this->table_name . " SET senha = ? WHERE id = ?";
         $stmt = $this->conn->prepare( $query );
@@ -180,11 +180,11 @@ class Usuario{
         $stmt = $this->conn->prepare($query);
 
         // posted values
-        $this->nomeusuario=htmlspecialchars(strip_tags($this->nomeusuario));
-        $this->senha=htmlspecialchars(strip_tags($this->senha));
-        $this->email=htmlspecialchars(strip_tags($this->email));
-        $this->nome=htmlspecialchars(strip_tags($this->nome));
-		$this->emTeste=htmlspecialchars(strip_tags($this->emTeste));
+        $this->nomeusuario=htmlspecialchars(strip_tags((string)$this->nomeusuario));
+        $this->senha=htmlspecialchars(strip_tags((string)$this->senha));
+        $this->email=htmlspecialchars(strip_tags((string)$this->email));
+        $this->nome=htmlspecialchars(strip_tags((string)$this->nome));
+		$this->emTeste=htmlspecialchars(strip_tags((string)$this->emTeste));
 
         //inserir verificação de usuario aqui
         $query_comparacao = "SELECT id FROM ". $this->table_name . " WHERE nomeusuario = ? OR email = ?";
@@ -215,7 +215,7 @@ class Usuario{
 
     function atualizarDownload($idUsuario){
 
-        $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+        $idUsuario = htmlspecialchars(strip_tags((string)$idUsuario));
 
         $query = "UPDATE " . $this->table_name . " SET ultimoDownload = NOW() WHERE id = ?";
         $stmt = $this->conn->prepare( $query );
@@ -227,7 +227,7 @@ class Usuario{
 
     function alteracoesPosteriores($idUsuario){
 
-        $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+        $idUsuario = htmlspecialchars(strip_tags((string)$idUsuario));
 
         $query = "SELECT (UNIX_TIMESTAMP(ultimaAlteracao) - UNIX_TIMESTAMP(ultimoDownload)) as tempo FROM " . $this->table_name . " WHERE id = ?";
         $stmt = $this->conn->prepare( $query );
@@ -243,7 +243,7 @@ class Usuario{
 
     function atualizarAlteracao($idUsuario){
 
-        $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+        $idUsuario = htmlspecialchars(strip_tags((string)$idUsuario));
 
         $query = "UPDATE " . $this->table_name . " SET ultimaAlteracao = NOW() WHERE id = ?";
         $stmt = $this->conn->prepare( $query );
@@ -255,7 +255,7 @@ class Usuario{
 	
 	function emTestes($idUsuario){
 
-        $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+        $idUsuario = htmlspecialchars(strip_tags((string)$idUsuario));
 
         $query = "SELECT emTeste FROM " . $this->table_name . "  WHERE id = ?";
         $stmt = $this->conn->prepare( $query );
@@ -275,7 +275,7 @@ class Usuario{
 	
 	function checkApiKey($apiKey){
 
-        $apiKey = htmlspecialchars(strip_tags($apiKey));
+        $apiKey = htmlspecialchars(strip_tags((string)$apiKey));
 
         $query = "SELECT id FROM " . $this->table_name . "  WHERE apiKey = ?";
         $stmt = $this->conn->prepare( $query );
@@ -312,7 +312,7 @@ class Usuario{
 	
     function gerarApiKey($userId){
 
-        $userId = htmlspecialchars(strip_tags($userId));
+        $userId = htmlspecialchars(strip_tags((string)$userId));
 		
 		$apiKey = implode('-', str_split(substr(strtolower(md5(microtime().rand(10000, 99999))), 0, 30), 6));
 

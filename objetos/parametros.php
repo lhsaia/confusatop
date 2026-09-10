@@ -26,16 +26,16 @@ class Parametro{
     function inserir(){
 
         // posted values
-        $this->nome=htmlspecialchars(strip_tags($this->nome));
-        $this->dono=htmlspecialchars(strip_tags($this->dono));
-        $this->gols=htmlspecialchars(strip_tags($this->gols));
-        $this->faltas=htmlspecialchars(strip_tags($this->faltas));
-        $this->impedimentos=htmlspecialchars(strip_tags($this->impedimentos));
-        $this->cartoes=htmlspecialchars(strip_tags($this->cartoes));
-        $this->estilo=htmlspecialchars(strip_tags($this->estilo));
-        $this->selecionado=htmlspecialchars(strip_tags($this->selecionado));
-        $this->paisPadrao=htmlspecialchars(strip_tags($this->paisPadrao));
-        $this->exibirBandeiras=htmlspecialchars(strip_tags($this->exibirBandeiras));
+        $this->nome=htmlspecialchars(strip_tags((string)$this->nome));
+        $this->dono=htmlspecialchars(strip_tags((string)$this->dono));
+        $this->gols=htmlspecialchars(strip_tags((string)$this->gols));
+        $this->faltas=htmlspecialchars(strip_tags((string)$this->faltas));
+        $this->impedimentos=htmlspecialchars(strip_tags((string)$this->impedimentos));
+        $this->cartoes=htmlspecialchars(strip_tags((string)$this->cartoes));
+        $this->estilo=htmlspecialchars(strip_tags((string)$this->estilo));
+        $this->selecionado=htmlspecialchars(strip_tags((string)$this->selecionado));
+        $this->paisPadrao=htmlspecialchars(strip_tags((string)$this->paisPadrao));
+        $this->exibirBandeiras=htmlspecialchars(strip_tags((string)$this->exibirBandeiras));
 
         if($this->selecionado == 1){
             $prequery = "UPDATE " . $this->table_name . " SET Selecionado=0 WHERE Dono=:dono";
@@ -75,7 +75,7 @@ class Parametro{
     //ler todos os jogadores para o quadro
     function readAll($from_record_num, $records_per_page, $idDono){
 
-        $idDono = htmlspecialchars(strip_tags($idDono));
+        $idDono = htmlspecialchars(strip_tags((string)$idDono));
  
      $query = "SELECT
                  a.ID, a.Nome, a.Gols, a.Faltas, a.Impedimentos, a.Cartoes, a.Estilo, a.Selecionado, a.PaisPadrao, p.bandeira, p.sigla, a.ExibirBandeiras 
@@ -100,7 +100,7 @@ class Parametro{
     // used for paging products
     public function countAll($idDono){
 
-     $idDono = htmlspecialchars(strip_tags($idDono));
+     $idDono = htmlspecialchars(strip_tags((string)$idDono));
 
          $query =    "SELECT a.id 
                      FROM " . $this->table_name . " a
@@ -115,7 +115,7 @@ class Parametro{
     }
 
     function coletarOpcoes($idUsuario){
-        $idUsuario = htmlspecialchars(strip_tags($idUsuario));
+        $idUsuario = htmlspecialchars(strip_tags((string)$idUsuario));
 
         $query = "SELECT * FROM opcoesHYMT WHERE usuario = ?";
         $stmt = $this->conn->prepare($query);
@@ -139,12 +139,12 @@ class Parametro{
     }       
 
     function alterarOpcoes($dono, $sumulas, $lesoes, $porTempo, $porData, $VAR){
-        $dono = htmlspecialchars(strip_tags($dono));
-        $sumulas = htmlspecialchars(strip_tags($sumulas));
-        $lesoes = htmlspecialchars(strip_tags($lesoes));
-        $porTempo = htmlspecialchars(strip_tags($porTempo));
-        $porData = htmlspecialchars(strip_tags($porData));
-        $VAR = htmlspecialchars(strip_tags($VAR));
+        $dono = htmlspecialchars(strip_tags((string)$dono));
+        $sumulas = htmlspecialchars(strip_tags((string)$sumulas));
+        $lesoes = htmlspecialchars(strip_tags((string)$lesoes));
+        $porTempo = htmlspecialchars(strip_tags((string)$porTempo));
+        $porData = htmlspecialchars(strip_tags((string)$porData));
+        $VAR = htmlspecialchars(strip_tags((string)$VAR));
 
 
         $query = "INSERT INTO opcoesHYMT (usuario, mostrarSumula, limitarLesoes, porTempo, porData, videoAr) VALUES (?, ?, ?, ?, ?, ?) 
@@ -171,17 +171,17 @@ class Parametro{
     //alterar parametro
     function alterar(){
 
-        $this->nome=htmlspecialchars(strip_tags($this->nome));
-        $this->dono=htmlspecialchars(strip_tags($this->dono));
-        $this->gols=htmlspecialchars(strip_tags($this->gols));
-        $this->faltas=htmlspecialchars(strip_tags($this->faltas));
-        $this->impedimentos=htmlspecialchars(strip_tags($this->impedimentos));
-        $this->cartoes=htmlspecialchars(strip_tags($this->cartoes));
-        $this->estilo=htmlspecialchars(strip_tags($this->estilo));
-        $this->selecionado=htmlspecialchars(strip_tags($this->selecionado));
-        $this->paisPadrao=htmlspecialchars(strip_tags($this->paisPadrao));
-        $this->exibirBandeiras=htmlspecialchars(strip_tags($this->exibirBandeiras));
-        $this->id=htmlspecialchars(strip_tags($this->id));
+        $this->nome=htmlspecialchars(strip_tags((string)$this->nome));
+        $this->dono=htmlspecialchars(strip_tags((string)$this->dono));
+        $this->gols=htmlspecialchars(strip_tags((string)$this->gols));
+        $this->faltas=htmlspecialchars(strip_tags((string)$this->faltas));
+        $this->impedimentos=htmlspecialchars(strip_tags((string)$this->impedimentos));
+        $this->cartoes=htmlspecialchars(strip_tags((string)$this->cartoes));
+        $this->estilo=htmlspecialchars(strip_tags((string)$this->estilo));
+        $this->selecionado=htmlspecialchars(strip_tags((string)$this->selecionado));
+        $this->paisPadrao=htmlspecialchars(strip_tags((string)$this->paisPadrao));
+        $this->exibirBandeiras=htmlspecialchars(strip_tags((string)$this->exibirBandeiras));
+        $this->id=htmlspecialchars(strip_tags((string)$this->id));
 
         if($this->selecionado == 1){
             $prequery = "UPDATE " . $this->table_name . " SET Selecionado=0 WHERE Dono=:dono";

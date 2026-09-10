@@ -1,6 +1,10 @@
 <?php
  
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
+if (empty($_SESSION['loggedin']) || empty($_SESSION['user_id'])) {
+    header("Location: /");
+    exit;
+}
 $userId = $_SESSION['user_id'];
 
 include_once($_SERVER['DOCUMENT_ROOT']."/config/sqliteDatabase.php");
@@ -29,10 +33,9 @@ $parametro = new Parametro($db);
 $exportFiles = array();
 $newFiles = array();
 
-$masterLista = $_GET['data'];
-$masterLista = json_decode($_GET['data'], true);
+$masterLista = isset($_GET['data']) ? json_decode($_GET['data'], true) : [];
 
-$opcaoPrincipal = $_GET['option'];
+$opcaoPrincipal = $_GET['option'] ?? 0;
 $listaNomesPaises = array();
 
 //remove all user files and create directories only if needed
@@ -421,7 +424,7 @@ try {
 }
 } 
 //criar zip e fazer exportação
-$zip_name = $_SESSION['username'].'.zip'; //the real path of your final zip file on your system
+$zip_name = (!empty($_SESSION['username']) ? $_SESSION['username'] : ('user_' . $userId)) . '.zip'; //the real path of your final zip file on your system
 $zip = new ZipArchive();
 $zip->open($zip_name, ZipArchive::CREATE);
 
