@@ -4,13 +4,14 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // CLI/Cron runner for next-day matches simulation
-if (php_sapi_name() !== 'cli' && !isset($_GET['cron_key'])) {
+$isCommandLine = (php_sapi_name() === 'cli') || (php_sapi_name() === 'cgi') || (php_sapi_name() === 'cgi-fcgi') || !isset($_SERVER['HTTP_HOST']);
+if (!$isCommandLine && !isset($_GET['cron_key'])) {
     // Permitir execução via CLI ou via Web se cron_key estiver presente
     header('HTTP/1.0 403 Forbidden');
     die("Acesso restrito ao agendador (Cron CLI).");
 }
 
-if (php_sapi_name() !== 'cli') {
+if (php_sapi_name() !== 'cli' && isset($_SERVER['HTTP_HOST'])) {
     header('Content-Type: text/plain; charset=utf-8');
 }
 

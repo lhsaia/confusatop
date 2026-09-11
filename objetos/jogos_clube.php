@@ -564,6 +564,8 @@ class Jogo{
                     j.estadio_id,
                     j.competicao_id,
                     j.competicao_tipo,
+                    j.simulador_interno,
+                    j.status,
                     j.dono,
                     arbitros.nomeArbitro as nome_arbitro, 
                     COALESCE(ta.Nome, j.timeA_nome) as timeA_nome, 
@@ -577,11 +579,12 @@ class Jogo{
                     j.timeA_penaltis, 
                     j.timeB_penaltis, 
                     DATE_FORMAT(j.data, '%Y-%m-%d') as data, 
-                    COALESCE(li.nome, cc.nome) as competition_name, 
+                    COALESCE(cl.nome, li.nome, cc.nome) as competition_name, 
                     j.fase as phase 
                 FROM jogos_clube j 
-                LEFT JOIN liga li ON li.id = j.competicao_id AND j.competicao_tipo = 0
-                LEFT JOIN campeonatos_clube cc ON cc.id = j.competicao_id AND j.competicao_tipo = 1
+                LEFT JOIN competicao_lista cl ON cl.id = j.competicao_id AND j.simulador_interno = 1
+                LEFT JOIN liga li ON li.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 0
+                LEFT JOIN campeonatos_clube cc ON cc.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 1
                 LEFT JOIN clube ta ON ta.ID = j.timeA_id  
                 LEFT JOIN clube tb ON tb.ID = j.timeB_id 
                 LEFT JOIN arbitros ON arbitros.id = j.arbitro_id 

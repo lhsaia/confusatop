@@ -286,15 +286,50 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     }
     ksort($tabelaPorGrupo);
     
-    // 5. Escanear arquivos de partidas e consolidar estatísticas de jogadores
+    // 5. Escanear arquivos de partidas e consolidar estatísticas de jogadores (apenas de jogos encerrados no tempo real)
     $playerStats = [];
     $nomeComposto = $ano_competicao . " - " . $nome_competicao;
     $dirPartidas = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/" . $nomeComposto . "/1º Rodada";
     
+    // Mapeamento de jogos por nome de arquivo para verificação de tempo real e término
+    $jogosPorPath = [];
+    foreach ($jogos as $j) {
+        $pBasename = !empty($j['path']) ? basename($j['path']) : '';
+        if ($pBasename !== '') {
+            $jogosPorPath[$pBasename] = $j;
+        }
+    }
+
     if (is_dir($dirPartidas)) {
         $files = scandir($dirPartidas);
         foreach ($files as $f) {
             if (pathinfo($f, PATHINFO_EXTENSION) === 'hyj') {
+                $baseFilename = pathinfo($f, PATHINFO_FILENAME);
+                
+                // Verificar se a partida correspondente existe e se já encerrou no tempo real
+                $jogoCorrespondente = null;
+                if (isset($jogosPorPath[$baseFilename])) {
+                    $jogoCorrespondente = $jogosPorPath[$baseFilename];
+                } else {
+                    foreach ($jogos as $j) {
+                        if (!empty($j['path']) && strpos($j['path'], $baseFilename) !== false) {
+                            $jogoCorrespondente = $j;
+                            break;
+                        }
+                    }
+                }
+
+                if ($jogoCorrespondente) {
+                    $dataJogo = !empty($jogoCorrespondente['data']) ? strtotime($jogoCorrespondente['data']) : time();
+                    $temPen = ($jogoCorrespondente['timeA_penaltis'] !== null && $jogoCorrespondente['timeA_penaltis'] !== '');
+                    $duracaoSegundos = $temPen ? (150 * 60) : (120 * 60);
+                    $jaTerminou = (time() >= ($dataJogo + $duracaoSegundos));
+                    
+                    if ((int)$jogoCorrespondente['status'] !== 1 || !$jaTerminou) {
+                        continue; // Jogo ainda não aconteceu ou não finalizou no tempo real
+                    }
+                }
+
                 $content = @file_get_contents($dirPartidas . "/" . $f);
                 if ($content !== false) {
                     $json = json_decode($content);

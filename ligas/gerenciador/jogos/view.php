@@ -69,10 +69,24 @@ if(!$results) {
 
             <div class="scoreboard-score-center">
                 <div class="scoreboard-score-text">
-                    <?php echo $results['timeA_gols']; ?> × <?php echo $results['timeB_gols']; ?>
+                    <?php 
+                        $statusJogo = isset($results['status']) ? (int)$results['status'] : 1;
+                        $dtJogo = !empty($results['data']) ? strtotime($results['data']) : time();
+                        $temPen = ($results['timeA_penaltis'] !== null && $results['timeA_penaltis'] !== '');
+                        $duracaoSegundos = $temPen ? (150 * 60) : (120 * 60);
+                        $jaTerminou = (time() >= ($dtJogo + $duracaoSegundos));
+
+                        if ($statusJogo === 0 || (!$jaTerminou && !empty($results['simulador_interno']))) {
+                            echo "VS";
+                        } else {
+                            $gA = ($results['timeA_gols'] !== null) ? (int)$results['timeA_gols'] : 0;
+                            $gB = ($results['timeB_gols'] !== null) ? (int)$results['timeB_gols'] : 0;
+                            echo "{$gA} × {$gB}";
+                        }
+                    ?>
                 </div>
-                <?php if($results['timeA_penaltis'] !== null && $results['timeB_penaltis'] !== null && ($results['timeA_penaltis'] + $results['timeB_penaltis'] != 0)): ?>
-                    <span class="scoreboard-penalty">Pênaltis: <?php echo $results['timeA_penaltis']; ?> × <?php echo $results['timeB_penaltis']; ?></span>
+                <?php if($statusJogo === 1 && ($jaTerminou || empty($results['simulador_interno'])) && $results['timeA_penaltis'] !== null && $results['timeB_penaltis'] !== null && ($results['timeA_penaltis'] != '' || $results['timeB_penaltis'] != '')): ?>
+                    <span class="scoreboard-penalty">Pênaltis: <?php echo (int)$results['timeA_penaltis']; ?> × <?php echo (int)$results['timeB_penaltis']; ?></span>
                 <?php endif; ?>
             </div>
 

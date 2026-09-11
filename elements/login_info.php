@@ -10,8 +10,9 @@ if(isset($_POST['logout']) && $_POST['logout']==true){
     exit;
 }
 
-include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
-include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
+$base_dir = dirname(__DIR__);
+require_once $base_dir . "/config/database.php";
+require_once $base_dir . "/objetos/usuarios.php";
 
 $database = new Database();
 $db = $database->getConnection();
@@ -179,7 +180,7 @@ if( filter_var($_POST['newemail'], FILTER_VALIDATE_EMAIL) )
 
         // Enviar email via SMTP usando mail_setup.php
         try {
-            require_once($_SERVER['DOCUMENT_ROOT']."/elements/mail_setup.php");
+            require_once($base_dir . "/elements/mail_setup.php");
             $mail->clearAddresses();
             $mail->clearReplyTos();
             $mail->setFrom(getenv('SMTP_USER'), 'CONFUSA.top');
@@ -268,7 +269,7 @@ if( filter_var($_POST['forgetemail'], FILTER_VALIDATE_EMAIL) && $change_success)
 {
     $sendSuccess = false;
     try {
-        require_once($_SERVER['DOCUMENT_ROOT']."/elements/mail_setup.php");
+        require_once($base_dir . "/elements/mail_setup.php");
         $mail->clearAddresses();
         $mail->clearReplyTos();
         $mail->setFrom(getenv('SMTP_USER'), 'CONFUSA.top');

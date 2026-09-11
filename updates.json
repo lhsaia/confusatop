@@ -9,9 +9,50 @@
   },
   "days": [
     {
+      "id": "day_10_09_2026",
+      "date": "10/09/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção de Compatibilidade de Schema (SQLite/MySQL)",
+          "desc": "Corrigido erro de sintaxe SQL na verificação e migração de schema da tabela de opções e log de alterações de competição em conexões SQLite e MySQL."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Edição de Jogos de Competições",
+          "desc": "Corrigido erro de parâmetro PDO (bindParam) ao atualizar partidas com clubes indefinidos/zerados na edição de jogos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste no Cron de Simulação e Detalhes de Partidas",
+          "desc": "Corrigido o tratamento de ambiente para o cron de simulação (compatibilidade com CLI/CGI da hospedagem), adicionado sigilo temporal em estatísticas de jogadores (gols e cartões), corrigida a exibição do nome da competição no visualizador de partidas e restaurado o preenchimento de nomes de atletas nas escalações."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Carregamento da Criação de Liga",
+          "desc": "Corrigido erro de sintaxe (Parse error) no arquivo de criação de ligas que causava erro HTTP 500 no carregamento da página."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Robustez no Carregamento de Sessão e Usuários",
+          "desc": "Padronizada a resolução de caminhos absolutos e inclusão de dependências em login_info.php e conexão de banco de dados, prevenindo falhas de inicialização de classes em páginas do sistema."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Registro de Linha do Tempo e Eventos em Simulações Automáticas",
+          "desc": "Unificada a gravação de eventos minuto a minuto (gols, cartões amarelos e vermelhos) na tabela jogos_clube_eventos durante simulações automáticas via leitura das súmulas .hyl."
+        }
+      ]
+    },
+    {
       "id": "day_09_09_2026",
       "date": "09/09/2026",
       "items": [
+        {
+          "badge": "bugfix",
+          "title": "Diferenciação de Modalidade para Clubes Homônimos no Time Traveler",
+          "desc": "A lista de seleção de clubes no Time Traveler agora identifica automaticamente clubes com nomes idênticos e exibe a indicação [Masculino] ou [Feminino], facilitando a escolha correta da equipe."
+        },
         {
           "badge": "new",
           "title": "Lançamento do Módulo de Competições",

@@ -24,80 +24,93 @@ class Competicao_clube{
 
     public function checkAndMigrateSchema(){
         try {
+            $driver = '';
+            try {
+                $driver = strtolower($this->conn->getAttribute(PDO::ATTR_DRIVER_NAME));
+            } catch (Exception $e) {}
+
             // 1. Garantir tabela competicao_alteracoes_log
-            $this->conn->exec("
-                CREATE TABLE IF NOT EXISTS competicao_alteracoes_log (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    id_competicao INT NOT NULL,
-                    id_time INT NOT NULL,
-                    tipo_acao VARCHAR(30) NOT NULL,
-                    id_jogador_saiu INT NULL,
-                    id_jogador_entrou INT NULL,
-                    data_alteracao DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    INDEX (id_competicao),
-                    INDEX (id_time)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-            ");
+            if ($driver === 'sqlite') {
+                $this->conn->exec("
+                    CREATE TABLE IF NOT EXISTS competicao_alteracoes_log (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        id_competicao INTEGER NOT NULL,
+                        id_time INTEGER NOT NULL,
+                        tipo_acao TEXT NOT NULL,
+                        id_jogador_saiu INTEGER NULL,
+                        id_jogador_entrou INTEGER NULL,
+                        data_alteracao DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                ");
+                $this->conn->exec("CREATE INDEX IF NOT EXISTS idx_cal_comp ON competicao_alteracoes_log (id_competicao)");
+                $this->conn->exec("CREATE INDEX IF NOT EXISTS idx_cal_time ON competicao_alteracoes_log (id_time)");
 
-            // 2. Garantir colunas em competicao_opcoes
-            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'alteracoeselenco'");
-            if ($res && $res->rowCount() == 0) {
-                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN alteracoeselenco TINYINT(1) DEFAULT 0");
-            }
+                // 2. Garantir colunas em competicao_opcoes no SQLite se a tabela existir
+                $cols = [];
+                $res = $this->conn->query("PRAGMA table_info(competicao_opcoes)");
+                if ($res) {
+                    while ($row = $res->fetch(PDO::FETCH_ASSOC)) {
+                        $cols[strtolower($row['name'])] = true;
+                    }
+                }
+                if (!empty($cols)) {
+                    $columnsToAdd = [
+                        'alteracoeselenco' => "INTEGER DEFAULT 0",
+                        'inicioalteracoes' => "TEXT NULL",
+                        'fimalteracoes' => "TEXT NULL",
+                        'jogadoresadicionais' => "INTEGER DEFAULT 0",
+                        'expulso_dois_amarelos' => "INTEGER DEFAULT 0",
+                        'tipo_preliminar' => "INTEGER DEFAULT 1",
+                        'turnos_pontos_corridos' => "INTEGER DEFAULT 2",
+                        'data_inicial' => "TEXT NULL",
+                        'max_jogos_dia' => "INTEGER DEFAULT 0",
+                        'dias_semana' => "TEXT DEFAULT ''",
+                        'intervalo_rodadas' => "INTEGER DEFAULT 1",
+                        'horarios_jogos' => "TEXT DEFAULT '16:00'"
+                    ];
+                    foreach ($columnsToAdd as $col => $def) {
+                        if (!isset($cols[$col])) {
+                            $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN {$col} {$def}");
+                        }
+                    }
+                }
+            } else {
+                $this->conn->exec("
+                    CREATE TABLE IF NOT EXISTS competicao_alteracoes_log (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        id_competicao INT NOT NULL,
+                        id_time INT NOT NULL,
+                        tipo_acao VARCHAR(30) NOT NULL,
+                        id_jogador_saiu INT NULL,
+                        id_jogador_entrou INT NULL,
+                        data_alteracao DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        INDEX idx_cal_comp (id_competicao),
+                        INDEX idx_cal_time (id_time)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                ");
 
-            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'inicioalteracoes'");
-            if ($res && $res->rowCount() == 0) {
-                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN inicioalteracoes DATE NULL");
-            }
+                // 2. Garantir colunas em competicao_opcoes no MySQL
+                $columnsToAdd = [
+                    'alteracoeselenco' => "TINYINT(1) DEFAULT 0",
+                    'inicioalteracoes' => "DATE NULL",
+                    'fimalteracoes' => "DATE NULL",
+                    'jogadoresadicionais' => "INT DEFAULT 0",
+                    'expulso_dois_amarelos' => "TINYINT(1) DEFAULT 0",
+                    'tipo_preliminar' => "TINYINT(1) DEFAULT 1",
+                    'turnos_pontos_corridos' => "TINYINT(1) DEFAULT 2",
+                    'data_inicial' => "DATE NULL",
+                    'max_jogos_dia' => "INT DEFAULT 0",
+                    'dias_semana' => "VARCHAR(50) DEFAULT ''",
+                    'intervalo_rodadas' => "INT DEFAULT 1",
+                    'horarios_jogos' => "VARCHAR(255) DEFAULT '16:00'"
+                ];
 
-            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'fimalteracoes'");
-            if ($res && $res->rowCount() == 0) {
-                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN fimalteracoes DATE NULL");
-            }
-
-            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'jogadoresadicionais'");
-            if ($res && $res->rowCount() == 0) {
-                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN jogadoresadicionais INT DEFAULT 0");
-            }
-
-            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'expulso_dois_amarelos'");
-            if ($res && $res->rowCount() == 0) {
-                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN expulso_dois_amarelos TINYINT(1) DEFAULT 0");
-            }
-
-            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'tipo_preliminar'");
-            if ($res && $res->rowCount() == 0) {
-                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN tipo_preliminar TINYINT(1) DEFAULT 1");
-            }
-
-            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'turnos_pontos_corridos'");
-            if ($res && $res->rowCount() == 0) {
-                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN turnos_pontos_corridos TINYINT(1) DEFAULT 2");
-            }
-
-            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'data_inicial'");
-            if ($res && $res->rowCount() == 0) {
-                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN data_inicial DATE NULL");
-            }
-
-            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'max_jogos_dia'");
-            if ($res && $res->rowCount() == 0) {
-                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN max_jogos_dia INT DEFAULT 0");
-            }
-
-            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'dias_semana'");
-            if ($res && $res->rowCount() == 0) {
-                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN dias_semana VARCHAR(50) DEFAULT ''");
-            }
-
-            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'intervalo_rodadas'");
-            if ($res && $res->rowCount() == 0) {
-                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN intervalo_rodadas INT DEFAULT 1");
-            }
-
-            $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE 'horarios_jogos'");
-            if ($res && $res->rowCount() == 0) {
-                $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN horarios_jogos VARCHAR(255) DEFAULT '16:00'");
+                foreach ($columnsToAdd as $col => $def) {
+                    $res = $this->conn->query("SHOW COLUMNS FROM competicao_opcoes LIKE '{$col}'");
+                    if ($res && $res->rowCount() == 0) {
+                        $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN {$col} {$def}");
+                    }
+                }
             }
         } catch (Exception $e) {
             error_log("Erro ao verificar/migrar schema de competicao_opcoes: " . $e->getMessage());

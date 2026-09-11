@@ -155,32 +155,93 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
         }
     }
 
-    // 5. Gravar eventos detalhados na tabela unificada jogos_clube_eventos
-    if (file_exists($hyjFile)) {
-        $json = json_decode(file_get_contents($hyjFile));
-        if ($json && isset($json->lances)) {
-            // Limpa eventos anteriores desta partida para evitar duplicações
-            $stmtDelEv = $db->prepare("DELETE FROM jogos_clube_eventos WHERE id_jogo = :idJogo");
-            $stmtDelEv->bindValue(':idJogo', $idPartida, PDO::PARAM_INT);
-            $stmtDelEv->execute();
+    // 5. Obter informações dos clubes da partida
+    $stmtJogoInfo = $db->prepare("SELECT timeA_id, timeA_nome, timeB_id, timeB_nome FROM jogos_clube WHERE id = :idPartida LIMIT 1");
+    $stmtJogoInfo->bindValue(':idPartida', $idPartida, PDO::PARAM_INT);
+    $stmtJogoInfo->execute();
+    $jogoInfo = $stmtJogoInfo->fetch(PDO::FETCH_ASSOC);
 
-            $stmtInsEv = $db->prepare("INSERT INTO jogos_clube_eventos (id_jogo, tempo, minutos, tipo, id_jogador, nome_jogador, id_time, nome_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            foreach ($json->lances as $lance) {
-                $minuto = isset($lance->minuto) ? (int)$lance->minuto : 0;
-                $tempo = ($minuto <= 45) ? 1 : 2;
-                $tipo = isset($lance->tipo) ? $lance->tipo : '';
-                $idJog = isset($lance->idJogador) ? (int)$lance->idJogador : 0;
-                $nomeJog = isset($lance->nomeJogador) ? $lance->nomeJogador : '';
-                $idTm = isset($lance->idTime) ? (int)$lance->idTime : 0;
-                $nomeTm = isset($lance->nomeTime) ? $lance->nomeTime : '';
+    $timeA_id = (int)($jogoInfo['timeA_id'] ?? 0);
+    $nome_time_A = $jogoInfo['timeA_nome'] ?? '';
+    $timeB_id = (int)($jogoInfo['timeB_id'] ?? 0);
+    $nome_time_B = $jogoInfo['timeB_nome'] ?? '';
 
-                if (!empty($tipo)) {
-                    $stmtInsEv->execute([$idPartida, $tempo, $minuto, $tipo, $idJog, $nomeJog, $idTm, $nomeTm]);
+    // Ler dados da súmula .hyl (onde estão os eventos detalhados e nomes da escalação)
+    $hylData = file_exists($hylFile) ? json_decode(file_get_contents($hylFile), true) : null;
+    $playerMap1 = [];
+    $playerMap2 = [];
+    if ($hylData) {
+        foreach ($hylData['escalacaoTime1'] ?? [] as $p) {
+            $pId = (int)($p['id'] ?? 0);
+            if ($pId > 0) $playerMap1[$pId] = $p;
+        }
+        foreach ($hylData['escalacaoTime2'] ?? [] as $p) {
+            $pId = (int)($p['id'] ?? 0);
+            if ($pId > 0) $playerMap2[$pId] = $p;
+        }
+    }
+
+    // 6. Gravar eventos detalhados (gols e cartões) na tabela unificada jogos_clube_eventos
+    if ($hylData && !empty($hylData['eventos']) && is_array($hylData['eventos'])) {
+        // Limpa eventos anteriores desta partida para evitar duplicações
+        $stmtDelEv = $db->prepare("DELETE FROM jogos_clube_eventos WHERE id_jogo = :idJogo");
+        $stmtDelEv->bindValue(':idJogo', $idPartida, PDO::PARAM_INT);
+        $stmtDelEv->execute();
+
+        $stmtInsEv = $db->prepare("INSERT INTO jogos_clube_eventos (id_jogo, tempo, minutos, tipo, id_jogador, nome_jogador, id_time, nome_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        foreach ($hylData['eventos'] as $ev) {
+            $tipoEvStr = $ev['tipoEvento'] ?? '';
+            $tipoEvento = 0;
+            switch ($tipoEvStr) {
+                case 'gol':       $tipoEvento = 1; break;
+                case 'amarelo':   $tipoEvento = 2; break;
+                case 'vermelho':  $tipoEvento = 3; break;
+                case 'golContra': $tipoEvento = 4; break;
+            }
+
+            if ($tipoEvento > 0) {
+                $minuto = isset($ev['minutos']) ? (int)$ev['minutos'] : null;
+                $tempo = isset($ev['tempo']) ? (int)$ev['tempo'] : 1;
+                if ($minuto !== null && $minuto > 45 && $tempo == 1) {
+                    $tempo = 2;
                 }
+
+                $tempId = (int)($ev['idJogador'] ?? 0);
+                $nomeJog = '';
+                $idTm = 0;
+                $nomeTm = '';
+
+                if (isset($playerMap1[$tempId])) {
+                    $nomeJog = $playerMap1[$tempId]['nome'] ?? '';
+                    $idTm = $timeA_id;
+                    $nomeTm = $nome_time_A;
+                } elseif (isset($playerMap2[$tempId])) {
+                    $nomeJog = $playerMap2[$tempId]['nome'] ?? '';
+                    $idTm = $timeB_id;
+                    $nomeTm = $nome_time_B;
+                } else {
+                    $teamNum = (int)($ev['time'] ?? 1);
+                    $idTm = ($teamNum === 2) ? $timeB_id : $timeA_id;
+                    $nomeTm = ($teamNum === 2) ? $nome_time_B : $nome_time_A;
+                }
+
+                $stmtInsEv->execute([
+                    $idPartida,
+                    $tempo,
+                    $minuto,
+                    $tipoEvento,
+                    $tempId,
+                    mb_substr($nomeJog, 0, 40),
+                    $idTm,
+                    $nomeTm
+                ]);
             }
         }
+    }
 
-        // 6. Gravar escalações na tabela unificada jogos_clube_escalacao
+    // 7. Gravar escalações na tabela unificada jogos_clube_escalacao
+    if (file_exists($hyjFile)) {
+        $json = json_decode(file_get_contents($hyjFile));
         if ($json) {
             $stmtDelEsc = $db->prepare("DELETE FROM jogos_clube_escalacao WHERE id_partida = :idPartida");
             $stmtDelEsc->bindValue(':idPartida', $idPartida, PDO::PARAM_INT);
@@ -189,17 +250,20 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
             $stmtInsEsc = $db->prepare("INSERT INTO jogos_clube_escalacao (id_partida, id_time, nome_time, posicao, numero, id_jogador, nome_jogador, titular, entrada_tempo, entrada_minuto, saida_tempo, saida_minuto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             $timesEsc = [];
-            if (isset($json->time1)) $timesEsc[] = $json->time1;
-            if (isset($json->time2)) $timesEsc[] = $json->time2;
+            if (isset($json->time1)) $timesEsc[] = ['obj' => $json->time1, 'id' => $timeA_id, 'nome' => $nome_time_A, 'hylMap' => $playerMap1];
+            if (isset($json->time2)) $timesEsc[] = ['obj' => $json->time2, 'id' => $timeB_id, 'nome' => $nome_time_B, 'hylMap' => $playerMap2];
 
-            foreach ($timesEsc as $tmObj) {
-                $tmId = isset($tmObj->idTime) ? (int)$tmObj->idTime : 0;
-                $tmNome = isset($tmObj->nomeTime) ? $tmObj->nomeTime : '';
+            foreach ($timesEsc as $tmGroup) {
+                $tmObj = $tmGroup['obj'];
+                $tmId = $tmGroup['id'] > 0 ? $tmGroup['id'] : (int)($tmObj->idTime ?? 0);
+                $tmNome = !empty($tmGroup['nome']) ? $tmGroup['nome'] : ($tmObj->nomeTime ?? '');
+                $hMap = $tmGroup['hylMap'];
+
                 if (isset($tmObj->jogadores) && is_array($tmObj->jogadores)) {
                     foreach ($tmObj->jogadores as $idx => $jg) {
                         $jgId = isset($jg->idJogador) ? (int)$jg->idJogador : 0;
-                        $jgNome = isset($jg->nome) ? $jg->nome : '';
-                        $pos = isset($jg->posicao) ? $jg->posicao : '';
+                        $jgNome = isset($jg->nome) && !empty($jg->nome) ? $jg->nome : ($hMap[$jgId]['nome'] ?? '');
+                        $pos = isset($jg->posicao) && !empty($jg->posicao) ? $jg->posicao : ($hMap[$jgId]['posicao'] ?? '');
                         $num = isset($jg->numero) ? (int)$jg->numero : ($idx + 1);
                         $titular = ($idx < 11) ? 1 : 0;
                         $entTempo = isset($jg->entradaTempo) ? (int)$jg->entradaTempo : 0;

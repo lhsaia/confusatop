@@ -47,14 +47,14 @@ if ($timeA_id !== null) {
     if ($timeA_id > 0) {
         $subQuery .= ", timeA_id = :timeA, timeA_nome = NULL";
     } else {
-        $subQuery .= ", timeA_id = 0";
+        $subQuery .= ", timeA_id = :timeA";
     }
 }
 if ($timeB_id !== null) {
     if ($timeB_id > 0) {
         $subQuery .= ", timeB_id = :timeB, timeB_nome = NULL";
     } else {
-        $subQuery .= ", timeB_id = 0";
+        $subQuery .= ", timeB_id = :timeB";
     }
 }
 if ($grupo !== null) {
