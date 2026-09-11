@@ -236,8 +236,8 @@ require_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 				<div class="form-field-aligned">
 					<label for='input_turnosgrupos'>Jogos da Fase de Grupos</label>
 					<select name='input_turnosgrupos' id='input_turnosgrupos'>
-						<option value='0' <?php echo (!isset($options['turnos_pontos_corridos']) || $options['turnos_pontos_corridos']<=1) ? "selected" : ""; ?>>Apenas Ida (1 Turno)</option>
-						<option value='1' <?php echo (isset($options['turnos_pontos_corridos']) && $options['turnos_pontos_corridos']==2) ? "selected" : ""; ?>>Ida e Volta (2 Turnos)</option>
+						<option value='0' <?php echo (isset($options['turnos_pontos_corridos']) && intval($options['turnos_pontos_corridos']) == 1) ? "selected" : ""; ?>>Apenas Ida (1 Turno)</option>
+						<option value='1' <?php echo (!isset($options['turnos_pontos_corridos']) || intval($options['turnos_pontos_corridos']) >= 2) ? "selected" : ""; ?>>Ida e Volta (2 Turnos)</option>
 					</select>
 				</div>
 				<div class="form-field-aligned">

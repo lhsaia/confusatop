@@ -480,6 +480,9 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
     $numGroups = (isset($options['num_grupos']) && intval($options['num_grupos']) > 0) ? intval($options['num_grupos']) : 4;
     $teamsPerGroup = (isset($options['times_por_grupo']) && intval($options['times_por_grupo']) > 0) ? intval($options['times_por_grupo']) : 4;
     $tipoPreliminar = isset($options['tipo_preliminar']) ? intval($options['tipo_preliminar']) : 1; // 0=ida, 1=ida e volta
+    $roundsLimit = (isset($options['turnos_pontos_corridos']) && intval($options['turnos_pontos_corridos']) >= 1 && intval($options['turnos_pontos_corridos']) <= 4) 
+                   ? intval($options['turnos_pontos_corridos']) 
+                   : 2;
     $capacidadeGrupos = $numGroups * $teamsPerGroup;
 
     if ($isSlots) {
@@ -574,28 +577,31 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
             $allGroupSchedules[$g] = $groupSchedule;
         }
 
-        // Iterar rodada a rodada através de todos os grupos simultaneamente
-        for ($mdayIndex = 0; $mdayIndex < $maxMatchdaysInGroups; $mdayIndex++) {
-            for ($g = 0; $g < $numGroups; $g++) {
-                if (isset($allGroupSchedules[$g][$mdayIndex])) {
-                    foreach ($allGroupSchedules[$g][$mdayIndex] as $match) {
-                        $home = $match['home'];
-                        $away = $match['away'];
-                        $groupName = $match['group'];
-                        $arbId = count($arbitros) > 0 ? $arbitros[array_rand($arbitros)]['ID'] : 0;
-                        $dateMatch = $scheduler->getNextMatchDateTime();
-                        
-                        $tA_id = isset($assignedSlotTeams[$home]) ? $assignedSlotTeams[$home] : 0;
-                        $tA_nome = ($tA_id == 0) ? $home : null;
-                        $tB_id = isset($assignedSlotTeams[$away]) ? $assignedSlotTeams[$away] : 0;
-                        $tB_nome = ($tB_id == 0) ? $away : null;
-                        $estId = ($tA_id > 0) ? getStadiumForMatch($ldb, $tA_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
-                        
-                        $competicao->inserirJogo($idCompeticao, $tA_id, $tB_id, 2, $arbId, $estId, $dateMatch, "false", $groupName, null, $tA_nome, $tB_nome);
+        // Iterar rodada a rodada através de todos os grupos simultaneamente conforme o número de turnos configurado
+        for ($roundTurn = 1; $roundTurn <= $roundsLimit; $roundTurn++) {
+            $shouldInvert = ($roundTurn % 2 == 0);
+            for ($mdayIndex = 0; $mdayIndex < $maxMatchdaysInGroups; $mdayIndex++) {
+                for ($g = 0; $g < $numGroups; $g++) {
+                    if (isset($allGroupSchedules[$g][$mdayIndex])) {
+                        foreach ($allGroupSchedules[$g][$mdayIndex] as $match) {
+                            $home = $shouldInvert ? $match['away'] : $match['home'];
+                            $away = $shouldInvert ? $match['home'] : $match['away'];
+                            $groupName = $match['group'];
+                            $arbId = count($arbitros) > 0 ? $arbitros[array_rand($arbitros)]['ID'] : 0;
+                            $dateMatch = $scheduler->getNextMatchDateTime();
+                            
+                            $tA_id = isset($assignedSlotTeams[$home]) ? $assignedSlotTeams[$home] : 0;
+                            $tA_nome = ($tA_id == 0) ? $home : null;
+                            $tB_id = isset($assignedSlotTeams[$away]) ? $assignedSlotTeams[$away] : 0;
+                            $tB_nome = ($tB_id == 0) ? $away : null;
+                            $estId = ($tA_id > 0) ? getStadiumForMatch($ldb, $tA_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
+                            
+                            $competicao->inserirJogo($idCompeticao, $tA_id, $tB_id, 2, $arbId, $estId, $dateMatch, "false", $groupName, null, $tA_nome, $tB_nome);
+                        }
                     }
                 }
+                $scheduler->advanceRound();
             }
-            $scheduler->advanceRound();
         }
     } else {
         shuffle($teams);
@@ -696,23 +702,26 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
             $allGroupSchedules[$g] = $groupSchedule;
         }
 
-        // Iterar rodada a rodada através de todos os grupos simultaneamente
-        for ($mdayIndex = 0; $mdayIndex < $maxMatchdaysInGroups; $mdayIndex++) {
-            for ($g = 0; $g < $numGroups; $g++) {
-                if (isset($allGroupSchedules[$g][$mdayIndex])) {
-                    foreach ($allGroupSchedules[$g][$mdayIndex] as $match) {
-                        $home = $match['home'];
-                        $away = $match['away'];
-                        $groupName = $match['group'];
-                        $arbId = count($arbitros) > 0 ? $arbitros[array_rand($arbitros)]['ID'] : 0;
-                        $estId = getStadiumForMatch($ldb, $home, $estadios_times, $estadios);
-                        $dateMatch = $scheduler->getNextMatchDateTime();
-                        
-                        $competicao->inserirJogo($idCompeticao, $home, $away, 2, $arbId, $estId, $dateMatch, "false", $groupName);
+        // Iterar rodada a rodada através de todos os grupos simultaneamente conforme o número de turnos configurado
+        for ($roundTurn = 1; $roundTurn <= $roundsLimit; $roundTurn++) {
+            $shouldInvert = ($roundTurn % 2 == 0);
+            for ($mdayIndex = 0; $mdayIndex < $maxMatchdaysInGroups; $mdayIndex++) {
+                for ($g = 0; $g < $numGroups; $g++) {
+                    if (isset($allGroupSchedules[$g][$mdayIndex])) {
+                        foreach ($allGroupSchedules[$g][$mdayIndex] as $match) {
+                            $home = $shouldInvert ? $match['away'] : $match['home'];
+                            $away = $shouldInvert ? $match['home'] : $match['away'];
+                            $groupName = $match['group'];
+                            $arbId = count($arbitros) > 0 ? $arbitros[array_rand($arbitros)]['ID'] : 0;
+                            $estId = getStadiumForMatch($ldb, $home, $estadios_times, $estadios);
+                            $dateMatch = $scheduler->getNextMatchDateTime();
+                            
+                            $competicao->inserirJogo($idCompeticao, $home, $away, 2, $arbId, $estId, $dateMatch, "false", $groupName);
+                        }
                     }
                 }
+                $scheduler->advanceRound();
             }
-            $scheduler->advanceRound();
         }
     }
 }
