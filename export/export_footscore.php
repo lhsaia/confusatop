@@ -100,7 +100,7 @@ foreach($lista_times as $numero_time => $time_footscore){
             $tratamentoNacionalidade = explode(".",$testeNacionalidade);
             $testeNacionalidade = $tratamentoNacionalidade[0];
             
-            $isGoleiro = ($row['StringPosicoes'][0] == "1" ? true : false);
+            $isGoleiro = (!empty($row['StringPosicoes']) && $row['StringPosicoes'][0] == "1");
             
             $listaPosicoes = $jogador->listaPosicoes($row['StringPosicoes']);
             $listaPosicoes = !empty($listaPosicoes) ? explode("-", $listaPosicoes) : [];

@@ -134,10 +134,11 @@ foreach($listaPaises as $idPais){
     $listaConferencia = array();
     $listaConferenciaGoleiro = array();
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-        $listaPosicoes[] = array_merge([$row['idJogador']],str_split($row['StringPosicoes']));
+        $sp = str_pad((string)($row['StringPosicoes'] ?? ''), 15, '0');
+        $listaPosicoes[] = array_merge([$row['idJogador']], str_split($sp));
         $listaJogadores[] = [$row['idJogador'], $row['nomeJogador'], $row['Idade'], $row['Nivel'], '0' , '0', $row['Mentalidade'], $row['CobradorFalta']];
         $listaNacionalidades[] = [$row['idJogador'], ($row['Nacionalidade'] != null ? $row['Nacionalidade'] : '-') ];
-        if($row['StringPosicoes'][0] == 1){
+        if($sp[0] == 1){
             $listaAtributosGoleiro[] = [$row['idJogador'],$row['Reflexos'], $row['Seguranca'], $row['Saidas'], $row['JogoAereo'], $row['Lancamentos'], $row['DefesaPenaltis'], $row['Determinacao'], $row['DeterminacaoOriginal']];
             $listaConferenciaGoleiro[] = [$row['idJogador'], $row['Nivel'], $row['somaAtributos']];  
         } else {

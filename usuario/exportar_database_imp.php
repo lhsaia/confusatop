@@ -111,7 +111,8 @@ foreach($listaPaises as $idPais){
     $listaConferencia = array();
     $listaConferenciaGoleiro = array();
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-        $megaQueryPais .= "INSERT INTO posicaojogador VALUES ('{$row['idJogador']}', '{$row['StringPosicoes'][0]}', '{$row['StringPosicoes'][1]}', '{$row['StringPosicoes'][2]}', '{$row['StringPosicoes'][3]}', '{$row['StringPosicoes'][4]}', '{$row['StringPosicoes'][5]}', '{$row['StringPosicoes'][6]}', '{$row['StringPosicoes'][7]}', '{$row['StringPosicoes'][8]}', '{$row['StringPosicoes'][9]}', '{$row['StringPosicoes'][10]}', '{$row['StringPosicoes'][11]}', '{$row['StringPosicoes'][12]}', '{$row['StringPosicoes'][13]}', '{$row['StringPosicoes'][14]}'); ";
+        $sp = str_pad((string)($row['StringPosicoes'] ?? ''), 15, '0');
+        $megaQueryPais .= "INSERT INTO posicaojogador VALUES ('{$row['idJogador']}', '{$sp[0]}', '{$sp[1]}', '{$sp[2]}', '{$sp[3]}', '{$sp[4]}', '{$sp[5]}', '{$sp[6]}', '{$sp[7]}', '{$sp[8]}', '{$sp[9]}', '{$sp[10]}', '{$sp[11]}', '{$sp[12]}', '{$sp[13]}', '{$sp[14]}'); ";
 
         $nomeJogador = str_replace("'", "''", $row['nomeJogador']);
         $megaQueryPais .= "INSERT INTO jogador VALUES ('{$row['idJogador']}', '{$nomeJogador}', '{$row['Idade']}', '{$row['Nivel']}', '0' , '0', '{$row['Mentalidade']}', '{$row['CobradorFalta']}'); ";
@@ -119,7 +120,7 @@ foreach($listaPaises as $idPais){
         $testeNacionalidade = ($row['Nacionalidade'] != null ? $row['Nacionalidade'] : '-');
         $megaQueryPais .= "INSERT INTO nacionalidades VALUES ('{$row['idJogador']}', '{$testeNacionalidade}'); ";
 
-        if($row['StringPosicoes'][0] == 1){
+        if($sp[0] == 1){
             $megaQueryPais .= "INSERT INTO atributosgoleiro VALUES ('{$row['idJogador']}', '{$row['Reflexos']}', '{$row['Seguranca']}', '{$row['Saidas']}', '{$row['JogoAereo']}', '{$row['Lancamentos']}', '{$row['DefesaPenaltis']}', '{$row['Determinacao']}', '{$row['DeterminacaoOriginal']}'); ";
 
             $somaZero = abs(($row['Nivel'] * 0.55) - ($row['somaAtributos']));
