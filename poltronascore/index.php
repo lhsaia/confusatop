@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Poltrona Score - Placar de Jogos</title>
+    <title>Poltrona Score - Placar e Classificação</title>
     
     <!-- Meta tags para PWA -->
     <meta name="theme-color" content="#1837E8">
@@ -39,32 +39,91 @@
         </div>
     </header>
 
-    <!-- Navigation tabs -->
-    <nav class="tabs-nav">
-        <div class="tabs-container">
-            <button class="tab-btn" data-tab="previous">
-                <span class="material-symbols-outlined" style="font-size: 18px;">history</span>
-                Anteriores
-            </button>
-            <button class="tab-btn active" data-tab="live">
-                <span class="material-symbols-outlined" style="font-size: 18px;">sensors</span>
-                Ao Vivo
-            </button>
-            <button class="tab-btn" data-tab="next">
-                <span class="material-symbols-outlined" style="font-size: 18px;">calendar_month</span>
-                Próximos
-            </button>
-        </div>
-    </nav>
+    <!-- Main Views Container -->
+    <main class="main-content">
+        
+        <!-- VIEW 1: MATCHES (JOGOS) -->
+        <section id="view-matches" class="app-view active">
+            <!-- Navigation tabs for match filters -->
+            <nav class="tabs-nav">
+                <div class="tabs-container">
+                    <button class="tab-btn" data-tab="previous">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">history</span>
+                        Anteriores
+                    </button>
+                    <button class="tab-btn active" data-tab="live">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">sensors</span>
+                        Ao Vivo
+                    </button>
+                    <button class="tab-btn" data-tab="next">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">calendar_month</span>
+                        Próximos
+                    </button>
+                </div>
+            </nav>
 
-    <!-- Match list content -->
-    <main>
-        <div id="matches-list">
-            <!-- Matches render dynamically here -->
-            <div class="loading-spinner">
-                <div class="spinner"></div>
+            <!-- Match list content -->
+            <div id="matches-list">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
             </div>
-        </div>
+        </section>
+
+        <!-- VIEW 2: STANDINGS (TABELAS / CLASSIFICAÇÃO) -->
+        <section id="view-standings" class="app-view">
+            <!-- Competition Selector -->
+            <div class="comp-selector-container">
+                <label for="comp-select" class="comp-select-label">
+                    <span class="material-symbols-outlined">emoji_events</span>
+                    Competição:
+                </label>
+                <select id="comp-select" class="comp-select-dropdown">
+                    <option value="">Carregando competições...</option>
+                </select>
+            </div>
+
+            <!-- Standings Subtabs -->
+            <div class="standings-subnav" id="standings-subnav">
+                <button class="standings-tab-btn active" data-subtab="table" id="btn-subtab-table">
+                    <span class="material-symbols-outlined">format_list_numbered</span>
+                    Classificação
+                </button>
+                <button class="standings-tab-btn" data-subtab="bracket" id="btn-subtab-bracket">
+                    <span class="material-symbols-outlined">account_tree</span>
+                    Chaveamento
+                </button>
+                <button class="standings-tab-btn" data-subtab="rounds" id="btn-subtab-rounds">
+                    <span class="material-symbols-outlined">event_note</span>
+                    Rodadas & Jogos
+                </button>
+            </div>
+
+            <!-- Standings & Rounds Content -->
+            <div id="standings-content">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: COMPETITIONS (LIGAS) -->
+        <section id="view-competitions" class="app-view">
+            <div class="competitions-header">
+                <h2>
+                    <span class="material-symbols-outlined" style="color: var(--accent-cyan); vertical-align: middle;">sports_soccer</span>
+                    Competições
+                </h2>
+                <span class="competitions-subtitle">Acompanhe as tabelas, rodadas e resultados</span>
+            </div>
+            
+            <div id="competitions-list" class="competitions-grid">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Slide-up Modal Drawer for match details -->
@@ -134,9 +193,25 @@
 
     <!-- Sticky footer -->
     <footer id="bottom-bar">
-        <div style="font-weight: 600; margin-bottom: 5px;">🛋️ Poltrona Score © 2026</div>
+        <div style="font-weight: 600; margin-bottom: 3px;">🛋️ Poltrona Score © 2026</div>
         <div>O placar da comunidade direto do seu sofá</div>
     </footer>
+
+    <!-- Bottom Navigation Bar (SofaScore style) -->
+    <nav id="bottom-nav" class="bottom-nav">
+        <button class="nav-item active" data-view="matches">
+            <span class="material-symbols-outlined nav-icon">sports_soccer</span>
+            <span class="nav-label">Jogos</span>
+        </button>
+        <button class="nav-item" data-view="standings">
+            <span class="material-symbols-outlined nav-icon">leaderboard</span>
+            <span class="nav-label">Tabelas</span>
+        </button>
+        <button class="nav-item" data-view="competitions">
+            <span class="material-symbols-outlined nav-icon">emoji_events</span>
+            <span class="nav-label">Ligas</span>
+        </button>
+    </nav>
 
     <!-- App JavaScript -->
     <script src="/poltronascore/js/poltrona.js?v=<?= time() ?>"></script>

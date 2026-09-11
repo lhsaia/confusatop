@@ -13,6 +13,36 @@
       "date": "10/09/2026",
       "items": [
         {
+          "badge": "new",
+          "title": "Quadro Visual de Disputa de Pênaltis",
+          "desc": "Adicionado painel visual dedicado na súmula da partida com sequência de acertos e erros (bolinhas verdes e vermelhas com checks e Xs) e tabela detalhada das cobranças individuais por atleta com link para o perfil."
+        },
+        {
+          "badge": "new",
+          "title": "Chaveamento de Mata-Mata e Detalhes de Partidas no PoltronaScore",
+          "desc": "Adicionada visualização de Chave de Mata-Mata em copas e competições eliminatórias com identificação de vencedores, placares com pênaltis e integração completa do modal de detalhes com os jogos de competições."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção nas Consultas MySQL do PoltronaScore",
+          "desc": "Corrigido o mapeamento de tabelas no MySQL (tabela clube e competicao_lista) nos endpoints de competições e classificação do PoltronaScore, eliminando dependências externas e falhas de carregamento."
+        },
+        {
+          "badge": "new",
+          "title": "PoltronaScore: Tabelas de Classificação e Ligas",
+          "desc": "Implementada a expansão estilo SofaScore no PoltronaScore com Bottom Navigation Bar, visualização dinâmica de Tabelas de Classificação (pontos, vitórias, saldo, aproveitamento e forma recente) e listagem de competições e rodadas."
+        },
+        {
+          "badge": "new",
+          "title": "Exportação Completa de Competições para Excel",
+          "desc": "Adicionado botão e funcionalidade para exportar todos os dados da competição diretamente para uma planilha Excel multiabas estruturada contendo Classificação, Jogos, Artilharia, Assistências, Cartões e DM/Suspensões."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Separação de Disputa de Pênaltis e Gols Regulares",
+          "desc": "Ajustado o processamento e exibição de eventos de partidas para garantir que as cobranças em disputas de pênaltis pós-jogo não sejam computadas como gols regulares do tempo normal/prorrogação, exibindo o placar de pênaltis separadamente na súmula e detalhes do jogo."
+        },
+        {
           "badge": "bugfix",
           "title": "Correção de Compatibilidade de Schema (SQLite/MySQL)",
           "desc": "Corrigido erro de sintaxe SQL na verificação e migração de schema da tabela de opções e log de alterações de competição em conexões SQLite e MySQL."
@@ -41,6 +71,16 @@
           "badge": "bugfix",
           "title": "Registro de Linha do Tempo e Eventos em Simulações Automáticas",
           "desc": "Unificada a gravação de eventos minuto a minuto (gols, cartões amarelos e vermelhos) na tabela jogos_clube_eventos durante simulações automáticas via leitura das súmulas .hyl."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Nome de Competição e Placares no Gerenciador de Jogos",
+          "desc": "Corrigido o relacionamento de competições (competicao_lista) na listagem geral de jogos e ajustada a formatação de placares para jogos futuros ou sob sigilo temporal, eliminando a exibição de 'null'."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Resolução Automática de Nomes de Atletas via SQLite na Súmula",
+          "desc": "Implementada a busca e recuperação automática de nomes e posições de atletas a partir da base SQLite da competição e do arquivo .hyl no visualizador de partidas, garantindo exibição completa das escalações mesmo em partidas anteriores."
         }
       ]
     },
