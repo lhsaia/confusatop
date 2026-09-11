@@ -132,6 +132,11 @@ $percentual_times = ($total_times > 0) ? min(100, round(($times_inseridos / $tot
 		</div>
 		
 		<div class="hero-badge-container">
+			<a href="exportar_excel.php?id=<?php echo $idCompeticao; ?>" class="btn-hero-export" title="Exportar dados da competição para Excel">
+				<span class="material-symbols-outlined">download</span>
+				<span>Exportar Excel</span>
+			</a>
+
 			<?php if($federacao_nome != "" && $federacao_nome != "0"): ?>
 				<img class="hero-federation-logo" src="/images/<?php echo strtolower($federacao_nome); ?>.png" alt="Federação" />
 			<?php else: ?>

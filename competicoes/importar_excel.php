@@ -53,7 +53,18 @@ if (isset($_FILES['planilha_excel']) && !empty($_FILES['planilha_excel'])) {
             if (!$xlsx) {
                 throw new Exception(SimpleXLSX::parseError());
             }
-            $rawRows = $xlsx->rows();
+            
+            // Detectar o índice da aba de Jogos (busca pela aba chamada 'Jogos' ou 'Tabela', ou usa a primeira aba)
+            $sheetIndex = 0;
+            $sheetNames = $xlsx->sheetNames();
+            foreach ($sheetNames as $idx => $sName) {
+                $sNameLower = mb_strtolower(trim($sName));
+                if ($sNameLower === 'jogos' || $sNameLower === 'tabela' || strpos($sNameLower, 'jogo') !== false) {
+                    $sheetIndex = $idx;
+                    break;
+                }
+            }
+            $rawRows = $xlsx->rows($sheetIndex);
             
             // Reindex to 1-based row and column letters A, B, C...
             $sheetData = [];

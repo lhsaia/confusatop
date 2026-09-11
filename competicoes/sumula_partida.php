@@ -184,6 +184,21 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	$golsTimeA = (int)($xml_hyl->placarTime1 ?? ($matchInfo['timeA_gols'] ?? 0));
 	$golsTimeB = (int)($xml_hyl->placarTime2 ?? ($matchInfo['timeB_gols'] ?? 0));
 	
+	$penA = null;
+	$penB = null;
+	if (isset($xml_hyl->penaltis) && $xml_hyl->penaltis) {
+		$penA = isset($xml_hyl->placarPenaltisTime1) ? (int)$xml_hyl->placarPenaltisTime1 : null;
+		$penB = isset($xml_hyl->placarPenaltisTime2) ? (int)$xml_hyl->placarPenaltisTime2 : null;
+	}
+	if ($penA === null && isset($xml_hyj->penaltis) && $xml_hyj->penaltis) {
+		$penA = isset($xml_hyj->time1->placarPenaltis) ? (int)$xml_hyj->time1->placarPenaltis : null;
+		$penB = isset($xml_hyj->time2->placarPenaltis) ? (int)$xml_hyj->time2->placarPenaltis : null;
+	}
+	if ($penA === null && isset($matchInfo['timeA_penaltis']) && $matchInfo['timeA_penaltis'] !== null && $matchInfo['timeA_penaltis'] !== '') {
+		$penA = (int)$matchInfo['timeA_penaltis'];
+		$penB = (int)($matchInfo['timeB_penaltis'] ?? 0);
+	}
+	
 	$escudoTimeA = (string) ($xml_hyl->escudoTime1 ?? '');
 	$escudoTimeB = (string) ($xml_hyl->escudoTime2 ?? '');
 	
@@ -202,7 +217,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	}
 	
 	function gols($var){
-		if($var->tipoEvento == "gol"){
+		if($var->tipoEvento == "gol" && (!isset($var->tempo) || (int)$var->tempo <= 4)){
 			return true;
 		} else {
 			return false;
@@ -397,7 +412,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	
 	foreach($vermelhosJogo as $unicoVermelho){
 		
-		if($unicoVermelho->time == 2){
+		if($unicoVermelho->time == 1){
 			if($hasVermelho){
 				$caixaTextoA .= " --- Cartões Vermelhos --- <br>";
 			}
@@ -444,7 +459,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	
 	foreach($vermelhosJogo as $unicoVermelho){
 		
-		if($unicoVermelho->time == 1){
+		if($unicoVermelho->time == 2){
 			if($hasVermelho){
 				$caixaTextoB .= " --- Cartões Vermelhos --- <br>";
 			}
@@ -525,7 +540,7 @@ echo "<div id='faixa_superior'>
 <p>
 ".$caixaTextoA."</p></div>
 </div>
-<div id='x_central'><span>X</span></div>
+<div id='x_central'><span>X</span>".($penA !== null && $penB !== null ? "<br><small style='font-size:0.95vw; color:#0284c7; font-weight:700; white-space:nowrap;'>({$penA} × {$penB} pên)</small>" : "")."</div>
 <div id='score_timeB'>
 <div id='barraPrincipal_timeB'>
 <div id='gols_timeA' style='background-color: ".hex($coresTimeB['cor2'])."; color: ".hex($coresTimeB['cor1'])."'><span>".$golsTimeB."</span></div>

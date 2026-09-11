@@ -511,7 +511,15 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
 <main class="propostas-container">
     <div class="propostas-card">
-        <h2 class="propostas-title"><?php echo $nome_competicao . " " . $ano_competicao; ?> - Estatísticas</h2>
+        <div class="header-actions-container">
+            <h2 class="propostas-title"><?php echo $nome_competicao . " " . $ano_competicao; ?> - Estatísticas</h2>
+            <div class="header-buttons-wrapper">
+                <a href="exportar_excel.php?id=<?php echo $idCompeticao; ?>" class="btn-action-primary" id="btn-exportar-excel" title="Exportar todas as informações para planilha Excel">
+                    <span class="material-symbols-outlined">download</span>
+                    <span>Exportar Excel</span>
+                </a>
+            </div>
+        </div>
         
         <!-- Abas -->
         <div class="stats-tabs">

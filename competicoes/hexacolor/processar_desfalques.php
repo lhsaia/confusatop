@@ -199,9 +199,15 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
                 case 'golContra': $tipoEvento = 4; break;
             }
 
+            // Ignorar eventos ocorridos durante disputa de pênaltis pós-jogo (tempo > 4)
+            $tempoRaw = isset($ev['tempo']) ? (int)$ev['tempo'] : 1;
+            if ($tempoRaw > 4) {
+                continue;
+            }
+
             if ($tipoEvento > 0) {
                 $minuto = isset($ev['minutos']) ? (int)$ev['minutos'] : null;
-                $tempo = isset($ev['tempo']) ? (int)$ev['tempo'] : 1;
+                $tempo = $tempoRaw;
                 if ($minuto !== null && $minuto > 45 && $tempo == 1) {
                     $tempo = 2;
                 }
