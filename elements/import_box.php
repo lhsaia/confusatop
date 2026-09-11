@@ -14,7 +14,10 @@
 	<form id="importForm" enctype="multipart/form-data" novalidate class="box">
 
 		<div class="box__input centralize_text">
-            <input type="file" name="files[]" id="file" class="box__file" data-multiple-caption="{count} arquivos selecionados" multiple />
+            <?php 
+            $is_single_team = (isset($_SESSION['jogadorTime']) && $_SESSION['jogadorTime'] == 2);
+            ?>
+            <input type="file" name="files[]" id="file" class="box__file" <?php echo $is_single_team ? '' : 'data-multiple-caption="{count} arquivos selecionados" multiple'; ?> />
 
 
             <label for="file"><strong>Selecione um arquivo</strong><span class="box__dragndrop"> ou arraste-o aqui</span>.</label>

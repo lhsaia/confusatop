@@ -82,7 +82,11 @@
 				});
 				form.addEventListener( 'drop', function( e )
 				{
-					droppedFiles = e.dataTransfer.files; // the files that were dropped
+					var files = e.dataTransfer.files;
+					if ( !input.hasAttribute( 'multiple' ) && files.length > 1 ) {
+						files = [ files[0] ];
+					}
+					droppedFiles = files; // the files that were dropped
 					showFiles( droppedFiles );
 
 					

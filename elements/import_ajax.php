@@ -145,6 +145,17 @@ if (isset($_POST['ajax'])) {
             $j++;
         }
 
+        if (isset($_SESSION['jogadorTime']) && $_SESSION['jogadorTime'] == 2) {
+            if (count($filesToUpload) > 1) {
+                $php_output = ob_get_clean();
+                die(json_encode([
+                    'success' => false,
+                    'error' => 'Por favor, envie apenas 1 time por vez.',
+                    'php_output' => $php_output
+                ]));
+            }
+        }
+
         //libxml_use_internal_errors(true);
 
         if (isset($_SESSION['jogadorTime']) && ($_SESSION['jogadorTime'] == 4 || $_SESSION['jogadorTime'] == 7)) {
@@ -442,8 +453,8 @@ if (isset($_POST['ajax'])) {
                     $usuario->atualizarAlteracao($_SESSION['user_id']);
                 }
 
-                $is_admin = (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == false);
-                if ($is_admin && ($_SESSION['jogadorTime'] == 1 || $_SESSION['jogadorTime'] == 2)) {
+                $is_admin = (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && empty($_SESSION['impersonated']));
+                if (isset($_SESSION['jogadorTime']) && ($_SESSION['jogadorTime'] == 1 || $_SESSION['jogadorTime'] == 2)) {
                     // Parse players and build matching list
                     $players_to_match = [];
                     
@@ -478,7 +489,14 @@ if (isset($_POST['ajax'])) {
                         }
                     } else {
                         if (isset($paisLigaSelecionada) && $paisLigaSelecionada != 0) {
-                            $country_id = $paisLigaSelecionada;
+                            $country_id = (int)$paisLigaSelecionada;
+                        } else if (!empty($ligaSelecionada)) {
+                            $stmt_l_pais = $db->prepare("SELECT Pais FROM liga WHERE ID = ?");
+                            $stmt_l_pais->execute([$ligaSelecionada]);
+                            $country_id = (int)$stmt_l_pais->fetchColumn();
+                            if ($country_id) {
+                                $paisLigaSelecionada = $country_id;
+                            }
                         } else {
                             $teste_pais = array();
                             if (isset($xml->nacionalidades->string)) {
@@ -500,20 +518,37 @@ if (isset($_POST['ajax'])) {
                         }
                     }
 
+                    // For non-admin on team import, validate ownership of the league/country
+                    if (!$is_admin && $_SESSION['jogadorTime'] == 2) {
+                        if (empty($ligaSelecionada)) {
+                            $php_output = ob_get_clean();
+                            die(json_encode([
+                                'success' => false,
+                                'error' => 'Por favor, selecione uma liga para importar o time.',
+                                'php_output' => $php_output
+                            ]));
+                        }
+                        $stmt_owner = $db->prepare("SELECT p.id FROM liga l INNER JOIN paises p ON l.pais = p.id WHERE l.id = ? AND p.dono = ?");
+                        $stmt_owner->execute([$ligaSelecionada, $_SESSION['user_id']]);
+                        $valid_country = $stmt_owner->fetchColumn();
+                        if (!$valid_country) {
+                            $php_output = ob_get_clean();
+                            die(json_encode([
+                                'success' => false,
+                                'error' => 'Você não tem permissão para importar times nesta liga.',
+                                'php_output' => $php_output
+                            ]));
+                        }
+                        $country_id = (int)$valid_country;
+                        $paisLigaSelecionada = $country_id;
+                    }
+
                     // Find potential matches for each player
                     foreach ($imported_players as $ip) {
                         $p_nome_decoded = trim(html_entity_decode((string)$ip['nome'], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
                         $p_nome_html = htmlspecialchars($p_nome_decoded, ENT_QUOTES, 'UTF-8');
 
                         $words = explode(' ', $p_nome_decoded);
-                        $clauses = [];
-                        $params = [];
-                        
-                        if ($country_id) {
-                            $clauses[] = "Pais = ?";
-                            $params[] = $country_id;
-                        }
-                        
                         $name_clauses = [];
                         $params_similar = [];
                         foreach ($words as $w) {
@@ -527,20 +562,39 @@ if (isset($_POST['ajax'])) {
                         
                         $matches = [];
                         
-                        // 1. Search for exact name match (decoded and HTML entity)
-                        $sql_exact = "SELECT j.ID, j.Nome, j.Nivel, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as Idade, j.Sexo, p.Bandeira, p.Nome AS NomePais, b.ID AS idClube, b.Nome AS NomeClube, b.Pais AS PaisClube, pc.Nome AS NomePaisClube FROM jogador j LEFT JOIN paises p ON j.Pais = p.id LEFT JOIN contratos_jogador c ON c.jogador = j.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID LEFT JOIN paises pc ON b.Pais = pc.id WHERE (j.Nome = ? OR j.Nome = ?)";
-                        $params_exact = [$p_nome_decoded, $p_nome_html];
-                        $stmt_exact = $db->prepare($sql_exact);
-                        $stmt_exact->execute($params_exact);
-                        $exact_matches = $stmt_exact->fetchAll(PDO::FETCH_ASSOC);
-                        
-                        // 2. Search for similar names (fuzzy LIKE)
-                        $similar_matches = [];
-                        if (!empty($name_clauses)) {
-                            $sql_similar = "SELECT j.ID, j.Nome, j.Nivel, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as Idade, j.Sexo, p.Bandeira, p.Nome AS NomePais, b.ID AS idClube, b.Nome AS NomeClube, b.Pais AS PaisClube, pc.Nome AS NomePaisClube FROM jogador j LEFT JOIN paises p ON j.Pais = p.id LEFT JOIN contratos_jogador c ON c.jogador = j.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID LEFT JOIN paises pc ON b.Pais = pc.id WHERE " . implode(' AND ', $name_clauses) . " LIMIT 10";
-                            $stmt_similar = $db->prepare($sql_similar);
-                            $stmt_similar->execute($params_similar);
-                            $similar_matches = $stmt_similar->fetchAll(PDO::FETCH_ASSOC);
+                        if ($is_admin) {
+                            // 1. Search for exact name match (decoded and HTML entity)
+                            $sql_exact = "SELECT j.ID, j.Nome, j.Nivel, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as Idade, j.Sexo, p.Bandeira, p.Nome AS NomePais, b.ID AS idClube, b.Nome AS NomeClube, b.Pais AS PaisClube, pc.Nome AS NomePaisClube FROM jogador j LEFT JOIN paises p ON j.Pais = p.id LEFT JOIN contratos_jogador c ON c.jogador = j.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID LEFT JOIN paises pc ON b.Pais = pc.id WHERE (j.Nome = ? OR j.Nome = ?)";
+                            $params_exact = [$p_nome_decoded, $p_nome_html];
+                            $stmt_exact = $db->prepare($sql_exact);
+                            $stmt_exact->execute($params_exact);
+                            $exact_matches = $stmt_exact->fetchAll(PDO::FETCH_ASSOC);
+                            
+                            // 2. Search for similar names (fuzzy LIKE)
+                            $similar_matches = [];
+                            if (!empty($name_clauses)) {
+                                $sql_similar = "SELECT j.ID, j.Nome, j.Nivel, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as Idade, j.Sexo, p.Bandeira, p.Nome AS NomePais, b.ID AS idClube, b.Nome AS NomeClube, b.Pais AS PaisClube, pc.Nome AS NomePaisClube FROM jogador j LEFT JOIN paises p ON j.Pais = p.id LEFT JOIN contratos_jogador c ON c.jogador = j.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID LEFT JOIN paises pc ON b.Pais = pc.id WHERE " . implode(' AND ', $name_clauses) . " LIMIT 10";
+                                $stmt_similar = $db->prepare($sql_similar);
+                                $stmt_similar->execute($params_similar);
+                                $similar_matches = $stmt_similar->fetchAll(PDO::FETCH_ASSOC);
+                            }
+                        } else {
+                            // Non-admin: JAMAIS EM HIPOTESE NENHUMA vincula ou puxa jogadores de outros países
+                            // Only match players in clubs of the target country OR free agents of the target country, matching gender
+                            $sql_exact = "SELECT j.ID, j.Nome, j.Nivel, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as Idade, j.Sexo, p.Bandeira, p.Nome AS NomePais, b.ID AS idClube, b.Nome AS NomeClube, b.Pais AS PaisClube, pc.Nome AS NomePaisClube FROM jogador j LEFT JOIN paises p ON j.Pais = p.id LEFT JOIN contratos_jogador c ON c.jogador = j.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID LEFT JOIN paises pc ON b.Pais = pc.id WHERE (j.Nome = ? OR j.Nome = ?) AND ( (b.ID IS NOT NULL AND b.Pais = ?) OR (b.ID IS NULL AND j.Pais = ?) ) AND j.Sexo = ?";
+                            $params_exact = [$p_nome_decoded, $p_nome_html, $country_id, $country_id, $sexo];
+                            $stmt_exact = $db->prepare($sql_exact);
+                            $stmt_exact->execute($params_exact);
+                            $exact_matches = $stmt_exact->fetchAll(PDO::FETCH_ASSOC);
+                            
+                            $similar_matches = [];
+                            if (!empty($name_clauses)) {
+                                $sql_similar = "SELECT j.ID, j.Nome, j.Nivel, FLOOR((DATEDIFF(CURDATE(), j.Nascimento))/365) as Idade, j.Sexo, p.Bandeira, p.Nome AS NomePais, b.ID AS idClube, b.Nome AS NomeClube, b.Pais AS PaisClube, pc.Nome AS NomePaisClube FROM jogador j LEFT JOIN paises p ON j.Pais = p.id LEFT JOIN contratos_jogador c ON c.jogador = j.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID LEFT JOIN paises pc ON b.Pais = pc.id WHERE " . implode(' AND ', $name_clauses) . " AND ( (b.ID IS NOT NULL AND b.Pais = ?) OR (b.ID IS NULL AND j.Pais = ?) ) AND j.Sexo = ? LIMIT 10";
+                                $params_similar_exec = array_merge($params_similar, [$country_id, $country_id, $sexo]);
+                                $stmt_similar = $db->prepare($sql_similar);
+                                $stmt_similar->execute($params_similar_exec);
+                                $similar_matches = $stmt_similar->fetchAll(PDO::FETCH_ASSOC);
+                            }
                         }
                         
                         // Merge and keep unique players (exact first)
@@ -572,32 +626,65 @@ if (isset($_POST['ajax'])) {
                         $t_name_decoded = trim(html_entity_decode((string)$xml->clube->Nome, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
                         $t_name_html = htmlspecialchars($t_name_decoded, ENT_QUOTES, 'UTF-8');
                         $t_sigla = (string)$xml->clube->TresLetras;
-                        $stmt_t = $db->prepare("SELECT c.ID, c.Nome, c.liga, l.Nome AS NomeLiga FROM clube c LEFT JOIN liga l ON c.liga = l.ID WHERE c.Nome = ? OR c.Nome = ? OR c.TresLetras = ?");
-                        $stmt_t->execute([$t_name_decoded, $t_name_html, $t_sigla]);
-                        $t_matches = $stmt_t->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        if ($is_admin) {
+                            $stmt_t = $db->prepare("SELECT c.ID, c.Nome, c.liga, l.Nome AS NomeLiga FROM clube c LEFT JOIN liga l ON c.liga = l.ID WHERE c.Nome = ? OR c.Nome = ? OR c.TresLetras = ?");
+                            $stmt_t->execute([$t_name_decoded, $t_name_html, $t_sigla]);
+                            $t_matches = $stmt_t->fetchAll(PDO::FETCH_ASSOC);
+                        } else {
+                            // Non-admin: JAMAIS vincula times com outros países; apenas no mesmo país/dono
+                            $stmt_t = $db->prepare("SELECT c.ID, c.Nome, c.liga, l.Nome AS NomeLiga FROM clube c INNER JOIN liga l ON c.liga = l.ID INNER JOIN paises p ON l.pais = p.id WHERE (c.Nome = ? OR c.Nome = ? OR c.TresLetras = ?) AND (c.Pais = ? OR l.pais = ?) AND p.dono = ?");
+                            $stmt_t->execute([$t_name_decoded, $t_name_html, $t_sigla, $country_id, $country_id, $_SESSION['user_id']]);
+                            $t_matches = $stmt_t->fetchAll(PDO::FETCH_ASSOC);
+                        }
 
                         // Coach matches
                         $c_name_raw = trim(preg_replace('/\s*\[.*?\]\s*$/', '', (string)$xml->tecnico->Nome));
                         $c_name_decoded = trim(html_entity_decode($c_name_raw, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
                         $c_name_html = htmlspecialchars($c_name_decoded, ENT_QUOTES, 'UTF-8');
 
-                        $stmt_c_exact = $db->prepare("SELECT a.ID, a.Nome, a.Nivel, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, a.Sexo, b.ID AS idClube, b.Nome AS NomeClube, b.Pais AS PaisClube, pc.Nome AS NomePaisClube FROM tecnico a LEFT JOIN contratos_tecnico c ON c.tecnico = a.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID LEFT JOIN paises pc ON b.Pais = pc.id WHERE (a.Nome = ? OR a.Nome = ?)");
-                        $stmt_c_exact->execute([$c_name_decoded, $c_name_html]);
-                        $c_exact = $stmt_c_exact->fetchAll(PDO::FETCH_ASSOC);
-                        $stmt_c_fuzzy = $db->prepare("SELECT a.ID, a.Nome, a.Nivel, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, a.Sexo, b.ID AS idClube, b.Nome AS NomeClube, b.Pais AS PaisClube, pc.Nome AS NomePaisClube FROM tecnico a LEFT JOIN contratos_tecnico c ON c.tecnico = a.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID LEFT JOIN paises pc ON b.Pais = pc.id WHERE (a.Nome LIKE ? OR a.Nome LIKE ?)");
-                        $stmt_c_fuzzy->execute(['%' . $c_name_decoded . '%', '%' . $c_name_html . '%']);
-                        $c_fuzzy = $stmt_c_fuzzy->fetchAll(PDO::FETCH_ASSOC);
+                        if ($is_admin) {
+                            $stmt_c_exact = $db->prepare("SELECT a.ID, a.Nome, a.Nivel, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, a.Sexo, b.ID AS idClube, b.Nome AS NomeClube, b.Pais AS PaisClube, pc.Nome AS NomePaisClube FROM tecnico a LEFT JOIN contratos_tecnico c ON c.tecnico = a.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID LEFT JOIN paises pc ON b.Pais = pc.id WHERE (a.Nome = ? OR a.Nome = ?)");
+                            $stmt_c_exact->execute([$c_name_decoded, $c_name_html]);
+                            $c_exact = $stmt_c_exact->fetchAll(PDO::FETCH_ASSOC);
+                            
+                            $stmt_c_fuzzy = $db->prepare("SELECT a.ID, a.Nome, a.Nivel, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, a.Sexo, b.ID AS idClube, b.Nome AS NomeClube, b.Pais AS PaisClube, pc.Nome AS NomePaisClube FROM tecnico a LEFT JOIN contratos_tecnico c ON c.tecnico = a.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID LEFT JOIN paises pc ON b.Pais = pc.id WHERE (a.Nome LIKE ? OR a.Nome LIKE ?)");
+                            $stmt_c_fuzzy->execute(['%' . $c_name_decoded . '%', '%' . $c_name_html . '%']);
+                            $c_fuzzy = $stmt_c_fuzzy->fetchAll(PDO::FETCH_ASSOC);
+                        } else {
+                            // Non-admin: JAMAIS vincula técnicos de outros países
+                            $stmt_c_exact = $db->prepare("SELECT a.ID, a.Nome, a.Nivel, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, a.Sexo, b.ID AS idClube, b.Nome AS NomeClube, b.Pais AS PaisClube, pc.Nome AS NomePaisClube FROM tecnico a LEFT JOIN contratos_tecnico c ON c.tecnico = a.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID LEFT JOIN paises pc ON b.Pais = pc.id WHERE (a.Nome = ? OR a.Nome = ?) AND ( (b.ID IS NOT NULL AND b.Pais = ?) OR (b.ID IS NULL AND a.Pais = ?) ) AND a.Sexo = ?");
+                            $stmt_c_exact->execute([$c_name_decoded, $c_name_html, $country_id, $country_id, $sexo]);
+                            $c_exact = $stmt_c_exact->fetchAll(PDO::FETCH_ASSOC);
+                            
+                            $stmt_c_fuzzy = $db->prepare("SELECT a.ID, a.Nome, a.Nivel, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, a.Sexo, b.ID AS idClube, b.Nome AS NomeClube, b.Pais AS PaisClube, pc.Nome AS NomePaisClube FROM tecnico a LEFT JOIN contratos_tecnico c ON c.tecnico = a.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON c.clube = b.ID LEFT JOIN paises pc ON b.Pais = pc.id WHERE (a.Nome LIKE ? OR a.Nome LIKE ?) AND ( (b.ID IS NOT NULL AND b.Pais = ?) OR (b.ID IS NULL AND a.Pais = ?) ) AND a.Sexo = ? LIMIT 10");
+                            $stmt_c_fuzzy->execute(['%' . $c_name_decoded . '%', '%' . $c_name_html . '%', $country_id, $country_id, $sexo]);
+                            $c_fuzzy = $stmt_c_fuzzy->fetchAll(PDO::FETCH_ASSOC);
+                        }
                         $c_matches = array_slice(array_unique(array_merge($c_exact, $c_fuzzy), SORT_REGULAR), 0, 5);
 
                         // Stadium matches
                         $s_name = trim(html_entity_decode((string)$xml->estadio->Nome, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
                         $s_name_html = htmlspecialchars($s_name, ENT_QUOTES, 'UTF-8');
-                        $stmt_s_exact = $db->prepare("SELECT ID, Nome FROM estadio WHERE Nome = ? OR Nome = ?");
-                        $stmt_s_exact->execute([$s_name, $s_name_html]);
-                        $s_exact = $stmt_s_exact->fetchAll(PDO::FETCH_ASSOC);
-                        $stmt_s_fuzzy = $db->prepare("SELECT ID, Nome FROM estadio WHERE Nome LIKE ? OR Nome LIKE ?");
-                        $stmt_s_fuzzy->execute(['%' . $s_name . '%', '%' . $s_name_html . '%']);
-                        $s_fuzzy = $stmt_s_fuzzy->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        if ($is_admin) {
+                            $stmt_s_exact = $db->prepare("SELECT ID, Nome FROM estadio WHERE Nome = ? OR Nome = ?");
+                            $stmt_s_exact->execute([$s_name, $s_name_html]);
+                            $s_exact = $stmt_s_exact->fetchAll(PDO::FETCH_ASSOC);
+                            
+                            $stmt_s_fuzzy = $db->prepare("SELECT ID, Nome FROM estadio WHERE Nome LIKE ? OR Nome LIKE ?");
+                            $stmt_s_fuzzy->execute(['%' . $s_name . '%', '%' . $s_name_html . '%']);
+                            $s_fuzzy = $stmt_s_fuzzy->fetchAll(PDO::FETCH_ASSOC);
+                        } else {
+                            // Non-admin: strictly same country
+                            $stmt_s_exact = $db->prepare("SELECT ID, Nome FROM estadio WHERE (Nome = ? OR Nome = ?) AND Pais = ?");
+                            $stmt_s_exact->execute([$s_name, $s_name_html, $country_id]);
+                            $s_exact = $stmt_s_exact->fetchAll(PDO::FETCH_ASSOC);
+                            
+                            $stmt_s_fuzzy = $db->prepare("SELECT ID, Nome FROM estadio WHERE (Nome LIKE ? OR Nome LIKE ?) AND Pais = ? LIMIT 10");
+                            $stmt_s_fuzzy->execute(['%' . $s_name . '%', '%' . $s_name_html . '%', $country_id]);
+                            $s_fuzzy = $stmt_s_fuzzy->fetchAll(PDO::FETCH_ASSOC);
+                        }
                         $s_matches = array_slice(array_unique(array_merge($s_exact, $s_fuzzy), SORT_REGULAR), 0, 5);
 
                         $team_matches_data = [

@@ -1,23 +1,21 @@
-﻿<?php
+<?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     die("Acesso negado. Por favor faça o login.");
 }
 
-$is_admin = (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && $_SESSION['impersonated'] == false);
-if (!$is_admin) {
-    die("Acesso negado. Apenas administradores podem utilizar o assistente de associação.");
-}
+$is_admin = (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && empty($_SESSION['impersonated']));
 
 if (!isset($_SESSION['pending_import']) || empty($_SESSION['pending_import'])) {
-    header("Location: /jogadores/importar_jogador.php");
+    header("Location: /times/importar_time.php");
     exit;
 }
 
 $pending = $_SESSION['pending_import'];
 $players = $pending['players'];
 $type = $pending['type']; // 1 = player, 2 = team
+$cancel_url = ($type == 2) ? '/times/importar_time.php' : '/jogadores/importar_jogador.php';
 
 // Include headers
 $page_title = "Associação de Jogadores Importados";
@@ -185,7 +183,7 @@ if ($target_pais_id === 0 && !empty($pending['time'])) {
             <?php endforeach; ?>
 
             <div class="wizard-footer">
-                <button type="button" class="btn-cancel" onclick="window.location.href='/jogadores/importar_jogador.php'">
+                <button type="button" class="btn-cancel" onclick="window.location.href='<?php echo $cancel_url; ?>'">
                     Cancelar
                 </button>
                 <button type="submit" class="btn-submit">

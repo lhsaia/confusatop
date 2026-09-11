@@ -204,6 +204,15 @@ if(!function_exists('changeName')){
                      $error_msg .= 'Houve erros ao atualizar o time existente.';
                      die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
                  }
+             } else if ($assoc_clube && $assoc_clube['action'] === 'new') {
+                 if($time->create()){
+                     $is_success = true;
+                     $codigo_time = (int)($time->id ?: $db->lastInsertId());
+                 } else {
+                     $is_success = false;
+                     $error_msg .= 'Houve erros durante a inserção do time, possivelmente duplicado.';
+                     die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
+                 }
              } else {
                  $is_admin_check = (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && empty($_SESSION['impersonated']));
                  $current_user_id = (int)($_SESSION['user_id'] ?? 0);
