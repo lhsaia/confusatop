@@ -13,7 +13,7 @@ try {
         throw new Exception("Falha na conexão com o banco de dados MySQL.");
     }
     
-    // Obter apenas as competições simuladas internamente no CONFUSA.top (competicao_lista + jogos_clube com simulador_interno = 1)
+    // Obter todas as competições de clubes cadastradas no CONFUSA.top (competicao_lista)
     $query = "
         SELECT 
             c.id,
@@ -25,7 +25,7 @@ try {
             SUM(CASE WHEN j.status = 1 THEN 1 ELSE 0 END) as finished_matches,
             SUM(CASE WHEN j.status = 0 THEN 1 ELSE 0 END) as next_matches
         FROM competicao_lista c
-        INNER JOIN jogos_clube j ON j.competicao_id = c.id AND j.simulador_interno = 1
+        INNER JOIN jogos_clube j ON j.competicao_id = c.id
         GROUP BY c.id, c.nome, c.ano, c.logo, c.tipo
         HAVING total_matches > 0
         ORDER BY c.ano DESC, c.id DESC
@@ -50,9 +50,9 @@ try {
             $stmtTeams = $conn->prepare("
                 SELECT DISTINCT cl.ID as id, cl.Nome as team_name, cl.Escudo as logo_url
                 FROM (
-                    SELECT timeA_id as time_id FROM jogos_clube WHERE competicao_id = ? AND simulador_interno = 1 AND timeA_id > 0
+                    SELECT timeA_id as time_id FROM jogos_clube WHERE competicao_id = ? AND timeA_id > 0
                     UNION
-                    SELECT timeB_id as time_id FROM jogos_clube WHERE competicao_id = ? AND simulador_interno = 1 AND timeB_id > 0
+                    SELECT timeB_id as time_id FROM jogos_clube WHERE competicao_id = ? AND timeB_id > 0
                 ) jt
                 INNER JOIN clube cl ON cl.ID = jt.time_id
                 LIMIT 6

@@ -135,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         compSelect.addEventListener('change', (e) => {
             currentCompId = parseInt(e.target.value, 10) || 0;
             if (currentCompId > 0) {
+                currentSubTab = 'table';
                 loadStandings(currentCompId);
             }
         });
@@ -382,6 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const compId = parseInt(card.getAttribute('data-comp-id'), 10);
                 currentCompId = compId;
                 if (compSelect) compSelect.value = compId;
+                currentSubTab = 'table';
                 switchView('standings');
                 loadStandings(compId);
             });
@@ -403,24 +405,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Adjust subtabs visibility based on competition structure
                 if (btnSubtabTable && btnSubtabBracket) {
+                    if (res.has_groups) {
+                        btnSubtabTable.innerHTML = '<span class="material-symbols-outlined">grid_view</span> Grupos';
+                    } else {
+                        btnSubtabTable.innerHTML = '<span class="material-symbols-outlined">leaderboard</span> Classificação';
+                    }
+
                     if (!res.has_standings && res.has_bracket) {
                         // Mata-mata puro: oculta tabela, exibe chaveamento
                         btnSubtabTable.style.display = 'none';
                         btnSubtabBracket.style.display = 'flex';
-                        if (currentSubTab === 'table') {
-                            currentSubTab = 'bracket';
-                        }
+                        currentSubTab = 'bracket';
                     } else if (res.has_standings && !res.has_bracket) {
                         // Pontos corridos puro: exibe tabela, oculta chaveamento
                         btnSubtabTable.style.display = 'flex';
                         btnSubtabBracket.style.display = 'none';
-                        if (currentSubTab === 'bracket') {
-                            currentSubTab = 'table';
-                        }
+                        currentSubTab = 'table';
                     } else {
                         // Misto: exibe ambos
                         btnSubtabTable.style.display = 'flex';
                         btnSubtabBracket.style.display = 'flex';
+                        if (currentSubTab !== 'bracket' && currentSubTab !== 'rounds') {
+                            currentSubTab = 'table';
+                        }
                     }
 
                     // Update active button visually
@@ -460,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (data.has_groups && data.groups && Object.keys(data.groups).length > 0) {
+        if (data.groups && Object.keys(data.groups).length > 0) {
             let html = '';
             for (const [groupName, teamsList] of Object.entries(data.groups)) {
                 html += `
@@ -752,39 +759,84 @@ document.addEventListener('DOMContentLoaded', () => {
                 mAwayScorers.textContent = match.away_scorers || '';
 
                 // Events
-                renderEvents(res.events || []);
+                renderEvents(res.events || [], match.home_team, match.away_team);
             })
             .catch(() => {
                 mEventsList.innerHTML = '<div class="no-data">Falha ao obter detalhes da partida.</div>';
             });
     }
 
-    function renderEvents(events) {
+    function renderEvents(events, homeTeamName, awayTeamName) {
         if (!events || events.length === 0) {
             mEventsList.innerHTML = '<div class="no-data">Nenhum evento registrado nesta partida.</div>';
             return;
         }
 
-        let html = '<div class="event-list">';
-        events.slice().reverse().forEach(ev => {
-            let iconClass = 'event-icon';
-            if (ev.type) iconClass += ' ' + ev.type;
+        let html = `
+            <div class="timeline-header">
+                <span class="th-home">${homeTeamName || 'Mandante'}</span>
+                <span class="th-away">${awayTeamName || 'Visitante'}</span>
+            </div>
+            <div class="event-timeline">
+        `;
 
-            let badgeHtml = ev.team_name ? `<span class="event-team">${ev.team_name}</span>` : '';
-            let playerHtml = ev.player_name ? `<span class="event-player">${ev.player_name}</span>` : '';
+        // Renderizar eventos na ordem cronológica decrescente fornecida pela API (mais recentes no topo, primeiros no fim)
+        events.forEach(ev => {
+            const isHome = (ev.side === 'home' || ev.is_home === true);
+            const type = (ev.type || '').toLowerCase();
+            const desc = ev.description || '';
 
-            html += `
-                <div class="event-item">
-                    <div class="${iconClass}"></div>
-                    <div class="event-time-team">
-                        <span class="event-minute">${ev.minute ? ev.minute + ' ' : ''}</span>
-                        ${badgeHtml}
-                    </div>
-                    ${playerHtml}
-                    <div class="event-desc">${ev.description}</div>
+            // Ícones e Cartões Preenchidos
+            let iconHtml = '';
+            if (type === 'goal' || type === 'lance-gol') {
+                iconHtml = '<span class="material-symbols-outlined tl-icon-goal" title="Gol">sports_soccer</span>';
+            } else if (type === 'yellow-card' || type === 'yellow_card' || type === 'cartao-amarelo' || (type === 'lance-cartao' && !desc.toLowerCase().includes('vermelho'))) {
+                iconHtml = '<span class="card-rect yellow" title="Cartão Amarelo"></span>';
+            } else if (type === 'red-card' || type === 'red_card' || type === 'cartao-vermelho' || (type === 'lance-cartao' && desc.toLowerCase().includes('vermelho'))) {
+                iconHtml = '<span class="card-rect red" title="Cartão Vermelho"></span>';
+            } else if (type === 'own-goal' || type === 'own_goal') {
+                iconHtml = '<span class="material-symbols-outlined tl-icon-own-goal" title="Gol Contra">sports_soccer</span>';
+            } else if (type === 'substitution' || type === 'lance-substituicao') {
+                iconHtml = '<span class="material-symbols-outlined" style="font-size: 16px; color: var(--accent-emerald);" title="Substituição">sync_alt</span>';
+            } else {
+                iconHtml = '<span class="material-symbols-outlined" style="font-size: 16px; color: var(--accent-cyan);">info</span>';
+            }
+
+            const minuteBadge = `<span class="tl-minute-badge">${ev.minute || '-'}</span>`;
+            const playerName = ev.player_name || ev.team_name || 'Lance';
+
+            const contentBlock = `
+                <div class="tl-text">
+                    <span class="tl-player">${playerName}</span>
+                    ${desc ? `<span class="tl-desc">${desc}</span>` : ''}
                 </div>
             `;
+
+            if (isHome) {
+                html += `
+                    <div class="tl-row tl-home">
+                        <div class="tl-content tl-content-home">
+                            ${contentBlock}
+                            <div class="tl-icon-box">${iconHtml}</div>
+                        </div>
+                        <div class="tl-center">${minuteBadge}</div>
+                        <div class="tl-content tl-content-away empty"></div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="tl-row tl-away">
+                        <div class="tl-content tl-content-home empty"></div>
+                        <div class="tl-center">${minuteBadge}</div>
+                        <div class="tl-content tl-content-away">
+                            <div class="tl-icon-box">${iconHtml}</div>
+                            ${contentBlock}
+                        </div>
+                    </div>
+                `;
+            }
         });
+
         html += '</div>';
         mEventsList.innerHTML = html;
     }

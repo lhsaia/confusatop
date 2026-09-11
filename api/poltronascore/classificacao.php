@@ -23,7 +23,7 @@ try {
             $stmtFind = $conn->prepare("
                 SELECT c.id 
                 FROM competicao_lista c
-                INNER JOIN jogos_clube j ON j.competicao_id = c.id AND j.simulador_interno = 1
+                INNER JOIN jogos_clube j ON j.competicao_id = c.id
                 WHERE c.nome LIKE ? OR CONCAT(c.nome, ' ', c.ano) LIKE ?
                 ORDER BY c.ano DESC, c.id DESC
                 LIMIT 1
@@ -37,7 +37,7 @@ try {
         $stmtLatest = $conn->query("
             SELECT c.id 
             FROM competicao_lista c
-            INNER JOIN jogos_clube j ON j.competicao_id = c.id AND j.simulador_interno = 1
+            INNER JOIN jogos_clube j ON j.competicao_id = c.id
             GROUP BY c.id
             ORDER BY c.ano DESC, c.id DESC
             LIMIT 1
@@ -70,7 +70,7 @@ try {
     $compDisplayName = $compInfo ? ($compInfo['nome'] . (!empty($compInfo['ano']) ? ' ' . $compInfo['ano'] : '')) : "Competição #$compId";
     $compTipo = isset($compInfo['tipo']) ? (int)$compInfo['tipo'] : 0; // 0 = Misto, 1 = Mata-mata, 2 = Pontos Corridos
     
-    // 2. Partidas da competição (estritamente simulador_interno = 1)
+    // 2. Partidas da competição
     $stmtMatches = $conn->prepare("
         SELECT 
             j.id,
@@ -85,14 +85,23 @@ try {
             j.data,
             j.fase,
             j.grupo,
-            j.estadio_nome,
-            j.status
+            COALESCE(NULLIF(j.estadio_nome, ''), eDirect.Nome, eHome.Nome, '') as estadio_nome,
+            j.status,
+            j.simulador_interno
         FROM jogos_clube j
-        WHERE j.competicao_id = ? AND j.simulador_interno = 1
+        LEFT JOIN clube cA ON cA.ID = j.timeA_id
+        LEFT JOIN estadio eDirect ON eDirect.ID = j.estadio_id
+        LEFT JOIN estadio eHome ON eHome.ID = cA.Estadio
+        WHERE j.competicao_id = ?
         ORDER BY j.data ASC, j.id ASC
     ");
     $stmtMatches->execute([$compId]);
-    $matches = $stmtMatches->fetchAll(PDO::FETCH_ASSOC);
+    $allMatches = $stmtMatches->fetchAll(PDO::FETCH_ASSOC);
+    
+    $simIntMatches = array_filter($allMatches, function($m) {
+        return (int)($m['simulador_interno'] ?? 0) === 1;
+    });
+    $matches = !empty($simIntMatches) ? array_values($simIntMatches) : $allMatches;
     
     // 3. Escudos e nomes de clubes
     $teamIds = [];
@@ -136,19 +145,6 @@ try {
     $teamForms = [];
     $bracketPhases = [];
     $rounds = [];
-    
-    $hasGroupMatches = false;
-    $hasKnockoutMatches = false;
-    
-    foreach ($matches as $m) {
-        $faseInt = (int)$m['fase'];
-        if ($faseInt === 2 || ($compTipo === 2 && $faseInt <= 2)) {
-            $hasGroupMatches = true;
-        }
-        if ($faseInt > 2 || $compTipo === 1) {
-            $hasKnockoutMatches = true;
-        }
-    }
     
     foreach ($matches as $m) {
         $idA = (int)$m['timeA_id'];
@@ -203,8 +199,11 @@ try {
             'status' => $statusLabel
         ];
         
-        // 1. Processar Classificação (apenas se for fase de grupos/pontos corridos E competição NÃO for mata-mata pura)
-        if ($compTipo !== 1 && ($faseInt === 2 || ($compTipo === 2 && $faseInt <= 2))) {
+        $isGroupMatch = (!empty($m['grupo']) || $faseInt === 2 || ($compTipo === 2 && $faseInt <= 2));
+        $isKnockoutMatch = ($faseInt > 2 || $faseInt === 10 || $faseInt === 9 || ($compTipo === 1 && empty($m['grupo']) && $faseInt !== 2));
+        
+        // 1. Processar Classificação (fase de grupos ou pontos corridos)
+        if ($isGroupMatch) {
             if (!isset($groups[$grpKey])) {
                 $groups[$grpKey] = [];
             }
@@ -274,8 +273,8 @@ try {
             }
         }
         
-        // 2. Processar Mata-Mata / Chaveamento (fase > 2 ou tipo = 1)
-        if ($faseInt > 2 || ($compTipo === 1 && $faseInt !== 2)) {
+        // 2. Processar Mata-Mata / Chaveamento
+        if ($isKnockoutMatch) {
             $bracketPhases[$faseInt][] = $matchFormatted;
         }
         
@@ -336,7 +335,7 @@ try {
     }
     
     // Determinar quais abas devem ser exibidas
-    $hasStandings = ($compTipo !== 1 && (!empty($flatStandings) || !empty($sortedGroups)));
+    $hasStandings = !empty($sortedGroups);
     $hasBracket = !empty($structuredBracket);
     
     echo json_encode([
@@ -346,7 +345,7 @@ try {
         'competition_type' => $compTipo,
         'has_standings' => $hasStandings,
         'has_bracket' => $hasBracket,
-        'has_groups' => count($sortedGroups) > 1,
+        'has_groups' => count($sortedGroups) > 1 || (count($sortedGroups) === 1 && !isset($sortedGroups['Geral'])),
         'groups' => $sortedGroups,
         'standings' => $flatStandings,
         'bracket' => $structuredBracket,

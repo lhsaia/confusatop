@@ -36,7 +36,7 @@ try {
             j.timeB_gols as away_score,
             j.timeB_penaltis as away_penalties,
             j.data as match_date,
-            j.estadio_nome as stadium,
+            COALESCE(NULLIF(j.estadio_nome, ''), eDirect.Nome, eHome.Nome, '') as stadium,
             j.status,
             j.fase,
             j.grupo,
@@ -47,6 +47,8 @@ try {
         LEFT JOIN competicao_lista cl ON cl.id = j.competicao_id AND j.simulador_interno = 1
         LEFT JOIN clube cA ON cA.ID = j.timeA_id
         LEFT JOIN clube cB ON cB.ID = j.timeB_id
+        LEFT JOIN estadio eDirect ON eDirect.ID = j.estadio_id
+        LEFT JOIN estadio eHome ON eHome.ID = cA.Estadio
         WHERE j.id = ?
     ");
     $stmt->execute([$matchId]);
@@ -86,21 +88,161 @@ try {
         
         $statusStr = ($row['status'] == 1) ? 'previous' : 'next';
         
-        // Buscar eventos se houver tabela jogos_clube_eventos
+        // Buscar eventos e montar lista de artilheiros
         $events = [];
+        $homeGoalsList = [];
+        $awayGoalsList = [];
+        
+        // 1. Tentar buscar em jogos_clube_eventos
         try {
-            $stmtEv = $conn->prepare("SELECT * FROM jogos_clube_eventos WHERE match_id = ? ORDER BY minuto ASC, id ASC");
+            $stmtEv = $conn->prepare("SELECT * FROM jogos_clube_eventos WHERE id_jogo = ? ORDER BY tempo DESC, minutos DESC, id_evento DESC");
             $stmtEv->execute([$matchId]);
             while ($evRow = $stmtEv->fetch(PDO::FETCH_ASSOC)) {
+                $tipoNum = (int)$evRow['tipo'];
+                $tipoStr = 'event';
+                $desc = 'Lance';
+                switch ($tipoNum) {
+                    case 1:
+                        $tipoStr = 'goal';
+                        $desc = 'Gol';
+                        break;
+                    case 2:
+                        $tipoStr = 'yellow-card';
+                        $desc = 'Cartão Amarelo';
+                        break;
+                    case 3:
+                        $tipoStr = 'red-card';
+                        $desc = 'Cartão Vermelho';
+                        break;
+                    case 4:
+                        $tipoStr = 'own-goal';
+                        $desc = 'Gol Contra';
+                        break;
+                }
+
+                $minuto = ($evRow['minutos'] !== null && $evRow['minutos'] !== '') ? (int)$evRow['minutos'] : null;
+                $minutoStr = ($minuto !== null) ? $minuto . "'" : '';
+                if ((int)$evRow['tempo'] === 3 || (int)$evRow['tempo'] === 4) {
+                    $minutoStr .= ($minutoStr ? ' (Prorr.)' : 'Prorrogação');
+                }
+
+                $pName = trim((string)($evRow['nome_jogador'] ?? ''));
+                $tName = trim((string)($evRow['nome_time'] ?? ''));
+                $tId = (int)($evRow['id_time'] ?? 0);
+                $isHome = ($tId > 0 && $tId === (int)$row['timeA_id']) || (!empty($tName) && $tName === $row['home_team']);
+                $side = $isHome ? 'home' : 'away';
+
                 $events[] = [
-                    'minute' => $evRow['minuto'] . "'",
-                    'type' => $evRow['tipo'],
-                    'team_name' => $evRow['time_nome'] ?? '',
-                    'player_name' => $evRow['jogador_nome'] ?? '',
-                    'description' => $evRow['descricao'] ?? ''
+                    'minute' => $minutoStr,
+                    'type' => $tipoStr,
+                    'team_name' => $tName,
+                    'player_name' => $pName,
+                    'description' => $desc,
+                    'side' => $side,
+                    'is_home' => $isHome
                 ];
+
+                if ($tipoNum === 1 || $tipoNum === 4) {
+                    $scorerEntry = ($pName ?: 'Gol') . ($minutoStr ? " $minutoStr" : "") . ($tipoNum === 4 ? " (contra)" : "");
+                    if ($isHome) {
+                        $homeGoalsList[] = $scorerEntry;
+                    } else {
+                        $awayGoalsList[] = $scorerEntry;
+                    }
+                }
             }
         } catch (\Throwable $e) {}
+
+        // 2. Se vazio, tentar carregar a partir do arquivo .hyl
+        if (empty($events) && !empty($row['path'])) {
+            $baseRoot = isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' ? rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') : dirname(__DIR__, 2);
+            $cleanPath = basename($row['path'], '.hyl');
+            $hylFiles = glob($baseRoot . "/competicoes/hexacolor/Partidas/*/*/" . $cleanPath . ".hyl");
+            if (empty($hylFiles)) {
+                $hylFiles = glob($baseRoot . "/full hexa suite/Hexacolor YMT/Partidas/*/*/" . $cleanPath . ".hyl");
+            }
+            if (!empty($hylFiles) && file_exists($hylFiles[0])) {
+                $hylData = json_decode(file_get_contents($hylFiles[0]), true);
+                if ($hylData && !empty($hylData['eventos']) && is_array($hylData['eventos'])) {
+                    $hylPlayerNames = [];
+                    foreach (array_merge($hylData['escalacaoTime1'] ?? [], $hylData['escalacaoTime2'] ?? []) as $hp) {
+                        $hpId = (int)($hp['id'] ?? 0);
+                        $hpNome = trim((string)($hp['nome'] ?? ''));
+                        if ($hpId > 0 && $hpNome !== '') {
+                            $hylPlayerNames[$hpId] = $hpNome;
+                        }
+                    }
+
+                    $rawHylEvents = $hylData['eventos'];
+                    // Ordenar eventos hyl de forma decrescente (tempo DESC, minutos DESC)
+                    usort($rawHylEvents, function($a, $b) {
+                        $tA = isset($a['tempo']) ? (int)$a['tempo'] : 1;
+                        $tB = isset($b['tempo']) ? (int)$b['tempo'] : 1;
+                        if ($tA !== $tB) return $tB <=> $tA;
+                        $mA = isset($a['minutos']) ? (int)$a['minutos'] : 0;
+                        $mB = isset($b['minutos']) ? (int)$b['minutos'] : 0;
+                        return $mB <=> $mA;
+                    });
+
+                    foreach ($rawHylEvents as $ev) {
+                        $tipoEvStr = $ev['tipoEvento'] ?? '';
+                        $tipoNum = 0;
+                        $tipoStr = 'event';
+                        $desc = 'Lance';
+                        switch ($tipoEvStr) {
+                            case 'gol':       $tipoNum = 1; $tipoStr = 'goal'; $desc = 'Gol'; break;
+                            case 'amarelo':   $tipoNum = 2; $tipoStr = 'yellow-card'; $desc = 'Cartão Amarelo'; break;
+                            case 'vermelho':  $tipoNum = 3; $tipoStr = 'red-card'; $desc = 'Cartão Vermelho'; break;
+                            case 'golContra': $tipoNum = 4; $tipoStr = 'own-goal'; $desc = 'Gol Contra'; break;
+                        }
+
+                        $tempoRaw = isset($ev['tempo']) ? (int)$ev['tempo'] : 1;
+                        if ($tempoRaw > 4) continue; // Pênaltis pós-jogo
+
+                        if ($tipoNum > 0) {
+                            $pId = (int)($ev['idJogador'] ?? 0);
+                            $pName = $hylPlayerNames[$pId] ?? '';
+                            if (empty($pName) && $pId > 0) {
+                                try {
+                                    $stP = $conn->prepare("SELECT Nome FROM jogador WHERE ID = ? LIMIT 1");
+                                    $stP->execute([$pId]);
+                                    $pName = (string)$stP->fetchColumn();
+                                } catch (\Throwable $e) {}
+                            }
+
+                            $teamNum = (int)($ev['time'] ?? 1);
+                            $isHome = ($teamNum === 1);
+                            $side = $isHome ? 'home' : 'away';
+                            $nomeTm = $isHome ? $row['home_team'] : $row['away_team'];
+                            $minuto = isset($ev['minutos']) ? (int)$ev['minutos'] : null;
+                            $minutoStr = ($minuto !== null) ? $minuto . "'" : '';
+                            if ($tempoRaw === 3 || $tempoRaw === 4) {
+                                $minutoStr .= ($minutoStr ? ' (Prorr.)' : 'Prorrogação');
+                            }
+
+                            $events[] = [
+                                'minute' => $minutoStr,
+                                'type' => $tipoStr,
+                                'team_name' => $nomeTm,
+                                'player_name' => $pName,
+                                'description' => $desc,
+                                'side' => $side,
+                                'is_home' => $isHome
+                            ];
+
+                            if ($tipoNum === 1 || $tipoNum === 4) {
+                                $scorerEntry = ($pName ?: 'Gol') . ($minutoStr ? " $minutoStr" : "") . ($tipoNum === 4 ? " (contra)" : "");
+                                if ($isHome) {
+                                    $homeGoalsList[] = $scorerEntry;
+                                } else {
+                                    $awayGoalsList[] = $scorerEntry;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         
         $matchData = [
             'id' => (int)$row['id'],
@@ -113,12 +255,12 @@ try {
             'home_logo' => $homeLogo,
             'home_score' => ($row['status'] == 1) ? (int)$row['home_score'] : 0,
             'home_penalties' => ($row['home_penalties'] !== null) ? (int)$row['home_penalties'] : null,
-            'home_scorers' => '',
+            'home_scorers' => implode(', ', $homeGoalsList),
             'away_team' => $row['away_team'],
             'away_logo' => $awayLogo,
             'away_score' => ($row['status'] == 1) ? (int)$row['away_score'] : 0,
             'away_penalties' => ($row['away_penalties'] !== null) ? (int)$row['away_penalties'] : null,
-            'away_scorers' => '',
+            'away_scorers' => implode(', ', $awayGoalsList),
             'status' => $statusStr
         ];
         
@@ -136,9 +278,39 @@ try {
     $pMatch = $stmtPoltrona->fetch(PDO::FETCH_ASSOC);
     
     if ($pMatch) {
-        $stmtEvents = $conn->prepare("SELECT * FROM poltrona_match_events WHERE match_id = ? ORDER BY id DESC");
+        $stmtEvents = $conn->prepare("SELECT * FROM poltrona_match_events WHERE match_id = ? ORDER BY id ASC");
         $stmtEvents->execute([$matchId]);
-        $events = $stmtEvents->fetchAll(PDO::FETCH_ASSOC);
+        $rawEvents = $stmtEvents->fetchAll(PDO::FETCH_ASSOC);
+        $events = [];
+        foreach ($rawEvents as $ev) {
+            $isHome = (!empty($ev['team_name']) && trim($ev['team_name']) === trim($pMatch['home_team']));
+            $evType = $ev['type'] ?: 'event';
+            $evDesc = $ev['description'] ?: '';
+
+            if ($evType === 'lance-cartao') {
+                if (stripos($evDesc, 'vermelho') !== false) {
+                    $evType = 'red-card';
+                } else {
+                    $evType = 'yellow-card';
+                }
+            } elseif ($evType === 'lance-gol') {
+                if (stripos($evDesc, 'contra') !== false) {
+                    $evType = 'own-goal';
+                } else {
+                    $evType = 'goal';
+                }
+            }
+
+            $events[] = [
+                'minute' => !empty($ev['minute']) ? (rtrim($ev['minute'], "'") . "'") : '',
+                'type' => $evType,
+                'team_name' => $ev['team_name'] ?: '',
+                'player_name' => $ev['player_name'] ?: '',
+                'description' => $evDesc,
+                'side' => $isHome ? 'home' : 'away',
+                'is_home' => $isHome
+            ];
+        }
         
         echo json_encode([
             'success' => true,

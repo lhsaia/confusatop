@@ -13,6 +13,31 @@
       "date": "10/09/2026",
       "items": [
         {
+          "badge": "bugfix",
+          "title": "Exibição de Estádios em Partidas Simuladas",
+          "desc": "Adicionado relacionamento dinâmico com a tabela de estádios e mandos de campo de clubes nos endpoints de jogos e classificação, garantindo que o nome do estádio seja exibido em todas as partidas e detalhes de competições."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ordem Cronológica Decrescente Unificada em Todos os Jogos",
+          "desc": "Padronizada a ordenação cronológica decrescente dos lances de jogo (mais recentes no topo e primeiros minutos na base) tanto para os jogos ao vivo/anteriores da tela principal do scraper quanto para as partidas de competições simuladas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Reconhecimento Preciso de Fase de Grupos e Classificação",
+          "desc": "Ajustado o reconhecimento de etapas de grupos em campeonatos com múltiplos formatos, garantindo que as tabelas de classificação de grupos e pontos corridos sejam sempre exibidas sem serem ocultadas erroneamente pela mensagem de mata-mata."
+        },
+        {
+          "badge": "design",
+          "title": "Linha do Tempo Bilateral e Cartões Sólidos nos Lances",
+          "desc": "Redesenhada a linha do tempo de lances do PoltronaScore no estilo SofaScore, com eventos em ordem cronológica decrescente (mais recentes no topo), separados pelos lados das equipes (mandante à esquerda, visitante à direita, minuto centralizado) e cartões em blocos sólidos preenchidos na cor correspondente."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste na Exibição de Grupos e Tabelas de Competições",
+          "desc": "Corrigida a alternância automática para a visualização de Grupos ao selecionar competições mistas e de fase de grupos, garantindo que o chaveamento de mata-mata não sobrescreva as tabelas de classificação."
+        },
+        {
           "badge": "new",
           "title": "Quadro Visual de Disputa de Pênaltis",
           "desc": "Adicionado painel visual dedicado na súmula da partida com sequência de acertos e erros (bolinhas verdes e vermelhas com checks e Xs) e tabela detalhada das cobranças individuais por atleta com link para o perfil."
