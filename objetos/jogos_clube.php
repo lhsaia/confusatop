@@ -495,13 +495,15 @@ class Jogo{
                 COALESCE(cB.Escudo, '0.png') as escudoB, 
                 j.data, 
                 DATE_FORMAT(j.data, '%d-%m-%Y') as data_formatada,
-                COALESCE(li.nome, cc.nome) as campeonato, 
+                COALESCE(cl.nome, li.nome, cc.nome, '') as campeonato, 
                 j.timeA_penaltis as timeApenaltis, 
                 j.timeB_penaltis as timeBpenaltis, 
                 j.timeA_id as idA, 
                 j.timeB_id as idB, 
                 j.dono,
-                j.id
+                j.id,
+                j.status,
+                j.simulador_interno
             FROM
                 jogos_clube j
             LEFT JOIN
@@ -513,20 +515,24 @@ class Jogo{
             ON
                 j.timeB_id = cB.ID
             LEFT JOIN
+                competicao_lista cl
+            ON
+                cl.id = j.competicao_id AND j.simulador_interno = 1
+            LEFT JOIN
                 liga li
             ON
-                j.competicao_id = li.id AND j.competicao_tipo = 0
+                j.competicao_id = li.id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 0
             LEFT JOIN
                 campeonatos_clube cc
             ON
-                j.competicao_id = cc.id AND j.competicao_tipo = 1
+                j.competicao_id = cc.id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 1
             WHERE
                 COALESCE(cA.Nome, j.timeA_nome) LIKE ?
                 OR j.timeA_gols LIKE ?
                 OR j.timeB_gols LIKE ?
                 OR COALESCE(cB.Nome, j.timeB_nome) LIKE ?
                 OR j.data LIKE ?
-                OR COALESCE(li.nome, cc.nome) LIKE ?
+                OR COALESCE(cl.nome, li.nome, cc.nome) LIKE ?
                 OR j.id LIKE ?
             ORDER BY
                 data DESC";
@@ -560,6 +566,7 @@ class Jogo{
       $match_id = htmlspecialchars(strip_tags($match_id));
       $query = "SELECT 
                     j.id,
+                    j.path,
                     j.estadio_nome as estadio, 
                     j.estadio_id,
                     j.competicao_id,

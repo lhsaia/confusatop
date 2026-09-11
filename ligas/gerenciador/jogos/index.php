@@ -99,8 +99,33 @@ $(document).ready(function($){
                 var pen = '-';
                 if(index>=(from_result_num-1) && index<=(from_result_num+results_per_page-2)){
 
-                if(val['timeApenaltis'] !== null && val['timeApenaltis'] !== "" && val['timeBpenaltis'] !== null && val['timeBpenaltis'] !== ""){
-                    pen = "<span class='penalty-tag'>(" + val['timeApenaltis'] + " - " + val['timeBpenaltis'] + ")</span>";
+                var statusJogo = (val['status'] !== undefined && val['status'] !== null) ? parseInt(val['status']) : 1;
+                var isSimuladorInterno = (val['simulador_interno'] == 1 || val['simulador_interno'] == '1');
+
+                var liberado = true;
+                if (isSimuladorInterno) {
+                    if (statusJogo === 0) {
+                        liberado = false;
+                    } else if (val['data']) {
+                        var matchTime = new Date(val['data'].replace(' ', 'T')).getTime();
+                        var duracaoMs = (val['timeApenaltis'] !== null && val['timeApenaltis'] !== "") ? (150 * 60 * 1000) : (120 * 60 * 1000);
+                        if (Date.now() < (matchTime + duracaoMs)) {
+                            liberado = false;
+                        }
+                    }
+                } else if (statusJogo === 0) {
+                    liberado = false;
+                }
+
+                var golsA = '-';
+                var golsB = '-';
+                if (liberado && val['timeAgols'] !== null && val['timeAgols'] !== undefined && val['timeAgols'] !== '' && val['timeBgols'] !== null && val['timeBgols'] !== undefined && val['timeBgols'] !== '') {
+                    golsA = val['timeAgols'];
+                    golsB = val['timeBgols'];
+
+                    if(val['timeApenaltis'] !== null && val['timeApenaltis'] !== "" && val['timeBpenaltis'] !== null && val['timeBpenaltis'] !== ""){
+                        pen = "<span class='penalty-tag'>(" + val['timeApenaltis'] + " - " + val['timeBpenaltis'] + ")</span>";
+                    }
                 }
 
                 var viewLink = "view.php?match_id="+val['id'];
@@ -110,13 +135,13 @@ $(document).ready(function($){
                     var escudoB = val['escudoB'] ? val['escudoB'] : '0.png';
 
                     tbl += "<td style='text-align: left;'><div style='display:flex; align-items:center;'><img src='/images/escudos/"+escudoA+"' class='team-crest' alt='"+val['nomeA']+"'> <a href='/times/team_presentation_magazine.php?team="+val['idA']+"' class='team-name-link' onclick='event.stopPropagation();'>"+val['nomeA']+"</a></div></td>";
-                    tbl +=  "<td class='score-num'>"+val['timeAgols']+"</td>";
+                    tbl +=  "<td class='score-num'>"+golsA+"</td>";
                     tbl +=  "<td class='penaltybox'>"+pen+"</td>";
-                    tbl +=  "<td class='score-num'>"+val['timeBgols']+"</td>";
+                    tbl +=  "<td class='score-num'>"+golsB+"</td>";
                     tbl +=  "<td style='text-align: left;'><div style='display:flex; align-items:center;'><img src='/images/escudos/"+escudoB+"' class='team-crest' alt='"+val['nomeB']+"'> <a href='/times/team_presentation_magazine.php?team="+val['idB']+"' class='team-name-link' onclick='event.stopPropagation();'>"+val['nomeB']+"</a></div></td>";
                     
                     tbl +=  "<td style='color:#475569; font-size:0.85rem;'>"+val['data_formatada']+"</td>";
-                    tbl +=  "<td style='font-weight:600; font-size:0.85rem;'>"+val['campeonato']+"</td>";
+                    tbl +=  "<td style='font-weight:600; font-size:0.85rem;'>"+(val['campeonato'] || '-')+"</td>";
                     
                     var actions = "";
                     if (currentUserId > 0 && (val['dono'] == currentUserId || isAdmin)) {

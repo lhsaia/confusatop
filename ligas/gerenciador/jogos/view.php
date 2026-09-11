@@ -159,9 +159,145 @@ if(!$results) {
             </h4>
 
             <?php
+            $baseRoot = (isset($_SERVER['DOCUMENT_ROOT']) && is_dir($_SERVER['DOCUMENT_ROOT']) ? rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') : dirname(__DIR__, 3));
+
+            // 1. Carregar súmula .hyl se disponível
+            $hylData = null;
+            if (!empty($results['path'])) {
+                $cleanPath = basename($results['path'], '.hyl');
+                $hylFiles = glob($baseRoot . "/competicoes/hexacolor/Partidas/*/*/" . $cleanPath . ".hyl");
+                if (empty($hylFiles)) {
+                    $hylFiles = glob($baseRoot . "/full hexa suite/Hexacolor YMT/Partidas/*/*/" . $cleanPath . ".hyl");
+                }
+                if (!empty($hylFiles) && file_exists($hylFiles[0])) {
+                    $hylData = json_decode(file_get_contents($hylFiles[0]), true);
+                }
+            }
+
+            // 2. Carregar mapa de jogadores do SQLite da competição (se for simulador interno)
+            $sqlitePlayersMap = [];
+            if (!empty($results['competicao_id'])) {
+                $dbPath = $baseRoot . "/competicoes/databases/" . (int)$results['competicao_id'] . "-database.db3";
+                if (file_exists($dbPath)) {
+                    try {
+                        $cdb = new PDO("sqlite:" . $dbPath);
+                        $stmtSqJogs = $cdb->query("SELECT ID, Nome, Posicao FROM jogador");
+                        if ($stmtSqJogs) {
+                            while ($sqRow = $stmtSqJogs->fetch(PDO::FETCH_ASSOC)) {
+                                $sqlitePlayersMap[(int)$sqRow['ID']] = $sqRow;
+                            }
+                        }
+                    } catch (\Throwable $e) {}
+                }
+            }
+
+            // 3. Mapeamento de nomes do .hyl
+            $hylPlayerNames = [];
+            if ($hylData) {
+                foreach (array_merge($hylData['escalacaoTime1'] ?? [], $hylData['escalacaoTime2'] ?? []) as $hp) {
+                    $hpId = (int)($hp['id'] ?? 0);
+                    $hpNome = trim((string)($hp['nome'] ?? ''));
+                    if ($hpId > 0 && $hpNome !== '') {
+                        $hylPlayerNames[$hpId] = $hpNome;
+                    }
+                }
+            }
+
+            // 4. Função universal de resolução de jogador
+            $resolverJogador = function($pId) use ($sqlitePlayersMap, $hylPlayerNames, $db) {
+                $pId = (int)$pId;
+                if ($pId <= 0) return ['nome' => '', 'posicao' => ''];
+                
+                $nome = '';
+                $pos = '';
+                
+                if (isset($hylPlayerNames[$pId]) && $hylPlayerNames[$pId] !== '') {
+                    $nome = $hylPlayerNames[$pId];
+                }
+                
+                if (isset($sqlitePlayersMap[$pId])) {
+                    if (empty($nome)) $nome = $sqlitePlayersMap[$pId]['Nome'];
+                    $pos = $sqlitePlayersMap[$pId]['Posicao'] ?? '';
+                }
+                
+                if (empty($nome)) {
+                    try {
+                        $stmtMy = $db->prepare("SELECT Nome, Posicao FROM jogador WHERE ID = ? LIMIT 1");
+                        $stmtMy->execute([$pId]);
+                        if ($myRow = $stmtMy->fetch(PDO::FETCH_ASSOC)) {
+                            $nome = $myRow['Nome'];
+                            if (empty($pos)) $pos = $myRow['Posicao'] ?? '';
+                        }
+                    } catch (\Throwable $e) {}
+                }
+                
+                return ['nome' => $nome, 'posicao' => $pos];
+            };
+
+            // 5. Carregar Eventos da partida
             $stmtEvents = $db->prepare("SELECT * FROM jogos_clube_eventos WHERE id_jogo = ? ORDER BY tempo ASC, minutos ASC");
             $stmtEvents->execute([$match_id]);
             $allEvents = $stmtEvents->fetchAll(PDO::FETCH_ASSOC);
+
+            // Se a tabela de eventos estiver vazia mas tivermos o .hyl, popula os eventos a partir do .hyl
+            if (empty($allEvents) && $hylData && !empty($hylData['eventos']) && is_array($hylData['eventos'])) {
+                foreach ($hylData['eventos'] as $ev) {
+                    $tipoEvStr = $ev['tipoEvento'] ?? '';
+                    $tipoEvento = 0;
+                    switch ($tipoEvStr) {
+                        case 'gol':       $tipoEvento = 1; break;
+                        case 'amarelo':   $tipoEvento = 2; break;
+                        case 'vermelho':  $tipoEvento = 3; break;
+                        case 'golContra': $tipoEvento = 4; break;
+                    }
+
+                    // Ignorar eventos ocorridos durante disputa de pênaltis pós-jogo (tempo > 4)
+                    $tempoRaw = isset($ev['tempo']) ? (int)$ev['tempo'] : 1;
+                    if ($tempoRaw > 4) {
+                        continue;
+                    }
+
+                    if ($tipoEvento > 0) {
+                        $pId = (int)($ev['idJogador'] ?? 0);
+                        $infoJog = $resolverJogador($pId);
+                        $teamNum = (int)($ev['time'] ?? 1);
+                        $idTm = ($teamNum === 2) ? (int)$results['timeB_id'] : (int)$results['timeA_id'];
+                        $nomeTm = ($teamNum === 2) ? $results['timeB_nome'] : $results['timeA_nome'];
+                        $minuto = isset($ev['minutos']) ? (int)$ev['minutos'] : null;
+                        $tempo = $tempoRaw;
+                        if ($minuto !== null && $minuto > 45 && $tempo == 1) {
+                            $tempo = 2;
+                        }
+
+                        $allEvents[] = [
+                            'id_jogo' => $match_id,
+                            'tempo' => $tempo,
+                            'minutos' => $minuto,
+                            'tipo' => $tipoEvento,
+                            'id_jogador' => $pId,
+                            'nome_jogador' => $infoJog['nome'],
+                            'id_time' => $idTm,
+                            'nome_time' => $nomeTm
+                        ];
+
+                        try {
+                            $stmtInsEv = $db->prepare("INSERT INTO jogos_clube_eventos (id_jogo, tempo, minutos, tipo, id_jogador, nome_jogador, id_time, nome_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                            $stmtInsEv->execute([$match_id, $tempo, $minuto, $tipoEvento, $pId, mb_substr($infoJog['nome'], 0, 40), $idTm, $nomeTm]);
+                        } catch (\Throwable $e) {}
+                    }
+                }
+            }
+
+            // Preencher nomes faltantes em eventos
+            foreach ($allEvents as &$event) {
+                if (empty($event['nome_jogador']) && !empty($event['id_jogador'])) {
+                    $infoJog = $resolverJogador($event['id_jogador']);
+                    if (!empty($infoJog['nome'])) {
+                        $event['nome_jogador'] = $infoJog['nome'];
+                    }
+                }
+            }
+            unset($event);
 
             if(count($allEvents) > 0):
                 foreach ($allEvents as $event):
@@ -184,7 +320,8 @@ if(!$results) {
                         $min_display = $minutos . "'";
                     }
                     
-                    $alignment = ($id_time == $results['timeA_id'] || $nome_time == $results['timeA_nome']) ? 'left' : 'right';
+                    $isTeamA = ($id_time == $results['timeA_id'] || $id_time == 1 || $nome_time == $results['timeA_nome']);
+                    $alignment = $isTeamA ? 'left' : 'right';
                     $rowStyle = ($alignment == 'left') ? 'flex-direction: row;' : 'flex-direction: row-reverse; text-align: right;';
                     
                     $playerNameDisplay = stripslashes($nome_jogador ?? '');
@@ -218,6 +355,84 @@ if(!$results) {
                 $stmtEsc->execute();
                 $allPlayers = $stmtEsc->fetchAll(PDO::FETCH_ASSOC);
 
+                // Se a tabela de escalação estiver vazia mas tivermos o .hyl, carrega a escalação do .hyl
+                if (empty($allPlayers) && $hylData) {
+                    $idA = (int)($results['timeA_id'] ?? 0);
+                    $idB = (int)($results['timeB_id'] ?? 0);
+
+                    foreach ($hylData['escalacaoTime1'] ?? [] as $idx => $p) {
+                        $pId = (int)($p['id'] ?? 0);
+                        $infoJog = $resolverJogador($pId);
+                        $pNome = !empty($p['nome']) ? trim((string)$p['nome']) : $infoJog['nome'];
+                        $pPos = !empty($p['posicao']) ? $p['posicao'] : $infoJog['posicao'];
+                        $pTitular = isset($p['titular']) ? (int)$p['titular'] : ($idx < 11 ? 1 : 0);
+
+                        $allPlayers[] = [
+                            'id_partida' => $match_id,
+                            'id_time' => $idA,
+                            'nome_time' => $results['timeA_nome'],
+                            'id_jogador' => $pId,
+                            'nome_jogador' => $pNome,
+                            'posicao' => $pPos,
+                            'titular' => $pTitular,
+                            'numero' => $idx + 1,
+                            'entrada_minuto' => null,
+                            'saida_minuto' => null
+                        ];
+
+                        try {
+                            $stmtInsEsc = $db->prepare("INSERT INTO jogos_clube_escalacao (id_partida, id_time, nome_time, posicao, numero, id_jogador, nome_jogador, titular, entrada_tempo, entrada_minuto, saida_tempo, saida_minuto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0)");
+                            $stmtInsEsc->execute([$match_id, $idA, $results['timeA_nome'], $pPos, $idx + 1, $pId, $pNome, $pTitular]);
+                        } catch (\Throwable $e) {}
+                    }
+
+                    foreach ($hylData['escalacaoTime2'] ?? [] as $idx => $p) {
+                        $pId = (int)($p['id'] ?? 0);
+                        $infoJog = $resolverJogador($pId);
+                        $pNome = !empty($p['nome']) ? trim((string)$p['nome']) : $infoJog['nome'];
+                        $pPos = !empty($p['posicao']) ? $p['posicao'] : $infoJog['posicao'];
+                        $pTitular = isset($p['titular']) ? (int)$p['titular'] : ($idx < 11 ? 1 : 0);
+
+                        $allPlayers[] = [
+                            'id_partida' => $match_id,
+                            'id_time' => $idB,
+                            'nome_time' => $results['timeB_nome'],
+                            'id_jogador' => $pId,
+                            'nome_jogador' => $pNome,
+                            'posicao' => $pPos,
+                            'titular' => $pTitular,
+                            'numero' => $idx + 1,
+                            'entrada_minuto' => null,
+                            'saida_minuto' => null
+                        ];
+
+                        try {
+                            $stmtInsEsc = $db->prepare("INSERT INTO jogos_clube_escalacao (id_partida, id_time, nome_time, posicao, numero, id_jogador, nome_jogador, titular, entrada_tempo, entrada_minuto, saida_tempo, saida_minuto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0)");
+                            $stmtInsEsc->execute([$match_id, $idB, $results['timeB_nome'], $pPos, $idx + 1, $pId, $pNome, $pTitular]);
+                        } catch (\Throwable $e) {}
+                    }
+                }
+
+                // Preencher e persistir nomes vazios em $allPlayers
+                foreach ($allPlayers as &$player) {
+                    if (empty($player['nome_jogador']) && !empty($player['id_jogador'])) {
+                        $pId = (int)$player['id_jogador'];
+                        $infoJog = $resolverJogador($pId);
+
+                        if (!empty($infoJog['nome'])) {
+                            $player['nome_jogador'] = $infoJog['nome'];
+                            if (empty($player['posicao']) && !empty($infoJog['posicao'])) {
+                                $player['posicao'] = $infoJog['posicao'];
+                            }
+                            try {
+                                $stmtUpEsc = $db->prepare("UPDATE jogos_clube_escalacao SET nome_jogador = ? WHERE id_partida = ? AND id_jogador = ?");
+                                $stmtUpEsc->execute([$infoJog['nome'], $match_id, $pId]);
+                            } catch (\Throwable $e) {}
+                        }
+                    }
+                }
+                unset($player);
+
                 $idA = (int)($results['timeA_id'] ?? 0);
                 $idB = (int)($results['timeB_id'] ?? 0);
 
@@ -233,6 +448,10 @@ if(!$results) {
                     if($idA > 0 && $pTeamId === $idA) {
                         $tKey = 1;
                     } elseif($idB > 0 && $pTeamId === $idB) {
+                        $tKey = 2;
+                    } elseif($pTeamId === 1) {
+                        $tKey = 1;
+                    } elseif($pTeamId === 2) {
                         $tKey = 2;
                     } elseif(!empty($player['nome_time']) && $player['nome_time'] === $results['timeA_nome']) {
                         $tKey = 1;
