@@ -75,13 +75,6 @@ if($_POST){
         header("Location: " . $_SERVER['PHP_SELF']);
         exit;
     }
-}  else {
-
-    $_SESSION['flash_msg'] = "<div class='alert alert-danger alert-btn'><span class='closebtn'>&times;</span>Campos em branco</div>";
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit;
-}
-}
 }
 
 $page_title = "Inserir liga";
