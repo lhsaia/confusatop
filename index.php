@@ -66,19 +66,20 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
             </div>
         </a>
 
-        <!-- Competições (Subido de categoria e desabilitado) -->
-        <div class="hub-card disabled-card">
+        <!-- Competições -->
+        <a href="/competicoes" class="hub-card">
             <div class="hub-card-hero-image">
                 <img src="/images/pacotes.png?1" alt="Competições" />
             </div>
             <div class="hub-card-body">
                 <h3 class="hub-card-title">
                     <span>Competições</span>
-                    <span class="badge-status">Em Breve</span>
+                    <span class="badge-status" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">Novo</span>
+                    <span class="material-symbols-outlined hub-card-arrow">arrow_forward</span>
                 </h3>
                 <p class="hub-card-desc">Monte e configure torneios para simulação online.</p>
             </div>
-        </div>
+        </a>
 
         <!-- Ranking -->
         <a href="/ranking" class="hub-card">
