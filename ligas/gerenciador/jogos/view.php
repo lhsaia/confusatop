@@ -161,8 +161,9 @@ if(!$results) {
             <?php
             $baseRoot = (isset($_SERVER['DOCUMENT_ROOT']) && is_dir($_SERVER['DOCUMENT_ROOT']) ? rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') : dirname(__DIR__, 3));
 
-            // 1. Carregar súmula .hyl se disponível
+            // 1. Carregar súmula .hyl e dados detalhados .hyj se disponível
             $hylData = null;
+            $hyjData = null;
             if (!empty($results['path'])) {
                 $cleanPath = basename($results['path'], '.hyl');
                 $hylFiles = glob($baseRoot . "/competicoes/hexacolor/Partidas/*/*/" . $cleanPath . ".hyl");
@@ -171,6 +172,10 @@ if(!$results) {
                 }
                 if (!empty($hylFiles) && file_exists($hylFiles[0])) {
                     $hylData = json_decode(file_get_contents($hylFiles[0]), true);
+                    $hyjPathCandidate = str_replace('.hyl', '.hyj', $hylFiles[0]);
+                    if (file_exists($hyjPathCandidate)) {
+                        $hyjData = json_decode(file_get_contents($hyjPathCandidate), true);
+                    }
                 }
             }
 
@@ -342,6 +347,183 @@ if(!$results) {
                 <p style="text-align:center; color:#94a3b8; padding:1.5rem; margin:0; font-size:0.9rem;">Sem eventos registrados nesta partida.</p>
             <?php endif; ?>
         </div>
+
+        <?php
+        // Extrair e renderizar Disputa de Pênaltis (se houver)
+        $temPenaltis = ($statusJogo === 1 && ($jaTerminou || empty($results['simulador_interno'])) && $results['timeA_penaltis'] !== null && $results['timeB_penaltis'] !== null && ($results['timeA_penaltis'] !== '' || $results['timeB_penaltis'] !== ''));
+        
+        $cobrancasA = [];
+        $cobrancasB = [];
+        $shootoutEvents = [];
+
+        // 1. Extrair cobranças da súmula .hyl (tempo > 4)
+        if ($hylData && !empty($hylData['eventos']) && is_array($hylData['eventos'])) {
+            foreach ($hylData['eventos'] as $ev) {
+                $tRaw = isset($ev['tempo']) ? (int)$ev['tempo'] : 0;
+                if ($tRaw > 4) {
+                    $shootoutEvents[] = $ev;
+                }
+            }
+        }
+
+        // 2. Extrair das estatísticas dos jogadores no .hyj se não houver eventos detalhados com tempo > 4
+        if (empty($shootoutEvents) && $hyjData) {
+            foreach ($hyjData['time1']['jogadores'] ?? [] as $pj) {
+                $pId = (int)($pj['idJogador'] ?? 0);
+                $conv = (int)($pj['penaltisConvertidosDisputa'] ?? 0);
+                $perd = (int)($pj['penaltisPerdidosDisputa'] ?? 0);
+                for ($k = 0; $k < $conv; $k++) {
+                    $cobrancasA[] = ['id' => $pId, 'acertou' => true];
+                }
+                for ($k = 0; $k < $perd; $k++) {
+                    $cobrancasA[] = ['id' => $pId, 'acertou' => false];
+                }
+            }
+            foreach ($hyjData['time2']['jogadores'] ?? [] as $pj) {
+                $pId = (int)($pj['idJogador'] ?? 0);
+                $conv = (int)($pj['penaltisConvertidosDisputa'] ?? 0);
+                $perd = (int)($pj['penaltisPerdidosDisputa'] ?? 0);
+                for ($k = 0; $k < $conv; $k++) {
+                    $cobrancasB[] = ['id' => $pId, 'acertou' => true];
+                }
+                for ($k = 0; $k < $perd; $k++) {
+                    $cobrancasB[] = ['id' => $pId, 'acertou' => false];
+                }
+            }
+        } elseif (!empty($shootoutEvents)) {
+            foreach ($shootoutEvents as $sev) {
+                $pId = (int)($sev['idJogador'] ?? 0);
+                $tNum = (int)($sev['time'] ?? 1);
+                $tipoEv = $sev['tipoEvento'] ?? '';
+                $acertou = ($tipoEv === 'gol' || $tipoEv === 'penaltiConvertido');
+                if ($tNum === 2) {
+                    $cobrancasB[] = ['id' => $pId, 'acertou' => $acertou];
+                } else {
+                    $cobrancasA[] = ['id' => $pId, 'acertou' => $acertou];
+                }
+            }
+        }
+
+        // Se a partida tiver placar de pênaltis mas nenhuma cobrança individual foi registrada no arquivo,
+        // apenas preencher as cobranças convertidas reais sem inventar cobranças perdidas fantasmas
+        if ($temPenaltis && empty($cobrancasA) && empty($cobrancasB)) {
+            $pA = (int)$results['timeA_penaltis'];
+            $pB = (int)$results['timeB_penaltis'];
+            for ($k = 0; $k < $pA; $k++) {
+                $cobrancasA[] = ['id' => 0, 'acertou' => true];
+            }
+            for ($k = 0; $k < $pB; $k++) {
+                $cobrancasB[] = ['id' => 0, 'acertou' => true];
+            }
+        }
+
+        if ($temPenaltis || !empty($cobrancasA) || !empty($cobrancasB)):
+            $penA_placar = (int)($results['timeA_penaltis'] ?? count(array_filter($cobrancasA, fn($c) => $c['acertou'])));
+            $penB_placar = (int)($results['timeB_penaltis'] ?? count(array_filter($cobrancasB, fn($c) => $c['acertou'])));
+        ?>
+        <div class="shootout-box">
+            <div class="shootout-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="material-symbols-outlined" style="color:#0284c7;">sports_score</span>
+                    <span>Disputa de Pênaltis</span>
+                </div>
+                <span style="color:#0284c7; font-weight:800; font-size:1.1rem;">
+                    <?php echo $results['timeA_nome']; ?> <?php echo $penA_placar; ?> × <?php echo $penB_placar; ?> <?php echo $results['timeB_nome']; ?>
+                </span>
+            </div>
+
+            <!-- Resumo visual em bolinhas e Xs -->
+            <div class="shootout-teams-summary">
+                <div class="shootout-team-dots">
+                    <span class="shootout-team-label"><?php echo $results['timeA_nome']; ?>:</span>
+                    <?php foreach ($cobrancasA as $idx => $cob): ?>
+                        <span class="shootout-dot <?php echo $cob['acertou'] ? 'converted' : 'missed'; ?>" title="<?php echo ($idx+1).'ª cobrança: '.($cob['acertou'] ? 'Convertido' : 'Perdido'); ?>">
+                            <span class="material-symbols-outlined shootout-dot-icon"><?php echo $cob['acertou'] ? 'check' : 'close'; ?></span>
+                        </span>
+                    <?php endforeach; ?>
+                </div>
+                <div class="shootout-team-dots" style="justify-content: flex-end;">
+                    <span class="shootout-team-label" style="text-align:right;"><?php echo $results['timeB_nome']; ?>:</span>
+                    <?php foreach ($cobrancasB as $idx => $cob): ?>
+                        <span class="shootout-dot <?php echo $cob['acertou'] ? 'converted' : 'missed'; ?>" title="<?php echo ($idx+1).'ª cobrança: '.($cob['acertou'] ? 'Convertido' : 'Perdido'); ?>">
+                            <span class="material-symbols-outlined shootout-dot-icon"><?php echo $cob['acertou'] ? 'check' : 'close'; ?></span>
+                        </span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <!-- Detalhes das cobranças individuais por atleta -->
+            <?php 
+                $hasNamedKicks = false;
+                foreach (array_merge($cobrancasA, $cobrancasB) as $cb) {
+                    if (!empty($cb['id']) && $cb['id'] > 0) {
+                        $hasNamedKicks = true;
+                        break;
+                    }
+                }
+            ?>
+            <?php if ($hasNamedKicks): ?>
+                <div class="shootout-kicks-table">
+                    <?php 
+                    $maxKicks = max(count($cobrancasA), count($cobrancasB));
+                    for ($i = 0; $i < $maxKicks; $i++):
+                        $kickA = $cobrancasA[$i] ?? null;
+                        $kickB = $cobrancasB[$i] ?? null;
+                        if (!$kickA && !$kickB) continue;
+                    ?>
+                        <div class="shootout-kick-row">
+                            <!-- Cobrança Time A -->
+                            <div style="flex:1; display:flex; align-items:center; gap:8px;">
+                                <?php if ($kickA): 
+                                    $infoA = $resolverJogador($kickA['id']);
+                                    $nomeA = !empty($infoA['nome']) ? $infoA['nome'] : '';
+                                    if ($nomeA !== ''):
+                                ?>
+                                    <span class="shootout-kick-badge <?php echo $kickA['acertou'] ? 'converted' : 'missed'; ?>">
+                                        <span class="material-symbols-outlined" style="font-size:15px;"><?php echo $kickA['acertou'] ? 'check_circle' : 'cancel'; ?></span>
+                                        <?php echo $kickA['acertou'] ? 'Gol' : 'Perdeu'; ?>
+                                    </span>
+                                    <span>
+                                        <?php if ($kickA['id'] > 0): ?>
+                                            <a href="/ligas/playerstatus.php?player=<?php echo $kickA['id']; ?>" class="player-link-clean"><strong><?php echo $nomeA; ?></strong></a>
+                                        <?php else: ?>
+                                            <strong><?php echo $nomeA; ?></strong>
+                                        <?php endif; ?>
+                                    </span>
+                                <?php endif; endif; ?>
+                            </div>
+
+                            <!-- Número da Rodada -->
+                            <div style="padding: 0 12px; font-weight:700; color:#94a3b8; font-size:0.8rem;">
+                                #<?php echo ($i + 1); ?>
+                            </div>
+
+                            <!-- Cobrança Time B -->
+                            <div style="flex:1; display:flex; align-items:center; justify-content:flex-end; gap:8px; text-align:right;">
+                                <?php if ($kickB): 
+                                    $infoB = $resolverJogador($kickB['id']);
+                                    $nomeB = !empty($infoB['nome']) ? $infoB['nome'] : '';
+                                    if ($nomeB !== ''):
+                                ?>
+                                    <span>
+                                        <?php if ($kickB['id'] > 0): ?>
+                                            <a href="/ligas/playerstatus.php?player=<?php echo $kickB['id']; ?>" class="player-link-clean"><strong><?php echo $nomeB; ?></strong></a>
+                                        <?php else: ?>
+                                            <strong><?php echo $nomeB; ?></strong>
+                                        <?php endif; ?>
+                                    </span>
+                                    <span class="shootout-kick-badge <?php echo $kickB['acertou'] ? 'converted' : 'missed'; ?>">
+                                        <span class="material-symbols-outlined" style="font-size:15px;"><?php echo $kickB['acertou'] ? 'check_circle' : 'cancel'; ?></span>
+                                        <?php echo $kickB['acertou'] ? 'Gol' : 'Perdeu'; ?>
+                                    </span>
+                                <?php endif; endif; ?>
+                            </div>
+                        </div>
+                    <?php endfor; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
 
         <!-- Escalações -->
         <div class="lineups-grid">
