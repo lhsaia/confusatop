@@ -5,9 +5,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $idApagar = isset($_POST['jogadorId']) ? (int)$_POST['jogadorId'] : 0;
 
     //estabelecer conexão com banco de dados
-    include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
-    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
-    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
+    require_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+    require_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
+    require_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
     $database = new Database();
     $db = $database->getConnection();
     $jogador = new Jogador($db);

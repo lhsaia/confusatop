@@ -3329,28 +3329,24 @@ return $stmt;
 
                 // 1. Verificar se possui contratos com outros clubes além do clube informado
                 $queryContratos = "SELECT COUNT(*) FROM contratos_jogador 
-                                   WHERE jogador = :jogador 
-                                     AND (clube <> :clube OR (clubeVinculado <> 0 AND clubeVinculado <> :clube))";
+                                   WHERE jogador = ? 
+                                     AND (clube <> ? OR (clubeVinculado <> 0 AND clubeVinculado <> ?))";
                 $stmtC = $this->conn->prepare($queryContratos);
-                $stmtC->bindParam(":jogador", $idJogador, PDO::PARAM_INT);
-                $stmtC->bindParam(":clube", $idClube, PDO::PARAM_INT);
-                $stmtC->execute();
+                $stmtC->execute([$idJogador, $idClube, $idClube]);
                 if((int)$stmtC->fetchColumn() > 0){
                     return false;
                 }
 
                 // 2. Verificar se possui transferências/relações envolvendo outros clubes ou negociações entre times
                 $queryTransf = "SELECT COUNT(*) FROM transferencias 
-                                WHERE jogador = :jogador 
+                                WHERE jogador = ? 
                                   AND (
-                                    (clubeOrigem <> 0 AND clubeOrigem <> :clube)
-                                    OR (clubeDestino <> 0 AND clubeDestino <> :clube)
+                                    (clubeOrigem <> 0 AND clubeOrigem <> ?)
+                                    OR (clubeDestino <> 0 AND clubeDestino <> ?)
                                     OR (clubeOrigem <> 0 AND clubeDestino <> 0)
                                   )";
                 $stmtT = $this->conn->prepare($queryTransf);
-                $stmtT->bindParam(":jogador", $idJogador, PDO::PARAM_INT);
-                $stmtT->bindParam(":clube", $idClube, PDO::PARAM_INT);
-                $stmtT->execute();
+                $stmtT->execute([$idJogador, $idClube, $idClube]);
                 if((int)$stmtT->fetchColumn() > 0){
                     return false;
                 }

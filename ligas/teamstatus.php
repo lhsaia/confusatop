@@ -17,15 +17,15 @@ $from_record_num = 0;
 // $from_record_num = ($records_per_page * $page) - $records_per_page;
 
 //estabelecer conexão com banco de dados
-include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
-include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
-include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
-include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
-include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
-include_once($_SERVER['DOCUMENT_ROOT']."/objetos/tecnico.php");
-include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
-include_once($_SERVER['DOCUMENT_ROOT']."/objetos/estadio.php");
-include_once($_SERVER['DOCUMENT_ROOT']."/objetos/federacoes.php");
+require_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+require_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
+require_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
+require_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
+require_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
+require_once($_SERVER['DOCUMENT_ROOT']."/objetos/tecnico.php");
+require_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
+require_once($_SERVER['DOCUMENT_ROOT']."/objetos/estadio.php");
+require_once($_SERVER['DOCUMENT_ROOT']."/objetos/federacoes.php");
 
 $database = new Database();
 $db = $database->getConnection();
