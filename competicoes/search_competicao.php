@@ -17,7 +17,13 @@
 		$pais = new Pais($db);
 		$competicao = new Competicao_clube($db);
 
-		$stmt = $competicao->readAllAjax($item_pesquisado);
+		if (isset($_SESSION['user_id']) && $_SESSION['user_id'] <> 0) {
+			$user = $_SESSION['user_id'];
+		} else {
+			$user = 0;
+		}
+
+		$stmt = $competicao->readAllAjax($item_pesquisado, $user);
 		$return_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		
 		// Encoding array in JSON format

@@ -154,9 +154,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	//$jogador = new Jogador($db);
 	//$pais = new Pais($db);
 	
-	$compDatabase = new SQLiteDatabase();
-	$compDatabase->fileName = $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$idCompeticao."-database.db3";
-	$cdb = $compDatabase->getConnection();
+	$cdb = null;
+	$dbFile = $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$idCompeticao."-database.db3";
+	if (file_exists($dbFile)) {
+		$compDatabase = new SQLiteDatabase();
+		$compDatabase->fileName = $dbFile;
+		$cdb = $compDatabase->getConnection();
+	}
 	
 	$lite_competicao = new Competicao_clube($cdb);
 	
@@ -375,7 +379,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 		
 			
 		//cores da competicao
-		$coresJogo = $competicao->getColors() ?: ['partidaCor1' => 0x1A1469, 'partidaCor2' => 0xFFFFFF, 'partidaCor3' => 0x000000];
+		$coresJogo = $lite_competicao->getColors() ?: ($competicao->getColors() ?: ['partidaCor1' => 0x1A1469, 'partidaCor2' => 0xFFFFFF, 'partidaCor3' => 0x000000]);
 		
 
 		
