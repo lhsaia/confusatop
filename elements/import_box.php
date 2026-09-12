@@ -25,7 +25,7 @@
             <input type="hidden" name="timeselecionado" id="timeselecionado" value="" />
             <input type="hidden" name="nacionalidade" id="nacionalidade" value=""/>
             <input type="hidden" name="paisligaselecionada" id="paisligaselecionada" value="" />
-            <input type="hidden" name="sexo" id="sexo" value="0" />
+            <input type="hidden" name="sexo" id="sexo" value="<?php echo htmlspecialchars((string)($_SESSION['last_import_sexo'] ?? '0')); ?>" />
 			<input type="hidden" name="campeonato_jogo_import" id="campeonato_jogo_import" value="10" />
 			<input type="hidden" name="fase_jogo_import" id="fase_jogo_import" value="0" />
 			<input type="hidden" name="competicao_tipo" id="competicao_tipo" value="1" />

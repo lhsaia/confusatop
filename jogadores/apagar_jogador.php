@@ -2,7 +2,7 @@
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
-    $idApagar = $_POST['jogadorId'];
+    $idApagar = isset($_POST['jogadorId']) ? (int)$_POST['jogadorId'] : 0;
 
     //estabelecer conexão com banco de dados
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -13,14 +13,17 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $jogador = new Jogador($db);
     $usuario = new Usuario($db);
 
-    //verificar se jogador tem contrato com algum time ou já esteve em mais de um time
-
+    $idClube = isset($_POST['idTime']) ? (int)$_POST['idTime'] : 0;
+    $is_impersonated = !empty($_SESSION['impersonated']);
     $donoJogador = $jogador->verificarDono($idApagar);
-    $usuarioLogado = $_SESSION['user_id'];
+    $usuarioLogado = $_SESSION['user_id'] ?? 0;
 
+    if($is_impersonated || $donoJogador == $usuarioLogado){
+      $podeApagar = $is_impersonated 
+          ? $jogador->possivelApagarComClube($idApagar, $idClube) 
+          : $jogador->possivelApagar($idApagar);
 
-    if($donoJogador == $usuarioLogado){
-      if($jogador->possivelApagar($idApagar)){
+      if($podeApagar){
         //apagar jogador
         if($jogador->apagar($idApagar)){
             $is_success = true;
@@ -32,7 +35,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         }
       } else {
         $is_success = false;
-        $error_msg = "Jogador não pode ser excluído por ter contrato ativo ou já ter sido negociado entre clubes.";
+        $error_msg = ($is_impersonated && $idClube > 0)
+            ? "O jogador não pode ser apagado pois possui contratos, histórico de transferências ou vínculos com outros clubes."
+            : "Jogador não pode ser excluído por ter contrato ativo ou já ter sido negociado entre clubes.";
       }
     } else {
       $is_success = false;

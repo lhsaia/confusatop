@@ -84,6 +84,7 @@ echo '</main>';
 
 <script>
 $( document ).ready(function() {
+    $('#selecaosexo').trigger('change');
     updateLigas();
     $('#selecaoTime').trigger('change');
 });
@@ -91,7 +92,12 @@ $( document ).ready(function() {
 $('#selecaoTime').on('change', function (e) {
     var optionSelected = $("option:selected", this);
     var valueSelected = this.value;
+    var sexoTime = $('option:selected', this).attr('data-sexo');
     $('input[name="timeselecionado"]').val(valueSelected);
+    if (sexoTime !== undefined && sexoTime !== '') {
+        $('#selecaosexo').val(sexoTime);
+        $('input[name="sexo"]').val(sexoTime);
+    }
 });
 
 $('#selecaosexo').on('change', function (e) {
@@ -104,9 +110,17 @@ $('#selecaosexo').on('change', function (e) {
 function updateLigas(){
     var sexo = $("#selecaosexo").val();
     $("#selecaoTime option").each(function(){
+        if ($(this).val() === '') {
+            $(this).show();
+            return;
+        }
         var sexoLiga = $(this).attr("data-sexo");
         if (sexoLiga != sexo){
             $(this).hide();
+            if ($(this).is(':selected')) {
+                $("#selecaoTime").val('');
+                $('input[name="timeselecionado"]').val('');
+            }
         } else {
             $(this).show();
         }

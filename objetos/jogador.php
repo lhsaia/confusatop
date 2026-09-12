@@ -38,10 +38,25 @@ class Jogador{
     public $determinacaoOriginal;
     public $sexo;
     public $progressao;
+    public $externalID;
 
     public function __construct($db){
         $this->conn = $db;
         $this->ensureDataFalecimentoColumn();
+        $this->ensureExternalIDColumn();
+    }
+
+    private function ensureExternalIDColumn() {
+        try {
+            $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN IF NOT EXISTS externalID INT(11) DEFAULT NULL");
+        } catch (Exception $e) {
+            try {
+                $check = $this->conn->query("SHOW COLUMNS FROM " . $this->table_name . " LIKE 'externalID'");
+                if ($check && $check->rowCount() == 0) {
+                    $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN externalID INT(11) DEFAULT NULL");
+                }
+            } catch (Exception $ex) {}
+        }
     }
 
     private function ensureDataFalecimentoColumn() {
@@ -61,7 +76,7 @@ class Jogador{
     function create($fromScratch = null){
 
 
-        $subquery = ", Valor=:valor";
+        $subquery = ", Valor=:valor, externalID=:externalID";
         $this->valor = htmlspecialchars(strip_tags((string)($this->valor ?? '')));
 
         $this->progressao = $this->randomProgressao();
@@ -155,6 +170,8 @@ class Jogador{
         $stmt->bindParam(":determinacaoOriginal", $this->determinacaoOriginal);
         $stmt->bindParam(":sexo", $this->sexo);
         $stmt->bindParam(":progressao", $this->progressao);
+        $extVal = ($this->externalID !== null && $this->externalID !== '') ? (int)$this->externalID : null;
+        $stmt->bindValue(":externalID", $extVal, $extVal !== null ? PDO::PARAM_INT : PDO::PARAM_NULL);
 
         if($stmt->execute()){
             $this->id = (int)$this->conn->lastInsertId();
@@ -168,6 +185,9 @@ class Jogador{
     function updateImported($idJogador, $fromScratch = null){
         $this->id = (int)$idJogador;
         $subquery = ", Valor=:valor";
+        if(isset($this->externalID)){
+            $subquery .= ", externalID=:externalID";
+        }
         $this->valor = htmlspecialchars(strip_tags((string)($this->valor ?? '')));
         $this->condicao = "true";
 
@@ -252,6 +272,10 @@ class Jogador{
         $stmt->bindParam(":determinacao", $this->determinacao);
         $stmt->bindParam(":determinacaoOriginal", $this->determinacaoOriginal);
         $stmt->bindParam(":sexo", $this->sexo);
+        if(isset($this->externalID)){
+            $extVal = ($this->externalID !== null && $this->externalID !== '') ? (int)$this->externalID : null;
+            $stmt->bindValue(":externalID", $extVal, $extVal !== null ? PDO::PARAM_INT : PDO::PARAM_NULL);
+        }
 
         if($stmt->execute()){
             $this->id = (int)$idJogador;
@@ -3295,25 +3319,66 @@ return $stmt;
                 }
             }
 
-            //apagar árbitro
-            function apagar($idApagar){
-                $idApagar = htmlspecialchars(strip_tags($idApagar));
-                $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
-                $stmt = $this->conn->prepare( $query );
-                $stmt->bindParam(1, $idApagar);
-                if($stmt->execute()){
-                  $query = "DELETE FROM transferencias WHERE jogador = ?";
-                  $stmt = $this->conn->prepare( $query );
-                  $stmt->bindParam(1, $idApagar);
-                  if($stmt->execute()){
-                      return true;
-                  } else {
-                      return false;
-                  }
-                } else {
+            function possivelApagarComClube($idJogador, $idClube){
+                $idJogador = (int)$idJogador;
+                $idClube = (int)$idClube;
+
+                if($idClube <= 0){
+                    return $this->possivelApagar($idJogador);
+                }
+
+                // 1. Verificar se possui contratos com outros clubes além do clube informado
+                $queryContratos = "SELECT COUNT(*) FROM contratos_jogador 
+                                   WHERE jogador = :jogador 
+                                     AND (clube <> :clube OR (clubeVinculado <> 0 AND clubeVinculado <> :clube))";
+                $stmtC = $this->conn->prepare($queryContratos);
+                $stmtC->bindParam(":jogador", $idJogador, PDO::PARAM_INT);
+                $stmtC->bindParam(":clube", $idClube, PDO::PARAM_INT);
+                $stmtC->execute();
+                if((int)$stmtC->fetchColumn() > 0){
                     return false;
                 }
 
+                // 2. Verificar se possui transferências/relações envolvendo outros clubes ou negociações entre times
+                $queryTransf = "SELECT COUNT(*) FROM transferencias 
+                                WHERE jogador = :jogador 
+                                  AND (
+                                    (clubeOrigem <> 0 AND clubeOrigem <> :clube)
+                                    OR (clubeDestino <> 0 AND clubeDestino <> :clube)
+                                    OR (clubeOrigem <> 0 AND clubeDestino <> 0)
+                                  )";
+                $stmtT = $this->conn->prepare($queryTransf);
+                $stmtT->bindParam(":jogador", $idJogador, PDO::PARAM_INT);
+                $stmtT->bindParam(":clube", $idClube, PDO::PARAM_INT);
+                $stmtT->execute();
+                if((int)$stmtT->fetchColumn() > 0){
+                    return false;
+                }
+
+                return true;
+            }
+
+            //apagar jogador e dependências
+            function apagar($idApagar){
+                $idApagar = htmlspecialchars(strip_tags($idApagar));
+
+                // Excluir contratos do jogador
+                $queryContratos = "DELETE FROM contratos_jogador WHERE jogador = ?";
+                $stmtC = $this->conn->prepare($queryContratos);
+                $stmtC->bindParam(1, $idApagar);
+                $stmtC->execute();
+
+                // Excluir transferências vinculadas
+                $queryTransf = "DELETE FROM transferencias WHERE jogador = ?";
+                $stmtT = $this->conn->prepare($queryTransf);
+                $stmtT->bindParam(1, $idApagar);
+                $stmtT->execute();
+
+                // Excluir o registro do jogador
+                $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
+                $stmt = $this->conn->prepare( $query );
+                $stmt->bindParam(1, $idApagar);
+                return $stmt->execute();
             }
 
 

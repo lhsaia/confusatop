@@ -559,7 +559,9 @@ $agora = date('Y-m-d');
                         $optionsString .= "<a id='desc".$idJogador."' title='Desconvocar jogador' class='clickable desconvocar'><span class='material-symbols-outlined inlineButton vermelho'>travel</span></a>";
                     }
 
-
+                    if(!empty($_SESSION['impersonated'])){
+                        $optionsString .= "<a id='del".$idJogador."' title='Apagar jogador permanentemente (Admin)' class='clickable apagar-jogador-admin' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton vermelho'>delete</span></a>";
+                    }
 
                     $optionsString .= "</span></td>";
                     echo $optionsString;
@@ -2083,6 +2085,39 @@ $(document).on("click", '.demitir', function(event){
 
 });
 
+$(document).on("click", '.apagar-jogador-admin', function(event){
+    event.preventDefault();
+    var tbl_row = $(this).closest('tr');
+    var idJogador = tbl_row.prop('id');
+    var idTime = $('#quadro-container').prop('class');
+    var nomeJogador = tbl_row.find('.nomeEditavel').text().trim();
+
+    if(window.confirm("ATENÇÃO (Ação Admin): Deseja realmente APAGAR o jogador '" + nomeJogador + "' permanentemente? O jogador só poderá ser apagado se seu único contrato e histórico forem exclusivamente com este clube.")){
+        $.ajax({
+            type: 'POST',
+            url: '/jogadores/apagar_jogador.php',
+            data: { 
+                jogadorId: idJogador,
+                idTime: idTime
+            },
+            dataType: 'json'
+        })
+        .done(function(data){
+            if(data.success){
+                showToast('Jogador apagado com sucesso!', 'success');
+                reloadPageContent();
+            } else {
+                showToast('Erro: ' + (data.error || 'Falha ao apagar jogador'), 'error');
+                $('#errorbox').html('<div class="alert alert-danger">Erro ao apagar jogador: ' + (data.error || 'Falha ao apagar jogador') + '</div>');
+            }
+        })
+        .fail(function(jqXHR, textStatus, errorThrown){
+            showToast('Erro de conexão', 'error');
+            $('#errorbox').html('<div class="alert alert-danger">Erro de conexão: ' + errorThrown + '</div>');
+        });
+    }
+});
+
 $(document).on("click", '.demitirTecnico', function(event){
     event.preventDefault();
 
@@ -2461,6 +2496,7 @@ tbl_row.find(".valor").html(valor);
         tbl_row.find(".disponibilizar").show();
         tbl_row.find(".demitir").show();
         tbl_row.find(".proposta").show();
+        tbl_row.find(".apagar-jogador-admin").show();
         tbl_row.find('.posicoesAtuais').show();
         tbl_row.find('.comboPosicoes').hide();
         tbl_row.find('.valorEditavel').attr('contenteditable', 'false').removeClass('editavel');

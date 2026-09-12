@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 header('Content-Type: text/html; charset=utf-8');
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -90,6 +90,7 @@ echo '</main>';
 
 <script>
 $( document ).ready(function() {
+    $('#selecaosexo').trigger('change');
     updateLigas();
     $('#selecaoligas').trigger('change');
 });
@@ -98,8 +99,13 @@ $('#selecaoligas').on('change', function (e) {
     var optionSelected = $("option:selected", this);
     var valueSelected = this.value;
     var valuePaisLiga = $('option:selected', this).attr('data-pais');
+    var sexoLiga = $('option:selected', this).attr('data-sexo');
     $('input[name="ligaselecionada"]').val(valueSelected);
     $('input[name="paisligaselecionada"]').val(valuePaisLiga);
+    if (sexoLiga !== undefined && sexoLiga !== '') {
+        $('#selecaosexo').val(sexoLiga);
+        $('input[name="sexo"]').val(sexoLiga);
+    }
 });
 
 $('#selecaosexo').on('change', function (e) {
@@ -112,9 +118,18 @@ $('#selecaosexo').on('change', function (e) {
 function updateLigas(){
     var sexo = $("#selecaosexo").val();
     $("#selecaoligas option").each(function(){
+        if ($(this).val() === '') {
+            $(this).show();
+            return;
+        }
         var sexoLiga = $(this).attr("data-sexo");
         if (sexoLiga != sexo){
             $(this).hide();
+            if ($(this).is(':selected')) {
+                $("#selecaoligas").val('');
+                $('input[name="ligaselecionada"]').val('');
+                $('input[name="paisligaselecionada"]').val('');
+            }
         } else {
             $(this).show();
         }

@@ -184,6 +184,14 @@ if(!function_exists('changeName')){
                 $time->estadio = $codigo_estadio;
                 $time->liga = !empty($ligaSelecionada) ? (int)$ligaSelecionada : 0;
                 $time->sexo = $sexo;
+                if ($time->liga > 0) {
+                    $stmt_liga_sexo = $db->prepare("SELECT Sexo FROM liga WHERE id = ? LIMIT 1");
+                    $stmt_liga_sexo->execute([$time->liga]);
+                    $liga_sexo_db = $stmt_liga_sexo->fetchColumn();
+                    if ($liga_sexo_db !== false && $liga_sexo_db !== null && $liga_sexo_db !== '') {
+                        $time->sexo = (int)$liga_sexo_db;
+                    }
+                }
 
              $assoc_clube = isset($team_associations['clube']) ? $team_associations['clube'] : null;
              if ($assoc_clube && $assoc_clube['action'] === 'match' && !empty($assoc_clube['player_id'])) {

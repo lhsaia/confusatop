@@ -23,11 +23,14 @@ class Competicao_clube{
     }
 
     public function checkAndMigrateSchema(){
+        if (!$this->conn) {
+            return;
+        }
         try {
             $driver = '';
             try {
                 $driver = strtolower($this->conn->getAttribute(PDO::ATTR_DRIVER_NAME));
-            } catch (Exception $e) {}
+            } catch (\Throwable $e) {}
 
             // 1. Garantir tabela competicao_alteracoes_log
             if ($driver === 'sqlite') {
@@ -215,25 +218,46 @@ class Competicao_clube{
     }
 	
 	    //ler todos os jogadores para o quadro - versão para página com Ajax
-    function readAllAjax($item_pesquisado){
+    function readAllAjax($item_pesquisado, $dono = null){
 		$item_pesquisado = htmlspecialchars(strip_tags($item_pesquisado));
 
-		$query = "SELECT * FROM (SELECT
-					a.id, a.nome, a.logo, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede
-					FROM " . $this->table_name . " a
-					LEFT JOIN paises p ON a.sede = p.id
-					LEFT JOIN federacoes f ON a.federacao = f.id
-					ORDER BY
-						a.Nome ASC ) t1 WHERE Nome LIKE ? LIMIT 150";
+		if($dono === null || $dono === 0 || $dono === '0' || $dono === ''){
+			$query = "SELECT * FROM (SELECT
+						a.id, a.nome, a.logo, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais
+						FROM " . $this->table_name . " a
+						LEFT JOIN paises p ON a.sede = p.id
+						LEFT JOIN federacoes f ON a.federacao = f.id
+						ORDER BY
+							a.Nome ASC ) t1 WHERE Nome LIKE ? LIMIT 150";
 
-		$stmt = $this->conn->prepare( $query );
-		$item_pesquisado = "%" . $item_pesquisado . "%";
-		
-		$stmt->bindParam(1, $item_pesquisado);
+			$stmt = $this->conn->prepare( $query );
+			$item_pesquisado = "%" . $item_pesquisado . "%";
+			
+			$stmt->bindParam(1, $item_pesquisado);
 
-		$stmt->execute();
+			$stmt->execute();
 
-		return $stmt;
+			return $stmt;
+		} else {
+			$dono = htmlspecialchars(strip_tags($dono));
+			$query = "SELECT * FROM (SELECT
+						a.id, a.nome, a.logo, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais
+						FROM " . $this->table_name . " a
+						LEFT JOIN paises p ON a.sede = p.id
+						LEFT JOIN federacoes f ON a.federacao = f.id
+						ORDER BY
+							a.Nome ASC ) t1 WHERE dono = ? AND Nome LIKE ? LIMIT 150";
+
+			$stmt = $this->conn->prepare( $query );
+			$item_pesquisado = "%" . $item_pesquisado . "%";
+			
+			$stmt->bindParam(1, $dono);
+			$stmt->bindParam(2, $item_pesquisado);
+
+			$stmt->execute();
+
+			return $stmt;
+		}
 }
 
 
@@ -624,11 +648,17 @@ class Competicao_clube{
 	}
 	
 	function getColors(){
-		$query = "SELECT (SELECT  valor as cor1 FROM opcoes WHERE parametro = 'partidaCor1' ) as partidaCor1, (SELECT  valor as cor2 FROM opcoes WHERE parametro = 'partidaCor2') as partidaCor2, (SELECT  valor as cor3 FROM opcoes WHERE parametro = 'partidaCor3') as partidaCor3";
-		$stmt = $this->conn->query($query);
-		$stmt->execute();
-		$result = $stmt->fetch(PDO::FETCH_ASSOC);
-		return $result;
+		if (!$this->conn) return false;
+		try {
+			$query = "SELECT (SELECT  valor as cor1 FROM opcoes WHERE parametro = 'partidaCor1' ) as partidaCor1, (SELECT  valor as cor2 FROM opcoes WHERE parametro = 'partidaCor2') as partidaCor2, (SELECT  valor as cor3 FROM opcoes WHERE parametro = 'partidaCor3') as partidaCor3";
+			$stmt = $this->conn->query($query);
+			if (!$stmt) return false;
+			$stmt->execute();
+			$result = $stmt->fetch(PDO::FETCH_ASSOC);
+			return $result ?: false;
+		} catch (\Throwable $e) {
+			return false;
+		}
 	}
 	
 	function uploadMatchResults($idPartida, $golsTimeA, $golsTimeB, $path, $penA = null, $penB = null){
@@ -673,117 +703,137 @@ class Competicao_clube{
 	}
 	
 	function getTeamColors($uniforme, $idTime){
-		
-		$idTime = htmlspecialchars(strip_tags($idTime));
-		
-		if($uniforme == 2){
-			$query = "SELECT Uni2Cor1 as cor1, Uni2Cor2 as cor2, Uni2Cor3 as cor3 FROM clube WHERE ID = :id";
-
-		} else {
-			$query = "SELECT Uni1Cor1 as cor1, Uni1Cor2 as cor2, Uni1Cor3 as cor3 FROM clube WHERE ID = :id";
+		if (!$this->conn || empty($idTime)) return false;
+		try {
+			$idTime = htmlspecialchars(strip_tags($idTime));
+			
+			if($uniforme == 2){
+				$query = "SELECT Uni2Cor1 as cor1, Uni2Cor2 as cor2, Uni2Cor3 as cor3 FROM clube WHERE ID = :id";
+			} else {
+				$query = "SELECT Uni1Cor1 as cor1, Uni1Cor2 as cor2, Uni1Cor3 as cor3 FROM clube WHERE ID = :id";
+			}
+			
+			$stmt = $this->conn->prepare($query);
+			if (!$stmt) return false;
+			$stmt->bindParam(":id", $idTime);
+			$stmt->execute();
+			$result = $stmt->fetch(PDO::FETCH_ASSOC);
+			return $result ?: false;
+		} catch (\Throwable $e) {
+			return false;
 		}
-		
-		$stmt = $this->conn->prepare($query);
-		$stmt->bindParam(":id", $idTime);
-		$stmt->execute();
-		$result = $stmt->fetch(PDO::FETCH_ASSOC);
-		return $result;
 	}
 	
 	function getTeamUniform($uniforme, $idTime){
-		
-		$idTime = htmlspecialchars(strip_tags($idTime));
-		
-		if($uniforme == 2){
-			$query = "SELECT Uniforme2 as uniforme FROM clube WHERE ID = :id";
-
-		} else {
-			$query = "SELECT Uniforme1 as uniforme FROM clube WHERE ID = :id";
+		if (!$this->conn || empty($idTime)) return false;
+		try {
+			$idTime = htmlspecialchars(strip_tags($idTime));
+			
+			if($uniforme == 2){
+				$query = "SELECT Uniforme2 as uniforme FROM clube WHERE ID = :id";
+			} else {
+				$query = "SELECT Uniforme1 as uniforme FROM clube WHERE ID = :id";
+			}
+			
+			$stmt = $this->conn->prepare($query);
+			if (!$stmt) return false;
+			$stmt->bindParam(":id", $idTime);
+			$stmt->execute();
+			$result = $stmt->fetch(PDO::FETCH_ASSOC);
+			return $result ?: false;
+		} catch (\Throwable $e) {
+			return false;
 		}
-		
-		$stmt = $this->conn->prepare($query);
-		$stmt->bindParam(":id", $idTime);
-		$stmt->execute();
-		$result = $stmt->fetch(PDO::FETCH_ASSOC);
-		return $result;
 	}
 	
 	function getTeamPlayers($idTime){
-		$idTime = htmlspecialchars(strip_tags($idTime));
-		
-		$query = "SELECT t1.jogador as ID, j.Nome, j.Idade, j.Nivel FROM (SELECT Jogador1 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador2 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador3 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador4 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador5 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador6 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador7 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador8 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador9 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador10 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador11 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador12 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador13 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador14 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador15 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador16 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador17 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador18 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador19 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador20 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador21 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador22 as jogador FROM elenco WHERE Clube = ?
-			UNION
-			SELECT Jogador23 as jogador FROM elenco WHERE Clube = ?) t1
+		if (!$this->conn || empty($idTime)) return [];
+		try {
+			$idTime = htmlspecialchars(strip_tags($idTime));
+			
+			$query = "SELECT t1.jogador as ID, j.Nome, j.Idade, j.Nivel FROM (SELECT Jogador1 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador2 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador3 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador4 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador5 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador6 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador7 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador8 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador9 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador10 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador11 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador12 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador13 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador14 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador15 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador16 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador17 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador18 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador19 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador20 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador21 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador22 as jogador FROM elenco WHERE Clube = ?
+				UNION
+				SELECT Jogador23 as jogador FROM elenco WHERE Clube = ?) t1
 
-			LEFT JOIN jogador j ON t1.jogador = j.ID";
+				LEFT JOIN jogador j ON t1.jogador = j.ID";
 
-		$stmt = $this->conn->prepare($query);
-		for($i = 1;$i <= 23; $i++){
-			$stmt->bindValue($i, $idTime);
+			$stmt = $this->conn->prepare($query);
+			if (!$stmt) return [];
+			for($i = 1;$i <= 23; $i++){
+				$stmt->bindValue($i, $idTime);
+			}
+			
+			$stmt->execute();
+			
+			$listaJogadores = array();
+			while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+				extract($row);
+				$addArray = array("nome" => $Nome, "nivel" => $Nivel, "idade" => $Idade);
+				$listaJogadores[$ID] = $addArray;
+			}
+			return $listaJogadores;
+		} catch (\Throwable $e) {
+			return [];
 		}
-		
-		$stmt->execute();
-		
-		$listaJogadores = array();
-		while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-			extract($row);
-			$addArray = array("nome" => $Nome, "nivel" => $Nivel, "idade" => $Idade);
-			$listaJogadores[$ID] = $addArray;
-		}
-		return $listaJogadores;
 	}
 	
 	function getNomeEstadio($idEstadio){
-		$idEstadio = htmlspecialchars(strip_tags($idEstadio));
-		
-		$query = "SELECT  Nome from estadio WHERE ID = :id";
-		$stmt = $this->conn->prepare($query);
-		$stmt->bindParam(":id", $idEstadio);
-		$stmt->execute();
-		$result = $stmt->fetch(PDO::FETCH_ASSOC);
-		return $result['Nome'];
+		if (!$this->conn || empty($idEstadio)) return '';
+		try {
+			$idEstadio = htmlspecialchars(strip_tags($idEstadio));
+			
+			$query = "SELECT Nome from estadio WHERE ID = :id";
+			$stmt = $this->conn->prepare($query);
+			if (!$stmt) return '';
+			$stmt->bindParam(":id", $idEstadio);
+			$stmt->execute();
+			$result = $stmt->fetch(PDO::FETCH_ASSOC);
+			return $result['Nome'] ?? '';
+		} catch (\Throwable $e) {
+			return '';
+		}
 	}
 	function limparJogos($id_competicao){
 		$id_competicao = htmlspecialchars(strip_tags($id_competicao));
@@ -1043,11 +1093,11 @@ class Competicao_clube{
 		$stmtJogosPendentes = $this->conn->prepare("
 			SELECT 1 FROM jogos_clube 
 			WHERE competicao_id = :idComp 
-			  AND (timeA_id = :idClube OR timeB_id = :idClube) 
+			  AND (timeA_id = :idClubeA OR timeB_id = :idClubeB) 
 			  AND status = 0 
 			LIMIT 1
 		");
-		$stmtJogosPendentes->execute([':idComp' => $idCompeticao, ':idClube' => $idClube]);
+		$stmtJogosPendentes->execute([':idComp' => $idCompeticao, ':idClubeA' => $idClube, ':idClubeB' => $idClube]);
 		if ($stmtJogosPendentes->fetch()) {
 			return true;
 		}
@@ -1057,10 +1107,10 @@ class Competicao_clube{
 			SELECT id, timeA_id, timeB_id, timeA_gols, timeB_gols, timeA_penaltis, timeB_penaltis, fase, status 
 			FROM jogos_clube 
 			WHERE competicao_id = :idComp 
-			  AND (timeA_id = :idClube OR timeB_id = :idClube)
+			  AND (timeA_id = :idClubeA OR timeB_id = :idClubeB)
 			ORDER BY fase DESC, id DESC
 		");
-		$stmtJogos->execute([':idComp' => $idCompeticao, ':idClube' => $idClube]);
+		$stmtJogos->execute([':idComp' => $idCompeticao, ':idClubeA' => $idClube, ':idClubeB' => $idClube]);
 		$jogos = $stmtJogos->fetchAll(PDO::FETCH_ASSOC);
 
 		if (empty($jogos)) {

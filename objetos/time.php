@@ -30,10 +30,25 @@ class Time{
     public $sobre_subtitulo;
     public $sobre_texto;
     public $ultimo_erro;
+    public $externalID;
 
 
     public function __construct($db){
         $this->conn = $db;
+        $this->ensureExternalIDColumn();
+    }
+
+    private function ensureExternalIDColumn() {
+        try {
+            $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN IF NOT EXISTS externalID INT(11) DEFAULT NULL");
+        } catch (Exception $e) {
+            try {
+                $check = $this->conn->query("SHOW COLUMNS FROM " . $this->table_name . " LIKE 'externalID'");
+                if ($check && $check->rowCount() == 0) {
+                    $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN externalID INT(11) DEFAULT NULL");
+                }
+            } catch (Exception $ex) {}
+        }
     }
 
     // criar time
@@ -54,7 +69,7 @@ class Time{
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    Nome=:nome, TresLetras=:sigla, Estadio=:estadio, Escudo=:escudo, Uni1Cor1=:uniforme1cor1, Uni1Cor2=:uniforme1cor2, Uni1Cor3=:uniforme1cor3, Uni2Cor1=:uniforme2cor1, Uni2Cor2=:uniforme2cor2, Uni2Cor3=:uniforme2cor3, Uniforme1=:uniforme1, Uniforme2=:uniforme2, MaxTorcedores=:maxTorcedores, Fidelidade=:fidelidade, Pais=:pais, liga=:liga, Sexo=:sexo, status=:status, mascote=:mascote, titulos=:titulos, sobre_titulo=:sobre_titulo, sobre_subtitulo=:sobre_subtitulo, sobre_texto=:sobre_texto ";
+                    Nome=:nome, TresLetras=:sigla, Estadio=:estadio, Escudo=:escudo, Uni1Cor1=:uniforme1cor1, Uni1Cor2=:uniforme1cor2, Uni1Cor3=:uniforme1cor3, Uni2Cor1=:uniforme2cor1, Uni2Cor2=:uniforme2cor2, Uni2Cor3=:uniforme2cor3, Uniforme1=:uniforme1, Uniforme2=:uniforme2, MaxTorcedores=:maxTorcedores, Fidelidade=:fidelidade, Pais=:pais, liga=:liga, Sexo=:sexo, status=:status, mascote=:mascote, titulos=:titulos, sobre_titulo=:sobre_titulo, sobre_subtitulo=:sobre_subtitulo, sobre_texto=:sobre_texto, externalID=:externalID ";
 
         $stmt = $this->conn->prepare($query);
 
@@ -103,6 +118,8 @@ class Time{
         $stmt->bindParam(":sobre_titulo", $sobre_titulo);
         $stmt->bindParam(":sobre_subtitulo", $sobre_subtitulo);
         $stmt->bindParam(":sobre_texto", $sobre_texto);
+        $extVal = ($this->externalID !== null && $this->externalID !== '') ? (int)$this->externalID : null;
+        $stmt->bindValue(":externalID", $extVal, $extVal !== null ? PDO::PARAM_INT : PDO::PARAM_NULL);
 
         try {
             //PDO query execution goes here.
@@ -139,7 +156,7 @@ class Time{
         }
 
     $query = $sub_query_inicio."SELECT
-                a.ID, a.Nome, a.TresLetras, a.Escudo, a.Uni1Cor1, a.Uni1Cor2, a.Uni1Cor3, a.Uni2Cor1, a.Uni2Cor2, a.Uni2Cor3, a.Uniforme1, a.Uniforme2, a.MaxTorcedores, a.Fidelidade, p.id as idPais, p.dono as idDonoPais, e.Nome as nomeEstadio, l.nome as nomeLiga, p.sigla as siglaPais, p.bandeira as bandeiraPais, a.liga, l.logo, e.Capacidade as capacidade, a.estadio as estadioId, a.Sexo as sexo, a.status
+                a.ID, a.Nome, a.TresLetras, a.Escudo, a.Uni1Cor1, a.Uni1Cor2, a.Uni1Cor3, a.Uni2Cor1, a.Uni2Cor2, a.Uni2Cor3, a.Uniforme1, a.Uniforme2, a.MaxTorcedores, a.Fidelidade, p.id as idPais, p.dono as idDonoPais, e.Nome as nomeEstadio, l.nome as nomeLiga, p.sigla as siglaPais, p.bandeira as bandeiraPais, a.liga, l.logo, e.Capacidade as capacidade, a.estadio as estadioId, COALESCE(a.Sexo, l.Sexo, 0) as sexo, a.status
                 FROM " . $this->table_name . " a
         LEFT JOIN paises p ON a.Pais = p.id
         LEFT JOIN estadio e ON a.Estadio = e.id
@@ -277,11 +294,13 @@ function readInfo($id){
 
             //select all data
             $query = "SELECT
-                        a.id, a.nome, a.Sexo, a.status, a.Pais as paisTime, p.nome as nomePais, a.escudo  
+                        a.id, a.nome, COALESCE(a.Sexo, l.Sexo, 0) as Sexo, a.status, a.Pais as paisTime, p.nome as nomePais, a.escudo  
                     FROM
                         " . $this->table_name . " a
                     LEFT JOIN
                         paises p ON a.Pais = p.id
+                    LEFT JOIN
+                        liga l ON a.liga = l.id
                     WHERE " . $donoQuery  . $subquery . "
                     ORDER BY
                         a.nome";
@@ -1246,6 +1265,14 @@ function readInfo($id){
             $query .= " TresLetras=:sigla, ";
         }
 
+        if(isset($this->externalID)){
+            $query .= " externalID=:externalID, ";
+        }
+
+        if(isset($this->sexo) && $this->sexo !== ''){
+            $query .= " Sexo=:sexo, ";
+        }
+
         //escrever query
         $query .= " Estadio=:estadio,
                     Uni1Cor1=:uniforme1cor1,
@@ -1305,6 +1332,16 @@ function readInfo($id){
         if(isset($this->sigla) && $this->sigla !== ''){
             $this->sigla = strtoupper(substr(htmlspecialchars(strip_tags((string)$this->sigla)), 0, 3));
             $stmt->bindParam(":sigla", $this->sigla);
+        }
+
+        if(isset($this->externalID)){
+            $extVal = ($this->externalID !== null && $this->externalID !== '') ? (int)$this->externalID : null;
+            $stmt->bindValue(":externalID", $extVal, $extVal !== null ? PDO::PARAM_INT : PDO::PARAM_NULL);
+        }
+
+        if(isset($this->sexo) && $this->sexo !== ''){
+            $this->sexo = htmlspecialchars(strip_tags((string)$this->sexo));
+            $stmt->bindParam(":sexo", $this->sexo);
         }
 
         $stmt->bindParam(":nome", $this->nome);
