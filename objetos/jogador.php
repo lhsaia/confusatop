@@ -3306,7 +3306,7 @@ return $stmt;
                   return false;
                 } else {
 
-                  $new_query = "SELECT jogador FROM transferencias WHERE jogador = :jogador AND (clubeOrigem * clubeDestino) <> 0 LIMIT 0,1;";
+                  $new_query = "SELECT jogador FROM transferencias WHERE jogador = :jogador AND status_execucao = 1 AND (clubeOrigem * clubeDestino) <> 0 LIMIT 0,1;";
                   $new_stmt = $this->conn->prepare($new_query);
                   $new_stmt->bindParam(":jogador", $idJogador);
                   $new_stmt->execute();
@@ -3337,9 +3337,10 @@ return $stmt;
                     return false;
                 }
 
-                // 2. Verificar se possui transferências/relações envolvendo outros clubes ou negociações entre times
+                // 2. Verificar se possui transferências/relações envolvendo outros clubes ou negociações entre times (somente executadas)
                 $queryTransf = "SELECT COUNT(*) FROM transferencias 
                                 WHERE jogador = ? 
+                                  AND status_execucao = 1
                                   AND (
                                     (clubeOrigem <> 0 AND clubeOrigem <> ?)
                                     OR (clubeDestino <> 0 AND clubeDestino <> ?)

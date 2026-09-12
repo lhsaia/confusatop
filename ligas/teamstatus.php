@@ -275,6 +275,13 @@ $perc_estrangeiros = $total_rows > 0 ? number_format(($estrangeiros / $total_row
                 <span class="material-symbols-outlined" style="font-size: 1.1rem; color: #38bdf8;">history_toggle_off</span>
                 <span>Time Traveler</span>
             </a>
+            <?php if(!empty($_SESSION['impersonated'])): ?>
+                <!-- Botão Apagar Clube (Admin) -->
+                <button type="button" id="btn-apagar-clube-admin" class="btn-apagar-clube" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: #ef4444; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: background 0.2s;" title="Apagar clube permanentemente (Admin)">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">delete_forever</span>
+                    <span>Apagar Clube</span>
+                </button>
+            <?php endif; ?>
         </div>
     </div>
     
@@ -429,6 +436,10 @@ if($rowTec) {
             }
         } else {
             $tecOptions .= "<a id='desTec".$rowTec['ID']."' title='Desconvocar técnico' class='clickable desconvocarTecnico'><span class='material-symbols-outlined inlineButton vermelho'>travel</span></a>";
+        }
+
+        if(!empty($_SESSION['impersonated'])){
+            $tecOptions .= "<a id='delTec".$rowTec['ID']."' title='Apagar técnico permanentemente (Admin)' class='clickable apagar-tecnico-admin' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton vermelho'>delete</span></a>";
         }
     }
 
@@ -2114,6 +2125,73 @@ $(document).on("click", '.apagar-jogador-admin', function(event){
         .fail(function(jqXHR, textStatus, errorThrown){
             showToast('Erro de conexão', 'error');
             $('#errorbox').html('<div class="alert alert-danger">Erro de conexão: ' + errorThrown + '</div>');
+        });
+    }
+});
+
+$(document).on("click", '.apagar-tecnico-admin', function(event){
+    event.preventDefault();
+    var tbl_row = $(this).closest('tr');
+    var idTecnico = tbl_row.prop('id').replace(/\D/g, "");
+    var idTime = $('#quadro-container').prop('class');
+    var nomeTecnico = tbl_row.find('.nomeEditavel').text().trim();
+
+    if(window.confirm("ATENÇÃO (Ação Admin): Deseja realmente APAGAR o técnico '" + nomeTecnico + "' permanentemente? O técnico só poderá ser apagado se seu histórico for exclusivo com este clube.")){
+        $.ajax({
+            type: 'POST',
+            url: '/tecnicos/apagar_tecnico.php',
+            data: { 
+                tecnicoId: idTecnico,
+                idTime: idTime
+            },
+            dataType: 'json'
+        })
+        .done(function(data){
+            if(data.success){
+                showToast('Técnico apagado com sucesso!', 'success');
+                reloadPageContent();
+            } else {
+                showToast('Erro: ' + (data.error || 'Falha ao apagar técnico'), 'error');
+                $('#errorbox').html('<div class="alert alert-danger">Erro ao apagar técnico: ' + (data.error || 'Falha ao apagar técnico') + '</div>');
+            }
+        })
+        .fail(function(jqXHR, textStatus, errorThrown){
+            showToast('Erro de conexão', 'error');
+            $('#errorbox').html('<div class="alert alert-danger">Erro de conexão: ' + errorThrown + '</div>');
+        });
+    }
+});
+
+$(document).on("click", '#btn-apagar-clube-admin', function(event){
+    event.preventDefault();
+    var idTime = $('#quadro-container').prop('class');
+    var nomeClube = $('.team-header-title-container h2').text().trim();
+
+    if(window.confirm("ATENÇÃO CRÍTICA (Ação Admin):\n\nDeseja realmente APAGAR o clube '" + nomeClube + "' permanentemente do sistema?\n\nEsta ação não poderá ser desfeita e só é permitida se o clube não possuir partidas em competições, inscrições ativas ou histórico de transferências concluídas no mercado.")){
+        $.ajax({
+            type: 'POST',
+            url: '/times/apagar_time.php',
+            data: { 
+                timeId: idTime
+            },
+            dataType: 'json'
+        })
+        .done(function(data){
+            if(data.success){
+                showToast('Clube apagado com sucesso!', 'success');
+                setTimeout(function(){
+                    window.location.href = data.redirect || '/usuario/meustimes.php';
+                }, 1000);
+            } else {
+                showToast('Erro: ' + (data.error || 'Falha ao apagar clube'), 'error');
+                $('#errorbox').html('<div class="alert alert-danger"><b>Não foi possível apagar o clube:</b> ' + (data.error || 'Falha ao apagar clube') + '</div>');
+                window.scrollTo(0, 0);
+            }
+        })
+        .fail(function(jqXHR, textStatus, errorThrown){
+            showToast('Erro de conexão', 'error');
+            $('#errorbox').html('<div class="alert alert-danger">Erro de conexão ao apagar clube: ' + errorThrown + '</div>');
+            window.scrollTo(0, 0);
         });
     }
 });

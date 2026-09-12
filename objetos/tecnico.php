@@ -172,19 +172,87 @@ class Tecnico{
     return $num;
     }
 
-    //apagar jogador
-    // - se o jogador tiver em time ou transferencias, não apaga
-    function apagar($idApagar){
-        // $idApagar = htmlspecialchars(strip_tags($idApagar));
-        // $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
-        // $stmt = $this->conn->prepare( $query );
-        // $stmt->bindParam(1, $idApagar);
-        // if($stmt->execute()){
-        //     return true;
-        // } else {
-        //     return false;
-        // }
+    function possivelApagar($idTecnico){
+        $idTecnico = (int)$idTecnico;
 
+        $query = "SELECT tecnico FROM contratos_tecnico WHERE tecnico = :tecnico LIMIT 0,1;";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":tecnico", $idTecnico);
+        $stmt->execute();
+        $result = $stmt->fetchColumn();
+        if($result == $idTecnico){
+            return false;
+        }
+
+        $new_query = "SELECT tecnico FROM transferencias_tecnico WHERE tecnico = :tecnico AND status_execucao = 1 AND (clubeOrigem * clubeDestino) <> 0 LIMIT 0,1;";
+        $new_stmt = $this->conn->prepare($new_query);
+        $new_stmt->bindParam(":tecnico", $idTecnico);
+        $new_stmt->execute();
+        $new_result = $new_stmt->fetchColumn();
+        if($new_result == $idTecnico){
+            return false;
+        }
+
+        return true;
+    }
+
+    function possivelApagarComClube($idTecnico, $idClube){
+        $idTecnico = (int)$idTecnico;
+        $idClube = (int)$idClube;
+
+        if($idClube <= 0){
+            return $this->possivelApagar($idTecnico);
+        }
+
+        // 1. Verificar se possui contratos com outros clubes além do clube informado
+        $queryContratos = "SELECT COUNT(*) FROM contratos_tecnico 
+                           WHERE tecnico = ? 
+                             AND clube <> ?";
+        $stmtC = $this->conn->prepare($queryContratos);
+        $stmtC->execute([$idTecnico, $idClube]);
+        if((int)$stmtC->fetchColumn() > 0){
+            return false;
+        }
+
+        // 2. Verificar se possui transferências executadas envolvendo outros clubes ou negociações entre times
+        $queryTransf = "SELECT COUNT(*) FROM transferencias_tecnico 
+                        WHERE tecnico = ? 
+                          AND status_execucao = 1
+                          AND (
+                            (clubeOrigem <> 0 AND clubeOrigem <> ?)
+                            OR (clubeDestino <> 0 AND clubeDestino <> ?)
+                            OR (clubeOrigem <> 0 AND clubeDestino <> 0)
+                          )";
+        $stmtT = $this->conn->prepare($queryTransf);
+        $stmtT->execute([$idTecnico, $idClube]);
+        if((int)$stmtT->fetchColumn() > 0){
+            return false;
+        }
+
+        return true;
+    }
+
+    //apagar tecnico e dependências
+    function apagar($idApagar){
+        $idApagar = (int)$idApagar;
+
+        // Excluir contratos do técnico
+        $queryContratos = "DELETE FROM contratos_tecnico WHERE tecnico = ?";
+        $stmtC = $this->conn->prepare($queryContratos);
+        $stmtC->bindParam(1, $idApagar);
+        $stmtC->execute();
+
+        // Excluir transferências vinculadas
+        $queryTransf = "DELETE FROM transferencias_tecnico WHERE tecnico = ?";
+        $stmtT = $this->conn->prepare($queryTransf);
+        $stmtT->bindParam(1, $idApagar);
+        $stmtT->execute();
+
+        // Excluir registro do técnico
+        $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $idApagar);
+        return $stmt->execute();
     }
 
     //alterar jogador

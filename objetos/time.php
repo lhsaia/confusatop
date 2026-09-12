@@ -2115,5 +2115,112 @@ function readExtraInfo($id){
 		
 	}
 
+    function verificarDono($idClube){
+        $idClube = (int)$idClube;
+        $query = "SELECT p.dono FROM " . $this->table_name . " c INNER JOIN paises p ON c.Pais = p.id WHERE c.ID = ? LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$idClube]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    function possivelApagar($idClube){
+        $idClube = (int)$idClube;
+        if($idClube <= 0){
+            return ['pode' => false, 'motivo' => 'ID de clube inválido.'];
+        }
+
+        // 1. Verificar se é seleção nacional
+        $stmtSel = $this->conn->prepare("SELECT status FROM " . $this->table_name . " WHERE ID = ? LIMIT 1");
+        $stmtSel->execute([$idClube]);
+        $status = $stmtSel->fetchColumn();
+        if($status !== false && (int)$status > 0){
+            return ['pode' => false, 'motivo' => 'Seleções nacionais oficiais não podem ser excluídas.'];
+        }
+
+        // 2. Verificar partidas cadastradas em jogos_clube
+        $stmtJogos = $this->conn->prepare("SELECT COUNT(*) FROM jogos_clube WHERE timeA_id = ? OR timeB_id = ?");
+        $stmtJogos->execute([$idClube, $idClube]);
+        if((int)$stmtJogos->fetchColumn() > 0){
+            return ['pode' => false, 'motivo' => 'O clube possui histórico de partidas cadastradas em competições.'];
+        }
+
+        // 3. Verificar inscrição em competições
+        $stmtComp = $this->conn->prepare("SELECT COUNT(*) FROM competicao_clube WHERE clube = ?");
+        $stmtComp->execute([$idClube]);
+        if((int)$stmtComp->fetchColumn() > 0){
+            return ['pode' => false, 'motivo' => 'O clube está inscrito em competições ativas ou históricas.'];
+        }
+
+        // 4. Verificar histórico de transferências concluídas de jogadores
+        $stmtTransf = $this->conn->prepare("SELECT COUNT(*) FROM transferencias WHERE (clubeOrigem = ? OR clubeDestino = ?) AND status_execucao = 1");
+        $stmtTransf->execute([$idClube, $idClube]);
+        if((int)$stmtTransf->fetchColumn() > 0){
+            return ['pode' => false, 'motivo' => 'O clube possui transferências de jogadores concluídas no mercado.'];
+        }
+
+        // 5. Verificar histórico de transferências concluídas de técnicos
+        $stmtTransfTec = $this->conn->prepare("SELECT COUNT(*) FROM transferencias_tecnico WHERE (clubeOrigem = ? OR clubeDestino = ?) AND status_execucao = 1");
+        $stmtTransfTec->execute([$idClube, $idClube]);
+        if((int)$stmtTransfTec->fetchColumn() > 0){
+            return ['pode' => false, 'motivo' => 'O clube possui transferências de técnicos concluídas no mercado.'];
+        }
+
+        // 6. Verificar movimentações financeiras
+        $stmtFin = $this->conn->prepare("SELECT COUNT(*) FROM financeiro WHERE time = ?");
+        $stmtFin->execute([$idClube]);
+        if((int)$stmtFin->fetchColumn() > 0){
+            return ['pode' => false, 'motivo' => 'O clube possui lançamentos financeiros registrados.'];
+        }
+
+        // 7. Verificar atletas com vínculo externo com outros clubes
+        $stmtVinculo = $this->conn->prepare("SELECT COUNT(*) FROM contratos_jogador WHERE clube = ? AND clubeVinculado <> 0 AND clubeVinculado <> ?");
+        $stmtVinculo->execute([$idClube, $idClube]);
+        if((int)$stmtVinculo->fetchColumn() > 0){
+            return ['pode' => false, 'motivo' => 'O clube possui atletas com vínculo ou empréstimo ativo com outros clubes.'];
+        }
+
+        return ['pode' => true, 'motivo' => ''];
+    }
+
+    function apagar($idClube){
+        $idClube = (int)$idClube;
+        if($idClube <= 0){
+            return false;
+        }
+
+        try {
+            $this->conn->beginTransaction();
+
+            // 1. Limpar contratos de jogadores vinculados a este clube
+            $stmtCj = $this->conn->prepare("DELETE FROM contratos_jogador WHERE clube = ?");
+            $stmtCj->execute([$idClube]);
+
+            // 2. Limpar contratos de tecnicos vinculados a este clube
+            $stmtCt = $this->conn->prepare("DELETE FROM contratos_tecnico WHERE clube = ?");
+            $stmtCt->execute([$idClube]);
+
+            // 3. Limpar propostas pendentes/recusadas de transferencias de jogadores deste clube
+            $stmtTj = $this->conn->prepare("DELETE FROM transferencias WHERE (clubeOrigem = ? OR clubeDestino = ?) AND status_execucao <> 1");
+            $stmtTj->execute([$idClube, $idClube]);
+
+            // 4. Limpar propostas pendentes/recusadas de transferencias de tecnicos deste clube
+            $stmtTt = $this->conn->prepare("DELETE FROM transferencias_tecnico WHERE (clubeOrigem = ? OR clubeDestino = ?) AND status_execucao <> 1");
+            $stmtTt->execute([$idClube, $idClube]);
+
+            // 5. Excluir o registro do clube
+            $stmtClube = $this->conn->prepare("DELETE FROM " . $this->table_name . " WHERE ID = ?");
+            $stmtClube->execute([$idClube]);
+
+            $this->conn->commit();
+            return true;
+        } catch (\Exception $e) {
+            if($this->conn->inTransaction()){
+                $this->conn->rollBack();
+            }
+            error_log("Erro ao apagar clube {$idClube}: " . $e->getMessage());
+            return false;
+        }
+    }
+
 
 }
