@@ -187,6 +187,8 @@
 
     atualizarPainelAtleta();
     document.getElementById('lista-temporadas').innerHTML = '';
+    const modal = document.getElementById('modal-decisao');
+    if (modal) modal.style.display = 'none';
     
     // Rola suave para o topo do painel
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -198,6 +200,9 @@
   // Avança temporadas até a próxima tomada de decisão
   function avancarCiclo() {
     if (!motor || motor.aposentado) return;
+
+    const modal = document.getElementById('modal-decisao');
+    if (modal) modal.style.display = 'none';
 
     // Desabilita botão durante processamento
     const btnAvancar = document.getElementById('btn-avancar-temporada');
