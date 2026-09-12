@@ -207,6 +207,8 @@ window.ToperoEngine = class ToperoEngine {
     const titulosAno = [];
     const tierClube = this.jogador.clubeAtual.tierLiga || 1;
     const fatorParticipacao = Math.min(1.0, multMinutos);
+    let promovido = false;
+    let rebaixado = false;
 
     // Liga Nacional
     if (tierClube === 1) {
@@ -219,6 +221,22 @@ window.ToperoEngine = class ToperoEngine {
           categoria: 'Liga Nacional',
           icone: 'trofeu_ouro'
         });
+      } else {
+        // Risco de rebaixamento para quem não foi campeão na 1ª divisão
+        let probRebaixamento = 0;
+        if (this.jogador.nivel < 65) {
+          probRebaixamento = 0.28 * (1.1 - fatorParticipacao * 0.5);
+        } else if (this.jogador.nivel < 72) {
+          probRebaixamento = 0.12 * (1.1 - fatorParticipacao * 0.4);
+        } else if (this.jogador.nivel < 77) {
+          probRebaixamento = 0.04;
+        }
+        if (this.modTemporada.suspenso || this.modTemporada.lesao) {
+          probRebaixamento += 0.08;
+        }
+        if (Math.random() < probRebaixamento) {
+          rebaixado = true;
+        }
       }
     } else {
       // 2ª ou 3ª Divisão (Título de Acesso)
@@ -230,6 +248,12 @@ window.ToperoEngine = class ToperoEngine {
           categoria: 'Divisão de Acesso',
           icone: 'trofeu_bronze'
         });
+        promovido = true;
+      } else {
+        // Chance secundária de rebaixamento para divisões inferiores se nível for extremamente baixo
+        if (this.jogador.nivel < 58 && Math.random() < 0.15) {
+          rebaixado = true;
+        }
       }
     }
 
@@ -338,8 +362,20 @@ window.ToperoEngine = class ToperoEngine {
       golsSelecao: golsSelecaoAno,
       titulos: titulosAno,
       bolaDeOuro,
-      status: statusAtivo
+      status: statusAtivo,
+      promovido,
+      rebaixado,
+      proximaLiga: null
     };
+
+    // Aplica promoção ou rebaixamento ao clube para o ano seguinte
+    if (promovido) {
+      this.promoverClube(this.jogador.clubeAtual);
+      registroTemporada.proximaLiga = this.jogador.clubeAtual.nomeLiga;
+    } else if (rebaixado) {
+      this.rebaixarClube(this.jogador.clubeAtual);
+      registroTemporada.proximaLiga = this.jogador.clubeAtual.nomeLiga;
+    }
 
     // Reseta o modificador temporário após aplicar à temporada
     this.modTemporada = {
@@ -357,6 +393,70 @@ window.ToperoEngine = class ToperoEngine {
     }
 
     return registroTemporada;
+  }
+
+  // Promove o clube para a divisão imediatamente superior (tier - 1)
+  promoverClube(clube) {
+    if (!clube) return;
+    const tierAtual = clube.tierLiga || 1;
+    if (tierAtual <= 1) return; // Já está na 1ª divisão
+
+    const novoTier = tierAtual - 1;
+    const sexoClube = clube.sexo !== undefined ? parseInt(clube.sexo, 10) : 0;
+
+    let novaLiga = null;
+    if (this.mundo && this.mundo.ligas) {
+      novaLiga = this.mundo.ligas.find(l => {
+        const sexoLiga = l.sexo !== undefined ? parseInt(l.sexo, 10) : 0;
+        return l.idPais === clube.idPais && sexoLiga === sexoClube && l.tier === novoTier;
+      });
+
+      if (!novaLiga) {
+        novaLiga = this.mundo.ligas.find(l => l.idPais === clube.idPais && l.tier === novoTier);
+      }
+    }
+
+    if (novaLiga) {
+      clube.idLiga = novaLiga.id;
+      clube.nomeLiga = novaLiga.nome;
+      clube.tierLiga = novaLiga.tier;
+    } else {
+      clube.tierLiga = novoTier;
+      if (novoTier === 1) {
+        clube.nomeLiga = `Primeira Divisão de ${clube.nomePais || 'País'}`;
+      } else {
+        clube.nomeLiga = `${novoTier}ª Divisão de ${clube.nomePais || 'País'}`;
+      }
+    }
+  }
+
+  // Rebaixa o clube para a divisão imediatamente inferior (tier + 1)
+  rebaixarClube(clube) {
+    if (!clube) return;
+    const tierAtual = clube.tierLiga || 1;
+    const novoTier = tierAtual + 1;
+    const sexoClube = clube.sexo !== undefined ? parseInt(clube.sexo, 10) : 0;
+
+    let novaLiga = null;
+    if (this.mundo && this.mundo.ligas) {
+      novaLiga = this.mundo.ligas.find(l => {
+        const sexoLiga = l.sexo !== undefined ? parseInt(l.sexo, 10) : 0;
+        return l.idPais === clube.idPais && sexoLiga === sexoClube && l.tier === novoTier;
+      });
+
+      if (!novaLiga) {
+        novaLiga = this.mundo.ligas.find(l => l.idPais === clube.idPais && l.tier === novoTier);
+      }
+    }
+
+    if (novaLiga) {
+      clube.idLiga = novaLiga.id;
+      clube.nomeLiga = novaLiga.nome;
+      clube.tierLiga = novaLiga.tier;
+    } else {
+      clube.tierLiga = novoTier;
+      clube.nomeLiga = `${novoTier}ª Divisão de ${clube.nomePais || 'País'}`;
+    }
   }
 
   // Executa o bloco de temporadas até a próxima tomada de decisão
@@ -511,6 +611,17 @@ window.ToperoEngine = class ToperoEngine {
 
   // Sorteia um evento narrativo da lista de eventos, priorizando eventos ainda não vistos
   sortearEvento() {
+    // 1. Chance raríssima de Easter Egg secreto (~3.5% de chance ao disparar um dilema narrativo raro)
+    const easterEggs = window.TOPERO_EASTER_EGGS || [];
+    if (easterEggs.length > 0 && Math.random() < 0.035) {
+      const easterNaoVistos = easterEggs.filter(ev => !this.eventosConcluidos.includes(ev.id));
+      const poolEE = easterNaoVistos.length > 0 ? easterNaoVistos : easterEggs;
+      const escolhidoEE = poolEE[Math.floor(Math.random() * poolEE.length)];
+      this.eventosConcluidos.push(escolhidoEE.id);
+      return escolhidoEE;
+    }
+
+    // 2. Sorteio padrão da lista de eventos
     const lista = window.TOPERO_EVENTS || [];
     if (lista.length === 0) return null;
 
@@ -535,7 +646,8 @@ window.ToperoEngine = class ToperoEngine {
       minutosMult: 1.0,
       suspenso: false,
       lesao: false,
-      descricao: ''
+      descricao: '',
+      aposentou: false
     };
 
     let outcomeObj = null;
@@ -564,6 +676,17 @@ window.ToperoEngine = class ToperoEngine {
       resultado.minutosMult = outcomeObj.minutosMult !== undefined ? outcomeObj.minutosMult : 1.0;
       resultado.suspenso = !!outcomeObj.suspenso;
       resultado.lesao = !!outcomeObj.lesao;
+
+      // Suporte a Aposentadoria Imediata / Especial (ex: Rei do Khemed, Copa de Andrômeda, etc.)
+      if (outcomeObj.aposentar) {
+        this.aposentado = true;
+        this.motivoAposentadoria = outcomeObj.motivoAposentadoria || 'Aposentadoria Inesperada';
+        resultado.aposentou = true;
+        if (outcomeObj.trofeuEspecial) {
+          this.jogador.estatisticasTotais.titulos++;
+          this.jogador.estatisticasTotais.titulosDetalhados.push(outcomeObj.trofeuEspecial);
+        }
+      }
     }
 
     // Aplica os efeitos para a próxima temporada/bloco

@@ -295,7 +295,7 @@ $user_avatar = !empty($_SESSION['avatar']) ? $_SESSION['avatar'] : '/images/defa
         <div class="final-header" style="margin-bottom: 1.25rem;">
           <div style="font-size:2.2rem; margin-bottom:4px;">🎖️</div>
           <h2 class="final-title" style="margin-bottom: 2px;">Fim da Trajetória Profissional</h2>
-          <p style="color:#94a3b8; font-size:0.95rem; margin:0;">
+          <p id="final-subtitulo" style="color:#94a3b8; font-size:0.95rem; margin:0;">
             <strong id="final-nome" style="color:#f8fafc;">Atleta</strong> encerrou sua carreira lendária no CONFUSA.top!
           </p>
         </div>

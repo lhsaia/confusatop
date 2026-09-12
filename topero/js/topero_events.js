@@ -237,3 +237,105 @@ window.TOPERO_EVENTS = [
     ]
   }
 ];
+
+window.TOPERO_EASTER_EGGS = [
+  {
+    id: "rei_do_khemed",
+    title: "👑 A Coroa Perdida do Khemed",
+    description: "Uma frota de limusines folheadas a ouro e escoltada por cavalaria do deserto cerca o centro de treinamento. Um emissário imperial trajando seda e turbante desembarca com um pergaminho milenar selado com o brasão da dinastia Kalish: exames genealógicos comprovam que você é o herdeiro legítimo do Trono do Khemed! O reino de Wadesdah exige que você abandone imediatamente as chuteiras para assumir o trono e governar os poços de petróleo.",
+    easterEgg: true,
+    options: [
+      {
+        id: "aceitar_trono",
+        label: "👑 Abdicar do futebol e ser coroado Rei do Khemed!",
+        outcome: {
+          aposentar: true,
+          ovrDelta: 0,
+          motivoAposentadoria: "Abdicou dos gramados para ser coroado Sua Majestade Real, Soberano do Khemed!",
+          trofeuEspecial: {
+            tipo: "trofeu_rei",
+            nome: "Coroa Imperial do Khemed",
+            categoria: "Realeza & Império",
+            icone: "trofeu_rei"
+          },
+          description: "VIDA LONGA AO REI! 👑 Você pendurou as chuteiras imediatamente e embarcou no jato real rumo a Wadesdah. Agora você comanda um reino com 40 palácios de mármore, 500 camelos de corrida e poços infinitos de petróleo! Sua carreira no futebol acabou de forma apoteótica e lendária."
+        }
+      },
+      {
+        id: "recusar_trono",
+        label: "⚽ 'Meu reino são as quatro linhas!' (Recusar a coroa)",
+        outcome: {
+          ovrDelta: 3,
+          minutosMult: 1.1,
+          description: "O emissário ficou chocado com sua devoção ao futebol, mas em respeito te presenteou com uma mala de barras de ouro puro e o título de Príncipe Honorário (+3 Nível e moral nas alturas)!"
+        }
+      }
+    ]
+  },
+  {
+    id: "copa_andromeda",
+    title: "🛸 O Chamado do Planeta Cúbico de Mali (COMETA)",
+    description: "Uma nave em formato de cubo perfeito pousa silenciosamente no gramado durante o treino noturno. Uma delegação espacial desembarca vestindo uniformes com o lendário brasão da COMETA — a antiga confederação da CONFUSA que todos julgavam extinta! Eles revelam que a COMETA nunca acabou, apenas se transferiu para o espaço profundo, e agora o Planeta Cúbico de Mali precisa do seu futebol para disputar a Taça Interplanetária!",
+    easterEgg: true,
+    options: [
+      {
+        id: "embarcar_nave",
+        label: "🛸 Embarcar na nave cúbica e defender Mali na COMETA!",
+        outcome: {
+          aposentar: true,
+          ovrDelta: 0,
+          motivoAposentadoria: "Abduzido para defender o Planeta Cúbico de Mali na renascida confederação COMETA!",
+          trofeuEspecial: {
+            tipo: "trofeu_alien",
+            nome: "Taça Interplanetária da COMETA (Planeta Mali)",
+            categoria: "COMETA • Interplanetário",
+            icone: "trofeu_alien"
+          },
+          description: "GLÓRIA CÚBICA NO ESPAÇO! 🛸 Você embarcou rumo ao Planeta Cúbico de Mali! A COMETA está mais viva do que nunca além das estrelas. Dizem que você dominou a física dos chutes de efeito com gravidade cúbica e virou lenda eterna no universo!"
+        }
+      },
+      {
+        id: "ficar_na_terra",
+        label: "🌍 'Agradeço à COMETA, mas tenho compromisso na CONFUSA!'",
+        outcome: {
+          ovrDelta: 4,
+          minutosMult: 1.15,
+          description: "A delegação de Mali admirou sua fidelidade à CONFUSA terrestre e te presenteou com um propulsor antigravitacional cúbico para as suas chuteiras (+4 Nível)!"
+        }
+      }
+    ]
+  },
+  {
+    id: "bilionario_topero_coin",
+    title: "💎 A Fortuna Secreta do ToperoCoin",
+    description: "Uma criptomoeda que você comprou por 10 reais na adolescência ('ToperoCoin') valorizou 900.000.000% esta madrugada. Você acordou sendo oficialmente o homem mais rico do planeta, com patrimônio superior a vários países da CONFUSA juntos!",
+    easterEgg: true,
+    options: [
+      {
+        id: "comprar_ilha",
+        label: "🏝️ Comprar uma ilha de um famoso ator americano e viver de sombra e água fresca!",
+        outcome: {
+          aposentar: true,
+          ovrDelta: 0,
+          motivoAposentadoria: "Encerrou a carreira precocemente para viver como magnata em seu arquipélago oceânico!",
+          trofeuEspecial: {
+            tipo: "trofeu_ilha",
+            nome: "Escritura do Arquipélago Paradisíaco",
+            categoria: "Magnata Global",
+            icone: "trofeu_ilha"
+          },
+          description: "VIDA DE MAGNATA! 🏝️ Você comprou o arquipélago inteiro, um iate de 15 andares com campinho de futebol society na proa e contratou seus antigos companheiros de time como consultores de churrasco!"
+        }
+      },
+      {
+        id: "jogar_por_amor",
+        label: "⚽ Jogar puramente por amor à camisa (Doar fortunas)",
+        outcome: {
+          ovrDelta: 2,
+          minutosMult: 1.05,
+          description: "Você financiou novos estádios para todos os times da liga e passou a jogar 100% livre de pressão financeira (+2 Nível de serenidade)!"
+        }
+      }
+    ]
+  }
+];

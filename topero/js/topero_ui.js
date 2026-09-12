@@ -289,6 +289,14 @@
 
     let htmlEscudo = t.clube.escudo ? `<img src="/images/escudos/${t.clube.escudo}" class="mini-escudo" alt="">` : '';
     let htmlStatus = t.status ? `<span class="badge-status-alerta" title="Impacto na temporada">${t.status}</span>` : '';
+    let htmlDesfecho = '';
+    if (t.promovido) {
+      const nomeDest = t.proximaLiga ? ` ➔ ${t.proximaLiga}` : '';
+      htmlDesfecho = `<span class="badge-status-promocao" title="Acesso garantido! Disputará a divisão superior na próxima temporada">⬆️ Acesso Conquistado${nomeDest}</span>`;
+    } else if (t.rebaixado) {
+      const nomeDest = t.proximaLiga ? ` ➔ ${t.proximaLiga}` : '';
+      htmlDesfecho = `<span class="badge-status-rebaixamento" title="Rebaixado na temporada! Disputará a divisão inferior na próxima temporada">⬇️ Rebaixado${nomeDest}</span>`;
+    }
     let htmlSelecaoBadge = t.convocadoSelecao 
       ? `<span class="badge-status-selecao" title="Convocado pela Seleção Nacional">⭐ Seleção (${t.jogosSelecao || 0}J ${t.golsSelecao ? `• ${t.golsSelecao}G` : ''})</span>` 
       : '';
@@ -304,7 +312,7 @@
     card.innerHTML = `
       <div class="temp-header">
         <div class="temp-ano-badge">Ano ${t.ano} (${t.idade} anos)</div>
-        <div class="temp-clube-info">${htmlEscudo} <strong>${t.clube.nome}</strong> (${t.clube.nomeLiga || 'Liga'}) ${htmlStatus} ${htmlSelecaoBadge}</div>
+        <div class="temp-clube-info">${htmlEscudo} <strong>${t.clube.nome}</strong> (${t.clube.nomeLiga || 'Liga'}) ${htmlStatus} ${htmlDesfecho} ${htmlSelecaoBadge}</div>
         <div class="temp-ovr-badge">OVR ${t.nivel}</div>
       </div>
       <div class="temp-stats">
@@ -336,6 +344,12 @@
         return `<svg class="svg-trophy gold" viewBox="0 0 24 24"><path fill="#fbbf24" d="M12 2L9 6h6l-3-4zM5 8h14v2H5V8zm2 4h10v2H7v-2zm2 4h6v4H9v-4z"/></svg>`;
       case 'bola_ouro':
         return `<svg class="svg-trophy gold" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#eab308"/><path fill="#ca8a04" d="M12 2a10 10 0 0 0-10 10c0 5.52 4.48 10 10 10 5.52 0 10-4.48 10-10A10 10 0 0 0 12 2zm1 17.93V17l2-2-1-2 2-2-2-2 1-2-2-2V4.07c3.84.47 6.9 3.53 7.37 7.37.06.56.06 1.12 0 1.68-.47 3.84-3.53 6.9-7.37 7.37z"/></svg>`;
+      case 'trofeu_rei':
+        return `<svg class="svg-trophy gold" viewBox="0 0 24 24"><path fill="#f59e0b" d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .55-.45 1-1 1H6c-.55 0-1-.45-1-1v-1h14v1z"/></svg>`;
+      case 'trofeu_alien':
+        return `<svg class="svg-trophy cyan" viewBox="0 0 24 24"><path fill="#38bdf8" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>`;
+      case 'trofeu_ilha':
+        return `<svg class="svg-trophy green" viewBox="0 0 24 24"><path fill="#10b981" d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L12 22l7.03-4.39C20.26 16.07 21 14.12 21 12c0-4.97-4.03-9-9-9zm0 13c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>`;
       default:
         return `🏆`;
     }
@@ -417,16 +431,21 @@
     feedback.innerHTML = `
       <div class="feedback-desc">${resultado.descricao}</div>
       <div class="feedback-ovr">${ovrTxt}</div>
-      <button id="btn-continuar-decisao" class="btn-primary" style="margin-top:15px;">Continuar Carreira</button>
+      <button id="btn-continuar-decisao" class="btn-primary" style="margin-top:15px;">${resultado.aposentou ? 'Ver Desfecho Histórico ➔' : 'Continuar Carreira'}</button>
     `;
     feedback.style.display = 'block';
 
     atualizarPainelAtleta();
 
-    document.getElementById('btn-continuar-decisao').addEventListener('click', function () {
+    const btnContinuar = document.getElementById('btn-continuar-decisao');
+    btnContinuar.addEventListener('click', function () {
       document.getElementById('modal-decisao').style.display = 'none';
-      document.getElementById('btn-avancar-temporada').disabled = false;
-    });
+      if (motor.aposentado) {
+        finalizarCarreira();
+      } else {
+        document.getElementById('btn-avancar-temporada').disabled = false;
+      }
+    }, { once: true });
   }
 
   function renderizarModalTransferencia(dadosTransferencia) {
@@ -511,7 +530,17 @@
     const jog = motor.jogador;
     const tot = jog.estatisticasTotais;
 
-    document.getElementById('final-nome').textContent = jog.nome;
+    const elSubtitulo = document.getElementById('final-subtitulo');
+    if (elSubtitulo) {
+      if (motor.motivoAposentadoria) {
+        elSubtitulo.innerHTML = `<span style="color:#38bdf8; font-weight:700;">🌟 Desfecho Inédito:</span> <span style="color:#f8fafc;">${motor.motivoAposentadoria}</span>`;
+      } else {
+        elSubtitulo.innerHTML = `<strong id="final-nome" style="color:#f8fafc;">${jog.nome}</strong> encerrou sua carreira lendária no CONFUSA.top!`;
+      }
+    }
+
+    const elNome = document.getElementById('final-nome');
+    if (elNome) elNome.textContent = jog.nome;
     document.getElementById('final-numero-pos').textContent = `#${jog.numero} • ${jog.posicao}`;
     document.getElementById('final-pais').textContent = jog.pais.nome;
     document.getElementById('final-idade').textContent = `${jog.idade} anos`;
