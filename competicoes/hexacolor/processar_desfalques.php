@@ -40,6 +40,14 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
         }
     }
 
+    // Obter informações dos clubes e data da partida
+    $stmtJogoInfo = $db->prepare("SELECT timeA_id, timeA_nome, timeB_id, timeB_nome, data FROM jogos_clube WHERE id = :idPartida LIMIT 1");
+    $stmtJogoInfo->bindValue(':idPartida', $idPartida, PDO::PARAM_INT);
+    $stmtJogoInfo->execute();
+    $jogoInfo = $stmtJogoInfo->fetch(PDO::FETCH_ASSOC);
+
+    $dataPartida = !empty($jogoInfo['data']) ? substr($jogoInfo['data'], 0, 10) : date('Y-m-d');
+
     // 3. Processar cartões e lesões a partir do arquivo JSON da partida (.hyj)
     if (file_exists($hyjFile)) {
         $json = json_decode(file_get_contents($hyjFile));
@@ -126,9 +134,12 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
                 if ($temLesao == 1 || $duracaoLesao > 0) {
                     $duracao = ($duracaoLesao > 0) ? $duracaoLesao : 7;
 
-                    // Atualiza tabela jogador global
-                    $stmtLes = $db->prepare("UPDATE jogador SET lesionado_ate = DATE_ADD(CURDATE(), INTERVAL :duracao DAY) WHERE ID = :idJog");
+                    // Atualiza tabela jogador global se a data de recuperação for futura
+                    $stmtLes = $db->prepare("UPDATE jogador SET lesionado_ate = DATE_ADD(:dataBase, INTERVAL :duracao DAY) WHERE ID = :idJog AND (lesionado_ate IS NULL OR lesionado_ate < DATE_ADD(:dataBase2, INTERVAL :duracao2 DAY))");
+                    $stmtLes->bindValue(':dataBase', $dataPartida, PDO::PARAM_STR);
                     $stmtLes->bindValue(':duracao', $duracao, PDO::PARAM_INT);
+                    $stmtLes->bindValue(':dataBase2', $dataPartida, PDO::PARAM_STR);
+                    $stmtLes->bindValue(':duracao2', $duracao, PDO::PARAM_INT);
                     $stmtLes->bindValue(':idJog', $pId, PDO::PARAM_INT);
                     $stmtLes->execute();
 
@@ -138,13 +149,15 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
                     $stmtGetLes->bindValue(':idJog', $pId, PDO::PARAM_INT);
                     $stmtGetLes->execute();
                     if (!$stmtGetLes->fetch()) {
-                        $stmtInsLes = $db->prepare("INSERT INTO competicao_suspensos (id_competicao, id_jogador, cartoes_amarelos, suspenso, jogos_restantes, lesionado_ate) VALUES (:idComp, :idJog, 0, 0, 0, DATE_ADD(CURDATE(), INTERVAL :duracao DAY))");
+                        $stmtInsLes = $db->prepare("INSERT INTO competicao_suspensos (id_competicao, id_jogador, cartoes_amarelos, suspenso, jogos_restantes, lesionado_ate) VALUES (:idComp, :idJog, 0, 0, 0, DATE_ADD(:dataBase, INTERVAL :duracao DAY))");
                         $stmtInsLes->bindValue(':idComp', $idCompeticao, PDO::PARAM_INT);
                         $stmtInsLes->bindValue(':idJog', $pId, PDO::PARAM_INT);
+                        $stmtInsLes->bindValue(':dataBase', $dataPartida, PDO::PARAM_STR);
                         $stmtInsLes->bindValue(':duracao', $duracao, PDO::PARAM_INT);
                         $stmtInsLes->execute();
                     } else {
-                        $stmtUpdLes = $db->prepare("UPDATE competicao_suspensos SET lesionado_ate = DATE_ADD(CURDATE(), INTERVAL :duracao DAY) WHERE id_competicao = :idComp AND id_jogador = :idJog");
+                        $stmtUpdLes = $db->prepare("UPDATE competicao_suspensos SET lesionado_ate = DATE_ADD(:dataBase, INTERVAL :duracao DAY) WHERE id_competicao = :idComp AND id_jogador = :idJog");
+                        $stmtUpdLes->bindValue(':dataBase', $dataPartida, PDO::PARAM_STR);
                         $stmtUpdLes->bindValue(':duracao', $duracao, PDO::PARAM_INT);
                         $stmtUpdLes->bindValue(':idComp', $idCompeticao, PDO::PARAM_INT);
                         $stmtUpdLes->bindValue(':idJog', $pId, PDO::PARAM_INT);
@@ -154,12 +167,6 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
             }
         }
     }
-
-    // 5. Obter informações dos clubes da partida
-    $stmtJogoInfo = $db->prepare("SELECT timeA_id, timeA_nome, timeB_id, timeB_nome FROM jogos_clube WHERE id = :idPartida LIMIT 1");
-    $stmtJogoInfo->bindValue(':idPartida', $idPartida, PDO::PARAM_INT);
-    $stmtJogoInfo->execute();
-    $jogoInfo = $stmtJogoInfo->fetch(PDO::FETCH_ASSOC);
 
     $timeA_id = (int)($jogoInfo['timeA_id'] ?? 0);
     $nome_time_A = $jogoInfo['timeA_nome'] ?? '';

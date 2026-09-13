@@ -1,12 +1,44 @@
 <?php
+date_default_timezone_set('America/Sao_Paulo');
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+set_time_limit(0);
+ini_set('max_execution_time', '0');
+ini_set('memory_limit', '512M');
+
 // CLI/Cron runner for next-day matches simulation
+$cronLogFile = __DIR__ . '/cron_exec.log';
+function cron_log($msg) {
+    global $cronLogFile;
+    $line = (strpos($msg, '[') === 0 ? "" : "[" . date('Y-m-d H:i:s') . "] ") . $msg . "\n";
+    echo $line;
+    @file_put_contents($cronLogFile, $line, FILE_APPEND);
+}
+
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        cron_log("[FATAL ERROR SHUTDOWN] " . $error['message'] . " em " . $error['file'] . ":" . $error['line']);
+    }
+});
+
+$docRoot = dirname(__DIR__);
 $isCommandLine = (php_sapi_name() === 'cli') || (php_sapi_name() === 'cgi') || (php_sapi_name() === 'cgi-fcgi') || !isset($_SERVER['HTTP_HOST']);
-if (!$isCommandLine && !isset($_GET['cron_key'])) {
-    // Permitir execução via CLI ou via Web se cron_key estiver presente
+
+cron_log("=== DISPARO DO CRON INICIADO ===");
+cron_log("PHP: " . PHP_VERSION . " | SAPI: " . php_sapi_name() . " | BIN: " . (defined('PHP_BINARY') ? PHP_BINARY : 'N/A') . " | CLI: " . ($isCommandLine ? 'SIM' : 'NAO'));
+
+if (session_status() === PHP_SESSION_NONE && isset($_COOKIE[session_name()])) {
+    @session_start();
+}
+$isAdmin = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true && (int)($_SESSION['admin_status'] ?? 0) === 1;
+
+if (!$isCommandLine && !isset($_GET['cron_key']) && !$isAdmin) {
+    // Permitir execução via CLI ou via Web se cron_key estiver presente ou admin autenticado
+    cron_log("[BLOQUEIO 403] Acesso negado: não é CLI, falta cron_key e não é Admin autenticado.");
     header('HTTP/1.0 403 Forbidden');
     die("Acesso restrito ao agendador (Cron CLI).");
 }
@@ -14,8 +46,6 @@ if (!$isCommandLine && !isset($_GET['cron_key'])) {
 if (php_sapi_name() !== 'cli' && isset($_SERVER['HTTP_HOST'])) {
     header('Content-Type: text/plain; charset=utf-8');
 }
-
-date_default_timezone_set('America/Sao_Paulo');
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/sqliteDatabase.php';
@@ -29,7 +59,7 @@ $competicaoObj = new Competicao_clube($db);
 // Selecionar jogos pendentes (status = 0) agendados até as próximas 24 horas (incluindo partidas atrasadas no passado)
 $fimBusca = date('Y-m-d H:i:s', strtotime('+24 hours')); // Até 24 horas à frente
 
-echo "[" . date('Y-m-d H:i:s') . "] Iniciando Cron de Simulação para partidas pendentes até {$fimBusca}...\n";
+cron_log("Iniciando Cron de Simulação para partidas pendentes até {$fimBusca}...");
 
 // Buscar jogos pendentes com data até o limite estipulado
 $query = "SELECT id, competicao_id AS competicao, timeA_id AS timeA, timeB_id AS timeB, estadio_id AS estadio, neutro, fase, data, subir_live 
@@ -37,7 +67,7 @@ $query = "SELECT id, competicao_id AS competicao, timeA_id AS timeA, timeB_id AS
           WHERE status = 0 
             AND simulador_interno = 1
             AND data <= :fim 
-          ORDER BY data ASC";
+          ORDER BY data ASC, fase ASC, id ASC";
 
 $stmt = $db->prepare($query);
 $stmt->bindParam(':fim', $fimBusca);
@@ -48,7 +78,7 @@ $partidas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 // Função auxiliar para verificar e avançar fases de mata-mata concluídas
 function checarAvancoMataMataAtivos($db, $competicaoObj) {
     try {
-        // Ordena pela ordem cronológica do mata-mata (64-avos=11, 32-avos=10, 16-avos=9, Oitavas=3, Quartas=4, Semi=5)
+        // Ordena pela ordem cronológica do mata-mata (64-avos=11, 32-avos=10, 16-avos=9, Oitavos=3, Quartas=4, Semi=5)
         $stmtFases = $db->query("
             SELECT DISTINCT competicao_id, fase 
             FROM jogos_clube 
@@ -61,37 +91,202 @@ function checarAvancoMataMataAtivos($db, $competicaoObj) {
                 $faseId = (int)$rFase['fase'];
                 $avancou = $competicaoObj->verificarEAvancarMataMata($compId, $faseId);
                 if ($avancou) {
-                    echo "[" . date('Y-m-d H:i:s') . "] [MATA-MATA CRON] Competição #{$compId}: Fase {$faseId} avançada com sucesso para a próxima fase.\n";
+                    cron_log("[MATA-MATA CRON] Competição #{$compId}: Fase {$faseId} avançada com sucesso para a próxima fase.");
                 }
             }
         }
     } catch (\Throwable $e) {
         error_log("PHP Simulador: [ERRO AVANÇO MATA-MATA CRON GERAL] " . $e->getMessage());
-        echo "[" . date('Y-m-d H:i:s') . "] [ERRO MATA-MATA CRON] " . $e->getMessage() . "\n";
+        cron_log("[ERRO MATA-MATA CRON] " . $e->getMessage());
     }
 }
 
 if (empty($partidas)) {
-    echo "[" . date('Y-m-d H:i:s') . "] Nenhuma partida pendente encontrada até {$fimBusca}.\n";
+    cron_log("Nenhuma partida pendente encontrada até {$fimBusca}.");
     checarAvancoMataMataAtivos($db, $competicaoObj);
+    cron_log("=== DISPARO DO CRON CONCLUÍDO (SEM PARTIDAS) ===\n");
     exit(0);
 }
 
-echo "[" . date('Y-m-d H:i:s') . "] Encontrada(s) " . count($partidas) . " partida(s) para simular.\n";
+cron_log("Encontrada(s) " . count($partidas) . " partida(s) para simular.");
 
 $hexacolorDir = __DIR__ . '/hexacolor';
+
+// Helper para garantir e resolver imagens dos clubes no SQLite temporário antes da engine Java rodar
+function resolverCaminhoImagem($relPath, $hexacolorDir, $docRoot, $fallbackRel) {
+    if (empty($relPath)) {
+        return $fallbackRel;
+    }
+    
+    // Caminho absoluto no disco
+    if (strpos($relPath, '../../') === 0) {
+        $sub = substr($relPath, 6);
+        $abs = $docRoot . '/' . ltrim($sub, '/\\');
+    } else {
+        $abs = $hexacolorDir . '/' . ltrim($relPath, '/\\');
+    }
+    
+    if (file_exists($abs) && is_file($abs) && @filesize($abs) > 0) {
+        return $relPath;
+    }
+    
+    // Tenta encontrar ignorando maiúsculas/minúsculas no mesmo diretório
+    $dir = dirname($abs);
+    $filename = basename($abs);
+    if (is_dir($dir)) {
+        $files = @scandir($dir);
+        if ($files) {
+            foreach ($files as $f) {
+                if ($f !== '.' && $f !== '..' && strcasecmp($f, $filename) === 0 && is_file($dir . '/' . $f)) {
+                    if (strpos($relPath, '../../') === 0) {
+                        return '../../' . ltrim(substr(dirname($relPath), 6), '/\\') . '/' . $f;
+                    } else {
+                        return (dirname($relPath) !== '.' ? dirname($relPath) . '/' : '') . $f;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Tenta procurar em images/escudos ou images/uniformes pelo nome do arquivo
+    $filenameBase = basename($relPath);
+    if (!empty($filenameBase)) {
+        $altDirs = [$docRoot . '/images/escudos', $docRoot . '/images/uniformes', $hexacolorDir . '/Imagens', $hexacolorDir . '/Escudos', $hexacolorDir . '/Uniformes'];
+        foreach ($altDirs as $altDir) {
+            if (is_dir($altDir)) {
+                $altFiles = @scandir($altDir);
+                if ($altFiles) {
+                    foreach ($altFiles as $af) {
+                        if ($af !== '.' && $af !== '..' && strcasecmp($af, $filenameBase) === 0 && is_file($altDir . '/' . $af)) {
+                            if (strpos($altDir, $docRoot) === 0) {
+                                $relFromDoc = substr($altDir, strlen($docRoot));
+                                return '../../' . ltrim($relFromDoc, '/\\') . '/' . $af;
+                            }
+                            if (strpos($altDir, $hexacolorDir) === 0) {
+                                $relFromHexa = substr($altDir, strlen($hexacolorDir));
+                                return ltrim($relFromHexa, '/\\') . '/' . $af;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return $fallbackRel;
+}
+
+function normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot) {
+    if (!$ldb) return;
+    try {
+        $stmtClubs = $ldb->query("SELECT ID, Nome, Escudo, Uniforme1, Uniforme2 FROM clube");
+        if (!$stmtClubs) return;
+        $clubs = $stmtClubs->fetchAll(PDO::FETCH_ASSOC);
+        $stmtClubs = null;
+        
+        $fallbackEscudo = 'imagens/EscudoPadrao.png';
+        $fallbackUniforme = 'imagens/UniformePadrao.PNG';
+        
+        $stmtUpClube = $ldb->prepare("UPDATE clube SET Escudo = :esc, Uniforme1 = :uni1, Uniforme2 = :uni2 WHERE ID = :id");
+        
+        foreach ($clubs as $c) {
+            $changed = false;
+            $escudo = trim($c['Escudo'] ?? '');
+            $uni1 = trim($c['Uniforme1'] ?? '');
+            $uni2 = trim($c['Uniforme2'] ?? '');
+            
+            $escudoResolvido = resolverCaminhoImagem($escudo, $hexacolorDir, $docRoot, $fallbackEscudo);
+            if ($escudoResolvido !== $escudo) {
+                $escudo = $escudoResolvido;
+                $changed = true;
+            }
+            
+            $uni1Resolvido = resolverCaminhoImagem($uni1, $hexacolorDir, $docRoot, $fallbackUniforme);
+            if ($uni1Resolvido !== $uni1) {
+                $uni1 = $uni1Resolvido;
+                $changed = true;
+            }
+            
+            $uni2Resolvido = resolverCaminhoImagem($uni2, $hexacolorDir, $docRoot, $fallbackUniforme);
+            if ($uni2Resolvido !== $uni2) {
+                $uni2 = $uni2Resolvido;
+                $changed = true;
+            }
+            
+            if ($changed) {
+                $stmtUpClube->bindValue(':esc', $escudo);
+                $stmtUpClube->bindValue(':uni1', $uni1);
+                $stmtUpClube->bindValue(':uni2', $uni2);
+                $stmtUpClube->bindValue(':id', $c['ID'], PDO::PARAM_INT);
+                $stmtUpClube->execute();
+            }
+        }
+        $stmtUpClube = null;
+    } catch (\Throwable $e) {
+        cron_log("   [AVISO IMAGENS] Erro ao normalizar imagens dos clubes: " . $e->getMessage());
+    }
+}
+
+// Garantir compatibilidade de pastas e imagens com a engine Java no Linux (case-sensitive)
+$imageFolders = ['Imagens' => 'imagens', 'Escudos' => 'escudos', 'Uniformes' => 'uniformes'];
+foreach ($imageFolders as $orig => $lower) {
+    $origDir = $hexacolorDir . '/' . $orig;
+    $lowerDir = $hexacolorDir . '/' . $lower;
+    if (is_dir($origDir) && !is_dir($lowerDir)) {
+        if (!@symlink($origDir, $lowerDir)) {
+            @mkdir($lowerDir, 0777, true);
+            $files = glob($origDir . '/*');
+            if ($files) {
+                foreach ($files as $f) {
+                    if (is_file($f)) {
+                        @copy($f, $lowerDir . '/' . basename($f));
+                    }
+                }
+            }
+        }
+    }
+    // Garantir arquivos padrões em minúsculo e maiúsculo em todas as pastas
+    if (is_dir($origDir)) {
+        $escudoPadrao = $origDir . '/EscudoPadrao.png';
+        if (file_exists($escudoPadrao)) {
+            if (!file_exists($origDir . '/escudopadrao.png')) @copy($escudoPadrao, $origDir . '/escudopadrao.png');
+            if (is_dir($lowerDir)) {
+                if (!file_exists($lowerDir . '/EscudoPadrao.png')) @copy($escudoPadrao, $lowerDir . '/EscudoPadrao.png');
+                if (!file_exists($lowerDir . '/escudopadrao.png')) @copy($escudoPadrao, $lowerDir . '/escudopadrao.png');
+            }
+            // Garantir também dentro de hexacolor/Escudos e images/escudos
+            if (is_dir($hexacolorDir . '/Escudos') && !file_exists($hexacolorDir . '/Escudos/EscudoPadrao.png')) @copy($escudoPadrao, $hexacolorDir . '/Escudos/EscudoPadrao.png');
+            if (is_dir($hexacolorDir . '/escudos') && !file_exists($hexacolorDir . '/escudos/EscudoPadrao.png')) @copy($escudoPadrao, $hexacolorDir . '/escudos/EscudoPadrao.png');
+            if (is_dir($docRoot . '/images/escudos') && !file_exists($docRoot . '/images/escudos/EscudoPadrao.png')) @copy($escudoPadrao, $docRoot . '/images/escudos/EscudoPadrao.png');
+        }
+        $uniformePadrao = $origDir . '/UniformePadrao.PNG';
+        if (file_exists($uniformePadrao)) {
+            if (!file_exists($origDir . '/UniformePadrao.png')) @copy($uniformePadrao, $origDir . '/UniformePadrao.png');
+            if (!file_exists($origDir . '/uniformepadrao.png')) @copy($uniformePadrao, $origDir . '/uniformepadrao.png');
+            if (is_dir($lowerDir)) {
+                if (!file_exists($lowerDir . '/UniformePadrao.PNG')) @copy($uniformePadrao, $lowerDir . '/UniformePadrao.PNG');
+                if (!file_exists($lowerDir . '/UniformePadrao.png')) @copy($uniformePadrao, $lowerDir . '/UniformePadrao.png');
+                if (!file_exists($lowerDir . '/uniformepadrao.png')) @copy($uniformePadrao, $lowerDir . '/uniformepadrao.png');
+            }
+            // Garantir também dentro de hexacolor/Uniformes e images/uniformes
+            if (is_dir($hexacolorDir . '/Uniformes') && !file_exists($hexacolorDir . '/Uniformes/UniformePadrao.PNG')) @copy($uniformePadrao, $hexacolorDir . '/Uniformes/UniformePadrao.PNG');
+            if (is_dir($hexacolorDir . '/uniformes') && !file_exists($hexacolorDir . '/uniformes/UniformePadrao.PNG')) @copy($uniformePadrao, $hexacolorDir . '/uniformes/UniformePadrao.PNG');
+            if (is_dir($docRoot . '/images/uniformes') && !file_exists($docRoot . '/images/uniformes/UniformePadrao.PNG')) @copy($uniformePadrao, $docRoot . '/images/uniformes/UniformePadrao.PNG');
+        }
+    }
+}
 
 foreach ($partidas as $matchInfo) {
     $idPartida = $matchInfo['id'];
     $idCompeticao = $matchInfo['competicao'];
     
-    echo "-> Processando Partida ID #{$idPartida} (Competição #{$idCompeticao})...\n";
+    cron_log("-> Processando Partida ID #{$idPartida} (Competição #{$idCompeticao})...");
     
     $sourceDbPath = __DIR__ . "/databases/{$idCompeticao}-database.db3";
     $targetDbPath = $hexacolorDir . "/data/database.db3";
     
     if (!file_exists($sourceDbPath)) {
-        echo "   [ERRO] Banco da competição não encontrado: {$sourceDbPath}\n";
+        cron_log("   [ERRO] Banco da competição não encontrado: {$sourceDbPath}");
         continue;
     }
     
@@ -99,12 +294,17 @@ foreach ($partidas as $matchInfo) {
         mkdir($hexacolorDir . "/data", 0777, true);
     }
     
+    // Limpar arquivos residuais de WAL/lock de simulações anteriores para evitar disk I/O error
+    @unlink($targetDbPath . '-wal');
+    @unlink($targetDbPath . '-shm');
+    @unlink($targetDbPath . '-journal');
+
     // 1. Copiar SQLite da competição para data/database.db3
     copy($sourceDbPath, $targetDbPath);
     
     $idEstadio = isset($matchInfo['estadio']) ? (int)$matchInfo['estadio'] : 0;
     if ($idEstadio <= 0) {
-        echo "   [ERRO] A Partida #{$idPartida} não possui estádio definido. Pulando...\n";
+        cron_log("   [ERRO] A Partida #{$idPartida} não possui estádio definido. Pulando...");
         continue;
     }
 
@@ -120,7 +320,7 @@ foreach ($partidas as $matchInfo) {
     $stmtEstCheck->execute();
     if (!$stmtEstCheck->fetch()) {
         $ldb = null;
-        echo "   [ERRO] O estádio #{$idEstadio} da Partida #{$idPartida} não existe no banco SQLite. Pulando...\n";
+        cron_log("   [ERRO] O estádio #{$idEstadio} da Partida #{$idPartida} não existe no banco SQLite. Pulando...");
         continue;
     }
 
@@ -248,10 +448,12 @@ foreach ($partidas as $matchInfo) {
                 $db->exec("ALTER TABLE competicao_suspensos ADD COLUMN lesionado_ate DATE DEFAULT NULL");
             } catch (Exception $e) {}
 
+            $dataMatch = !empty($matchInfo['data']) ? substr($matchInfo['data'], 0, 10) : date('Y-m-d');
+
             // Consultar status dinâmicos no MariaDB principal (inclui checagem para jogadores de times importados .ymt)
             try {
                 $querySt = "SELECT val.ID,
-                                   IF((cs.lesionado_ate IS NOT NULL AND cs.lesionado_ate >= CURDATE()) OR (j.lesionado_ate IS NOT NULL AND j.lesionado_ate >= CURDATE()), 1, 0) as lesionado,
+                                   IF((cs.lesionado_ate IS NOT NULL AND cs.lesionado_ate >= :dataJogo1) OR (j.lesionado_ate IS NOT NULL AND j.lesionado_ate >= :dataJogo2), 1, 0) as lesionado,
                                    COALESCE(cs.suspenso, 0) as suspenso
                             FROM (
                                 SELECT ID FROM jogador WHERE ID IN ($inClause)
@@ -263,6 +465,8 @@ foreach ($partidas as $matchInfo) {
                 $stmtSt = $db->prepare($querySt);
                 $stmtSt->bindValue(':comp', $idCompeticao, PDO::PARAM_INT);
                 $stmtSt->bindValue(':comp2', $idCompeticao, PDO::PARAM_INT);
+                $stmtSt->bindValue(':dataJogo1', $dataMatch, PDO::PARAM_STR);
+                $stmtSt->bindValue(':dataJogo2', $dataMatch, PDO::PARAM_STR);
                 $stmtSt->execute();
                 while ($rowSt = $stmtSt->fetch(PDO::FETCH_ASSOC)) {
                     $pId = (int)$rowSt['ID'];
@@ -352,6 +556,9 @@ foreach ($partidas as $matchInfo) {
         $outTeam2 = array_values(array_unique($outTeam2));
     } catch (Exception $e) {}
     
+    // 4. Normalizar e validar imagens de todos os clubes para evitar exceções do Java (ImageIO.read retornando null)
+    normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot);
+    
     $competitionInfo = $competicaoObj->readInfo($idCompeticao);
     $nomeComposto = $competitionInfo['ano'] . " - " . $competitionInfo['nome'];
     $databasePath = "jdbc:sqlite:data/database.db3";
@@ -408,15 +615,27 @@ foreach ($partidas as $matchInfo) {
     $completePath = "/Partidas/" . $nomeComposto . "/" . $matchdayIndex . "º Rodada/" . $path . ".hyl";
 
     // Fechar todas as referências ao SQLite temporariamente para evitar locks de arquivo (SQLITE_BUSY) durante a simulação
+    if ($ldb) {
+        try {
+            $ldb->exec("PRAGMA wal_checkpoint(TRUNCATE);");
+        } catch (Exception $e) {}
+    }
+    $stmtEstCheck = null;
+    $stmtCheck = null;
+    $stmtInsert = null;
     $stmtOrig = null;
     $stmtCustomA = null;
     $stmtCustomB = null;
+    $stmtT1 = null;
+    $stmtT2 = null;
     $stmtOut1 = null;
     $stmtOut2 = null;
     $stmtUp = null;
     $liteCompeticao = null;
     $timeObj = null;
     $ldb = null;
+    $liteDatabase = null;
+    gc_collect_cycles();
 
     $json = json_encode($json_array, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK | JSON_PRETTY_PRINT);
     file_put_contents($hexacolorDir . "/agenda/json.txt", $json);
@@ -428,7 +647,7 @@ foreach ($partidas as $matchInfo) {
     if ($isWindows) {
         $jarPath = $dir . "/HexacolorYMTv2.jar";
         $jsonPath = $dir . "/agenda/json.txt";
-        $cmd = "cd /d \"$dir\" && java -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.awt.headless=true -jar \"$jarPath\" -m \"$jsonPath\" 2>&1";
+        $cmd = "cd /d \"$dir\" && java -Xms32m -Xmx256m -XX:+UseSerialGC -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.awt.headless=true -jar \"$jarPath\" -m \"$jsonPath\" 2>&1";
     } else {
         $docRoot = dirname(__DIR__); // raiz do site /home/lhsaia/confusa.top
         $javaBin = $docRoot . "/java_station/jdk/jdk1.8.0_231/bin/java";
@@ -436,7 +655,7 @@ foreach ($partidas as $matchInfo) {
         $tmpDir = $docRoot . "/java_station/tmp";
         $jarPath = $hexacolorDir . "/HexacolorYMTv2.jar";
         $jsonPath = $hexacolorDir . "/agenda/json.txt";
-        $cmd = "cd {$hexacolorDir} && export LANG=en_US.UTF-8; export LC_ALL=en_US.UTF-8; $javaBin -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.awt.headless=true -Djava.library.path=$libPath -Djava.io.tmpdir=$tmpDir -jar $jarPath -m $jsonPath 2>&1";
+        $cmd = "cd {$hexacolorDir} && export LANG=en_US.UTF-8; export LC_ALL=en_US.UTF-8; $javaBin -Xms32m -Xmx256m -XX:+UseSerialGC -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.awt.headless=true -Djava.library.path=$libPath -Djava.io.tmpdir=$tmpDir -jar $jarPath -m $jsonPath 2>&1";
     }
     
     $output = shell_exec($cmd . "\n");
@@ -479,26 +698,40 @@ foreach ($partidas as $matchInfo) {
                 $stmtRestore->bindValue(':pen3', $rowOrig['Penalti3'], PDO::PARAM_INT);
                 $stmtRestore->execute();
             }
+            $stmtRestore = null;
         }
     } catch (Exception $e) {}
 
-    // Fechar conexão SQLite para evitar locks no Windows
-    $ldb = null;
+    // Flush WAL checkpoint e fechar conexão SQLite
+    if ($ldb) {
+        try {
+            $ldb->exec("PRAGMA wal_checkpoint(TRUNCATE);");
+        } catch (Exception $e) {}
+        $ldb = null;
+    }
+    $liteDatabase = null;
+    gc_collect_cycles();
 
-    // 2. Copiar banco SQLite atualizado de volta
+    // 2. Copiar banco SQLite atualizado de volta garantindo integridade de arquivos
     if (file_exists($targetDbPath)) {
+        @unlink($sourceDbPath . '-wal');
+        @unlink($sourceDbPath . '-shm');
+        @unlink($sourceDbPath . '-journal');
         copy($targetDbPath, $sourceDbPath);
+        @unlink($targetDbPath . '-wal');
+        @unlink($targetDbPath . '-shm');
+        @unlink($targetDbPath . '-journal');
     }
     
     $hylFile = $hexacolorDir . $completePath;
     
     if (!file_exists($hylFile)) {
         error_log("PHP Simulador: [ERRO] Cron falhou na partida #{$idPartida}. Comando: " . $cmd . " | Output: " . trim($output));
-        echo "   [ERRO] A simulação da Partida #{$idPartida} falhou. O arquivo .hyl não foi gerado.\n";
+        cron_log("   [ERRO] A simulação da Partida #{$idPartida} falhou. O arquivo .hyl não foi gerado.");
         if (!empty($output)) {
-            echo "   [DETALHE ENGINE]: " . trim($output) . "\n";
+            cron_log("   [DETALHE ENGINE]: " . trim($output));
         }
-        echo "   Pulando...\n";
+        cron_log("   Pulando...");
         continue;
     }
     
@@ -516,7 +749,7 @@ foreach ($partidas as $matchInfo) {
         }
     } else {
         error_log("PHP Simulador: [ERRO] Cron gerou súmula vazia/corrompida na partida #{$idPartida}. Output: " . trim($output));
-        echo "   [ERRO] O arquivo .hyl para a Partida #{$idPartida} foi gerado mas está corrompido ou vazio. Pulando...\n";
+        cron_log("   [ERRO] O arquivo .hyl para a Partida #{$idPartida} foi gerado mas está corrompido ou vazio. Pulando...");
         continue;
     }
     
@@ -570,20 +803,23 @@ foreach ($partidas as $matchInfo) {
 
             $liveResult = ConfusaLiveUploader::enviarPartida($hylFile, $nomeComposto, $faseNome, $matchInfo['data']);
             if ($liveResult['success']) {
-                echo "   [LIVE] Partida #{$idPartida} enviada com sucesso para o CONFUSA Live.\n";
+                cron_log("   [LIVE] Partida #{$idPartida} enviada com sucesso para o CONFUSA Live.");
             } else {
-                echo "   [LIVE AVISO] Não foi possível enviar a partida #{$idPartida} para o Live: {$liveResult['message']}\n";
+                cron_log("   [LIVE AVISO] Não foi possível enviar a partida #{$idPartida} para o Live: {$liveResult['message']}");
             }
         } catch (\Throwable $e) {
-            echo "   [LIVE EXCEÇÃO] Erro ao disparar upload: " . $e->getMessage() . "\n";
+            cron_log("   [LIVE EXCEÇÃO] Erro ao disparar upload: " . $e->getMessage());
         }
     }
 
     $penMsg = ($penA !== null) ? " (Pên: {$penA}x{$penB})" : "";
-    echo "   [SUCESSO] Partida #{$idPartida} simulada! Placar: {$siglaA} {$golsTimeA} x {$golsTimeB} {$siglaB}{$penMsg}\n";
+    cron_log("   [SUCESSO] Partida #{$idPartida} simulada! Placar: {$siglaA} {$golsTimeA} x {$golsTimeB} {$siglaB}{$penMsg}");
+
+    gc_collect_cycles();
 }
 
 checarAvancoMataMataAtivos($db, $competicaoObj);
 
-echo "[" . date('Y-m-d H:i:s') . "] Processamento do Cron concluído com sucesso.\n";
+cron_log("Processamento do Cron concluído com sucesso.");
+cron_log("=== DISPARO DO CRON FINALIZADO ===\n");
 ?>

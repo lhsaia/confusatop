@@ -340,7 +340,63 @@
 	$siglaA = $time->getSigla($matchInfo['timeA_id']);
 	$siglaB = $time->getSigla($matchInfo['timeB_id']);
 
+	// Normalizar e validar imagens dos clubes para garantir que Java não encontre caminhos inválidos ou nulos
+	$hexacolorDir = __DIR__;
+	$docRoot = $_SERVER['DOCUMENT_ROOT'];
+	if (function_exists('normalizarImagensClubesSQLite')) {
+		normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot);
+	} else {
+		try {
+			$stmtClubs = $ldb->query("SELECT ID, Nome, Escudo, Uniforme1, Uniforme2 FROM clube");
+			if ($stmtClubs) {
+				$clubs = $stmtClubs->fetchAll(PDO::FETCH_ASSOC);
+				$stmtClubs = null;
+				$fallbackEscudo = 'imagens/EscudoPadrao.png';
+				$fallbackUniforme = 'imagens/UniformePadrao.PNG';
+				$stmtUpClube = $ldb->prepare("UPDATE clube SET Escudo = :esc, Uniforme1 = :uni1, Uniforme2 = :uni2 WHERE ID = :id");
+				foreach ($clubs as $c) {
+					$changed = false;
+					$escudo = trim($c['Escudo'] ?? '');
+					$uni1 = trim($c['Uniforme1'] ?? '');
+					$uni2 = trim($c['Uniforme2'] ?? '');
+					
+					$checkAbs = function($rel) use ($hexacolorDir, $docRoot) {
+						if (empty($rel)) return false;
+						$abs = (strpos($rel, '../../') === 0) ? ($docRoot . '/' . ltrim(substr($rel, 6), '/\\')) : ($hexacolorDir . '/' . ltrim($rel, '/\\'));
+						return file_exists($abs) && is_file($abs) && @filesize($abs) > 0;
+					};
+					
+					if (!$checkAbs($escudo)) {
+						$escudo = $fallbackEscudo;
+						$changed = true;
+					}
+					if (!$checkAbs($uni1)) {
+						$uni1 = $fallbackUniforme;
+						$changed = true;
+					}
+					if (!$checkAbs($uni2)) {
+						$uni2 = $fallbackUniforme;
+						$changed = true;
+					}
+					if ($changed) {
+						$stmtUpClube->bindValue(':esc', $escudo);
+						$stmtUpClube->bindValue(':uni1', $uni1);
+						$stmtUpClube->bindValue(':uni2', $uni2);
+						$stmtUpClube->bindValue(':id', $c['ID'], PDO::PARAM_INT);
+						$stmtUpClube->execute();
+					}
+				}
+				$stmtUpClube = null;
+			}
+		} catch (\Throwable $e) {}
+	}
+
 	// Fechar a conexão SQLite temporariamente para evitar locks de arquivo (SQLITE_BUSY) durante a simulação do JAR
+	if ($ldb) {
+		try {
+			$ldb->exec("PRAGMA wal_checkpoint(TRUNCATE);");
+		} catch (Exception $e) {}
+	}
 	$stmtOrig = null;
 	$stmtCustomA = null;
 	$stmtCustomB = null;
@@ -350,6 +406,8 @@
 	$liteCompeticao = null;
 	$time = null;
 	$ldb = null;
+	$liteDatabase = null;
+	gc_collect_cycles();
 
 	// Obter as opções de desempate da competição
 	$options = $competicao->getOptions($idCompeticao);
@@ -403,7 +461,7 @@
 			$dir = str_replace('\\', '/', __DIR__);
 			$jarPath = $dir . "/HexacolorYMTv2.jar";
 			$jsonPath = $dir . "/agenda/json.txt";
-			$cmd = "java -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.awt.headless=true -jar \"$jarPath\" -m \"$jsonPath\" 2>&1";
+			$cmd = "java -Xms32m -Xmx256m -XX:+UseSerialGC -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.awt.headless=true -jar \"$jarPath\" -m \"$jsonPath\" 2>&1";
 		} else {
 			// Produção (Linux)
 			$docRoot = dirname(__DIR__, 2);
@@ -412,7 +470,7 @@
 			$tmpDir = $docRoot . "/java_station/tmp";
 			$jarPath = $docRoot . "/competicoes/hexacolor/HexacolorYMTv2.jar";
 			$jsonPath = $docRoot . "/competicoes/hexacolor/agenda/json.txt";
-			$cmd = "export LANG=en_US.UTF-8; export LC_ALL=en_US.UTF-8; $javaBin -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.awt.headless=true -Djava.library.path=$libPath -Djava.io.tmpdir=$tmpDir -jar $jarPath -m $jsonPath 2>&1";
+			$cmd = "cd " . __DIR__ . " && export LANG=en_US.UTF-8; export LC_ALL=en_US.UTF-8; $javaBin -Xms32m -Xmx256m -XX:+UseSerialGC -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.awt.headless=true -Djava.library.path=$libPath -Djava.io.tmpdir=$tmpDir -jar $jarPath -m $jsonPath 2>&1";
 		}
 
 		$output = shell_exec($cmd . "\n");
@@ -455,11 +513,19 @@
 					$stmtRestore->bindValue(':pen3', $rowOrig['Penalti3'], PDO::PARAM_INT);
 					$stmtRestore->execute();
 				}
+				$stmtRestore = null;
 			}
 		} catch (Exception $e) {}
 
 		// Fechar conexões para garantir gravação e evitar locks no Windows
-		$ldb = null;
+		if ($ldb) {
+			try {
+				$ldb->exec("PRAGMA wal_checkpoint(TRUNCATE);");
+			} catch (Exception $e) {}
+			$ldb = null;
+		}
+		$liteDatabase = null;
+		gc_collect_cycles();
 		
 		// Copiar o banco atualizado de volta
 		if(file_exists($targetDbPath)){
