@@ -195,6 +195,30 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
             <span style="display: inline-block; margin-top: 16px; color: #5865F2; font-weight: 600; font-size: 14px;">Testar notificação &rarr;</span>
         </a>
 
+        <!-- Card 6: Importar Banco SQLite (.db3) -->
+        <a href="/admin/importar_db3.php" class="admin-card" style="border-top: 3px solid #0284c7 !important;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <span class="material-symbols-outlined" style="font-size: 32px; color: #0284c7;">database</span>
+                <h2>Importar SQLite (.db3)</h2>
+            </div>
+            <p>
+                Importe e sincronize uma base completa de SQLite .db3 para um país e gênero, cadastrando ou atualizando clubes, jogadores e externalID.
+            </p>
+            <span style="display: inline-block; margin-top: 16px; color: #0284c7; font-weight: 600; font-size: 14px;">Importar banco &rarr;</span>
+        </a>
+
+        <!-- Card 7: Cron de Simulação -->
+        <a href="/admin/cron_logs.php" class="admin-card" style="border-top: 3px solid #38bdf8 !important;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <span class="material-symbols-outlined" style="font-size: 32px; color: #38bdf8;">schedule</span>
+                <h2>Cron de Simulação</h2>
+            </div>
+            <p>
+                Monitore o agendador de simulação de jogos automáticos, acompanhe logs de terminal e da engine Java e force simulações manuais.
+            </p>
+            <span style="display: inline-block; margin-top: 16px; color: #38bdf8; font-weight: 600; font-size: 14px;">Monitorar Cron &rarr;</span>
+        </a>
+
     </div>
     
     <div style="margin-top: 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
