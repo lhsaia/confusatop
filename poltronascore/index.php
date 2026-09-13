@@ -124,6 +124,44 @@
             </div>
         </section>
 
+        <!-- VIEW 4: FAVORITES (FAVORITOS) -->
+        <section id="view-favorites" class="app-view">
+            <div class="competitions-header">
+                <h2>
+                    <span class="material-symbols-outlined" style="color: #fbbf24; vertical-align: middle;">star</span>
+                    Favoritos
+                </h2>
+                <span class="competitions-subtitle">Acompanhe seus jogos, times, ligas e atletas favoritados</span>
+            </div>
+
+            <!-- Favorites Subnav -->
+            <div class="standings-subnav" id="favorites-subnav">
+                <button class="standings-tab-btn active" data-fav-tab="matches" id="btn-fav-matches">
+                    <span class="material-symbols-outlined">sports_soccer</span>
+                    Jogos
+                </button>
+                <button class="standings-tab-btn" data-fav-tab="clubs" id="btn-fav-clubs">
+                    <span class="material-symbols-outlined">shield</span>
+                    Times
+                </button>
+                <button class="standings-tab-btn" data-fav-tab="competitions" id="btn-fav-competitions">
+                    <span class="material-symbols-outlined">emoji_events</span>
+                    Ligas
+                </button>
+                <button class="standings-tab-btn" data-fav-tab="players" id="btn-fav-players">
+                    <span class="material-symbols-outlined">person</span>
+                    Jogadores
+                </button>
+            </div>
+
+            <!-- Favorites Content -->
+            <div id="favorites-content">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Slide-up Modal Drawer for match details -->
@@ -134,9 +172,14 @@
                     <span id="m-championship" class="modal-championship">POLUSCAO 2026</span>
                     <span id="m-info-row" class="modal-info-row">LIGA A - RODADA 21 • 08/08 • Arena Talheres</span>
                 </div>
-                <button id="modal-close" class="modal-close">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
+                <div class="modal-header-actions">
+                    <button id="modal-fav-btn" class="modal-fav-btn" title="Favoritar partida">
+                        <span class="material-symbols-outlined">star</span>
+                    </button>
+                    <button id="modal-close" class="modal-close">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
             </div>
             <div class="modal-body">
                 <!-- Scoreboard Card -->
@@ -162,15 +205,80 @@
                     </div>
                 </div>
                 
-                <!-- Timeline Events -->
-                <div class="timeline-section">
-                    <h3 class="timeline-title">
-                        <span class="material-symbols-outlined" style="color: var(--accent-cyan);">receipt_long</span>
-                        LANCES DO JOGO
-                    </h3>
+                <!-- Sub-nav for Match Center: Lances vs Escalações -->
+                <div class="match-subnav" id="match-subnav">
+                    <button class="match-subtab-btn active" data-match-tab="events" id="btn-match-events">
+                        <span class="material-symbols-outlined">receipt_long</span>
+                        Lances
+                    </button>
+                    <button class="match-subtab-btn" data-match-tab="lineups" id="btn-match-lineups">
+                        <span class="material-symbols-outlined">sports</span>
+                        Escalações
+                    </button>
+                </div>
+
+                <!-- TAB 1: Timeline Events -->
+                <div id="match-tab-events" class="match-tab-view active">
                     <div id="m-events-list">
                         <!-- Events populated here -->
                     </div>
+                </div>
+
+                <!-- TAB 2: Lineups & Tactical Pitch -->
+                <div id="match-tab-lineups" class="match-tab-view">
+                    <div id="m-lineups-content">
+                        <!-- Lineups & Pitch populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide-up Modal Drawer for Player Profile (Fase 2) -->
+    <div id="player-modal" class="modal-overlay">
+        <div class="modal-content player-modal-content">
+            <div class="modal-header">
+                <div class="modal-title-container">
+                    <span class="modal-championship" id="pm-header-title">PERFIL DO ATLETA</span>
+                    <span class="modal-info-row" id="pm-header-subtitle">Estatísticas & Atributos</span>
+                </div>
+                <div class="modal-header-actions">
+                    <button id="player-modal-fav-btn" class="modal-fav-btn" title="Favoritar atleta">
+                        <span class="material-symbols-outlined">star</span>
+                    </button>
+                    <button id="player-modal-close" class="modal-close">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body" id="player-modal-body">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide-up Modal Drawer for Club Profile (Fase 4) -->
+    <div id="club-modal" class="modal-overlay">
+        <div class="modal-content club-modal-content">
+            <div class="modal-header">
+                <div class="modal-title-container">
+                    <span class="modal-championship" id="cm-header-title">PERFIL DO CLUBE</span>
+                    <span class="modal-info-row" id="cm-header-subtitle">Elenco & Calendário</span>
+                </div>
+                <div class="modal-header-actions">
+                    <button id="club-modal-fav-btn" class="modal-fav-btn" title="Favoritar clube">
+                        <span class="material-symbols-outlined">star</span>
+                    </button>
+                    <button id="club-modal-close" class="modal-close">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body" id="club-modal-body">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
                 </div>
             </div>
         </div>
@@ -202,6 +310,10 @@
         <button class="nav-item active" data-view="matches">
             <span class="material-symbols-outlined nav-icon">sports_soccer</span>
             <span class="nav-label">Jogos</span>
+        </button>
+        <button class="nav-item" data-view="favorites">
+            <span class="material-symbols-outlined nav-icon">star</span>
+            <span class="nav-label">Favoritos</span>
         </button>
         <button class="nav-item" data-view="standings">
             <span class="material-symbols-outlined nav-icon">leaderboard</span>

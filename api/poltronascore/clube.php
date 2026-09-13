@@ -276,6 +276,18 @@ try {
         }
     }
 
+    // Compact formatted market value (e.g., $ 12.5M, $ 850k)
+    $compactValue = '$ 0';
+    if ($totalValue >= 1000000000) {
+        $compactValue = '$ ' . round($totalValue / 1000000000, 1) . 'B';
+    } elseif ($totalValue >= 1000000) {
+        $compactValue = '$ ' . round($totalValue / 1000000, 1) . 'M';
+    } elseif ($totalValue >= 1000) {
+        $compactValue = '$ ' . round($totalValue / 1000, 0) . 'k';
+    } else {
+        $compactValue = '$ ' . $totalValue;
+    }
+
     echo json_encode([
         'success' => true,
         'club' => [
@@ -294,7 +306,8 @@ try {
                 'average_age' => $avgAge,
                 'average_level' => $avgLevel,
                 'total_market_value' => $totalValue,
-                'total_market_value_formatted' => '$ ' . number_format($totalValue, 0, ',', '.')
+                'total_market_value_formatted' => '$ ' . number_format($totalValue, 0, ',', '.'),
+                'total_market_value_compact' => $compactValue
             ],
             'squad' => $squadGrouped,
             'matches' => [

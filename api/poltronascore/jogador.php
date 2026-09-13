@@ -212,10 +212,68 @@ try {
         'red_cards' => (int)($statsRow['total_vermelhos'] ?? 0)
     ];
 
+    // Helpers para busca de .hyj e notas
+    function psFindHyjFile($cleanName) {
+        static $fileCache = null;
+        if ($fileCache === null) {
+            $fileCache = [];
+            $baseRoot = isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' 
+                ? rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') 
+                : dirname(__DIR__, 2);
+            
+            $searchDirs = [
+                $baseRoot . '/competicoes/hexacolor/Partidas',
+                $baseRoot . '/full hexa suite/Hexacolor YMT/Partidas'
+            ];
+
+            foreach ($searchDirs as $dir) {
+                if (!is_dir($dir)) continue;
+                try {
+                    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+                    foreach ($it as $file) {
+                        if ($file->isDir()) continue;
+                        $fn = strtolower($file->getFilename());
+                        if (substr($fn, -4) === '.hyj') {
+                            $baseKey = strtolower(basename($fn, '.hyj'));
+                            if (!isset($fileCache[$baseKey])) {
+                                $fileCache[$baseKey] = $file->getPathname();
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+
+        $key = strtolower(basename(basename($cleanName, '.hyj'), '.hyl'));
+        return $fileCache[$key] ?? null;
+    }
+
+    function psCalculatePlayerRating($pId, $pLevel, $pPos, $isStarter, $goalsScored, $yellowCards, $redCards, $teamGoals, $oppGoals, $matchId) {
+        $base = 6.2 + ($pLevel - 50) * 0.02;
+        if ($isStarter) $base += 0.3;
+
+        if ($teamGoals > $oppGoals) $base += 0.4;
+        elseif ($teamGoals < $oppGoals) $base -= 0.3;
+
+        $base += ($goalsScored * 1.0);
+        $base -= ($yellowCards * 0.5);
+        $base -= ($redCards * 1.5);
+
+        $isDef = in_array(strtoupper($pPos), ['G', 'Z', 'LD', 'LE', 'V', 'DF', 'CB', 'RB', 'LB', 'DM']);
+        if ($isDef) {
+            if ($oppGoals === 0) $base += 0.5;
+            else $base -= ($oppGoals * 0.15);
+        }
+
+        $seed = ($pId * 37 + $matchId * 53) % 11;
+        $base += ($seed - 5) * 0.06;
+
+        return max(4.5, min(9.9, round($base, 1)));
+    }
+
     // 8. Últimas Partidas e Média de Notas
     $recentMatches = [];
     $allRatings = [];
-    $baseRoot = isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' ? rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') : dirname(__DIR__, 2);
 
     try {
         $stmtRecent = $conn->prepare("
@@ -236,14 +294,9 @@ try {
         while ($rm = $stmtRecent->fetch(PDO::FETCH_ASSOC)) {
             $matchRating = null;
             if (!empty($rm['path'])) {
-                $cleanP = basename($rm['path'], '.hyj');
-                $cleanP = basename($cleanP, '.hyl');
-                $hyj = glob($baseRoot . "/competicoes/hexacolor/Partidas/*/*/" . $cleanP . ".hyj");
-                if (empty($hyj)) {
-                    $hyj = glob($baseRoot . "/full hexa suite/Hexacolor YMT/Partidas/*/*/" . $cleanP . ".hyj");
-                }
-                if (!empty($hyj) && file_exists($hyj[0])) {
-                    $hyjJson = @file_get_contents($hyj[0]);
+                $hyjPath = psFindHyjFile($rm['path']);
+                if ($hyjPath && file_exists($hyjPath)) {
+                    $hyjJson = @file_get_contents($hyjPath);
                     if ($hyjJson) {
                         $hyjData = json_decode($hyjJson, true);
                         $allJog = array_merge($hyjData['time1']['jogadores'] ?? [], $hyjData['time2']['jogadores'] ?? []);
@@ -261,12 +314,17 @@ try {
                 }
             }
 
+            $isTeamA = ($clubData && $clubData['id'] === (int)$rm['timeA_id']);
+            $opponent = $isTeamA ? $rm['timeB_nome'] : $rm['timeA_nome'];
+            $myScore = $isTeamA ? (int)$rm['timeA_gols'] : (int)$rm['timeB_gols'];
+            $oppScore = $isTeamA ? (int)$rm['timeB_gols'] : (int)$rm['timeA_gols'];
+
+            if ($matchRating === null) {
+                $matchRating = psCalculatePlayerRating($playerId, (int)$player['Nivel'], $rm['posicao_jogo'] ?: $posicaoPrincipal, (bool)$rm['titular'], 0, 0, 0, $myScore, $oppScore, (int)$rm['id']);
+                $allRatings[] = $matchRating;
+            }
+
             if ($matchIndex < 5) {
-                $isTeamA = ($clubData && $clubData['id'] === (int)$rm['timeA_id']);
-                $opponent = $isTeamA ? $rm['timeB_nome'] : $rm['timeA_nome'];
-                $myScore = $isTeamA ? (int)$rm['timeA_gols'] : (int)$rm['timeB_gols'];
-                $oppScore = $isTeamA ? (int)$rm['timeB_gols'] : (int)$rm['timeA_gols'];
-                
                 $res = 'E';
                 if ($myScore > $oppScore) $res = 'V';
                 elseif ($myScore < $oppScore) $res = 'D';
@@ -287,7 +345,11 @@ try {
         }
     } catch (\Throwable $e) {}
 
-    $avgRating = !empty($allRatings) ? round(array_sum($allRatings) / count($allRatings), 1) : null;
+    if (!empty($allRatings)) {
+        $avgRating = round(array_sum($allRatings) / count($allRatings), 1);
+    } else {
+        $avgRating = round(5.5 + ((int)$player['Nivel'] * 0.025), 1);
+    }
     $careerStats['average_rating'] = $avgRating;
 
     echo json_encode([
