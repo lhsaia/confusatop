@@ -146,6 +146,10 @@ if (isset($_POST['ajax'])) {
         }
 
         if (isset($_SESSION['jogadorTime']) && $_SESSION['jogadorTime'] == 2) {
+            // Filtrar entradas vazias (geradas pelo browser ao fazer drag-and-drop junto com o input file vazio do form)
+            $filesToUpload = array_values(array_filter($filesToUpload, function($f) {
+                return isset($f[0]) && $f[0] !== '' && isset($f[3]) && $f[3] > 0;
+            }));
             if (count($filesToUpload) > 1) {
                 $php_output = ob_get_clean();
                 die(json_encode([
