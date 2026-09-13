@@ -268,7 +268,10 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                 if(logged == "true"){
                     if(admin == "true" || user_id == val['dono'] || user_id == val['idDonoPais']){
                         optionsString += "<a id='edi"+val['id']+"' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
-                        optionsString += "<a id='del"+val['id']+"' title='Excluir Competição' class='clickable deletar'><span class='material-symbols-outlined inlineButton negative'>delete</span></a>";
+                        let numSimulados = parseInt(val['jogos_simulados'] || 0);
+                        if (numSimulados === 0) {
+                            optionsString += "<a id='del"+val['id']+"' title='Excluir Competição' class='clickable deletar'><span class='material-symbols-outlined inlineButton negative'>delete</span></a>";
+                        }
                         optionsString += "<a hidden id='sal"+val['id']+"' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
                         optionsString += "<a hidden id='can"+val['id']+"' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
                     }

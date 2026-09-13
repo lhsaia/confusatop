@@ -223,7 +223,8 @@ class Competicao_clube{
 
 		if($dono === null || $dono === 0 || $dono === '0' || $dono === ''){
 			$query = "SELECT * FROM (SELECT
-						a.id, a.nome, a.logo, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais
+						a.id, a.nome, a.logo, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais,
+						(SELECT COUNT(*) FROM jogos_clube jc WHERE jc.competicao_id = a.id AND (jc.status = 1 OR jc.timeA_gols IS NOT NULL)) as jogos_simulados
 						FROM " . $this->table_name . " a
 						LEFT JOIN paises p ON a.sede = p.id
 						LEFT JOIN federacoes f ON a.federacao = f.id
@@ -241,7 +242,8 @@ class Competicao_clube{
 		} else {
 			$dono = htmlspecialchars(strip_tags($dono));
 			$query = "SELECT * FROM (SELECT
-						a.id, a.nome, a.logo, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais
+						a.id, a.nome, a.logo, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais,
+						(SELECT COUNT(*) FROM jogos_clube jc WHERE jc.competicao_id = a.id AND (jc.status = 1 OR jc.timeA_gols IS NOT NULL)) as jogos_simulados
 						FROM " . $this->table_name . " a
 						LEFT JOIN paises p ON a.sede = p.id
 						LEFT JOIN federacoes f ON a.federacao = f.id

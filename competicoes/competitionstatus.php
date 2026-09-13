@@ -148,10 +148,10 @@ $percentual_times = ($total_times > 0) ? min(100, round(($times_inseridos / $tot
 			}
 			?>
 			<?php if ($canDelete && $jogosSimulados === 0): ?>
-				<button type="button" id="btn-excluir-competicao" class="btn-hero-delete" title="Excluir Competição">
+				<a href="javascript:void(0)" id="btn-excluir-competicao" class="btn-hero-delete" title="Excluir Competição">
 					<span class="material-symbols-outlined">delete</span>
 					<span>Excluir Competição</span>
-				</button>
+				</a>
 			<?php endif; ?>
 
 			<?php if($federacao_nome != "" && $federacao_nome != "0"): ?>
