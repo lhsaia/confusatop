@@ -1250,3 +1250,25 @@ tr.jogador-bloqueado-idade td.nomeJogador a {
     color: #94a3b8 !important;
 }
 
+.btn-apagar-clube {
+    width: auto !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 10px 16px !important;
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: background 0.2s, transform 0.15s !important;
+}
+
+.btn-apagar-clube:hover {
+    background: #dc2626 !important;
+    transform: translateY(-1px) !important;
+}
+
