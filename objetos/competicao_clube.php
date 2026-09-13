@@ -1428,5 +1428,101 @@ class Competicao_clube{
 
 		return true;
 	}
+
+	public function temJogosSimulados($idCompeticao) {
+		$idCompeticao = (int)$idCompeticao;
+		$query = "SELECT COUNT(*) as total FROM jogos_clube WHERE competicao_id = :id AND (status = 1 OR timeA_gols IS NOT NULL)";
+		$stmt = $this->conn->prepare($query);
+		$stmt->bindParam(':id', $idCompeticao, PDO::PARAM_INT);
+		$stmt->execute();
+		$row = $stmt->fetch(PDO::FETCH_ASSOC);
+		return (intval($row['total'] ?? 0) > 0);
+	}
+
+	public function excluir($idCompeticao, $userId, $isAdmin = false) {
+		$idCompeticao = (int)$idCompeticao;
+		$userId = (int)$userId;
+
+		// 1. Verificar se a competição existe e se o usuário tem permissão
+		$queryComp = "SELECT id, nome, logo, dono FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
+		$stmtComp = $this->conn->prepare($queryComp);
+		$stmtComp->bindParam(':id', $idCompeticao, PDO::PARAM_INT);
+		$stmtComp->execute();
+		$comp = $stmtComp->fetch(PDO::FETCH_ASSOC);
+
+		if (!$comp) {
+			return ['success' => false, 'error' => 'Competição não encontrada.'];
+		}
+
+		if (!$isAdmin && intval($comp['dono']) !== $userId) {
+			return ['success' => false, 'error' => 'Você não tem permissão para excluir esta competição.'];
+		}
+
+		// 2. Bloquear se houver jogos simulados ou finalizados
+		if ($this->temJogosSimulados($idCompeticao)) {
+			return ['success' => false, 'error' => 'Não é possível excluir esta competição pois ela já possui jogos simulados ou finalizados.'];
+		}
+
+		// 3. Executar limpeza em cascata com transação
+		try {
+			$this->conn->beginTransaction();
+
+			// Remover jogos agendados/não simulados
+			$stmtDelJogos = $this->conn->prepare("DELETE FROM jogos_clube WHERE competicao_id = :id");
+			$stmtDelJogos->execute([':id' => $idCompeticao]);
+
+			// Remover vínculos de times
+			$stmtDelTimes = $this->conn->prepare("DELETE FROM competicao_times WHERE id_competicao = :id");
+			$stmtDelTimes->execute([':id' => $idCompeticao]);
+
+			// Remover opções/regulamento
+			$stmtDelOpcoes = $this->conn->prepare("DELETE FROM competicao_opcoes WHERE id_competicao = :id");
+			$stmtDelOpcoes->execute([':id' => $idCompeticao]);
+
+			// Remover log de alterações
+			$stmtDelLog = $this->conn->prepare("DELETE FROM competicao_alteracoes_log WHERE id_competicao = :id");
+			$stmtDelLog->execute([':id' => $idCompeticao]);
+
+			// Remover registro principal da competição
+			$stmtDelComp = $this->conn->prepare("DELETE FROM " . $this->table_name . " WHERE id = :id");
+			$stmtDelComp->execute([':id' => $idCompeticao]);
+
+			$this->conn->commit();
+
+			// 4. Remover arquivo SQLite da competição (.db3) se existir
+			$baseDir = dirname(__DIR__);
+			$docRoot = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') ? $_SERVER['DOCUMENT_ROOT'] : $baseDir;
+			$db3Paths = [
+				$baseDir . "/competicoes/databases/" . $idCompeticao . "-database.db3",
+				$docRoot . "/competicoes/databases/" . $idCompeticao . "-database.db3"
+			];
+			foreach ($db3Paths as $p) {
+				if (file_exists($p)) {
+					@unlink($p);
+				}
+			}
+
+			// 5. Remover logo do disco se existir e não for imagem padrão
+			$logoFile = $comp['logo'] ?? '';
+			if (!empty($logoFile) && $logoFile !== '0.png' && $logoFile !== 'flag.png' && $logoFile !== 'default.webp') {
+				$logoPaths = [
+					$baseDir . "/images/competicoes/" . $logoFile,
+					$docRoot . "/images/competicoes/" . $logoFile
+				];
+				foreach ($logoPaths as $lp) {
+					if (file_exists($lp)) {
+						@unlink($lp);
+					}
+				}
+			}
+
+			return ['success' => true];
+		} catch (\Exception $e) {
+			if ($this->conn->inTransaction()) {
+				$this->conn->rollBack();
+			}
+			return ['success' => false, 'error' => 'Falha ao excluir competição: ' . $e->getMessage()];
+		}
+	}
 }
 ?>

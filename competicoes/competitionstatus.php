@@ -137,6 +137,23 @@ $percentual_times = ($total_times > 0) ? min(100, round(($times_inseridos / $tot
 				<span>Exportar Excel</span>
 			</a>
 
+			<?php 
+			$canDelete = false;
+			if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
+				$userId = (int)($_SESSION['user_id'] ?? 0);
+				$isAdmin = isset($_SESSION['admin_status']) && (int)$_SESSION['admin_status'] === 1;
+				if ($isAdmin || $userId === (int)($info['dono'] ?? 0)) {
+					$canDelete = true;
+				}
+			}
+			?>
+			<?php if ($canDelete && $jogosSimulados === 0): ?>
+				<button type="button" id="btn-excluir-competicao" class="btn-hero-delete" title="Excluir Competição">
+					<span class="material-symbols-outlined">delete</span>
+					<span>Excluir Competição</span>
+				</button>
+			<?php endif; ?>
+
 			<?php if($federacao_nome != "" && $federacao_nome != "0"): ?>
 				<img class="hero-federation-logo" src="/images/<?php echo strtolower($federacao_nome); ?>.png" alt="Federação" />
 			<?php else: ?>
@@ -283,6 +300,34 @@ $percentual_times = ($total_times > 0) ? min(100, round(($times_inseridos / $tot
 	</div>
 
 </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	var btnExcluir = document.getElementById('btn-excluir-competicao');
+	if (btnExcluir) {
+		btnExcluir.addEventListener('click', function() {
+			var nomeComp = <?php echo json_encode($nome_competicao . ' ' . $ano_competicao); ?>;
+			if (confirm('Tem certeza de que deseja excluir a competição "' + nomeComp + '"?\nEsta ação apagará todas as configurações e confrontos não simulados permanentemente.')) {
+				$.ajax({
+					url: 'excluir_competicao.php',
+					type: 'POST',
+					dataType: 'json',
+					data: { id: <?php echo (int)$idCompeticao; ?> }
+				}).done(function(data) {
+					if (data.success) {
+						alert('Competição excluída com sucesso!');
+						window.location.href = 'index.php';
+					} else {
+						alert('Não foi possível excluir a competição: ' + (data.error || 'Erro desconhecido.'));
+					}
+				}).fail(function(jqXHR, textStatus, errorThrown) {
+					alert('Erro na requisição ao excluir competição: ' + errorThrown);
+				});
+			}
+		});
+	}
+});
+</script>
 
 <?php
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");

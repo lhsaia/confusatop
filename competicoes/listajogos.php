@@ -271,6 +271,7 @@ $(document).ready(function($){
 	 var numTeamsComp = <?php echo (int)$numTeamsComp; ?>;
 
 	 var codigo_competicao = '<?php echo $idCompeticao ?>';
+	 var currentYearMin = '<?php echo date('Y'); ?>-01-01';
 	 var localData = [];
 	 var currentPage = 1;
 	 var logged ='<?php echo (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true) ? "true" : "false"; ?>';
@@ -651,7 +652,7 @@ $(document).ready(function($){
 						tbl += "<td data-label='Grupo'><span class='grupo' id='grupo"+ val['id']+"'>"+ grupo +"</span><input id='selGrupo"+val['id']+"' class='grupoEditavel editavel' type='text' value='"+grupo+"' style='display:none; max-width:60px;'/></td>";
 						tbl += "<td data-label='Árbitro'><span class='arbitro' id='arbitro"+ val['id']+"'>"+ arbitro +"</span><select id='selArbitro"+val['id']+"' class='comboArbitro editavel' style='display:none;' disabled>"+arbOptions+"</select></td>";
 						tbl += "<td data-label='Estádio'><span class='estadio' id='estadio"+ val['id']+"'>"+ estadio +"</span><select id='selEstadio"+val['id']+"' class='comboEstadio editavel' style='display:none;'>"+estOptions+"</select></td>";
-						tbl += "<td data-label='Data'><span class='dataPartida' id='dat"+ val['id']+"'>"+ dataDisplay+" </span><input id='selDat"+val['id']+"' class='dataEditavel editavel' type='date' value='"+dateOnly+"' style='display:none;'/></td>";
+						tbl += "<td data-label='Data'><span class='dataPartida' id='dat"+ val['id']+"'>"+ dataDisplay+" </span><input id='selDat"+val['id']+"' class='dataEditavel editavel' type='date' value='"+dateOnly+"' min='"+currentYearMin+"' style='display:none;'/></td>";
 						tbl += "<td data-label='Hora'><span class='horaPartida' id='hor"+ val['id']+"'>"+ horaDisplay+" </span><input id='selHor"+val['id']+"' class='horaEditavel editavel' type='time' value='"+hora+"' style='display:none;'/></td>";
 						tbl += "<td data-label='Neutro'><input type='checkbox' class='neutro' id='alt"+ val['id']+"' "+ (val['neutro'] == 1? 'checked' : '')+" disabled></td>";
 						tbl += "<td data-label='Live'><input type='checkbox' class='subir_live_chk' id='live"+ val['id']+"' "+ (isLiveChecked ? 'checked' : '')+" disabled></td>";
@@ -995,7 +996,7 @@ $(document).ready(function($){
                 <?php endforeach; ?>
             </select>
             
-            <input type="date" id="new_date"/>
+            <input type="date" id="new_date" min="<?php echo date('Y'); ?>-01-01"/>
             <input type="time" id="new_time"/>
             <label for="new_neutro">
                 Campo neutro

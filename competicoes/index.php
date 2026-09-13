@@ -268,6 +268,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                 if(logged == "true"){
                     if(admin == "true" || user_id == val['dono'] || user_id == val['idDonoPais']){
                         optionsString += "<a id='edi"+val['id']+"' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
+                        optionsString += "<a id='del"+val['id']+"' title='Excluir Competição' class='clickable deletar'><span class='material-symbols-outlined inlineButton negative'>delete</span></a>";
                         optionsString += "<a hidden id='sal"+val['id']+"' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
                         optionsString += "<a hidden id='can"+val['id']+"' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
                     }
@@ -450,7 +451,7 @@ for (var key of formData.entries()) {
         if (! data.success) {
             window.scrollTo(0, 0);
             $('#modalProposta').hide();
-            $('#errorbox').append('<div class="alert alert-danger">Não foi possível editar o jogador, '+data.error+'</div>');
+            $('#errorbox').append('<div class="alert alert-danger">Não foi possível editar a competição: '+data.error+'</div>');
 
 
         } else {
@@ -469,9 +470,34 @@ for (var key of formData.entries()) {
             // console.log(textStatus);
             // console.log(errorThrown);
             $('#modalProposta').hide();
-            $('#errorbox').append('<div class="alert alert-danger">Não foi possível editar o jogador, '+errorThrown+'</div>');
+            $('#errorbox').append('<div class="alert alert-danger">Não foi possível editar a competição: '+errorThrown+'</div>');
         });
 
+});
+
+$('.deletar').click(function(){
+    var tbl_row = $(this).closest('tr');
+    var id = tbl_row.attr('id');
+    var nome = tbl_row.find('#nom'+id).text().trim();
+
+    if (confirm('Tem certeza de que deseja excluir a competição "' + nome + '"?\nEsta ação apagará as configurações e jogos agendados não iniciados permanentemente.')) {
+        $.ajax({
+            url: 'excluir_competicao.php',
+            type: 'POST',
+            dataType: 'json',
+            data: { id: id }
+        }).done(function(data) {
+            if (!data.success) {
+                window.scrollTo(0, 0);
+                $('#errorbox').html('<div class="alert alert-danger">Não foi possível excluir a competição: ' + (data.error || 'Erro desconhecido') + '</div>');
+            } else {
+                location.reload();
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            window.scrollTo(0, 0);
+            $('#errorbox').html('<div class="alert alert-danger">Erro de comunicação ao excluir competição: ' + errorThrown + '</div>');
+        });
+    }
 });
 
 
