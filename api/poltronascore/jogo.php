@@ -244,6 +244,119 @@ try {
             }
         }
         
+        // 3. Buscar escalações (Lineups)
+        $lineups = [
+            'has_lineups' => false,
+            'home' => [
+                'formation' => '',
+                'starters' => [],
+                'bench' => []
+            ],
+            'away' => [
+                'formation' => '',
+                'starters' => [],
+                'bench' => []
+            ]
+        ];
+
+        try {
+            $stmtEsc = $conn->prepare("
+                SELECT esc.id, esc.id_partida, esc.id_time, esc.nome_time, esc.posicao, esc.numero,
+                       esc.id_jogador, COALESCE(NULLIF(esc.nome_jogador, ''), j.Nome, CONCAT('Jogador #', esc.id_jogador)) as nome_jogador,
+                       esc.titular, j.foto, j.Nivel
+                FROM jogos_clube_escalacao esc
+                LEFT JOIN jogador j ON j.ID = esc.id_jogador
+                WHERE esc.id_partida = ?
+                ORDER BY esc.id_time ASC, esc.titular DESC, esc.id ASC
+            ");
+            $stmtEsc->execute([$matchId]);
+            $rawEsc = $stmtEsc->fetchAll(PDO::FETCH_ASSOC);
+
+            if (!empty($rawEsc)) {
+                $lineups['has_lineups'] = true;
+                $homeId = (int)$row['timeA_id'];
+                $awayId = (int)$row['timeB_id'];
+
+                // Buscar notas dos atletas se existir arquivo .hyj
+                $playerRatings = [];
+                if (!empty($row['path'])) {
+                    $baseRoot = isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' ? rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') : dirname(__DIR__, 2);
+                    $cleanPath = basename($row['path'], '.hyj');
+                    $cleanPath = basename($cleanPath, '.hyl');
+                    $hyjFiles = glob($baseRoot . "/competicoes/hexacolor/Partidas/*/*/" . $cleanPath . ".hyj");
+                    if (empty($hyjFiles)) {
+                        $hyjFiles = glob($baseRoot . "/full hexa suite/Hexacolor YMT/Partidas/*/*/" . $cleanPath . ".hyj");
+                    }
+                    if (!empty($hyjFiles) && file_exists($hyjFiles[0])) {
+                        $hyjJson = @file_get_contents($hyjFiles[0]);
+                        if ($hyjJson) {
+                            $hyjData = json_decode($hyjJson, true);
+                            if (!empty($hyjData['time1']['jogadores'])) {
+                                foreach ($hyjData['time1']['jogadores'] as $pj) {
+                                    $pjId = (int)($pj['idJogador'] ?? 0);
+                                    if ($pjId > 0 && isset($pj['nota']) && (float)$pj['nota'] > 0) {
+                                        $playerRatings[$pjId] = round((float)$pj['nota'], 1);
+                                    }
+                                }
+                            }
+                            if (!empty($hyjData['time2']['jogadores'])) {
+                                foreach ($hyjData['time2']['jogadores'] as $pj) {
+                                    $pjId = (int)($pj['idJogador'] ?? 0);
+                                    if ($pjId > 0 && isset($pj['nota']) && (float)$pj['nota'] > 0) {
+                                        $playerRatings[$pjId] = round((float)$pj['nota'], 1);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                foreach ($rawEsc as $p) {
+                    $pId = (int)$p['id_jogador'];
+                    $pTimeId = (int)$p['id_time'];
+                    $isHomeTeam = ($pTimeId === $homeId) || ($pTimeId > 0 && $pTimeId !== $awayId);
+
+                    $pPhoto = '';
+                    if (!empty($p['foto']) && $p['foto'] !== 'default.webp' && $p['foto'] !== '0.png') {
+                        $pPhoto = (strpos($p['foto'], 'http') === 0) ? $p['foto'] : '/images/jogadores/' . basename($p['foto']);
+                    }
+
+                    $playerEntry = [
+                        'id' => $pId,
+                        'name' => $p['nome_jogador'],
+                        'number' => $p['numero'] ? (int)$p['numero'] : null,
+                        'position' => $p['posicao'] ?: 'LIN',
+                        'level' => (int)($p['Nivel'] ?? 0),
+                        'photo' => $pPhoto,
+                        'rating' => isset($playerRatings[$pId]) ? $playerRatings[$pId] : null
+                    ];
+
+                    $targetKey = $isHomeTeam ? 'home' : 'away';
+                    if ((int)$p['titular'] === 1) {
+                        $lineups[$targetKey]['starters'][] = $playerEntry;
+                    } else {
+                        $lineups[$targetKey]['bench'][] = $playerEntry;
+                    }
+                }
+
+                // Calcular formações táticas baseadas nos titulares
+                $calcFormation = function($starters) {
+                    $def = 0; $mid = 0; $fwd = 0;
+                    foreach ($starters as $s) {
+                        $pos = strtoupper(trim($s['position'] ?? ''));
+                        if (in_array($pos, ['Z', 'LD', 'LE', 'AD', 'AE', 'DF', 'CB', 'RB', 'LB'])) $def++;
+                        elseif (in_array($pos, ['V', 'MC', 'MD', 'ME', 'MA', 'M', 'MF', 'DM', 'AM', 'CM', 'RM', 'LM'])) $mid++;
+                        elseif (in_array($pos, ['CA', 'SA', 'PD', 'PE', 'A', 'FW', 'ST', 'CF', 'RW', 'LW', 'AA', 'AM'])) $fwd++;
+                    }
+                    if ($def + $mid + $fwd > 0) return "$def-$mid-$fwd";
+                    return '4-4-2';
+                };
+
+                $lineups['home']['formation'] = $calcFormation($lineups['home']['starters']);
+                $lineups['away']['formation'] = $calcFormation($lineups['away']['starters']);
+            }
+        } catch (\Throwable $e) {}
+        
         $matchData = [
             'id' => (int)$row['id'],
             'championship' => $champName,
@@ -251,11 +364,13 @@ try {
             'match_date' => $matchDateFormatted,
             'match_time' => $matchTimeFormatted,
             'stadium' => $row['stadium'] ?: 'Estádio não informado',
+            'home_id' => (int)$row['timeA_id'],
             'home_team' => $row['home_team'],
             'home_logo' => $homeLogo,
             'home_score' => ($row['status'] == 1) ? (int)$row['home_score'] : 0,
             'home_penalties' => ($row['home_penalties'] !== null) ? (int)$row['home_penalties'] : null,
             'home_scorers' => implode(', ', $homeGoalsList),
+            'away_id' => (int)$row['timeB_id'],
             'away_team' => $row['away_team'],
             'away_logo' => $awayLogo,
             'away_score' => ($row['status'] == 1) ? (int)$row['away_score'] : 0,
@@ -267,7 +382,8 @@ try {
         echo json_encode([
             'success' => true,
             'match' => $matchData,
-            'events' => $events
+            'events' => $events,
+            'lineups' => $lineups
         ], JSON_UNESCAPED_UNICODE);
         exit;
     }
