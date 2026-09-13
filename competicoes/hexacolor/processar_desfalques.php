@@ -195,7 +195,7 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
         $stmtDelEv->bindValue(':idJogo', $idPartida, PDO::PARAM_INT);
         $stmtDelEv->execute();
 
-        $stmtInsEv = $db->prepare("INSERT INTO jogos_clube_eventos (id_jogo, tempo, minutos, tipo, id_jogador, nome_jogador, id_time, nome_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmtInsEv = $db->prepare("INSERT IGNORE INTO jogos_clube_eventos (id_jogo, tempo, minutos, tipo, id_jogador, nome_jogador, id_time, nome_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         foreach ($hylData['eventos'] as $ev) {
             $tipoEvStr = $ev['tipoEvento'] ?? '';
             $tipoEvento = 0;

@@ -126,45 +126,54 @@ function resolverCaminhoImagem($relPath, $hexacolorDir, $docRoot, $fallbackRel) 
         $abs = $hexacolorDir . '/' . ltrim($relPath, '/\\');
     }
     
-    if (file_exists($abs) && is_file($abs) && @filesize($abs) > 0) {
-        return $relPath;
-    }
+    $resolvedAbs = null;
+    $resolvedRel = null;
     
-    // Tenta encontrar ignorando maiúsculas/minúsculas no mesmo diretório
-    $dir = dirname($abs);
-    $filename = basename($abs);
-    if (is_dir($dir)) {
-        $files = @scandir($dir);
-        if ($files) {
-            foreach ($files as $f) {
-                if ($f !== '.' && $f !== '..' && strcasecmp($f, $filename) === 0 && is_file($dir . '/' . $f)) {
-                    if (strpos($relPath, '../../') === 0) {
-                        return '../../' . ltrim(substr(dirname($relPath), 6), '/\\') . '/' . $f;
-                    } else {
-                        return (dirname($relPath) !== '.' ? dirname($relPath) . '/' : '') . $f;
+    if (file_exists($abs) && is_file($abs) && @filesize($abs) > 0) {
+        $resolvedAbs = $abs;
+        $resolvedRel = $relPath;
+    } else {
+        // Tenta encontrar ignorando maiúsculas/minúsculas no mesmo diretório
+        $dir = dirname($abs);
+        $filename = basename($abs);
+        if (is_dir($dir)) {
+            $files = @scandir($dir);
+            if ($files) {
+                foreach ($files as $f) {
+                    if ($f !== '.' && $f !== '..' && strcasecmp($f, $filename) === 0 && is_file($dir . '/' . $f)) {
+                        $resolvedAbs = $dir . '/' . $f;
+                        if (strpos($relPath, '../../') === 0) {
+                            $resolvedRel = '../../' . ltrim(substr(dirname($relPath), 6), '/\\') . '/' . $f;
+                        } else {
+                            $resolvedRel = (dirname($relPath) !== '.' ? dirname($relPath) . '/' : '') . $f;
+                        }
+                        break;
                     }
                 }
             }
         }
-    }
-    
-    // Tenta procurar em images/escudos ou images/uniformes pelo nome do arquivo
-    $filenameBase = basename($relPath);
-    if (!empty($filenameBase)) {
-        $altDirs = [$docRoot . '/images/escudos', $docRoot . '/images/uniformes', $hexacolorDir . '/Imagens', $hexacolorDir . '/Escudos', $hexacolorDir . '/Uniformes'];
-        foreach ($altDirs as $altDir) {
-            if (is_dir($altDir)) {
-                $altFiles = @scandir($altDir);
-                if ($altFiles) {
-                    foreach ($altFiles as $af) {
-                        if ($af !== '.' && $af !== '..' && strcasecmp($af, $filenameBase) === 0 && is_file($altDir . '/' . $af)) {
-                            if (strpos($altDir, $docRoot) === 0) {
-                                $relFromDoc = substr($altDir, strlen($docRoot));
-                                return '../../' . ltrim($relFromDoc, '/\\') . '/' . $af;
-                            }
-                            if (strpos($altDir, $hexacolorDir) === 0) {
-                                $relFromHexa = substr($altDir, strlen($hexacolorDir));
-                                return ltrim($relFromHexa, '/\\') . '/' . $af;
+        
+        // Tenta procurar em images/escudos ou images/uniformes pelo nome do arquivo
+        if (!$resolvedAbs) {
+            $filenameBase = basename($relPath);
+            if (!empty($filenameBase)) {
+                $altDirs = [$docRoot . '/images/escudos', $docRoot . '/images/uniformes', $hexacolorDir . '/Imagens', $hexacolorDir . '/Escudos', $hexacolorDir . '/Uniformes'];
+                foreach ($altDirs as $altDir) {
+                    if (is_dir($altDir)) {
+                        $altFiles = @scandir($altDir);
+                        if ($altFiles) {
+                            foreach ($altFiles as $af) {
+                                if ($af !== '.' && $af !== '..' && strcasecmp($af, $filenameBase) === 0 && is_file($altDir . '/' . $af)) {
+                                    $resolvedAbs = $altDir . '/' . $af;
+                                    if (strpos($altDir, $docRoot) === 0) {
+                                        $relFromDoc = substr($altDir, strlen($docRoot));
+                                        $resolvedRel = '../../' . ltrim($relFromDoc, '/\\') . '/' . $af;
+                                    } elseif (strpos($altDir, $hexacolorDir) === 0) {
+                                        $relFromHexa = substr($altDir, strlen($hexacolorDir));
+                                        $resolvedRel = ltrim($relFromHexa, '/\\') . '/' . $af;
+                                    }
+                                    break 2;
+                                }
                             }
                         }
                     }
@@ -173,7 +182,65 @@ function resolverCaminhoImagem($relPath, $hexacolorDir, $docRoot, $fallbackRel) 
         }
     }
     
-    return $fallbackRel;
+    // Se não encontrou o arquivo em lugar nenhum, usar fallback
+    if (!$resolvedAbs || !file_exists($resolvedAbs) || @filesize($resolvedAbs) <= 0) {
+        return $fallbackRel;
+    }
+    
+    $ext = strtolower(pathinfo($resolvedAbs, PATHINFO_EXTENSION));
+    
+    // Tratamento especial para WEBP: Java 8 (ImageIO) não suporta .webp nativamente e dá erro "image == null"
+    if ($ext === 'webp') {
+        $cacheDir = $hexacolorDir . '/cache_images';
+        if (!is_dir($cacheDir)) {
+            @mkdir($cacheDir, 0777, true);
+        }
+        $pngFilename = md5($resolvedAbs) . '.png';
+        $pngAbs = $cacheDir . '/' . $pngFilename;
+        $pngRel = 'cache_images/' . $pngFilename;
+        
+        if (file_exists($pngAbs) && @filesize($pngAbs) > 0) {
+            return $pngRel;
+        }
+        
+        if (function_exists('imagecreatefromwebp')) {
+            $img = @imagecreatefromwebp($resolvedAbs);
+            if ($img) {
+                imagealphablending($img, false);
+                imagesavealpha($img, true);
+                if (@imagepng($img, $pngAbs, 6)) {
+                    @imagedestroy($img);
+                    return $pngRel;
+                }
+                @imagedestroy($img);
+            }
+        }
+        
+        // Se a conversão webp falhou, usar o placeholder PNG padrão
+        return $fallbackRel;
+    }
+    
+    return $resolvedRel;
+}
+
+function imagemValida($absPath) {
+    if (!file_exists($absPath) || !is_file($absPath) || @filesize($absPath) <= 0) {
+        return false;
+    }
+    // Verificar magic bytes: PNG (89 50 4E 47), JPEG (FF D8 FF), GIF (47 49 46)
+    $handle = @fopen($absPath, 'rb');
+    if (!$handle) return false;
+    $header = fread($handle, 4);
+    fclose($handle);
+    if (strlen($header) < 3) return false;
+    $b = unpack('C*', $header);
+    // PNG
+    if ($b[1] === 0x89 && $b[2] === 0x50 && $b[3] === 0x4E && $b[4] === 0x47) return true;
+    // JPEG
+    if ($b[1] === 0xFF && $b[2] === 0xD8 && $b[3] === 0xFF) return true;
+    // GIF
+    if ($b[1] === 0x47 && $b[2] === 0x49 && $b[3] === 0x46) return true;
+    return false;
 }
 
 function normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot) {
@@ -184,8 +251,8 @@ function normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot) {
         $clubs = $stmtClubs->fetchAll(PDO::FETCH_ASSOC);
         $stmtClubs = null;
         
-        $fallbackEscudo = 'imagens/EscudoPadrao.png';
-        $fallbackUniforme = 'imagens/UniformePadrao.PNG';
+        $fallbackEscudo = 'Imagens/EscudoPadrao.png';
+        $fallbackUniforme = 'Imagens/UniformePadrao.PNG';
         
         $stmtUpClube = $ldb->prepare("UPDATE clube SET Escudo = :esc, Uniforme1 = :uni1, Uniforme2 = :uni2 WHERE ID = :id");
         
@@ -194,6 +261,7 @@ function normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot) {
             $escudo = trim($c['Escudo'] ?? '');
             $uni1 = trim($c['Uniforme1'] ?? '');
             $uni2 = trim($c['Uniforme2'] ?? '');
+            $nomeClube = $c['Nome'] ?? "ID#{$c['ID']}";
             
             $escudoResolvido = resolverCaminhoImagem($escudo, $hexacolorDir, $docRoot, $fallbackEscudo);
             if ($escudoResolvido !== $escudo) {
@@ -226,6 +294,7 @@ function normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot) {
         cron_log("   [AVISO IMAGENS] Erro ao normalizar imagens dos clubes: " . $e->getMessage());
     }
 }
+
 
 // Garantir compatibilidade de pastas e imagens com a engine Java no Linux (case-sensitive)
 $imageFolders = ['Imagens' => 'imagens', 'Escudos' => 'escudos', 'Uniformes' => 'uniformes'];
@@ -819,6 +888,26 @@ foreach ($partidas as $matchInfo) {
 }
 
 checarAvancoMataMataAtivos($db, $competicaoObj);
+
+// Limpeza automática de arquivos de imagens convertidas em cache com mais de 30 dias
+$cacheDir = $hexacolorDir . '/cache_images';
+if (is_dir($cacheDir)) {
+    $limiteTempo = time() - (30 * 86400); // 30 dias
+    $arquivosCache = @glob($cacheDir . '/*.png');
+    $removidos = 0;
+    if ($arquivosCache) {
+        foreach ($arquivosCache as $arq) {
+            if (is_file($arq) && @filemtime($arq) < $limiteTempo) {
+                if (@unlink($arq)) {
+                    $removidos++;
+                }
+            }
+        }
+        if ($removidos > 0) {
+            cron_log("   [CACHE LIMPEZA] {$removidos} imagem(ns) temporária(s) antiga(s) removida(s) de cache_images/.");
+        }
+    }
+}
 
 cron_log("Processamento do Cron concluído com sucesso.");
 cron_log("=== DISPARO DO CRON FINALIZADO ===\n");
