@@ -85,6 +85,7 @@ images/mascotes/*.webp
 
 # temporary unfinished business
 scratch/
+scratch_jar/
 refactor.py
 *_refactor.py
 *_forms.py
