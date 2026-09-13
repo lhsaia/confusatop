@@ -280,11 +280,13 @@ try {
             SELECT 
                 j.id, j.data, j.timeA_id, j.timeA_nome, j.timeA_gols,
                 j.timeB_id, j.timeB_nome, j.timeB_gols, j.competicao_id, j.path,
-                cl.nome as competicao_nome,
+                COALESCE(cl.nome, li.nome, cc.nome, 'Competição') as competicao_nome,
                 esc.titular, esc.posicao as posicao_jogo
             FROM jogos_clube_escalacao esc
             INNER JOIN jogos_clube j ON j.id = esc.id_partida
-            LEFT JOIN competicao_lista cl ON cl.id = j.competicao_id
+            LEFT JOIN competicao_lista cl ON cl.id = j.competicao_id AND j.simulador_interno = 1
+            LEFT JOIN liga li ON li.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 0
+            LEFT JOIN campeonatos_clube cc ON cc.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 1
             WHERE esc.id_jogador = ? OR (esc.id_jogador = 0 AND esc.nome_jogador = ?)
             ORDER BY j.data DESC, j.id DESC
             LIMIT 15

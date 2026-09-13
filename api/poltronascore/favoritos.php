@@ -54,12 +54,14 @@ try {
                 j.timeA_id, j.timeA_nome, j.timeA_gols, j.timeA_penaltis,
                 j.timeB_id, j.timeB_nome, j.timeB_gols, j.timeB_penaltis,
                 j.estadio,
-                cl.nome as competicao_nome,
+                COALESCE(cl.nome, li.nome, cc.nome, 'Competição') as competicao_nome,
                 cr.nome as rodada_nome,
                 cA.Escudo as timeA_escudo,
                 cB.Escudo as timeB_escudo
             FROM jogos_clube j
-            LEFT JOIN competicao_lista cl ON cl.id = j.competicao_id
+            LEFT JOIN competicao_lista cl ON cl.id = j.competicao_id AND j.simulador_interno = 1
+            LEFT JOIN liga li ON li.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 0
+            LEFT JOIN campeonatos_clube cc ON cc.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 1
             LEFT JOIN competicao_rodada cr ON cr.id = j.rodada_id
             LEFT JOIN clube cA ON cA.ID = j.timeA_id
             LEFT JOIN clube cB ON cB.ID = j.timeB_id
