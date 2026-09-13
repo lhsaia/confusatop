@@ -277,10 +277,10 @@ $perc_estrangeiros = $total_rows > 0 ? number_format(($estrangeiros / $total_row
             </a>
             <?php if(!empty($_SESSION['impersonated'])): ?>
                 <!-- Botão Apagar Clube (Admin) -->
-                <button type="button" id="btn-apagar-clube-admin" class="btn-apagar-clube" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: #ef4444; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: background 0.2s;" title="Apagar clube permanentemente (Admin)">
+                <a href="javascript:void(0)" id="btn-apagar-clube-admin" class="btn-apagar-clube" title="Apagar clube permanentemente (Admin)">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">delete_forever</span>
                     <span>Apagar Clube</span>
-                </button>
+                </a>
             <?php endif; ?>
         </div>
     </div>

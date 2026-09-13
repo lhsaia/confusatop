@@ -224,7 +224,7 @@ class Tecnico{
                             OR (clubeOrigem <> 0 AND clubeDestino <> 0)
                           )";
         $stmtT = $this->conn->prepare($queryTransf);
-        $stmtT->execute([$idTecnico, $idClube]);
+        $stmtT->execute([$idTecnico, $idClube, $idClube]);
         if((int)$stmtT->fetchColumn() > 0){
             return false;
         }
