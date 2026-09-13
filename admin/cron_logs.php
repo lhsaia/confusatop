@@ -145,6 +145,38 @@ try {
     $proximoJogoData = $stmt4->fetchColumn();
 } catch (\Throwable $e) {}
 
+// Calcular tamanho e quantidade de arquivos da pasta de súmulas (.hyl)
+function cronGetFolderStats(string $dir): array {
+    $size = 0;
+    $count = 0;
+    if (!is_dir($dir)) {
+        return ['size' => 0, 'count' => 0];
+    }
+    try {
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($iterator as $item) {
+            if ($item->isFile()) {
+                $size += $item->getSize();
+                $count++;
+            }
+        }
+    } catch (\Throwable $e) {}
+    return ['size' => $size, 'count' => $count];
+}
+
+function cronFormatBytes(int $bytes, int $precision = 1): string {
+    if ($bytes <= 0) return '0 B';
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    $pow = (int)floor(log($bytes, 1024));
+    $pow = min($pow, count($units) - 1);
+    return round($bytes / pow(1024, $pow), $precision) . ' ' . $units[$pow];
+}
+
+$partidasDir = $rootPath . '/competicoes/hexacolor/Partidas';
+$partidasStats = cronGetFolderStats($partidasDir);
+
 // Carregar conteúdo do log selecionado
 $currentFilePath = $logFiles[$selectedLog]['path'];
 $logContent = '';
@@ -230,6 +262,12 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
                 <?= $proximoJogoData ? date('d/m/Y H:i', strtotime($proximoJogoData)) : 'Nenhuma pendente' ?>
             </div>
             <div style="color: #64748b; font-size: 12px; margin-top: 4px;">Data agendada no sistema</div>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.03); padding: 18px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); border-left: 4px solid #f472b6;">
+            <div style="color: #94a3b8; font-size: 13px; font-weight: 500;">Súmulas Salvas em Disco</div>
+            <div style="font-size: 22px; font-weight: 700; color: #f472b6; margin-top: 4px;"><?= cronFormatBytes((int)$partidasStats['size']) ?></div>
+            <div style="color: #64748b; font-size: 12px; margin-top: 4px;"><?= number_format($partidasStats['count'], 0, ',', '.') ?> arquivo(s) em <code style="color:#94a3b8;font-size:11px;">hexacolor/Partidas</code></div>
         </div>
     </div>
 
