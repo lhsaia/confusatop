@@ -100,7 +100,7 @@ if ($target_pais_id === 0 && !empty($pending['time'])) {
                                 <?php if (!empty($matches)): ?>
                                     <?php foreach ($matches as $m): ?>
                                         <?php if ($key === 'clube'): ?>
-                                            <option value="<?php echo $m['ID']; ?>" data-liga-id="<?php echo $m['liga']; ?>" data-liga-nome="<?php echo htmlspecialchars($m['NomeLiga'] ?? 'Nenhuma'); ?>">
+                                            <option value="<?php echo $m['ID']; ?>" data-liga-id="<?php echo $m['liga']; ?>" data-liga-nome="<?php echo htmlspecialchars($m['NomeLiga'] ?? 'Nenhuma'); ?>" data-sexo="<?php echo $m['Sexo'] ?? 0; ?>">
                                                 <?php echo htmlspecialchars($m['Nome']); ?> (ID: <?php echo $m['ID']; ?>)
                                             </option>
                                         <?php elseif ($key === 'tecnico'): ?>

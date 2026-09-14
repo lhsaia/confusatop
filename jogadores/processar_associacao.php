@@ -73,8 +73,8 @@ if (!$is_admin) {
     // 1. Validar Clube
     if (isset($team_associations['clube']) && ($team_associations['clube']['action'] ?? '') === 'match' && !empty($team_associations['clube']['player_id'])) {
         $check_club_id = (int)$team_associations['clube']['player_id'];
-        $st_vc = $db->prepare("SELECT c.ID FROM clube c INNER JOIN liga l ON c.liga = l.ID INNER JOIN paises p ON l.pais = p.id WHERE c.ID = ? AND (c.Pais = ? OR l.pais = ?) AND p.dono = ?");
-        $st_vc->execute([$check_club_id, $target_pais_id, $target_pais_id, $_SESSION['user_id']]);
+        $st_vc = $db->prepare("SELECT c.ID FROM clube c INNER JOIN liga l ON c.liga = l.ID INNER JOIN paises p ON l.pais = p.id WHERE c.ID = ? AND (c.Pais = ? OR l.pais = ?) AND c.Sexo = ? AND p.dono = ?");
+        $st_vc->execute([$check_club_id, $target_pais_id, $target_pais_id, $sexo, $_SESSION['user_id']]);
         if (!$st_vc->fetchColumn()) {
             $team_associations['clube']['action'] = 'new';
             unset($team_associations['clube']['player_id']);

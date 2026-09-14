@@ -1000,12 +1000,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const homeTeamBoard = mHomeName.closest('.modal-board-team');
                 if (homeTeamBoard) {
                     homeTeamBoard.style.cursor = 'pointer';
-                    homeTeamBoard.onclick = () => openClubModal(match.home_id || 0, match.home_team);
+                    homeTeamBoard.onclick = () => openClubModal(match.home_id || 0, match.home_team, match.gender);
                 }
                 const awayTeamBoard = mAwayName.closest('.modal-board-team');
                 if (awayTeamBoard) {
                     awayTeamBoard.style.cursor = 'pointer';
-                    awayTeamBoard.onclick = () => openClubModal(match.away_id || 0, match.away_team);
+                    awayTeamBoard.onclick = () => openClubModal(match.away_id || 0, match.away_team, match.gender);
                 }
 
                 // Score
@@ -1044,8 +1044,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Events
                 renderEvents(res.events || [], match.home_team, match.away_team);
 
-                // Lineups (Fase 3)
-                renderLineups(res.lineups, match.home_team, match.away_team, match.home_logo, match.away_logo, match.home_id, match.away_id);
+                // Lineups
+                renderLineups(res.lineups, match.home_team, match.away_team, match.home_logo, match.away_logo, match.home_id, match.away_id, match.gender);
             })
             .catch(() => {
                 mEventsList.innerHTML = '<div class="no-data">Falha ao obter detalhes da partida.</div>';
@@ -1180,7 +1180,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'rating-low';
     }
 
-    function renderLineups(lineups, homeTeam, awayTeam, homeLogo, awayLogo, homeId, awayId) {
+    function renderLineups(lineups, homeTeam, awayTeam, homeLogo, awayLogo, homeId, awayId, matchGender = null) {
         if (!mLineupsContent) return;
 
         if (!lineups || !lineups.has_lineups) {
@@ -1213,6 +1213,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<div class="pitch-row">${nodesHtml}</div>`;
         };
 
+        const gArg = (matchGender !== null && matchGender !== undefined) ? matchGender : 'null';
+
         // Pitch HTML
         let html = `
             <div class="pitch-container">
@@ -1223,7 +1225,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <!-- Home Team Half (Top) -->
                 <div class="pitch-team-half">
                     <div class="pitch-team-header">
-                        <span class="clickable-entity" onclick="window.poltronaOpenClubModal(${homeId || 0}, '${homeTeam.replace(/'/g, "\\'")}')">${homeTeam}</span>
+                        <span class="clickable-entity" onclick="window.poltronaOpenClubModal(${homeId || 0}, '${homeTeam.replace(/'/g, "\\'")}', ${gArg})">${homeTeam}</span>
                         <span class="pitch-formation-badge">${lineups.home.formation || '4-4-2'}</span>
                     </div>
                     ${renderPitchRow(homeGroup.gk, 'home')}
@@ -1239,7 +1241,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${renderPitchRow(awayGroup.def, 'away')}
                     ${renderPitchRow(awayGroup.gk, 'away')}
                     <div class="pitch-team-header" style="margin-top: 4px;">
-                        <span class="clickable-entity" onclick="window.poltronaOpenClubModal(${awayId || 0}, '${awayTeam.replace(/'/g, "\\'")}')">${awayTeam}</span>
+                        <span class="clickable-entity" onclick="window.poltronaOpenClubModal(${awayId || 0}, '${awayTeam.replace(/'/g, "\\'")}', ${gArg})">${awayTeam}</span>
                         <span class="pitch-formation-badge">${lineups.away.formation || '4-4-2'}</span>
                     </div>
                 </div>
@@ -1584,18 +1586,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // 7. CLUB PROFILE MODAL (FASE 4)
     // =========================================================================
 
-    window.poltronaOpenClubModal = function(clubId, clubName) {
-        openClubModal(clubId, clubName);
+    window.poltronaOpenClubModal = function(clubId, clubName, gender = null) {
+        openClubModal(clubId, clubName, gender);
     };
 
-    function openClubModal(clubId, clubName) {
+    function openClubModal(clubId, clubName, gender = null) {
         if (!clubModal || !clubModalBody) return;
 
         bringModalToFront(clubModal);
         clubModal.classList.add('active');
         clubModalBody.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
 
-        const url = `/api/poltronascore/clube.php?id=${clubId || 0}&nome=${encodeURIComponent(clubName || '')}`;
+        let url = `/api/poltronascore/clube.php?id=${clubId || 0}&nome=${encodeURIComponent(clubName || '')}`;
+        if (gender !== null && gender !== undefined) {
+            url += `&sexo=${encodeURIComponent(gender)}`;
+        }
 
         fetch(url)
             .then(res => res.json())

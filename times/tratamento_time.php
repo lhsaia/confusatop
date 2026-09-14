@@ -231,13 +231,13 @@ if(!function_exists('changeName')){
                      $time_nome_decoded = html_entity_decode((string)$time->nome, ENT_QUOTES | ENT_HTML5, 'UTF-8');
                      $time_nome_html = htmlspecialchars($time_nome_decoded, ENT_QUOTES, 'UTF-8');
                      if ($is_admin_check) {
-                         $stmt_check_time = $db->prepare("SELECT id FROM clube WHERE (Nome = ? OR Nome = ?) AND liga = ? LIMIT 1");
-                         $stmt_check_time->execute([$time_nome_decoded, $time_nome_html, $target_liga_id]);
+                         $stmt_check_time = $db->prepare("SELECT id FROM clube WHERE (Nome = ? OR Nome = ?) AND liga = ? AND Sexo = ? LIMIT 1");
+                         $stmt_check_time->execute([$time_nome_decoded, $time_nome_html, $target_liga_id, $time->sexo]);
                          $existing_time_id = $stmt_check_time->fetchColumn();
                      } else {
-                         // Para usuário comum: só sobrescreve se o time pertencer à MESMA LIGA e for de um país/liga pertencente ao próprio usuário
-                         $stmt_check_time = $db->prepare("SELECT c.id FROM clube c INNER JOIN liga l ON c.liga = l.id INNER JOIN paises p ON l.pais = p.id WHERE (c.Nome = ? OR c.Nome = ?) AND c.liga = ? AND p.dono = ? LIMIT 1");
-                         $stmt_check_time->execute([$time_nome_decoded, $time_nome_html, $target_liga_id, $current_user_id]);
+                         // Para usuário comum: só sobrescreve se o time pertencer à MESMA LIGA e for de um país/liga pertencente ao próprio usuário e mesmo sexo
+                         $stmt_check_time = $db->prepare("SELECT c.id FROM clube c INNER JOIN liga l ON c.liga = l.id INNER JOIN paises p ON l.pais = p.id WHERE (c.Nome = ? OR c.Nome = ?) AND c.liga = ? AND c.Sexo = ? AND p.dono = ? LIMIT 1");
+                         $stmt_check_time->execute([$time_nome_decoded, $time_nome_html, $target_liga_id, $time->sexo, $current_user_id]);
                          $existing_time_id = $stmt_check_time->fetchColumn();
                      }
                  }
