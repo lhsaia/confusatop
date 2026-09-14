@@ -337,6 +337,11 @@
 		$outTeam2 = array_values(array_unique($outTeam2));
 	} catch (Exception $e) {}
 
+	// 3.1. Sanitizar escalações, preencher desfalques e equilibrar formações táticas para evitar somaProb == 0 na engine
+	require_once __DIR__ . '/simulador_helper.php';
+	sanitizarEscalacaoPreSimulacao($ldb, (int)$matchInfo['timeA_id'], $outTeam1);
+	sanitizarEscalacaoPreSimulacao($ldb, (int)$matchInfo['timeB_id'], $outTeam2);
+
 	$siglaA = $time->getSigla($matchInfo['timeA_id']);
 	$siglaB = $time->getSigla($matchInfo['timeB_id']);
 
@@ -536,6 +541,37 @@
 		$completePath = "/Partidas/" . $nomeComposto . "/" . $matchdayIndex . "º Rodada/" . $path . ".hyl";
 		
 		$hylFile = __DIR__ . $completePath;
+		
+		// Se o arquivo .hyl não foi gerado na primeira tentativa, acionar o fallback de formação clássica 4-4-2 limpa
+		if (!file_exists($hylFile)) {
+			$liteEmergency = new SQLiteDatabase();
+			$liteEmergency->fileName = $targetDbPath;
+			$ldbEm = $liteEmergency->getConnection();
+			if ($ldbEm) {
+				aplicarEscalacaoEmergenciaSQLite($ldbEm, (int)$matchInfo['timeA_id']);
+				aplicarEscalacaoEmergenciaSQLite($ldbEm, (int)$matchInfo['timeB_id']);
+				try {
+					$ldbEm->exec("PRAGMA wal_checkpoint(TRUNCATE);");
+				} catch (Exception $e) {}
+				$ldbEm = null;
+			}
+			$liteEmergency = null;
+			gc_collect_cycles();
+
+			$jsonEmergency = $json_array;
+			$jsonEmergency['matches'][0]['outTeam1'] = [];
+			$jsonEmergency['matches'][0]['outTeam2'] = [];
+			file_put_contents(__DIR__ . "/agenda/json.txt", json_encode($jsonEmergency, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK | JSON_PRETTY_PRINT));
+
+			$outputRetry = shell_exec($cmd . "\n");
+			$outputRetryStr = ($outputRetry !== null) ? (string)$outputRetry : '';
+			$output .= "\n[FALLBACK DE EMERGÊNCIA]:\n" . $outputRetryStr;
+
+			// Se gerou após o fallback, atualizar o banco de volta
+			if (file_exists($hylFile) && file_exists($targetDbPath)) {
+				copy($targetDbPath, $sourceDbPath);
+			}
+		}
 		
 		if (!file_exists($hylFile)) {
 			// Envia apenas em caso de erro real para o Log Central

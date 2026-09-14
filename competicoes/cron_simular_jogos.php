@@ -625,6 +625,11 @@ foreach ($partidas as $matchInfo) {
         $outTeam2 = array_values(array_unique($outTeam2));
     } catch (Exception $e) {}
     
+    // 3.1. Sanitizar escalações, preencher desfalques e equilibrar formações táticas para evitar somaProb == 0 na engine
+    require_once $hexacolorDir . '/simulador_helper.php';
+    sanitizarEscalacaoPreSimulacao($ldb, (int)$matchInfo['timeA'], $outTeam1);
+    sanitizarEscalacaoPreSimulacao($ldb, (int)$matchInfo['timeB'], $outTeam2);
+
     // 4. Normalizar e validar imagens de todos os clubes para evitar exceções do Java (ImageIO.read retornando null)
     normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot);
     
@@ -794,6 +799,41 @@ foreach ($partidas as $matchInfo) {
     
     $hylFile = $hexacolorDir . $completePath;
     
+    // Se o arquivo .hyl não foi gerado na primeira tentativa, acionar o fallback de formação clássica 4-4-2 limpa
+    if (!file_exists($hylFile)) {
+        cron_log("   [RETRY] Tentando simular partida #{$idPartida} com formação padrão de emergência...");
+        $liteEmergency = new SQLiteDatabase();
+        $liteEmergency->fileName = $targetDbPath;
+        $ldbEm = $liteEmergency->getConnection();
+        if ($ldbEm) {
+            aplicarEscalacaoEmergenciaSQLite($ldbEm, (int)$matchInfo['timeA']);
+            aplicarEscalacaoEmergenciaSQLite($ldbEm, (int)$matchInfo['timeB']);
+            try {
+                $ldbEm->exec("PRAGMA wal_checkpoint(TRUNCATE);");
+            } catch (Exception $e) {}
+            $ldbEm = null;
+        }
+        $liteEmergency = null;
+        gc_collect_cycles();
+
+        $jsonEmergency = $json_array;
+        $jsonEmergency['matches'][0]['outTeam1'] = [];
+        $jsonEmergency['matches'][0]['outTeam2'] = [];
+        file_put_contents($hexacolorDir . "/agenda/json.txt", json_encode($jsonEmergency, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK | JSON_PRETTY_PRINT));
+
+        $outputRetry = shell_exec($cmd . "\n");
+        $outputRetryStr = ($outputRetry !== null) ? (string)$outputRetry : '';
+        $output .= "\n[FALLBACK DE EMERGÊNCIA]:\n" . $outputRetryStr;
+
+        // Se gerou após o fallback, atualizar o banco de volta
+        if (file_exists($hylFile) && file_exists($targetDbPath)) {
+            @unlink($sourceDbPath . '-wal');
+            @unlink($sourceDbPath . '-shm');
+            @unlink($sourceDbPath . '-journal');
+            copy($targetDbPath, $sourceDbPath);
+        }
+    }
+
     if (!file_exists($hylFile)) {
         error_log("PHP Simulador: [ERRO] Cron falhou na partida #{$idPartida}. Comando: " . $cmd . " | Output: " . trim($output));
         cron_log("   [ERRO] A simulação da Partida #{$idPartida} falhou. O arquivo .hyl não foi gerado.");
