@@ -68,9 +68,21 @@ try {
             LEFT JOIN paises p ON p.id = j.Pais
             LEFT JOIN mentalidade m ON m.ID = j.Mentalidade
             WHERE j.Nome = ? OR j.Nome LIKE ?
+            ORDER BY 
+                CASE 
+                    WHEN j.Nome = ? THEN 0
+                    WHEN j.Nome LIKE ? THEN 1
+                    ELSE 2
+                END,
+                j.ID ASC
             LIMIT 1
         ");
-        $stmtP->execute([$playerNameParam, "%$playerNameParam%"]);
+        $stmtP->execute([
+            $playerNameParam, 
+            "%$playerNameParam%",
+            $playerNameParam,
+            "$playerNameParam%"
+        ]);
     }
 
     $player = $stmtP->fetch(PDO::FETCH_ASSOC);

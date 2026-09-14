@@ -8,6 +8,7 @@ require_once isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '
 
 $clubId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $clubNameParam = trim($_GET['nome'] ?? '');
+$genderParam = isset($_GET['sexo']) ? (int)$_GET['sexo'] : (isset($_GET['genero']) ? (int)$_GET['genero'] : null);
 
 if ($clubId <= 0 && empty($clubNameParam)) {
     http_response_code(400);
@@ -52,16 +53,59 @@ try {
         ");
         $stmtC->execute([$clubId]);
     } else {
-        $stmtC = $conn->prepare("
-            SELECT c.*, e.Nome as estadio_nome, e.Capacidade as estadio_capacidade, e.foto as estadio_foto,
-                   p.nome as pais_nome, p.bandeira as pais_bandeira
-            FROM clube c
-            LEFT JOIN estadio e ON e.ID = c.Estadio
-            LEFT JOIN paises p ON p.id = c.Pais
-            WHERE c.Nome = ? OR c.Nome LIKE ?
-            LIMIT 1
-        ");
-        $stmtC->execute([$clubNameParam, "%$clubNameParam%"]);
+        if ($genderParam !== null) {
+            $stmtC = $conn->prepare("
+                SELECT c.*, e.Nome as estadio_nome, e.Capacidade as estadio_capacidade, e.foto as estadio_foto,
+                       p.nome as pais_nome, p.bandeira as pais_bandeira
+                FROM clube c
+                LEFT JOIN estadio e ON e.ID = c.Estadio
+                LEFT JOIN paises p ON p.id = c.Pais
+                WHERE c.Nome = ? OR c.Nome LIKE ?
+                ORDER BY 
+                    CASE 
+                        WHEN c.Nome = ? AND c.Sexo = ? THEN 0
+                        WHEN c.Nome = ? THEN 1
+                        WHEN c.Nome LIKE ? AND c.Sexo = ? THEN 2
+                        WHEN c.Nome LIKE ? THEN 3
+                        ELSE 4
+                    END,
+                    c.ID ASC
+                LIMIT 1
+            ");
+            $stmtC->execute([
+                $clubNameParam, 
+                "%$clubNameParam%",
+                $clubNameParam,
+                $genderParam,
+                $clubNameParam,
+                "$clubNameParam%",
+                $genderParam,
+                "$clubNameParam%"
+            ]);
+        } else {
+            $stmtC = $conn->prepare("
+                SELECT c.*, e.Nome as estadio_nome, e.Capacidade as estadio_capacidade, e.foto as estadio_foto,
+                       p.nome as pais_nome, p.bandeira as pais_bandeira
+                FROM clube c
+                LEFT JOIN estadio e ON e.ID = c.Estadio
+                LEFT JOIN paises p ON p.id = c.Pais
+                WHERE c.Nome = ? OR c.Nome LIKE ?
+                ORDER BY 
+                    CASE 
+                        WHEN c.Nome = ? THEN 0
+                        WHEN c.Nome LIKE ? THEN 1
+                        ELSE 2
+                    END,
+                    c.ID ASC
+                LIMIT 1
+            ");
+            $stmtC->execute([
+                $clubNameParam, 
+                "%$clubNameParam%",
+                $clubNameParam,
+                "$clubNameParam%"
+            ]);
+        }
     }
 
     $club = $stmtC->fetch(PDO::FETCH_ASSOC);

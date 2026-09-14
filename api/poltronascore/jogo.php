@@ -74,11 +74,96 @@ function psCalculatePlayerRating($pId, $pLevel, $pPos, $isStarter, $goalsScored,
     return max(4.5, min(9.9, round($base, 1)));
 }
 
+// Helper: Inferir gênero da partida usando nome da competição e tabela demográfica gen_nomes
+function psInferMatchGender($conn, $championshipName, $playerNamesList = []) {
+    // 1. Verificar palavras-chave no nome do campeonato
+    if (!empty($championshipName)) {
+        if (preg_match('/\b(fem|feminina|feminino|femininas|femininos|women|womens|mulheres|damas)\b/i', $championshipName)) {
+            return 1;
+        }
+        if (preg_match('/\b(masc|masculino|masculina|men|homens)\b/i', $championshipName)) {
+            return 0;
+        }
+    }
+
+    // 2. Extrair primeiros nomes dos atletas dos eventos/escalações e cruzar com gen_nomes
+    if (!empty($playerNamesList) && is_array($playerNamesList)) {
+        $firstNames = [];
+        foreach ($playerNamesList as $rawName) {
+            $cleaned = trim(preg_replace('/[0-9\(\)\'\"]+/', '', (string)$rawName));
+            $parts = preg_split('/\s+/', $cleaned);
+            if (!empty($parts[0]) && mb_strlen($parts[0]) >= 2) {
+                $firstNames[] = $parts[0];
+            }
+        }
+        $firstNames = array_unique(array_filter($firstNames));
+
+        if (!empty($firstNames)) {
+            try {
+                $placeholders = implode(',', array_fill(0, count($firstNames), '?'));
+                $stmtGen = $conn->prepare("SELECT SUM(F) as fem_count, SUM(M) as masc_count FROM gen_nomes WHERE Nome IN ($placeholders)");
+                $stmtGen->execute(array_values($firstNames));
+                $rowGen = $stmtGen->fetch(PDO::FETCH_ASSOC);
+
+                $femCount = (int)($rowGen['fem_count'] ?? 0);
+                $mascCount = (int)($rowGen['masc_count'] ?? 0);
+
+                if ($femCount > $mascCount) {
+                    return 1;
+                } elseif ($mascCount > $femCount) {
+                    return 0;
+                }
+            } catch (\Throwable $e) {}
+        }
+    }
+
+    // Padrão: 0 (Masculino)
+    return 0;
+}
+
 // Helper: Montar escalações táticas completas a partir do elenco do clube
-function psBuildLineupFromClubSquad($conn, $clubId, $clubName, $matchId, $isHome, $teamScore, $oppScore, $playerEvents = [], $status = 'previous') {
+function psBuildLineupFromClubSquad($conn, $clubId, $clubName, $matchId, $isHome, $teamScore, $oppScore, $playerEvents = [], $status = 'previous', $gender = null) {
     if ($clubId <= 0 && !empty($clubName)) {
-        $stC = $conn->prepare("SELECT ID FROM clube WHERE Nome = ? OR Nome LIKE ? LIMIT 1");
-        $stC->execute([$clubName, "%$clubName%"]);
+        if ($gender !== null) {
+            $stC = $conn->prepare("
+                SELECT ID FROM clube 
+                WHERE Nome = ? OR Nome LIKE ? 
+                ORDER BY 
+                    CASE 
+                        WHEN Nome = ? AND Sexo = ? THEN 0 
+                        WHEN Nome = ? THEN 1 
+                        WHEN Nome LIKE ? AND Sexo = ? THEN 2 
+                        WHEN Nome LIKE ? THEN 3 
+                        ELSE 4 
+                    END, 
+                    ID ASC 
+                LIMIT 1
+            ");
+            $stC->execute([
+                $clubName, 
+                "%$clubName%", 
+                $clubName, 
+                $gender, 
+                $clubName, 
+                "$clubName%", 
+                $gender, 
+                "$clubName%"
+            ]);
+        } else {
+            $stC = $conn->prepare("
+                SELECT ID FROM clube 
+                WHERE Nome = ? OR Nome LIKE ? 
+                ORDER BY 
+                    CASE 
+                        WHEN Nome = ? THEN 0 
+                        WHEN Nome LIKE ? THEN 1 
+                        ELSE 2 
+                    END, 
+                    ID ASC 
+                LIMIT 1
+            ");
+            $stC->execute([$clubName, "%$clubName%", $clubName, "$clubName%"]);
+        }
         $clubId = (int)$stC->fetchColumn();
     }
 
@@ -225,7 +310,8 @@ try {
             j.grupo,
             j.path,
             COALESCE(cl.nome, li.nome, cc.nome, '') as championship_name,
-            cl.ano as championship_year
+            cl.ano as championship_year,
+            COALESCE(cl.genero, li.Sexo, cc.genero, 0) as championship_gender
         FROM jogos_clube j
         LEFT JOIN competicao_lista cl ON cl.id = j.competicao_id AND j.simulador_interno = 1
         LEFT JOIN liga li ON li.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 0
@@ -549,7 +635,8 @@ try {
             'away_score' => ($row['status'] == 1) ? (int)$row['away_score'] : 0,
             'away_penalties' => ($row['away_penalties'] !== null) ? (int)$row['away_penalties'] : null,
             'away_scorers' => implode(', ', $awayGoalsList),
-            'status' => $statusStr
+            'status' => $statusStr,
+            'gender' => (int)($row['championship_gender'] ?? 0)
         ];
         
         echo json_encode([
@@ -603,13 +690,31 @@ try {
             ];
         }
 
-        // Buscar escalações a partir do elenco dos clubes
+        // Inferir gênero da partida raspada por campeonato e tabela demográfica gen_nomes
+        $allScorers = trim(($pMatch['home_scorers'] ?? '') . ', ' . ($pMatch['away_scorers'] ?? ''));
+        $namesToInfer = [];
+        if (!empty($allScorers)) {
+            foreach (explode(',', $allScorers) as $sc) {
+                $cleanedSc = trim($sc);
+                if (!empty($cleanedSc)) $namesToInfer[] = $cleanedSc;
+            }
+        }
+        foreach ($rawEvents as $ev) {
+            if (!empty($ev['player_name'])) {
+                $namesToInfer[] = $ev['player_name'];
+            }
+        }
+
+        $inferredGender = psInferMatchGender($conn, $pMatch['championship'] ?? '', $namesToInfer);
+        $pMatch['gender'] = $inferredGender;
+
+        // Buscar escalações a partir do elenco dos clubes respeitando o gênero inferido
         $homeScore = (int)($pMatch['home_score'] ?? 0);
         $awayScore = (int)($pMatch['away_score'] ?? 0);
         $pStatus = $pMatch['status'] ?? 'previous';
 
-        $homeLineup = psBuildLineupFromClubSquad($conn, 0, $pMatch['home_team'], $matchId, true, $homeScore, $awayScore, $playerEvents, $pStatus);
-        $awayLineup = psBuildLineupFromClubSquad($conn, 0, $pMatch['away_team'], $matchId, false, $awayScore, $homeScore, $playerEvents, $pStatus);
+        $homeLineup = psBuildLineupFromClubSquad($conn, 0, $pMatch['home_team'], $matchId, true, $homeScore, $awayScore, $playerEvents, $pStatus, $inferredGender);
+        $awayLineup = psBuildLineupFromClubSquad($conn, 0, $pMatch['away_team'], $matchId, false, $awayScore, $homeScore, $playerEvents, $pStatus, $inferredGender);
 
         $lineups = [
             'has_lineups' => (!empty($homeLineup['starters']) || !empty($awayLineup['starters'])),

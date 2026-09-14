@@ -33,80 +33,180 @@ try {
 
     // 1. Buscar Partidas Favoritas e Partidas de Clubes Favoritos
     if (!empty($matchesIds) || !empty($clubsIds)) {
-        $whereClauses = [];
-        $params = [];
-
-        if (!empty($matchesIds)) {
-            $inMatches = implode(',', array_fill(0, count($matchesIds), '?'));
-            $whereClauses[] = "j.id IN ($inMatches)";
-            $params = array_merge($params, $matchesIds);
-        }
-
+        $clubNames = [];
         if (!empty($clubsIds)) {
             $inClubs = implode(',', array_fill(0, count($clubsIds), '?'));
-            $whereClauses[] = "j.timeA_id IN ($inClubs) OR j.timeB_id IN ($inClubs)";
-            $params = array_merge($params, $clubsIds, $clubsIds);
+            $stmtNames = $conn->prepare("SELECT ID, Nome FROM clube WHERE ID IN ($inClubs)");
+            $stmtNames->execute($clubsIds);
+            $clubRows = $stmtNames->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($clubRows as $cr) {
+                $clubNames[] = $cr['Nome'];
+            }
         }
 
-        $sqlMatches = "
-            SELECT 
-                j.id, j.competicao_id, j.rodada_id, j.data, j.hora, j.status,
-                j.timeA_id, j.timeA_nome, j.timeA_gols, j.timeA_penaltis,
-                j.timeB_id, j.timeB_nome, j.timeB_gols, j.timeB_penaltis,
-                j.estadio,
-                COALESCE(cl.nome, li.nome, cc.nome, 'Competição') as competicao_nome,
-                cr.nome as rodada_nome,
-                cA.Escudo as timeA_escudo,
-                cB.Escudo as timeB_escudo
-            FROM jogos_clube j
-            LEFT JOIN competicao_lista cl ON cl.id = j.competicao_id AND j.simulador_interno = 1
-            LEFT JOIN liga li ON li.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 0
-            LEFT JOIN campeonatos_clube cc ON cc.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 1
-            LEFT JOIN competicao_rodada cr ON cr.id = j.rodada_id
-            LEFT JOIN clube cA ON cA.ID = j.timeA_id
-            LEFT JOIN clube cB ON cB.ID = j.timeB_id
-            WHERE " . implode(' OR ', $whereClauses) . "
-            ORDER BY j.data DESC, j.hora DESC, j.id DESC
-            LIMIT 30
-        ";
+        $seenMatchKeys = [];
 
-        $stmtM = $conn->prepare($sqlMatches);
-        $stmtM->execute($params);
+        // 1A. Buscar em poltrona_matches (jogos de ligas externas / scraping PoltronaScore)
+        $pmWhere = [];
+        $pmParams = [];
+        if (!empty($matchesIds)) {
+            $inM = implode(',', array_fill(0, count($matchesIds), '?'));
+            $pmWhere[] = "id IN ($inM)";
+            $pmParams = array_merge($pmParams, $matchesIds);
+        }
+        if (!empty($clubNames)) {
+            $inN = implode(',', array_fill(0, count($clubNames), '?'));
+            $pmWhere[] = "home_team IN ($inN) OR away_team IN ($inN)";
+            $pmParams = array_merge($pmParams, $clubNames, $clubNames);
+        }
 
-        while ($m = $stmtM->fetch(PDO::FETCH_ASSOC)) {
-            $statusStr = 'previous';
-            if ((int)$m['status'] === 0) {
-                $statusStr = 'next';
-            } elseif ((int)$m['status'] === 2) {
-                $statusStr = 'live';
+        if (!empty($pmWhere)) {
+            $sqlPM = "
+                SELECT 
+                    id, championship, rodada, home_team, away_team,
+                    home_score, away_score, match_date, match_time,
+                    stadium, status, home_logo, away_logo
+                FROM poltrona_matches
+                WHERE " . implode(' OR ', $pmWhere) . "
+                ORDER BY id DESC
+                LIMIT 30
+            ";
+            $stmtPM = $conn->prepare($sqlPM);
+            $stmtPM->execute($pmParams);
+            while ($m = $stmtPM->fetch(PDO::FETCH_ASSOC)) {
+                $key = 'pm_' . $m['id'];
+                if (isset($seenMatchKeys[$key])) continue;
+                $seenMatchKeys[$key] = true;
+
+                $statusStr = $m['status'] ?: 'previous';
+
+                $logoA = '';
+                if (!empty($m['home_logo']) && $m['home_logo'] !== '0.png') {
+                    $logoA = (strpos($m['home_logo'], 'http') === 0) ? $m['home_logo'] : '/images/escudos/' . basename($m['home_logo']);
+                }
+                $logoB = '';
+                if (!empty($m['away_logo']) && $m['away_logo'] !== '0.png') {
+                    $logoB = (strpos($m['away_logo'], 'http') === 0) ? $m['away_logo'] : '/images/escudos/' . basename($m['away_logo']);
+                }
+
+                $response['matches'][] = [
+                    'id' => (int)$m['id'],
+                    'competition' => $m['championship'] ?: 'Competição',
+                    'rodada' => $m['rodada'] ?: '',
+                    'date' => $m['match_date'] ?: '',
+                    'time' => $m['match_time'] ?: '',
+                    'status' => $statusStr,
+                    'home_id' => 0,
+                    'home_team' => $m['home_team'],
+                    'home_logo' => $logoA,
+                    'home_score' => ($statusStr !== 'next') ? (int)$m['home_score'] : null,
+                    'away_id' => 0,
+                    'away_team' => $m['away_team'],
+                    'away_logo' => $logoB,
+                    'away_score' => ($statusStr !== 'next') ? (int)$m['away_score'] : null,
+                    'stadium' => $m['stadium'] ?: ''
+                ];
             }
+        }
 
-            $logoA = '';
-            if (!empty($m['timeA_escudo']) && $m['timeA_escudo'] !== '0.png') {
-                $logoA = (strpos($m['timeA_escudo'], 'http') === 0) ? $m['timeA_escudo'] : '/images/escudos/' . basename($m['timeA_escudo']);
-            }
-            $logoB = '';
-            if (!empty($m['timeB_escudo']) && $m['timeB_escudo'] !== '0.png') {
-                $logoB = (strpos($m['timeB_escudo'], 'http') === 0) ? $m['timeB_escudo'] : '/images/escudos/' . basename($m['timeB_escudo']);
-            }
+        // 1B. Buscar em jogos_clube (jogos de competições do simulador interno)
+        $jcWhere = [];
+        $jcParams = [];
+        if (!empty($matchesIds)) {
+            $inM = implode(',', array_fill(0, count($matchesIds), '?'));
+            $jcWhere[] = "j.id IN ($inM)";
+            $jcParams = array_merge($jcParams, $matchesIds);
+        }
+        if (!empty($clubsIds)) {
+            $inC = implode(',', array_fill(0, count($clubsIds), '?'));
+            $jcWhere[] = "j.timeA_id IN ($inC) OR j.timeB_id IN ($inC)";
+            $jcParams = array_merge($jcParams, $clubsIds, $clubsIds);
+        }
 
-            $response['matches'][] = [
-                'id' => (int)$m['id'],
-                'competition' => $m['competicao_nome'] ?: 'Competição',
-                'rodada' => $m['rodada_nome'] ?: '',
-                'date' => !empty($m['data']) ? date('d/m/Y', strtotime($m['data'])) : '',
-                'time' => !empty($m['hora']) ? substr($m['hora'], 0, 5) : '',
-                'status' => $statusStr,
-                'home_id' => (int)$m['timeA_id'],
-                'home_team' => $m['timeA_nome'],
-                'home_logo' => $logoA,
-                'home_score' => ($m['status'] != 0) ? (int)$m['timeA_gols'] : null,
-                'away_id' => (int)$m['timeB_id'],
-                'away_team' => $m['timeB_nome'],
-                'away_logo' => $logoB,
-                'away_score' => ($m['status'] != 0) ? (int)$m['timeB_gols'] : null,
-                'stadium' => $m['estadio'] ?: ''
+        if (!empty($jcWhere)) {
+            $faseMap = [
+                1 => 'Fase de Grupos',
+                2 => '16avos de Final',
+                3 => 'Oitavas de Final',
+                4 => 'Quartas de Final',
+                5 => 'Semifinal',
+                6 => 'Disputa de 3º Lugar',
+                7 => 'Final',
+                8 => 'Repescagem'
             ];
+
+            $sqlJC = "
+                SELECT 
+                    j.id, j.competicao_id, j.data, j.status, j.fase, j.grupo,
+                    j.timeA_id, j.timeA_nome, j.timeA_gols, j.timeA_penaltis,
+                    j.timeB_id, j.timeB_nome, j.timeB_gols, j.timeB_penaltis,
+                    COALESCE(NULLIF(j.estadio_nome, ''), eDirect.Nome, eHome.Nome, '') as estadio,
+                    COALESCE(cl.nome, li.nome, cc.nome, 'Competição') as competicao_nome,
+                    cA.Escudo as timeA_escudo,
+                    cB.Escudo as timeB_escudo
+                FROM jogos_clube j
+                LEFT JOIN competicao_lista cl ON cl.id = j.competicao_id AND j.simulador_interno = 1
+                LEFT JOIN liga li ON li.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 0
+                LEFT JOIN campeonatos_clube cc ON cc.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 1
+                LEFT JOIN clube cA ON cA.ID = j.timeA_id
+                LEFT JOIN clube cB ON cB.ID = j.timeB_id
+                LEFT JOIN estadio eDirect ON eDirect.ID = j.estadio_id
+                LEFT JOIN estadio eHome ON eHome.ID = cA.Estadio
+                WHERE " . implode(' OR ', $jcWhere) . "
+                ORDER BY j.data DESC, j.id DESC
+                LIMIT 30
+            ";
+
+            $stmtJC = $conn->prepare($sqlJC);
+            $stmtJC->execute($jcParams);
+
+            while ($m = $stmtJC->fetch(PDO::FETCH_ASSOC)) {
+                $key = 'jc_' . $m['id'];
+                if (isset($seenMatchKeys[$key])) continue;
+                $seenMatchKeys[$key] = true;
+
+                $statusStr = 'previous';
+                if ((int)$m['status'] === 0) {
+                    $statusStr = 'next';
+                } elseif ((int)$m['status'] === 2) {
+                    $statusStr = 'live';
+                }
+
+                $logoA = '';
+                if (!empty($m['timeA_escudo']) && $m['timeA_escudo'] !== '0.png') {
+                    $logoA = (strpos($m['timeA_escudo'], 'http') === 0) ? $m['timeA_escudo'] : '/images/escudos/' . basename($m['timeA_escudo']);
+                }
+                $logoB = '';
+                if (!empty($m['timeB_escudo']) && $m['timeB_escudo'] !== '0.png') {
+                    $logoB = (strpos($m['timeB_escudo'], 'http') === 0) ? $m['timeB_escudo'] : '/images/escudos/' . basename($m['timeB_escudo']);
+                }
+
+                $rodadaName = $faseMap[(int)($m['fase'] ?? 0)] ?? '';
+                if (!empty($m['grupo']) && $m['grupo'] !== '0') {
+                    $rodadaName = ($rodadaName ? $rodadaName . ' - ' : '') . 'Grupo ' . strtoupper(trim($m['grupo']));
+                }
+
+                $matchDateFmt = !empty($m['data']) ? date('d/m/Y', strtotime($m['data'])) : '';
+                $matchTimeFmt = !empty($m['data']) ? date('H:i', strtotime($m['data'])) : '';
+
+                $response['matches'][] = [
+                    'id' => (int)$m['id'],
+                    'competition' => $m['competicao_nome'] ?: 'Competição',
+                    'rodada' => $rodadaName,
+                    'date' => $matchDateFmt,
+                    'time' => $matchTimeFmt,
+                    'status' => $statusStr,
+                    'home_id' => (int)$m['timeA_id'],
+                    'home_team' => $m['timeA_nome'],
+                    'home_logo' => $logoA,
+                    'home_score' => ($statusStr !== 'next') ? (int)$m['timeA_gols'] : null,
+                    'away_id' => (int)$m['timeB_id'],
+                    'away_team' => $m['timeB_nome'],
+                    'away_logo' => $logoB,
+                    'away_score' => ($statusStr !== 'next') ? (int)$m['timeB_gols'] : null,
+                    'stadium' => $m['estadio'] ?: ''
+                ];
+            }
         }
     }
 
@@ -147,9 +247,9 @@ try {
         $inComps = implode(',', array_fill(0, count($compsIds), '?'));
         $stmtCp = $conn->prepare("
             SELECT cl.id, cl.nome, cl.logo, p.nome as pais_nome, p.bandeira as pais_bandeira,
-                   (SELECT COUNT(*) FROM competicao_times ct WHERE ct.competicao_id = cl.id) as total_times
+                   (SELECT COUNT(*) FROM competicao_times ct WHERE ct.id_competicao = cl.id) as total_times
             FROM competicao_lista cl
-            LEFT JOIN paises p ON p.id = cl.pais_id
+            LEFT JOIN paises p ON p.id = cl.sede
             WHERE cl.id IN ($inComps)
             ORDER BY cl.nome ASC
         ");

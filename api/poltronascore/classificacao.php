@@ -24,11 +24,26 @@ try {
                 SELECT c.id 
                 FROM competicao_lista c
                 INNER JOIN jogos_clube j ON j.competicao_id = c.id
-                WHERE c.nome LIKE ? OR CONCAT(c.nome, ' ', c.ano) LIKE ?
-                ORDER BY c.ano DESC, c.id DESC
+                WHERE c.nome = ? OR CONCAT(c.nome, ' ', c.ano) = ? OR c.nome LIKE ? OR CONCAT(c.nome, ' ', c.ano) LIKE ?
+                ORDER BY 
+                    CASE 
+                        WHEN c.nome = ? OR CONCAT(c.nome, ' ', c.ano) = ? THEN 0
+                        WHEN c.nome LIKE ? OR CONCAT(c.nome, ' ', c.ano) LIKE ? THEN 1
+                        ELSE 2
+                    END,
+                    c.ano DESC, c.id DESC
                 LIMIT 1
             ");
-            $stmtFind->execute(["%$compParam%", "%$compParam%"]);
+            $stmtFind->execute([
+                $compParam,
+                $compParam,
+                "%$compParam%",
+                "%$compParam%",
+                $compParam,
+                $compParam,
+                "$compParam%",
+                "$compParam%"
+            ]);
             $compId = (int)$stmtFind->fetchColumn();
         }
     }
