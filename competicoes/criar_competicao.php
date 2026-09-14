@@ -118,7 +118,28 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && !($_SESSION['e
                         $error_msg .= "Não foi possível processar o logo da competição em WebP.";
                     }
                 } else {
-                    $error_msg .= "Arquivo de imagem deve ser menor que 5MB.";
+                    $error_msg .= "Arquivo de imagem do logo deve ser menor que 5MB.";
+                }
+            } 
+
+            if(isset($_FILES['trofeu']) && !empty($_FILES['trofeu']['tmp_name']) && (file_exists($_FILES['trofeu']['tmp_name']) || is_uploaded_file($_FILES['trofeu']['tmp_name']))){
+                $trofeuName = $_FILES['trofeu']['name'];
+                $trofeuExplode = explode(".", $trofeuName);
+                $trofeuBase = preg_replace("/[^a-zA-Z0-9]/", "", $trofeuExplode[0]) ?: "competicao_trofeu";
+                $trofeuFileName = "comp-" . strtolower($trofeuBase) . mt_rand(1,10000).".webp";
+                $trofeuSize = $_FILES['trofeu']['size'];
+                $trofeuFilePath = $_FILES['trofeu']['tmp_name'];
+                $upload_trofeu_dir = "/images/trofeus/";
+
+                if($trofeuSize <= 5000000){
+                    $upload_trofeu_path = $_SERVER['DOCUMENT_ROOT'] . $upload_trofeu_dir . $_SESSION['user_id'] . "-" . $trofeuFileName;
+                    if(processAndSaveWebPImage($trofeuFilePath, $upload_trofeu_path, 400, 90)){
+                        $competicao->trofeu = $_SESSION['user_id'] . "-" . $trofeuFileName;
+                    } else {
+                        $error_msg .= "Não foi possível processar o troféu da competição em WebP. ";
+                    }
+                } else {
+                    $error_msg .= "Arquivo de imagem do troféu deve ser menor que 5MB. ";
                 }
             } 
 
@@ -266,13 +287,21 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
                     <small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 4px;">A sede e federação serão associadas automaticamente ao país selecionado.</small>
                 </div>
 
-                <label>Logo</label>
+                <label>Logo da Competição</label>
                 <label class='custom-file-upload' for='logo'>
                     <span class="material-symbols-outlined" style="font-size: 24px; color: #0284c7;">cloud_upload</span>
                     <img id='logo-preview' style="display:none; max-height:40px; max-width:60px; object-fit:contain; border-radius:4px;">
                     <span id='nomeLogo'>Clique para selecionar a Logo</span>
                 </label>
                 <input type="file" id='logo' class='form-control' name='logo' data-max-size="2048" multiple='false' accept='image/*' style="display: none !important;">
+
+                <label>Troféu da Competição (Opcional)</label>
+                <label class='custom-file-upload' for='trofeu'>
+                    <span class="material-symbols-outlined" style="font-size: 24px; color: #f59e0b;">emoji_events</span>
+                    <img id='trofeu-preview' style="display:none; max-height:40px; max-width:60px; object-fit:contain; border-radius:4px;">
+                    <span id='nomeTrofeu'>Clique para selecionar o Troféu (opcional)</span>
+                </label>
+                <input type="file" id='trofeu' class='form-control' name='trofeu' data-max-size="2048" multiple='false' accept='image/*' style="display: none !important;">
 
                 <label for='genero'>Masculina/Feminina</label>
                 <?php
@@ -347,6 +376,18 @@ $(document).ready(function(){
     $('#logo').change(function(){
         $("#nomeLogo").text("");
         readURL(this, 'logo');
+    });
+
+    $('#trofeu').change(function(){
+        $("#nomeTrofeu").text("");
+        readURL(this, 'trofeu');
+    });
+
+    $('button[type="reset"]').on('click', function(){
+        $('#nomeLogo').text('Clique para selecionar a Logo');
+        $('#logo-preview').hide().attr('src', '');
+        $('#nomeTrofeu').text('Clique para selecionar o Troféu (opcional)');
+        $('#trofeu-preview').hide().attr('src', '');
     });
 	
 });

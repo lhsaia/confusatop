@@ -202,11 +202,12 @@ function updateTable(ajax_data, current_page, highlighted, direction){
     tbl += "<table id='tabelaPrincipal' class='table'>";
         tbl += "<thead id='headings'>";
 			tbl += "<tr>";
-				tbl += "<th asc='' class='headings' width='30%' id='nome'><span class='th-content'>Competição<span class='material-symbols-outlined ascending hidden'>expand_less</span><span class='material-symbols-outlined descending hidden'>expand_more</span></span></th>";
-				tbl += "<th class='headings' width='12%'>Logo</th>";
-				tbl += "<th asc='' class='headings' width='12%' id='ano'><span class='th-content'>Ano<span class='material-symbols-outlined ascending hidden'>expand_less</span><span class='material-symbols-outlined descending hidden'>expand_more</span></span></th>";
+				tbl += "<th asc='' class='headings' width='26%' id='nome'><span class='th-content'>Competição<span class='material-symbols-outlined ascending hidden'>expand_less</span><span class='material-symbols-outlined descending hidden'>expand_more</span></span></th>";
+				tbl += "<th class='headings' width='10%'>Logo</th>";
+				tbl += "<th class='headings' width='10%'>Troféu</th>";
+				tbl += "<th asc='' class='headings' width='10%' id='ano'><span class='th-content'>Ano<span class='material-symbols-outlined ascending hidden'>expand_less</span><span class='material-symbols-outlined descending hidden'>expand_more</span></span></th>";
 				tbl += "<th asc='' class='headings' width='18%' id='federacao'><span class='th-content'>Federação<span class='material-symbols-outlined ascending hidden'>expand_less</span><span class='material-symbols-outlined descending hidden'>expand_more</span></span></th>";
-				tbl += "<th asc='' class='headings' width='18%' id='sede'><span class='th-content'>Sede<span class='material-symbols-outlined ascending hidden'>expand_less</span><span class='material-symbols-outlined descending hidden'>expand_more</span></span></th>";
+				tbl += "<th asc='' class='headings' width='16%' id='sede'><span class='th-content'>Sede<span class='material-symbols-outlined ascending hidden'>expand_less</span><span class='material-symbols-outlined descending hidden'>expand_more</span></span></th>";
 				tbl += "<th class='headings' width='10%'>Opções</th>";
 			tbl += "</tr>";
         tbl +=  "</thead>";
@@ -230,9 +231,14 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 			
 			// geração da tabela
 			let tipoBadge = (parseInt(val['tipo']) === 1) ? "<span class='badge-tipo-nacional'>Nacional</span>" : "";
+            let trofeuHtml = (val['trofeu'] && val['trofeu'] !== '') 
+                ? "<img class='thumb trofeuThumb' src='/images/trofeus/"+val['trofeu']+"' title='Troféu' style='max-height:30px; max-width:40px; object-fit:contain;' />" 
+                : "<span class='trofeuThumb' style='font-size:0.85rem; color:#94a3b8;'>-</span>";
+
 			tbl += "<tr id='"+val['id']+"' data-sexo='"+val['sexo']+"' >";
 				tbl +=  "<td data-label='Competição'><span class='nomeEditavel' id='nom"+val['id']+"'><a class='linkNome' href='/competicoes/competitionstatus.php?id="+val['id']+"' >"+val['nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span>" + tipoBadge + "</td>";
-				tbl += "<td data-label='Logo'><div class='imageUpload'><img class='thumb' src='/images/competicoes/"+val['logo']+"' /> <input type='file' hidden id='logo"+val['id']+"' class='hiddenInput custom-file-upload' name='logo' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
+				tbl += "<td data-label='Logo'><div class='imageUpload'><img class='thumb logoThumb' src='/images/competicoes/"+val['logo']+"' /> <input type='file' hidden id='logo"+val['id']+"' class='hiddenInput custom-file-upload' name='logo' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
+				tbl += "<td data-label='Troféu'><div class='imageUpload'>"+trofeuHtml+" <input type='file' hidden id='trofeu"+val['id']+"' class='hiddenInput custom-file-upload' name='trofeu' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
 				tbl += "<td data-label='Ano'><span class='fidelidadeFixo'>"+val['ano']+"</span><input type='number' min='1' max='2100' class=' fidelidade inputHerdeiro' value="+val['ano']+" id='ano"+val['id']+"' hidden></td>";
                 
 				if(val['federacao'] != null){
@@ -414,10 +420,19 @@ $('.salvar').click(function(){
     var inputLogo = (tbl_row.find('#logo'+id))[0];
     var logo;
 
-    if (inputLogo.files.length > 0) {
+    if (inputLogo && inputLogo.files.length > 0) {
        logo = inputLogo.files[0];
     } else {
        logo = null;
+    }
+
+    var inputTrofeu = (tbl_row.find('#trofeu'+id))[0];
+    var trofeu;
+
+    if (inputTrofeu && inputTrofeu.files.length > 0) {
+       trofeu = inputTrofeu.files[0];
+    } else {
+       trofeu = null;
     }
 
     var formData = new FormData();
@@ -428,6 +443,9 @@ $('.salvar').click(function(){
     formData.append('federacao', federacao);
      if(logo != null){
         formData.append('logo', logo);
+     }
+     if(trofeu != null){
+        formData.append('trofeu', trofeu);
      }
 
 

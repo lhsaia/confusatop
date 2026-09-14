@@ -14,6 +14,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : null;
     $error_msg = "";
     $new_logo_path = null;
+    $new_trofeu_path = null;
 
     if(isset($_FILES['logo']) && !empty($_FILES['logo']['tmp_name']) && (file_exists($_FILES['logo']['tmp_name']) || is_uploaded_file($_FILES['logo']['tmp_name']))){
         $logo_path = $_FILES['logo']['name'];
@@ -29,12 +30,34 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             if(processAndSaveWebPImage($filePath, $upload_path, 300, 90)){
                 $new_logo_path = $_SESSION['user_id'] . "-" . $fileName;
             } else {
-                $error_msg .= "Não foi possível processar o logo em WebP.";
+                $error_msg .= "Não foi possível processar o logo em WebP. ";
             }
         } else {
-            $error_msg .= "Arquivo de imagem deve ser menor que 5MB.";
+            $error_msg .= "Arquivo de imagem do logo deve ser menor que 5MB. ";
         }
     }
+
+    if(isset($_FILES['trofeu']) && !empty($_FILES['trofeu']['tmp_name']) && (file_exists($_FILES['trofeu']['tmp_name']) || is_uploaded_file($_FILES['trofeu']['tmp_name']))){
+        $trofeu_path = $_FILES['trofeu']['name'];
+        $trofeuSize = $_FILES['trofeu']['size'];
+        $trofeuFilePath = $_FILES['trofeu']['tmp_name'];
+        $trofeuExplode = explode(".", $trofeu_path);
+        $trofeuBase = preg_replace("/[^a-zA-Z0-9]/", "", $trofeuExplode[0]) ?: "competicao_trofeu";
+        $trofeuFileName = "comp-" . strtolower($trofeuBase) . mt_rand(1, 10000) . ".webp";
+        $upload_trofeu_dir = "/images/trofeus/";
+
+        if($trofeuSize <= 5000000){
+            $upload_trofeu_path = $_SERVER['DOCUMENT_ROOT'] . $upload_trofeu_dir . $_SESSION['user_id'] . "-" . $trofeuFileName;
+            if(processAndSaveWebPImage($trofeuFilePath, $upload_trofeu_path, 400, 90)){
+                $new_trofeu_path = $_SESSION['user_id'] . "-" . $trofeuFileName;
+            } else {
+                $error_msg .= "Não foi possível processar o troféu em WebP. ";
+            }
+        } else {
+            $error_msg .= "Arquivo de imagem do troféu deve ser menor que 5MB. ";
+        }
+    }
+
     //estabelecer conexão com banco de dados
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/competicao_clube.php");
@@ -45,7 +68,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
 
     //alterar competicao
-    if($competicao->alterar($id,$nome,$sede,$ano,$federacao,$new_logo_path, $tipo)){
+    if($competicao->alterar($id,$nome,$sede,$ano,$federacao,$new_logo_path, $tipo, $new_trofeu_path)){
         $is_success = true;
         $error_msg .= "";
     } else {

@@ -24,6 +24,7 @@ $ano_competicao = $info['ano'] ?? '';
 $sede_competicao = $info['sede'] ?? '';
 $federacao_nome = $info['federacao'] ?? '';
 $logo_competicao = $info['logo'] ?? '';
+$trofeu_competicao = $info['trofeu'] ?? '';
 $total_times = (int)($info['total_times'] ?? 0);
 $times_inseridos = (int)($info['times_inseridos'] ?? 0);
 
@@ -122,6 +123,9 @@ $percentual_times = ($total_times > 0) ? min(100, round(($times_inseridos / $tot
 	<section class="competition-hero">
 		<div class="hero-main-info">
 			<img class="hero-logo" src="/images/competicoes/<?php echo $logo_competicao; ?>" alt="Logo Competição" />
+			<?php if(!empty($trofeu_competicao)): ?>
+				<img class="hero-trophy" src="/images/trofeus/<?php echo htmlspecialchars($trofeu_competicao); ?>" alt="Troféu Competição" title="Troféu da Competição" style="height: 60px; max-width: 60px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));" />
+			<?php endif; ?>
 			<div class="hero-text-block">
 				<h2 class="hero-title"><?php echo $nome_competicao . " " . $ano_competicao; ?></h2>
 				<span class="hero-subtitle">
