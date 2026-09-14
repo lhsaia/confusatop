@@ -49,11 +49,38 @@ if($_POST){
             }
         } else {
             $liga->logo = $liga->logoPadrao();
-            $error_msg .= " A imagem enviada excede 5MB.";
+            $error_msg .= " A imagem enviada do logo excede 5MB.";
         }
     } else {
         $liga->logo = $liga->logoPadrao();
     }
+
+    if(!empty($_FILES['trofeu']['name']) && isset($_FILES['trofeu']['tmp_name']) && (file_exists($_FILES['trofeu']['tmp_name']) || is_uploaded_file($_FILES['trofeu']['tmp_name']))){
+        $trofeu_path = $_FILES['trofeu']['name'];
+        $trofeuSize = $_FILES['trofeu']['size'];
+        $trofeuFilePath = $_FILES['trofeu']['tmp_name'];
+        $trofeuFileBase = pathinfo($trofeu_path, PATHINFO_FILENAME);
+        $trofeuCleanBase = preg_replace('/[^A-Za-z0-9_-]/', '', $trofeuFileBase) ?: 'trofeu';
+        $trofeuNewFileName = $_SESSION['user_id'] . "-trofeu-" . $trofeuCleanBase . "-" . mt_rand(1, 10000) . ".webp";
+        $trofeu_upload_dir = "/images/trofeus/";
+
+        if($trofeuSize <= 5000000){
+            $trofeu_upload_path = $_SERVER['DOCUMENT_ROOT'] . $trofeu_upload_dir . $trofeuNewFileName;
+            $resultTrofeu = processAndSaveWebPImage($trofeuFilePath, $trofeu_upload_path, 512, 90);
+            if (!$resultTrofeu) {
+                $error_msg .= " Não foi possível processar o troféu em WebP.";
+                $liga->trofeu = null;
+            } else {
+                $liga->trofeu = $trofeuNewFileName;
+            }
+        } else {
+            $liga->trofeu = null;
+            $error_msg .= " A imagem enviada do troféu excede 5MB.";
+        }
+    } else {
+        $liga->trofeu = null;
+    }
+
     // set product property values
     $liga->nome = $_POST['nome'];
     $liga->pais = $_POST['pais'];
@@ -132,13 +159,21 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
                 echo "</select>";
                 ?>
 
-                <label>Logo</label>
+                <label>Logo da Liga</label>
                 <label class='custom-file-upload' for='logo'>
                     <span class="material-symbols-outlined" style="font-size: 24px; color: #0284c7;">cloud_upload</span>
                     <img id='logo-preview' style="display:none; max-height:40px; max-width:60px; object-fit:contain; border-radius:4px;">
                     <span id='nomeLogo'>Clique para selecionar o logo</span>
                 </label>
                 <input type="file" id='logo' class='form-control' name='logo' accept=".jpg,.png,.jpeg,.webp" style="display: none !important;">
+
+                <label>Troféu da Liga (Opcional)</label>
+                <label class='custom-file-upload' for='trofeu'>
+                    <span class="material-symbols-outlined" style="font-size: 24px; color: #f59e0b;">emoji_events</span>
+                    <img id='trofeu-preview' style="display:none; max-height:40px; max-width:60px; object-fit:contain; border-radius:4px;">
+                    <span id='nomeTrofeu'>Clique para selecionar a imagem do troféu (opcional)</span>
+                </label>
+                <input type="file" id='trofeu' class='form-control' name='trofeu' accept=".jpg,.png,.jpeg,.webp" style="display: none !important;">
 
                 <div class="form-actions">
                     <button type="submit" name="criar" id="salvar" class="btn">
@@ -182,9 +217,21 @@ $(document).ready(function(){
         }
     });
 
+    $('#trofeu').on('change', function(){
+        if (this.files && this.files[0]) {
+            $('#nomeTrofeu').text(this.files[0].name);
+            readURL(this, 'trofeu');
+        } else {
+            $('#nomeTrofeu').text('Clique para selecionar a imagem do troféu (opcional)');
+            $('#trofeu-preview').hide().attr('src', '');
+        }
+    });
+
     $('button[type="reset"]').on('click', function(){
         $('#nomeLogo').text('Clique para selecionar o logo');
         $('#logo-preview').hide().attr('src', '');
+        $('#nomeTrofeu').text('Clique para selecionar a imagem do troféu (opcional)');
+        $('#trofeu-preview').hide().attr('src', '');
     });
 });
 </script>

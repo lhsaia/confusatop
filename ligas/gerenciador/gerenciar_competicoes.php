@@ -25,6 +25,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php");
 
 // Handle Form Submission
 if(isset($_POST['create_competition'])){
@@ -33,6 +34,30 @@ if(isset($_POST['create_competition'])){
     $sede = 0;      // Default or could be input
     $genero = 'M';  // Default or could be input
     $dono = $_SESSION['user_id'];
+    $trofeuFileName = null;
+    $error_msg = "";
+
+    if(isset($_FILES['trofeu']) && !empty($_FILES['trofeu']['tmp_name']) && (file_exists($_FILES['trofeu']['tmp_name']) || is_uploaded_file($_FILES['trofeu']['tmp_name']))){
+        $trofeu_path = $_FILES['trofeu']['name'];
+        $trofeuSize = $_FILES['trofeu']['size'];
+        $trofeuFilePath = $_FILES['trofeu']['tmp_name'];
+        $trofeuFileBase = pathinfo($trofeu_path, PATHINFO_FILENAME);
+        $trofeuCleanBase = preg_replace('/[^A-Za-z0-9_-]/', '', $trofeuFileBase) ?: 'copa_trofeu';
+        $trofeuFileName = $_SESSION['user_id'] . "-copa-" . $trofeuCleanBase . "-" . mt_rand(1, 10000) . ".webp";
+        $trofeu_upload_dir = "/images/trofeus/";
+
+        if($trofeuSize <= 5000000){
+            $trofeu_upload_path = $_SERVER['DOCUMENT_ROOT'] . $trofeu_upload_dir . $trofeuFileName;
+            $resultTrofeu = processAndSaveWebPImage($trofeuFilePath, $trofeu_upload_path, 512, 90);
+            if (!$resultTrofeu) {
+                $trofeuFileName = null;
+                $error_msg .= " Não foi possível processar o troféu em WebP.";
+            }
+        } else {
+            $trofeuFileName = null;
+            $error_msg .= " A imagem do troféu excede 5MB.";
+        }
+    }
     
     // Assign values to object
     $competicao->nome = $nome;
@@ -41,11 +66,12 @@ if(isset($_POST['create_competition'])){
     $competicao->genero = $genero;
     $competicao->dono = $dono;
     $competicao->logo = ''; // Optional
+    $competicao->trofeu = $trofeuFileName;
     
     if($competicao->inserir()){
-        echo "<div class='alert alert-success'>Competição criada com sucesso!</div>";
+        echo "<div class='alert alert-success'>Copa criada com sucesso!" . (!empty($error_msg) ? " (Aviso: " . $error_msg . ")" : "") . "</div>";
     } else {
-        echo "<div class='alert alert-danger'>Erro ao criar competição.</div>";
+        echo "<div class='alert alert-danger'>Erro ao criar copa.</div>";
     }
 }
 
@@ -69,11 +95,17 @@ $stmtUserCups->execute();
         <div class="propostas-card-subtitle">
             <span class="material-symbols-outlined">add_circle</span> Criar Nova Copa
         </div>
-        <form method="post" action="">
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <label for="nome">Nome da Copa:</label>
-                <input type="text" class="form-control" id="nome" name="nome" placeholder="Ex: Super Copa dos Campeões" required>
-                <button type="submit" name="create_competition" class="btn-primary">Criar Copa</button>
+        <form method="post" action="" enctype="multipart/form-data">
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                    <label for="nome" style="display:block; margin-bottom: 4px; font-weight: 500;">Nome da Copa:</label>
+                    <input type="text" class="form-control" id="nome" name="nome" placeholder="Ex: Super Copa dos Campeões" required>
+                </div>
+                <div>
+                    <label for="trofeu" style="display:block; margin-bottom: 4px; font-weight: 500;">Troféu da Copa (Opcional):</label>
+                    <input type="file" class="form-control" id="trofeu" name="trofeu" accept=".jpg,.png,.jpeg,.webp">
+                </div>
+                <button type="submit" name="create_competition" class="btn-primary" style="align-self: flex-start; margin-top: 5px;">Criar Copa</button>
             </div>
         </form>
     </div>
@@ -88,7 +120,8 @@ $stmtUserCups->execute();
                 <table id="tabelaPrincipal" class="table">
                     <thead>
                         <tr>
-                            <th width="15%">ID</th>
+                            <th width="12%">ID</th>
+                            <th width="15%">Troféu</th>
                             <th>Nome da Competição</th>
                         </tr>
                     </thead>
@@ -96,7 +129,14 @@ $stmtUserCups->execute();
                         <?php while ($row = $stmtUserCups->fetch(PDO::FETCH_ASSOC)): ?>
                             <tr>
                                 <td><span class="badge bg-light text-dark">#<?php echo $row['id']; ?></span></td>
-                                <td class="fw-bold"><?php echo $row['nome']; ?></td>
+                                <td>
+                                    <?php if(!empty($row['trofeu'])): ?>
+                                        <img src="/images/trofeus/<?php echo htmlspecialchars($row['trofeu']); ?>" alt="Troféu" style="height: 36px; max-width: 48px; object-fit: contain;">
+                                    <?php else: ?>
+                                        <span class="material-symbols-outlined" style="color: #94a3b8; font-size: 24px;">emoji_events</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="fw-bold"><?php echo htmlspecialchars($row['nome']); ?></td>
                             </tr>
                         <?php endwhile; ?>
                     </tbody>

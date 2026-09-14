@@ -47,6 +47,7 @@ $estadio = new Estadio($db);
 $info = $liga->readInfo($idLiga);
 $nome_liga = (string)($info['nome'] ?? '');
 $logo_liga = (string)($info['logo'] ?? '');
+$trofeu_liga = (string)($info['trofeu'] ?? '');
 $pais_liga = (string)($info['Pais'] ?? '');
 $tier_liga = (string)($info['tier'] ?? '');
 $limite_idade_liga = isset($info['limite_idade']) ? $info['limite_idade'] : null;
@@ -96,6 +97,9 @@ if($isOwnerOrAdmin){
 <div class="propostas-card">
     <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
         <img id="bandeiraGrande" src="/images/ligas/<?php echo htmlspecialchars((string)$logo_liga); ?>" style="height: 60px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <?php if(!empty($trofeu_liga)): ?>
+            <img src="/images/trofeus/<?php echo htmlspecialchars((string)$trofeu_liga); ?>" alt="Troféu da Liga" title="Troféu da Liga" style="height: 60px; max-width: 60px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">
+        <?php endif; ?>
         <div>
             <h2 class="propostas-title" style="margin: 0; text-align: left;"><?php echo htmlspecialchars((string)$nome_liga); ?></h2>
             <h3 style="margin: 4px 0 0 0; font-size: 1rem;"><a href="paisstatus.php?country=<?php echo $idPais; ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;"><?php echo htmlspecialchars((string)$pais_liga); ?></a> - Tier <?php echo $tier_liga; ?><?php if(!empty($limite_idade_liga)) echo " • <span style='background: rgba(2, 132, 199, 0.1); color: #0284c7; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;'>Sub-" . htmlspecialchars((string)$limite_idade_liga) . "</span>"; ?></h3>
