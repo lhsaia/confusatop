@@ -12,12 +12,27 @@ class Liga
     public $tier;
     public $limite_idade;
     public $logo;
+    public $trofeu;
     public $pais;
     public $sexo;
 
     public function __construct($db)
     {
         $this->conn = $db;
+        $this->checkAndMigrateSchema();
+    }
+
+    public function checkAndMigrateSchema()
+    {
+        if (!$this->conn) {
+            return;
+        }
+        try {
+            $resCol = $this->conn->query("SHOW COLUMNS FROM `liga` LIKE 'trofeu'");
+            if ($resCol && $resCol->rowCount() == 0) {
+                $this->conn->exec("ALTER TABLE `liga` ADD COLUMN `trofeu` VARCHAR(255) NULL");
+            }
+        } catch (\Throwable $e) {}
     }
 
     // criar time
@@ -28,7 +43,7 @@ class Liga
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    nome=:nome, tier=:tier, limite_idade=:limite_idade, logo=:logo, pais=:pais, Sexo=:sexo, status=0 ";
+                    nome=:nome, tier=:tier, limite_idade=:limite_idade, logo=:logo, trofeu=:trofeu, pais=:pais, Sexo=:sexo, status=0 ";
 
         $stmt = $this->conn->prepare($query);
 
@@ -37,6 +52,7 @@ class Liga
         $this->tier = htmlspecialchars(strip_tags((string)($this->tier ?? '')));
         $this->limite_idade = (!empty($this->limite_idade) && intval($this->limite_idade) > 0) ? intval($this->limite_idade) : null;
         $this->logo = htmlspecialchars(strip_tags((string)($this->logo ?? '')));
+        $this->trofeu = ($this->trofeu !== null && $this->trofeu !== '') ? htmlspecialchars(strip_tags((string)$this->trofeu)) : null;
         $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
         $this->sexo = htmlspecialchars(strip_tags((string)($this->sexo ?? '')));
 
@@ -49,6 +65,7 @@ class Liga
             $stmt->bindValue(":limite_idade", null, PDO::PARAM_NULL);
         }
         $stmt->bindParam(":logo", $this->logo);
+        $stmt->bindParam(":trofeu", $this->trofeu);
         $stmt->bindParam(":pais", $this->pais);
         $stmt->bindParam(":sexo", $this->sexo);
 
@@ -75,7 +92,7 @@ class Liga
         }
 
         $query = "SELECT
-                 a.id, a.nome, a.tier, a.limite_idade, a.logo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.Sexo as sexo, p.nome as nomePais 
+                 a.id, a.nome, a.tier, a.limite_idade, a.logo, a.trofeu, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.Sexo as sexo, p.nome as nomePais 
              FROM
                  " . $this->table_name . " a
              LEFT JOIN paises p ON a.pais = p.id
@@ -142,7 +159,7 @@ class Liga
         return $num;
     }
 
-    function alterar($idLiga, $nomeLiga, $tierLiga, $pais, $logo = null, $limite_idade = null)
+    function alterar($idLiga, $nomeLiga, $tierLiga, $pais, $logo = null, $limite_idade = null, $trofeu = null)
     {
 
         $idLiga = htmlspecialchars(strip_tags((string)$idLiga));
@@ -150,12 +167,15 @@ class Liga
         $tierLiga = htmlspecialchars(strip_tags((string)$tierLiga));
         $pais = htmlspecialchars(strip_tags((string)$pais));
         $logo = ($logo !== null && $logo !== '') ? htmlspecialchars(strip_tags((string)$logo)) : null;
+        $trofeu = ($trofeu !== null && $trofeu !== '') ? htmlspecialchars(strip_tags((string)$trofeu)) : null;
         $limite_idade = (!empty($limite_idade) && intval($limite_idade) > 0) ? intval($limite_idade) : null;
 
+        $subquery = "";
         if ($logo != null) {
-            $subquery = ", logo=:logo";
-        } else {
-            $subquery = "";
+            $subquery .= ", logo=:logo";
+        }
+        if ($trofeu != null) {
+            $subquery .= ", trofeu=:trofeu";
         }
 
         $query = "UPDATE " . $this->table_name . " SET nome=:nome, tier=:tier, limite_idade=:limite_idade, pais=:pais " . $subquery . " WHERE id=:id";
@@ -171,6 +191,9 @@ class Liga
         $stmt->bindParam(":pais", $pais);
         if ($logo != null) {
             $stmt->bindParam(":logo", $logo);
+        }
+        if ($trofeu != null) {
+            $stmt->bindParam(":trofeu", $trofeu);
         }
         $stmt->bindParam(":id", $idLiga);
 
@@ -191,6 +214,7 @@ class Liga
             'tier' => '',
             'limite_idade' => null,
             'logo' => '',
+            'trofeu' => null,
             'Pais' => '',
             'idPais' => 0,
             'Sexo' => '',
@@ -208,7 +232,7 @@ class Liga
 
         if ($id > 0) {
             $query = "SELECT
-                    a.nome, a.tier, a.limite_idade, a.logo, COALESCE(p.nome, p.Nome, '') as Pais, a.Pais as idPais, a.Sexo, p.dono as idDonoPais
+                    a.nome, a.tier, a.limite_idade, a.logo, a.trofeu, COALESCE(p.nome, p.Nome, '') as Pais, a.Pais as idPais, a.Sexo, p.dono as idDonoPais
                 FROM
                     " . $this->table_name . " a
                 LEFT JOIN

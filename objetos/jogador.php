@@ -1605,40 +1605,40 @@ return $stmt;
         }
 
         function verificarDono($idJogador){
-            $idJogador = htmlspecialchars(strip_tags($idJogador));
+            $idJogador = htmlspecialchars(strip_tags((string)$idJogador));
 
             $query = "SELECT p.dono FROM jogador j LEFT JOIN paises p ON j.Pais = p.id WHERE j.ID = ? LIMIT 0,1";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $idDono = $row['dono'];
+            $idDono = $row ? $row['dono'] : null;
             return $idDono;
 
         }
 
         function verificarNivelAtual($idJogador){
-            $idJogador = htmlspecialchars(strip_tags($idJogador));
+            $idJogador = htmlspecialchars(strip_tags((string)$idJogador));
 
             $query = "SELECT Nivel FROM jogador WHERE ID = ? LIMIT 0,1";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $nivel = $row['Nivel'];
+            $nivel = $row ? $row['Nivel'] : null;
             return $nivel;
 
         }
 
         function verificarStringPosicoesAtual($idJogador){
-            $idJogador = htmlspecialchars(strip_tags($idJogador));
+            $idJogador = htmlspecialchars(strip_tags((string)$idJogador));
 
             $query = "SELECT StringPosicoes FROM jogador WHERE ID = ? LIMIT 0,1";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $pos = $row['StringPosicoes'];
+            $pos = $row ? $row['StringPosicoes'] : null;
             return $pos;
 
         }
@@ -2760,14 +2760,14 @@ return $stmt;
 
 
         function verificarDonoTimeVinculado($idJogador){
-            $idJogador = htmlspecialchars(strip_tags($idJogador));
+            $idJogador = htmlspecialchars(strip_tags((string)$idJogador));
 
             $query = "SELECT p.dono FROM jogador j LEFT JOIN contratos_jogador c ON c.jogador = j.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON b.ID = c.clube LEFT JOIN paises p ON b.Pais = p.id WHERE j.ID = ? LIMIT 0,1";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $idDono = $row['dono'];
+            $idDono = $row ? $row['dono'] : null;
 
             return $idDono;
 

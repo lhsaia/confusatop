@@ -1034,28 +1034,28 @@ class Tecnico{
 
 
         function verificarDonoTimeVinculado($idJogador){
-            $idJogador = htmlspecialchars(strip_tags($idJogador));
+            $idJogador = htmlspecialchars(strip_tags((string)$idJogador));
 
             $query = "SELECT p.dono FROM tecnico t LEFT JOIN contratos_tecnico c ON c.tecnico = t.ID AND c.tipoContrato = 0 LEFT JOIN clube b ON b.ID = c.clube LEFT JOIN paises p ON b.Pais = p.id WHERE t.ID = ? LIMIT 0,1";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $idDono = $row['dono'];
+            $idDono = $row ? $row['dono'] : null;
 
             return $idDono;
 
         }
 
         function verificarDono($idJogador){
-            $idJogador = htmlspecialchars(strip_tags($idJogador));
+            $idJogador = htmlspecialchars(strip_tags((string)$idJogador));
 
             $query = "SELECT p.dono FROM tecnico t LEFT JOIN paises p ON t.Pais = p.id WHERE t.ID = ? LIMIT 0,1";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(1,$idJogador);
             $stmt->execute();
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $idDono = $row['dono'];
+            $idDono = $row ? $row['dono'] : null;
             return $idDono;
 
         }

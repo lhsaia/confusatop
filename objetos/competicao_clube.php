@@ -13,6 +13,7 @@ class Competicao_clube{
 	public $sede;
 	public $path;
 	public $logo;
+	public $trofeu;
 	public $genero;
 	public $tipo;
 	public $dono;
@@ -31,6 +32,22 @@ class Competicao_clube{
             try {
                 $driver = strtolower($this->conn->getAttribute(PDO::ATTR_DRIVER_NAME));
             } catch (\Throwable $e) {}
+
+            // Migração de coluna trofeu nas tabelas principais do MySQL
+            if ($driver !== 'sqlite') {
+                $checkMysqlCol = function($tableName, $colName, $colDef) {
+                    $res = $this->conn->query("SHOW TABLES LIKE '{$tableName}'");
+                    if ($res && $res->rowCount() > 0) {
+                        $resCol = $this->conn->query("SHOW COLUMNS FROM `{$tableName}` LIKE '{$colName}'");
+                        if ($resCol && $resCol->rowCount() == 0) {
+                            $this->conn->exec("ALTER TABLE `{$tableName}` ADD COLUMN `{$colName}` {$colDef}");
+                        }
+                    }
+                };
+                $checkMysqlCol('competicao_lista', 'trofeu', 'VARCHAR(255) NULL');
+                $checkMysqlCol('liga', 'trofeu', 'VARCHAR(255) NULL');
+                $checkMysqlCol('campeonatos_clube', 'trofeu', 'VARCHAR(255) NULL');
+            }
 
             // 1. Garantir tabela competicao_alteracoes_log
             if ($driver === 'sqlite') {
@@ -125,15 +142,15 @@ class Competicao_clube{
     function read(){
         //select all data
         $query = "SELECT
-                    id, nome, ano, federacao, sede, path, logo, genero, tipo 
+                    id, nome, ano, federacao, sede, path, logo, trofeu, genero, tipo 
                 FROM
                     " . $this->table_name . "
                 ORDER BY
                     ano DESC, nome ASC";  
- 
+
         $stmt = $this->conn->prepare( $query );
         $stmt->execute();
- 
+
         return $stmt;
     }
     
@@ -141,11 +158,11 @@ class Competicao_clube{
     function readName(){
      
     $query = "SELECT nome FROM " . $this->table_name . " WHERE id = ? limit 0,1";
- 
+
     $stmt = $this->conn->prepare( $query );
     $stmt->bindParam(1, $this->id);
     $stmt->execute();
- 
+
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
      
     $this->name = $row['nome'];
@@ -176,10 +193,13 @@ class Competicao_clube{
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    nome=:nome, ano=:ano, federacao=:federacao, logo=:logo, sede=:sede, genero=:genero, tipo=:tipo, dono=:dono, path=:path ";
+                    nome=:nome, ano=:ano, federacao=:federacao, logo=:logo, trofeu=:trofeu, sede=:sede, genero=:genero, tipo=:tipo, dono=:dono, path=:path ";
 					
 		if($this->logo == ""){
 			$this->logo = "0.png";
+		}
+		if($this->trofeu == ""){
+			$this->trofeu = null;
 		}
 
         $this->path = $this->ano . "-" . $this->nome;
@@ -195,6 +215,7 @@ class Competicao_clube{
         $this->genero=htmlspecialchars(strip_tags($this->genero));
         $this->tipo=intval($this->tipo ?? 0);
 		$this->logo=htmlspecialchars(strip_tags($this->logo));
+		$this->trofeu=($this->trofeu !== null) ? htmlspecialchars(strip_tags((string)$this->trofeu)) : null;
 		$this->dono=htmlspecialchars(strip_tags($this->dono));
         $this->path=htmlspecialchars(strip_tags($this->path));
 
@@ -202,6 +223,7 @@ class Competicao_clube{
         $stmt->bindParam(":nome", $this->nome);
         $stmt->bindParam(":ano", $this->ano);
         $stmt->bindParam(":logo", $this->logo);
+        $stmt->bindParam(":trofeu", $this->trofeu);
         $stmt->bindParam(":sede", $this->sede);
         $stmt->bindParam(":genero", $this->genero);
         $stmt->bindParam(":tipo", $this->tipo);
@@ -223,7 +245,7 @@ class Competicao_clube{
 
 		if($dono === null || $dono === 0 || $dono === '0' || $dono === ''){
 			$query = "SELECT * FROM (SELECT
-						a.id, a.nome, a.logo, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais,
+						a.id, a.nome, a.logo, a.trofeu, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais,
 						(SELECT COUNT(*) FROM jogos_clube jc WHERE jc.competicao_id = a.id AND (jc.status = 1 OR jc.timeA_gols IS NOT NULL)) as jogos_simulados
 						FROM " . $this->table_name . " a
 						LEFT JOIN paises p ON a.sede = p.id
@@ -242,7 +264,7 @@ class Competicao_clube{
 		} else {
 			$dono = htmlspecialchars(strip_tags($dono));
 			$query = "SELECT * FROM (SELECT
-						a.id, a.nome, a.logo, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais,
+						a.id, a.nome, a.logo, a.trofeu, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais,
 						(SELECT COUNT(*) FROM jogos_clube jc WHERE jc.competicao_id = a.id AND (jc.status = 1 OR jc.timeA_gols IS NOT NULL)) as jogos_simulados
 						FROM " . $this->table_name . " a
 						LEFT JOIN paises p ON a.sede = p.id
@@ -263,18 +285,22 @@ class Competicao_clube{
 }
 
 
-    function alterar($id,$nome,$sede,$ano,$federacao,$logo = null, $tipo = null){
+    function alterar($id,$nome,$sede,$ano,$federacao,$logo = null, $tipo = null, $trofeu = null){
 
         $id = htmlspecialchars(strip_tags($id));
         $nome = htmlspecialchars(strip_tags($nome));
         $sede = htmlspecialchars(strip_tags($sede));
         $ano = htmlspecialchars(strip_tags($ano));
 		$federacao = htmlspecialchars(strip_tags($federacao));
-        $logo = htmlspecialchars(strip_tags($logo));
+        $logo = ($logo !== null && $logo !== '') ? htmlspecialchars(strip_tags((string)$logo)) : null;
+        $trofeu = ($trofeu !== null && $trofeu !== '') ? htmlspecialchars(strip_tags((string)$trofeu)) : null;
 
         $subquery = "";
         if($logo != null){
             $subquery .= ", logo=:logo";
+        }
+        if($trofeu != null){
+            $subquery .= ", trofeu=:trofeu";
         }
         if($tipo !== null){
             $subquery .= ", tipo=:tipo";
@@ -289,6 +315,9 @@ class Competicao_clube{
 		$stmt->bindParam(":federacao", $federacao);
         if($logo != null){
             $stmt->bindParam(":logo", $logo);
+        }
+        if($trofeu != null){
+            $stmt->bindParam(":trofeu", $trofeu);
         }
         if($tipo !== null){
             $tipo = intval($tipo);
@@ -310,7 +339,7 @@ class Competicao_clube{
         $id = intval($id);
 
 		$query = "SELECT
-					a.nome, a.ano, a.tipo, a.sede as sedeId, f.nome as federacao, p.bandeira as sede, p.nome as sedeNome, a.logo, a.genero, f.id as federacaoId, a.dono, o.numero_times as total_times, 
+					a.nome, a.ano, a.tipo, a.sede as sedeId, f.nome as federacao, p.bandeira as sede, p.nome as sedeNome, a.logo, a.trofeu, a.genero, f.id as federacaoId, a.dono, o.numero_times as total_times, 
 					(SELECT COUNT(DISTINCT codigo_time) FROM competicao_times WHERE id_competicao = a.id AND has_team = '1') as times_inseridos     
 				FROM
 					" . $this->table_name . " a
