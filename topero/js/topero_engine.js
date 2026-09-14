@@ -48,6 +48,16 @@ window.ToperoEngine = class ToperoEngine {
     this.temporadaAtual = 0;
     this.aposentado = false;
 
+    // Rastreamento para Conquistas (Achievements)
+    this.historicoEventos = {
+      aceitouRivalAno: null,
+      caiuDoping: false,
+      lesaoGrave: false,
+      tevePropostaPolemica: false,
+      aceitouPolemica: false,
+      embarcouNaveCometa: false
+    };
+
     // Modificadores ativos que impactam a temporada seguinte (ex: suspensão, lesão grave, bônus)
     this.modTemporada = {
       minutosMult: 1.0,
@@ -85,13 +95,54 @@ window.ToperoEngine = class ToperoEngine {
     const fed = parseInt(idFederacao, 10);
     switch (fed) {
       case 1:
-        return { nome: 'FEASCOPA', federacaoNome: 'FEASCO', icone: 'trofeu_continental_selecao' };
+        return { nome: 'FEASCOPA', federacaoId: 1, federacaoNome: 'FEASCO', icone: 'trofeu_continental_selecao' };
       case 2:
-        return { nome: 'Copa dos Três Mares', federacaoNome: 'FEMIFUS', icone: 'trofeu_continental_selecao' };
+        return { nome: 'Copa dos Três Mares', federacaoId: 2, federacaoNome: 'FEMIFUS', icone: 'trofeu_continental_selecao' };
       case 3:
-        return { nome: 'Taça dos Hemisférios', federacaoNome: 'COMPACTA', icone: 'trofeu_continental_selecao' };
+        return { nome: 'Escudo da Távola', federacaoId: 3, federacaoNome: 'COMPACTA', icone: 'trofeu_continental_selecao' };
       default:
-        return { nome: 'Copa Continental de Seleções', federacaoNome: 'CONFUSA', icone: 'trofeu_continental_selecao' };
+        return { nome: 'Copa Continental de Seleções', federacaoId: 1, federacaoNome: 'CONFUSA', icone: 'trofeu_continental_selecao' };
+    }
+  }
+
+  // Obtém a competição continental de clubes principal (1º Nível) com base na federação do clube
+  obterCompeticaoClube(idFederacao) {
+    const fed = parseInt(idFederacao, 10);
+    switch (fed) {
+      case 1:
+        return { nome: 'Taça Valderrama', nivel: 1, federacaoId: 1, federacaoNome: 'FEASCO', icone: 'trofeu_continental' };
+      case 2:
+        return { nome: 'Taça Navegadores', nivel: 1, federacaoId: 2, federacaoNome: 'FEMIFUS', icone: 'trofeu_continental' };
+      case 3:
+        return { nome: 'Taça Hemisférios', nivel: 1, federacaoId: 3, federacaoNome: 'COMPACTA', icone: 'trofeu_continental' };
+      default:
+        return { nome: 'Copa Continental de Clubes', nivel: 1, federacaoId: 1, federacaoNome: 'CONFUSA', icone: 'trofeu_continental' };
+    }
+  }
+
+  // Obtém a competição continental de clubes secundária (2º Nível: Taça Nery Pumpido, Taça Trifon Ivanov, Taça LID)
+  obterCompeticaoClubeSecundaria(idFederacao) {
+    const fed = parseInt(idFederacao, 10);
+    switch (fed) {
+      case 1:
+        return { nome: 'Taça Nery Pumpido', nivel: 2, federacaoId: 1, federacaoNome: 'FEASCO', icone: 'trofeu_prata' };
+      case 2:
+        return { nome: 'Taça Trifon Ivanov', nivel: 2, federacaoId: 2, federacaoNome: 'FEMIFUS', icone: 'trofeu_prata' };
+      case 3:
+        return { nome: 'Taça LID', nivel: 2, federacaoId: 3, federacaoNome: 'COMPACTA', icone: 'trofeu_prata' };
+      default:
+        return null;
+    }
+  }
+
+  // Obtém a competição continental de clubes terciária (3º Nível: Taça Andy Selva na FEMIFUS)
+  obterCompeticaoClubeTerciaria(idFederacao) {
+    const fed = parseInt(idFederacao, 10);
+    switch (fed) {
+      case 2:
+        return { nome: 'Taça Andy Selva', nivel: 3, federacaoId: 2, federacaoNome: 'FEMIFUS', icone: 'trofeu_bronze' };
+      default:
+        return null;
     }
   }
 
@@ -219,7 +270,9 @@ window.ToperoEngine = class ToperoEngine {
           tipo: 'liga',
           nome: `${this.jogador.clubeAtual.nomeLiga || 'Liga Nacional'}`,
           categoria: 'Liga Nacional',
-          icone: 'trofeu_ouro'
+          icone: 'trofeu_ouro',
+          idPais: this.jogador.clubeAtual.idPais,
+          clubeId: this.jogador.clubeAtual.id
         });
       } else {
         // Risco de rebaixamento para quem não foi campeão na 1ª divisão
@@ -272,7 +325,59 @@ window.ToperoEngine = class ToperoEngine {
         tipo: 'copa',
         nome: `Copa de ${this.jogador.clubeAtual.nomePais || 'País'}${prefixoZebra}`,
         categoria: 'Copa Nacional',
-        icone: 'trofeu_prata'
+        icone: 'trofeu_prata',
+        idPais: this.jogador.clubeAtual.idPais,
+        clubeId: this.jogador.clubeAtual.id
+      });
+    }
+
+    // Copas Continentais de Clubes:
+    const fedClubeId = this.jogador.clubeAtual.idFederacao || 1;
+    const compClube1 = this.obterCompeticaoClube(fedClubeId);
+    const compClube2 = this.obterCompeticaoClubeSecundaria(fedClubeId);
+    const compClube3 = this.obterCompeticaoClubeTerciaria(fedClubeId);
+
+    // 1º Nível Continental (Elite principal: Taça Valderrama, Taça Navegadores, Taça Hemisférios)
+    // Disputada apenas por clubes de Tier 1 com OVR competitivo (>= 74)
+    let ganhouContinental1 = false;
+    if (tierClube === 1 && this.jogador.nivel >= 74 && Math.random() < 0.20 * fatorParticipacao) {
+      ganhouContinental1 = true;
+      titulosAno.push({
+        tipo: 'continental_clube',
+        nome: `${compClube1.nome}`,
+        categoria: `Clubes • ${compClube1.federacaoNome} (1º Nível)`,
+        icone: compClube1.icone,
+        federacaoId: compClube1.federacaoId,
+        nivelTorneio: 1,
+        clubeId: this.jogador.clubeAtual.id
+      });
+    }
+
+    // 2º Nível Continental (Copa Secundária: Taça Nery Pumpido, Taça Trifon Ivanov, Taça LID)
+    // Disputada por clubes de Tier 1 intermediários ou equipes competitivas que não disputaram a final da taça principal
+    if (!ganhouContinental1 && compClube2 && this.jogador.nivel >= 66 && Math.random() < 0.16 * fatorParticipacao) {
+      titulosAno.push({
+        tipo: 'continental_clube_secundaria',
+        nome: `${compClube2.nome}`,
+        categoria: `Clubes • ${compClube2.federacaoNome} (2º Nível)`,
+        icone: compClube2.icone,
+        federacaoId: compClube2.federacaoId,
+        nivelTorneio: 2,
+        clubeId: this.jogador.clubeAtual.id
+      });
+    }
+
+    // 3º Nível Continental (Copa Terciária: Taça Andy Selva na FEMIFUS)
+    // Disputada por clubes em desenvolvimento
+    if (!ganhouContinental1 && compClube3 && this.jogador.nivel >= 60 && Math.random() < 0.14 * fatorParticipacao) {
+      titulosAno.push({
+        tipo: 'continental_clube_terciaria',
+        nome: `${compClube3.nome}`,
+        categoria: `Clubes • ${compClube3.federacaoNome} (3º Nível)`,
+        icone: compClube3.icone,
+        federacaoId: compClube3.federacaoId,
+        nivelTorneio: 3,
+        clubeId: this.jogador.clubeAtual.id
       });
     }
 
@@ -282,7 +387,8 @@ window.ToperoEngine = class ToperoEngine {
         tipo: 'mundial_clubes',
         nome: `Copa do Mundo CONFUSA de Clubes`,
         categoria: 'Mundial de Clubes',
-        icone: 'trofeu_continental'
+        icone: 'trofeu_continental',
+        clubeId: this.jogador.clubeAtual.id
       });
     }
 
@@ -299,7 +405,9 @@ window.ToperoEngine = class ToperoEngine {
             tipo: 'torneio_selecao',
             nome: `${torneioFed.nome} (${this.jogador.pais.nome})`,
             categoria: `Seleções • ${torneioFed.federacaoNome}`,
-            icone: 'trofeu_selecao'
+            icone: 'trofeu_selecao',
+            federacaoId: torneioFed.federacaoId,
+            paisId: this.jogador.pais.id
           });
           this.jogador.estatisticasTotais.titulosSelecao++;
         }
@@ -313,7 +421,9 @@ window.ToperoEngine = class ToperoEngine {
             tipo: 'copa_mundo_selecao',
             nome: `Copa do Mundo de Seleções (${this.jogador.pais.nome})`,
             categoria: 'Seleções • Mundial',
-            icone: 'trofeu_copa_mundo'
+            icone: 'trofeu_copa_mundo',
+            forcaPaisBase: forcaPaisBase,
+            paisId: this.jogador.pais.id
           });
           this.jogador.estatisticasTotais.titulosSelecao++;
         }
@@ -689,6 +799,23 @@ window.ToperoEngine = class ToperoEngine {
       }
     }
 
+    // Rastreamento para conquistas
+    if (evento && evento.id === 'mysterious_substance' && opcaoId === 'consume' && resultado.suspenso) {
+      this.historicoEventos.caiuDoping = true;
+    }
+    if (evento && (evento.id === 'injury_at_peak' || evento.id === 'training_extra' || evento.id === 'season_load') && resultado.lesao) {
+      this.historicoEventos.lesaoGrave = true;
+    }
+    if (evento && (evento.id === 'honesty_test' || evento.id === 'rival_offer' || evento.id === 'mysterious_substance')) {
+      this.historicoEventos.tevePropostaPolemica = true;
+      if (opcaoId === 'accept' || opcaoId === 'consume') {
+        this.historicoEventos.aceitouPolemica = true;
+      }
+    }
+    if (evento && evento.id === 'copa_andromeda' && opcaoId === 'embarcar_nave') {
+      this.historicoEventos.embarcouNaveCometa = true;
+    }
+
     // Aplica os efeitos para a próxima temporada/bloco
     this.modTemporada = {
       minutosMult: resultado.minutosMult,
@@ -701,6 +828,7 @@ window.ToperoEngine = class ToperoEngine {
     if (opcao.trocaRival && this.mundo && this.mundo.clubes && this.jogador.clubeAtual) {
       const clubeAtual = this.jogador.clubeAtual;
       const sexoJogador = this.jogador.sexo !== undefined ? this.jogador.sexo : 0;
+      this.historicoEventos.aceitouRivalAno = this.temporadaAtual;
       
       // Prioridade 1: Clubes da mesmíssima liga (rival direto)
       let rivais = this.mundo.clubes.filter(c => {
@@ -756,5 +884,185 @@ window.ToperoEngine = class ToperoEngine {
     }
 
     return resultado;
+  }
+
+  // Verifica e retorna os IDs dos achievements conquistados nesta carreira
+  verificarAchievements() {
+    const jog = this.jogador;
+    const tot = jog.estatisticasTotais;
+    const temporadas = jog.temporadas || [];
+    const historicoClubes = jog.historicoClubes || [];
+    const histEv = this.historicoEventos || {};
+    const desbloqueados = [];
+
+    // 1. "Baile da Oligarquia": vencer competição continental de clubes e seleções nas 3 federações (1, 2, 3)
+    const fedsClubes = new Set();
+    const fedsSelecoes = new Set();
+    tot.titulosDetalhados.forEach(t => {
+      if (t.tipo === 'continental_clube' && t.federacaoId) {
+        fedsClubes.add(t.federacaoId);
+      }
+      if (t.tipo === 'torneio_selecao' && t.federacaoId) {
+        fedsSelecoes.add(t.federacaoId);
+      }
+    });
+    if ([1, 2, 3].every(f => fedsClubes.has(f)) && [1, 2, 3].every(f => fedsSelecoes.has(f))) {
+      desbloqueados.push('baile_oligarquia');
+    }
+
+    // 2. "Felipe Castro": vencer competição continental de clubes nas 3 federações
+    if ([1, 2, 3].every(f => fedsClubes.has(f))) {
+      desbloqueados.push('felipe_castro');
+    }
+
+    // 3. "Khangtsi": não ganhar absolutamente nada a carreira inteira
+    if (this.aposentado && tot.titulos === 0 && tot.bolasOuro === 0) {
+      desbloqueados.push('khangtsi');
+    }
+
+    // 4. "É tetra!": Jogar em pelo menos um clube de todas as federações (1, 2, 3 e aceitar COMETA)
+    const fedsOndeJogou = new Set();
+    historicoClubes.forEach(h => {
+      if (h.clube && h.clube.idFederacao) {
+        fedsOndeJogou.add(h.clube.idFederacao);
+      }
+    });
+    if ([1, 2, 3].every(f => fedsOndeJogou.has(f)) && histEv.embarcouNaveCometa) {
+      desbloqueados.push('e_tetra');
+    }
+
+    // 5. "Monstro": Ganhar a Bola de Ouro 3 vezes (ou mais) na carreira
+    if (tot.bolasOuro >= 3) {
+      desbloqueados.push('monstro');
+    }
+
+    // 6. "El Pitti": Atingir OVR 95+ no auge da carreira
+    if (jog.ovrMaximo >= 95) {
+      desbloqueados.push('el_pitti');
+    }
+
+    // 7. "Chuva de gols": Atingir a marca de 700 gols na carreira
+    if (tot.gols >= 700) {
+      desbloqueados.push('chuva_de_gols');
+    }
+
+    // 8. "Não vai passar": (Goleiro) Alcançar 200 jogos sem sofrer gols na carreira
+    if (tot.jogosSemSofrerGol >= 200) {
+      desbloqueados.push('nao_vai_passar');
+    }
+
+    // 9. "Goleador": Terminar uma temporada com mais gols do que jogos disputados
+    const teveTemporadaMaisGols = temporadas.some(t => t.jogos > 0 && t.gols > t.jogos);
+    if (teveTemporadaMaisGols) {
+      desbloqueados.push('goleador');
+    }
+
+    // 10. "Multicampeão": Ser campeão nacional de clubes em 6 países diferentes
+    const paisesCampeao = new Set();
+    tot.titulosDetalhados.forEach(t => {
+      if (t.tipo === 'liga' && t.idPais) {
+        paisesCampeao.add(t.idPais);
+      }
+    });
+    if (paisesCampeao.size >= 6) {
+      desbloqueados.push('multicampeao');
+    }
+
+    // 11. "Esse é fera": Vencer a Copa Mundial de Clubes por dois times diferentes
+    const timesMundial = new Set();
+    tot.titulosDetalhados.forEach(t => {
+      if (t.tipo === 'mundial_clubes' && t.clubeId) {
+        timesMundial.add(t.clubeId);
+      }
+    });
+    if (timesMundial.size >= 2) {
+      desbloqueados.push('esse_e_fera');
+    }
+
+    // 12. "Tríplice coroa": Conquistar a Liga Nacional, a Copa Continental e a Bola de Ouro no mesmo ano
+    const teveTriplice = temporadas.some(t => {
+      const temLiga = t.titulos && t.titulos.some(x => x.tipo === 'liga');
+      const temContinental = t.titulos && t.titulos.some(x => x.tipo === 'continental_clube');
+      const temBolaOuro = !!t.bolaDeOuro;
+      return temLiga && temContinental && temBolaOuro;
+    });
+    if (teveTriplice) {
+      desbloqueados.push('triplice_coroa');
+    }
+
+    // 13. "O'Harrison": Marcar 70 gols ou mais pela seleção nacional
+    if (tot.golsSelecao >= 70) {
+      desbloqueados.push('oharrison');
+    }
+
+    // 14. "Bahavia": Ganhar a Copa do Mundo com uma seleção de força baixa (OVR base < 70)
+    const ganhouMundialZebra = tot.titulosDetalhados.some(t => t.tipo === 'copa_mundo_selecao' && t.forcaPaisBase && t.forcaPaisBase < 70);
+    if (ganhouMundialZebra) {
+      desbloqueados.push('bahavia');
+    }
+
+    // 15. "Cláusula Weah": Ganhar a Bola de Ouro sem nunca ter vencido um título com a seleção
+    if (tot.bolasOuro >= 1 && tot.titulosSelecao === 0) {
+      desbloqueados.push('clausula_weah');
+    }
+
+    // 16. "Lei do Ex": Aceitar a proposta do Maior Rival e ser campeão na temporada seguinte
+    if (histEv.aceitouRivalAno !== null) {
+      const anoRival = histEv.aceitouRivalAno;
+      const foiCampeaoAnoSeguinte = temporadas.some(t => t.ano === anoRival + 1 && t.titulos && t.titulos.length > 0);
+      if (foiCampeaoAnoSeguinte) {
+        desbloqueados.push('lei_do_ex');
+      }
+    }
+
+    // 17. "Segunda chance": Cair no antidoping / tomar suspensão grave e ainda assim voltar para ser campeão ou Bola de Ouro
+    if (histEv.caiuDoping) {
+      const posDoping = temporadas.some(t => t.titulos && t.titulos.length > 0 || t.bolaDeOuro);
+      if (posDoping) {
+        desbloqueados.push('segunda_chance');
+      }
+    }
+
+    // 18. "Volta por cima": Sofrer lesão grave em evento e depois ser campeão mundial (de clubes ou seleções)
+    if (histEv.lesaoGrave) {
+      const foiCampeaoMundial = tot.titulosDetalhados.some(t => t.tipo === 'mundial_clubes' || t.tipo === 'copa_mundo_selecao');
+      if (foiCampeaoMundial) {
+        desbloqueados.push('volta_por_cima');
+      }
+    }
+
+    // 19. "Com moral": Recusar todas as propostas polêmicas e manter a carreira 100% fair play (ao se aposentar)
+    if (this.aposentado && histEv.tevePropostaPolemica && !histEv.aceitouPolemica) {
+      desbloqueados.push('com_moral');
+    }
+
+    // 20. "One-Club Man": Jogar a carreira inteira (dos 17 até se aposentar) em um único clube
+    if (this.aposentado && historicoClubes.length === 1) {
+      desbloqueados.push('one_club_man');
+    }
+
+    // 21. "Mochileiro": Passar por mais de 20 clubes diferentes ao longo da carreira
+    const clubesDistintos = new Set(historicoClubes.map(h => h.clube ? h.clube.id : null).filter(Boolean));
+    if (clubesDistintos.size > 20) {
+      desbloqueados.push('mochileiro');
+    }
+
+    // 22. "Sem etarismo": Ganhar um grande título (Continental ou Mundial) com 37 anos ou mais
+    const ganhouVeterano = temporadas.some(t => {
+      if (t.idade >= 37 && t.titulos) {
+        return t.titulos.some(x => x.tipo === 'continental_clube' || x.tipo === 'mundial_clubes' || x.tipo === 'torneio_selecao' || x.tipo === 'copa_mundo_selecao');
+      }
+      return false;
+    });
+    if (ganhouVeterano) {
+      desbloqueados.push('sem_etarismo');
+    }
+
+    // 23. "Incansável": Aposentar com mais de 1100 jogos oficiais no currículo
+    if (this.aposentado && tot.jogos > 1100) {
+      desbloqueados.push('incansavel');
+    }
+
+    return desbloqueados;
   }
 };

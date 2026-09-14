@@ -74,6 +74,9 @@ $user_avatar = !empty($_SESSION['avatar']) ? $_SESSION['avatar'] : '/images/defa
         <button id="tab-btn-jogar" class="topero-tab-btn active">
           <span class="material-symbols-outlined">sports_soccer</span> Novo Jogo
         </button>
+        <button id="tab-btn-conquistas" class="topero-tab-btn">
+          <span class="material-symbols-outlined">military_tech</span> Conquistas
+        </button>
         <button id="tab-btn-minhas-carreiras" class="topero-tab-btn">
           <span class="material-symbols-outlined">badge</span> Minhas Carreiras
         </button>
@@ -346,6 +349,14 @@ $user_avatar = !empty($_SESSION['avatar']) ? $_SESSION['avatar'] : '/images/defa
         <h4 style="font-family:'Outfit', sans-serif; font-size:1.15rem; color:#f8fafc; margin:1.25rem 0 0.5rem 0;">🏆 Galeria de Troféus Conquistados</h4>
         <div id="final-trofeus-lista" class="final-trofeus-grid" style="margin-bottom: 1.5rem;"></div>
 
+        <!-- Conquistas Desbloqueadas na Carreira -->
+        <div id="final-achievements-wrap" style="display:none; margin-bottom: 1.5rem;">
+          <h4 style="font-family:'Outfit', sans-serif; font-size:1.15rem; color:#38bdf8; margin:1.25rem 0 0.5rem 0; display:flex; align-items:center; gap:8px;">
+            <span>🎖️</span> Conquistas Desbloqueadas nesta Carreira
+          </h4>
+          <div id="final-achievements-lista" class="final-achievements-grid"></div>
+        </div>
+
         <!-- Clubes defendidos -->
         <h4 style="font-family:'Outfit', sans-serif; font-size:1.15rem; color:#f8fafc; margin:1.25rem 0 0.5rem 0;">🛡️ Clubes Onde Jogou</h4>
         <div id="final-clubes-lista" class="final-clubes-wrap" style="margin-bottom: 1rem;"></div>
@@ -369,22 +380,70 @@ $user_avatar = !empty($_SESSION['avatar']) ? $_SESSION['avatar'] : '/images/defa
       </div>
     </section>
 
-    <!-- TELA 4: MINHAS CARREIRAS & HALL DA FAMA -->
-    <section id="view-hall-fama" style="display: none;">
-      
-      <div id="container-minhas-carreiras-wrap" style="display: none;">
-        <h3 style="font-family:'Outfit', sans-serif; color:#f8fafc; margin-top:0; margin-bottom:12px; font-size:1.35rem; display:flex; align-items:center; gap:8px;">
-          <span>🎖️</span> Minhas Carreiras Salvas
-        </h3>
-        <div id="minhas-carreiras-lista" class="carreiras-grid-cards" style="margin-bottom: 2.5rem;"></div>
+    <!-- TELA 4: GALERIA DE CONQUISTAS / ACHIEVEMENTS -->
+    <section id="view-conquistas" style="display: none;">
+      <div class="achievements-header-card">
+        <div class="achievements-header-info">
+          <h3 style="font-family:'Outfit', sans-serif; color:#f8fafc; margin:0 0 6px 0; font-size:1.45rem; display:flex; align-items:center; gap:8px;">
+            <span>🎖️</span> Galeria de Conquistas do TOPERO
+          </h3>
+          <p style="color:#94a3b8; font-size:0.95rem; margin:0;">
+            Desbloqueie marcos lendários do CONFUSA ao longo de suas carreiras.
+          </p>
+        </div>
+        <div class="achievements-progress-box">
+          <div class="achievements-progress-count" id="achievements-count">0 / 23</div>
+          <div class="achievements-progress-bar-bg">
+            <div id="achievements-progress-fill" class="achievements-progress-bar-fill" style="width: 0%;"></div>
+          </div>
+        </div>
       </div>
 
-      <div>
-        <h3 style="font-family:'Outfit', sans-serif; color:#f8fafc; margin-top:0; margin-bottom:12px; font-size:1.35rem; display:flex; align-items:center; gap:8px;">
-          <span>🏆</span> Hall da Fama Global (Top 25 CONFUSA)
-        </h3>
-        <div id="ranking-global-lista" class="carreiras-grid-cards"></div>
+      <div id="achievements-grid" class="achievements-grid-cards"></div>
+
+      <div style="text-align:center; margin-top:2.5rem;">
+        <button id="btn-voltar-criacao-conquistas" class="btn-primary">
+          ⚽ Iniciar Nova Carreira
+        </button>
       </div>
+    </section>
+
+    <!-- TELA 5: MINHAS CARREIRAS SALVAS -->
+    <section id="view-minhas-carreiras" style="display: none;">
+      <div class="achievements-header-card">
+        <div class="achievements-header-info">
+          <h3 style="font-family:'Outfit', sans-serif; color:#f8fafc; margin:0 0 6px 0; font-size:1.45rem; display:flex; align-items:center; gap:8px;">
+            <span>🎖️</span> Minhas Carreiras Salvas
+          </h3>
+          <p style="color:#94a3b8; font-size:0.95rem; margin:0;">
+            Histórico completo de todos os seus atletas e carreiras imortalizadas no CONFUSA.
+          </p>
+        </div>
+      </div>
+
+      <div id="minhas-carreiras-lista" class="carreiras-grid-cards"></div>
+
+      <div style="text-align:center; margin-top:2.5rem;">
+        <button id="btn-voltar-criacao-minhas" class="btn-primary">
+          ⚽ Iniciar Nova Carreira
+        </button>
+      </div>
+    </section>
+
+    <!-- TELA 6: HALL DA FAMA GLOBAL -->
+    <section id="view-hall-fama" style="display: none;">
+      <div class="achievements-header-card">
+        <div class="achievements-header-info">
+          <h3 style="font-family:'Outfit', sans-serif; color:#f8fafc; margin:0 0 6px 0; font-size:1.45rem; display:flex; align-items:center; gap:8px;">
+            <span>🏆</span> Hall da Fama Global (Top 25 CONFUSA)
+          </h3>
+          <p style="color:#94a3b8; font-size:0.95rem; margin:0;">
+            Os maiores atletas da história do simulador, ranqueados por títulos, conquistas e gols.
+          </p>
+        </div>
+      </div>
+
+      <div id="ranking-global-lista" class="carreiras-grid-cards"></div>
 
       <div style="text-align:center; margin-top:2.5rem;">
         <button id="btn-voltar-criacao" class="btn-primary">

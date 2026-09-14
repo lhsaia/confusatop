@@ -339,3 +339,168 @@ window.TOPERO_EASTER_EGGS = [
     ]
   }
 ];
+
+window.TOPERO_ACHIEVEMENTS = [
+  {
+    id: "baile_oligarquia",
+    title: "Baile da Oligarquia",
+    description: "Vencer competição continental de clubes e seleções nas 3 federações (FEASCO, FEMIFUS e COMPACTA).",
+    icon: "crown",
+    rarity: "legendary"
+  },
+  {
+    id: "felipe_castro",
+    title: "Felipe Castro",
+    description: "Vencer competição continental de clubes nas 3 federações.",
+    icon: "globe",
+    rarity: "epic"
+  },
+  {
+    id: "khangtsi",
+    title: "Khangtsi",
+    description: "Não ganhar absolutamente nada a carreira inteira.",
+    icon: "sentiment_sad",
+    rarity: "rare"
+  },
+  {
+    id: "e_tetra",
+    title: "É tetra!",
+    description: "Jogar em pelo menos um clube de todas as federações.",
+    icon: "rocket_launch",
+    rarity: "legendary"
+  },
+  {
+    id: "monstro",
+    title: "Monstro",
+    description: "Ganhar a Bola de Ouro 3 vezes (ou mais) na carreira.",
+    icon: "star",
+    rarity: "epic"
+  },
+  {
+    id: "el_pitti",
+    title: "El Pitti",
+    description: "Atingir OVR 95+ no auge da carreira.",
+    icon: "bolt",
+    rarity: "epic"
+  },
+  {
+    id: "chuva_de_gols",
+    title: "Chuva de gols",
+    description: "Atingir a marca de 700 gols na carreira.",
+    icon: "sports_soccer",
+    rarity: "rare"
+  },
+  {
+    id: "nao_vai_passar",
+    title: "Não vai passar",
+    description: "Alcançar 200 jogos sem sofrer gols (clean sheets) na carreira.",
+    icon: "shield",
+    rarity: "rare"
+  },
+  {
+    id: "goleador",
+    title: "Goleador",
+    description: "Terminar uma temporada com mais gols do que jogos disputados.",
+    icon: "local_fire_department",
+    rarity: "rare"
+  },
+  {
+    id: "multicampeao",
+    title: "Multicampeão",
+    description: "Ser campeão nacional de clubes em 6 países diferentes.",
+    icon: "military_tech",
+    rarity: "epic"
+  },
+  {
+    id: "esse_e_fera",
+    title: "Esse é fera",
+    description: "Vencer a Copa Mundial de Clubes por dois times diferentes.",
+    icon: "public",
+    rarity: "epic"
+  },
+  {
+    id: "triplice_coroa",
+    title: "Tríplice coroa",
+    description: "Conquistar a Liga Nacional, a Copa Continental e a Bola de Ouro no mesmo ano.",
+    icon: "workspace_premium",
+    rarity: "legendary"
+  },
+  {
+    id: "oharrison",
+    title: "O'Harrison",
+    description: "Marcar 70 gols ou mais pela seleção nacional.",
+    icon: "flag",
+    rarity: "rare"
+  },
+  {
+    id: "bahavia",
+    title: "Bahavia",
+    description: "Ganhar a Copa do Mundo com uma seleção de força baixa (OVR base < 70).",
+    icon: "emoji_events",
+    rarity: "epic"
+  },
+  {
+    id: "clausula_weah",
+    title: "Cláusula Weah",
+    description: "Ganhar a Bola de Ouro sem nunca ter vencido um título com a seleção.",
+    icon: "hotel_class",
+    rarity: "rare"
+  },
+  {
+    id: "lei_do_ex",
+    title: "Lei do Ex",
+    description: "Aceitar a proposta do Maior Rival e ser campeão na temporada seguinte.",
+    icon: "swap_horiz",
+    rarity: "rare"
+  },
+  {
+    id: "segunda_chance",
+    title: "Segunda chance",
+    description: "Cair no antidoping / tomar suspensão grave e ainda assim voltar para ser campeão ou Bola de Ouro.",
+    icon: "medication",
+    rarity: "epic"
+  },
+  {
+    id: "volta_por_cima",
+    title: "Volta por cima",
+    description: "Sofrer lesão grave em evento e depois ser campeão mundial.",
+    icon: "healing",
+    rarity: "epic"
+  },
+  {
+    id: "com_moral",
+    title: "Com moral",
+    description: "Recusar todas as propostas polêmicas e manter a carreira 100% fair play.",
+    icon: "verified_user",
+    rarity: "rare"
+  },
+  {
+    id: "one_club_man",
+    title: "One-Club Man",
+    description: "Jogar a carreira inteira (dos 17 até se aposentar) em um único clube.",
+    icon: "favorite",
+    rarity: "rare"
+  },
+  {
+    id: "mochileiro",
+    title: "Mochileiro",
+    description: "Passar por mais de 20 clubes diferentes ao longo da carreira.",
+    icon: "flight_takeoff",
+    rarity: "rare"
+  },
+  {
+    id: "sem_etarismo",
+    title: "Sem etarismo",
+    description: "Ganhar um grande título (Continental ou Mundial) com 37 anos ou mais.",
+    icon: "elderly",
+    rarity: "rare"
+  },
+  {
+    id: "incansavel",
+    title: "Incansável",
+    description: "Aposentar com mais de 1100 jogos oficiais no currículo.",
+    icon: "timer",
+    rarity: "rare"
+  }
+];
+

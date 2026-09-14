@@ -9,6 +9,45 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
+// Garante criação das tabelas necessárias para o TOPERO se não existirem
+try {
+    $createAchTable = "CREATE TABLE IF NOT EXISTS topero_conquistas (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        id_usuario INT NOT NULL,
+        achievement_id VARCHAR(50) NOT NULL,
+        data_desbloqueio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uk_user_ach (id_usuario, achievement_id),
+        INDEX (id_usuario)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    $db->exec($createAchTable);
+
+    $createCarreirasTable = "CREATE TABLE IF NOT EXISTS topero_carreiras (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        id_usuario INT NOT NULL,
+        nome_jogador VARCHAR(100) NOT NULL,
+        numero INT NOT NULL,
+        sexo TINYINT NOT NULL DEFAULT 0,
+        posicao VARCHAR(20) NOT NULL,
+        id_pais_origem INT NOT NULL,
+        id_ultimo_clube INT NULL,
+        idade_final INT NOT NULL,
+        ovr_maximo INT NOT NULL,
+        partidas_totais INT NOT NULL,
+        gols_totais INT NOT NULL,
+        assistencias_totais INT NOT NULL,
+        gols_sofridos INT NOT NULL DEFAULT 0,
+        clean_sheets INT NOT NULL DEFAULT 0,
+        titulos_totais INT NOT NULL,
+        bolas_ouro INT NOT NULL DEFAULT 0,
+        detalhes_json LONGTEXT NOT NULL,
+        data_criacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX (id_usuario),
+        INDEX (titulos_totais),
+        INDEX (gols_totais)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    $db->exec($createCarreirasTable);
+} catch (Exception $e) {}
+
 $action = isset($_GET['action']) ? $_GET['action'] : 'bootstrap';
 
 // Função auxiliar para calcular distância euclidiana/haversine simplificada
@@ -75,7 +114,7 @@ if ($action === 'bootstrap') {
     $queryClubes = "SELECT 
                         c.ID as id, c.Nome as nome, c.TresLetras as sigla, c.Escudo as escudo,
                         c.Pais as idPais, c.liga as idLiga, COALESCE(c.Sexo, l.Sexo, 0) as sexo,
-                        p.nome as nomePais, p.sigla as siglaPais, p.bandeira as bandeiraPais,
+                        p.nome as nomePais, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.federacao as idFederacao,
                         l.nome as nomeLiga, l.tier as tierLiga
                     FROM clube c
                     INNER JOIN liga l ON c.liga = l.id
@@ -94,6 +133,7 @@ if ($action === 'bootstrap') {
         $row['idPais'] = (int)$row['idPais'];
         $row['idLiga'] = (int)$row['idLiga'];
         $row['tierLiga'] = (int)$row['tierLiga'];
+        $row['idFederacao'] = isset($row['idFederacao']) ? (int)$row['idFederacao'] : 1;
         $row['sexo'] = (int)$row['sexo'];
         $clubes[] = $row;
     }
@@ -189,6 +229,27 @@ if ($action === 'bootstrap') {
     $mapeamentoVizinhoMasc = $calcularMapeamento($paisesComLigaPorSexo[0]);
     $mapeamentoVizinhoFem = $calcularMapeamento($paisesComLigaPorSexo[1]);
 
+    // 6. Conquistas do Usuário Logado (se logado)
+    $conquistasUsuario = [];
+    if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true && isset($_SESSION['user_id'])) {
+        try {
+            $createAchTable = "CREATE TABLE IF NOT EXISTS topero_conquistas (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                id_usuario INT NOT NULL,
+                achievement_id VARCHAR(50) NOT NULL,
+                data_desbloqueio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY uk_user_ach (id_usuario, achievement_id),
+                INDEX (id_usuario)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+            $db->exec($createAchTable);
+
+            $stmtAch = $db->prepare("SELECT achievement_id FROM topero_conquistas WHERE id_usuario = :uid");
+            $stmtAch->bindValue(':uid', $_SESSION['user_id'], PDO::PARAM_INT);
+            $stmtAch->execute();
+            $conquistasUsuario = $stmtAch->fetchAll(PDO::FETCH_COLUMN);
+        } catch (Exception $e) {}
+    }
+
     echo json_encode([
         'success' => true,
         'user' => [
@@ -196,6 +257,7 @@ if ($action === 'bootstrap') {
             'id' => isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null,
             'nome' => isset($_SESSION['nome']) ? $_SESSION['nome'] : null
         ],
+        'conquistasUsuario' => $conquistasUsuario,
         'paises' => $paises,
         'ligas' => $ligas,
         'clubes' => $clubes,
@@ -203,6 +265,88 @@ if ($action === 'bootstrap') {
         'mapeamentoVizinhoMasc' => $mapeamentoVizinhoMasc,
         'mapeamentoVizinhoFem' => $mapeamentoVizinhoFem
     ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if ($action === 'desbloquear_conquista') {
+    if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+        echo json_encode(['success' => false, 'message' => 'Usuário não autenticado.']);
+        exit;
+    }
+
+    $input = json_decode(file_get_contents('php://input'), true);
+    $achId = isset($input['achievement_id']) ? trim($input['achievement_id']) : (isset($_GET['achievement_id']) ? trim($_GET['achievement_id']) : null);
+
+    if (!$achId) {
+        echo json_encode(['success' => false, 'message' => 'Achievement inválido.']);
+        exit;
+    }
+
+    try {
+        $createAchTable = "CREATE TABLE IF NOT EXISTS topero_conquistas (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            id_usuario INT NOT NULL,
+            achievement_id VARCHAR(50) NOT NULL,
+            data_desbloqueio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_user_ach (id_usuario, achievement_id),
+            INDEX (id_usuario)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+        $db->exec($createAchTable);
+
+        $sql = "INSERT IGNORE INTO topero_conquistas (id_usuario, achievement_id) VALUES (:uid, :ach)";
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(':uid', $_SESSION['user_id'], PDO::PARAM_INT);
+        $stmt->bindValue(':ach', $achId);
+        $stmt->execute();
+
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Erro ao registrar conquista.']);
+    }
+    exit;
+}
+
+if ($action === 'sincronizar_conquistas') {
+    if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+        echo json_encode(['success' => false, 'message' => 'Usuário não autenticado.']);
+        exit;
+    }
+
+    $input = json_decode(file_get_contents('php://input'), true);
+    $achievements = isset($input['achievements']) && is_array($input['achievements']) ? $input['achievements'] : [];
+
+    try {
+        $createAchTable = "CREATE TABLE IF NOT EXISTS topero_conquistas (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            id_usuario INT NOT NULL,
+            achievement_id VARCHAR(50) NOT NULL,
+            data_desbloqueio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uk_user_ach (id_usuario, achievement_id),
+            INDEX (id_usuario)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+        $db->exec($createAchTable);
+
+        if (!empty($achievements)) {
+            $sql = "INSERT IGNORE INTO topero_conquistas (id_usuario, achievement_id) VALUES (:uid, :ach)";
+            $stmt = $db->prepare($sql);
+            foreach ($achievements as $achId) {
+                if (is_string($achId) && !empty($achId)) {
+                    $stmt->bindValue(':uid', $_SESSION['user_id'], PDO::PARAM_INT);
+                    $stmt->bindValue(':ach', $achId);
+                    $stmt->execute();
+                }
+            }
+        }
+
+        $stmtAch = $db->prepare("SELECT achievement_id FROM topero_conquistas WHERE id_usuario = :uid");
+        $stmtAch->bindValue(':uid', $_SESSION['user_id'], PDO::PARAM_INT);
+        $stmtAch->execute();
+        $todas = $stmtAch->fetchAll(PDO::FETCH_COLUMN);
+
+        echo json_encode(['success' => true, 'conquistas' => $todas], JSON_UNESCAPED_UNICODE);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Erro ao sincronizar.']);
+    }
     exit;
 }
 
@@ -315,7 +459,7 @@ if ($action === 'carregar_carreira') {
         $sql = "SELECT c.*, p.nome as nomePais, p.bandeira as bandeiraPais, u.nome as nomeUsuario
                 FROM topero_carreiras c
                 LEFT JOIN paises p ON c.id_pais_origem = p.id
-                LEFT JOIN usuario u ON c.id_usuario = u.id
+                LEFT JOIN usuarios u ON c.id_usuario = u.id
                 WHERE c.id = :id";
         $stmt = $db->prepare($sql);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
@@ -341,7 +485,7 @@ if ($action === 'ranking_carreiras') {
                        c.data_criacao, p.nome as nomePais, p.bandeira as bandeiraPais, u.nome as nomeUsuario
                 FROM topero_carreiras c
                 LEFT JOIN paises p ON c.id_pais_origem = p.id
-                LEFT JOIN usuario u ON c.id_usuario = u.id
+                LEFT JOIN usuarios u ON c.id_usuario = u.id
                 ORDER BY c.titulos_totais DESC, c.bolas_ouro DESC, c.ovr_maximo DESC, c.gols_totais DESC
                 LIMIT 25";
         $stmt = $db->prepare($sql);

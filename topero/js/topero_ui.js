@@ -13,11 +13,115 @@
   const viewCriacao = document.getElementById('view-criacao');
   const viewJogo = document.getElementById('view-jogo');
   const viewAposentadoria = document.getElementById('view-aposentadoria');
+  const viewConquistas = document.getElementById('view-conquistas');
+  const viewMinhasCarreiras = document.getElementById('view-minhas-carreiras');
+  const viewHallFama = document.getElementById('view-hall-fama');
 
   const selectPais = document.getElementById('select-pais');
   const selectClube = document.getElementById('select-clube');
   const notaGeografica = document.getElementById('nota-geografica');
   const bandeiraPreview = document.getElementById('bandeira-preview');
+
+  // Gerenciamento de Achievements Desbloqueados Globais (LocalStorage + Banco de Dados)
+  function obterAchievementsDesbloqueadosGlobais() {
+    try {
+      const salvas = localStorage.getItem('topero_unlocked_achievements');
+      return salvas ? JSON.parse(salvas) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function salvarAchievementGlobal(achId) {
+    const atuais = obterAchievementsDesbloqueadosGlobais();
+    if (!atuais.includes(achId)) {
+      atuais.push(achId);
+      try {
+        localStorage.setItem('topero_unlocked_achievements', JSON.stringify(atuais));
+      } catch (e) {}
+    }
+
+    // Se estiver logado, persiste imediatamente no banco de dados
+    if (mundo && mundo.user && mundo.user.logged) {
+      fetch('/topero/api.php?action=desbloquear_conquista', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ achievement_id: achId })
+      }).catch(() => {});
+    }
+  }
+
+  // Sincroniza achievements do banco com o localStorage ao iniciar
+  async function sincronizarConquistasComBanco() {
+    if (!mundo || !mundo.user || !mundo.user.logged) return;
+    const locais = obterAchievementsDesbloqueadosGlobais();
+    const doBanco = mundo.conquistasUsuario || [];
+
+    // Mescla locais e banco
+    const unificados = Array.from(new Set([...locais, ...doBanco]));
+    localStorage.setItem('topero_unlocked_achievements', JSON.stringify(unificados));
+
+    // Se houver conquistas locais que ainda não estavam no banco, envia para sincronizar
+    const pendentes = locais.filter(x => !doBanco.includes(x));
+    if (pendentes.length > 0) {
+      try {
+        const res = await fetch('/topero/api.php?action=sincronizar_conquistas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ achievements: unificados })
+        });
+        const data = await res.json();
+        if (data.success && data.conquistas) {
+          localStorage.setItem('topero_unlocked_achievements', JSON.stringify(data.conquistas));
+        }
+      } catch (e) {}
+    }
+  }
+
+  // Exibe notificação toast flutuante em tempo real quando uma conquista é desbloqueada
+  function exibirToastConquista(ach) {
+    const toast = document.createElement('div');
+    toast.className = 'achievement-toast';
+    toast.innerHTML = `
+      <span class="material-symbols-outlined achievement-toast-icon">${ach.icon || 'military_tech'}</span>
+      <div class="achievement-toast-content">
+        <strong>Conquista Desbloqueada!</strong>
+        <span>${ach.title}</span>
+      </div>
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add('show');
+    }, 100);
+
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 500);
+    }, 4500);
+  }
+
+  // Checa achievements durante o jogo e notifica
+  function checarENotificarAchievements() {
+    if (!motor) return [];
+    const listaDefinicoes = window.TOPERO_ACHIEVEMENTS || [];
+    const conquistadosAgora = motor.verificarAchievements();
+    const globais = obterAchievementsDesbloqueadosGlobais();
+
+    conquistadosAgora.forEach(achId => {
+      if (!globais.includes(achId)) {
+        salvarAchievementGlobal(achId);
+        const achDef = listaDefinicoes.find(a => a.id === achId);
+        if (achDef) {
+          exibirToastConquista(achDef);
+        }
+      }
+    });
+
+    return conquistadosAgora;
+  }
 
   // Inicialização
   document.addEventListener('DOMContentLoaded', init);
@@ -28,6 +132,7 @@
       const data = await res.json();
       if (data.success) {
         mundo = data;
+        sincronizarConquistasComBanco();
         popularPaises();
         configurarEventosFormulario();
         document.getElementById('loading-overlay').style.display = 'none';
@@ -213,6 +318,9 @@
     // Renderiza novas temporadas no feed
     novasTemporadas.forEach(t => renderizarLinhaTemporada(t));
     atualizarPainelAtleta();
+
+    // Checa e notifica conquistas obtidas
+    checarENotificarAchievements();
 
     // Verifica se aposentou
     if (motor.aposentado) {
@@ -618,6 +726,34 @@
       containerClubes.appendChild(el);
     });
 
+    // Conquistas Desbloqueadas na Carreira
+    const wrapAch = document.getElementById('final-achievements-wrap');
+    const containerAch = document.getElementById('final-achievements-lista');
+    const conquistasCarreira = checarENotificarAchievements();
+    const listaDefinicoes = window.TOPERO_ACHIEVEMENTS || [];
+
+    if (conquistasCarreira && conquistasCarreira.length > 0 && containerAch && wrapAch) {
+      containerAch.innerHTML = '';
+      conquistasCarreira.forEach(achId => {
+        const achDef = listaDefinicoes.find(a => a.id === achId);
+        if (achDef) {
+          const item = document.createElement('div');
+          item.className = 'final-achievement-item';
+          item.innerHTML = `
+            <span class="material-symbols-outlined">${achDef.icon || 'military_tech'}</span>
+            <div class="final-achievement-item-text">
+              <strong>${achDef.title}</strong>
+              <span>${achDef.description}</span>
+            </div>
+          `;
+          containerAch.appendChild(item);
+        }
+      });
+      wrapAch.style.display = 'block';
+    } else if (wrapAch) {
+      wrapAch.style.display = 'none';
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -646,7 +782,8 @@
       bolas_ouro: jog.estatisticasTotais.bolasOuro,
       detalhes: {
         temporadas: jog.temporadas,
-        historicoClubes: jog.historicoClubes
+        historicoClubes: jog.historicoClubes,
+        conquistas: motor ? motor.verificarAchievements() : []
       }
     };
 
@@ -719,9 +856,10 @@
           logging: false
         });
 
-        const jog = motor.jogador;
+        const nomeAtletaEl = document.getElementById('final-nome');
+        const nomeAtleta = (motor && motor.jogador && motor.jogador.nome) ? motor.jogador.nome : (nomeAtletaEl ? nomeAtletaEl.textContent.trim() : 'carreira');
         const link = document.createElement('a');
-        link.download = `topero-${jog.nome.toLowerCase().replace(/\s+/g, '-')}.png`;
+        link.download = `topero-${nomeAtleta.toLowerCase().replace(/\s+/g, '-')}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
       } else {
@@ -740,7 +878,8 @@
   function reiniciarJogo() {
     viewAposentadoria.style.display = 'none';
     viewJogo.style.display = 'none';
-    const viewHallFama = document.getElementById('view-hall-fama');
+    if (viewConquistas) viewConquistas.style.display = 'none';
+    if (viewMinhasCarreiras) viewMinhasCarreiras.style.display = 'none';
     if (viewHallFama) viewHallFama.style.display = 'none';
     viewCriacao.style.display = 'block';
     
@@ -751,13 +890,15 @@
 
   // Controle de Abas Superiores
   const tabJogar = document.getElementById('tab-btn-jogar');
+  const tabConquistas = document.getElementById('tab-btn-conquistas');
   const tabMinhas = document.getElementById('tab-btn-minhas-carreiras');
   const tabHall = document.getElementById('tab-btn-hall-fama');
   const btnVoltarCriacao = document.getElementById('btn-voltar-criacao');
-  const viewHallFama = document.getElementById('view-hall-fama');
+  const btnVoltarCriacaoMinhas = document.getElementById('btn-voltar-criacao-minhas');
+  const btnVoltarCriacaoConquistas = document.getElementById('btn-voltar-criacao-conquistas');
 
   function ativarAba(tabId) {
-    [tabJogar, tabMinhas, tabHall].forEach(t => {
+    [tabJogar, tabConquistas, tabMinhas, tabHall].forEach(t => {
       if (t) t.classList.remove('active');
     });
     const el = document.getElementById(tabId);
@@ -776,6 +917,25 @@
     });
   }
 
+  if (btnVoltarCriacaoMinhas) {
+    btnVoltarCriacaoMinhas.addEventListener('click', () => {
+      reiniciarJogo();
+    });
+  }
+
+  if (btnVoltarCriacaoConquistas) {
+    btnVoltarCriacaoConquistas.addEventListener('click', () => {
+      reiniciarJogo();
+    });
+  }
+
+  if (tabConquistas) {
+    tabConquistas.addEventListener('click', () => {
+      ativarAba('tab-btn-conquistas');
+      abrirGaleriaConquistas();
+    });
+  }
+
   if (tabMinhas) {
     tabMinhas.addEventListener('click', () => {
       ativarAba('tab-btn-minhas-carreiras');
@@ -790,19 +950,87 @@
     });
   }
 
+  function abrirGaleriaConquistas() {
+    viewCriacao.style.display = 'none';
+    viewJogo.style.display = 'none';
+    viewAposentadoria.style.display = 'none';
+    if (viewMinhasCarreiras) viewMinhasCarreiras.style.display = 'none';
+    if (viewHallFama) viewHallFama.style.display = 'none';
+    if (viewConquistas) viewConquistas.style.display = 'block';
+
+    const listaDefinicoes = window.TOPERO_ACHIEVEMENTS || [];
+    const desbloqueados = obterAchievementsDesbloqueadosGlobais();
+
+    const countEl = document.getElementById('achievements-count');
+    const fillEl = document.getElementById('achievements-progress-fill');
+    const gridEl = document.getElementById('achievements-grid');
+
+    const total = listaDefinicoes.length;
+    const qtdDesbloqueados = desbloqueados.length;
+    const pct = total > 0 ? Math.round((qtdDesbloqueados / total) * 100) : 0;
+
+    if (countEl) countEl.textContent = `${qtdDesbloqueados} / ${total} (${pct}%)`;
+    if (fillEl) fillEl.style.width = `${pct}%`;
+
+    if (gridEl) {
+      gridEl.innerHTML = '';
+      listaDefinicoes.forEach(ach => {
+        const isUnlocked = desbloqueados.includes(ach.id);
+        const card = document.createElement('div');
+        const rarityClass = ach.rarity || 'rare';
+        card.className = `achievement-card ${isUnlocked ? 'unlocked' : 'locked'} ${rarityClass}`;
+        
+        const statusHtml = isUnlocked 
+          ? `<div class="achievement-status-tag"><span class="material-symbols-outlined" style="font-size:14px;">check_circle</span> Desbloqueada</div>`
+          : `<div class="achievement-status-tag" style="color:#64748b;"><span class="material-symbols-outlined" style="font-size:14px;">lock</span> Bloqueada</div>`;
+
+        const rarityLabel = ach.rarity === 'legendary' ? 'Lendária' : (ach.rarity === 'epic' ? 'Épica' : 'Rara');
+
+        card.innerHTML = `
+          <div class="achievement-icon-wrap">
+            <span class="material-symbols-outlined" style="font-size:24px;">${ach.icon || 'military_tech'}</span>
+          </div>
+          <div class="achievement-info">
+            <div class="achievement-title-row">
+              <h4 class="achievement-title">${ach.title}</h4>
+              <span class="achievement-badge-rarity ${rarityClass}">${rarityLabel}</span>
+            </div>
+            <p class="achievement-desc">${ach.description}</p>
+            ${statusHtml}
+          </div>
+        `;
+        gridEl.appendChild(card);
+      });
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   async function abrirMinhasCarreiras() {
     viewCriacao.style.display = 'none';
     viewJogo.style.display = 'none';
     viewAposentadoria.style.display = 'none';
-    viewHallFama.style.display = 'block';
-
-    const wrapMinhas = document.getElementById('container-minhas-carreiras-wrap');
-    wrapMinhas.style.display = 'block';
+    if (viewConquistas) viewConquistas.style.display = 'none';
+    if (viewHallFama) viewHallFama.style.display = 'none';
+    if (viewMinhasCarreiras) viewMinhasCarreiras.style.display = 'block';
 
     const containerMinhas = document.getElementById('minhas-carreiras-lista');
-    containerMinhas.innerHTML = '<div style="color:#94a3b8; padding:10px;">Carregando suas carreiras salvas...</div>';
+    if (!containerMinhas) return;
 
-    carregarRankingGlobal();
+    if (!mundo || !mundo.user || !mundo.user.logged) {
+      containerMinhas.innerHTML = `
+        <div style="background:rgba(30, 41, 59, 0.7); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:2rem; text-align:center; grid-column: 1 / -1;">
+          <div style="font-size:2rem; margin-bottom:10px;">🔒</div>
+          <h4 style="color:#f8fafc; font-family:'Outfit',sans-serif; margin:0 0 6px 0; font-size:1.2rem;">Faça login para ver suas carreiras</h4>
+          <p style="color:#94a3b8; font-size:0.9rem; margin:0 0 1rem 0;">Entre com sua conta CONFUSA.top para salvar, carregar e sincronizar suas trajetórias.</p>
+          <a href="/login.php" class="btn-primary" style="display:inline-block; text-decoration:none; padding:8px 20px;">Fazer Login</a>
+        </div>
+      `;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    containerMinhas.innerHTML = '<div style="color:#94a3b8; padding:10px;">Carregando suas carreiras salvas...</div>';
 
     try {
       const res = await fetch('/topero/api.php?action=minhas_carreiras');
@@ -813,31 +1041,30 @@
           containerMinhas.appendChild(criarCardResumoCarreira(c));
         });
       } else {
-        containerMinhas.innerHTML = '<div style="color:#94a3b8; font-size:0.9rem; padding:10px;">Você ainda não possui carreiras salvas. Conclua uma carreira até o fim e salve-a!</div>';
+        containerMinhas.innerHTML = '<div style="color:#94a3b8; font-size:0.9rem; padding:10px; grid-column: 1 / -1;">Você ainda não possui carreiras salvas. Conclua uma carreira até o fim e salve-a!</div>';
       }
     } catch (e) {
-      containerMinhas.innerHTML = '<div style="color:#ef4444; padding:10px;">Erro ao carregar suas carreiras.</div>';
+      containerMinhas.innerHTML = '<div style="color:#ef4444; padding:10px; grid-column: 1 / -1;">Erro ao carregar suas carreiras.</div>';
     }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async function abrirHallDaFama() {
     viewCriacao.style.display = 'none';
     viewJogo.style.display = 'none';
     viewAposentadoria.style.display = 'none';
-    viewHallFama.style.display = 'block';
+    if (viewConquistas) viewConquistas.style.display = 'none';
+    if (viewMinhasCarreiras) viewMinhasCarreiras.style.display = 'none';
+    if (viewHallFama) viewHallFama.style.display = 'block';
 
-    const wrapMinhas = document.getElementById('container-minhas-carreiras-wrap');
-    if (mundo && mundo.user && mundo.user.logged) {
-      wrapMinhas.style.display = 'block';
-      abrirMinhasCarreiras();
-    } else {
-      wrapMinhas.style.display = 'none';
-      carregarRankingGlobal();
-    }
+    carregarRankingGlobal();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async function carregarRankingGlobal() {
     const containerRank = document.getElementById('ranking-global-lista');
+    if (!containerRank) return;
     containerRank.innerHTML = '<div style="color:#94a3b8; padding:10px;">Carregando ranking global...</div>';
 
     try {
@@ -849,10 +1076,10 @@
           containerRank.appendChild(criarCardResumoCarreira(c, idx + 1));
         });
       } else {
-        containerRank.innerHTML = '<div style="color:#94a3b8; font-size:0.9rem; padding:10px;">Nenhuma carreira lendária gravada ainda no Hall da Fama.</div>';
+        containerRank.innerHTML = '<div style="color:#94a3b8; font-size:0.9rem; padding:10px; grid-column: 1 / -1;">Nenhuma carreira lendária gravada ainda no Hall da Fama.</div>';
       }
     } catch (e) {
-      containerRank.innerHTML = '<div style="color:#ef4444; padding:10px;">Erro ao carregar Hall da Fama.</div>';
+      containerRank.innerHTML = '<div style="color:#ef4444; padding:10px; grid-column: 1 / -1;">Erro ao carregar Hall da Fama.</div>';
     }
   }
 
@@ -914,7 +1141,8 @@
   function renderizarCarreiraCarregada(c) {
     viewCriacao.style.display = 'none';
     viewJogo.style.display = 'none';
-    viewHallFama.style.display = 'none';
+    if (viewMinhasCarreiras) viewMinhasCarreiras.style.display = 'none';
+    if (viewHallFama) viewHallFama.style.display = 'none';
     viewAposentadoria.style.display = 'block';
 
     document.getElementById('final-nome').textContent = c.nome_jogador;
@@ -1007,6 +1235,34 @@
         el.innerHTML = `${escudo} <strong>${nomeClube}</strong> (${anos})`;
         containerClubes.appendChild(el);
       });
+    }
+
+    // Processa Conquistas da Carreira Salva
+    const wrapAch = document.getElementById('final-achievements-wrap');
+    const containerAch = document.getElementById('final-achievements-lista');
+    const conquistasCarreira = (c.detalhes && c.detalhes.conquistas) ? c.detalhes.conquistas : [];
+    const listaDefinicoes = window.TOPERO_ACHIEVEMENTS || [];
+
+    if (conquistasCarreira && conquistasCarreira.length > 0 && containerAch && wrapAch) {
+      containerAch.innerHTML = '';
+      conquistasCarreira.forEach(achId => {
+        const achDef = listaDefinicoes.find(a => a.id === achId);
+        if (achDef) {
+          const item = document.createElement('div');
+          item.className = 'final-achievement-item';
+          item.innerHTML = `
+            <span class="material-symbols-outlined">${achDef.icon || 'military_tech'}</span>
+            <div class="final-achievement-item-text">
+              <strong>${achDef.title}</strong>
+              <span>${achDef.description}</span>
+            </div>
+          `;
+          containerAch.appendChild(item);
+        }
+      });
+      wrapAch.style.display = 'block';
+    } else if (wrapAch) {
+      wrapAch.style.display = 'none';
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
