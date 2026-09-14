@@ -86,12 +86,13 @@ if($num>0){
     echo "<thead>";
         echo "<tr>";
            // echo "<th>Id</th>";
-            echo "<th width='28%'>Liga</th>";
-            echo "<th width='15%'>Logo</th>";
-            echo "<th width='10%'>Tier</th>";
+            echo "<th width='24%'>Liga</th>";
+            echo "<th width='12%'>Logo</th>";
+            echo "<th width='12%'>Troféu</th>";
+            echo "<th width='8%'>Tier</th>";
             echo "<th width='12%'>Idade Máx.</th>";
-            echo "<th width='18%' class='wide'>País</th>";
-            echo "<th width='17%' class='wide'>Opções</th>";
+            echo "<th width='16%' class='wide'>País</th>";
+            echo "<th width='16%' class='wide'>Opções</th>";
 
         echo "</tr>";
         echo "</thead>";
@@ -113,11 +114,15 @@ if($num>0){
             }
 
             $limiteIdadeDisplay = (!empty($limite_idade) && intval($limite_idade) > 0) ? $limite_idade : '-';
+            $trofeuHtml = (!empty($trofeu)) 
+                ? "<img class='trofeuimage' id='trof".$id."' src='/images/trofeus/".$trofeu."' height='35px' title='Troféu da Liga' style='object-fit:contain;'/>" 
+                : "<span class='trofeuimage' id='trof".$id."' style='font-size:0.85rem; color:#94a3b8;'>-</span>";
 
             echo "<tr id='".$id."' data-sexo='".$sexo."'>";
                 //echo "<td><span id=".$id.">{$id}</span></td>";
                 echo "<td><span class='nomeEditavel' id='nom".$id."'><a class='nomeLiga fw-bold' href='../ligas/leaguestatus.php?league=".$id."' style='text-decoration:none;'>{$nome}</a></span><span class=' {$genderClass} genderSign'>{$genderCode}</span></td>";
                 echo "<td><img class='logoimage' id='log".$id."' src='../images/ligas/".$logo."' height='35px'/><div class='newlogoedit' hidden> <input type='file' id='newlogo".$id."' class=' custom-file-upload' name='file' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
+                echo "<td>".$trofeuHtml."<div class='newtrofeuedit' hidden> <input type='file' id='newtrofeu".$id."' class=' custom-file-upload' name='trofeu_file' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
                 echo "<td><span class='tier-badge nomeEditavel' id='tie".$id."'>{$tier}</span></td>";
                 echo "<td><span class='idade-badge nomeEditavel' id='ida".$id."' title='Limite de idade (vazio ou - para sem limite)'>{$limiteIdadeDisplay}</span></td>";
                 if($idPais != 0){
@@ -184,6 +189,8 @@ echo "</main>"; // closes propostas-container
         tbl_row.find('.nomePais').hide();
         tbl_row.find('.newlogoedit').show();
         tbl_row.find('.logoimage').hide();
+        tbl_row.find('.newtrofeuedit').show();
+        tbl_row.find('.trofeuimage').hide();
 
         var paisId = tbl_row.find('.comboPais').attr('id');
         tbl_row.find('.comboPais').show().val(paisId);
@@ -204,6 +211,8 @@ echo "</main>"; // closes propostas-container
         tbl_row.find('.draftar').show();
         tbl_row.find('.newlogoedit').hide();
         tbl_row.find('.logoimage').show();
+        tbl_row.find('.newtrofeuedit').hide();
+        tbl_row.find('.trofeuimage').show();
 
         tbl_row.find('span').each(function(index, val){
             $(this).html($(this).attr('original_entry'));
@@ -224,6 +233,8 @@ echo "</main>"; // closes propostas-container
         tbl_row.find('.draftar').show();
         tbl_row.find('.newlogoedit').hide();
         tbl_row.find('.logoimage').show();
+        tbl_row.find('.newtrofeuedit').hide();
+        tbl_row.find('.trofeuimage').show();
 
         var id = tbl_row.attr('id');
         var nomeLiga = tbl_row.find('#nom'+id).html();
@@ -237,10 +248,18 @@ echo "</main>"; // closes propostas-container
         var input = (tbl_row.find('#newlogo'+id))[0];
         var logo;
 
-        if (input.files.length > 0) {
+        if (input && input.files.length > 0) {
            logo = input.files[0];
         } else {
            logo = null;
+        }
+
+        var trofeuInput = (tbl_row.find('#newtrofeu'+id))[0];
+        var trofeu;
+        if (trofeuInput && trofeuInput.files.length > 0) {
+           trofeu = trofeuInput.files[0];
+        } else {
+           trofeu = null;
         }
 
         //var formId = 'form'+id;
@@ -253,6 +272,9 @@ echo "</main>"; // closes propostas-container
          formData.append('pais', pais);
          if(logo != null){
             formData.append('logo', logo);
+         }
+         if(trofeu != null){
+            formData.append('trofeu', trofeu);
          }
 
 
