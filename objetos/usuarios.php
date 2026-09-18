@@ -15,6 +15,20 @@ class Usuario{
 
     public function __construct($db){
         $this->conn = $db;
+        $this->ensurePermissaoDb3Column();
+    }
+
+    private function ensurePermissaoDb3Column() {
+        try {
+            $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN IF NOT EXISTS permissao_importar_db3 TINYINT(1) NOT NULL DEFAULT 0");
+        } catch (Exception $e) {
+            try {
+                $check = $this->conn->query("SHOW COLUMNS FROM " . $this->table_name . " LIKE 'permissao_importar_db3'");
+                if ($check && $check->rowCount() == 0) {
+                    $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN permissao_importar_db3 TINYINT(1) NOT NULL DEFAULT 0");
+                }
+            } catch (Exception $ex) {}
+        }
     }
 
     // used by select drop-down list
@@ -327,6 +341,57 @@ class Usuario{
         } else {
             return null;
         }
+    }
+
+    public function isAdmin($userId): bool {
+        $userId = (int)$userId;
+        if ($userId <= 0) {
+            return false;
+        }
+
+        $query = "SELECT admin_status FROM " . $this->table_name . " WHERE id = ? LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$userId]);
+        $status = $stmt->fetchColumn();
+        return ((int)$status === 1);
+    }
+
+    public function podeImportarDb3($userId): bool {
+        $userId = (int)$userId;
+        if ($userId <= 0) {
+            return false;
+        }
+
+        $query = "SELECT admin_status, permissao_importar_db3 FROM " . $this->table_name . " WHERE id = ? LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$userId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            return false;
+        }
+
+        return ((int)($row['admin_status'] ?? 0) === 1 || (int)($row['permissao_importar_db3'] ?? 0) === 1);
+    }
+
+    public function definirPermissaoDb3($userId, $status): bool {
+        $userId = (int)$userId;
+        $status = $status ? 1 : 0;
+
+        $query = "UPDATE " . $this->table_name . " SET permissao_importar_db3 = ? WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([$status, $userId]);
+    }
+
+    public function listarUsuariosPermissaoDb3(): array {
+        $query = "SELECT u.id, u.nomeusuario, u.nome, u.email, u.admin_status, u.permissao_importar_db3, u.avatar,
+                         COUNT(p.id) as total_paises,
+                         GROUP_CONCAT(p.nome ORDER BY p.nome ASC SEPARATOR ', ') as nomes_paises
+                  FROM " . $this->table_name . " u
+                  LEFT JOIN paises p ON p.dono = u.id AND p.ativo = 1
+                  GROUP BY u.id
+                  ORDER BY u.nome ASC";
+        $stmt = $this->conn->query($query);
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
 
 }

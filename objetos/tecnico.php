@@ -14,11 +14,26 @@ class Tecnico{
     public $estilo;
     public $pais;
     public $sexo;
+    public $externalID;
 
     public function __construct($db){
         $this->conn = $db;
         $this->ensureDataFalecimentoColumn();
         $this->ensureReferenciaColumn();
+        $this->ensureExternalIDColumn();
+    }
+
+    private function ensureExternalIDColumn() {
+        try {
+            $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN IF NOT EXISTS externalID INT(11) DEFAULT NULL");
+        } catch (Exception $e) {
+            try {
+                $check = $this->conn->query("SHOW COLUMNS FROM " . $this->table_name . " LIKE 'externalID'");
+                if ($check && $check->rowCount() == 0) {
+                    $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN externalID INT(11) DEFAULT NULL");
+                }
+            } catch (Exception $ex) {}
+        }
     }
 
     private function ensureReferenciaColumn() {
@@ -64,7 +79,7 @@ class Tecnico{
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    Nome=:nome, Nascimento=:nascimento, Nivel=:nivel, Mentalidade=:mentalidade, Estilo=:estilo, Pais=:pais, Sexo=:sexo, referencia='' ";
+                    Nome=:nome, Nascimento=:nascimento, Nivel=:nivel, Mentalidade=:mentalidade, Estilo=:estilo, Pais=:pais, Sexo=:sexo, referencia='', externalID=:externalID ";
 
         $stmt = $this->conn->prepare($query);
 
@@ -76,6 +91,7 @@ class Tecnico{
         $this->estilo = htmlspecialchars(strip_tags((string)($this->estilo ?? '')));
         $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
         $this->sexo = htmlspecialchars(strip_tags((string)($this->sexo ?? '')));
+        $this->externalID = ($this->externalID !== null && $this->externalID !== '') ? (int)$this->externalID : null;
 
         // bind values
         $stmt->bindParam(":nome", $this->nome);
@@ -90,6 +106,7 @@ class Tecnico{
         $stmt->bindParam(":estilo", $this->estilo);
         $stmt->bindParam(":pais", $this->pais);
         $stmt->bindParam(":sexo", $this->sexo);
+        $stmt->bindParam(":externalID", $this->externalID);
 
         if($stmt->execute()){
             $this->id = (int)$this->conn->lastInsertId();
@@ -255,32 +272,60 @@ class Tecnico{
         return $stmt->execute();
     }
 
-    //alterar jogador
-    function alterar($idRecebida,$nomeJogadorRec,$nomeAux1Rec,$nomeAux2Rec,$cobradorFaltaRec,$paisRec = 0){
+    //alterar tecnico
+    function alterar($idRecebida, $nomeTecnico, $nascimento = null, $nivel = null, $mentalidade = null, $estilo = null, $paisRec = null, $sexo = null, $externalID = null){
 
-        // $idRecebida = htmlspecialchars(strip_tags($idRecebida));
-        // $nomeJogadorRec = htmlspecialchars(strip_tags($nomeJogadorRec));
-        // $nomeAux1Rec = htmlspecialchars(strip_tags($nomeAux1Rec));
-        // $nomeAux2Rec = htmlspecialchars(strip_tags($nomeAux2Rec));
-        // $cobradorFaltaRec = htmlspecialchars(strip_tags($cobradorFaltaRec));
-        // $paisRec = htmlspecialchars(strip_tags($paisRec));
+        $idRecebida = (int)$idRecebida;
+        $nomeTecnico = htmlspecialchars(strip_tags((string)($nomeTecnico ?? '')));
 
-        // $query = "UPDATE " . $this->table_name . " SET nomeJogador = ?, nascimento = ?, mentalidade = ?, cobradorFalta = ?, pais = ? WHERE id = ?";
-        // $stmt = $this->conn->prepare( $query );
+        $setClauses = ["Nome = :nome"];
+        $params = [":nome" => $nomeTecnico, ":id" => $idRecebida];
 
-        // $stmt->bindParam(1, $nomeJogadorRec);
-        // $stmt->bindParam(2, $nomeAux1Rec);
-        // $stmt->bindParam(3, $nomeAux2Rec);
-        // $stmt->bindParam(4, $cobradorFaltaRec);
-        // $stmt->bindParam(5, $paisRec);
-        // $stmt->bindParam(6, $idRecebida);
+        if ($nivel !== null && $nivel !== '') {
+            $setClauses[] = "Nivel = :nivel";
+            $params[":nivel"] = htmlspecialchars(strip_tags((string)$nivel));
+        }
+        if ($mentalidade !== null && $mentalidade !== '') {
+            $setClauses[] = "Mentalidade = :mentalidade";
+            $params[":mentalidade"] = htmlspecialchars(strip_tags((string)$mentalidade));
+        }
+        if ($estilo !== null && $estilo !== '') {
+            $setClauses[] = "Estilo = :estilo";
+            $params[":estilo"] = htmlspecialchars(strip_tags((string)$estilo));
+        }
+        if ($paisRec !== null && (int)$paisRec > 0) {
+            $setClauses[] = "Pais = :pais";
+            $params[":pais"] = (int)$paisRec;
+        }
+        if ($sexo !== null && $sexo !== '') {
+            $setClauses[] = "Sexo = :sexo";
+            $params[":sexo"] = (int)$sexo;
+        }
+        if ($nascimento !== null && $nascimento !== '') {
+            $setClauses[] = "Nascimento = :nascimento";
+            if (is_numeric($nascimento)) {
+                $params[":nascimento"] = $this->aniversario_reverso($nascimento);
+            } else {
+                $params[":nascimento"] = htmlspecialchars(strip_tags((string)$nascimento));
+            }
+        }
+        if ($externalID !== null) {
+            $setClauses[] = "externalID = :externalID";
+            $params[":externalID"] = ($externalID !== '' && $externalID !== null) ? (int)$externalID : null;
+        }
 
-        // if($stmt->execute()){
-        //     return true;
-        // } else {
-        //     return false;
-        // }
+        $query = "UPDATE " . $this->table_name . " SET " . implode(", ", $setClauses) . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
 
+        foreach ($params as $paramKey => $paramVal) {
+            if ($paramKey === ':externalID' && $paramVal === null) {
+                $stmt->bindValue($paramKey, null, PDO::PARAM_NULL);
+            } else {
+                $stmt->bindValue($paramKey, $paramVal);
+            }
+        }
+
+        return $stmt->execute();
     }
 
     public function aniversario_reverso( $idade ){
@@ -368,7 +413,7 @@ class Tecnico{
 			  $subquery = " b.liga=:liga ";
 			}
 
-            $query = "SELECT DISTINCT a.ID, CONCAT(a.Nome,' [',p.sigla,']' ) as Nome, IFNULL(FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365),0) as Idade, a.Nivel, a.Mentalidade, a.Estilo FROM contratos_tecnico c LEFT JOIN tecnico a ON c.tecnico = a.ID LEFT JOIN paises p ON a.Pais = p.id LEFT JOIN clube b ON c.clube = b.ID WHERE " . $subquery;
+            $query = "SELECT DISTINCT a.ID, CONCAT(a.Nome,' [',p.sigla,']' ) as Nome, IFNULL(FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365),0) as Idade, a.Nivel, a.Mentalidade, a.Estilo, a.externalID FROM contratos_tecnico c LEFT JOIN tecnico a ON c.tecnico = a.ID LEFT JOIN paises p ON a.Pais = p.id LEFT JOIN clube b ON c.clube = b.ID WHERE " . $subquery;
             $stmt = $this->conn->prepare( $query );
             if($idPais != null){
               $stmt->bindParam(":pais", $idPais);

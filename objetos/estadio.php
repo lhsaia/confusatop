@@ -14,9 +14,24 @@ class Estadio{
     public $caldeirao;
     public $pais;
     public $foto;
+    public $externalID;
 
     public function __construct($db){
         $this->conn = $db;
+        $this->ensureExternalIDColumn();
+    }
+
+    private function ensureExternalIDColumn() {
+        try {
+            $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN IF NOT EXISTS externalID INT(11) DEFAULT NULL");
+        } catch (Exception $e) {
+            try {
+                $check = $this->conn->query("SHOW COLUMNS FROM " . $this->table_name . " LIKE 'externalID'");
+                if ($check && $check->rowCount() == 0) {
+                    $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN externalID INT(11) DEFAULT NULL");
+                }
+            } catch (Exception $ex) {}
+        }
     }
 
     function create(){
@@ -25,7 +40,7 @@ class Estadio{
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    Nome=:nome, Capacidade=:capacidade, Clima=:clima, Altitude=:altitude, Caldeirao=:caldeirao, Pais=:pais, foto=:foto";
+                    Nome=:nome, Capacidade=:capacidade, Clima=:clima, Altitude=:altitude, Caldeirao=:caldeirao, Pais=:pais, foto=:foto, externalID=:externalID";
 
         $stmt = $this->conn->prepare($query);
 
@@ -37,6 +52,7 @@ class Estadio{
         $this->caldeirao = htmlspecialchars(strip_tags((string)($this->caldeirao ?? '')));
         $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
         $this->foto = ($this->foto !== null && $this->foto !== '') ? htmlspecialchars(strip_tags((string)$this->foto)) : null;
+        $this->externalID = ($this->externalID !== null && $this->externalID !== '') ? (int)$this->externalID : null;
         
         $altVal = strtolower(trim((string)$this->altitude));
         if ($altVal === '1' || $altVal === 'true' || $this->altitude === 1 || $this->altitude === true) {
@@ -61,6 +77,7 @@ class Estadio{
         $stmt->bindParam(":caldeirao", $this->caldeirao);
         $stmt->bindParam(":pais", $this->pais);
         $stmt->bindParam(":foto", $this->foto);
+        $stmt->bindParam(":externalID", $this->externalID);
 
         if($stmt->execute()){
             return true;
@@ -132,7 +149,7 @@ class Estadio{
     }
 
     //alterar estádio
-    function alterar($idEstadio,$nomeEstadio,$capacidade,$pais,$altitude, $caldeirao, $clima, $foto = null){
+    function alterar($idEstadio,$nomeEstadio,$capacidade,$pais,$altitude, $caldeirao, $clima, $foto = null, $externalID = null){
 
         $idEstadio = htmlspecialchars(strip_tags((string)($idEstadio ?? '')));
         $nomeEstadio = trim(html_entity_decode(strip_tags((string)($nomeEstadio ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
@@ -143,17 +160,13 @@ class Estadio{
 		$clima = htmlspecialchars(strip_tags((string)($clima ?? '')));
 		$foto = ($foto !== null && $foto !== '') ? htmlspecialchars(strip_tags((string)$foto)) : null;
 		
-		$altitude = ($altitude == 'true') ? 1 : 0;
-		$caldeirao = ($caldeirao == 'true') ? 1 : 0;
+		$altitude = ($altitude == 'true' || $altitude == '1' || $altitude === 1) ? 1 : 0;
+		$caldeirao = ($caldeirao == 'true' || $caldeirao == '1' || $caldeirao === 1) ? 1 : 0;
 		
-		if($foto != "" && $foto != null){
-			$query_foto = ", foto=:foto";
-		} else {
-			$query_foto = "";
-		}
-		
+		$query_foto = ($foto != "" && $foto != null) ? ", foto=:foto" : "";
+		$query_ext = ($externalID !== null) ? ", externalID=:externalID" : "";
 
-        $query = "UPDATE " . $this->table_name . " SET Nome=:nome, Capacidade=:capacidade, Clima=:clima, Altitude=:altitude, Caldeirao=:caldeirao, Pais=:pais ".$query_foto." WHERE ID=:id";
+        $query = "UPDATE " . $this->table_name . " SET Nome=:nome, Capacidade=:capacidade, Clima=:clima, Altitude=:altitude, Caldeirao=:caldeirao, Pais=:pais ".$query_foto.$query_ext." WHERE ID=:id";
         $stmt = $this->conn->prepare( $query );
 
         $stmt->bindParam(":nome", $nomeEstadio);
@@ -166,6 +179,10 @@ class Estadio{
 		if($foto != "" && $foto != null){
 			$stmt->bindParam(":foto", $foto);
 		} 
+		if($externalID !== null){
+			$extVal = ($externalID !== '' && $externalID !== null) ? (int)$externalID : null;
+			$stmt->bindValue(":externalID", $extVal, $extVal !== null ? PDO::PARAM_INT : PDO::PARAM_NULL);
+		}
 
         if($stmt->execute()){
             return true;
@@ -181,9 +198,9 @@ class Estadio{
         $idTime = $idTime !== null ? htmlspecialchars(strip_tags((string)$idTime)) : null;
 
         if($idPais != null){
-          $query = "SELECT e.ID, e.Nome, e.Capacidade, e.Clima, e.Altitude, e.Caldeirao FROM estadio e WHERE e.Pais=:pais";
+          $query = "SELECT e.ID, e.Nome, e.Capacidade, e.Clima, e.Altitude, e.Caldeirao, e.externalID FROM estadio e WHERE e.Pais=:pais";
         } else {
-          $query = "SELECT DISTINCT e.ID, e.Nome, e.Capacidade, e.Clima, e.Altitude, e.Caldeirao FROM clube b LEFT JOIN estadio e ON e.ID = b.Estadio WHERE b.ID=:clube";
+          $query = "SELECT DISTINCT e.ID, e.Nome, e.Capacidade, e.Clima, e.Altitude, e.Caldeirao, e.externalID FROM clube b LEFT JOIN estadio e ON e.ID = b.Estadio WHERE b.ID=:clube";
         }
         $stmt = $this->conn->prepare( $query );
         if($idPais != null){

@@ -36,6 +36,10 @@ $newFiles = array();
 $masterLista = isset($_GET['data']) ? json_decode($_GET['data'], true) : [];
 
 $opcaoPrincipal = $_GET['option'] ?? 0;
+$useExternalIds = (isset($_GET['external_ids']) && $_GET['external_ids'] == '1');
+if ($useExternalIds && !$usuario->podeImportarDb3($userId)) {
+    $useExternalIds = false;
+}
 $listaNomesPaises = array();
 
 //remove all user files and create directories only if needed
@@ -55,6 +59,69 @@ function delTree($dir) {
             unlink("$dir/$file");
         }
     }
+}
+
+/**
+ * Constrói um mapeamento seguro de IDs para exportação, evitando colisões
+ * entre IDs externos e IDs locais do MySQL.
+ *
+ * @param array $items Array de registros com chaves 'mysql_id' e opcional 'external_id'
+ * @param bool $useExternalIds Se deve priorizar o externalID
+ * @return array Mapeamento [mysql_id => export_id]
+ */
+function buildSafeExportIdMap(array $items, bool $useExternalIds): array {
+    $map = array();
+    $usedExportIds = array();
+    $maxId = 0;
+
+    // 1ª Passada: Registrar e reservar todos os externalIDs válidos
+    foreach ($items as $item) {
+        $mysqlId = (int)$item['mysql_id'];
+        $extId = isset($item['external_id']) ? (int)$item['external_id'] : 0;
+        if ($mysqlId > $maxId) {
+            $maxId = $mysqlId;
+        }
+        if ($useExternalIds && $extId > 0) {
+            if ($extId > $maxId) {
+                $maxId = $extId;
+            }
+            if (!isset($usedExportIds[$extId])) {
+                $map[$mysqlId] = $extId;
+                $usedExportIds[$extId] = true;
+            }
+        }
+    }
+
+    // O contador de IDs seguros começa acima do maior ID presente (mínimo 100000 para não colidir com tabelas padrão)
+    $safeCounter = max($maxId + 1, 100000);
+
+    // 2ª Passada: Atribuir IDs para registros sem externalID (ou em caso de conflito)
+    foreach ($items as $item) {
+        $mysqlId = (int)$item['mysql_id'];
+        if (isset($map[$mysqlId])) {
+            continue; // Já atribuído com segurança pelo externalID
+        }
+
+        if (!$useExternalIds) {
+            $map[$mysqlId] = $mysqlId;
+        } else {
+            // Se o ID do MySQL não colide com nenhum externalID já reservado, usa ele mesmo
+            if (!isset($usedExportIds[$mysqlId])) {
+                $map[$mysqlId] = $mysqlId;
+                $usedExportIds[$mysqlId] = true;
+            } else {
+                // Colisão detectada! Atribui um ID seguro e livre
+                while (isset($usedExportIds[$safeCounter])) {
+                    $safeCounter++;
+                }
+                $map[$mysqlId] = $safeCounter;
+                $usedExportIds[$safeCounter] = true;
+                $safeCounter++;
+            }
+        }
+    }
+
+    return $map;
 }
    
 
@@ -147,6 +214,13 @@ foreach($masterLista as $paisSelecionado => $ligasSelecionadas){
     $estadio = new Estadio($db);
     $novoClima = new Clima($db);
 
+    // Mapeamentos para ID externo
+    $mapClimaExport = array();
+    $mapEstadioExport = array();
+    $mapTecnicoExport = array();
+    $mapJogadorExport = array();
+    $mapClubeExport = array();
+
     //tentativa de juntar as querys para aumentar performance
     $megaQueryPais = "BEGIN TRANSACTION; ";
 
@@ -160,23 +234,39 @@ foreach($masterLista as $paisSelecionado => $ligasSelecionadas){
         $megaQueryPais .= "INSERT INTO trioarbitragem VALUES ('{$row['id']}', '{$nomeArbitro}', '{$nomeAuxiliarUm}', '{$nomeAuxiliarDois}', '{$row['estilo']}'); ";
         $contagemArbitros++;
     }
-	
-	//buscar estadio e adicionar na query
-    $stmt = $estadio->exportacao($paisSelecionado);
-
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-        $nomeEstadio = str_replace("'", "''", $row['Nome']);
-        $megaQueryPais .= "INSERT INTO estadio VALUES ('{$row['ID']}', '{$nomeEstadio}', '{$row['Capacidade']}', '{$row['Clima']}', '{$row['Altitude']}', '{$row['Caldeirao']}'); ";
-
-    }
 
     //buscar climas e adicionar na query
-    $stmt = $novoClima->exportacao($paisSelecionado);
+    $stmtClima = $novoClima->exportacao($paisSelecionado);
+    $rowsClima = $stmtClima->fetchAll(PDO::FETCH_ASSOC);
+    $itemsClima = array();
+    foreach ($rowsClima as $r) {
+        $itemsClima[] = ['mysql_id' => (int)$r['idClima'], 'external_id' => (int)($r['externalID'] ?? 0)];
+    }
+    $mapClimaExport = buildSafeExportIdMap($itemsClima, $useExternalIds);
 
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+    foreach ($rowsClima as $row) {
+        $climaIdMysql = (int)$row['idClima'];
+        $climaIdExp = $mapClimaExport[$climaIdMysql] ?? $climaIdMysql;
         $nomeClima = str_replace("'", "''", $row['nomeClima']);
-        $megaQueryPais .= "INSERT INTO clima VALUES ('{$row['idClima']}', '{$nomeClima}', '{$row['TempVerao']}', '{$row['EstiloVerao']}', '{$row['TempOutono']}', '{$row['EstiloOutono']}', '{$row['TempInverno']}', '{$row['EstiloInverno']}', '{$row['TempPrimavera']}', '{$row['EstiloPrimavera']}', '{$row['Hemisferio']}'); ";
+        $megaQueryPais .= "INSERT INTO clima VALUES ('{$climaIdExp}', '{$nomeClima}', '{$row['TempVerao']}', '{$row['EstiloVerao']}', '{$row['TempOutono']}', '{$row['EstiloOutono']}', '{$row['TempInverno']}', '{$row['EstiloInverno']}', '{$row['TempPrimavera']}', '{$row['EstiloPrimavera']}', '{$row['Hemisferio']}'); ";
+    }
 
+    //buscar estadio e adicionar na query
+    $stmtEstadio = $estadio->exportacao($paisSelecionado);
+    $rowsEstadio = $stmtEstadio->fetchAll(PDO::FETCH_ASSOC);
+    $itemsEstadio = array();
+    foreach ($rowsEstadio as $r) {
+        $itemsEstadio[] = ['mysql_id' => (int)$r['ID'], 'external_id' => (int)($r['externalID'] ?? 0)];
+    }
+    $mapEstadioExport = buildSafeExportIdMap($itemsEstadio, $useExternalIds);
+
+    foreach ($rowsEstadio as $row) {
+        $estIdMysql = (int)$row['ID'];
+        $estIdExp = $mapEstadioExport[$estIdMysql] ?? $estIdMysql;
+        $climaFk = (int)$row['Clima'];
+        $climaFkExp = ($climaFk > 0 && isset($mapClimaExport[$climaFk])) ? $mapClimaExport[$climaFk] : $climaFk;
+        $nomeEstadio = str_replace("'", "''", $row['Nome']);
+        $megaQueryPais .= "INSERT INTO estadio VALUES ('{$estIdExp}', '{$nomeEstadio}', '{$row['Capacidade']}', '{$climaFkExp}', '{$row['Altitude']}', '{$row['Caldeirao']}'); ";
     }
 	
 	//buscar parametros e adicionar na query (padrão se tiver 0)
@@ -221,174 +311,207 @@ foreach($masterLista as $paisSelecionado => $ligasSelecionadas){
 	}
 	
 	///////////////////////////////////////////////////// COMECO TIMES ////////////////////////////////////////////////////////////////////////////////////////////////
+	// Coleta prévia de todos os registros de todas as ligas do país para mapeamento anti-colisão
+	$rowsTecnicos = array();
+	$rowsJogadores = array();
+	$rowsClubes = array();
+
 	foreach($listaLigas as $ligaSelecionada){
+		$stmtTec = $tecnico->exportacao(null,null,$ligaSelecionada);
+		while ($row = $stmtTec->fetch(PDO::FETCH_ASSOC)){
+			$rowsTecnicos[$row['ID']] = $row;
+		}
 
-    //buscar tecnico e adicionar na query
-    $stmt = $tecnico->exportacao(null,null,$ligaSelecionada);
+		$stmtJog = $jogador->exportacao(null,null,null,$ligaSelecionada);
+		while ($row = $stmtJog->fetch(PDO::FETCH_ASSOC)){
+			$rowsJogadores[$row['idJogador']] = $row;
+		}
 
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-        $nomeTecnico = str_replace("'", "''", $row['Nome']);
-        $megaQueryPais .= "INSERT OR IGNORE INTO tecnico VALUES ('{$row['ID']}', '{$nomeTecnico}', '{$row['Idade']}', '{$row['Nivel']}', '{$row['Mentalidade']}', '{$row['Estilo']}'); ";
-    }
+		$stmtClub = $time->exportacao(null,null,$ligaSelecionada);
+		while ($row = $stmtClub->fetch(PDO::FETCH_ASSOC)){
+			$rowsClubes[$row['ID']] = $row;
+		}
+	}
 
-    //buscar posicoes dos jogadores e adicionar na query
-    $stmt = $jogador->exportacao(null,null,null,$ligaSelecionada);
+	// Geração de mapeamentos anti-colisão para este banco SQLite
+	$itemsTec = array();
+	foreach ($rowsTecnicos as $r) {
+		$itemsTec[] = ['mysql_id' => (int)$r['ID'], 'external_id' => (int)($r['externalID'] ?? 0)];
+	}
+	$mapTecnicoExport = buildSafeExportIdMap($itemsTec, $useExternalIds);
 
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-        $sp = str_pad((string)($row['StringPosicoes'] ?? ''), 15, '0');
-        $megaQueryPais .= "INSERT OR IGNORE INTO posicaojogador VALUES ('{$row['idJogador']}', '{$sp[0]}', '{$sp[1]}', '{$sp[2]}', '{$sp[3]}', '{$sp[4]}', '{$sp[5]}', '{$sp[6]}', '{$sp[7]}', '{$sp[8]}', '{$sp[9]}', '{$sp[10]}', '{$sp[11]}', '{$sp[12]}', '{$sp[13]}', '{$sp[14]}'); ";
+	$itemsJog = array();
+	foreach ($rowsJogadores as $r) {
+		$itemsJog[] = ['mysql_id' => (int)$r['idJogador'], 'external_id' => (int)($r['externalID'] ?? 0)];
+	}
+	$mapJogadorExport = buildSafeExportIdMap($itemsJog, $useExternalIds);
 
-        $nomeJogador = str_replace("'", "''", $row['nomeJogador']);
-        $megaQueryPais .= "INSERT OR IGNORE INTO jogador VALUES ('{$row['idJogador']}', '{$nomeJogador}', '{$row['Idade']}', '{$row['Nivel']}', '0' , '0', '{$row['Mentalidade']}', '{$row['CobradorFalta']}'); ";
+	$itemsClub = array();
+	foreach ($rowsClubes as $r) {
+		$itemsClub[] = ['mysql_id' => (int)$r['ID'], 'external_id' => (int)($r['externalID'] ?? 0)];
+	}
+	$mapClubeExport = buildSafeExportIdMap($itemsClub, $useExternalIds);
 
-        $testeNacionalidade = ($row['Nacionalidade'] != null ? $row['Nacionalidade'] : '-');
-        $megaQueryPais .= "INSERT OR IGNORE INTO nacionalidades VALUES ('{$row['idJogador']}', '{$testeNacionalidade}'); ";
+	// Inserção dos técnicos
+	foreach ($rowsTecnicos as $row) {
+		$tecIdMysql = (int)$row['ID'];
+		$tecIdExp = $mapTecnicoExport[$tecIdMysql] ?? $tecIdMysql;
+		$nomeTecnico = str_replace("'", "''", $row['Nome']);
+		$megaQueryPais .= "INSERT OR IGNORE INTO tecnico VALUES ('{$tecIdExp}', '{$nomeTecnico}', '{$row['Idade']}', '{$row['Nivel']}', '{$row['Mentalidade']}', '{$row['Estilo']}'); ";
+	}
 
-        if($sp[0] == 1){
-            
-            
-        // inserir atributos recalculados goleiro
-        
-        $atributosGoleiro = adjustAttributes(true, $row['Nivel'], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, $row['Reflexos'], $row['Seguranca'],  $row['Saidas'],  $row['JogoAereo'],  $row['Lancamentos'],  $row['DefesaPenaltis']);
-        
-        // fim atributos recalculados goleiro
-        
-            $megaQueryPais .= "INSERT OR IGNORE INTO atributosgoleiro VALUES ('{$row['idJogador']}', '{$atributosGoleiro['reflexos']}', '{$atributosGoleiro['seguranca']}', '{$atributosGoleiro['saidas']}', '{$atributosGoleiro['jogoAereo']}', '{$atributosGoleiro['lancamentos']}', '{$atributosGoleiro['defesaPenaltis']}', '1', '1'); ";
+	// Inserção dos jogadores
+	foreach ($rowsJogadores as $row) {
+		$jogIdMysql = (int)$row['idJogador'];
+		$jogIdExp = $mapJogadorExport[$jogIdMysql] ?? $jogIdMysql;
 
-            $somaZero = abs(($row['Nivel'] * 0.50) - array_sum($atributosGoleiro));
-            if($somaZero > 0.5){
-                $megaQueryPais .= "INSERT OR IGNORE INTO jogadorpendente VALUES ('{$row['idJogador']}'); ";
-            }
+		$sp = str_pad((string)($row['StringPosicoes'] ?? ''), 15, '0');
+		$megaQueryPais .= "INSERT OR IGNORE INTO posicaojogador VALUES ('{$jogIdExp}', '{$sp[0]}', '{$sp[1]}', '{$sp[2]}', '{$sp[3]}', '{$sp[4]}', '{$sp[5]}', '{$sp[6]}', '{$sp[7]}', '{$sp[8]}', '{$sp[9]}', '{$sp[10]}', '{$sp[11]}', '{$sp[12]}', '{$sp[13]}', '{$sp[14]}'); ";
 
-        } else {
-            
-            //inserir atributos recalculados
-            
-            $atributosJogador = adjustAttributes(false, $row['Nivel'], $row['Marcacao'], $row['Desarme'], $row['VisaoJogo'], $row['Movimentacao'], $row['Cruzamentos'], $row['Cabeceamento'], $row['Tecnica'], $row['ControleBola'], $row['Finalizacao'], $row['FaroGol'], $row['Velocidade'], $row['Forca'], 0, 0, 0, 0, 0, 0);
-            
-            
-            //fim atributos recalculados
-            
-            $megaQueryPais .= "INSERT OR IGNORE INTO atributosjogador VALUES ('{$row['idJogador']}', '{$atributosJogador['marcacao']}', '{$atributosJogador['desarme']}', '{$atributosJogador['visaoJogo']}', '{$atributosJogador['movimentacao']}', '{$atributosJogador['cruzamentos']}', '{$atributosJogador['cabeceamento']}', '{$atributosJogador['tecnica']}', '{$atributosJogador['controleBola']}', '{$atributosJogador['finalizacao']}', '{$atributosJogador['faroGol']}', '{$atributosJogador['velocidade']}', '{$atributosJogador['forca']}', '1', '1'); ";
-            
+		$nomeJogador = str_replace("'", "''", $row['nomeJogador']);
+		$megaQueryPais .= "INSERT OR IGNORE INTO jogador VALUES ('{$jogIdExp}', '{$nomeJogador}', '{$row['Idade']}', '{$row['Nivel']}', '0' , '0', '{$row['Mentalidade']}', '{$row['CobradorFalta']}'); ";
 
+		$testeNacionalidade = ($row['Nacionalidade'] != null ? $row['Nacionalidade'] : '-');
+		$megaQueryPais .= "INSERT OR IGNORE INTO nacionalidades VALUES ('{$jogIdExp}', '{$testeNacionalidade}'); ";
 
-            $somaZero = abs(($row['Nivel'] * 0.65) - array_sum($atributosJogador));
-            if($somaZero > 0.5){
-                $megaQueryPais .= "INSERT OR IGNORE INTO jogadorpendente VALUES ('{$row['idJogador']}'); ";
-                
+		if($sp[0] == 1){
+			$atributosGoleiro = adjustAttributes(true, $row['Nivel'], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, $row['Reflexos'], $row['Seguranca'],  $row['Saidas'],  $row['JogoAereo'],  $row['Lancamentos'],  $row['DefesaPenaltis']);
+			$megaQueryPais .= "INSERT OR IGNORE INTO atributosgoleiro VALUES ('{$jogIdExp}', '{$atributosGoleiro['reflexos']}', '{$atributosGoleiro['seguranca']}', '{$atributosGoleiro['saidas']}', '{$atributosGoleiro['jogoAereo']}', '{$atributosGoleiro['lancamentos']}', '{$atributosGoleiro['defesaPenaltis']}', '1', '1'); ";
 
-            }
-        }
+			$somaZero = abs(($row['Nivel'] * 0.50) - array_sum($atributosGoleiro));
+			if($somaZero > 0.5){
+				$megaQueryPais .= "INSERT OR IGNORE INTO jogadorpendente VALUES ('{$jogIdExp}'); ";
+			}
+		} else {
+			$atributosJogador = adjustAttributes(false, $row['Nivel'], $row['Marcacao'], $row['Desarme'], $row['VisaoJogo'], $row['Movimentacao'], $row['Cruzamentos'], $row['Cabeceamento'], $row['Tecnica'], $row['ControleBola'], $row['Finalizacao'], $row['FaroGol'], $row['Velocidade'], $row['Forca'], 0, 0, 0, 0, 0, 0);
+			$megaQueryPais .= "INSERT OR IGNORE INTO atributosjogador VALUES ('{$jogIdExp}', '{$atributosJogador['marcacao']}', '{$atributosJogador['desarme']}', '{$atributosJogador['visaoJogo']}', '{$atributosJogador['movimentacao']}', '{$atributosJogador['cruzamentos']}', '{$atributosJogador['cabeceamento']}', '{$atributosJogador['tecnica']}', '{$atributosJogador['controleBola']}', '{$atributosJogador['finalizacao']}', '{$atributosJogador['faroGol']}', '{$atributosJogador['velocidade']}', '{$atributosJogador['forca']}', '1', '1'); ";
 
-    }
+			$somaZero = abs(($row['Nivel'] * 0.65) - array_sum($atributosJogador));
+			if($somaZero > 0.5){
+				$megaQueryPais .= "INSERT OR IGNORE INTO jogadorpendente VALUES ('{$jogIdExp}'); ";
+			}
+		}
+	}
 
-    //buscar clubes e adicionar na query
-    $stmt = $time->exportacao(null,null,$ligaSelecionada);
+	// Inserção dos clubes, elencos e escalações
+	foreach ($rowsClubes as $row) {
+		$clubeIdMysql = (int)$row['ID'];
+		$clubeIdExp = $mapClubeExport[$clubeIdMysql] ?? $clubeIdMysql;
 
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+		//tratar uniforme e simbolo
+		$rawEscudo = $row['Escudo'];
+		$escudoPath = $_SERVER['DOCUMENT_ROOT'].'/images/escudos/'.$rawEscudo;
+		if (!file_exists($escudoPath) && !empty($rawEscudo)) {
+			$decoded = html_entity_decode(html_entity_decode($rawEscudo, ENT_QUOTES | ENT_HTML5), ENT_QUOTES | ENT_HTML5);
+			if (file_exists($_SERVER['DOCUMENT_ROOT'].'/images/escudos/'.$decoded)) {
+				$escudoPath = $_SERVER['DOCUMENT_ROOT'].'/images/escudos/'.$decoded;
+			}
+		}
 
-        //tratar uniforme e simbolo
-        $rawEscudo = $row['Escudo'];
-        $escudoPath = $_SERVER['DOCUMENT_ROOT'].'/images/escudos/'.$rawEscudo;
-        if (!file_exists($escudoPath) && !empty($rawEscudo)) {
-            $decoded = html_entity_decode(html_entity_decode($rawEscudo, ENT_QUOTES | ENT_HTML5), ENT_QUOTES | ENT_HTML5);
-            if (file_exists($_SERVER['DOCUMENT_ROOT'].'/images/escudos/'.$decoded)) {
-                $escudoPath = $_SERVER['DOCUMENT_ROOT'].'/images/escudos/'.$decoded;
-            }
-        }
+		$rawUni1 = $row['Uniforme1'];
+		$uni1Path = $_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$rawUni1;
+		if (!file_exists($uni1Path) && !empty($rawUni1)) {
+			$decoded = html_entity_decode(html_entity_decode($rawUni1, ENT_QUOTES | ENT_HTML5), ENT_QUOTES | ENT_HTML5);
+			if (file_exists($_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$decoded)) {
+				$uni1Path = $_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$decoded;
+			}
+		}
 
-        $rawUni1 = $row['Uniforme1'];
-        $uni1Path = $_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$rawUni1;
-        if (!file_exists($uni1Path) && !empty($rawUni1)) {
-            $decoded = html_entity_decode(html_entity_decode($rawUni1, ENT_QUOTES | ENT_HTML5), ENT_QUOTES | ENT_HTML5);
-            if (file_exists($_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$decoded)) {
-                $uni1Path = $_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$decoded;
-            }
-        }
+		$rawUni2 = $row['Uniforme2'];
+		$uni2Path = $_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$rawUni2;
+		if (!file_exists($uni2Path) && !empty($rawUni2)) {
+			$decoded = html_entity_decode(html_entity_decode($rawUni2, ENT_QUOTES | ENT_HTML5), ENT_QUOTES | ENT_HTML5);
+			if (file_exists($_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$decoded)) {
+				$uni2Path = $_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$decoded;
+			}
+		}
 
-        $rawUni2 = $row['Uniforme2'];
-        $uni2Path = $_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$rawUni2;
-        if (!file_exists($uni2Path) && !empty($rawUni2)) {
-            $decoded = html_entity_decode(html_entity_decode($rawUni2, ENT_QUOTES | ENT_HTML5), ENT_QUOTES | ENT_HTML5);
-            if (file_exists($_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$decoded)) {
-                $uni2Path = $_SERVER['DOCUMENT_ROOT'].'/images/uniformes/'.$decoded;
-            }
-        }
+		$escudoExt = pathinfo($escudoPath, PATHINFO_EXTENSION) ?: 'png';
+		$uni1Ext = pathinfo($uni1Path, PATHINFO_EXTENSION) ?: 'png';
+		$uni2Ext = pathinfo($uni2Path, PATHINFO_EXTENSION) ?: 'png';
 
-        $escudoExt = pathinfo($escudoPath, PATHINFO_EXTENSION) ?: 'png';
-        $uni1Ext = pathinfo($uni1Path, PATHINFO_EXTENSION) ?: 'png';
-        $uni2Ext = pathinfo($uni2Path, PATHINFO_EXTENSION) ?: 'png';
-
-        $baseFileName = "team" . $row['ID'];
-        $escudoTratado = "Escudos/" . $baseFileName . "." . $escudoExt;
-        $uni1Tratado = "Uniformes/1-" . $baseFileName . "." . $uni1Ext;
-        $uni2Tratado = "Uniformes/2-" . $baseFileName . "." . $uni2Ext;
+		$baseFileName = "team" . $clubeIdExp;
+		$escudoTratado = "Escudos/" . $baseFileName . "." . $escudoExt;
+		$uni1Tratado = "Uniformes/1-" . $baseFileName . "." . $uni1Ext;
+		$uni2Tratado = "Uniformes/2-" . $baseFileName . "." . $uni2Ext;
 
 		if($opcaoPrincipal < 2){
-            if (file_exists($escudoPath)) {
-                copy($escudoPath, $_SERVER['DOCUMENT_ROOT'].'/sqlitedb/'.$userId.'/'.$nomePais.'/'. $escudoTratado);
-                $exportFiles[] = [$_SERVER['DOCUMENT_ROOT']."/sqlitedb/".$userId."/".$nomePais."/".$escudoTratado, $nomePais."/".$escudoTratado];
-            }
-            if (file_exists($uni1Path)) {
-                copy($uni1Path, $_SERVER['DOCUMENT_ROOT'].'/sqlitedb/'.$userId.'/'.$nomePais.'/'. $uni1Tratado);
-                $exportFiles[] = [$_SERVER['DOCUMENT_ROOT']."/sqlitedb/".$userId."/".$nomePais."/".$uni1Tratado, $nomePais."/".$uni1Tratado];
-            }
-            if (file_exists($uni2Path)) {
-                copy($uni2Path, $_SERVER['DOCUMENT_ROOT'].'/sqlitedb/'.$userId.'/'.$nomePais.'/'. $uni2Tratado);
-                $exportFiles[] = [$_SERVER['DOCUMENT_ROOT']."/sqlitedb/".$userId."/".$nomePais."/".$uni2Tratado, $nomePais."/".$uni2Tratado];
-            }
+			if (file_exists($escudoPath)) {
+				copy($escudoPath, $_SERVER['DOCUMENT_ROOT'].'/sqlitedb/'.$userId.'/'.$nomePais.'/'. $escudoTratado);
+				$exportFiles[] = [$_SERVER['DOCUMENT_ROOT']."/sqlitedb/".$userId."/".$nomePais."/".$escudoTratado, $nomePais."/".$escudoTratado];
+			}
+			if (file_exists($uni1Path)) {
+				copy($uni1Path, $_SERVER['DOCUMENT_ROOT'].'/sqlitedb/'.$userId.'/'.$nomePais.'/'. $uni1Tratado);
+				$exportFiles[] = [$_SERVER['DOCUMENT_ROOT']."/sqlitedb/".$userId."/".$nomePais."/".$uni1Tratado, $nomePais."/".$uni1Tratado];
+			}
+			if (file_exists($uni2Path)) {
+				copy($uni2Path, $_SERVER['DOCUMENT_ROOT'].'/sqlitedb/'.$userId.'/'.$nomePais.'/'. $uni2Tratado);
+				$exportFiles[] = [$_SERVER['DOCUMENT_ROOT']."/sqlitedb/".$userId."/".$nomePais."/".$uni2Tratado, $nomePais."/".$uni2Tratado];
+			}
 		}
-        if($time->verificarHomonimo($row['Nome'],$paisSelecionado) && $row['Sexo'] == '1'){
-            $nomeExportado = $row['Nome'] . " (F)";
-        } else {
-            $nomeExportado = $row['Nome'];
-        }
+		if($time->verificarHomonimo($row['Nome'],$paisSelecionado) && $row['Sexo'] == '1'){
+			$nomeExportado = $row['Nome'] . " (F)";
+		} else {
+			$nomeExportado = $row['Nome'];
+		}
 
-        $nomeExportado = str_replace("'", "''", $nomeExportado);
+		$nomeExportado = str_replace("'", "''", $nomeExportado);
 
-        $megaQueryPais .= "INSERT INTO clube VALUES ('{$row['ID']}', '{$nomeExportado}', '{$row['TresLetras']}', '{$row['Estadio']}', '{$escudoTratado}', '{$row['Uni1Cor1']}', '{$row['Uni1Cor2']}', '{$row['Uni1Cor3']}', '{$uni1Tratado}', '{$row['Uni2Cor1']}', '{$row['Uni2Cor2']}', '{$row['Uni2Cor3']}', '{$uni2Tratado}', '{$row['MaxTorcedores']}', '{$row['Fidelidade']}'); ";
+		$estadioFk = (int)$row['Estadio'];
+		$estadioFkExp = ($estadioFk > 0 && isset($mapEstadioExport[$estadioFk])) ? $mapEstadioExport[$estadioFk] : $estadioFk;
 
-        $elenco = array();
-        $newStmt = $time->getElenco($row['ID']);
-        $elenco[] = $row['ID'];
-        while($newRow = $newStmt->fetch(PDO::FETCH_ASSOC)){
-            $elenco[] = $newRow['ID'];
-        }
-        $total_jogadores = $time->getSizeElenco($row['ID']);
-        while ($total_jogadores < 23){
-            $elenco[] = '0';
-            $total_jogadores++;
-        }
-        $tecStmt = $time->getTecnico($row['ID']);
-        while($tecRow  = $tecStmt->fetch(PDO::FETCH_ASSOC)){
-            $elenco[] = $tecRow['tecnico'];
-        }
-        while (count($elenco) < 25) {
-            $elenco[] = '0';
-        }
+		$megaQueryPais .= "INSERT INTO clube VALUES ('{$clubeIdExp}', '{$nomeExportado}', '{$row['TresLetras']}', '{$estadioFkExp}', '{$escudoTratado}', '{$row['Uni1Cor1']}', '{$row['Uni1Cor2']}', '{$row['Uni1Cor3']}', '{$uni1Tratado}', '{$row['Uni2Cor1']}', '{$row['Uni2Cor2']}', '{$row['Uni2Cor3']}', '{$uni2Tratado}', '{$row['MaxTorcedores']}', '{$row['Fidelidade']}'); ";
 
-        $megaQueryPais .= "INSERT INTO elenco VALUES ('{$elenco[0]}', '{$elenco[1]}', '{$elenco[2]}', '{$elenco[3]}', '{$elenco[4]}', '{$elenco[5]}', '{$elenco[6]}', '{$elenco[7]}', '{$elenco[8]}', '{$elenco[9]}', '{$elenco[10]}', '{$elenco[11]}', '{$elenco[12]}', '{$elenco[13]}', '{$elenco[14]}', '{$elenco[15]}', '{$elenco[16]}', '{$elenco[17]}', '{$elenco[18]}', '{$elenco[19]}', '{$elenco[20]}', '{$elenco[21]}', '{$elenco[22]}', '{$elenco[23]}', '{$elenco[24]}'); ";
+		$elenco = array();
+		$newStmt = $time->getElenco($row['ID']);
+		$elenco[] = (string)$clubeIdExp;
+		while($newRow = $newStmt->fetch(PDO::FETCH_ASSOC)){
+			$pId = (int)$newRow['ID'];
+			$expPId = ($pId > 0 && isset($mapJogadorExport[$pId])) ? $mapJogadorExport[$pId] : $pId;
+			$elenco[] = (string)$expPId;
+		}
+		$total_jogadores = $time->getSizeElenco($row['ID']);
+		while ($total_jogadores < 23){
+			$elenco[] = '0';
+			$total_jogadores++;
+		}
+		$tecStmt = $time->getTecnico($row['ID']);
+		while($tecRow  = $tecStmt->fetch(PDO::FETCH_ASSOC)){
+			$tId = (int)$tecRow['tecnico'];
+			$expTId = ($tId > 0 && isset($mapTecnicoExport[$tId])) ? $mapTecnicoExport[$tId] : $tId;
+			$elenco[] = (string)$expTId;
+		}
+		while (count($elenco) < 25) {
+			$elenco[] = '0';
+		}
 
-        $escalacao = array();
-        $escalacao[] = $row['ID'];
-        $escStmt = $time->getEscalacao($row['ID']);
-        while($escRow = $escStmt->fetch(PDO::FETCH_ASSOC)){
-            $escalacao[] = $escRow['posicaoBase'];
-            $escalacao[] = $escRow['jogador'];
-        }
-        $capStmt = $time->getCapitao($row['ID']);
-        while($capRow = $capStmt->fetch(PDO::FETCH_ASSOC)){
-            $escalacao[] = $capRow['jogador'];
-        }
-        $penStmt = $time->getPenaltis($row['ID']);
-        while($penRow = $penStmt->fetch(PDO::FETCH_ASSOC)){
-            $escalacao[] = $penRow['jogador'];
-        }
+		$megaQueryPais .= "INSERT INTO elenco VALUES ('{$elenco[0]}', '{$elenco[1]}', '{$elenco[2]}', '{$elenco[3]}', '{$elenco[4]}', '{$elenco[5]}', '{$elenco[6]}', '{$elenco[7]}', '{$elenco[8]}', '{$elenco[9]}', '{$elenco[10]}', '{$elenco[11]}', '{$elenco[12]}', '{$elenco[13]}', '{$elenco[14]}', '{$elenco[15]}', '{$elenco[16]}', '{$elenco[17]}', '{$elenco[18]}', '{$elenco[19]}', '{$elenco[20]}', '{$elenco[21]}', '{$elenco[22]}', '{$elenco[23]}', '{$elenco[24]}'); ";
 
-        $megaQueryPais .= "INSERT INTO escalacao VALUES ('{$escalacao[0]}', '{$escalacao[1]}', '{$escalacao[2]}', '{$escalacao[3]}', '{$escalacao[4]}', '{$escalacao[5]}', '{$escalacao[6]}', '{$escalacao[7]}', '{$escalacao[8]}', '{$escalacao[9]}', '{$escalacao[10]}', '{$escalacao[11]}', '{$escalacao[12]}', '{$escalacao[13]}', '{$escalacao[14]}', '{$escalacao[15]}', '{$escalacao[16]}', '{$escalacao[17]}', '{$escalacao[18]}', '{$escalacao[19]}', '{$escalacao[20]}', '{$escalacao[21]}', '{$escalacao[22]}', '{$escalacao[23]}', '{$escalacao[24]}', '{$escalacao[25]}', '{$escalacao[26]}'); ";
+		$escalacao = array();
+		$escalacao[] = (string)$clubeIdExp;
+		$escStmt = $time->getEscalacao($row['ID']);
+		while($escRow = $escStmt->fetch(PDO::FETCH_ASSOC)){
+			$escalacao[] = $escRow['posicaoBase'];
+			$pId = (int)$escRow['jogador'];
+			$expPId = ($pId > 0 && isset($mapJogadorExport[$pId])) ? $mapJogadorExport[$pId] : $pId;
+			$escalacao[] = (string)$expPId;
+		}
+		$capStmt = $time->getCapitao($row['ID']);
+		while($capRow = $capStmt->fetch(PDO::FETCH_ASSOC)){
+			$pId = (int)$capRow['jogador'];
+			$expPId = ($pId > 0 && isset($mapJogadorExport[$pId])) ? $mapJogadorExport[$pId] : $pId;
+			$escalacao[] = (string)$expPId;
+		}
+		$penStmt = $time->getPenaltis($row['ID']);
+		while($penRow = $penStmt->fetch(PDO::FETCH_ASSOC)){
+			$pId = (int)$penRow['jogador'];
+			$expPId = ($pId > 0 && isset($mapJogadorExport[$pId])) ? $mapJogadorExport[$pId] : $pId;
+			$escalacao[] = (string)$expPId;
+		}
 
-    }
+		$megaQueryPais .= "INSERT INTO escalacao VALUES ('{$escalacao[0]}', '{$escalacao[1]}', '{$escalacao[2]}', '{$escalacao[3]}', '{$escalacao[4]}', '{$escalacao[5]}', '{$escalacao[6]}', '{$escalacao[7]}', '{$escalacao[8]}', '{$escalacao[9]}', '{$escalacao[10]}', '{$escalacao[11]}', '{$escalacao[12]}', '{$escalacao[13]}', '{$escalacao[14]}', '{$escalacao[15]}', '{$escalacao[16]}', '{$escalacao[17]}', '{$escalacao[18]}', '{$escalacao[19]}', '{$escalacao[20]}', '{$escalacao[21]}', '{$escalacao[22]}', '{$escalacao[23]}', '{$escalacao[24]}', '{$escalacao[25]}', '{$escalacao[26]}'); ";
+
+	}
 //fim loop times
 }
 	

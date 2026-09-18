@@ -16,15 +16,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
 
     $database = new Database();
     $db = $database->getConnection();
 
     $liga = new Liga($db);
     $pais = new Pais($db);
+    $usuarioObj = new Usuario($db);
 
     $stmtPais = $pais->read($_SESSION['user_id']);
     $stmtLiga = $liga->read($_SESSION['user_id']);
+    $podeUsarIdsExternos = $usuarioObj->podeImportarDb3($_SESSION['user_id']);
 ?>
 
 <main class="propostas-container">
@@ -93,6 +96,16 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
                 <option value="3">Apenas Topdater</option>
             </select>
         </div>
+
+        <?php if ($podeUsarIdsExternos): ?>
+        <!-- Opção de IDs Externos para usuários autorizados -->
+        <div class="export-option-full" style="background: rgba(2, 132, 199, 0.06); border: 1px solid rgba(2, 132, 199, 0.2); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px;">
+            <label for="usarIdsExternos" class="checkbox-toggle-label" style="font-size: 0.92rem; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 10px; cursor: pointer; text-transform: none; margin-bottom: 0;">
+                <input type="checkbox" id="usarIdsExternos" name="usarIdsExternos" value="1" style="width: 18px; height: 18px;">
+                <span>Usar IDs Externos na Exportação <small style="display: block; font-weight: 400; color: #64748b; font-size: 0.8rem;">Mantém as chaves e IDs originais do arquivo SQLite importado</small></span>
+            </label>
+        </div>
+        <?php endif; ?>
 
         <!-- Botão Exportar -->
         <div class="export-actions">
@@ -235,7 +248,8 @@ $(document).ready(function() {
                     $('#importar_time').addClass('disabled');
                     $('html, body').css("cursor", "wait");
                     var optionString = opcaoSelecionada.toString();
-                    var urlToOpen = 'exportar_database_imp3.php?data=' + encodeURIComponent(JSON.stringify(ligaPais)) + '&option=' + optionString;
+                    var usarIdsExt = $('#usarIdsExternos').is(':checked') ? '1' : '0';
+                    var urlToOpen = 'exportar_database_imp3.php?data=' + encodeURIComponent(JSON.stringify(ligaPais)) + '&option=' + optionString + '&external_ids=' + usarIdsExt;
                     if(urlToOpen.length < 2000){
                         window.location = urlToOpen;
                     } else {
@@ -252,7 +266,8 @@ $(document).ready(function() {
             $('#importar_time').addClass('disabled');
             $('html, body').css("cursor", "wait");
             var optionString = opcaoSelecionada.toString();
-            var urlToOpen = 'exportar_database_imp3.php?data=' + encodeURIComponent(JSON.stringify(ligaPais)) + '&option=' + optionString;
+            var usarIdsExt = $('#usarIdsExternos').is(':checked') ? '1' : '0';
+            var urlToOpen = 'exportar_database_imp3.php?data=' + encodeURIComponent(JSON.stringify(ligaPais)) + '&option=' + optionString + '&external_ids=' + usarIdsExt;
             window.location = urlToOpen;
         }
     });

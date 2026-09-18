@@ -18,9 +18,24 @@ class Clima{
     public $estiloPrimavera;
     public $hemisferio;
     public $pais;
+    public $externalID;
 
     public function __construct($db){
         $this->conn = $db;
+        $this->ensureExternalIDColumn();
+    }
+
+    private function ensureExternalIDColumn() {
+        try {
+            $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN IF NOT EXISTS externalID INT(11) DEFAULT NULL");
+        } catch (Exception $e) {
+            try {
+                $check = $this->conn->query("SHOW COLUMNS FROM " . $this->table_name . " LIKE 'externalID'");
+                if ($check && $check->rowCount() == 0) {
+                    $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN externalID INT(11) DEFAULT NULL");
+                }
+            } catch (Exception $ex) {}
+        }
     }
 
     function create(){
@@ -29,7 +44,7 @@ class Clima{
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    Nome=:nome, TempVerao=:tempVerao, EstiloVerao=:estiloVerao, TempOutono=:tempOutono, EstiloOutono=:estiloOutono, TempInverno=:tempInverno, EstiloInverno=:estiloInverno, TempPrimavera=:tempPrimavera, EstiloPrimavera=:estiloPrimavera, Hemisferio=:hemisferio, Pais=:pais";
+                    Nome=:nome, TempVerao=:tempVerao, EstiloVerao=:estiloVerao, TempOutono=:tempOutono, EstiloOutono=:estiloOutono, TempInverno=:tempInverno, EstiloInverno=:estiloInverno, TempPrimavera=:tempPrimavera, EstiloPrimavera=:estiloPrimavera, Hemisferio=:hemisferio, Pais=:pais, externalID=:externalID";
 
         $stmt = $this->conn->prepare($query);
 
@@ -45,6 +60,7 @@ class Clima{
         $this->estiloPrimavera = htmlspecialchars(strip_tags((string)($this->estiloPrimavera ?? '')));
         $this->hemisferio = htmlspecialchars(strip_tags((string)($this->hemisferio ?? '')));
         $hemisferioInt = ($this->hemisferio === 'Sul' || $this->hemisferio === '1' || $this->hemisferio === 1) ? 1 : 0;
+        $this->externalID = ($this->externalID !== null && $this->externalID !== '') ? (int)$this->externalID : null;
 
         // bind values
         $stmt->bindParam(":nome", $this->nome);
@@ -58,6 +74,7 @@ class Clima{
         $stmt->bindParam(":estiloPrimavera", $this->estiloPrimavera);
         $stmt->bindParam(":hemisferio", $hemisferioInt, PDO::PARAM_INT);
         $stmt->bindParam(":pais", $this->pais);
+        $stmt->bindParam(":externalID", $this->externalID);
 
         if($stmt->execute()){
             return true;
@@ -204,9 +221,9 @@ return $num;
         $idTime = $idTime !== null ? htmlspecialchars(strip_tags((string)$idTime)) : null;
 
         if($idPais != null){
-          $query = "SELECT DISTINCT c.ID as idClima, c.Nome as nomeClima, c.TempVerao, c.EstiloVerao, c.TempOutono, c.EstiloOutono, c.TempInverno, c.EstiloInverno, c.TempPrimavera, c.EstiloPrimavera, c.Hemisferio FROM estadio e LEFT JOIN clima c ON e.Clima = c.ID WHERE e.Pais=:pais";
+          $query = "SELECT DISTINCT c.ID as idClima, c.Nome as nomeClima, c.TempVerao, c.EstiloVerao, c.TempOutono, c.EstiloOutono, c.TempInverno, c.EstiloInverno, c.TempPrimavera, c.EstiloPrimavera, c.Hemisferio, c.externalID FROM estadio e LEFT JOIN clima c ON e.Clima = c.ID WHERE e.Pais=:pais";
         } else {
-          $query = "SELECT DISTINCT c.ID as idClima, c.Nome as nomeClima, c.TempVerao, c.EstiloVerao, c.TempOutono, c.EstiloOutono, c.TempInverno, c.EstiloInverno, c.TempPrimavera, c.EstiloPrimavera, c.Hemisferio FROM clube b LEFT JOIN estadio e ON b.Estadio = e.ID LEFT JOIN clima c ON c.ID = e.Clima WHERE b.ID=:clube";
+          $query = "SELECT DISTINCT c.ID as idClima, c.Nome as nomeClima, c.TempVerao, c.EstiloVerao, c.TempOutono, c.EstiloOutono, c.TempInverno, c.EstiloInverno, c.TempPrimavera, c.EstiloPrimavera, c.Hemisferio, c.externalID FROM clube b LEFT JOIN estadio e ON b.Estadio = e.ID LEFT JOIN clima c ON c.ID = e.Clima WHERE b.ID=:clube";
         }
         $stmt = $this->conn->prepare( $query );
         if($idPais != null){

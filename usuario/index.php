@@ -26,7 +26,8 @@ $tecnico = new Tecnico($db);
 $usuario = new Usuario($db);
 
 // Consulta direta e precisa para contar propostas de jogadores que exigem ação (inbox pendente + outbox contraproposta)
-$idUsuario = $_SESSION['user_id'];
+$idUsuario = (int)$_SESSION['user_id'];
+$podeImportarDb3 = $usuario->podeImportarDb3($idUsuario);
 $query_count_jogadores = "
     SELECT COUNT(t.id) as total
     FROM transferencias t
@@ -507,6 +508,22 @@ try {
                 <p class="hub-card-desc">Configure as opções de simulação do HYMT.</p>
             </div>
         </a>
+
+        <?php if ($podeImportarDb3): ?>
+        <!-- Importar SQLite (.db3) -->
+        <a href='importar_db3.php' id='importar-db3' class='hub-card'>
+            <div class="hub-card-hero-image">
+                <img src="/images/importacao.avif" alt="Importar SQLite (.db3)" />
+            </div>
+            <div class="hub-card-body">
+                <h3 class="hub-card-title">
+                    <span>Importar SQLite (.db3)</span>
+                    <span class="material-symbols-outlined hub-card-arrow">arrow_forward</span>
+                </h3>
+                <p class="hub-card-desc">Sincronize bases de dados locais .db3 com seus clubes e jogadores no portal.</p>
+            </div>
+        </a>
+        <?php endif; ?>
     </section>
 </main>
 

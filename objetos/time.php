@@ -35,7 +35,17 @@ class Time{
 
     public function __construct($db){
         $this->conn = $db;
+        $this->ensureSiglaNotUnique();
         $this->ensureExternalIDColumn();
+    }
+
+    private function ensureSiglaNotUnique() {
+        try {
+            $stmt = $this->conn->query("SHOW INDEX FROM " . $this->table_name . " WHERE Key_name = 'unique_index'");
+            if ($stmt && $stmt->rowCount() > 0) {
+                $this->conn->exec("ALTER TABLE " . $this->table_name . " DROP INDEX unique_index");
+            }
+        } catch (Exception $e) {}
     }
 
     private function ensureExternalIDColumn() {
@@ -92,7 +102,7 @@ class Time{
         $this->pais = htmlspecialchars(strip_tags((string)($this->pais ?? '')));
         $this->liga = htmlspecialchars(strip_tags((string)($this->liga ?? '')));
         $this->sexo = htmlspecialchars(strip_tags((string)($this->sexo ?? '')));
-        $this->status = htmlspecialchars(strip_tags((string)($this->status ?? '')));;
+        $this->status = htmlspecialchars(strip_tags((string)($this->status ?? '')));
 
         // bind values
         $stmt->bindParam(":nome", $this->nome);
@@ -130,6 +140,7 @@ class Time{
             }
         }
         catch (\PDOException $e) {
+            $this->ultimo_erro = $e->getMessage();
             return false;
         }
 
@@ -344,7 +355,7 @@ function readInfo($id){
 			    $subquery .= " ) ";
 			}
 
-            $query = "SELECT DISTINCT c.ID, c.Nome, c.TresLetras, c.Estadio, c.Escudo, c.Uni1Cor1, c.Uni1Cor2, c.Uni1Cor3, c.Uni2Cor1, c.Uni2Cor2, c.Uni2Cor3, c.Uniforme1, c.Uniforme2, c.MaxTorcedores, c.Fidelidade, c.Sexo  FROM clube c WHERE " . $subquery;
+            $query = "SELECT DISTINCT c.ID, c.Nome, c.TresLetras, c.Estadio, c.Escudo, c.Uni1Cor1, c.Uni1Cor2, c.Uni1Cor3, c.Uni2Cor1, c.Uni2Cor2, c.Uni2Cor3, c.Uniforme1, c.Uniforme2, c.MaxTorcedores, c.Fidelidade, c.Sexo, c.externalID  FROM clube c WHERE " . $subquery;
 			
             $stmt = $this->conn->prepare( $query );
 
@@ -1261,6 +1272,10 @@ function readInfo($id){
             $query .= " mascote=:mascote, ";
         }
 
+        if(isset($this->status)){
+            $query .= " status=:status, ";
+        }
+
         if(isset($this->sigla) && $this->sigla !== ''){
             $query .= " TresLetras=:sigla, ";
         }
@@ -1327,6 +1342,11 @@ function readInfo($id){
         if(isset($this->mascote)){
             $this->mascote = htmlspecialchars(strip_tags((string)$this->mascote));
             $stmt->bindParam(":mascote", $this->mascote);
+        }
+
+        if(isset($this->status)){
+            $statusVal = (int)$this->status;
+            $stmt->bindParam(":status", $statusVal, PDO::PARAM_INT);
         }
 
         if(isset($this->sigla) && $this->sigla !== ''){
