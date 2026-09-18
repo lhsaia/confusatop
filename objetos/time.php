@@ -67,8 +67,8 @@ class Time{
         if(!isset($this->status)){
             $this->status = 0;
         }
-        if(!isset($this->mascote)){
-            $this->mascote = '0.png';
+        if(!isset($this->mascote) || $this->mascote === '0.png' || $this->mascote === '0'){
+            $this->mascote = '';
         }
         $titulos = '';
         $sobre_titulo = '';

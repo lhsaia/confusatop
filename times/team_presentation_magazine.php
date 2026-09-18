@@ -52,7 +52,7 @@ $titulos_time = $extra_info['titulos'] ?? '';
 $sobre_titulo = $extra_info['sobre_titulo'] ?? '';
 $sobre_subtitulo = $extra_info['sobre_subtitulo'] ?? '';
 $sobre_texto = $extra_info['sobre_texto'] ?? '';
-$mascote_time = (!empty($extra_info['mascote']) && $extra_info['mascote'] != 'null') ? '/images/mascotes/' . $extra_info['mascote'] : '/images/mascotes/placeholder.png';
+$mascote_time = (!empty($extra_info['mascote']) && $extra_info['mascote'] != 'null' && $extra_info['mascote'] != '0.png' && $extra_info['mascote'] != '0') ? '/images/mascotes/' . $extra_info['mascote'] : '/images/mascotes/placeholder.png';
 $foto_destaque = $extra_info['foto_destaque'] ?? '';
 
 if(empty($foto_destaque)) {

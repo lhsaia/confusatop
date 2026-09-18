@@ -205,7 +205,7 @@ $time_stmt = $jogador->selecionarElencoTime($id,$from_record_num,$records_per_pa
 		 <div id='titulosTime'> <span class='material-symbols-outlined' style='color: ".$color1."'>emoji_events</span><span class='infos_time' contenteditable={$editable}> {$titulos_time}</span></div>
 		 <div id='nomeEstadio'><span class='material-symbols-outlined' style='color: ".$color1."'>stadium</span><span class='infos_time'> ".$estadio_time." (" .$estadio_capacidade .")</span></div>
  </div>";
- $mascote_time = (!empty($extra_info['mascote']) && $extra_info['mascote'] != 'null') ? '/images/mascotes/' . $extra_info['mascote'] : '/images/mascotes/placeholder.png';
+ $mascote_time = (!empty($extra_info['mascote']) && $extra_info['mascote'] != 'null' && $extra_info['mascote'] != '0.png' && $extra_info['mascote'] != '0') ? '/images/mascotes/' . $extra_info['mascote'] : '/images/mascotes/placeholder.png';
 
  echo "<div id='imagensEstadioUniformes'>";
  echo "<div id='fotoEstadio'><img src='/images/estadios/{$foto_estadio}'></div>";

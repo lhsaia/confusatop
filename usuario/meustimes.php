@@ -228,7 +228,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 				tbl += "<td><span class='siglaEditavel' id='sig"+val['id']+"'>"+(val['TresLetras'] ? val['TresLetras'] : '')+"</span></td>";
 				tbl += "<td><div class='imageUpload'><img class='thumb' src='/images/escudos/"+val['Escudo']+"' /> <input type='file' hidden id='escudo"+val['id']+"' class='hiddenInput custom-file-upload' name='escudo' accept='.jpg,.png,.jpeg'/></div></td>";
 
-				let mascoteThumb = val['mascote'] && val['mascote'] != 'null' ? '/images/mascotes/' + val['mascote'] : '/images/mascotes/placeholder.png';
+				let mascoteThumb = val['mascote'] && val['mascote'] != 'null' && val['mascote'] != '0.png' && val['mascote'] != '0' ? '/images/mascotes/' + val['mascote'] : '/images/mascotes/placeholder.png';
 				tbl += "<td><div class='imageUpload'><img class='thumb' src='"+mascoteThumb+"' /> <input type='file' hidden id='mascote"+val['id']+"' class='hiddenInput custom-file-upload' name='mascote' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
 
 				tbl += "<td><div class='imageUpload'><img class='thumb' src='/images/uniformes/"+val['Uniforme1']+"' /> <input type='file' hidden id='uni1"+val['id']+"' class='hiddenInput custom-file-upload' name='uni1' accept='.jpg,.png,.jpeg'/></div></td>";
