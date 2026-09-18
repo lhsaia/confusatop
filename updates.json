@@ -9,6 +9,371 @@
   },
   "days": [
     {
+      "id": "day_18_09_2026",
+      "date": "18/09/2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Exportação de Backup do Banco de Dados (SQL) no Painel do Administrador",
+          "desc": "Criada ferramenta dedicada na Área do Administrador para geração e download de backups completos ou estruturais do banco MySQL em arquivos .sql ou compactados .sql.gz via streaming seguro, com operação 100% em modo leitura."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Tratamento Anti-Colisão de IDs na Exportação YMT com IDs Externos",
+          "desc": "Implementado algoritmo de resolução automática de colisões na exportação de banco .db3: caso o ID local do MySQL de um registro sem externalID coincida com o externalID de outra entidade, o sistema realoca dinamicamente um identificador seguro e exclusivo, preservando a integridade de todas as relações de elenco e escalação."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Atualização e Exibição de Técnicos e Estádios na Importação DB3",
+          "desc": "Padronizada a exibição de estatísticas e o processamento de atualização de técnicos e estádios no importador DB3, garantindo que registros já existentes sejam devidamente atualizados e discriminados como 'atualizados' na prévia e no relatório final."
+        },
+        {
+          "badge": "new",
+          "title": "Exportação YMT com Opção de IDs Externos e Persistência de Referências",
+          "desc": "Adicionada opção na tela de exportação de database YMT para utilizar os IDs externos originais em clubes, jogadores, técnicos, estádios e climas, preservando as chaves e integridade referencial de elencos e escalações."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Sincronização de Técnicos sem Clube na Importação de DB3",
+          "desc": "Corrigido o processamento de importação de bases SQLite (.db3) para cadastrar e sincronizar todos os técnicos da base (inclusive os que estão sem clube ou fora de elencos), evitando que apareçam como 'novos' em conferências subsequentes."
+        }
+      ]
+    },
+    {
+      "id": "day_16_09_2026",
+      "date": "16/09/2026",
+      "items": [
+        {
+          "badge": "security",
+          "title": "Gerenciamento de Permissões de Importação DB3 no Painel Administrativo",
+          "desc": "Criada interface de controle de acesso no painel do administrador para concessão ou revogação individual da permissão de importação de bancos SQLite (.db3) para cada usuário cadastrado, com alternância instantânea."
+        },
+        {
+          "badge": "new",
+          "title": "Importação de SQLite (.db3) na Minha Área com Restrição por Titularidade",
+          "desc": "A ferramenta de importação e sincronização de arquivos .db3 foi integrada à Minha Área para usuários autorizados, restringindo a seleção e o processamento exclusivamente aos países sob administração do usuário logado."
+        },
+        {
+          "badge": "new",
+          "title": "Proposta Automática para Jogadores Nacionais em Clubes de Outros Usuários na Importação de DB3",
+          "desc": "Na importação de SQLite (.db3), atletas do país importado que já estejam jogando em clubes de outros usuários não são transferidos compulsoriamente; em vez disso, o sistema acessa o jogador e gera automaticamente uma proposta formal de transferência com o comentário '-- proposta automatica --'."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Validação de Arquivo e Prevenção de Erro em Corrida Ao Vivo (OctaMotor)",
+          "desc": "Adicionada validação de existência de arquivo e checagem de parâmetros vazios antes da leitura de dados da corrida, prevenindo avisos de leitura em diretório e acesso a índice nulo."
+        }
+      ]
+    },
+    {
+      "id": "day_13_09_2026",
+      "date": "13/09/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correlação de Atletas de Seleções aos seus Clubes de Origem na Importação de DB3",
+          "desc": "Ajustada a conferência prévia para identificar atletas de seleções nacionais que já pertencem a clubes do arquivo .db3 ou do banco de dados (via externalID e nome), exibindo-os corretamente como 'Convocado' com o nome do clube de origem em vez de sugerir 'Criar Novo' duplicado."
+        },
+        {
+          "badge": "new",
+          "title": "Suporte a Seleções Nacionais e Sub-Categorias na Importação de DB3",
+          "desc": "Implementada a identificação automática de Seleções Nacionais (Principal, Olímpica/Sub-21, Sub-20 e Sub-18) na importação de bancos SQLite (.db3), preservando simultaneamente os contratos profissionais dos atletas em seus clubes locais (tipoContrato = status) e a vinculação correta de técnicos de seleções."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Remoção de Restrição de Sigla Única no Banco de Dados",
+          "desc": "Removida a restrição legada de unicidade de sigla (TresLetras) no banco de dados e no cadastro de clubes, permitindo que seleções de base e clubes compartilhem a mesma sigla de 3 letras exatamente como definido na base de origem."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Otimização de Performance e Prevenção de Timeout 500 na Importação de DB3",
+          "desc": "Implementado pré-carregamento em memória (hashmaps O(1)) e correção de campos nas consultas de técnicos e atletas, acelerando a conferência prévia e importação de bancos .db3 de mais de 120s para menos de 1s e prevenindo erro HTTP 500."
+        },
+        {
+          "badge": "design",
+          "title": "Padronização do Fundo do Tema Claro na Importação de DB3 e Criação de Times",
+          "desc": "Corrigido o background das telas de Importação de Bancos SQLite (.db3) e Criação de Times para aplicar com precisão o gradiente suave do Tema Claro sem interferência do tema escuro ou marcas d'água legadas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Tratamento Seguro de Origem de Nomes no Hexagen e Criação de Clubes",
+          "desc": "Corrigido o aviso PHP de chave indefinida 'origemNomes' e 'origemSobrenomes' na geração de jogadores e técnicos pelo Hexagen, adicionando verificação de existência e fallback automático para sorteio demográfico."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Rebalanceamento de Metas de Conquistas no TOPERO",
+          "desc": "Atualizadas as metas de conquistas: 'Chuva de gols' para 700 gols na carreira, 'O\\'Harrison' para 70 gols pela seleção nacional e 'Incansável' para 1100 jogos oficiais na carreira."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Desbloqueio da Conquista Com Moral no TOPERO",
+          "desc": "Ajustado o gatilho da conquista 'Com moral' para ser concedida exclusivamente ao término da carreira (aposentadoria), garantindo que o atleta tenha mantido o histórico 100% fair play até o fim."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Filtro Estrito de Gênero na Importação e Associação de Times",
+          "desc": "Garantido que as buscas de correspondência e sugestões de vinculação de clubes, jogadores e técnicos durante a importação respeitem estritamente o gênero selecionado na entrada (masculino ou feminino), impedindo comparações cruzadas indevidas entre categorias distintas."
+        },
+        {
+          "badge": "new",
+          "title": "Upload e Exibição de Imagens de Troféus para Ligas, Copas e Competições",
+          "desc": "Adicionada a opção de incluir imagens personalizadas de troféus para Ligas, Copas e Competições no momento da criação ou edição, com processamento e otimização automática em WebP mantendo canal alfa e transparência, e exibição nas listagens e painéis principais."
+        },
+        {
+          "badge": "new",
+          "title": "Copas Continentais de 2º e 3º Níveis e Ajuste de Seleções no TOPERO",
+          "desc": "Implementada a simulação das copas continentais secundárias e terciárias de clubes: Taça Nery Pumpido (FEASCO), Taça Trifon Ivanov (FEMIFUS), Taça LID (COMPACTA) e Taça Andy Selva (FEMIFUS), mantendo a validação estrita de 1º nível para as conquistas. Corrigido também o torneio continental de seleções da COMPACTA para Escudo da Távola."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Separação e Correção de Minhas Carreiras e Hall da Fama no TOPERO",
+          "desc": "Separadas as visualizações das abas 'Minhas Carreiras' e 'Hall da Fama' em telas independentes e corrigido o carregamento de detalhes de carreiras salvas com auto-criação da tabela e junção correta de usuários."
+        },
+        {
+          "badge": "new",
+          "title": "Sistema de Conquistas (Achievements) no TOPERO",
+          "desc": "Implementada galeria completa de 23 conquistas temáticas baseadas na história e desafios do universo CONFUSA, com notificações de desbloqueio em tempo real, progresso salvo no perfil e exibição no resumo final da carreira."
+        },
+        {
+          "badge": "new",
+          "title": "Importação Completa de Bancos SQLite .db3 com Conferência",
+          "desc": "Disponibilizada ferramenta administrativa para importar arquivos .db3 completos de países, com tela de conferência prévia interativa e otimizada para inspecionar clubes, elencos, funções e escalações antes de sincronizar no banco com externalID e filtro de gênero."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Tratamento Seguro de Verificação de Dono e Atributos de Atletas/Técnicos",
+          "desc": "Corrigido aviso de acesso a offset de array em booleano (fetch retornando false) nas consultas de permissão, posições e atributos de jogadores e técnicos."
+        },
+        {
+          "badge": "new",
+          "title": "Desambiguação Automática de Gênero (Masc/Fem) por Demografia de Nomes",
+          "desc": "Implementado sistema de fallback inteligente para diferenciar equipes masculinas e femininas em jogos raspados: ao cruzar os primeiros nomes de atletas e autores de eventos com a base demográfica gen_nomes, o sistema infere o gênero da partida e prioriza a versão correta do clube (masculina ou feminina) mesmo com nomes idênticos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Carregamento de Favoritos e Jogos de Times no PoltronaScore",
+          "desc": "Corrigido erro SQL que impedia o funcionamento da aba de favoritos para clubes e partidas no PoltronaScore, unificando a busca de confrontos entre a base de jogos externos (poltrona_matches) e o simulador interno (jogos_clube), além de corrigir junções de rodadas e tabelas de competições."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Priorização de Correspondência Exata em Clubes e Atletas",
+          "desc": "Ajustada a resolução de nomes de clubes, atletas e competições no PoltronaScore e na API de busca, garantindo que termos idênticos (correspondência 100% exata) tenham prioridade máxima sobre termos semelhantes ou parciais antes de aplicar LIMIT 1."
+        }
+      ]
+    },
+    {
+      "id": "day_12_09_2026",
+      "date": "12/09/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Sanitização Prévia de Escalações e Prevenção de Erro de Simulação",
+          "desc": "Implementada camada prévia de sanitização no PHP para normalizar posições táticas, balancear setores da escalação (defesa, meio e ataque) e substituir previamente desfalques nos titulares antes do envio à engine Java, além de adicionar mecanismo automático de retry com formação padrão de emergência caso a simulação falhe por falta de marcadores válidos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Leitura de Competições no PoltronaScore",
+          "desc": "Corrigida a identificação da competição nas partidas e histórico recente de atletas e clubes no PoltronaScore, aplicando a lógica condicional unificada da tabela jogos_clube para diferenciar torneios simulados internamente (competicao_lista) de ligas e copas legadas (liga e campeonatos_clube)."
+        },
+        {
+          "badge": "new",
+          "title": "Exclusão Segura de Competições",
+          "desc": "Adicionada a funcionalidade de exclusão de competições no índice e no painel da competição, disponível para o criador e administradores. A exclusão é bloqueada caso a competição já possua jogos simulados ou finalizados, e realiza a limpeza completa e segura em cascata (confrontos pendentes, regulamento, times vinculados, banco SQLite e arquivos de imagem)."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Compatibilidade de Imagens WEBP no Cron de Simulação",
+          "desc": "Corrigido erro no cron que causava 'image == null' na engine Java ao simular competições com escudos em formato WEBP. O simulador agora converte automaticamente imagens WEBP para PNG em cache e assegura o fallback de placeholder para arquivos ausentes ou corrompidos sem travar a simulação."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Crash Fatal no Cron por Evento Duplicado",
+          "desc": "Corrigido erro que derrubava o cron de simulação ao tentar gravar dois eventos com o mesmo minuto e tempo na tabela jogos_clube_eventos (violação da unique key 'eventoUnico'). O INSERT agora usa INSERT IGNORE, tolerando colisões sem interromper o processamento das demais partidas."
+        },
+        {
+          "badge": "new",
+          "title": "Data Mínima para Agendamento de Jogos",
+          "desc": "Os campos de data em competições agora bloqueiam qualquer data anterior a 01/01 do ano corrente, tanto ao criar um novo jogo quanto ao editar um existente inline na tabela, evitando agendamentos em anos passados."
+        },
+        {
+          "badge": "new",
+          "title": "Indicador de Tamanho do Arquivo de Súmulas",
+          "desc": "Adicionado card de estatística no painel de Cron de Simulação (/admin/cron_logs.php) mostrando o tamanho total em disco e a contagem de arquivos de súmulas (.hyl e outros) da pasta hexacolor/Partidas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Resolução e Fallback Automático de Imagens no Simulador",
+          "desc": "Implementada verificação e fallback inteligente de escudos e uniformes dos clubes no SQLite antes da execução do motor Java (Hexacolor), evitando exceções de imagem nula e garantindo liberação segura de locks e conexões do SQLite entre partidas consecutivas."
+        },
+        {
+          "badge": "design",
+          "title": "Disposição Vertical das Escalações no Mobile (PoltronaScore)",
+          "desc": "Ajustada a exibição das listas de jogadores titulares e reservas abaixo do campinho tático: em telas mobile as listas passam a se organizar verticalmente (uma equipe abaixo da outra), evitando qualquer corte ou estouro horizontal e tornando a leitura dos atletas e notas fluida."
+        },
+        {
+          "badge": "design",
+          "title": "Valor de Mercado Abreviado no Mobile (PoltronaScore)",
+          "desc": "Otimizada a exibição do valor de mercado total do elenco nos cards de estatísticas do clube, utilizando formato compacto e abreviado (ex: $ 12.5M, $ 850k) em dispositivos móveis para evitar estouro visual e manter o layout limpo."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste de Quebra de Linha nos Nomes dos Times (Mobile)",
+          "desc": "Ajustada a tipografia e o dimensionamento dos cards de partidas no PoltronaScore com quebra de linha fluida (text wrap) e limite de duas linhas com reticências para nomes extensos de times, impedindo estouro horizontal no mobile."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Compatibilidade Linux do Simulador e Tratamento de Locks SQLite",
+          "desc": "Resolvida a falha de leitura de escudos padrões no motor Java em ambiente Linux (case-sensitivity em pastas de imagens) e implementado flush atômico de checkpoints WAL para prevenir erros de I/O em bancos SQLite durante simulações contínuas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Cálculo Dinâmico de Lesões por Data de Partida",
+          "desc": "Ajustado o cálculo de desfalques por lesão no pós-jogo para usar a data da partida como base temporal em vez de CURDATE(), garantindo suporte e recuperação fidedigna em competições retroativas e regulares."
+        },
+        {
+          "badge": "new",
+          "title": "Painel de Monitoramento e Logs do Cron de Simulação",
+          "desc": "Criada tela administrativa dedicada (/admin/cron_logs.php) para acompanhar em tempo real as execuções do agendador, inspecionar logs de terminal e da engine Java, analisar partidas pendentes e disparar simulações manuais sob demanda."
+        },
+        {
+          "badge": "new",
+          "title": "PoltronaScore: Sistema Completo de Favoritos com Sincronização em Nuvem (⭐)",
+          "desc": "Implementada a funcionalidade de Favoritos no PoltronaScore no estilo SofaScore: salve partidas, clubes, ligas e jogadores com um toque na estrela. Inclui arquitetura híbrida de persistência local e sincronização automática em nuvem no banco de dados para usuários autenticados, além de aba dedicada com agenda unificada de partidas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste na Escala de Barras de Atributos",
+          "desc": "Calibrada a escala visual das barras de atributos dos atletas (máximo 10 para goleiros, máximo 7 para habilidades técnicas de jogadores de linha e máximo 5 para força e velocidade), exibindo a pontuação relativa de forma fidedigna."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Diagnóstico e Rastreamento Automático do Cron de Simulação",
+          "desc": "Implementado log autônomo com registro de disparos, runtime do PHP e saídas detalhadas do motor de simulação no cron_simular_jogos.php para diagnóstico transparente de execuções agendadas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Refinamento de Atributos e Mentalidade do Atleta",
+          "desc": "Ajustada a exibição de atributos no perfil do jogador: lançamentos foi movido para o grupo de goleiro, atributos técnicos agora só aparecem para jogadores de linha, mentalidade passou a ser exibida como tipo/personalidade (ex: Líder, Sangue Frio) e determinação foi removida."
+        },
+        {
+          "badge": "new",
+          "title": "Notas de Atletas no Match Center e Perfil do Jogador",
+          "desc": "Adicionada exibição das notas de desempenho dos jogadores no campinho tático e nas escalações do Match Center (a partir dos dados de partida .hyj), bem como a média geral de notas e as avaliações individuais nas últimas partidas dentro do perfil do atleta."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Sobreposição de Modais e Badge de Nível no PoltronaScore",
+          "desc": "Corrigido o empilhamento de camadas (z-index dinâmico) para garantir que o perfil do atleta sempre abra à frente do modal do clube (e vice-versa), e ajustado o overflow da foto do jogador para que o balão de nível não seja cortado."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Validação de Transferências sem Clube na Exclusão de Time",
+          "desc": "Ajustada a verificação de integridade de clubes para ignorar movimentações de/para sem clube (origem ou destino zerados), permitindo que contratações livres e dispensas não bloqueiem a exclusão do time."
+        },
+        {
+          "badge": "new",
+          "title": "PoltronaScore: Perfil Completo do Jogador (Fase 2)",
+          "desc": "Criado modal de perfil do atleta com bio, atributos técnicos, físicos e mentais em barras progressivas com cores por nível, clube atual, estatísticas de carreira e histórico das últimas partidas disputadas."
+        },
+        {
+          "badge": "new",
+          "title": "PoltronaScore: Match Center com Campinho Tático 2D (Fase 3)",
+          "desc": "Adicionado campinho tático 2D interativo no Match Center com demarcações reais de gramado, posicionamento dinâmico por esquema tático das equipes, nós dos atletas com número e nível, e listas completas de titulares e banco de reservas."
+        },
+        {
+          "badge": "new",
+          "title": "PoltronaScore: Perfil do Clube, Elenco e Calendário (Fase 4)",
+          "desc": "Criado modal de perfil do clube exibindo dados de estádio e capacidade, métricas de elenco (média de idade, nível médio e valor de mercado), elenco completo agrupado por setores e calendário de partidas anteriores e futuros confrontos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajuste na Exclusão de Técnico e Clube",
+          "desc": "Corrigido erro na verificação de competições (tabela competicao_times) ao apagar clube e ajuste na contagem de parâmetros SQL do técnico, garantindo retorno JSON limpo em ambas as operações."
+        },
+        {
+          "badge": "design",
+          "title": "Modal de Decisão Centralizado no Topero",
+          "desc": "Restaurado o modal centralizado de decisões no Topero para visualização imediata e direta de dilemas e transferências sem necessidade de rolagens na tela."
+        },
+        {
+          "badge": "new",
+          "title": "Easter Eggs Secretos e Raros no Topero",
+          "desc": "Adicionados momentos decisivos ultra-raros e bem-humorados no Topero, incluindo a chance de herdar o trono real do Khemed, chamado do Planeta Cúbico de Mali pela confederação espacial COMETA e fortuna repentina em ToperoCoin, com troféus exclusivos e aposentadoria especial."
+        },
+        {
+          "badge": "new",
+          "title": "Exclusão de Técnico para Administrador Impersonado",
+          "desc": "Adicionado botão de exclusão permanente de técnico no painel do time (teamstatus.php) para administradores impersonados, com validação de contratos e transferências exclusivas."
+        },
+        {
+          "badge": "new",
+          "title": "Exclusão de Clube para Administrador Impersonado",
+          "desc": "Implementada a funcionalidade de exclusão permanente de clubes para administradores impersonados, protegida por verificações rigorosas de integridade (partidas jogadas, competições, histórico de transferências, finanças e contratos de terceiros)."
+        },
+        {
+          "badge": "new",
+          "title": "Acesso e Rebaixamento de Divisão no Topero",
+          "desc": "Implementada a dinâmica de promoção e rebaixamento no modo carreira do Topero: vencer uma divisão de acesso garante a subida para a divisão imediatamente superior no ano seguinte, enquanto campanhas abaixo do esperado na elite resultam em rebaixamento para a divisão inferior."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Exclusão de Jogadores com Propostas Recusadas",
+          "desc": "Corrigida a validação de exclusão de jogador para considerar apenas transferências efetivamente executadas (status_execucao = 1), permitindo que jogadores com histórico de propostas recusadas ou canceladas possam ser apagados normalmente."
+        },
+        {
+          "badge": "new",
+          "title": "Exclusão Direta de Jogador para Administrador Impersonado",
+          "desc": "Adicionado botão de apagar jogador no elenco do time (teamstatus.php) para administradores em modo impersonado, com validação estrita de segurança para permitir exclusão somente se o atleta possuir histórico e contrato exclusivos com o clube atual."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Sincronização de Gênero na Importação e Atualização de Clubes",
+          "desc": "Corrigida a dessincronização do gênero na importação de times e jogadores, garantindo a atualização correta da coluna Sexo no banco de dados, alinhamento automático com a liga selecionada e leitura consistente em listagens."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Tratamento de Exceções e Conexão na Súmula de Partidas",
+          "desc": "Corrigido erro PDO::prepare() na recuperação de cores, uniformes, jogadores e estádios na súmula de partidas, adicionando verificação de existência da base SQLite e tratamento de falhas com fallbacks seguros em Competicao_clube."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Filtro de Competições Próprias no Índice de Competições",
+          "desc": "Ajustada a listagem e pesquisa da tela de competições para exibir exclusivamente as competições criadas e pertencentes ao usuário logado."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Parâmetros na Consulta de Clubes Ativos",
+          "desc": "Corrigido erro SQLSTATE[HY093] na verificação de atividade de clubes ao consultar partidas pendentes e histórico de jogos, garantindo identificadores únicos de parâmetros no prepared statement do PDO."
+        }
+      ]
+    },
+    {
+      "id": "day_11_09_2026",
+      "date": "11/09/2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Importação Completa de Bancos SQLite .db3",
+          "desc": "Disponibilizada ferramenta administrativa para importar arquivos .db3 completos de países, sincronizando times, atletas, elencos e escalações com persistência do externalID e suporte a filtro de gênero."
+        },
+        {
+          "badge": "new",
+          "title": "Revisão e Upload Individual na Importação de Times",
+          "desc": "Limitado o envio de times a 1 arquivo por vez para todos os usuários e liberada a tela de revisão e associação para usuários comuns, com isolamento estrito de país para evitar vinculações indevidas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Geração de Jogos de Ida e Volta na Fase de Grupos de Competições Mistas",
+          "desc": "Corrigida a geração de tabela em competições mistas para respeitar a configuração de turnos da fase de grupos, gerando corretamente as rodadas de ida e volta com inversão de mandos e estádios de cada equipe."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Tratamento Seguro de Posições na Exportação de Bases e Times",
+          "desc": "Normalizada a string de posições dos jogadores (StringPosicoes) com preenchimento seguro de 15 caracteres na exportação de bases SQLite, pacotes e vinculação de clubes, prevenindo avisos de offset não inicializado e falhas na gravação."
+        }
+      ]
+    },
+    {
       "id": "day_10_09_2026",
       "date": "10/09/2026",
       "items": [

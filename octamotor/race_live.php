@@ -79,7 +79,7 @@ $track_list = $track->getTracksList();
       <?php
 	  	$command_center = "";
 			
-      if(!isset($_GET['file_name'])){
+      if(empty($_GET['file_name'])){
 
 
 		$command_center .= "<select id='circuit-selection'>";
@@ -88,7 +88,7 @@ $track_list = $track->getTracksList();
           $command_center .= "<option value={$single_track['id']}>{$single_track['name']}</option>";
         }
          
-		$command_center .= "</select>";
+ 		$command_center .= "</select>";
 		$command_center .= "<select id='competition-selection'>";
         
         foreach($competition_list as $single_competition){
@@ -102,14 +102,19 @@ $track_list = $track->getTracksList();
 		
 		  //$command_center .= "<button id='bck_lap'><span class='material-symbols-outlined'>skip_previous</span></button><button id='fwd_lap'><span class='material-symbols-outlined'>skip_next</span></button>";
  } else {
-	 $file = $_GET['file_name'];
-	 $str_file = file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/octamotor/races/' . $file);
-	 $json = json_decode($str_file, true); // decode the JSON into an associative array
-	 $baseTimestamp = $json['INFO']["base_timestamp"];
-	 $time_diff = time() - ($baseTimestamp + 86400);
-	 if($time_diff > 0){
-		  //$command_center .= "<button id='bck_lap'><span class='material-symbols-outlined'>skip_previous</span></button><button id='fwd_lap'><span class='material-symbols-outlined'>skip_next</span></button>";
-		  $command_center .= "<button id='replay-race'><span class='material-symbols-outlined'>play_circle</span></button>";
+	 $file = basename($_GET['file_name']);
+	 $filePath = $_SERVER['DOCUMENT_ROOT'] . '/octamotor/races/' . $file;
+	 if (is_file($filePath)) {
+		 $str_file = file_get_contents($filePath);
+		 $json = json_decode($str_file, true); // decode the JSON into an associative array
+		 if (is_array($json) && isset($json['INFO']['base_timestamp'])) {
+			 $baseTimestamp = $json['INFO']["base_timestamp"];
+			 $time_diff = time() - ($baseTimestamp + 86400);
+			 if($time_diff > 0){
+				  //$command_center .= "<button id='bck_lap'><span class='material-symbols-outlined'>skip_previous</span></button><button id='fwd_lap'><span class='material-symbols-outlined'>skip_next</span></button>";
+				  $command_center .= "<button id='replay-race'><span class='material-symbols-outlined'>play_circle</span></button>";
+			 }
+		 }
 	 }
  }
 

@@ -291,31 +291,30 @@ if($time->alterarCapitaoCobrador($capitao[0]['id'], $cobradores[0]['id'],$cobrad
 
 
     //verificar se houve override de origem
-    if(isset($_POST['nomenclatura']) && $_POST['nomenclatura'] == 1){
+    if(isset($_POST['nomenclatura']) && $_POST['nomenclatura'] == 1 && (!empty($_POST['origemNomes']) || !empty($_POST['origemSobrenomes']))){
 
-        $listaNomes = $_POST['origemNomes'];
-
-        if(!is_array($listaNomes)){
-            $valueNome = $listaNomes;
-            $listaNomes = array();
-            $listaNomes[] = $valueNome;
+        if(!empty($_POST['origemNomes'])){
+            $listaNomes = $_POST['origemNomes'];
+            if(!is_array($listaNomes)){
+                $listaNomes = array($listaNomes);
+            }
+            $origemNomes = $listaNomes[array_rand($listaNomes)];
+        } else {
+            $origemNomes = $pais->sorteioDemografico($nacionalidade, 0, $sexo);
         }
 
-        $origemNomes = array_rand($listaNomes);
-        $origemNomes = $listaNomes[$origemNomes];
-
-        $listaSobrenomes = $_POST['origemSobrenomes'];
-
-        if(!is_array($listaSobrenomes)){
-            $valueSobrenome = $listaSobrenomes;
-            $listaSobrenomes = array();
-            $listaSobrenomes[] = $valueSobrenome;
+        if(!empty($_POST['origemSobrenomes'])){
+            $listaSobrenomes = $_POST['origemSobrenomes'];
+            if(!is_array($listaSobrenomes)){
+                $listaSobrenomes = array($listaSobrenomes);
+            }
+            $origemSobrenomes = $listaSobrenomes[array_rand($listaSobrenomes)];
+        } else {
+            $origemSobrenomes = $pais->sorteioDemografico($nacionalidade, 1, $sexo);
         }
 
-        $origemSobrenomes = array_rand($listaSobrenomes);
-        $origemSobrenomes = $listaSobrenomes[$origemSobrenomes];
         $indiceMiscigenacao = 100;
-    $ocorrenciaNomeDuplo = 0;
+        $ocorrenciaNomeDuplo = 0;
 
     } else {
         $origemNomes = $pais->sorteioDemografico($nacionalidade, 0, $sexo);
@@ -375,7 +374,8 @@ if($time->alterarCapitaoCobrador($capitao[0]['id'], $cobradores[0]['id'],$cobrad
 $page_title = "Criar Time";
 $css_filename = "home_redesign";
 $css_login = 'login';
-$aux_css = 'criar_time_redesign';
+$aux_css = 'home_redesign';
+$extra_css = 'criar_time_redesign';
 $css_versao = date('h:i:s');
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 
@@ -559,7 +559,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
         <div class="origemNomes row_atributo">
             <label for="origemNomes"><span class="material-symbols-outlined">casino</span>&nbsp Origem dos Nomes</label>
-            <select multiple class='form-control' id='origemNomes' name='origemNomes'>
+            <select multiple class='form-control' id='origemNomes' name='origemNomes[]'>
                 <?php
                 $stmt = $pais->listaOrigens();
 
@@ -573,7 +573,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
         <div class="origemSobrenomes row_atributo">
             <label for="origemSobrenomes"><span class="material-symbols-outlined">casino</span>&nbsp Origem dos Sobrenomes</label>
-            <select multiple class='form-control' id='origemSobrenomes' name='origemSobrenomes'>
+            <select multiple class='form-control' id='origemSobrenomes' name='origemSobrenomes[]'>
                 <?php
 
                 $stmt = $pais->listaOrigens();

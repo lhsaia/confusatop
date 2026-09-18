@@ -70,37 +70,36 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $error_msg = '';
 
     //verificar se houve override de origem
-    if(isset($_POST['nomenclatura']) && $_POST['nomenclatura'] == 1){
+    if(isset($_POST['nomenclatura']) && $_POST['nomenclatura'] == 1 && (!empty($_POST['origemNomes']) || !empty($_POST['origemSobrenomes']))){
 
-        $listaNomes = $_POST['origemNomes'];
-
-        if(!is_array($listaNomes)){
-            $valueNome = $listaNomes;
-            $listaNomes = array();
-            $listaNomes[] = $valueNome;
+        if(!empty($_POST['origemNomes'])){
+            $listaNomes = $_POST['origemNomes'];
+            if(!is_array($listaNomes)){
+                $listaNomes = array($listaNomes);
+            }
+            $origemNomes = $listaNomes[array_rand($listaNomes)];
+        } else {
+            $origemNomes = $pais->sorteioDemografico($nacionalidade, 0, $sexo);
         }
 
-        $origemNomes = array_rand($listaNomes);
-        $origemNomes = $listaNomes[$origemNomes];
-
-        $listaSobrenomes = $_POST['origemSobrenomes'];
-
-        if(!is_array($listaSobrenomes)){
-            $valueSobrenome = $listaSobrenomes;
-            $listaSobrenomes = array();
-            $listaSobrenomes[] = $valueSobrenome;
+        if(!empty($_POST['origemSobrenomes'])){
+            $listaSobrenomes = $_POST['origemSobrenomes'];
+            if(!is_array($listaSobrenomes)){
+                $listaSobrenomes = array($listaSobrenomes);
+            }
+            $origemSobrenomes = $listaSobrenomes[array_rand($listaSobrenomes)];
+        } else {
+            $origemSobrenomes = $pais->sorteioDemografico($nacionalidade, 1, $sexo);
         }
 
-        $origemSobrenomes = array_rand($listaSobrenomes);
-        $origemSobrenomes = $listaSobrenomes[$origemSobrenomes];
         $indiceMiscigenacao = 100;
-    $ocorrenciaNomeDuplo = 0;
+        $ocorrenciaNomeDuplo = 0;
 
     } else {
         $origemNomes = $pais->sorteioDemografico($nacionalidade, 0, $sexo);
         $origemSobrenomes = $pais->sorteioDemografico($nacionalidade,1, $sexo);
         $indiceMiscigenacao = $pais->verificarMiscigenacao($nacionalidade,$origemNomes);
-    $ocorrenciaNomeDuplo = $pais->verificarNomeDuplo($nacionalidade,$origemNomes);
+        $ocorrenciaNomeDuplo = $pais->verificarNomeDuplo($nacionalidade,$origemNomes);
     }
 
     $tecnico->randomTecnico($nacionalidade, $origemNomes, $origemSobrenomes,$idadeMin,$idadeMax,$nivelMin,$nivelMax,$nivelMed,$idadeMed,$ocorrenciaNomeDuplo, $indiceMiscigenacao, $sexo);
