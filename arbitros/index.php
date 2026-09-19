@@ -310,7 +310,7 @@ if($number_of_referees>0){
                 $optionsString = "<td class='wide'>";
 
                 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
-                    if($_SESSION['admin_status'] == '1' || $_SESSION['user_id'] === $idDonoPais){
+                    if($_SESSION['admin_status'] == '1' || (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$idDonoPais)){
                         $optionsString .= "<a id='edi".$id."' title='Editar' class='clickable editar'><span style='font-size:16px !important' class='material-symbols-outlined inlineButton'>edit</span></a>";
                         $optionsString .= "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar'><span style='font-size:16px !important' class='material-symbols-outlined inlineButton positive'>check</span></a>";
                         $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><span style='font-size:16px !important' class='material-symbols-outlined inlineButton negative'>close</span></a>";

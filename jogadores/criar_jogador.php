@@ -279,7 +279,8 @@ $(document).ready(function(){
 
                 while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
                     extract($row_category);
-                    echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}</option>";
+                    $genderSuffix = ((int)$Sexo === 1) ? ' [F]' : ' [M]';
+                    echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}{$genderSuffix}</option>";
                 }
 
                 echo "</select>";

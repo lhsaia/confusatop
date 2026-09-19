@@ -9,9 +9,50 @@
   },
   "days": [
     {
+      "id": "day_19_09_2026",
+      "date": "19/09/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção de Vínculo de Contratos e Status de Empréstimo",
+          "desc": "Corrigida a gravação do clube de vínculo na transferência e importação de jogadores para que contratações definitivas não sejam identificadas incorretamente como empréstimos."
+        },
+        {
+          "badge": "new",
+          "title": "Ferramenta de Merge de Atletas Duplicados",
+          "desc": "Criada uma tela administrativa com abas para comparar atletas lado a lado, detector automático de possíveis duplicatas (por similaridade de nome e fonética Soundex), histórico de auditoria de merges e fusão com migração automática de contratos, partidas, eventos, gols e transferências."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Lado dos Gols e Eventos no PoltronaScore",
+          "desc": "Corrigida a identificação e posicionamento dos eventos de partida na timeline do PoltronaScore, garantindo que gols e cartões do time mandante apareçam corretamente no lado esquerdo e os do time visitante no lado direito."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Paginação e Exibição de Clubes em Meus Times",
+          "desc": "Corrigido o cálculo de índices da paginação para garantir que o último clube da lista seja renderizado corretamente em todas as páginas."
+        }
+      ]
+    },
+    {
       "id": "day_18_09_2026",
       "date": "18/09/2026",
       "items": [
+        {
+          "badge": "design",
+          "title": "Identificação de Gênero [M]/[F] nas Listas de Times para Propostas",
+          "desc": "Adicionada a identificação explícita de categoria ([M] para masculino e [F] para feminino) nos menus de seleção de clubes de destino ao realizar propostas para técnicos e jogadores, e liberada a contratação de técnicos/técnicas para qualquer categoria de equipe."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Exibição de Ações e Download YMT de Seleções",
+          "desc": "Corrigida a validação de permissão de dono de país na listagem de seleções e árbitros, normalizando a comparação de tipos de dados para garantir que os botões de edição e download do arquivo .ymt sejam exibidos corretamente aos donos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Fallback de Exibição de Mascotes Ausentes",
+          "desc": "Ajustada a exibição e criação de mascotes para que times sem mascote cadastrado exibam corretamente o placeholder padrão em vez de tentar carregar '0.png'."
+        },
         {
           "badge": "new",
           "title": "Exportação de Backup do Banco de Dados (SQL) no Painel do Administrador",

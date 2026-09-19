@@ -633,7 +633,8 @@ echo $date->format('Y-m-d');
                   if (in_array((int)$paisTime, $closed_countries)) {
                       continue; // Não exibir times de países com janela fechada no período
                   }
-                  echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}</option>";
+                  $genderSuffix = ((int)$Sexo === 1) ? ' [F]' : ' [M]';
+                  echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}{$genderSuffix}</option>";
               }
           } else{
               echo "<option value='erro'>Usuário não logado</option>";
@@ -679,9 +680,8 @@ echo $date->format('Y-m-d');
 
                 while ($new_row_category = $newStmt->fetch(PDO::FETCH_ASSOC)){
                     extract($new_row_category);
-                    //if($id != $idTime){
-                    echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}</option>";
-                    //}
+                    $genderSuffix = ((int)$Sexo === 1) ? ' [F]' : ' [M]';
+                    echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}{$genderSuffix}</option>";
                 }
 
                 ?>
@@ -703,7 +703,6 @@ echo $date->format('Y-m-d');
     </div>
   </form>
 </div>
-
 
 <div id="modalConvocacao" class="modal">
 
@@ -727,10 +726,8 @@ echo $date->format('Y-m-d');
 
         while ($row_category = $stmt->fetch(PDO::FETCH_ASSOC)){
             extract($row_category);
-            //if($id != $idTime){
-            echo "<option value='{$id}' data-sexo='{$Sexo}' data-pais='{$paisTime}' data-status='{$status}'>{$nome}</option>";
-
-            //}
+            $genderSuffix = ((int)$Sexo === 1) ? ' [F]' : ' [M]';
+            echo "<option value='{$id}' data-sexo='{$Sexo}' data-pais='{$paisTime}' data-status='{$status}'>{$nome}{$genderSuffix}</option>";
         }
       } else{
         echo "<option value='erro'>Usuário não logado</option>";
@@ -1091,7 +1088,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 
                 var valor = "F$ " + Math.round(parseFloat(val['valor']/10000))/100 + " M";
 
-                var isEmprestado = (val['estaEmprestado'] == 1 || (val['idClubeVinculado'] && val['idClubeVinculado'] != 0));
+                var isEmprestado = (val['estaEmprestado'] == 1 || (val['idClubeVinculado'] && val['idClubeVinculado'] != 0 && val['idClubeVinculado'] != val['idClube']));
                 var rowClass = isEmprestado ? "class='jogador-emprestado'" : "";
 
             tbl += "<tr id='"+val['idJogador']+"' "+rowClass+">";

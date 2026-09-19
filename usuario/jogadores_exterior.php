@@ -94,7 +94,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
                         if (in_array((int)$paisTime, $closed_countries)) {
                             continue;
                         }
-                        echo "<option value='{$id}'>{$nome}</option>";
+                        $genderSuffix = ((int)$Sexo === 1) ? ' [F]' : ' [M]';
+                        echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}{$genderSuffix}</option>";
                     }
                     ?>
                 </select>

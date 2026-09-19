@@ -373,6 +373,38 @@ class PoltronaScraper {
                 $descNode = $xpath->query(".//span[@class='descricao-lance']", $eventNode);
                 $description = $descNode->length ? html_entity_decode(trim($descNode->item(0)->nodeValue), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
                 
+                // Fallback for teamName if missing or not matching
+                if (empty($teamName) || (strcasecmp($teamName, $homeTeam) !== 0 && strcasecmp($teamName, $awayTeam) !== 0)) {
+                    $cleanScorers = function($scorersStr) {
+                        $arr = [];
+                        foreach (explode(',', (string)$scorersStr) as $s) {
+                            $cleaned = mb_strtolower(trim(preg_replace('/\s*\(.*?\)/', '', $s)), 'UTF-8');
+                            if ($cleaned !== '') $arr[] = $cleaned;
+                        }
+                        return $arr;
+                    };
+                    $pNameLower = !empty($playerName) ? mb_strtolower(trim(preg_replace('/\s*\(.*?\)/', '', $playerName)), 'UTF-8') : '';
+                    if (!empty($pNameLower)) {
+                        $homeList = $cleanScorers($homeScorers);
+                        $awayList = $cleanScorers($awayScorers);
+                        if (in_array($pNameLower, $homeList) && !in_array($pNameLower, $awayList)) {
+                            $teamName = $homeTeam;
+                        } elseif (in_array($pNameLower, $awayList) && !in_array($pNameLower, $homeList)) {
+                            $teamName = $awayTeam;
+                        }
+                    }
+                    if (empty($teamName) && !empty($description)) {
+                        $descLower = mb_strtolower($description, 'UTF-8');
+                        $hLower = mb_strtolower($homeTeam, 'UTF-8');
+                        $aLower = mb_strtolower($awayTeam, 'UTF-8');
+                        if (mb_stripos($descLower, $hLower) !== false && mb_stripos($descLower, $aLower) === false) {
+                            $teamName = $homeTeam;
+                        } elseif (mb_stripos($descLower, $aLower) !== false && mb_stripos($descLower, $hLower) === false) {
+                            $teamName = $awayTeam;
+                        }
+                    }
+                }
+                
                 $stmtEvent->execute([
                     $matchId, $eventExtId, $minute, $period, $type, $teamName, $playerName, $description
                 ]);

@@ -56,7 +56,8 @@ echo "<p class='selecaodeligas'>Seleção de time: <select id='selecaoTime' clas
 echo "<option value='' " . (empty($last_time) ? 'selected' : '') . ">Selecione time...</option>";
 for($i = 0; $i < count($listaLigas);$i++){
     $selected = ($listaLigas[$i][0] == $last_time) ? 'selected' : '';
-    echo "<option value='{$listaLigas[$i][0]}' data-sexo='{$listaLigas[$i][2]}' {$selected}>{$listaLigas[$i][1]}</option>";
+    $genderSuffix = ((int)$listaLigas[$i][2] === 1) ? ' [F]' : ' [M]';
+    echo "<option value='{$listaLigas[$i][0]}' data-sexo='{$listaLigas[$i][2]}' {$selected}>{$listaLigas[$i][1]}{$genderSuffix}</option>";
 }
 echo "</select>";
 echo "</p>";

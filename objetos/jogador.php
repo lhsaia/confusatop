@@ -466,17 +466,20 @@ return $stmt;
 
 
 
+        $clubeVinculadoVal = ($tipoTransferencia == 1) ? $idClubeDestino : 0;
+
         $query_contrato = "INSERT INTO
                     contratos_jogador
                 SET
                     jogador=:jogador, clube=:clube, encerramento=:encerramento, tipoContrato=:tipoContrato, salario=:salario, capitao=:capitao, cobrancaPenalti=:cobrancaPenalti, titularidade=:titularidade, posicaoBase=:posicaoBase, ModificadorNivel=0, clubeVinculado=:clubeVinculado
                 ON DUPLICATE KEY UPDATE
-                    ".$querySalario." clube=:clubeNovo, encerramento=:encerramentoNovo, capitao=:capitaoNovo, cobrancaPenalti=:cobrancaPenaltiNovo, titularidade=:titularidadeNovo, posicaoBase=:posicaoBaseNovo";
+                    ".$querySalario." clube=:clubeNovo, encerramento=:encerramentoNovo, capitao=:capitaoNovo, cobrancaPenalti=:cobrancaPenaltiNovo, titularidade=:titularidadeNovo, posicaoBase=:posicaoBaseNovo, clubeVinculado=:clubeVinculadoNovo";
         $stmt = $this->conn->prepare( $query_contrato );
         $stmt->bindParam(":jogador", $idJogador);
         $stmt->bindParam(":tipoContrato", $tipoTransferencia);
         $stmt->bindParam(":clube", $idClubeDestino);
-        $stmt->bindParam(":clubeVinculado", $idClubeDestino);
+        $stmt->bindParam(":clubeVinculado", $clubeVinculadoVal);
+        $stmt->bindParam(":clubeVinculadoNovo", $clubeVinculadoVal);
         $stmt->bindParam(":encerramento", $prazo);
         $stmt->bindParam(":clubeNovo", $idClubeDestino);
         $stmt->bindParam(":encerramentoNovo", $prazo);
@@ -555,7 +558,9 @@ return $stmt;
         $result_check_vinculo = $stmt_check_vinculo->fetch(PDO::FETCH_ASSOC);
         
         if($result_check_vinculo) {
-            $estaEmprestado = ($result_check_vinculo['clubeVinculado'] != 0);
+            $cVinc = (int)($result_check_vinculo['clubeVinculado'] ?? 0);
+            $cAtual = (int)($result_check_vinculo['clube'] ?? 0);
+            $estaEmprestado = ($cVinc !== 0 && $cVinc !== $cAtual);
             
             // Se está emprestado, permite venda e extensão, mas barra novo empréstimo
             if ($estaEmprestado) {
@@ -564,7 +569,7 @@ return $stmt;
                 }
             } else {
                 // Para não-emprestados, verifica se quem propõe é o dono real
-                $donoNormal = ($result_check_vinculo['clubeVinculado'] == 0 && $result_check_vinculo['clube'] == $clubeOrigem);
+                $donoNormal = ($cVinc === 0 || $cVinc === $cAtual) && ($cAtual == $clubeOrigem);
                 if (!$donoNormal && $clubeOrigem != 0) {
                     return false;
                 }
@@ -1354,7 +1359,7 @@ return $stmt;
             CASE WHEN SUBSTRING(j.StringPosicoes,13,1) = 0 THEN '' ELSE 'MA-' END,
             CASE WHEN SUBSTRING(j.StringPosicoes,14,1) = 0 THEN '' ELSE 'Am-' END,
             CASE WHEN SUBSTRING(j.StringPosicoes,15,1) = 0 THEN '' ELSE 'Aa-' END) as posicoes, j.StringPosicoes as stringPosicoes,
-            j.valor, j.Nivel as nivel, CASE WHEN j.disponibilidade = -1 THEN 'Aposentado' WHEN j.disponibilidade = 0 THEN 'Não' WHEN j.disponibilidade = -2 THEN 'Expatriado' WHEN j.disponibilidade = -3 THEN 'Falecido' ELSE 'Sim' END as disponibilidade, p.bandeira, q.bandeira as bandeiraClube, q.ID as paisClube, CASE WHEN b.ID is not NULL THEN b.ID ELSE 0 END as idClube, b.liga as idLiga, l.Nome as ligaClube, CASE WHEN c.posicaoBase <> 0 THEN o.Nome ELSE '' END as posicaoBaseJogador, j.Mentalidade as mentalidadeIndex, p.ranqueavel, CASE WHEN p.dono <> :usuarioLogado THEN 0 ELSE 1 END as donoJogador, CASE WHEN q.dono = :usuarioLogadoClube THEN 1 ELSE 0 END as donoClubeAtual, c.tipoContrato, COALESCE(c.clubeVinculado, 0) as idClubeVinculado, COALESCE(c.clubeVinculado, 0) as idDonoVinculado, clOrig.Nome as nomeClubeOrigem, CASE WHEN c.clubeVinculado IS NOT NULL AND c.clubeVinculado <> 0 THEN 1 ELSE 0 END as estaEmprestado
+            j.valor, j.Nivel as nivel, CASE WHEN j.disponibilidade = -1 THEN 'Aposentado' WHEN j.disponibilidade = 0 THEN 'Não' WHEN j.disponibilidade = -2 THEN 'Expatriado' WHEN j.disponibilidade = -3 THEN 'Falecido' ELSE 'Sim' END as disponibilidade, p.bandeira, q.bandeira as bandeiraClube, q.ID as paisClube, CASE WHEN b.ID is not NULL THEN b.ID ELSE 0 END as idClube, b.liga as idLiga, l.Nome as ligaClube, CASE WHEN c.posicaoBase <> 0 THEN o.Nome ELSE '' END as posicaoBaseJogador, j.Mentalidade as mentalidadeIndex, p.ranqueavel, CASE WHEN p.dono <> :usuarioLogado THEN 0 ELSE 1 END as donoJogador, CASE WHEN q.dono = :usuarioLogadoClube THEN 1 ELSE 0 END as donoClubeAtual, c.tipoContrato, COALESCE(c.clubeVinculado, 0) as idClubeVinculado, COALESCE(c.clubeVinculado, 0) as idDonoVinculado, clOrig.Nome as nomeClubeOrigem, CASE WHEN c.clubeVinculado IS NOT NULL AND c.clubeVinculado <> 0 AND c.clubeVinculado <> COALESCE(c.clube, 0) THEN 1 ELSE 0 END as estaEmprestado
             FROM jogador j
             LEFT JOIN paises p ON j.Pais = p.id
             LEFT JOIN contratos_jogador c ON j.ID = c.jogador AND c.tipoContrato = 0
@@ -4039,7 +4044,6 @@ public function resolverEmprestimos(){
 
 		}
 
-        
     public function atualizarReferencia($idJogador, $referencia) {
         try {
             $query = "UPDATE " . $this->table_name . " SET referencia = :referencia WHERE ID = :id";
@@ -4057,6 +4061,288 @@ public function resolverEmprestimos(){
             }
             return false;
         }
+    }
+
+    private function ensureLogMergeTable() {
+        try {
+            $this->conn->exec("
+                CREATE TABLE IF NOT EXISTS log_merge_atletas (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    id_principal INT NOT NULL,
+                    nome_principal VARCHAR(255) NOT NULL,
+                    id_secundario INT NOT NULL,
+                    nome_secundario VARCHAR(255) NOT NULL,
+                    id_usuario INT NOT NULL DEFAULT 0,
+                    nome_usuario VARCHAR(255) DEFAULT NULL,
+                    detalhes TEXT DEFAULT NULL,
+                    data_merge DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_principal (id_principal),
+                    INDEX idx_data (data_merge)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+        } catch (Exception $e) {}
+    }
+
+    public function mergeAtletas($idPrincipal, $idSecundario, $idUsuario = 0, $nomeUsuario = 'Admin') {
+        $idPrincipal = (int)$idPrincipal;
+        $idSecundario = (int)$idSecundario;
+        $idUsuario = (int)$idUsuario;
+
+        if ($idPrincipal <= 0 || $idSecundario <= 0 || $idPrincipal === $idSecundario) {
+            return ['success' => false, 'error' => 'IDs de atletas inválidos para o merge.'];
+        }
+
+        $this->ensureLogMergeTable();
+
+        try {
+            $this->conn->beginTransaction();
+
+            // 1. Verificar se ambos os jogadores existem
+            $stmtP = $this->conn->prepare("SELECT * FROM " . $this->table_name . " WHERE ID = ?");
+            $stmtP->execute([$idPrincipal]);
+            $jogadorPrincipal = $stmtP->fetch(PDO::FETCH_ASSOC);
+
+            $stmtS = $this->conn->prepare("SELECT * FROM " . $this->table_name . " WHERE ID = ?");
+            $stmtS->execute([$idSecundario]);
+            $jogadorSecundario = $stmtS->fetch(PDO::FETCH_ASSOC);
+
+            if (!$jogadorPrincipal || !$jogadorSecundario) {
+                $this->conn->rollBack();
+                return ['success' => false, 'error' => 'Um ou ambos os atletas não foram encontrados no banco de dados.'];
+            }
+
+            // 2. Herança de foto, externalID ou referência se o principal estiver sem
+            $updates = [];
+            $params = [];
+
+            if (empty($jogadorPrincipal['foto']) && !empty($jogadorSecundario['foto'])) {
+                $updates[] = "foto = :foto";
+                $params[':foto'] = $jogadorSecundario['foto'];
+            }
+
+            if (empty($jogadorPrincipal['externalID']) && !empty($jogadorSecundario['externalID'])) {
+                $updates[] = "externalID = :externalID";
+                $params[':externalID'] = $jogadorSecundario['externalID'];
+            }
+
+            if (empty($jogadorPrincipal['referencia']) && !empty($jogadorSecundario['referencia'])) {
+                $updates[] = "referencia = :referencia";
+                $params[':referencia'] = $jogadorSecundario['referencia'];
+            }
+
+            if (!empty($updates)) {
+                $params[':id'] = $idPrincipal;
+                $sqlUp = "UPDATE " . $this->table_name . " SET " . implode(", ", $updates) . " WHERE ID = :id";
+                $stmtUp = $this->conn->prepare($sqlUp);
+                $stmtUp->execute($params);
+            }
+
+            // 3. Migração de Contratos (contratos_jogador)
+            $stmtContratosS = $this->conn->prepare("SELECT * FROM contratos_jogador WHERE jogador = ?");
+            $stmtContratosS->execute([$idSecundario]);
+            $contratosSecundario = $stmtContratosS->fetchAll(PDO::FETCH_ASSOC);
+
+            $contratosMigradosCount = 0;
+            foreach ($contratosSecundario as $cSec) {
+                $tipoContrato = (int)$cSec['tipoContrato'];
+                $stmtCheckCP = $this->conn->prepare("SELECT * FROM contratos_jogador WHERE jogador = ? AND tipoContrato = ?");
+                $stmtCheckCP->execute([$idPrincipal, $tipoContrato]);
+                $contratoPrincipalExistente = $stmtCheckCP->fetch(PDO::FETCH_ASSOC);
+
+                if (!$contratoPrincipalExistente) {
+                    $stmtMigraContrato = $this->conn->prepare("UPDATE contratos_jogador SET jogador = ? WHERE jogador = ? AND tipoContrato = ?");
+                    $stmtMigraContrato->execute([$idPrincipal, $idSecundario, $tipoContrato]);
+                    $contratosMigradosCount++;
+                } else {
+                    if ((int)$contratoPrincipalExistente['clube'] === 0 && (int)$cSec['clube'] > 0) {
+                        $stmtDelCP = $this->conn->prepare("DELETE FROM contratos_jogador WHERE jogador = ? AND tipoContrato = ?");
+                        $stmtDelCP->execute([$idPrincipal, $tipoContrato]);
+
+                        $stmtMigraContrato = $this->conn->prepare("UPDATE contratos_jogador SET jogador = ? WHERE jogador = ? AND tipoContrato = ?");
+                        $stmtMigraContrato->execute([$idPrincipal, $idSecundario, $tipoContrato]);
+                        $contratosMigradosCount++;
+                    } else {
+                        $stmtDelCS = $this->conn->prepare("DELETE FROM contratos_jogador WHERE jogador = ? AND tipoContrato = ?");
+                        $stmtDelCS->execute([$idSecundario, $tipoContrato]);
+                    }
+                }
+            }
+
+            $this->conn->prepare("DELETE FROM contratos_jogador WHERE jogador = ?")->execute([$idSecundario]);
+
+            // 4. Migração de Transferências e Histórico
+            $stmtTransf = $this->conn->prepare("UPDATE transferencias SET jogador = ? WHERE jogador = ?");
+            $stmtTransf->execute([$idPrincipal, $idSecundario]);
+            $transfCount = $stmtTransf->rowCount();
+
+            // 5. Migração de Partidas e Escalações
+            $stmtEsc1 = $this->conn->prepare("UPDATE jogos_clube_escalacao SET id_jogador = ? WHERE id_jogador = ?");
+            $stmtEsc1->execute([$idPrincipal, $idSecundario]);
+            $jogosClubeCount = $stmtEsc1->rowCount();
+
+            $stmtEsc2 = $this->conn->prepare("UPDATE jogos_escalacao SET id_jogador = ? WHERE id_jogador = ?");
+            $stmtEsc2->execute([$idPrincipal, $idSecundario]);
+            $jogosSelecaoCount = $stmtEsc2->rowCount();
+
+            // 6. Migração de Eventos de Partidas
+            $stmtEv1 = $this->conn->prepare("UPDATE jogos_clube_eventos SET id_jogador = ? WHERE id_jogador = ?");
+            $stmtEv1->execute([$idPrincipal, $idSecundario]);
+
+            $stmtEv2 = $this->conn->prepare("UPDATE jogos_eventos SET id_jogador = ? WHERE id_jogador = ?");
+            $stmtEv2->execute([$idPrincipal, $idSecundario]);
+
+            $stmtEv3 = $this->conn->prepare("UPDATE competicao_eventos SET id_jogador = ? WHERE id_jogador = ?");
+            $stmtEv3->execute([$idPrincipal, $idSecundario]);
+
+            // 7. Migração de Suspensões e Logs
+            $this->conn->prepare("UPDATE competicao_suspensos SET id_jogador = ? WHERE id_jogador = ?")->execute([$idPrincipal, $idSecundario]);
+            $this->conn->prepare("UPDATE competicao_alteracoes_log SET id_jogador_saiu = ? WHERE id_jogador_saiu = ?")->execute([$idPrincipal, $idSecundario]);
+            $this->conn->prepare("UPDATE competicao_alteracoes_log SET id_jogador_entrou = ? WHERE id_jogador_entrou = ?")->execute([$idPrincipal, $idSecundario]);
+
+            // 8. Salvar Registro no Histórico de Logs
+            $detalhesLog = json_encode([
+                'contratos_migrados' => $contratosMigradosCount,
+                'transferencias' => $transfCount,
+                'jogos_clube' => $jogosClubeCount,
+                'jogos_selecao' => $jogosSelecaoCount,
+                'dados_preservados' => [
+                    'nivel' => $jogadorPrincipal['Nivel'],
+                    'pais' => $jogadorPrincipal['Pais'],
+                    'nascimento' => $jogadorPrincipal['Nascimento']
+                ],
+                'dados_absorvidos' => [
+                    'nivel' => $jogadorSecundario['Nivel'],
+                    'pais' => $jogadorSecundario['Pais'],
+                    'nascimento' => $jogadorSecundario['Nascimento']
+                ]
+            ], JSON_UNESCAPED_UNICODE);
+
+            $stmtLog = $this->conn->prepare("
+                INSERT INTO log_merge_atletas 
+                (id_principal, nome_principal, id_secundario, nome_secundario, id_usuario, nome_usuario, detalhes, data_merge)
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+            ");
+            $stmtLog->execute([
+                $idPrincipal,
+                $jogadorPrincipal['Nome'],
+                $idSecundario,
+                $jogadorSecundario['Nome'],
+                $idUsuario,
+                $nomeUsuario,
+                $detalhesLog
+            ]);
+
+            // 9. Excluir o atleta secundário do cadastro de jogadores
+            $stmtDel = $this->conn->prepare("DELETE FROM " . $this->table_name . " WHERE ID = ?");
+            $stmtDel->execute([$idSecundario]);
+
+            $this->conn->commit();
+            return ['success' => true];
+        } catch (Exception $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+            return ['success' => false, 'error' => 'Erro durante o merge: ' . $e->getMessage()];
+        }
+    }
+
+    public function listarLogsMerge($limite = 50) {
+        $this->ensureLogMergeTable();
+        $limite = (int)$limite;
+        if ($limite <= 0) $limite = 50;
+
+        $stmt = $this->conn->prepare("SELECT * FROM log_merge_atletas ORDER BY data_merge DESC LIMIT " . $limite);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function buscarPossiveisDuplicatas() {
+        // Busca direta e ultra-rápida em duas etapas para evitar travamento do MySQL
+        $stmtNomes = $this->conn->query("
+            SELECT Nome 
+            FROM jogador 
+            WHERE Nome IS NOT NULL AND Nome != '' 
+            GROUP BY Nome 
+            HAVING COUNT(*) > 1 
+            ORDER BY COUNT(*) DESC, Nome ASC 
+            LIMIT 50
+        ");
+        $nomes = $stmtNomes ? $stmtNomes->fetchAll(PDO::FETCH_COLUMN) : [];
+
+        if (empty($nomes)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($nomes), '?'));
+        $query = "
+            SELECT 
+                j.ID, j.Nome, j.Nivel, j.Pais as idPais,
+                p.nome as pais, p.bandeira,
+                c.Nome as clube
+            FROM jogador j
+            LEFT JOIN paises p ON j.Pais = p.id
+            LEFT JOIN contratos_jogador cj ON j.ID = cj.jogador AND cj.tipoContrato = 0
+            LEFT JOIN clube c ON cj.clube = c.ID
+            WHERE j.Nome IN ($placeholders)
+            ORDER BY j.Nome ASC, j.ID ASC
+        ";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($nomes);
+        $atletas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Agrupa os atletas pelo nome no PHP
+        $grupos = [];
+        foreach ($atletas as $a) {
+            $chave = trim(mb_strtolower($a['Nome']));
+            $grupos[$chave][] = $a;
+        }
+
+        // Monta os pares de comparação
+        $duplicatas = [];
+        foreach ($grupos as $lista) {
+            $total = count($lista);
+            for ($i = 0; $i < $total - 1; $i++) {
+                for ($k = $i + 1; $k < $total; $k++) {
+                    $a1 = $lista[$i];
+                    $a2 = $lista[$k];
+
+                    $mesmoPais = (!empty($a1['idPais']) && !empty($a2['idPais']) && $a1['idPais'] === $a2['idPais']);
+                    $score = $mesmoPais ? 100 : 90;
+
+                    $duplicatas[] = [
+                        'id1' => $a1['ID'],
+                        'nome1' => $a1['Nome'],
+                        'nivel1' => $a1['Nivel'],
+                        'idPais1' => $a1['idPais'],
+                        'pais1' => $a1['pais'],
+                        'bandeira1' => $a1['bandeira'],
+                        'clube1' => $a1['clube'] ?? '',
+                        'id2' => $a2['ID'],
+                        'nome2' => $a2['Nome'],
+                        'nivel2' => $a2['Nivel'],
+                        'idPais2' => $a2['idPais'],
+                        'pais2' => $a2['pais'],
+                        'bandeira2' => $a2['bandeira'],
+                        'clube2' => $a2['clube'] ?? '',
+                        'match_score' => $score
+                    ];
+
+                    if (count($duplicatas) >= 100) {
+                        break 3;
+                    }
+                }
+            }
+        }
+
+        usort($duplicatas, function($a, $b) {
+            if ($b['match_score'] !== $a['match_score']) {
+                return $b['match_score'] <=> $a['match_score'];
+            }
+            return strcmp($a['nome1'], $b['nome1']);
+        });
+
+        return $duplicatas;
     }
 
 }

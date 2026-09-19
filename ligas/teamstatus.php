@@ -1057,7 +1057,8 @@ echo $date->format('Y-m-d');
                     if (in_array((int)$paisTime, $closed_countries)) {
                         continue; // Não exibir times de países com janela fechada no período
                     }
-                    echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}</option>";
+                    $genderSuffix = ((int)$Sexo === 1) ? ' [F]' : ' [M]';
+                    echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}{$genderSuffix}</option>";
                 }
 
                 ?>
@@ -1102,7 +1103,8 @@ echo $date->format('Y-m-d');
 
                 while ($new_row_category = $newStmt->fetch(PDO::FETCH_ASSOC)){
                     extract($new_row_category);
-                    echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}</option>";
+                    $genderSuffix = ((int)$Sexo === 1) ? ' [F]' : ' [M]';
+                    echo "<option value='{$id}' data-sexo='{$Sexo}'>{$nome}{$genderSuffix}</option>";
                 }
 
                 ?>
@@ -1214,16 +1216,16 @@ $(".propostaTecnico").click(function(){
     id = parseInt(id[1]);
     $('#nomeTecnicoTransf').val(nome);
 
-    sexoTecnico = $(this).closest("tr").attr("data-sexo");
+    var clubeOrigem = $('#clubeOrigemTecnico').val();
 
     $("#clubeDestinoTecnico option").each(function(){
-
-    if($(this).attr("data-sexo") == sexoTecnico){
-        $(this).show();
-    } else {
-        $(this).hide();
-    }
-
+        if($(this).val() == clubeOrigem && $(this).val() !== ''){
+            $(this).prop("disabled", true);
+            $(this).hide();
+        } else {
+            $(this).show();
+            $(this).prop("disabled", false);
+        }
     });
 
     $("#modalPropostaTecnico").show();

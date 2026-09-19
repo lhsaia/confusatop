@@ -40,14 +40,14 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && $_SESSION['u
     $clubeOrigem = 0;
     $estaEmprestado = false;
     if ($row_vinculo) {
-        if ($row_vinculo['clubeVinculado'] != 0) {
-            $clubeOrigem = $row_vinculo['clubeVinculado']; // Dono real dos direitos
+        if (!empty($row_vinculo['clubeVinculado']) && (int)$row_vinculo['clubeVinculado'] !== 0 && (int)$row_vinculo['clubeVinculado'] !== (int)$row_vinculo['clube']) {
+            $clubeOrigem = (int)$row_vinculo['clubeVinculado']; // Dono real dos direitos
             $estaEmprestado = true;
-            $clubeAtual = $row_vinculo['clube']; // Clube em que atua (mutuário)
+            $clubeAtual = (int)$row_vinculo['clube']; // Clube em que atua (mutuário)
         } else {
-            $clubeOrigem = $row_vinculo['clube'];
+            $clubeOrigem = (int)$row_vinculo['clube'];
             $estaEmprestado = false;
-            $clubeAtual = $row_vinculo['clube'];
+            $clubeAtual = (int)$row_vinculo['clube'];
         }
     }
 
