@@ -231,6 +231,18 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
             <span style="display: inline-block; margin-top: 16px; color: #10b981; font-weight: 600; font-size: 14px;">Fazer backup SQL &rarr;</span>
         </a>
 
+        <!-- Card 9: Merge de Atletas -->
+        <a href="/admin/merge_atletas.php" class="admin-card" style="border-top: 3px solid #a855f7 !important;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <span class="material-symbols-outlined" style="font-size: 32px; color: #a855f7;">merge</span>
+                <h2>Merge de Atletas</h2>
+            </div>
+            <p>
+                Compare atletas duplicados lado a lado, avalie fotos e atributos, e faça a fusão transferindo contratos, jogos, gols e histórico.
+            </p>
+            <span style="display: inline-block; margin-top: 16px; color: #a855f7; font-weight: 600; font-size: 14px;">Fazer merge de atletas &rarr;</span>
+        </a>
+
     </div>
     
     <div style="margin-top: 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
