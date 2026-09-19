@@ -176,7 +176,7 @@ if($num>0){
                 $optionsString = "<td class='wide'>";
 
                 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
-                    if($_SESSION['admin_status'] == '1' || $_SESSION['user_id'] === $idDonoPais){
+                    if($_SESSION['admin_status'] == '1' || (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$idDonoPais)){
                         $optionsString .= "<a id='edi".$ID."' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
                         $optionsString .= "<a id='dow".$ID."' title='Baixar arquivo .ymt' class='clickable exportar'><span class='material-symbols-outlined inlineButton azul'>download</span></a>";
 
