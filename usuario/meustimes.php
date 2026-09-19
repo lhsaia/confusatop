@@ -209,7 +209,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
         // criar linhas
         $.each(ajax_data, function(index, val){
 
-            if(index>=(from_result_num-1) && index<=(from_result_num+results_per_page-2)){
+            if(index >= (from_result_num) && index < (from_result_num + results_per_page)){
 			
 			// genero
 			let genderCode = ""
