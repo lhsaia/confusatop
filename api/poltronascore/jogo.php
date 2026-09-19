@@ -370,7 +370,28 @@ try {
             $stmtEv = $conn->prepare("SELECT * FROM jogos_clube_eventos WHERE id_jogo = ? ORDER BY tempo DESC, minutos DESC, id_evento DESC");
             $stmtEv->execute([$matchId]);
             while ($evRow = $stmtEv->fetch(PDO::FETCH_ASSOC)) {
-                $isHome = ((int)$evRow['id_time'] === (int)$row['timeA_id']) || (!empty($evRow['nome_time']) && trim($evRow['nome_time']) === trim($row['home_team']));
+                $evTimeId = (int)($evRow['id_time'] ?? 0);
+                $timeAId = (int)($row['timeA_id'] ?? 0);
+                $timeBId = (int)($row['timeB_id'] ?? 0);
+                $evTimeNome = trim((string)($evRow['nome_time'] ?? ''));
+                $homeTeamName = trim((string)($row['home_team'] ?? ''));
+                $awayTeamName = trim((string)($row['away_team'] ?? ''));
+
+                $isHome = false;
+                if ($evTimeId > 0 && $timeAId > 0 && $evTimeId === $timeAId) {
+                    $isHome = true;
+                } elseif ($evTimeId > 0 && $timeBId > 0 && $evTimeId === $timeBId) {
+                    $isHome = false;
+                } elseif (!empty($evTimeNome)) {
+                    if (strcasecmp($evTimeNome, $homeTeamName) === 0) {
+                        $isHome = true;
+                    } elseif (strcasecmp($evTimeNome, $awayTeamName) === 0) {
+                        $isHome = false;
+                    }
+                } else {
+                    $isHome = true;
+                }
+
                 $tipo = (int)$evRow['tipo'];
                 $minuto = $evRow['minutos'] ? ((int)$evRow['minutos'] . "'") : '';
                 $pName = $evRow['nome_jogador'] ?: '';
@@ -660,36 +681,6 @@ try {
         $events = [];
         $playerEvents = [];
 
-        foreach ($rawEvents as $ev) {
-            $isHome = (!empty($ev['team_name']) && trim($ev['team_name']) === trim($pMatch['home_team']));
-            $evType = $ev['type'] ?: 'event';
-            $evDesc = $ev['description'] ?: '';
-
-            if ($evType === 'lance-cartao') {
-                if (stripos($evDesc, 'vermelho') !== false) {
-                    $evType = 'red-card';
-                } else {
-                    $evType = 'yellow-card';
-                }
-            } elseif ($evType === 'lance-gol') {
-                if (stripos($evDesc, 'contra') !== false) {
-                    $evType = 'own-goal';
-                } else {
-                    $evType = 'goal';
-                }
-            }
-
-            $events[] = [
-                'minute' => !empty($ev['minute']) ? (rtrim($ev['minute'], "'") . "'") : '',
-                'type' => $evType,
-                'team_name' => $ev['team_name'] ?: '',
-                'player_name' => $ev['player_name'] ?: '',
-                'description' => $evDesc,
-                'side' => $isHome ? 'home' : 'away',
-                'is_home' => $isHome
-            ];
-        }
-
         // Inferir gênero da partida raspada por campeonato e tabela demográfica gen_nomes
         $allScorers = trim(($pMatch['home_scorers'] ?? '') . ', ' . ($pMatch['away_scorers'] ?? ''));
         $namesToInfer = [];
@@ -721,7 +712,113 @@ try {
             'home' => $homeLineup,
             'away' => $awayLineup
         ];
-        
+
+        // Preparar listas para resolução precisa de lado (mandante / visitante)
+        $cleanScorers = function($scorersStr) {
+            $arr = [];
+            foreach (explode(',', (string)$scorersStr) as $s) {
+                $cleaned = mb_strtolower(trim(preg_replace('/\s*\(.*?\)/', '', $s)), 'UTF-8');
+                if ($cleaned !== '') $arr[] = $cleaned;
+            }
+            return $arr;
+        };
+
+        $homeScorersArr = $cleanScorers($pMatch['home_scorers'] ?? '');
+        $awayScorersArr = $cleanScorers($pMatch['away_scorers'] ?? '');
+
+        $homePlayerNames = [];
+        foreach (array_merge($homeLineup['starters'] ?? [], $homeLineup['bench'] ?? []) as $hp) {
+            if (!empty($hp['name'])) $homePlayerNames[] = mb_strtolower(trim($hp['name']), 'UTF-8');
+        }
+        $awayPlayerNames = [];
+        foreach (array_merge($awayLineup['starters'] ?? [], $awayLineup['bench'] ?? []) as $ap) {
+            if (!empty($ap['name'])) $awayPlayerNames[] = mb_strtolower(trim($ap['name']), 'UTF-8');
+        }
+
+        $homeTeamLower = mb_strtolower(trim($pMatch['home_team']), 'UTF-8');
+        $awayTeamLower = mb_strtolower(trim($pMatch['away_team']), 'UTF-8');
+
+        foreach ($rawEvents as $ev) {
+            $evTeam = trim($ev['team_name'] ?? '');
+            $evPlayer = trim($ev['player_name'] ?? '');
+            $evDesc = trim($ev['description'] ?? '');
+
+            $isHome = null;
+
+            // 1. Por nome do time se preenchido
+            if (!empty($evTeam)) {
+                if (strcasecmp($evTeam, $pMatch['home_team']) === 0) {
+                    $isHome = true;
+                } elseif (strcasecmp($evTeam, $pMatch['away_team']) === 0) {
+                    $isHome = false;
+                }
+            }
+
+            // 2. Por lista de marcadores de gols
+            if ($isHome === null && !empty($evPlayer)) {
+                $cleanEvPlayer = mb_strtolower(trim(preg_replace('/\s*\(.*?\)/', '', $evPlayer)), 'UTF-8');
+                $inHome = in_array($cleanEvPlayer, $homeScorersArr);
+                $inAway = in_array($cleanEvPlayer, $awayScorersArr);
+                if ($inHome && !$inAway) $isHome = true;
+                elseif ($inAway && !$inHome) $isHome = false;
+            }
+
+            // 3. Por escalação/elenco do time
+            if ($isHome === null && !empty($evPlayer)) {
+                $cleanEvPlayer = mb_strtolower(trim($evPlayer), 'UTF-8');
+                $inHomeSquad = in_array($cleanEvPlayer, $homePlayerNames);
+                $inAwaySquad = in_array($cleanEvPlayer, $awayPlayerNames);
+                if ($inHomeSquad && !$inAwaySquad) $isHome = true;
+                elseif ($inAwaySquad && !$inHomeSquad) $isHome = false;
+            }
+
+            // 4. Por menções no texto da descrição
+            if ($isHome === null && !empty($evDesc)) {
+                $descLower = mb_strtolower($evDesc, 'UTF-8');
+                $homeMentions = preg_match('/\b(para o|para a|do|da|gol do|gol da)\s+' . preg_quote($homeTeamLower, '/') . '\b/iu', $descLower);
+                $awayMentions = preg_match('/\b(para o|para a|do|da|gol do|gol da)\s+' . preg_quote($awayTeamLower, '/') . '\b/iu', $descLower);
+
+                if ($homeMentions && !$awayMentions) $isHome = true;
+                elseif ($awayMentions && !$homeMentions) $isHome = false;
+                elseif (mb_stripos($descLower, $homeTeamLower) !== false && mb_stripos($descLower, $awayTeamLower) === false) $isHome = true;
+                elseif (mb_stripos($descLower, $awayTeamLower) !== false && mb_stripos($descLower, $homeTeamLower) === false) $isHome = false;
+            }
+
+            // Padrão se ainda indefinido: mandante (home)
+            if ($isHome === null) {
+                $isHome = true;
+            }
+
+            $evType = $ev['type'] ?: 'event';
+            $evDesc = $ev['description'] ?: '';
+
+            if ($evType === 'lance-cartao') {
+                if (stripos($evDesc, 'vermelho') !== false) {
+                    $evType = 'red-card';
+                } else {
+                    $evType = 'yellow-card';
+                }
+            } elseif ($evType === 'lance-gol') {
+                if (stripos($evDesc, 'contra') !== false) {
+                    $evType = 'own-goal';
+                } else {
+                    $evType = 'goal';
+                }
+            }
+
+            $finalTeamName = $evTeam ?: ($isHome ? $pMatch['home_team'] : $pMatch['away_team']);
+
+            $events[] = [
+                'minute' => !empty($ev['minute']) ? (rtrim($ev['minute'], "'") . "'") : '',
+                'type' => $evType,
+                'team_name' => $finalTeamName,
+                'player_name' => $ev['player_name'] ?: '',
+                'description' => $evDesc,
+                'side' => $isHome ? 'home' : 'away',
+                'is_home' => $isHome
+            ];
+        }
+
         echo json_encode([
             'success' => true,
             'match' => $pMatch,
