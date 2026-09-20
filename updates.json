@@ -13,6 +13,16 @@
       "date": "20/09/2026",
       "items": [
         {
+          "badge": "bugfix",
+          "title": "Exibição da Posição Natural para Jogadores Suplentes",
+          "desc": "Ajustada a exibição nas listagens do Mercado de Transferências para que atletas que estejam como suplentes em seus clubes exibam sua posição natural de ofício (ex: Goleiro, Zagueiro, etc.) em vez do texto 'Suplente'."
+        },
+        {
+          "badge": "new",
+          "title": "Recálculo Individual de Passe na Lista de Jogadores mais Valiosos",
+          "desc": "Adicionado botão de ação para administradores recalcularem instantaneamente o passe e o salário de um atleta específico na listagem de Jogadores mais Valiosos, aplicando os parâmetros personalizados e atualizando a interface em tempo real via AJAX."
+        },
+        {
           "badge": "new",
           "title": "Edição Inline de Valores de Mercado para Administradores",
           "desc": "Adicionada a opção para administradores alterarem diretamente na listagem de Jogadores mais Valiosos (/mercado/transferencias.php?type=jogadores) o valor de mercado de cada atleta com salvamento imediato via AJAX."

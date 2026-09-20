@@ -1078,6 +1078,76 @@ return $stmt;
         }
     }
 
+    function recalcularPasseIndividual($idJogador, $userId = null){
+        $idJogador = (int)$idJogador;
+        if ($idJogador <= 0) {
+            return ['success' => false, 'error' => 'ID de jogador inválido.'];
+        }
+
+        // Se não foi passado $userId, tenta pegar do dono do clube/país do jogador ou da sessão
+        if ($userId === null || (int)$userId <= 0) {
+            if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
+                $userId = (int)$_SESSION['user_id'];
+            } else {
+                $stmtOwner = $this->conn->prepare("
+                    SELECT p.dono
+                    FROM contratos_jogador cj
+                    INNER JOIN clube c ON cj.clube = c.id
+                    INNER JOIN paises p ON c.Pais = p.id
+                    WHERE cj.jogador = ? AND cj.tipoContrato = 0
+                    LIMIT 1
+                ");
+                $stmtOwner->execute([$idJogador]);
+                $donoEncontrado = $stmtOwner->fetchColumn();
+                $userId = $donoEncontrado ? (int)$donoEncontrado : 0;
+            }
+        }
+
+        $params = $this->obterParametrosValores($userId);
+        $percentualSalario = (float)($params['percentual_salario'] ?? 0.50);
+
+        $stmtJog = $this->conn->prepare("SELECT id, Nivel, Nascimento, CobradorFalta, StringPosicoes FROM jogador WHERE id = ? LIMIT 1");
+        $stmtJog->execute([$idJogador]);
+        $row = $stmtJog->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            return ['success' => false, 'error' => 'Jogador não encontrado.'];
+        }
+
+        $nivel = (int)$row['Nivel'];
+        $nasc = $row['Nascimento'];
+        $cobradorFalta = (int)$row['CobradorFalta'];
+        $stringPosicoes = $row['StringPosicoes'];
+
+        $novoValor = $this->calcularPasse($idJogador, $nivel, $nasc, $cobradorFalta, $stringPosicoes, $params);
+        $novoSalario = $this->calcularSalario($novoValor, $percentualSalario);
+
+        $this->conn->beginTransaction();
+        try {
+            $stmtUpdateJogador = $this->conn->prepare("UPDATE jogador SET valor = ? WHERE id = ?");
+            $stmtUpdateJogador->execute([$novoValor, $idJogador]);
+
+            $stmtUpdateContrato = $this->conn->prepare("UPDATE contratos_jogador SET salario = ? WHERE jogador = ? AND tipoContrato = 0");
+            $stmtUpdateContrato->execute([$novoSalario, $idJogador]);
+
+            $this->conn->commit();
+
+            return [
+                'success' => true,
+                'idJogador' => $idJogador,
+                'valor' => $novoValor,
+                'salario' => $novoSalario
+            ];
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("Erro em recalcularPasseIndividual: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
     function selecionarElencoTime($id_time,$from_record_num,$records_per_page){
 
         $id_time = htmlspecialchars(strip_tags($id_time));

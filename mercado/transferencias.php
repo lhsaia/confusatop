@@ -144,8 +144,8 @@ if($pageType == 'maiores' || $pageType == 'ultimas'){
                 $genderClass = "genderFem";
             }
 
-            //calcular posicao se não tiver base definida
-            if($posicaoBase == ''){
+            //calcular posicao se não tiver base definida ou se estiver marcada como Suplente
+            if(empty($posicaoBase) || strcasecmp($posicaoBase, 'Suplente') === 0 || $posicaoBase == '0'){
                 $posicaoBase = $jogador->nomePosicaoPorCodigo((strpos($stringPosicoes, "1"))+1);
             }
 
@@ -239,8 +239,8 @@ if($pageType == 'maiores' || $pageType == 'ultimas'){
                     $genderClass = "genderFem";
                 }
 
-                //calcular posicao se não tiver base definida
-                if($posicaoBase == ''){
+                //calcular posicao se não tiver base definida ou se estiver marcada como Suplente
+                if(empty($posicaoBase) || strcasecmp($posicaoBase, 'Suplente') === 0 || $posicaoBase == '0'){
                     $posicaoBase = $jogador->nomePosicaoPorCodigo((strpos($stringPosicoes, "1"))+1);
                 }
 
@@ -276,6 +276,7 @@ if($pageType == 'maiores' || $pageType == 'ultimas'){
                 if ($isAdmin) {
                     echo "<td class='nopadding col-opcoes' style='text-align: center; white-space: nowrap;'>";
                     echo "<a id='edit_{$id}' title='Alterar valor' class='clickable editar-valor-jog'><span class='material-symbols-outlined inlineButton azul'>edit</span></a>";
+                    echo "<a id='recalc_{$id}' title='Recalcular passe' class='clickable recalcular-valor-jog' style='margin-left: 3px;'><span class='material-symbols-outlined inlineButton ciano'>calculate</span></a>";
                     echo "<a id='sal_{$id}' title='Salvar' class='clickable salvar-valor-jog' style='display:none;'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
                     echo "<a id='can_{$id}' title='Cancelar' class='clickable cancelar-valor-jog' style='display:none; margin-left: 4px;'><span class='material-symbols-outlined inlineButton vermelho'>close</span></a>";
                     echo "</td>";
@@ -887,6 +888,7 @@ $(document).on("click", '.editar-valor-jog', function(e){
     inputVal.show().focus();
     
     tbl_row.find('.editar-valor-jog').hide();
+    tbl_row.find('.recalcular-valor-jog').hide();
     tbl_row.find('.salvar-valor-jog').show();
     tbl_row.find('.cancelar-valor-jog').show();
 });
@@ -902,6 +904,7 @@ $(document).on("click", '.cancelar-valor-jog', function(e){
     tbl_row.find('.salvar-valor-jog').hide();
     tbl_row.find('.cancelar-valor-jog').hide();
     tbl_row.find('.editar-valor-jog').show();
+    tbl_row.find('.recalcular-valor-jog').show();
 });
 
 $(document).on("click", '.salvar-valor-jog', function(e){
@@ -913,6 +916,7 @@ $(document).on("click", '.salvar-valor-jog', function(e){
     var btnSalvar = $(this);
     var btnCancelar = tbl_row.find('.cancelar-valor-jog');
     var btnEditar = tbl_row.find('.editar-valor-jog');
+    var btnRecalc = tbl_row.find('.recalcular-valor-jog');
     var textoValor = tbl_row.find('.valor-texto');
 
     btnSalvar.prop('disabled', true);
@@ -933,12 +937,44 @@ $(document).on("click", '.salvar-valor-jog', function(e){
             btnSalvar.hide();
             btnCancelar.hide();
             btnEditar.show();
+            btnRecalc.show();
         } else {
             alert(data && data.error ? data.error : 'Erro ao salvar valor do atleta.');
         }
     }).fail(function() {
         btnSalvar.prop('disabled', false);
         alert('Erro na comunicação com o servidor ao alterar valor.');
+    });
+});
+
+$(document).on("click", '.recalcular-valor-jog', function(e){
+    e.preventDefault();
+    var tbl_row = $(this).closest('tr');
+    var idJogador = tbl_row.attr('id');
+    var inputVal = tbl_row.find('.input-valor');
+    var btnRecalc = $(this);
+    var textoValor = tbl_row.find('.valor-texto');
+
+    btnRecalc.css('opacity', '0.5');
+
+    $.ajax({
+        type: 'POST',
+        url: 'recalcular_passe_jogador.php',
+        data: {
+            idJogador: idJogador
+        },
+        dataType: 'json'
+    }).done(function(data) {
+        btnRecalc.css('opacity', '1');
+        if (data && data.success) {
+            textoValor.text(data.valor_formatado).show();
+            inputVal.val(data.valor).data('valor-original', data.valor);
+        } else {
+            alert(data && data.error ? data.error : 'Erro ao recalcular passe do atleta.');
+        }
+    }).fail(function() {
+        btnRecalc.css('opacity', '1');
+        alert('Erro na comunicação com o servidor ao recalcular passe.');
     });
 });
 
