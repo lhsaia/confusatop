@@ -539,6 +539,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 1 = Atleta 1 é o principal; 2 = Atleta 2 é o principal
     let principalEscolhido = 1; 
+    let fotoEscolhidaNum = 1;
 
     function criarConfigTomSelect(num) {
         return {
@@ -631,6 +632,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     if (num === 1) dadosAtleta1 = data;
                     if (num === 2) dadosAtleta2 = data;
+                    
+                    // Auto-ajuste inteligente de foto escolhida
+                    if (dadosAtleta1 && dadosAtleta2) {
+                        if (dadosAtleta1.tem_foto_customizada && !dadosAtleta2.tem_foto_customizada) {
+                            fotoEscolhidaNum = 1;
+                        } else if (!dadosAtleta1.tem_foto_customizada && dadosAtleta2.tem_foto_customizada) {
+                            fotoEscolhidaNum = 2;
+                        } else {
+                            fotoEscolhidaNum = principalEscolhido;
+                        }
+                    } else if (data.tem_foto_customizada) {
+                        fotoEscolhidaNum = num;
+                    }
+
                     renderizarCards();
                 } else {
                     container.innerHTML = `<div class="empty-card-placeholder" style="color: #ef4444;"><p>Erro: ${data.error}</p></div>`;
@@ -646,6 +661,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Alternar qual atleta será o principal
     window.definirPrincipal = function(num) {
         principalEscolhido = num;
+        // Se ambos têm foto customizada ou nenhum tem, acompanha o principal escolhido por padrão
+        if (dadosAtleta1 && dadosAtleta2) {
+            if (dadosAtleta1.tem_foto_customizada && !dadosAtleta2.tem_foto_customizada) {
+                fotoEscolhidaNum = 1;
+            } else if (!dadosAtleta1.tem_foto_customizada && dadosAtleta2.tem_foto_customizada) {
+                fotoEscolhidaNum = 2;
+            } else {
+                fotoEscolhidaNum = num;
+            }
+        }
+        renderizarCards();
+        atualizarBotaoMerge();
+    };
+
+    // Alternar qual foto será preservada
+    window.definirFotoEscolhida = function(num) {
+        fotoEscolhidaNum = num;
         renderizarCards();
         atualizarBotaoMerge();
     };
@@ -668,6 +700,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const fotoHtml = data.foto 
             ? `<img src="${data.foto}" alt="${data.nome}">`
             : `<span class="material-symbols-outlined" style="font-size: 48px; color: #475569;">person</span>`;
+
+        const isFotoPreservada = (fotoEscolhidaNum === num);
 
         const posChips = data.posicoes.map(p => `<span class="pos-chip">${p}</span>`).join(' ') || '<span style="color:#64748b; font-size:12px;">Nenhuma</span>';
 
@@ -699,8 +733,20 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
 
             <div class="player-header-info">
-                <div class="player-photo-container">
-                    ${fotoHtml}
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                    <div class="player-photo-container" style="${isFotoPreservada ? 'border: 2px solid #38bdf8; box-shadow: 0 0 10px rgba(56,189,248,0.4);' : ''}">
+                        ${fotoHtml}
+                    </div>
+                    <div>
+                        ${data.tem_foto_customizada ? `
+                            <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: ${isFotoPreservada ? '#38bdf8' : '#94a3b8'}; background: ${isFotoPreservada ? 'rgba(56, 189, 248, 0.18)' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${isFotoPreservada ? 'rgba(56, 189, 248, 0.5)' : 'rgba(255,255,255,0.1)'}; padding: 3px 8px; border-radius: 12px;">
+                                <input type="radio" name="radio_foto_preservada" ${isFotoPreservada ? 'checked' : ''} onchange="definirFotoEscolhida(${num})">
+                                Manter foto
+                            </label>
+                        ` : `
+                            <span style="font-size: 10px; color: #64748b;">Sem foto própria</span>
+                        `}
+                    </div>
                 </div>
                 <div class="player-main-meta">
                     <h2 class="player-name">#${data.id} - ${data.nome}</h2>
@@ -801,7 +847,17 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.disabled = false;
             const principal = (principalEscolhido === 1) ? dadosAtleta1 : dadosAtleta2;
             const secundario = (principalEscolhido === 1) ? dadosAtleta2 : dadosAtleta1;
-            summary.innerHTML = `O atleta <strong style="color: #34d399;">#${principal.id} (${principal.nome})</strong> será preservado como principal. O atleta <strong style="color: #f87171;">#${secundario.id} (${secundario.nome})</strong> terá seus contratos, partidas e histórico migrados e será removido.`;
+            
+            let fotoInfo = '';
+            if (fotoEscolhidaNum === 1 && dadosAtleta1.tem_foto_customizada) {
+                fotoInfo = ` <span style="display: block; margin-top: 6px; color: #38bdf8; font-size: 13px;">📸 <strong>Foto preservada:</strong> #${dadosAtleta1.id} (${dadosAtleta1.nome})</span>`;
+            } else if (fotoEscolhidaNum === 2 && dadosAtleta2.tem_foto_customizada) {
+                fotoInfo = ` <span style="display: block; margin-top: 6px; color: #38bdf8; font-size: 13px;">📸 <strong>Foto preservada:</strong> #${dadosAtleta2.id} (${dadosAtleta2.nome})</span>`;
+            } else {
+                fotoInfo = ` <span style="display: block; margin-top: 6px; color: #94a3b8; font-size: 13px;">📸 Foto padrão do sistema mantida.</span>`;
+            }
+
+            summary.innerHTML = `O atleta <strong style="color: #34d399;">#${principal.id} (${principal.nome})</strong> será preservado como principal. O atleta <strong style="color: #f87171;">#${secundario.id} (${secundario.nome})</strong> terá seus contratos, partidas e histórico migrados e será removido.${fotoInfo}`;
         } else {
             btn.disabled = true;
             summary.innerHTML = `Selecione ambos os atletas acima e defina qual deles será mantido no sistema.`;
@@ -1039,6 +1095,16 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('action', 'merge');
         formData.append('id_principal', idPrincipal);
         formData.append('id_secundario', idSecundario);
+
+        let fotoEscolhidaRaw = null;
+        if (fotoEscolhidaNum === 1 && dadosAtleta1) {
+            fotoEscolhidaRaw = dadosAtleta1.foto_raw;
+        } else if (fotoEscolhidaNum === 2 && dadosAtleta2) {
+            fotoEscolhidaRaw = dadosAtleta2.foto_raw;
+        }
+        if (fotoEscolhidaRaw) {
+            formData.append('foto_escolhida', fotoEscolhidaRaw);
+        }
 
         fetch('/admin/api_jogador_merge.php', {
             method: 'POST',

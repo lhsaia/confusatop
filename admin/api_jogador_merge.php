@@ -83,12 +83,16 @@ if ($action === 'get') {
     $stmtTransf->execute([$idJogador]);
     $totalTransf = (int)$stmtTransf->fetchColumn();
 
-    // Foto formatada
+    // Foto formatada e status de personalização
+    $defaultsFotos = ['default.webp', 'default.jpg', 'default.png', 'default-user.png', 'avatar.png', 'placeholder.png', 'null', 'none', ''];
+    $fotoRaw = trim((string)($dados['foto'] ?? ''));
+    $temFotoCustomizada = !in_array(strtolower($fotoRaw), $defaultsFotos, true);
+
     $fotoFormatada = '';
-    if (!empty($dados['foto'])) {
-        $fotoFormatada = (strpos($dados['foto'], 'http') === 0 || strpos($dados['foto'], '/') === 0) 
-            ? $dados['foto'] 
-            : '/images/jogadores/' . $dados['foto'];
+    if (!empty($fotoRaw)) {
+        $fotoFormatada = (strpos($fotoRaw, 'http') === 0 || strpos($fotoRaw, '/') === 0) 
+            ? $fotoRaw 
+            : '/images/jogadores/' . $fotoRaw;
     }
 
     $resposta = [
@@ -102,6 +106,8 @@ if ($action === 'get') {
         'idPais' => $dados['idPais'] ?? 0,
         'bandeiraPais' => $dados['bandeiraPais'] ?? '',
         'foto' => $fotoFormatada,
+        'foto_raw' => $fotoRaw,
+        'tem_foto_customizada' => $temFotoCustomizada,
         'nivel' => (int)($dados['Nivel'] ?? 0),
         'valor' => (float)($dados['valor'] ?? 0),
         'valor_formatado' => number_format((float)($dados['valor'] ?? 0), 2, ',', '.'),
@@ -167,6 +173,7 @@ if ($action === 'merge') {
 
     $idPrincipal = (int)($_POST['id_principal'] ?? 0);
     $idSecundario = (int)($_POST['id_secundario'] ?? 0);
+    $fotoEscolhida = isset($_POST['foto_escolhida']) ? trim((string)$_POST['foto_escolhida']) : null;
     $idUsuario = (int)($_SESSION['user_id'] ?? 0);
     $nomeUsuario = (string)($_SESSION['nomereal'] ?? ($_SESSION['username'] ?? 'Admin'));
 
@@ -175,7 +182,7 @@ if ($action === 'merge') {
         exit;
     }
 
-    $resultado = $jogadorObj->mergeAtletas($idPrincipal, $idSecundario, $idUsuario, $nomeUsuario);
+    $resultado = $jogadorObj->mergeAtletas($idPrincipal, $idSecundario, $idUsuario, $nomeUsuario, $fotoEscolhida);
     echo json_encode($resultado);
     exit;
 }
