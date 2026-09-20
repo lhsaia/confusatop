@@ -35,7 +35,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	$listaPaises = array();
 	while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
 		extract($row_pais);
-		$addArray = array($id, $sigla);
+		$addArray = array($id, $nome);
 		$listaPaises[] = $addArray;
 	}
 	
@@ -72,6 +72,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 var localData = [];
 var asc = true;
 var activeSort = '';
+var activeDirection = true;
 
 var listaPaises =  <?php echo json_encode($listaPaises); ?>;
 
@@ -106,8 +107,8 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 		element.value = valueToSelect;
 	}
 	 
-	 
 	function createPositionString(stringPosicoes){
+		if (!stringPosicoes) return "";
 		if (stringPosicoes[0] == '1') return "G";
 		
 		var predicateArray = stringPosicoes.substring(1);
@@ -128,11 +129,6 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 	 
 	load_data();
 
-	//typing timer ajax improvement
-	//setup before functions
-	//var typingTimer;                //timer identifier
-	//var doneTypingInterval = 800;  //time in ms (5 seconds)
-	
 	function delay(fn, ms){
 		let timer = 0;
 		return function(...args){
@@ -144,52 +140,29 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 	//on keyup, start the countdown
 	$('#caixa_pesquisa').keyup(delay(function(e){
 		load_data();
-		//clearTimeout(typingTimer);
-		//if ($('#caixa_pesquisa').val()) {
-		//	typingTimer = setTimeout(doneTyping, doneTypingInterval);
-		//}
-		//typingTimer = setTimeout(doneTyping, doneTypingInterval);
-	},800));
-
-	//user is "finished typing," do something
-	function doneTyping () {
-		load_data();
-	}
+	}, 400));
 	
 	function load_data(){
+		var searchText = $('#caixa_pesquisa').val();
+		$('#loading').show();
 
-	var searchText = $('#caixa_pesquisa').val();
-	$('#loading').show();  // show loading indicator
-
-	$.ajax({
-		url:"search_player.php",
-		method:"POST",
-		cache:false,
-		data:{searchText:searchText},
-		success:function(data){
-			$('#loading').hide();  // hide loading indicator
-			updateTable(JSON.parse(data),1,0,0);
-			localData = JSON.parse(data);
-			
-			// $('.toggle_like').click(function(){
-				// let id = $(this).closest("tr").attr("id");
-				// $.ajax({
-					// url:"toggle_like.php",
-					// method:"POST",
-					// cache:false,
-					// data:{id:id},
-					// success:function(data){
-						// load_data();
-				// }
-				// });
-			// });
-		}
-	});
+		$.ajax({
+			url:"search_player.php",
+			method:"POST",
+			cache:false,
+			data:{searchText:searchText},
+			success:function(data){
+				$('#loading').hide();
+				localData = JSON.parse(data);
+				updateTable(localData, 1, activeSort, activeDirection ? 1 : 0);
+			},
+			error:function(){
+				$('#loading').hide();
+			}
+		});
 	}
 	
-	
 	function updateTable(ajax_data, current_page, highlighted, direction){
-
 		var results_per_page = 18;
 		var total_results = ajax_data.length;
 		var total_pages = Math.ceil(total_results/results_per_page);
@@ -200,590 +173,530 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 		} else if(current_page == 'inicio'){
 			treated_page = 1;
 		} else {
-			treated_page = current_page;
+			treated_page = parseInt(current_page) || 1;
 		}
 
 		var from_result_num = (results_per_page * treated_page) - results_per_page;
-
-		var pgn = pagination(treated_page,total_pages);
+		var pgn = pagination(treated_page, total_pages);
 
 		//criar tabela dinamicamente
 		var tbl = '';
 		tbl += pgn;
-		tbl += "<hr>";
+		tbl += "<div class='tbl_user_data'>";
 		tbl += "<table id='tabelaPrincipal' class='table'>";
 			tbl += "<thead id='headings"+user_id+"'>";
 				tbl += "<tr>";
-					tbl += "<th asc='' class='headings' width='2%'>Foto</th>";
-					tbl += "<th id='Nome' asc='' class='headings' width='15%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspNome</th>";
-					tbl += "<th asc='' class='headings' width='10%'>Nascimento (idade) </th>";
-					tbl += "<th asc='' class='headings' width='10%'>Mentalidade</th>";
-					tbl += "<th asc='' class='headings' width='10%'>Cobrança de Falta</th>";
-					tbl += "<th asc='' class='headings' width='10%'>Valor [Calculado]</th>";
-					//tbl += "<th asc='' class='headings' width='5%'>Valor (calculado)</th>";
-					tbl += "<th asc='' class='headings' width='10%'>Posições</th>";
-					tbl += "<th id='Nivel' asc='' class='headings' width='3%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspNível</th>";
-					tbl += "<th id='siglaPais' asc='' class='headings' width='3%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspPaís</th>";
-					tbl += "<th id='clubeVinculado' asc='' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspClube</th>";
-					tbl += "<th id='disponibilidade' asc='' class='headings' width='5%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbspStatus</th>";
-					tbl += "<th asc='' class='headings' width='10%' class=''>Opções</th>";
+					tbl += "<th width='2%'>Foto</th>";
+					tbl += "<th id='Nome' class='headings' width='15%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Nome</th>";
+					tbl += "<th id='Nascimento' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Nascimento (idade)</th>";
+					tbl += "<th id='Mentalidade' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Mentalidade</th>";
+					tbl += "<th id='CobradorFalta' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Cobrança de Falta</th>";
+					tbl += "<th id='valor' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Valor [Calculado]</th>";
+					tbl += "<th id='StringPosicoes' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Posições</th>";
+					tbl += "<th id='Nivel' class='headings' width='3%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Nível</th>";
+					tbl += "<th id='siglaPais' class='headings' width='3%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;País</th>";
+					tbl += "<th id='clubeVinculado' class='headings' width='10%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Clube</th>";
+					tbl += "<th id='disponibilidade' class='headings' width='5%'><span class='material-symbols-outlined ascending hidden'>arrow_drop_up</span><span class='material-symbols-outlined descending hidden'>arrow_drop_down</span>&nbsp;Status</th>";
+					tbl += "<th width='10%'>Opções</th>";
 				tbl += "</tr>";
 			tbl +=  "</thead>";
 			tbl +=  "<tbody>";
 
-			// criar linhas
-			$.each(ajax_data, function(index, val){
-
-				if(index>=(from_result_num-1) && index<=(from_result_num+results_per_page-2)){
-				
-				// genero
-				let genderCode = ""
-				let genderClass = ""
-				if(val['sexo'] == 0){
-					genderCode = "M";
-					genderClass = "genderMas";
-				} else {
-					genderCode = "F";
-					genderClass = "genderFem";
-				}
-				
-				var options = { year: 'numeric', month: '2-digit', day: '2-digit'};
-				var dataNascimento = new Date(val['Nascimento'].replace(/-/g, '\/'));
-				var nascimentoDisplay = dataNascimento.toLocaleDateString("pt-BR", options);
-				
-				var valorDisplay = "F$ " +  Math.round((parseInt(val['valor'])/1000), 2) + "k";
-				// console.log(val['valorAtualizado']);
-				if(val['valorAtualizado'] != null){
-					var valorCalcDisplay = " <br>[F$ " +  Math.round((parseInt(val['valorAtualizado'])/1000), 2) + "k] ";
-				} else {
-					var valorCalcDisplay = "";
-				}
-				
-				// geração da tabela
-				let isFalecido = (parseInt(val['disponibilidade']) === -3);
-				let fotoClass = isFalecido ? "playerThumb foto-falecido" : "playerThumb";
-
-				tbl += "<tr id='"+val['ID']+"' data-sexo='"+val['sexo']+"' data-dono-pais='"+val['idDonoPais']+"' >";
-					tbl += "<td><div class='imageUpload'><img class='"+fotoClass+"' src='/images/jogadores/"+val['foto']+"' /> <input type='file' hidden id='foto"+val['ID']+"' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
-					tbl +=  "<td><span class='nomeEditavel' id='nom"+val['ID']+"'><a class='linkNome' href='/ligas/playerstatus.php?player="+val['ID']+"' >"+val['Nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span></td>";
-					tbl += "<td><span class='nomeNascimento' id='nas"+ val['ID']+"'>"+ nascimentoDisplay + " (" +val['Idade']+") "+" </span><input id='selnas"+val['ID']+"' class='nascimentoEditavel editavel' type='date' value='"+val['Nascimento']+"' hidden/></td>";
-					tbl += "<td><span class='nomeMentalidade' id='men"+ val['ID']+"'>"+ val['Mentalidade'] +"</span><select id='selmen"+val['ID']+"' class='comboMentalidade editavel' value='"+val['Mentalidade']+"' hidden>";
-							listaMentalidades.forEach(function(value, key){
-								tbl += "<option value='"+value[0]+"'>"+value[1]+"</option>";
-							});
-						tbl += "</select>";	
-					tbl += "</td>";
-					tbl += "<td><span class='nomeCobrador' id='cob"+ val['ID']+"'>"+ val['CobradorFalta'] +"</span><select id='selcob"+val['ID']+"' class='comboCobrador editavel'  hidden>";
-							listaCobradores.forEach(function(value, key){
-								tbl += "<option value='"+value[0]+"'>"+value[1]+"</option>";
-							});
-						tbl += "</select>";	
-					tbl += "</td>";
-					tbl += "<td><span class='nomeValor id='val" + val['ID']+"'>" + valorDisplay + " "+valorCalcDisplay+"</span><span class='valorEditavel editavel' contenteditable='true' hidden>" + val['valor'] + "</span></td>";
-					
-
-					let splitPositions = createPositionString(val['StringPosicoes']);
-					
-
-					tbl += "<td><span class='nomePosicao posicoesAtuais' id='pos"+ val['ID']+"'>"+ splitPositions +"</span>";
-                 	tbl += " <select multiple class='comboPosicoes editavel' hidden>'  ";
-						listaPosicoes.forEach(function(value, key){
-							tbl += "<option value='"+value[0]+"'>"+value[1]+"</option>";
-						});
-					
-                 	tbl +=  "</select>";
-					tbl += "</td>";
-
-					tbl += "<td><span class='nivelEditavel' id='niv"+val['ID']+"'>"+val['Nivel']+"</span></td>";
-					
-					if(val['idPais'] != 0){
-						tbl += "<td class='wide'><img src='/images/bandeiras/"+val['bandeiraPais']+"' class='bandeira nomePais' id='ban"+val['ID']+"'>  <span class='nomePais' id='pai"+val['ID']+"'>"+val['siglaPais']+"</span>";
-					} else {
-						tbl += "<td>";
-					}
-					tbl += "<select class='comboPais editavel' id='"+val['idPais']+"' hidden>'  ";
-						listaPaises.forEach(function(value, key){
-							tbl += "<option value='"+value[0]+"'>"+value[1]+"</option>";
-						});
-
-					tbl += "</select>";
-					tbl += "</td>";
-					
-					if(val['clubeVinculado'] != null){
-						tbl += "<td><a href='/ligas/teamstatus.php?team="+val['idClubeVinculado']+"' id='dis"+val['ID']+"'><img class='minithumb' src='/images/escudos/"+val['escudoClubeVinculado']+"'>"+val['clubeVinculado']+"</a><span class='donoClubeVinculado' hidden>"+val['donoClubeVinculado']+"</span></td>";
-					} else {
-						tbl += "<td>-</td>";
-					}
-					
-					
-					var nomeDisponibilidade = "";
-					var dataFalecFmt = "";
-					if(val['data_falecimento']){
-						var dF = new Date(val['data_falecimento'].replace(/-/g, '\/'));
-						dataFalecFmt = dF.toLocaleDateString("pt-BR", options);
-					}
-					
-					switch(parseInt(val['disponibilidade'])){
-						case -3:
-							var txtDataFalec = dataFalecFmt ? dataFalecFmt : "Falecido";
-							nomeDisponibilidade = "<span class='badge-falecido' title='Falecido em " + (dataFalecFmt || "data não informada") + "'><span class='cruz-morte'>†</span> <svg class='luto-icon' viewBox='0 0 24 24' width='13' height='13' fill='currentColor'><path d='M12 2C8.69 2 6 4.69 6 8c0 2.21 1.2 4.15 3 5.19V22l3-2 3 2v-8.81c1.8-1.04 3-2.98 3-5.19 0-3.31-2.69-6-6-6zm0 2c2.21 0 4 1.79 4 4 0 1.25-.58 2.37-1.49 3.1-.47.38-.51 1.07-.09 1.5.42.43 1.12.43 1.58.01C17.26 11.45 18 9.82 18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 1.82.74 3.45 1.99 4.61.47.42 1.16.42 1.59-.01.42-.43.38-1.12-.09-1.5C8.58 10.37 8 9.25 8 8c0-2.21 1.79-4 4-4z'/></svg> " + txtDataFalec + "</span>";
-							break;
-						case -2:
-							nomeDisponibilidade = "Expatriado";
-							break;
-						case -1:
-							nomeDisponibilidade = "Aposentado"; 
-							break;
-						case 0:
-							nomeDisponibilidade = "Ativo";
-							break;
-						case 1:
-							nomeDisponibilidade = "Ativo (disponível)";
-							break;
-					}
-					
-					var valDataFalecimento = val['data_falecimento'] ? val['data_falecimento'] : new Date().toISOString().split('T')[0];
-
-					tbl += "<td><span class='nomeAtividade' id='dis"+val['ID']+"'>"+nomeDisponibilidade+"</span>";
-					tbl += "<div class='container-edit-atividade' style='display:inline-flex; flex-direction:column; gap:4px;'>";
-					tbl += "<select data-idTime='"+(val['idClubeVinculado'] ? val['idClubeVinculado'] : 0)+"' class='comboAtividade editavel' id='seldis"+val['ID']+"' hidden >";
-					tbl += "<option value='1' title='Ativo e disponível para negociar'>Ativo (disponível)</option>";
-					tbl += "<option value='0' title='Ativo'>Ativo</option>";
-					tbl += "<option value='-1' title='Aposentado, não pode ser contratado'>Aposentado</option>";
-					tbl += "<option value='-2' title='Jogando em clubes fora do Portal, não pode ser contratado'>Expatriado</option>";
-					tbl += "<option value='-3' title='Falecido'>Falecido</option>";
-					tbl += "</select>";
-					tbl += "<input type='date' class='falecimentoEditavel editavel' id='selfalec"+val['ID']+"' value='"+valDataFalecimento+"' title='Data de Falecimento' hidden style='font-size:0.75rem; padding:2px 4px; max-width:125px;' />";
-					tbl += "</div></td>";
-
-					
-					let optionsString = "<td class='wide'>";
-
-					if(logged == "true"){
-						if(admin == "true" || user_id == val['idDonoPais']){
-                            if(val['referencia'] && val['referencia'].trim() !== ''){
-                                optionsString += "<a href='"+val['referencia']+"' target='_blank' id='ref"+val['ID']+"' title='Ver Referência' class='clickable'><span class='material-symbols-outlined inlineButton positive'>link</span></a>";
-                            } else {
-                                optionsString += "<a id='ref"+val['ID']+"' title='Adicionar Referência' class='clickable add-referencia' data-id='"+val['ID']+"'><span class='material-symbols-outlined inlineButton'>link</span></a>";
-                            }
-							optionsString += "<a id='edi"+val['ID']+"' title='Editar jogador' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
-							optionsString += "<a id='apa"+val['ID']+"' title='Apagar jogador' class='clickable apagar'><span class='material-symbols-outlined inlineButton negativo'>delete</span></a>";
-							optionsString += "<a hidden id='sal"+val['ID']+"' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
-							optionsString += "<a hidden id='can"+val['ID']+"' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
+			if(total_results === 0){
+				tbl += "<tr><td colspan='12' style='text-align:center; padding: 2rem;'>Nenhum jogador encontrado.</td></tr>";
+			} else {
+				// criar linhas
+				$.each(ajax_data, function(index, val){
+					if(index >= from_result_num && index < (from_result_num + results_per_page)){
+						// genero
+						let genderCode = ""
+						let genderClass = ""
+						if(val['sexo'] == 0){
+							genderCode = "M";
+							genderClass = "genderMas";
+						} else {
+							genderCode = "F";
+							genderClass = "genderFem";
 						}
-						optionsString += "</td>";
-						tbl += optionsString;
+						
+						var options = { year: 'numeric', month: '2-digit', day: '2-digit'};
+						var dataNascimento = new Date(val['Nascimento'].replace(/-/g, '\/'));
+						var nascimentoDisplay = dataNascimento.toLocaleDateString("pt-BR", options);
+						
+						var valorDisplay = "F$ " +  Math.round((parseInt(val['valor'])/1000), 2) + "k";
+						if(val['valorAtualizado'] != null){
+							var valorCalcDisplay = " <br>[F$ " +  Math.round((parseInt(val['valorAtualizado'])/1000), 2) + "k] ";
+						} else {
+							var valorCalcDisplay = "";
+						}
+						
+						// geração da tabela
+						let isFalecido = (parseInt(val['disponibilidade']) === -3);
+						let fotoClass = isFalecido ? "playerThumb foto-falecido" : "playerThumb";
+
+						tbl += "<tr id='"+val['ID']+"' data-sexo='"+val['sexo']+"' data-dono-pais='"+val['idDonoPais']+"' >";
+							tbl += "<td><div class='imageUpload'><img class='"+fotoClass+"' src='/images/jogadores/"+val['foto']+"' /> <input type='file' hidden id='foto"+val['ID']+"' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
+							tbl +=  "<td><span class='nomeEditavel' id='nom"+val['ID']+"'><a class='linkNome' href='/ligas/playerstatus.php?player="+val['ID']+"' >"+val['Nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span></td>";
+							tbl += "<td><span class='nomeNascimento' id='nas"+ val['ID']+"'>"+ nascimentoDisplay + " (" +val['Idade']+") "+" </span><input id='selnas"+val['ID']+"' class='nascimentoEditavel editavel' type='date' value='"+val['Nascimento']+"' hidden/></td>";
+							tbl += "<td><span class='nomeMentalidade' id='men"+ val['ID']+"'>"+ val['Mentalidade'] +"</span><select id='selmen"+val['ID']+"' class='comboMentalidade editavel' value='"+val['Mentalidade']+"' hidden>";
+									listaMentalidades.forEach(function(value, key){
+										tbl += "<option value='"+value[0]+"'>"+value[1]+"</option>";
+									});
+								tbl += "</select>";	
+							tbl += "</td>";
+							tbl += "<td><span class='nomeCobrador' id='cob"+ val['ID']+"'>"+ val['CobradorFalta'] +"</span><select id='selcob"+val['ID']+"' class='comboCobrador editavel'  hidden>";
+									listaCobradores.forEach(function(value, key){
+										tbl += "<option value='"+value[0]+"'>"+value[1]+"</option>";
+									});
+								tbl += "</select>";	
+							tbl += "</td>";
+							tbl += "<td><span class='nomeValor' id='val" + val['ID']+"'>" + valorDisplay + " "+valorCalcDisplay+"</span><span class='valorEditavel editavel' contenteditable='true' hidden>" + val['valor'] + "</span></td>";
+							
+
+							let splitPositions = createPositionString(val['StringPosicoes']);
+							
+
+							tbl += "<td><span class='nomePosicao posicoesAtuais' id='pos"+ val['ID']+"'>"+ splitPositions +"</span>";
+							tbl += " <select multiple class='comboPosicoes editavel' hidden>'  ";
+								listaPosicoes.forEach(function(value, key){
+									tbl += "<option value='"+value[0]+"'>"+value[1]+"</option>";
+								});
+							
+							tbl +=  "</select>";
+							tbl += "</td>";
+
+							tbl += "<td><span class='nivelEditavel' id='niv"+val['ID']+"'>"+val['Nivel']+"</span></td>";
+							
+							if(val['idPais'] != 0){
+								tbl += "<td class='wide'><img src='/images/bandeiras/"+val['bandeiraPais']+"' class='bandeira nomePais' id='ban"+val['ID']+"'>  <span class='nomePais' id='pai"+val['ID']+"'>"+val['siglaPais']+"</span>";
+							} else {
+								tbl += "<td>";
+							}
+							tbl += "<select class='comboPais editavel' id='"+val['idPais']+"' hidden>'  ";
+								listaPaises.forEach(function(value, key){
+									tbl += "<option value='"+value[0]+"'>"+value[1]+"</option>";
+								});
+
+							tbl += "</select>";
+							tbl += "</td>";
+							
+							if(val['clubeVinculado'] != null){
+								tbl += "<td><a href='/ligas/teamstatus.php?team="+val['idClubeVinculado']+"' id='dis"+val['ID']+"'><img class='minithumb' src='/images/escudos/"+val['escudoClubeVinculado']+"'>"+val['clubeVinculado']+"</a><span class='donoClubeVinculado' hidden>"+val['donoClubeVinculado']+"</span></td>";
+							} else {
+								tbl += "<td>-</td>";
+							}
+							
+							
+							var nomeDisponibilidade = "";
+							var dataFalecFmt = "";
+							if(val['data_falecimento']){
+								var dF = new Date(val['data_falecimento'].replace(/-/g, '\/'));
+								dataFalecFmt = dF.toLocaleDateString("pt-BR", options);
+							}
+							
+							switch(parseInt(val['disponibilidade'])){
+								case -3:
+									var txtDataFalec = dataFalecFmt ? dataFalecFmt : "Falecido";
+									nomeDisponibilidade = "<span class='badge-falecido' title='Falecido em " + (dataFalecFmt || "data não informada") + "'><span class='cruz-morte'>†</span> <svg class='luto-icon' viewBox='0 0 24 24' width='13' height='13' fill='currentColor'><path d='M12 2C8.69 2 6 4.69 6 8c0 2.21 1.2 4.15 3 5.19V22l3-2 3 2v-8.81c1.8-1.04 3-2.98 3-5.19 0-3.31-2.69-6-6-6zm0 2c2.21 0 4 1.79 4 4 0 1.25-.58 2.37-1.49 3.1-.47.38-.51 1.07-.09 1.5.42.43 1.12.43 1.58.01C17.26 11.45 18 9.82 18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 1.82.74 3.45 1.99 4.61.47.42 1.16.42 1.59-.01.42-.43.38-1.12-.09-1.5C8.58 10.37 8 9.25 8 8c0-2.21 1.79-4 4-4z'/></svg> " + txtDataFalec + "</span>";
+									break;
+								case -2:
+									nomeDisponibilidade = "Expatriado";
+									break;
+								case -1:
+									nomeDisponibilidade = "Aposentado"; 
+									break;
+								case 0:
+									nomeDisponibilidade = "Ativo";
+									break;
+								case 1:
+									nomeDisponibilidade = "Ativo (disponível)";
+									break;
+							}
+							
+							var valDataFalecimento = val['data_falecimento'] ? val['data_falecimento'] : new Date().toISOString().split('T')[0];
+
+							tbl += "<td><span class='nomeAtividade' id='dis"+val['ID']+"'>"+nomeDisponibilidade+"</span>";
+							tbl += "<div class='container-edit-atividade' style='display:inline-flex; flex-direction:column; gap:4px;'>";
+							tbl += "<select data-idTime='"+(val['idClubeVinculado'] ? val['idClubeVinculado'] : 0)+"' class='comboAtividade editavel' id='seldis"+val['ID']+"' hidden >";
+							tbl += "<option value='1' title='Ativo e disponível para negociar'>Ativo (disponível)</option>";
+							tbl += "<option value='0' title='Ativo'>Ativo</option>";
+							tbl += "<option value='-1' title='Aposentado, não pode ser contratado'>Aposentado</option>";
+							tbl += "<option value='-2' title='Jogando em clubes fora do Portal, não pode ser contratado'>Expatriado</option>";
+							tbl += "<option value='-3' title='Falecido'>Falecido</option>";
+							tbl += "</select>";
+							tbl += "<input type='date' class='falecimentoEditavel editavel' id='selfalec"+val['ID']+"' value='"+valDataFalecimento+"' title='Data de Falecimento' hidden style='font-size:0.75rem; padding:2px 4px; max-width:125px;' />";
+							tbl += "</div></td>";
+
+							
+							let optionsString = "<td class='wide'>";
+
+							if(logged == "true"){
+								if(admin == "true" || user_id == val['idDonoPais']){
+									if(val['referencia'] && val['referencia'].trim() !== ''){
+										optionsString += "<a href='"+val['referencia']+"' target='_blank' id='ref"+val['ID']+"' title='Ver Referência' class='clickable'><span class='material-symbols-outlined inlineButton positive'>link</span></a>";
+									} else {
+										optionsString += "<a id='ref"+val['ID']+"' title='Adicionar Referência' class='clickable add-referencia' data-id='"+val['ID']+"'><span class='material-symbols-outlined inlineButton'>link</span></a>";
+									}
+									optionsString += "<a id='edi"+val['ID']+"' title='Editar jogador' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
+									optionsString += "<a id='apa"+val['ID']+"' title='Apagar jogador' class='clickable apagar'><span class='material-symbols-outlined inlineButton negativo'>delete</span></a>";
+									optionsString += "<a hidden id='sal"+val['ID']+"' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
+									optionsString += "<a hidden id='can"+val['ID']+"' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
+								}
+								optionsString += "</td>";
+								tbl += optionsString;
+							}
+
+							tbl += "</tr>";
 					}
-
-					 tbl += "</tr>";
-
-
-				}
-			});
+				});
+			}
 
 			tbl += '</tbody>';
 		tbl += '</table>';
-		
-		
+		tbl += '</div>';
 
 		//mostrar dados da tabela
-		$(document).find('.tbl_user_data').html(tbl);
-		
+		$('#table-container').html(tbl);
+
+		var showAsc = (direction === 2) ? activeDirection : (direction === 1);
+
+		if(highlighted){
+			$('#'+highlighted).addClass('highlighted');
+			if(showAsc){
+				$('#'+highlighted).find('.descending').addClass('hidden');
+				$('#'+highlighted).find('.ascending').removeClass('hidden');
+			} else {
+				$('#'+highlighted).find('.ascending').addClass('hidden');
+				$('#'+highlighted).find('.descending').removeClass('hidden');
+			}
+			activeSort = highlighted;
+			activeDirection = showAsc;
+		}
 
 		addFilters();
-
-		$(document).find('#'+highlighted).addClass('highlighted');
-
-		if(direction == 1){
-			asc = activeDirection;
-		}
-		if(asc){
-			$(document).find('#'+highlighted).find('.descending').addClass('hidden');
-			$(document).find('#'+highlighted).find('.ascending').removeClass('hidden');
-		} else {
-			$(document).find('#'+highlighted).find('.ascending').addClass('hidden');
-			$(document).find('#'+highlighted).find('.descending').removeClass('hidden');
-		}
-
-		activeSort = highlighted;
-		activeDirection = asc;
-		
-		// inclusão de formulas de edição
-		
-
-	$(".editar").on("click", function(){
-	var tbl_row = $(this).closest("tr");
-
-	tbl_row.find('a').each(function(index, val){
-		$(this).attr('original_entry', $(this).html());
-	});
-
-	tbl_row.find('span').each(function(index, val){
-		$(this).attr('original_entry', $(this).html());
-	});
-
-	tbl_row.find('input').each(function(index, val){
-		$(this).attr('data-original-entry', $(this).val());
-	});
-
-	tbl_row.find(".salvar").show();
-	tbl_row.find(".cancelar").show();
-	tbl_row.find(".editar").hide();
-	tbl_row.find(".apagar").hide();
-	tbl_row.find(".add-referencia").hide();
-	tbl_row.find("a[id^='ref']").hide();
-	tbl_row.find('.hiddenInput').show();
-	tbl_row.find('.playerThumb').addClass('editableThumb');
-
-	//garantir que o dono do time está logado e que ele é o dono do jogador também (duplo check, JS e PHP)
-	var donoTime = tbl_row.find(".donoClubeVinculado").html();
-	var donoJogador = $("#tabelaPrincipal").find('thead').prop("id").replace(/\D/g, "");
-	var donoPais = tbl_row.attr("data-dono-pais");
-
-	if (typeof donoTime === 'undefined'){
-		donoTime = donoJogador;
+		bindEvents();
 	}
 
-	if(donoTime.localeCompare(donoJogador) == 0 || (typeof donoPais !== 'undefined' && donoPais.localeCompare(donoJogador) == 0)){
-		var isDono = true;
-	} else {
-		var isDono = false;
+	function bindEvents(){
+		$(".editar").off("click").on("click", function(){
+			var tbl_row = $(this).closest("tr");
+
+			tbl_row.find('a').each(function(index, val){
+				$(this).attr('original_entry', $(this).html());
+			});
+
+			tbl_row.find('span').each(function(index, val){
+				$(this).attr('original_entry', $(this).html());
+			});
+
+			tbl_row.find('input').each(function(index, val){
+				$(this).attr('data-original-entry', $(this).val());
+			});
+
+			tbl_row.find(".salvar").show();
+			tbl_row.find(".cancelar").show();
+			tbl_row.find(".editar").hide();
+			tbl_row.find(".apagar").hide();
+			tbl_row.find(".add-referencia").hide();
+			tbl_row.find("a[id^='ref']").hide();
+			tbl_row.find('.hiddenInput').show();
+			tbl_row.find('.playerThumb').addClass('editableThumb');
+
+			//garantir que o dono do time está logado e que ele é o dono do jogador também (duplo check, JS e PHP)
+			var donoTime = tbl_row.find(".donoClubeVinculado").html();
+			var donoJogador = $("#tabelaPrincipal").find('thead').prop("id").replace(/\D/g, "");
+			var donoPais = tbl_row.attr("data-dono-pais");
+
+			if (typeof donoTime === 'undefined'){
+				donoTime = donoJogador;
+			}
+
+			if(donoTime.localeCompare(donoJogador) == 0 || (typeof donoPais !== 'undefined' && donoPais.localeCompare(donoJogador) == 0)){
+				var isDono = true;
+			} else {
+				var isDono = false;
+			}
+
+			if(isDono){
+				tbl_row.find('.comboMentalidade').show();
+				tbl_row.find('.comboAtividade').show();
+				tbl_row.find('.nomeCobrador').hide();
+				tbl_row.find('.nomeMentalidade').hide();
+				
+				tbl_row.find('.nomeAtividade').hide();
+				tbl_row.find('.nomeNascimento').hide();
+				tbl_row.find('.nascimentoEditavel').show();
+				tbl_row.find('.nomeValor').hide();
+				tbl_row.find('.valorEditavel').show();
+				tbl_row.find('.comboCobrador').show();
+			}
+
+			// override para permitir repaginação de praias
+			tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
+			tbl_row.find('.linkNome').css("cursor","text");
+			tbl_row.find('.linkNome').css("pointer-events","none");
+			
+			tbl_row.find('.nomePais').hide();
+			var paisId = tbl_row.find('.comboPais').attr('id');
+			tbl_row.find('.comboPais').show().val(paisId);
+
+			tbl_row.find('.nivelEditavel').attr('contenteditable', 'true').addClass('editavel');
+
+			tbl_row.find('.comboCobrador option').filter(function() {
+				return $(this).text().trim() == tbl_row.find('.nomeCobrador').text().trim();
+			}).prop("selected", true);
+
+			tbl_row.find('.comboMentalidade option').filter(function() {
+				return $(this).text().trim() == tbl_row.find('.nomeMentalidade').text().trim();
+			}).prop("selected", true);
+
+			let currentDisponibilidade = tbl_row.find('.comboAtividade option').filter(function() {
+				return $(this).text().trim() == tbl_row.find('.nomeAtividade').text().trim();
+			});
+			if(currentDisponibilidade.length > 0) {
+				currentDisponibilidade.prop("selected", true);
+			} else if(tbl_row.find('.badge-falecido').length > 0) {
+				tbl_row.find('.comboAtividade').val("-3");
+			}
+
+			if(tbl_row.find('.comboAtividade').val() == "-3"){
+				tbl_row.find('.falecimentoEditavel').show();
+			} else {
+				tbl_row.find('.falecimentoEditavel').hide();
+			}
+
+			//verificar se é goleiro
+			var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
+			var isGoleiro = stringPosicoes.localeCompare("G");
+
+			if(isGoleiro){
+				tbl_row.find('.posicoesAtuais').hide();
+				tbl_row.find('.comboPosicoes').show();
+			}
+
+			//valor original posicoes
+			var arrPosicoes = stringPosicoes.split('-');
+
+			tbl_row.find('.comboPosicoes option').each(function(){
+				if($.inArray($(this).html(), arrPosicoes) !== -1){
+					$(this).prop("selected","selected");
+				} else {
+					$(this).prop("selected", false);
+				}
+			});
+		});
+
+		$('.cancelar').off('click').on('click', function(){
+			var tbl_row =  $(this).closest('tr');
+			tbl_row.find(".salvar").hide();
+			tbl_row.find(".cancelar").hide();
+			tbl_row.find(".editar").show();
+			tbl_row.find(".apagar").show();
+			tbl_row.find(".add-referencia").show();
+			tbl_row.find("a[id^='ref']").show();
+			tbl_row.find('.linkNome').css("cursor","pointer");
+			tbl_row.find('.linkNome').css("pointer-events","auto");
+
+			tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+			tbl_row.find('.nivelEditavel').attr('contenteditable', 'false').removeClass('editavel');
+			tbl_row.find('.comboCobrador').hide();
+			tbl_row.find('.comboMentalidade').hide();
+			tbl_row.find('.comboPais').hide();
+			tbl_row.find('.comboAtividade').hide();
+			tbl_row.find('.falecimentoEditavel').hide();
+			tbl_row.find('.nomeCobrador').show();
+			tbl_row.find('.nomeMentalidade').show();
+			tbl_row.find('.nomePais').show();
+			tbl_row.find('.nomeAtividade').show();
+			tbl_row.find('.nomeNascimento').show();
+			tbl_row.find('.nascimentoEditavel').hide();
+			tbl_row.find('.nomeValor').show();
+			tbl_row.find('.valorEditavel').hide();
+			tbl_row.find('.nomePosicao').show();
+			tbl_row.find('.comboPosicoes').hide();
+			tbl_row.find('.hiddenInput').hide();
+			tbl_row.find('.playerThumb').removeClass('editableThumb');
+			
+			tbl_row.find('a').each(function(index, val){
+				$(this).html($(this).attr('original_entry'));
+			});
+
+			tbl_row.find('span').each(function(index, val){
+				$(this).html($(this).attr('original_entry'));
+			});
+
+			tbl_row.find('input').each(function(index, val){
+				$(this).val($(this).attr('data-original-entry'));
+			});
+		});
+
+		$('.apagar').off('click').on('click', function(){
+			var tbl_row =  $(this).closest('tr');
+			var jogadorId = tbl_row.prop('id');
+			var r = confirm("Você tem certeza que deseja apagar esse jogador? Essa ação não pode ser desfeita!");
+			if (r) {
+				$.ajax({
+					type: "POST",
+					url: '/jogadores/apagar_jogador.php',
+					data: {jogadorId:jogadorId},
+					dataType: 'json',
+					success: function(data) {
+					  if(!data.success){
+						$('#errorbox').append('<div class="alert alert-danger">Não foi possível apagar o jogador. '+ data.error +'</div>');
+					  } else {
+						load_data();
+					  }
+					},
+					error: function(data) {
+						$('#errorbox').append('<div class="alert alert-danger">Não foi possível apagar o jogador.</div>');
+					}
+				});
+			}
+		});
+
+		$('.salvar').off('click').on('click', function(){
+			var tbl_row =  $(this).closest('tr');
+			tbl_row.find(".salvar").hide();
+			tbl_row.find(".cancelar").hide();
+			tbl_row.find(".editar").show();
+			tbl_row.find(".apagar").show();
+			tbl_row.find(".add-referencia").show();
+			tbl_row.find("a[id^='ref']").show();
+			tbl_row.find('.linkNome').css("cursor","pointer");
+			tbl_row.find('.linkNome').css("pointer-events","auto");
+			tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+			tbl_row.find('.nivelEditavel').attr('contenteditable', 'false').removeClass('editavel');
+			tbl_row.find('.comboCobrador').hide();
+			tbl_row.find('.comboMentalidade').hide();
+			tbl_row.find('.comboPais').hide();
+			tbl_row.find('.comboAtividade').hide();
+			tbl_row.find('.falecimentoEditavel').hide();
+			tbl_row.find('.nomeCobrador').show();
+			tbl_row.find('.nomeMentalidade').show();
+			tbl_row.find('.nomePais').show();
+			tbl_row.find('.nomeAtividade').show();
+			tbl_row.find('.nomeNascimento').show();
+			tbl_row.find('.nascimentoEditavel').hide();
+			tbl_row.find('.nomeValor').show();
+			tbl_row.find('.valorEditavel').hide();
+			tbl_row.find('.nomePosicao').show();
+			tbl_row.find('.comboPosicoes').hide();
+			tbl_row.find('.hiddenInput').hide();
+			tbl_row.find('.playerThumb').removeClass('editableThumb');
+			
+			//check se é dono do jogador
+			var donoTime = tbl_row.find(".donoClubeVinculado").html();
+			var donoJogador = $("#tabelaPrincipal").find('thead').prop("id").replace(/\D/g, "");
+			var donoPais = tbl_row.attr("data-dono-pais");
+
+			if (typeof donoTime === 'undefined'){
+				donoTime = donoJogador;
+			}
+
+			if(donoTime.localeCompare(donoJogador) == 0 || (typeof donoPais !== 'undefined' && donoPais.localeCompare(donoJogador) == 0)){
+				var isDono = true;
+			} else {
+				var isDono = false;
+			}
+
+			var idJogador = tbl_row.prop('id');
+
+			if(isDono){
+				var nascimento = tbl_row.find(".nascimentoEditavel").val();
+				var valor = parseInt(tbl_row.find(".valorEditavel").html());
+				var determinacao = "1";
+				var mentalidade = tbl_row.find(".comboMentalidade").val();
+				var cobrancaFalta = tbl_row.find(".comboCobrador").val();
+				var atividade = tbl_row.find(".comboAtividade").val();
+				var rawTime = tbl_row.find(".comboAtividade").attr("data-idTime");
+				var timeParaDemissao = (rawTime && rawTime !== "null" && rawTime !== "undefined") ? parseInt(rawTime) : 0;
+				var dataFalecimento = tbl_row.find(".falecimentoEditavel").val();
+			}
+			
+			var nome = tbl_row.find('.nomeEditavel').text();
+			var nacionalidade = tbl_row.find(".comboPais").val();
+			
+			//foto
+			var inputFoto = (tbl_row.find('#foto'+idJogador))[0];
+			var foto;
+
+			if (inputFoto && inputFoto.files && inputFoto.files.length > 0) {
+			   foto = inputFoto.files[0];
+			} else {
+			   foto = null;
+			}
+
+			var nivel = tbl_row.find(".nivelEditavel").html();
+			
+			var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
+			var isGoleiro = stringPosicoes.localeCompare("G");
+		
+			if(isGoleiro == 0){
+				var posicoes = ["1"];
+			} else {
+				var posicoes = tbl_row.find(".comboPosicoes").val();
+			}
+			
+			var formData = new FormData();
+			
+			formData.append('idJogador',idJogador);
+			formData.append('alteracao',9);
+			formData.append('posicoes',posicoes);
+			formData.append('nivel',nivel);
+			formData.append('nome',nome);
+			formData.append('nacionalidade',nacionalidade);
+
+			if(isDono){
+				formData.append('nascimento',nascimento);
+				formData.append('valor',valor);
+				formData.append('determinacao',determinacao);
+				formData.append('mentalidade',mentalidade);
+				formData.append('cobrancaFalta',cobrancaFalta);
+				formData.append('atividade',atividade);
+				formData.append('timeParaDemissao',timeParaDemissao);
+				formData.append('dataFalecimento',dataFalecimento);
+			}
+
+			if(foto != null){
+				formData.append('foto',foto);
+			}
+
+			ajaxCallJogador(formData);
+		});
 	}
 
-	if(isDono){
-
-    
-    tbl_row.find('.comboMentalidade').show();
-    tbl_row.find('.comboAtividade').show();
-    tbl_row.find('.nomeCobrador').hide();
-    tbl_row.find('.nomeMentalidade').hide();
-    
-    tbl_row.find('.nomeAtividade').hide();
-    tbl_row.find('.nomeNascimento').hide();
-    tbl_row.find('.nascimentoEditavel').show();
-    tbl_row.find('.nomeValor').hide();
-    tbl_row.find('.valorEditavel').show();
-
-	tbl_row.find('.comboCobrador').show();
-
-}
-
-// override para permitir repaginação de praias
-    tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
-    tbl_row.find('.linkNome').css("cursor","text");
-    tbl_row.find('.linkNome').css("pointer-events","none");
-	
-	tbl_row.find('.nomePais').hide();
-	    var paisId = tbl_row.find('.comboPais').attr('id');
-    tbl_row.find('.comboPais').show().val(paisId);
-
-
-tbl_row.find('.nivelEditavel').attr('contenteditable', 'true').addClass('editavel');
-
-tbl_row.find('.comboCobrador option').filter(function() {
-    return $(this).text().trim() == tbl_row.find('.nomeCobrador').text().trim();
-}).prop("selected", true);
-
-tbl_row.find('.comboMentalidade option').filter(function() {
-    return $(this).text().trim() == tbl_row.find('.nomeMentalidade').text().trim();
-}).prop("selected", true);
-
-let currentDisponibilidade = tbl_row.find('.comboAtividade option').filter(function() {
-    return $(this).text().trim() == tbl_row.find('.nomeAtividade').text().trim();
-});
-if(currentDisponibilidade.length > 0) {
-    currentDisponibilidade.prop("selected", true);
-} else if(tbl_row.find('.badge-falecido').length > 0) {
-    tbl_row.find('.comboAtividade').val("-3");
-}
-
-if(tbl_row.find('.comboAtividade').val() == "-3"){
-    tbl_row.find('.falecimentoEditavel').show();
-} else {
-    tbl_row.find('.falecimentoEditavel').hide();
-}
-
-//verificar se é goleiro
-var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
-var isGoleiro = stringPosicoes.localeCompare("G");
-
-if(isGoleiro){
-    tbl_row.find('.posicoesAtuais').hide();
-    tbl_row.find('.comboPosicoes').show();
-}
-
-//valor original posicoes
-var arrPosicoes = stringPosicoes.split('-');
-
-tbl_row.find('.comboPosicoes option').each(function(){
-
-    if($.inArray($(this).html(), arrPosicoes) !== -1){
-        $(this).prop("selected","selected");
-    } else {
-        $(this).prop("selected", false);
-    }
-});
-
-});
-
-$(document).on("change", ".comboAtividade", function(){
-    let tbl_row = $(this).closest("tr");
-    if($(this).val() == "-3"){
-        tbl_row.find(".falecimentoEditavel").show();
-    } else {
-        tbl_row.find(".falecimentoEditavel").hide();
-    }
-});
-
-$('.cancelar').click(function(){
-        var tbl_row =  $(this).closest('tr');
-        tbl_row.find(".salvar").hide();
-        tbl_row.find(".cancelar").hide();
-        tbl_row.find(".editar").show();
-        tbl_row.find(".apagar").show();
-        tbl_row.find(".add-referencia").show();
-        tbl_row.find("a[id^='ref']").show();
-        tbl_row.find('.linkNome').css("cursor","pointer");
-        tbl_row.find('.linkNome').css("pointer-events","auto");
-
-        tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
-        tbl_row.find('.nivelEditavel').attr('contenteditable', 'false').removeClass('editavel');
-        tbl_row.find('.comboCobrador').hide();
-        tbl_row.find('.comboMentalidade').hide();
-        tbl_row.find('.comboPais').hide();
-        tbl_row.find('.comboAtividade').hide();
-        tbl_row.find('.falecimentoEditavel').hide();
-        tbl_row.find('.nomeCobrador').show();
-        tbl_row.find('.nomeMentalidade').show();
-        tbl_row.find('.nomePais').show();
-        tbl_row.find('.nomeAtividade').show();
-        tbl_row.find('.nomeNascimento').show();
-        tbl_row.find('.nascimentoEditavel').hide();
-        tbl_row.find('.nomeValor').show();
-        tbl_row.find('.valorEditavel').hide();
-        tbl_row.find('.nomePosicao').show();
-        tbl_row.find('.comboPosicoes').hide();
-		tbl_row.find('.hiddenInput').hide();
-		tbl_row.find('.playerThumb').removeClass('editableThumb');
-		
-        tbl_row.find('a').each(function(index, val){
-            $(this).html($(this).attr('original_entry'));
-        });
-
-        tbl_row.find('span').each(function(index, val){
-            $(this).html($(this).attr('original_entry'));
-        });
-
-        tbl_row.find('input').each(function(index, val){
-            $(this).val($(this).attr('data-original-entry'));
-        });
-    });
-
-    $('.apagar').click(function(){
-        var tbl_row =  $(this).closest('tr');
-        var jogadorId = tbl_row.prop('id');
-        var r = confirm("Você tem certeza que deseja apagar esse jogador? Essa ação não pode ser desfeita!");
-        if (r) {
-            $.ajax({
-                type: "POST",
-                url: '/jogadores/apagar_jogador.php',
-                data: {jogadorId:jogadorId},
-                dataType: 'json',
-                success: function(data) {
-                  // console.log(data.error);
-                  if(!data.success){
-                    $('#errorbox').append('<div class="alert alert-danger">Não foi possível apagar o jogador. '+ data.error +'</div>');
-                  } else {
-                    location.reload();
-                  }
-
-
-                },
-                error: function(data) {
-                    successmessage = 'Error';
-                    $('#errorbox').append('<div class="alert alert-danger">Não foi possível apagar o jogador. '+data.error+'</div>');
-                }
-            });
-        }
-
-
-    });
-
-    $('.salvar').click(function(){
-        var tbl_row =  $(this).closest('tr');
-        tbl_row.find(".salvar").hide();
-        tbl_row.find(".cancelar").hide();
-        tbl_row.find(".editar").show();
-        tbl_row.find(".apagar").show();
-        tbl_row.find(".add-referencia").show();
-        tbl_row.find("a[id^='ref']").show();
-        tbl_row.find('.linkNome').css("cursor","pointer");
-        tbl_row.find('.linkNome').css("pointer-events","auto");
-        tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
-        tbl_row.find('.nivelEditavel').attr('contenteditable', 'false').removeClass('editavel');
-        tbl_row.find('.comboCobrador').hide();
-        tbl_row.find('.comboMentalidade').hide();
-        tbl_row.find('.comboPais').hide();
-        tbl_row.find('.comboAtividade').hide();
-        tbl_row.find('.falecimentoEditavel').hide();
-        tbl_row.find('.nomeCobrador').show();
-        tbl_row.find('.nomeMentalidade').show();
-        tbl_row.find('.nomePais').show();
-        tbl_row.find('.nomeAtividade').show();
-        tbl_row.find('.nomeNascimento').show();
-        tbl_row.find('.nascimentoEditavel').hide();
-        tbl_row.find('.nomeValor').show();
-        tbl_row.find('.valorEditavel').hide();
-        tbl_row.find('.nomePosicao').show();
-        tbl_row.find('.comboPosicoes').hide();
-		tbl_row.find('.hiddenInput').hide();
-		tbl_row.find('.playerThumb').removeClass('editableThumb');
-		
-        //coleta de valores
-
-        //check se é dono do jogador
-        //garantir que o dono do time está logado e que ele é o dono do jogador também (duplo check, JS e PHP)
-        var donoTime = tbl_row.find(".donoClubeVinculado").html();
-        var donoJogador = $("#tabelaPrincipal").find('thead').prop("id").replace(/\D/g, "");
-        var donoPais = tbl_row.attr("data-dono-pais");
-
-        if (typeof donoTime === 'undefined'){
-            donoTime = donoJogador;
-        }
-
-        if(donoTime.localeCompare(donoJogador) == 0 || (typeof donoPais !== 'undefined' && donoPais.localeCompare(donoJogador) == 0)){
-
-            var isDono = true;
-        } else {
-            var isDono = false;
-        }
-
-        var idJogador = tbl_row.prop('id');
-
-        if(isDono){
-            
-            
-            var nascimento = tbl_row.find(".nascimentoEditavel").val();
-            var valor = parseInt(tbl_row.find(".valorEditavel").html());
-            var determinacao = "1";
-            var mentalidade = tbl_row.find(".comboMentalidade").val();
-            var cobrancaFalta = tbl_row.find(".comboCobrador").val();
-            var atividade = tbl_row.find(".comboAtividade").val();
-			var rawTime = tbl_row.find(".comboAtividade").attr("data-idTime");
-			var timeParaDemissao = (rawTime && rawTime !== "null" && rawTime !== "undefined") ? parseInt(rawTime) : 0;
-            var dataFalecimento = tbl_row.find(".falecimentoEditavel").val();
-        }
-		
-		//override para permitir repaginação de Praias
-		var nome = tbl_row.find('.nomeEditavel').text();
-		var nacionalidade = tbl_row.find(".comboPais").val();
-		
-		//foto
-		var inputFoto = (tbl_row.find('#foto'+idJogador))[0];
-		var foto;
-
-		if (inputFoto.files.length > 0) {
-		   foto = inputFoto.files[0];
+	$(document).on("change", ".comboAtividade", function(){
+		let tbl_row = $(this).closest("tr");
+		if($(this).val() == "-3"){
+			tbl_row.find(".falecimentoEditavel").show();
 		} else {
-		   foto = null;
+			tbl_row.find(".falecimentoEditavel").hide();
 		}
+	});
 
-        var nivel = tbl_row.find(".nivelEditavel").html();
-		
-		var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
-		var isGoleiro = stringPosicoes.localeCompare("G");
-	
-		if(isGoleiro == 0){
-			var posicoes = ["1"];
-		} else {
-			var posicoes = tbl_row.find(".comboPosicoes").val();
-		}
-		
-		var formData = new FormData();
-		
-		formData.append('idJogador',idJogador);
-		formData.append('alteracao',9);
-		formData.append('posicoes',posicoes);
-		formData.append('nivel',nivel);
-		formData.append('nome',nome);
-		formData.append('nacionalidade',nacionalidade);
-
-if(isDono){
-	
-	
-	formData.append('nascimento',nascimento);
-	formData.append('valor',valor);
-	formData.append('determinacao',determinacao);
-	formData.append('mentalidade',mentalidade);
-	formData.append('cobrancaFalta',cobrancaFalta);
-	formData.append('atividade',atividade);
-	formData.append('timeParaDemissao',timeParaDemissao);
-	formData.append('dataFalecimento',dataFalecimento);
-}
-
-     if(foto != null){
-		formData.append('foto',foto);
-     }
-
-
-// for (var key of formData.entries()) {
-     // console.log(key[0] + ', ' + key[1]);
- // }
-
-    ajaxCallJogador(formData);
-
-
-    });
-
-	
-	
-function ajaxCallJogador(formData){
-
-$.ajax({
-        type        : 'POST', // define the type of HTTP verb we want to use (POST for our form)
-        url         : '/jogadores/editar_jogador.php', // the url where we want to POST
-        data        : formData, // our data object
-        processData : false,
-        contentType : false,
-		cache: false,
-        dataType    : 'json', // what type of data do we expect back from the server
-                    //encode          : true
-    })
-
-                .done(function(data) {
-
-        // log data to the console so we can see
-        // console.log(data);
-
-
-        if (! data.success) {
-            window.scrollTo(0, 0);
-            $('#modalProposta').hide();
-            $('#errorbox').append('<div class="alert alert-danger">Não foi possível editar o jogador, '+data.error+'</div>');
-
-
-        } else {
-
-        $('#modalProposta').hide();
-            //$('#errorbox').append("<div class='alert alert-success'>A ação foi concluída com sucesso!</div>");
-
-            location.reload();
-
-        }
-
-        // here we will handle errors and validation messages
-        }).fail(function(jqXHR, textStatus, errorThrown ){
-            // console.log("Erro");
-            // console.log(jqXHR);
-            // console.log(textStatus);
-            // console.log(errorThrown);
-            $('#modalProposta').hide();
-            $('#errorbox').append('<div class="alert alert-danger">Não foi possível editar o jogador, '+errorThrown+'</div>');
-        });
-}
-	  
-		
-
+	function ajaxCallJogador(formData){
+		$.ajax({
+			type        : 'POST',
+			url         : '/jogadores/editar_jogador.php',
+			data        : formData,
+			processData : false,
+			contentType : false,
+			cache       : false,
+			dataType    : 'json'
+		})
+		.done(function(data) {
+			if (! data.success) {
+				window.scrollTo(0, 0);
+				$('#modalProposta').hide();
+				$('#errorbox').append('<div class="alert alert-danger">Não foi possível editar o jogador, '+data.error+'</div>');
+			} else {
+				$('#modalProposta').hide();
+				load_data();
+			}
+		}).fail(function(jqXHR, textStatus, errorThrown ){
+			$('#modalProposta').hide();
+			$('#errorbox').append('<div class="alert alert-danger">Não foi possível editar o jogador, '+errorThrown+'</div>');
+		});
 	}
 
 	$(document).on('click', '.add-referencia', function(){
@@ -799,7 +712,7 @@ $.ajax({
 					if(!data.success){
 						$('#errorbox').html('<div class="alert alert-danger">'+ data.error +'</div>');
 					} else {
-						location.reload();
+						load_data();
 					}
 				},
 				error: function() {
@@ -808,12 +721,6 @@ $.ajax({
 			});
 		}
 	});
-
-	$(document).on('click', '.pagination_link', function(){
-		var page = $(this).attr('id');
-		updateTable(localData, page,activeSort, 1);
-	});
-
 
 	function pagination(current_page, total_pages){
 		var pgn = '<ul class="pagination">';
@@ -849,52 +756,49 @@ $.ajax({
 		return pgn;
 	}
 
-
 	function addFilters(){
-		$(document).find('.headings').click(function(){
-		   treatResults(this);
+		$('.headings').off('click').on('click', function(){
+			var column = $(this).attr('id');
+			if(!column) return;
 
+			if(activeSort !== column){
+				asc = true;
+			}
 
+			localData.sort(function(a, b){
+				var valA = a[column];
+				var valB = b[column];
+
+				if(column === 'Nivel' || column === 'valor' || column === 'valorAtualizado' || column === 'disponibilidade' || column === 'Idade'){
+					valA = Number(valA) || 0;
+					valB = Number(valB) || 0;
+					return asc ? (valA - valB) : (valB - valA);
+				} else if(column === 'Nascimento'){
+					valA = valA || '';
+					valB = valB || '';
+					return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+				} else if(column === 'StringPosicoes'){
+					var posA = createPositionString(valA || '');
+					var posB = createPositionString(valB || '');
+					return asc ? posA.localeCompare(posB, 'pt-BR', { sensitivity: 'base' }) : posB.localeCompare(posA, 'pt-BR', { sensitivity: 'base' });
+				} else {
+					valA = (valA !== null && valA !== undefined) ? valA.toString().trim() : '';
+					valB = (valB !== null && valB !== undefined) ? valB.toString().trim() : '';
+					return asc ? valA.localeCompare(valB, 'pt-BR', { sensitivity: 'base', numeric: true }) : valB.localeCompare(valA, 'pt-BR', { sensitivity: 'base', numeric: true });
+				}
+			});
+
+			var currentAsc = asc;
+			asc = !asc;
+			updateTable(localData, 1, column, currentAsc ? 1 : 0);
+		});
+
+		$('.pagination_link').off('click').on('click', function(e){
+			e.preventDefault();
+			var page = $(this).attr('id');
+			updateTable(localData, page, activeSort, 2);
 		});
 	}
-
-	function treatResults(item){
-		var id = $(item).attr('id');
-
-		sortResults(id, asc);
-
-		if(asc){
-			asc = false;
-		} else {
-			asc = true;
-		}
-
-	}
-
-	function sortResults(prop, asc) {
-
-	if(prop == 'pontos'){
-
-		localData = localData.sort(
-			function(a,b){
-				if (asc) return a[prop] - b[prop];
-				if (!asc) return b[prop] - a[prop];
-				else return 0;
-			}
-		);
-	} else {
-		localData = localData.sort(
-			function(a, b) {
-				if (((a[prop] < b[prop]) && (!asc))||((a[prop] > b[prop]) && (asc))) return 1;
-				else if (((a[prop] > b[prop]) && (!asc))||((a[prop] < b[prop]) && (asc))) return -1;
-				else return 0;
-			}
-		);
-	}
-		
-    updateTable(localData, 1,prop,0);
-
-    }
 
 });
 
@@ -914,9 +818,8 @@ $.ajax({
         
         <div id='errorbox'></div>
 
-        <div class='tbl_user_data'>
-            <div style="text-align:center; padding: 20px;"><img id='loading' src='/images/icons/ajax-loader.gif' style="display:none;"></div>
-        </div>
+        <div id="loading" style="text-align:center; padding: 20px; display:none;"><img src='/images/icons/ajax-loader.gif'></div>
+        <div id='table-container'></div>
     </div>
 </main>
 

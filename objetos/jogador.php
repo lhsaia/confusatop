@@ -417,7 +417,7 @@ return $stmt;
         //sistema F+
         if($valor === null){
             $preco = 0;
-            $passeJogador = $this->calcularPasse();
+            $passeJogador = $this->calcularPasse($idJogador);
             $salario = $this->calcularSalario($passeJogador);
             $alterarPasse = true;
             $querySalario = "salario=:salarioNovo,";
@@ -427,13 +427,10 @@ return $stmt;
             $alterarPasse = false;
             $querySalario = "";
             $querySalario2 = "";
-            $passeJogador = !empty($this->valor) ? $this->valor : 0;
-            if ($passeJogador == 0) {
-                $stmt_val = $this->conn->prepare("SELECT valor FROM jogador WHERE ID = ?");
-                $stmt_val->execute([$idJogador]);
-                $passeJogador = (float)$stmt_val->fetchColumn();
-            }
-            if ($passeJogador == 0) {
+            $stmt_val = $this->conn->prepare("SELECT valor FROM jogador WHERE ID = ?");
+            $stmt_val->execute([$idJogador]);
+            $passeJogador = (float)$stmt_val->fetchColumn();
+            if ($passeJogador <= 0) {
                 $passeJogador = $this->calcularPasse($idJogador);
             }
             $salario = $this->calcularSalario($passeJogador);
@@ -636,8 +633,17 @@ return $stmt;
         return date('Y-m-d', strtotime($idade . ' years '.$dias.' days ago'));
     }
 
-    function calcularSalario($passe){
-        $multiplicador = 0.005;
+    function calcularSalario($passe, $percentual = null){
+        if ($percentual === null) {
+            if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
+                $params = $this->obterParametrosValores($_SESSION['user_id']);
+                $multiplicador = ((float)($params['percentual_salario'] ?? 0.5)) / 100.0;
+            } else {
+                $multiplicador = 0.005;
+            }
+        } else {
+            $multiplicador = ((float)$percentual) / 100.0;
+        }
         $salario = $passe * $multiplicador;
         return $salario;
     }
@@ -653,7 +659,167 @@ return $stmt;
         return $result;
     }
 
-    function calcularPasse($novaId = null, $nivel = null, $nascimento = null, $cobrancaFalta = null, $stringPosicoes = null ){
+    function ensureParametrosValoresTable(){
+        try {
+            $this->conn->exec("CREATE TABLE IF NOT EXISTS `usuario_parametros_valores` (
+                `user_id` INT PRIMARY KEY,
+                `percentual_salario` DECIMAL(5,3) DEFAULT 0.500,
+                `mult_idade_ate20` DECIMAL(5,2) DEFAULT 1.30,
+                `mult_idade_21_22` DECIMAL(5,2) DEFAULT 1.15,
+                `mult_idade_23_28` DECIMAL(5,2) DEFAULT 1.00,
+                `mult_idade_29_30` DECIMAL(5,2) DEFAULT 0.90,
+                `mult_idade_31_40` DECIMAL(5,2) DEFAULT 0.80,
+                `mult_idade_41_mais` DECIMAL(5,2) DEFAULT 0.50,
+                `bonus_falta` DECIMAL(5,2) DEFAULT 1.08,
+                `fator_global` DECIMAL(6,2) DEFAULT 1.00,
+                `ajuste_goleiro` DECIMAL(5,2) DEFAULT 1.00,
+                `ajuste_lateral` DECIMAL(5,2) DEFAULT 1.00,
+                `ajuste_zagueiro` DECIMAL(5,2) DEFAULT 1.00,
+                `ajuste_ala` DECIMAL(5,2) DEFAULT 1.00,
+                `ajuste_volante` DECIMAL(5,2) DEFAULT 1.00,
+                `ajuste_meia` DECIMAL(5,2) DEFAULT 1.00,
+                `ajuste_atacante` DECIMAL(5,2) DEFAULT 1.00,
+                `bonus_polivalencia` DECIMAL(5,2) DEFAULT 1.00,
+                `faixa1_a` DECIMAL(8,2) DEFAULT 2.00,
+                `faixa1_b` DECIMAL(8,2) DEFAULT 10.00,
+                `faixa2_a` DECIMAL(8,2) DEFAULT 40.00,
+                `faixa2_b` DECIMAL(8,2) DEFAULT 100.00,
+                `faixa3_a` DECIMAL(8,2) DEFAULT 175.00,
+                `faixa3_b` DECIMAL(8,2) DEFAULT 675.00,
+                `faixa4_a` DECIMAL(8,2) DEFAULT 250.00,
+                `faixa4_b` DECIMAL(8,2) DEFAULT 4250.00,
+                `faixa5_a` DECIMAL(8,2) DEFAULT 350.00,
+                `faixa5_b` DECIMAL(8,2) DEFAULT 6850.00,
+                `faixa6_a` DECIMAL(8,2) DEFAULT 400.00,
+                `faixa6_b` DECIMAL(8,2) DEFAULT 9700.00,
+                `data_atualizacao` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+            // Garantir que a coluna percentual_salario existe caso a tabela já tenha sido criada anteriormente
+            $checkCol = $this->conn->query("SHOW COLUMNS FROM `usuario_parametros_valores` LIKE 'percentual_salario'");
+            if ($checkCol && $checkCol->rowCount() === 0) {
+                $this->conn->exec("ALTER TABLE `usuario_parametros_valores` ADD COLUMN `percentual_salario` DECIMAL(5,3) DEFAULT 0.500 AFTER `user_id`");
+            }
+        } catch (Exception $e) {
+            error_log("Erro ao criar usuario_parametros_valores: " . $e->getMessage());
+        }
+    }
+
+    function getParametrosValoresPadrao(){
+        return [
+            'percentual_salario' => 0.50,
+            'mult_idade_ate20' => 1.30,
+            'mult_idade_21_22' => 1.15,
+            'mult_idade_23_28' => 1.00,
+            'mult_idade_29_30' => 0.90,
+            'mult_idade_31_40' => 0.80,
+            'mult_idade_41_mais' => 0.50,
+            'bonus_falta' => 1.08,
+            'fator_global' => 1.00,
+            'ajuste_goleiro' => 1.00,
+            'ajuste_lateral' => 1.00,
+            'ajuste_zagueiro' => 1.00,
+            'ajuste_ala' => 1.00,
+            'ajuste_volante' => 1.00,
+            'ajuste_meia' => 1.00,
+            'ajuste_atacante' => 1.00,
+            'bonus_polivalencia' => 1.00,
+            'faixa1_a' => 2.00,
+            'faixa1_b' => 10.00,
+            'faixa2_a' => 40.00,
+            'faixa2_b' => 100.00,
+            'faixa3_a' => 175.00,
+            'faixa3_b' => 675.00,
+            'faixa4_a' => 250.00,
+            'faixa4_b' => 4250.00,
+            'faixa5_a' => 350.00,
+            'faixa5_b' => 6850.00,
+            'faixa6_a' => 400.00,
+            'faixa6_b' => 9700.00,
+        ];
+    }
+
+    function obterParametrosValores($userId){
+        $this->ensureParametrosValoresTable();
+        $padrao = $this->getParametrosValoresPadrao();
+        try {
+            $stmt = $this->conn->prepare("SELECT * FROM usuario_parametros_valores WHERE user_id = ?");
+            $stmt->execute([(int)$userId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                return array_merge($padrao, $row);
+            }
+        } catch (Exception $e) {
+            error_log("Erro ao obterParametrosValores: " . $e->getMessage());
+        }
+        return $padrao;
+    }
+
+    function salvarParametrosValores($userId, $data){
+        $this->ensureParametrosValoresTable();
+        $padrao = $this->getParametrosValoresPadrao();
+        $params = [];
+        foreach ($padrao as $k => $v) {
+            $params[$k] = isset($data[$k]) ? (float)$data[$k] : $v;
+        }
+
+        $query = "INSERT INTO usuario_parametros_valores (
+            user_id, percentual_salario, mult_idade_ate20, mult_idade_21_22, mult_idade_23_28, mult_idade_29_30,
+            mult_idade_31_40, mult_idade_41_mais, bonus_falta, fator_global,
+            ajuste_goleiro, ajuste_lateral, ajuste_zagueiro, ajuste_ala,
+            ajuste_volante, ajuste_meia, ajuste_atacante, bonus_polivalencia,
+            faixa1_a, faixa1_b, faixa2_a, faixa2_b, faixa3_a, faixa3_b,
+            faixa4_a, faixa4_b, faixa5_a, faixa5_b, faixa6_a, faixa6_b
+        ) VALUES (
+            :user_id, :percentual_salario, :mult_idade_ate20, :mult_idade_21_22, :mult_idade_23_28, :mult_idade_29_30,
+            :mult_idade_31_40, :mult_idade_41_mais, :bonus_falta, :fator_global,
+            :ajuste_goleiro, :ajuste_lateral, :ajuste_zagueiro, :ajuste_ala,
+            :ajuste_volante, :ajuste_meia, :ajuste_atacante, :bonus_polivalencia,
+            :faixa1_a, :faixa1_b, :faixa2_a, :faixa2_b, :faixa3_a, :faixa3_b,
+            :faixa4_a, :faixa4_b, :faixa5_a, :faixa5_b, :faixa6_a, :faixa6_b
+        ) ON DUPLICATE KEY UPDATE
+            percentual_salario = VALUES(percentual_salario),
+            mult_idade_ate20 = VALUES(mult_idade_ate20),
+            mult_idade_21_22 = VALUES(mult_idade_21_22),
+            mult_idade_23_28 = VALUES(mult_idade_23_28),
+            mult_idade_29_30 = VALUES(mult_idade_29_30),
+            mult_idade_31_40 = VALUES(mult_idade_31_40),
+            mult_idade_41_mais = VALUES(mult_idade_41_mais),
+            bonus_falta = VALUES(bonus_falta),
+            fator_global = VALUES(fator_global),
+            ajuste_goleiro = VALUES(ajuste_goleiro),
+            ajuste_lateral = VALUES(ajuste_lateral),
+            ajuste_zagueiro = VALUES(ajuste_zagueiro),
+            ajuste_ala = VALUES(ajuste_ala),
+            ajuste_volante = VALUES(ajuste_volante),
+            ajuste_meia = VALUES(ajuste_meia),
+            ajuste_atacante = VALUES(ajuste_atacante),
+            bonus_polivalencia = VALUES(bonus_polivalencia),
+            faixa1_a = VALUES(faixa1_a),
+            faixa1_b = VALUES(faixa1_b),
+            faixa2_a = VALUES(faixa2_a),
+            faixa2_b = VALUES(faixa2_b),
+            faixa3_a = VALUES(faixa3_a),
+            faixa3_b = VALUES(faixa3_b),
+            faixa4_a = VALUES(faixa4_a),
+            faixa4_b = VALUES(faixa4_b),
+            faixa5_a = VALUES(faixa5_a),
+            faixa5_b = VALUES(faixa5_b),
+            faixa6_a = VALUES(faixa6_a),
+            faixa6_b = VALUES(faixa6_b)";
+
+        $stmt = $this->conn->prepare($query);
+        $params['user_id'] = (int)$userId;
+        return $stmt->execute($params);
+    }
+
+    function restaurarParametrosValoresPadrao($userId){
+        $this->ensureParametrosValoresTable();
+        $stmt = $this->conn->prepare("DELETE FROM usuario_parametros_valores WHERE user_id = ?");
+        return $stmt->execute([(int)$userId]);
+    }
+
+    function calcularPasse($novaId = null, $nivel = null, $nascimento = null, $cobrancaFalta = null, $stringPosicoes = null, $customParams = null){
         if($novaId == null){
 
             $nivel = (int)$this->nivel;
@@ -693,6 +859,11 @@ return $stmt;
 			}
         }
 
+        // Se não foi passado customParams explicitamente, verificar se há usuário logado com preferências salvas
+        if ($customParams === null && isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
+            $customParams = $this->obterParametrosValores($_SESSION['user_id']);
+        }
+
         // Clean and parse stringPosicoes if it's not in standard binary format (e.g. MEC, ME, MD, MC)
         if ($stringPosicoes !== null && !preg_match('/^[01]+$/', $stringPosicoes)) {
             $parts = preg_split('/[^A-Z0-9]/i', strtoupper($stringPosicoes));
@@ -711,30 +882,106 @@ return $stmt;
             $stringPosicoes = $binary;
         }
 
-        $ajustePorPosicao = array(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);
-        $bonusPolivalencia = array(1=>1,2=>1,3=>1,4=>1,5=>1,6=>1,7=>1);
-        $bonusCobrancaFalta = 1.08;
-        $idadeMax = array(1=>20,2=>22,3=>28,4=>30,5=>40,6=>45);
-        $idadeMult = array(1=>1.3,2=>1.15,3=>1,4=>0.9,5=>0.8,6=>0.5);
-        $parametroA = array(0=>2, 1=>40,2=>175,3=>250,4=>350,5=>400);
-        $parametroB = array(0=>10, 1=>100,2=>675,3=>4250,4=>6850,5=>9700);
+        if ($customParams !== null && is_array($customParams)) {
+            $ajGoleiro = (float)($customParams['ajuste_goleiro'] ?? 1.0);
+            $ajLateral = (float)($customParams['ajuste_lateral'] ?? 1.0);
+            $ajZagueiro = (float)($customParams['ajuste_zagueiro'] ?? 1.0);
+            $ajAla = (float)($customParams['ajuste_ala'] ?? 1.0);
+            $ajVolante = (float)($customParams['ajuste_volante'] ?? 1.0);
+            $ajMeia = (float)($customParams['ajuste_meia'] ?? 1.0);
+            $ajAtacante = (float)($customParams['ajuste_atacante'] ?? 1.0);
+
+            // 15 posições: G, LD, LE, Z, AD, AE, V, MD, ME, MC, MA, MEC, PD, PE, CA
+            $ajustePorPosicao = array(
+                $ajGoleiro,   // 0: G
+                $ajLateral,   // 1: LD
+                $ajLateral,   // 2: LE
+                $ajZagueiro,  // 3: Z
+                $ajAla,       // 4: AD
+                $ajAla,       // 5: AE
+                $ajVolante,   // 6: V
+                $ajMeia,      // 7: MD
+                $ajMeia,      // 8: ME
+                $ajMeia,      // 9: MC
+                $ajMeia,      // 10: MA
+                $ajMeia,      // 11: MEC
+                $ajAtacante,  // 12: PD
+                $ajAtacante,  // 13: PE
+                $ajAtacante   // 14: CA
+            );
+
+            $polivFactor = (float)($customParams['bonus_polivalencia'] ?? 1.0);
+            $bonusPolivalencia = array(
+                1 => 1.0,
+                2 => 1.0 * $polivFactor,
+                3 => 1.0 * ($polivFactor ** 1.2),
+                4 => 1.0 * ($polivFactor ** 1.4),
+                5 => 1.0 * ($polivFactor ** 1.6),
+                6 => 1.0 * ($polivFactor ** 1.8),
+                7 => 1.0 * ($polivFactor ** 2.0)
+            );
+
+            $bonusCobrancaFalta = (float)($customParams['bonus_falta'] ?? 1.08);
+            $fatorGlobal = (float)($customParams['fator_global'] ?? 1.0);
+
+            $idadeMax = array(1=>20, 2=>22, 3=>28, 4=>30, 5=>40, 6=>45);
+            $idadeMult = array(
+                1 => (float)($customParams['mult_idade_ate20'] ?? 1.3),
+                2 => (float)($customParams['mult_idade_21_22'] ?? 1.15),
+                3 => (float)($customParams['mult_idade_23_28'] ?? 1.0),
+                4 => (float)($customParams['mult_idade_29_30'] ?? 0.9),
+                5 => (float)($customParams['mult_idade_31_40'] ?? 0.8),
+                6 => (float)($customParams['mult_idade_41_mais'] ?? 0.5)
+            );
+
+            $parametroA = array(
+                0 => (float)($customParams['faixa1_a'] ?? 2),
+                1 => (float)($customParams['faixa2_a'] ?? 40),
+                2 => (float)($customParams['faixa3_a'] ?? 175),
+                3 => (float)($customParams['faixa4_a'] ?? 250),
+                4 => (float)($customParams['faixa5_a'] ?? 350),
+                5 => (float)($customParams['faixa6_a'] ?? 400)
+            );
+            $parametroB = array(
+                0 => (float)($customParams['faixa1_b'] ?? 10),
+                1 => (float)($customParams['faixa2_b'] ?? 100),
+                2 => (float)($customParams['faixa3_b'] ?? 675),
+                3 => (float)($customParams['faixa4_b'] ?? 4250),
+                4 => (float)($customParams['faixa5_b'] ?? 6850),
+                5 => (float)($customParams['faixa6_b'] ?? 9700)
+            );
+        } else {
+            $ajustePorPosicao = array(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);
+            $bonusPolivalencia = array(1=>1,2=>1,3=>1,4=>1,5=>1,6=>1,7=>1);
+            $bonusCobrancaFalta = 1.08;
+            $fatorGlobal = 1.0;
+            $idadeMax = array(1=>20,2=>22,3=>28,4=>30,5=>40,6=>45);
+            $idadeMult = array(1=>1.3,2=>1.15,3=>1,4=>0.9,5=>0.8,6=>0.5);
+            $parametroA = array(0=>2, 1=>40,2=>175,3=>250,4=>350,5=>400);
+            $parametroB = array(0=>10, 1=>100,2=>675,3=>4250,4=>6850,5=>9700);
+        }
+
         $nivelMin = array(0=>10,1=>31,2=>51,3=>71,4=>81,5=>89);
         $nivelMax = array(0=>30,1=>50,2=>70,3=>80,4=>88,5=>97);
 
         //determinacao da faixa de nivel
+        $faixaNivel = 0;
         for($i = 0;$i < 6; $i++){
             if($nivel<=$nivelMax[$i]){
                 $faixaNivel = $i;
                 break;
             }
+            $faixaNivel = $i;
         }
 
         //determinacao da faixa de idade
+        $faixaIdade = 1;
         for($i = 1;$i < 7; $i++){
             if($idade<=$idadeMax[$i]){
                 $faixaIdade = $i;
                 break;
             }
+            $faixaIdade = $i;
         }
 
         //calculo base
@@ -760,12 +1007,12 @@ return $stmt;
           $polivalencia = 7;
         }
         foreach($posicoes as $key=>&$posicao_especifica){
-            $posicao_especifica = (int)$posicao_especifica * $ajustePorPosicao[$key];
+            $posicao_especifica = (int)$posicao_especifica * ($ajustePorPosicao[$key] ?? 1);
         }
 
         unset($posicao_especifica);
 
-        $passe = 1000 * $passe * ((array_sum($posicoes))/($polivalencia)) * $bonusPolivalencia[$polivalencia];
+        $passe = 1000 * $passe * ((array_sum($posicoes))/($polivalencia)) * $bonusPolivalencia[$polivalencia] * $fatorGlobal;
 
         if($passe < 0){
             $passe = 0;
@@ -773,6 +1020,61 @@ return $stmt;
 
         return $passe;
 
+    }
+
+    function recalcularPassesEmMassa($userId){
+        $userId = (int)$userId;
+        $params = $this->obterParametrosValores($userId);
+        $percentualSalario = (float)($params['percentual_salario'] ?? 0.50);
+
+        $query = "
+            SELECT 
+                j.id, j.Nivel, j.Nascimento, j.CobradorFalta, j.StringPosicoes
+            FROM contratos_jogador cj
+            INNER JOIN clube c ON cj.clube = c.id
+            INNER JOIN paises p ON c.Pais = p.id
+            INNER JOIN jogador j ON cj.jogador = j.id
+            WHERE p.dono = ? AND cj.tipoContrato = 0
+        ";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$userId]);
+        $jogadores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmtUpdateJogador = $this->conn->prepare("UPDATE jogador SET valor = ? WHERE id = ?");
+        $stmtUpdateContrato = $this->conn->prepare("UPDATE contratos_jogador SET salario = ? WHERE jogador = ? AND tipoContrato = 0");
+
+        $totalAtualizados = 0;
+        $this->conn->beginTransaction();
+        try {
+            foreach ($jogadores as $row) {
+                $jId = (int)$row['id'];
+                $nivel = (int)$row['Nivel'];
+                $nasc = $row['Nascimento'];
+                $cobradorFalta = (int)$row['CobradorFalta'];
+                $stringPosicoes = $row['StringPosicoes'];
+
+                $novoValor = $this->calcularPasse($jId, $nivel, $nasc, $cobradorFalta, $stringPosicoes, $params);
+                $novoSalario = $this->calcularSalario($novoValor, $percentualSalario);
+
+                $stmtUpdateJogador->execute([$novoValor, $jId]);
+                $stmtUpdateContrato->execute([$novoSalario, $jId]);
+                $totalAtualizados++;
+            }
+            $this->conn->commit();
+            return [
+                'success' => true,
+                'total' => $totalAtualizados
+            ];
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("Erro em recalcularPassesEmMassa: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+                'total' => 0
+            ];
+        }
     }
 
     function selecionarElencoTime($id_time,$from_record_num,$records_per_page){
@@ -1249,14 +1551,23 @@ return $stmt;
             $query = "SELECT j.id, j.Nome as nomeJogador, s.Nome as posicaoBase, j.StringPosicoes as stringPosicoes, j.Pais as nacionalidade, p.Bandeira as bandeiraJogador, FLOOR(DATEDIFF(NOW(),j.Nascimento)/365) as idade, c.Escudo as escudo, o.clube, j.valor, j.Nivel, j.sexo
             FROM jogador j
             LEFT JOIN paises p ON j.Pais = p.ID
-            LEFT JOIN contratos_jogador o ON o.jogador = j.ID
-            LEFT JOIN clube c ON o.clube = c.ID
-
+            LEFT JOIN contratos_jogador o ON (o.jogador = j.ID AND o.tipoContrato = 0)
+            LEFT JOIN clube c ON (o.clube = c.ID AND c.status = 0)
             LEFT JOIN posicoes s ON o.posicaoBase = s.ID
             ORDER BY valor DESC LIMIT {$from_record_num},{$records_per_page}";
             $stmt = $this->conn->prepare($query);
             $stmt->execute();
             return $stmt;
+        }
+
+        public function alterarValor($id, $valor){
+            $query = "UPDATE " . $this->table_name . " SET valor = :valor WHERE ID = :id";
+            $stmt = $this->conn->prepare($query);
+            $id = (int)$id;
+            $valor = (float)$valor;
+            $stmt->bindParam(':valor', $valor);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            return $stmt->execute();
         }
 
         function pesquisaAvancada($nivelMin, $nivelMax, $idadeMin, $idadeMax, $cobrancaFalta, $disponivel, $nome, $nacionalidade, $mentalidade, $stringPosicoes, $seletorPosicoes, $semclube, $valorMin, $valorMax, $sexo, $apenasConfusa, $usuarioLogado, $liga){
@@ -4083,7 +4394,7 @@ public function resolverEmprestimos(){
         } catch (Exception $e) {}
     }
 
-    public function mergeAtletas($idPrincipal, $idSecundario, $idUsuario = 0, $nomeUsuario = 'Admin') {
+    public function mergeAtletas($idPrincipal, $idSecundario, $idUsuario = 0, $nomeUsuario = 'Admin', $fotoEscolhida = null) {
         $idPrincipal = (int)$idPrincipal;
         $idSecundario = (int)$idSecundario;
         $idUsuario = (int)$idUsuario;
@@ -4111,21 +4422,49 @@ public function resolverEmprestimos(){
                 return ['success' => false, 'error' => 'Um ou ambos os atletas não foram encontrados no banco de dados.'];
             }
 
-            // 2. Herança de foto, externalID ou referência se o principal estiver sem
+            // Função auxiliar para checar se uma foto é personalizada (não default/placeholder)
+            $isCustomFoto = function(?string $f): bool {
+                if (!$f) return false;
+                $fTrim = strtolower(trim($f));
+                $defaults = ['default.webp', 'default.jpg', 'default.png', 'default-user.png', 'avatar.png', 'placeholder.png', 'null', 'none', ''];
+                return !in_array($fTrim, $defaults, true);
+            };
+
+            // 2. Herança de foto, externalID ou referência
             $updates = [];
             $params = [];
 
-            if (empty($jogadorPrincipal['foto']) && !empty($jogadorSecundario['foto'])) {
-                $updates[] = "foto = :foto";
-                $params[':foto'] = $jogadorSecundario['foto'];
+            // Determinar qual foto manter
+            $fotoFinal = null;
+            if (!empty($fotoEscolhida) && is_string($fotoEscolhida)) {
+                $fotoEscolhidaTrim = trim($fotoEscolhida);
+                if ($fotoEscolhidaTrim === ($jogadorPrincipal['foto'] ?? '') || $fotoEscolhidaTrim === ($jogadorSecundario['foto'] ?? '')) {
+                    $fotoFinal = $fotoEscolhidaTrim;
+                }
             }
 
-            if (empty($jogadorPrincipal['externalID']) && !empty($jogadorSecundario['externalID'])) {
+            if ($fotoFinal === null) {
+                $principalHasCustom = $isCustomFoto($jogadorPrincipal['foto'] ?? null);
+                $secundarioHasCustom = $isCustomFoto($jogadorSecundario['foto'] ?? null);
+
+                if (!$principalHasCustom && $secundarioHasCustom) {
+                    $fotoFinal = $jogadorSecundario['foto'];
+                } elseif ($principalHasCustom) {
+                    $fotoFinal = $jogadorPrincipal['foto'];
+                }
+            }
+
+            if ($fotoFinal !== null && $fotoFinal !== ($jogadorPrincipal['foto'] ?? null)) {
+                $updates[] = "foto = :foto";
+                $params[':foto'] = $fotoFinal;
+            }
+
+            if ((empty($jogadorPrincipal['externalID']) || (int)$jogadorPrincipal['externalID'] === 0) && !empty($jogadorSecundario['externalID'])) {
                 $updates[] = "externalID = :externalID";
                 $params[':externalID'] = $jogadorSecundario['externalID'];
             }
 
-            if (empty($jogadorPrincipal['referencia']) && !empty($jogadorSecundario['referencia'])) {
+            if ((empty($jogadorPrincipal['referencia']) || (int)$jogadorPrincipal['referencia'] === 0) && !empty($jogadorSecundario['referencia'])) {
                 $updates[] = "referencia = :referencia";
                 $params[':referencia'] = $jogadorSecundario['referencia'];
             }
