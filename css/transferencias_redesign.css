@@ -858,3 +858,25 @@
   border: 1px solid rgba(245, 158, 11, 0.35) !important;
   letter-spacing: 0.02em !important;
 }
+
+/* Edição inline de valor em Jogadores mais Valiosos */
+.col-valor {
+  font-weight: 600 !important;
+  color: #0f172a !important;
+}
+
+.input-valor {
+  max-width: 110px !important;
+  font-size: 0.85rem !important;
+  padding: 4px 8px !important;
+  text-align: right !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+.col-opcoes {
+  width: 80px !important;
+  white-space: nowrap !important;
+}
+

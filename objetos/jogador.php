@@ -661,46 +661,47 @@ return $stmt;
 
     function ensureParametrosValoresTable(){
         try {
-            $this->conn->exec("CREATE TABLE IF NOT EXISTS `usuario_parametros_valores` (
-                `user_id` INT PRIMARY KEY,
-                `percentual_salario` DECIMAL(5,3) DEFAULT 0.500,
-                `mult_idade_ate20` DECIMAL(5,2) DEFAULT 1.30,
-                `mult_idade_21_22` DECIMAL(5,2) DEFAULT 1.15,
-                `mult_idade_23_28` DECIMAL(5,2) DEFAULT 1.00,
-                `mult_idade_29_30` DECIMAL(5,2) DEFAULT 0.90,
-                `mult_idade_31_40` DECIMAL(5,2) DEFAULT 0.80,
-                `mult_idade_41_mais` DECIMAL(5,2) DEFAULT 0.50,
-                `bonus_falta` DECIMAL(5,2) DEFAULT 1.08,
-                `fator_global` DECIMAL(6,2) DEFAULT 1.00,
-                `ajuste_goleiro` DECIMAL(5,2) DEFAULT 1.00,
-                `ajuste_lateral` DECIMAL(5,2) DEFAULT 1.00,
-                `ajuste_zagueiro` DECIMAL(5,2) DEFAULT 1.00,
-                `ajuste_ala` DECIMAL(5,2) DEFAULT 1.00,
-                `ajuste_volante` DECIMAL(5,2) DEFAULT 1.00,
-                `ajuste_meia` DECIMAL(5,2) DEFAULT 1.00,
-                `ajuste_atacante` DECIMAL(5,2) DEFAULT 1.00,
-                `bonus_polivalencia` DECIMAL(5,2) DEFAULT 1.00,
-                `faixa1_a` DECIMAL(8,2) DEFAULT 2.00,
-                `faixa1_b` DECIMAL(8,2) DEFAULT 10.00,
-                `faixa2_a` DECIMAL(8,2) DEFAULT 40.00,
-                `faixa2_b` DECIMAL(8,2) DEFAULT 100.00,
-                `faixa3_a` DECIMAL(8,2) DEFAULT 175.00,
-                `faixa3_b` DECIMAL(8,2) DEFAULT 675.00,
-                `faixa4_a` DECIMAL(8,2) DEFAULT 250.00,
-                `faixa4_b` DECIMAL(8,2) DEFAULT 4250.00,
-                `faixa5_a` DECIMAL(8,2) DEFAULT 350.00,
-                `faixa5_b` DECIMAL(8,2) DEFAULT 6850.00,
-                `faixa6_a` DECIMAL(8,2) DEFAULT 400.00,
-                `faixa6_b` DECIMAL(8,2) DEFAULT 9700.00,
-                `data_atualizacao` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            $sql = "CREATE TABLE IF NOT EXISTS `usuario_parametros_valores` ("
+                . " `user_id` INT PRIMARY KEY,"
+                . " `percentual_salario` DECIMAL(5,3) DEFAULT 0.500,"
+                . " `mult_idade_ate20` DECIMAL(5,2) DEFAULT 1.30,"
+                . " `mult_idade_21_22` DECIMAL(5,2) DEFAULT 1.15,"
+                . " `mult_idade_23_28` DECIMAL(5,2) DEFAULT 1.00,"
+                . " `mult_idade_29_30` DECIMAL(5,2) DEFAULT 0.90,"
+                . " `mult_idade_31_40` DECIMAL(5,2) DEFAULT 0.80,"
+                . " `mult_idade_41_mais` DECIMAL(5,2) DEFAULT 0.50,"
+                . " `bonus_falta` DECIMAL(5,2) DEFAULT 1.08,"
+                . " `fator_global` DECIMAL(6,2) DEFAULT 1.00,"
+                . " `ajuste_goleiro` DECIMAL(5,2) DEFAULT 1.00,"
+                . " `ajuste_lateral` DECIMAL(5,2) DEFAULT 1.00,"
+                . " `ajuste_zagueiro` DECIMAL(5,2) DEFAULT 1.00,"
+                . " `ajuste_ala` DECIMAL(5,2) DEFAULT 1.00,"
+                . " `ajuste_volante` DECIMAL(5,2) DEFAULT 1.00,"
+                . " `ajuste_meia` DECIMAL(5,2) DEFAULT 1.00,"
+                . " `ajuste_atacante` DECIMAL(5,2) DEFAULT 1.00,"
+                . " `bonus_polivalencia` DECIMAL(5,2) DEFAULT 1.00,"
+                . " `faixa1_a` DECIMAL(8,2) DEFAULT 2.00,"
+                . " `faixa1_b` DECIMAL(8,2) DEFAULT 10.00,"
+                . " `faixa2_a` DECIMAL(8,2) DEFAULT 40.00,"
+                . " `faixa2_b` DECIMAL(8,2) DEFAULT 100.00,"
+                . " `faixa3_a` DECIMAL(8,2) DEFAULT 175.00,"
+                . " `faixa3_b` DECIMAL(8,2) DEFAULT 675.00,"
+                . " `faixa4_a` DECIMAL(8,2) DEFAULT 250.00,"
+                . " `faixa4_b` DECIMAL(8,2) DEFAULT 4250.00,"
+                . " `faixa5_a` DECIMAL(8,2) DEFAULT 350.00,"
+                . " `faixa5_b` DECIMAL(8,2) DEFAULT 6850.00,"
+                . " `faixa6_a` DECIMAL(8,2) DEFAULT 400.00,"
+                . " `faixa6_b` DECIMAL(8,2) DEFAULT 9700.00,"
+                . " `data_atualizacao` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+                . " ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+            $this->conn->exec($sql);
 
             // Garantir que a coluna percentual_salario existe caso a tabela já tenha sido criada anteriormente
             $checkCol = $this->conn->query("SHOW COLUMNS FROM `usuario_parametros_valores` LIKE 'percentual_salario'");
             if ($checkCol && $checkCol->rowCount() === 0) {
                 $this->conn->exec("ALTER TABLE `usuario_parametros_valores` ADD COLUMN `percentual_salario` DECIMAL(5,3) DEFAULT 0.500 AFTER `user_id`");
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Erro ao criar usuario_parametros_valores: " . $e->getMessage());
         }
     }

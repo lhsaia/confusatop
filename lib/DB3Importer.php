@@ -8,6 +8,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/objetos/jogador.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/objetos/estadio.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/objetos/clima.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/objetos/tecnico.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/lib/functions.php';
 
 class DB3Importer {
     private $mysqlDb;
@@ -26,6 +27,19 @@ class DB3Importer {
         $this->estadioObj = new Estadio($mysqlDb);
         $this->climaObj = new Clima($mysqlDb);
         $this->tecnicoObj = new Tecnico($mysqlDb);
+    }
+
+    /**
+     * Mapeia todas as tabelas do SQLite de forma case-insensitive.
+     * Retorna array com chave em minúsculas => nome real no banco.
+     */
+    private function getSqliteTableMap(PDO $sqliteDb): array {
+        $sqliteTables = $sqliteDb->query("SELECT name FROM sqlite_master WHERE type='table'")->fetchAll(PDO::FETCH_COLUMN);
+        $tableMap = [];
+        foreach ($sqliteTables as $tblName) {
+            $tableMap[mb_strtolower(trim((string)$tblName), 'UTF-8')] = trim((string)$tblName);
+        }
+        return $tableMap;
     }
 
     /**
@@ -122,11 +136,11 @@ class DB3Importer {
             throw new RuntimeException("Não foi possível abrir o arquivo SQLite .db3: " . $e->getMessage());
         }
 
-        // Verificar tabelas essenciais no SQLite
-        $sqliteTables = $sqliteDb->query("SELECT name FROM sqlite_master WHERE type='table'")->fetchAll(PDO::FETCH_COLUMN);
+        // Verificar tabelas essenciais no SQLite (case-insensitive)
+        $tableMap = $this->getSqliteTableMap($sqliteDb);
         $requiredTables = ['clube', 'jogador', 'elenco'];
         foreach ($requiredTables as $req) {
-            if (!in_array($req, $sqliteTables, true)) {
+            if (!isset($tableMap[$req])) {
                 throw new RuntimeException("O arquivo .db3 não contém a tabela obrigatória '{$req}'.");
             }
         }
@@ -229,11 +243,13 @@ class DB3Importer {
 
         // 1. Mapear Estádios
         $estadiosDb3 = [];
-        if (in_array('estadio', $sqliteTables, true)) {
-            $stmtEst = $sqliteDb->query("SELECT * FROM estadio");
+        if (isset($tableMap['estadio'])) {
+            $tblEst = $tableMap['estadio'];
+            $stmtEst = $sqliteDb->query("SELECT * FROM \"{$tblEst}\"");
             while ($eRow = $stmtEst->fetch()) {
-                $eId = (int)$eRow['ID'];
-                $eNome = trim((string)$eRow['Nome']);
+                $eRow = array_change_key_case($eRow, CASE_LOWER);
+                $eId = (int)($eRow['id'] ?? 0);
+                $eNome = trim((string)($eRow['nome'] ?? ''));
                 $normE = $this->normalizeName($eNome);
                 $foundE = $existingEstByName[$normE] ?? null;
 
@@ -248,7 +264,7 @@ class DB3Importer {
                 $estadiosDb3[$eId] = [
                     'db3_id' => $eId,
                     'nome' => $eNome,
-                    'capacidade' => (int)($eRow['Capacidade'] ?? 10000),
+                    'capacidade' => (int)($eRow['capacidade'] ?? 10000),
                     'action' => $eAction,
                     'matched_id' => $foundE ? (int)$foundE['ID'] : null,
                     'matched_nome' => $foundE ? $foundE['Nome'] : null,
@@ -258,11 +274,13 @@ class DB3Importer {
 
         // 2. Mapear Técnicos
         $tecnicosDb3 = [];
-        if (in_array('tecnico', $sqliteTables, true)) {
-            $stmtTec = $sqliteDb->query("SELECT * FROM tecnico");
+        if (isset($tableMap['tecnico'])) {
+            $tblTec = $tableMap['tecnico'];
+            $stmtTec = $sqliteDb->query("SELECT * FROM \"{$tblTec}\"");
             while ($tRow = $stmtTec->fetch()) {
-                $tId = (int)$tRow['ID'];
-                $tNome = trim(preg_replace('/\s*\[.*?\]\s*$/', '', (string)$tRow['Nome']));
+                $tRow = array_change_key_case($tRow, CASE_LOWER);
+                $tId = (int)($tRow['id'] ?? 0);
+                $tNome = trim(preg_replace('/\s*\[.*?\]\s*$/', '', (string)($tRow['nome'] ?? '')));
                 $normT = $this->normalizeName($tNome);
                 $foundT = $existingTecByName[$normT] ?? null;
 
@@ -277,8 +295,8 @@ class DB3Importer {
                 $tecnicosDb3[$tId] = [
                     'db3_id' => $tId,
                     'nome' => $tNome,
-                    'idade' => (int)($tRow['Idade'] ?? 45),
-                    'nivel' => (int)($tRow['Nivel'] ?? 5),
+                    'idade' => (int)($tRow['idade'] ?? 45),
+                    'nivel' => (int)($tRow['nivel'] ?? 5),
                     'action' => $tAction,
                     'matched_id' => $foundT ? (int)$foundT['ID'] : null,
                     'matched_nome' => $foundT ? $foundT['Nome'] : null,
@@ -288,19 +306,26 @@ class DB3Importer {
 
         // 3. Mapear Posições, Nacionalidades e Escalações dos Jogadores
         $posicoesDb3 = [];
-        if (in_array('posicaojogador', $sqliteTables, true)) {
-            $stmtPos = $sqliteDb->query("SELECT * FROM posicaojogador");
+        if (isset($tableMap['posicaojogador'])) {
+            $tblPos = $tableMap['posicaojogador'];
+            $stmtPos = $sqliteDb->query("SELECT * FROM \"{$tblPos}\"");
             while ($pRow = $stmtPos->fetch()) {
-                $jId = (int)$pRow['Jogador'];
-                $isG = ((int)($pRow['G'] ?? 0) === 1);
+                $pRow = array_change_key_case($pRow, CASE_LOWER);
+                $jId = (int)($pRow['jogador'] ?? $pRow['id_jogador'] ?? $pRow['id'] ?? 0);
+                if ($jId <= 0) continue;
+                $isG = ((int)($pRow['g'] ?? 0) === 1);
                 $activePositions = [];
                 if ($isG) {
                     $activePositions[] = 'G';
                 }
-                $posKeys = ['LD', 'LE', 'Z', 'AD', 'AE', 'V', 'MD', 'ME', 'MC', 'PD', 'PE', 'MA', 'Am', 'Aa'];
-                foreach ($posKeys as $pk) {
+                $posMap = [
+                    'ld' => 'LD', 'le' => 'LE', 'z' => 'Z', 'ad' => 'AD', 'ae' => 'AE',
+                    'v' => 'V', 'md' => 'MD', 'me' => 'ME', 'mc' => 'MC', 'pd' => 'PD',
+                    'pe' => 'PE', 'ma' => 'MA', 'am' => 'Am', 'aa' => 'Aa'
+                ];
+                foreach ($posMap as $pk => $lbl) {
                     if ((int)($pRow[$pk] ?? 0) === 1) {
-                        $activePositions[] = $pk;
+                        $activePositions[] = $lbl;
                     }
                 }
                 $posicoesDb3[$jId] = [
@@ -311,27 +336,34 @@ class DB3Importer {
         }
 
         $nacionalidadesDb3 = [];
-        if (in_array('nacionalidades', $sqliteTables, true)) {
-            $stmtNac = $sqliteDb->query("SELECT * FROM nacionalidades");
+        if (isset($tableMap['nacionalidades'])) {
+            $tblNac = $tableMap['nacionalidades'];
+            $stmtNac = $sqliteDb->query("SELECT * FROM \"{$tblNac}\"");
             while ($nRow = $stmtNac->fetch()) {
-                $nacionalidadesDb3[(int)$nRow['ID_Jogador']] = trim((string)$nRow['Nacionalidade']);
+                $nRow = array_change_key_case($nRow, CASE_LOWER);
+                $jId = (int)($nRow['id_jogador'] ?? $nRow['jogador'] ?? $nRow['id'] ?? 0);
+                if ($jId > 0) {
+                    $nacionalidadesDb3[$jId] = trim((string)($nRow['nacionalidade'] ?? ''));
+                }
             }
         }
 
         $escalacoesDb3 = [];
-        if (in_array('escalacao', $sqliteTables, true)) {
-            $stmtEsc = $sqliteDb->query("SELECT * FROM escalacao");
+        if (isset($tableMap['escalacao'])) {
+            $tblEsc = $tableMap['escalacao'];
+            $stmtEsc = $sqliteDb->query("SELECT * FROM \"{$tblEsc}\"");
             while ($escRow = $stmtEsc->fetch()) {
-                $cId = (int)$escRow['Clube'];
-                $cap = (int)($escRow['Capitao'] ?? 0);
-                $pen1 = (int)($escRow['Penalti1'] ?? 0);
-                $pen2 = (int)($escRow['Penalti2'] ?? 0);
-                $pen3 = (int)($escRow['Penalti3'] ?? 0);
+                $escRow = array_change_key_case($escRow, CASE_LOWER);
+                $cId = (int)($escRow['clube'] ?? 0);
+                $cap = (int)($escRow['capitao'] ?? 0);
+                $pen1 = (int)($escRow['penalti1'] ?? 0);
+                $pen2 = (int)($escRow['penalti2'] ?? 0);
+                $pen3 = (int)($escRow['penalti3'] ?? 0);
 
                 $titulares = [];
                 for ($k = 1; $k <= 11; $k++) {
-                    $tJogId = (int)($escRow["Jogador{$k}"] ?? 0);
-                    $tPos = trim((string)($escRow["Pos{$k}"] ?? ''));
+                    $tJogId = (int)($escRow["jogador{$k}"] ?? 0);
+                    $tPos = trim((string)($escRow["pos{$k}"] ?? ''));
                     if ($tJogId > 0) {
                         $titulares[$tJogId] = $tPos;
                     }
@@ -346,14 +378,16 @@ class DB3Importer {
         }
 
         // 4. Mapear Clubes do SQLite
-        $stmtClubes = $sqliteDb->query("SELECT * FROM clube ORDER BY ID ASC");
+        $tblClubes = $tableMap['clube'];
+        $stmtClubes = $sqliteDb->query("SELECT * FROM \"{$tblClubes}\" ORDER BY ID ASC");
         $clubesDb3 = $stmtClubes->fetchAll();
 
         foreach ($clubesDb3 as $cRow) {
-            $db3ClubId = (int)$cRow['ID'];
-            $clubNome = trim((string)$cRow['Nome']);
-            $clubSigla = strtoupper(substr(trim((string)($cRow['TresLetras'] ?? 'XXX')), 0, 3));
-            $db3EstId = (int)($cRow['Estadio'] ?? 0);
+            $cRow = array_change_key_case($cRow, CASE_LOWER);
+            $db3ClubId = (int)($cRow['id'] ?? 0);
+            $clubNome = trim((string)($cRow['nome'] ?? ''));
+            $clubSigla = strtoupper(substr(trim((string)($cRow['tresletras'] ?? 'XXX')), 0, 3));
+            $db3EstId = (int)($cRow['estadio'] ?? 0);
             $normC = $this->normalizeName($clubNome);
 
             $cStatus = $this->detectSelecaoStatus($clubNome, $paisInfo['nome']);
@@ -393,15 +427,15 @@ class DB3Importer {
                 'is_selecao' => $isSelecao,
                 'status' => $cStatus,
                 'tipo_label' => $this->getSelecaoLabel($cStatus),
-                'max_torcedores' => (int)($cRow['MaxTorcedores'] ?? 5000),
-                'fidelidade' => (int)($cRow['Fidelidade'] ?? 5),
+                'max_torcedores' => (int)($cRow['maxtorcedores'] ?? 5000),
+                'fidelidade' => (int)($cRow['fidelidade'] ?? 5),
                 'cores' => [
-                    'u1c1' => (string)($cRow['Uni1Cor1'] ?? '000000000'),
-                    'u1c2' => (string)($cRow['Uni1Cor2'] ?? '255255255'),
-                    'u1c3' => (string)($cRow['Uni1Cor3'] ?? '000000000'),
-                    'u2c1' => (string)($cRow['Uni2Cor1'] ?? '255255255'),
-                    'u2c2' => (string)($cRow['Uni2Cor2'] ?? '000000000'),
-                    'u2c3' => (string)($cRow['Uni2Cor3'] ?? '255255255'),
+                    'u1c1' => (string)($cRow['uni1cor1'] ?? '000000000'),
+                    'u1c2' => (string)($cRow['uni1cor2'] ?? '255255255'),
+                    'u1c3' => (string)($cRow['uni1cor3'] ?? '000000000'),
+                    'u2c1' => (string)($cRow['uni2cor1'] ?? '255255255'),
+                    'u2c2' => (string)($cRow['uni2cor2'] ?? '000000000'),
+                    'u2c3' => (string)($cRow['uni2cor3'] ?? '255255255'),
                 ],
                 'estadio' => $estadiosDb3[$db3EstId] ?? null,
                 'tecnico' => null,
@@ -421,13 +455,15 @@ class DB3Importer {
 
         // 5. Pré-mapear jogadores de clubes regulares do SQLite para correlacionar com seleções
         $playerClubDb3Map = [];
-        $stmtElencosPre = $sqliteDb->query("SELECT * FROM elenco");
+        $tblElenco = $tableMap['elenco'];
+        $stmtElencosPre = $sqliteDb->query("SELECT * FROM \"{$tblElenco}\"");
         while ($elRow = $stmtElencosPre->fetch()) {
-            $db3CId = (int)$elRow['Clube'];
+            $elRow = array_change_key_case($elRow, CASE_LOWER);
+            $db3CId = (int)($elRow['clube'] ?? 0);
             $cInf = $preview['clubes'][$db3CId] ?? null;
             if ($cInf && empty($cInf['is_selecao'])) {
                 for ($k = 1; $k <= 23; $k++) {
-                    $jId = (int)($elRow["Jogador{$k}"] ?? 0);
+                    $jId = (int)($elRow["jogador{$k}"] ?? 0);
                     if ($jId > 0) {
                         $playerClubDb3Map[$jId] = [
                             'db3_clube_id' => $db3CId,
@@ -440,20 +476,26 @@ class DB3Importer {
         }
 
         // Carregar dados de todos os jogadores da base SQLite
-        $stmtAllJog = $sqliteDb->query("SELECT * FROM jogador");
+        $tblJogador = $tableMap['jogador'];
+        $stmtAllJog = $sqliteDb->query("SELECT * FROM \"{$tblJogador}\"");
         $jogadoresDataDb3 = [];
         while ($jRow = $stmtAllJog->fetch()) {
-            $jogadoresDataDb3[(int)$jRow['ID']] = $jRow;
+            $jRow = array_change_key_case($jRow, CASE_LOWER);
+            $jId = (int)($jRow['id'] ?? 0);
+            if ($jId > 0) {
+                $jogadoresDataDb3[$jId] = $jRow;
+            }
         }
 
         // Mapear jogadores únicos presentes nos elencos da importação para estatísticas globais precisas
         $uniquePlayersInImport = [];
-        $stmtElencosPreCount = $sqliteDb->query("SELECT * FROM elenco");
+        $stmtElencosPreCount = $sqliteDb->query("SELECT * FROM \"{$tblElenco}\"");
         while ($elRow = $stmtElencosPreCount->fetch()) {
-            $db3CId = (int)$elRow['Clube'];
+            $elRow = array_change_key_case($elRow, CASE_LOWER);
+            $db3CId = (int)($elRow['clube'] ?? 0);
             if (isset($preview['clubes'][$db3CId])) {
                 for ($k = 1; $k <= 23; $k++) {
-                    $jId = (int)($elRow["Jogador{$k}"] ?? 0);
+                    $jId = (int)($elRow["jogador{$k}"] ?? 0);
                     if ($jId > 0 && isset($jogadoresDataDb3[$jId])) {
                         $uniquePlayersInImport[$jId] = true;
                     }
@@ -463,7 +505,7 @@ class DB3Importer {
 
         foreach ($uniquePlayersInImport as $jId => $_) {
             $jData = $jogadoresDataDb3[$jId];
-            $normJ = $this->normalizeName($jData['Nome']);
+            $normJ = $this->normalizeName($jData['nome'] ?? '');
             $existingJog = $existingJogByExtId[$jId] ?? ($existingJogByName[$normJ] ?? null);
             if ($existingJog) {
                 $preview['stats']['jogadores_atualizados']++;
@@ -473,15 +515,16 @@ class DB3Importer {
             $preview['stats']['total_jogadores']++;
         }
 
-        $stmtElencos = $sqliteDb->query("SELECT * FROM elenco");
+        $stmtElencos = $sqliteDb->query("SELECT * FROM \"{$tblElenco}\"");
         while ($elRow = $stmtElencos->fetch()) {
-            $db3CId = (int)$elRow['Clube'];
+            $elRow = array_change_key_case($elRow, CASE_LOWER);
+            $db3CId = (int)($elRow['clube'] ?? 0);
             if (!isset($preview['clubes'][$db3CId])) {
                 continue;
             }
 
             // Associar Técnico do elenco ao preview do clube
-            $db3TId = (int)($elRow['Tecnico'] ?? 0);
+            $db3TId = (int)($elRow['tecnico'] ?? 0);
             if ($db3TId > 0 && isset($tecnicosDb3[$db3TId])) {
                 $preview['clubes'][$db3CId]['tecnico'] = $tecnicosDb3[$db3TId];
             }
@@ -490,15 +533,15 @@ class DB3Importer {
             $isSelecaoClub = !empty($preview['clubes'][$db3CId]['is_selecao']);
 
             for ($k = 1; $k <= 23; $k++) {
-                $jId = (int)($elRow["Jogador{$k}"] ?? 0);
+                $jId = (int)($elRow["jogador{$k}"] ?? 0);
                 if ($jId <= 0 || !isset($jogadoresDataDb3[$jId])) {
                     continue;
                 }
 
                 $jData = $jogadoresDataDb3[$jId];
-                $pNome = trim((string)$jData['Nome']);
-                $pIdade = (int)($jData['Idade'] ?? 22);
-                $pNivel = (int)($jData['Nivel'] ?? 50);
+                $pNome = trim((string)($jData['nome'] ?? ''));
+                $pIdade = (int)($jData['idade'] ?? 22);
+                $pNivel = (int)($jData['nivel'] ?? 50);
                 $normJ = $this->normalizeName($pNome);
 
                 // Busca jogador existente no MySQL via HashMap O(1)
@@ -637,11 +680,11 @@ class DB3Importer {
             throw new RuntimeException("Não foi possível abrir o arquivo SQLite .db3: " . $e->getMessage());
         }
 
-        // Verificar tabelas essenciais no SQLite
-        $sqliteTables = $sqliteDb->query("SELECT name FROM sqlite_master WHERE type='table'")->fetchAll(PDO::FETCH_COLUMN);
+        // Verificar tabelas essenciais no SQLite (case-insensitive)
+        $tableMap = $this->getSqliteTableMap($sqliteDb);
         $requiredTables = ['clube', 'jogador', 'elenco'];
         foreach ($requiredTables as $req) {
-            if (!in_array($req, $sqliteTables, true)) {
+            if (!isset($tableMap[$req])) {
                 throw new RuntimeException("O arquivo .db3 não contém a tabela obrigatória '{$req}'.");
             }
         }
@@ -767,26 +810,28 @@ class DB3Importer {
 
         // 1. Processar Climas e Estádios (se presentes no SQLite)
         $mapClimaDb3ToMySQL = [];
-        if (in_array('clima', $sqliteTables, true)) {
-            $stmtClimas = $sqliteDb->query("SELECT * FROM clima");
+        if (isset($tableMap['clima'])) {
+            $tblClima = $tableMap['clima'];
+            $stmtClimas = $sqliteDb->query("SELECT * FROM \"{$tblClima}\"");
             while ($climaRow = $stmtClimas->fetch()) {
-                $cId = (int)$climaRow['ID'];
-                $cNome = trim((string)$climaRow['Nome']);
+                $climaRow = array_change_key_case($climaRow, CASE_LOWER);
+                $cId = (int)($climaRow['id'] ?? 0);
+                $cNome = trim((string)($climaRow['nome'] ?? ''));
                 $normClima = $this->normalizeName($cNome);
                 
                 $mysqlClimaId = $existingClimaByName[$normClima] ?? 0;
 
                 if (!$mysqlClimaId) {
                     $this->climaObj->nome = $cNome;
-                    $this->climaObj->tempVerao = (string)($climaRow['TempVerao'] ?? 'Normal');
-                    $this->climaObj->estiloVerao = (string)($climaRow['EstiloVerao'] ?? 'Normal');
-                    $this->climaObj->tempOutono = (string)($climaRow['TempOutono'] ?? 'Normal');
-                    $this->climaObj->estiloOutono = (string)($climaRow['EstiloOutono'] ?? 'Normal');
-                    $this->climaObj->tempInverno = (string)($climaRow['TempInverno'] ?? 'Normal');
-                    $this->climaObj->estiloInverno = (string)($climaRow['EstiloInverno'] ?? 'Normal');
-                    $this->climaObj->tempPrimavera = (string)($climaRow['TempPrimavera'] ?? 'Normal');
-                    $this->climaObj->estiloPrimavera = (string)($climaRow['EstiloPrimavera'] ?? 'Normal');
-                    $this->climaObj->hemisferio = (string)($climaRow['Hemisferio'] ?? '0');
+                    $this->climaObj->tempVerao = (string)($climaRow['tempverao'] ?? 'Normal');
+                    $this->climaObj->estiloVerao = (string)($climaRow['estiloverao'] ?? 'Normal');
+                    $this->climaObj->tempOutono = (string)($climaRow['tempoutono'] ?? 'Normal');
+                    $this->climaObj->estiloOutono = (string)($climaRow['estilooutono'] ?? 'Normal');
+                    $this->climaObj->tempInverno = (string)($climaRow['tempinverno'] ?? 'Normal');
+                    $this->climaObj->estiloInverno = (string)($climaRow['estiloinverno'] ?? 'Normal');
+                    $this->climaObj->tempPrimavera = (string)($climaRow['tempprimavera'] ?? 'Normal');
+                    $this->climaObj->estiloPrimavera = (string)($climaRow['estiloprimavera'] ?? 'Normal');
+                    $this->climaObj->hemisferio = (string)($climaRow['hemisferio'] ?? '0');
                     $this->climaObj->pais = $idPais;
                     $this->climaObj->externalID = $cId;
                     if ($this->climaObj->create()) {
@@ -803,17 +848,19 @@ class DB3Importer {
         }
 
         $mapEstadioDb3ToMySQL = [];
-        if (in_array('estadio', $sqliteTables, true)) {
-            $stmtEstadios = $sqliteDb->query("SELECT * FROM estadio");
+        if (isset($tableMap['estadio'])) {
+            $tblEst = $tableMap['estadio'];
+            $stmtEstadios = $sqliteDb->query("SELECT * FROM \"{$tblEst}\"");
             while ($estRow = $stmtEstadios->fetch()) {
-                $eId = (int)$estRow['ID'];
-                $eNome = trim((string)$estRow['Nome']);
+                $estRow = array_change_key_case($estRow, CASE_LOWER);
+                $eId = (int)($estRow['id'] ?? 0);
+                $eNome = trim((string)($estRow['nome'] ?? ''));
                 $normE = $this->normalizeName($eNome);
-                $eCap = (int)($estRow['Capacidade'] ?? 10000);
-                $eClimaDb3 = (int)($estRow['Clima'] ?? 0);
+                $eCap = (int)($estRow['capacidade'] ?? 10000);
+                $eClimaDb3 = (int)($estRow['clima'] ?? 0);
                 $mysqlClima = $mapClimaDb3ToMySQL[$eClimaDb3] ?? 0;
-                $eAlt = (int)($estRow['Altitude'] ?? 0);
-                $eCald = (int)($estRow['Caldeirao'] ?? 0);
+                $eAlt = (int)($estRow['altitude'] ?? 0);
+                $eCald = (int)($estRow['caldeirao'] ?? 0);
 
                 $mysqlEstId = $existingEstByName[$normE] ?? 0;
 
@@ -845,25 +892,27 @@ class DB3Importer {
 
         // 2. Processar Clubes e Seleções
         $mapClubeDb3ToMySQL = [];
-        $stmtClubes = $sqliteDb->query("SELECT * FROM clube ORDER BY ID ASC");
+        $tblClubes = $tableMap['clube'];
+        $stmtClubes = $sqliteDb->query("SELECT * FROM \"{$tblClubes}\" ORDER BY ID ASC");
         $clubesDb3 = $stmtClubes->fetchAll();
 
         foreach ($clubesDb3 as $cRow) {
-            $db3ClubId = (int)$cRow['ID'];
-            $clubNome = trim((string)$cRow['Nome']);
+            $cRow = array_change_key_case($cRow, CASE_LOWER);
+            $db3ClubId = (int)($cRow['id'] ?? 0);
+            $clubNome = trim((string)($cRow['nome'] ?? ''));
             $normC = $this->normalizeName($clubNome);
-            $clubSigla = strtoupper(substr(trim((string)($cRow['TresLetras'] ?? 'XXX')), 0, 3));
-            $maxTorcedores = (int)($cRow['MaxTorcedores'] ?? 5000);
-            $fidelidade = (int)($cRow['Fidelidade'] ?? 5);
+            $clubSigla = strtoupper(substr(trim((string)($cRow['tresletras'] ?? 'XXX')), 0, 3));
+            $maxTorcedores = (int)($cRow['maxtorcedores'] ?? 5000);
+            $fidelidade = (int)($cRow['fidelidade'] ?? 5);
 
-            $u1c1 = (string)($cRow['Uni1Cor1'] ?? '000000000');
-            $u1c2 = (string)($cRow['Uni1Cor2'] ?? '255255255');
-            $u1c3 = (string)($cRow['Uni1Cor3'] ?? '000000000');
-            $u2c1 = (string)($cRow['Uni2Cor1'] ?? '255255255');
-            $u2c2 = (string)($cRow['Uni2Cor2'] ?? '000000000');
-            $u2c3 = (string)($cRow['Uni2Cor3'] ?? '255255255');
+            $u1c1 = (string)($cRow['uni1cor1'] ?? '000000000');
+            $u1c2 = (string)($cRow['uni1cor2'] ?? '255255255');
+            $u1c3 = (string)($cRow['uni1cor3'] ?? '000000000');
+            $u2c1 = (string)($cRow['uni2cor1'] ?? '255255255');
+            $u2c2 = (string)($cRow['uni2cor2'] ?? '000000000');
+            $u2c3 = (string)($cRow['uni2cor3'] ?? '255255255');
 
-            $db3EstId = (int)($cRow['Estadio'] ?? 0);
+            $db3EstId = (int)($cRow['estadio'] ?? 0);
             $estadioId = $mapEstadioDb3ToMySQL[$db3EstId] ?? 0;
 
             $cStatus = $this->detectSelecaoStatus($clubNome, $paisInfo['nome']);
@@ -910,7 +959,6 @@ class DB3Importer {
                 } else {
                     $report['stats']['clubes_atualizados']++;
                 }
-                $existingSiglasInPais[$clubSigla] = $mysqlClubId;
             } else {
                 $this->timeObj->nome = $clubNome;
                 $this->timeObj->sigla = $clubSigla;
@@ -958,7 +1006,6 @@ class DB3Importer {
                     if ($isSelecao) {
                         $existingSelecaoByStatus[$cStatus] = $newClubData;
                     }
-                    $existingSiglasInPais[$this->timeObj->sigla] = $mysqlClubId;
                     $clubSigla = $this->timeObj->sigla;
                 } else {
                     $errDesc = !empty($this->timeObj->ultimo_erro) ? " ({$this->timeObj->ultimo_erro})" : "";
@@ -994,16 +1041,18 @@ class DB3Importer {
 
         // 3. Processar Técnicos (se presentes no SQLite)
         $mapTecnicoDb3ToMySQL = [];
-        if (in_array('tecnico', $sqliteTables, true)) {
-            $stmtTecDb3 = $sqliteDb->query("SELECT * FROM tecnico");
+        if (isset($tableMap['tecnico'])) {
+            $tblTec = $tableMap['tecnico'];
+            $stmtTecDb3 = $sqliteDb->query("SELECT * FROM \"{$tblTec}\"");
             while ($tRow = $stmtTecDb3->fetch()) {
-                $db3TId = (int)$tRow['ID'];
-                $tNome = trim(preg_replace('/\s*\[.*?\]\s*$/', '', (string)$tRow['Nome']));
+                $tRow = array_change_key_case($tRow, CASE_LOWER);
+                $db3TId = (int)($tRow['id'] ?? 0);
+                $tNome = trim(preg_replace('/\s*\[.*?\]\s*$/', '', (string)($tRow['nome'] ?? '')));
                 $normT = $this->normalizeName($tNome);
-                $tIdade = (int)($tRow['Idade'] ?? 45);
-                $tNivel = (int)($tRow['Nivel'] ?? 5);
-                $tMentalidade = (int)($tRow['Mentalidade'] ?? 5);
-                $tEstilo = (int)($tRow['Estilo'] ?? 3);
+                $tIdade = (int)($tRow['idade'] ?? 45);
+                $tNivel = (int)($tRow['nivel'] ?? 5);
+                $tMentalidade = (int)($tRow['mentalidade'] ?? 5);
+                $tEstilo = (int)($tRow['estilo'] ?? 3);
 
                 $foundTec = $existingTecByName[$normT] ?? 0;
                 $mysqlTecId = 0;
@@ -1045,10 +1094,12 @@ class DB3Importer {
             }
 
             // Vincular técnicos aos seus respectivos clubes em elencos
-            $stmtElencosTec = $sqliteDb->query("SELECT Clube, Tecnico FROM elenco WHERE Tecnico > 0");
+            $tblElenco = $tableMap['elenco'];
+            $stmtElencosTec = $sqliteDb->query("SELECT Clube, Tecnico FROM \"{$tblElenco}\" WHERE Tecnico > 0");
             while ($elRow = $stmtElencosTec->fetch()) {
-                $db3CId = (int)$elRow['Clube'];
-                $db3TId = (int)$elRow['Tecnico'];
+                $elRow = array_change_key_case($elRow, CASE_LOWER);
+                $db3CId = (int)($elRow['clube'] ?? 0);
+                $db3TId = (int)($elRow['tecnico'] ?? 0);
                 $targetClubInfo = $mapClubeDb3ToMySQL[$db3CId] ?? null;
                 if (!$targetClubInfo) continue;
 
@@ -1074,28 +1125,31 @@ class DB3Importer {
             }
         }
 
-        // 4. Carregar Mapeamentos do SQLite para Jogadores
+        // 4. Carregar Mapeamentos do SQLite para Jogadores (case-insensitive)
         // Posições
         $posicoesPorJogadorDb3 = [];
-        if (in_array('posicaojogador', $sqliteTables, true)) {
-            $stmtPos = $sqliteDb->query("SELECT * FROM posicaojogador");
+        if (isset($tableMap['posicaojogador'])) {
+            $tblPos = $tableMap['posicaojogador'];
+            $stmtPos = $sqliteDb->query("SELECT * FROM \"{$tblPos}\"");
             while ($pRow = $stmtPos->fetch()) {
-                $jId = (int)$pRow['Jogador'];
-                $g = (int)($pRow['G'] ?? 0);
-                $ld = (int)($pRow['LD'] ?? 0);
-                $le = (int)($pRow['LE'] ?? 0);
-                $z = (int)($pRow['Z'] ?? 0);
-                $ad = (int)($pRow['AD'] ?? 0);
-                $ae = (int)($pRow['AE'] ?? 0);
-                $v = (int)($pRow['V'] ?? 0);
-                $md = (int)($pRow['MD'] ?? 0);
-                $me = (int)($pRow['ME'] ?? 0);
-                $mc = (int)($pRow['MC'] ?? 0);
-                $pd = (int)($pRow['PD'] ?? 0);
-                $pe = (int)($pRow['PE'] ?? 0);
-                $ma = (int)($pRow['MA'] ?? 0);
-                $am = (int)($pRow['Am'] ?? 0);
-                $aa = (int)($pRow['Aa'] ?? 0);
+                $pRow = array_change_key_case($pRow, CASE_LOWER);
+                $jId = (int)($pRow['jogador'] ?? $pRow['id_jogador'] ?? $pRow['id'] ?? 0);
+                if ($jId <= 0) continue;
+                $g = (int)($pRow['g'] ?? 0);
+                $ld = (int)($pRow['ld'] ?? 0);
+                $le = (int)($pRow['le'] ?? 0);
+                $z = (int)($pRow['z'] ?? 0);
+                $ad = (int)($pRow['ad'] ?? 0);
+                $ae = (int)($pRow['ae'] ?? 0);
+                $v = (int)($pRow['v'] ?? 0);
+                $md = (int)($pRow['md'] ?? 0);
+                $me = (int)($pRow['me'] ?? 0);
+                $mc = (int)($pRow['mc'] ?? 0);
+                $pd = (int)($pRow['pd'] ?? 0);
+                $pe = (int)($pRow['pe'] ?? 0);
+                $ma = (int)($pRow['ma'] ?? 0);
+                $am = (int)($pRow['am'] ?? 0);
+                $aa = (int)($pRow['aa'] ?? 0);
 
                 $strPos = "{$g}{$ld}{$le}{$z}{$ad}{$ae}{$v}{$md}{$me}{$mc}{$pd}{$pe}{$ma}{$am}{$aa}";
                 $posicoesPorJogadorDb3[$jId] = [
@@ -1107,46 +1161,63 @@ class DB3Importer {
 
         // Atributos de Linha
         $atributosJogadorDb3 = [];
-        if (in_array('atributosjogador', $sqliteTables, true)) {
-            $stmtAttr = $sqliteDb->query("SELECT * FROM atributosjogador");
+        if (isset($tableMap['atributosjogador'])) {
+            $tblAttr = $tableMap['atributosjogador'];
+            $stmtAttr = $sqliteDb->query("SELECT * FROM \"{$tblAttr}\"");
             while ($aRow = $stmtAttr->fetch()) {
-                $atributosJogadorDb3[(int)$aRow['Jogador']] = $aRow;
+                $aRow = array_change_key_case($aRow, CASE_LOWER);
+                $jId = (int)($aRow['jogador'] ?? $aRow['id_jogador'] ?? $aRow['id'] ?? 0);
+                if ($jId > 0) {
+                    $atributosJogadorDb3[$jId] = $aRow;
+                }
             }
         }
 
         // Atributos de Goleiro
         $atributosGoleiroDb3 = [];
-        if (in_array('atributosgoleiro', $sqliteTables, true)) {
-            $stmtAttrG = $sqliteDb->query("SELECT * FROM atributosgoleiro");
+        if (isset($tableMap['atributosgoleiro'])) {
+            $tblAttrG = $tableMap['atributosgoleiro'];
+            $stmtAttrG = $sqliteDb->query("SELECT * FROM \"{$tblAttrG}\"");
             while ($agRow = $stmtAttrG->fetch()) {
-                $atributosGoleiroDb3[(int)$agRow['Goleiro']] = $agRow;
+                $agRow = array_change_key_case($agRow, CASE_LOWER);
+                $gId = (int)($agRow['goleiro'] ?? $agRow['jogador'] ?? $agRow['id_jogador'] ?? $agRow['id'] ?? 0);
+                if ($gId > 0) {
+                    $atributosGoleiroDb3[$gId] = $agRow;
+                }
             }
         }
 
         // Nacionalidades
         $nacionalidadesDb3 = [];
-        if (in_array('nacionalidades', $sqliteTables, true)) {
-            $stmtNac = $sqliteDb->query("SELECT * FROM nacionalidades");
+        if (isset($tableMap['nacionalidades'])) {
+            $tblNac = $tableMap['nacionalidades'];
+            $stmtNac = $sqliteDb->query("SELECT * FROM \"{$tblNac}\"");
             while ($nRow = $stmtNac->fetch()) {
-                $nacionalidadesDb3[(int)$nRow['ID_Jogador']] = trim((string)$nRow['Nacionalidade']);
+                $nRow = array_change_key_case($nRow, CASE_LOWER);
+                $jId = (int)($nRow['id_jogador'] ?? $nRow['jogador'] ?? $nRow['id'] ?? 0);
+                if ($jId > 0) {
+                    $nacionalidadesDb3[$jId] = trim((string)($nRow['nacionalidade'] ?? ''));
+                }
             }
         }
 
         // Escalações (Capitão, Pênaltis, Titulares e Posições)
         $escalacoesDb3 = [];
-        if (in_array('escalacao', $sqliteTables, true)) {
-            $stmtEsc = $sqliteDb->query("SELECT * FROM escalacao");
+        if (isset($tableMap['escalacao'])) {
+            $tblEsc = $tableMap['escalacao'];
+            $stmtEsc = $sqliteDb->query("SELECT * FROM \"{$tblEsc}\"");
             while ($escRow = $stmtEsc->fetch()) {
-                $cId = (int)$escRow['Clube'];
-                $cap = (int)($escRow['Capitao'] ?? 0);
-                $pen1 = (int)($escRow['Penalti1'] ?? 0);
-                $pen2 = (int)($escRow['Penalti2'] ?? 0);
-                $pen3 = (int)($escRow['Penalti3'] ?? 0);
+                $escRow = array_change_key_case($escRow, CASE_LOWER);
+                $cId = (int)($escRow['clube'] ?? 0);
+                $cap = (int)($escRow['capitao'] ?? 0);
+                $pen1 = (int)($escRow['penalti1'] ?? 0);
+                $pen2 = (int)($escRow['penalti2'] ?? 0);
+                $pen3 = (int)($escRow['penalti3'] ?? 0);
 
                 $titulares = [];
                 for ($k = 1; $k <= 11; $k++) {
-                    $tJogId = (int)($escRow["Jogador{$k}"] ?? 0);
-                    $tPos = trim((string)($escRow["Pos{$k}"] ?? ''));
+                    $tJogId = (int)($escRow["jogador{$k}"] ?? 0);
+                    $tPos = trim((string)($escRow["pos{$k}"] ?? ''));
                     if ($tJogId > 0) {
                         $titulares[$tJogId] = $tPos;
                     }
@@ -1161,19 +1232,21 @@ class DB3Importer {
         }
 
         // Elencos: Mapear jogadores aos clubes do país
-        $stmtElencos = $sqliteDb->query("SELECT * FROM elenco");
+        $tblElenco = $tableMap['elenco'];
+        $stmtElencos = $sqliteDb->query("SELECT * FROM \"{$tblElenco}\"");
         $uniquePlayersToImport = []; // db3_player_id => true
         $elencosPorClubeDb3 = [];
 
         while ($elRow = $stmtElencos->fetch()) {
-            $db3CId = (int)$elRow['Clube'];
+            $elRow = array_change_key_case($elRow, CASE_LOWER);
+            $db3CId = (int)($elRow['clube'] ?? 0);
             if (!isset($mapClubeDb3ToMySQL[$db3CId])) {
                 continue; // Clube não pertence à importação
             }
 
             $elencosPorClubeDb3[$db3CId] = [];
             for ($k = 1; $k <= 23; $k++) {
-                $jId = (int)($elRow["Jogador{$k}"] ?? 0);
+                $jId = (int)($elRow["jogador{$k}"] ?? 0);
                 if ($jId > 0) {
                     $uniquePlayersToImport[$jId] = true;
                     $elencosPorClubeDb3[$db3CId][] = $jId;
@@ -1182,10 +1255,15 @@ class DB3Importer {
         }
 
         // Carregar dados de todos os jogadores no SQLite
-        $stmtAllJog = $sqliteDb->query("SELECT * FROM jogador");
+        $tblJogador = $tableMap['jogador'];
+        $stmtAllJog = $sqliteDb->query("SELECT * FROM \"{$tblJogador}\"");
         $jogadoresDataDb3 = [];
         while ($jRow = $stmtAllJog->fetch()) {
-            $jogadoresDataDb3[(int)$jRow['ID']] = $jRow;
+            $jRow = array_change_key_case($jRow, CASE_LOWER);
+            $jId = (int)($jRow['id'] ?? 0);
+            if ($jId > 0) {
+                $jogadoresDataDb3[$jId] = $jRow;
+            }
         }
 
         // Rastreamento dos jogadores importados por clube MySQL (para limpar desfalques/excedentes)
@@ -1207,16 +1285,27 @@ class DB3Importer {
             }
 
             $jData = $jogadoresDataDb3[$db3PlayerId];
-            $pNome = trim((string)$jData['Nome']);
+            $pNome = trim((string)($jData['nome'] ?? ''));
             $normJ = $this->normalizeName($pNome);
-            $pIdade = (int)($jData['Idade'] ?? 22);
-            $pNivel = (int)($jData['Nivel'] ?? 50);
-            $pMentalidade = (int)($jData['Mentalidade'] ?? 5);
-            $pCobradorFalta = (int)($jData['CobradorFalta'] ?? 0);
+            $pIdade = (int)($jData['idade'] ?? 22);
+            $pNivel = (int)($jData['nivel'] ?? 50);
+            $pMentalidade = (int)($jData['mentalidade'] ?? 5);
+            $pCobradorFalta = (int)($jData['cobradorfalta'] ?? ($jData['cobrador_falta'] ?? 0));
 
-            $posInfo = $posicoesPorJogadorDb3[$db3PlayerId] ?? ['isGoleiro' => false, 'stringPosicoes' => '000000000000000'];
-            $isGoleiro = $posInfo['isGoleiro'];
-            $stringPosicoes = $posInfo['stringPosicoes'];
+            // Posição do jogador
+            $posInfo = $posicoesPorJogadorDb3[$db3PlayerId] ?? null;
+            if ($posInfo) {
+                $isGoleiro = (bool)$posInfo['isGoleiro'];
+                $stringPosicoes = (string)$posInfo['stringPosicoes'];
+            } else {
+                // Fallback de determinação de posição
+                $isGoleiro = isset($atributosGoleiroDb3[$db3PlayerId]);
+                if ($isGoleiro) {
+                    $stringPosicoes = '100000000000000';
+                } else {
+                    $stringPosicoes = '000000000100000'; // Meia Central padrão
+                }
+            }
 
             // Nacionalidade
             $nacStr = $nacionalidadesDb3[$db3PlayerId] ?? '';
@@ -1232,9 +1321,29 @@ class DB3Importer {
                 }
             }
 
-            // Atributos
+            // Atributos com distribuição inteligente via adjustAttributes caso ausentes ou zerados
             if ($isGoleiro) {
                 $ag = $atributosGoleiroDb3[$db3PlayerId] ?? [];
+                $reflexos = isset($ag['reflexos']) ? (float)$ag['reflexos'] : 0.0;
+                $seguranca = isset($ag['seguranca']) ? (float)$ag['seguranca'] : 0.0;
+                $saidas = isset($ag['saidas']) ? (float)$ag['saidas'] : 0.0;
+                $jogoAereo = isset($ag['jogoaereo']) ? (float)$ag['jogoaereo'] : 0.0;
+                $lancamentos = isset($ag['lancamentos']) ? (float)$ag['lancamentos'] : 0.0;
+                $defesaPenaltis = isset($ag['defesapenaltis']) ? (float)$ag['defesapenaltis'] : 0.0;
+                $determinacao = isset($ag['determinacao']) ? (float)$ag['determinacao'] : 1.0;
+                $determinacaoOriginal = isset($ag['determinacaooriginal']) ? (float)$ag['determinacaooriginal'] : (float)$determinacao;
+
+                $sumG = $reflexos + $seguranca + $saidas + $jogoAereo + $lancamentos + $defesaPenaltis;
+                if ($sumG <= 0.01) {
+                    $adj = adjustAttributes(true, $pNivel, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                    $reflexos = (float)($adj['reflexos'] ?? 1.0);
+                    $seguranca = (float)($adj['seguranca'] ?? 1.0);
+                    $saidas = (float)($adj['saidas'] ?? 1.0);
+                    $jogoAereo = (float)($adj['jogoAereo'] ?? 1.0);
+                    $lancamentos = (float)($adj['lancamentos'] ?? 1.0);
+                    $defesaPenaltis = (float)($adj['defesaPenaltis'] ?? 1.0);
+                }
+
                 $marcacao = 0.0;
                 $desarme = 0.0;
                 $visaoJogo = 0.0;
@@ -1247,29 +1356,39 @@ class DB3Importer {
                 $faroGol = 0.0;
                 $velocidade = 0.0;
                 $forca = 0.0;
-
-                $reflexos = (float)($ag['Reflexos'] ?? 1.0);
-                $seguranca = (float)($ag['Seguranca'] ?? 1.0);
-                $saidas = (float)($ag['Saidas'] ?? 1.0);
-                $jogoAereo = (float)($ag['JogoAereo'] ?? 1.0);
-                $lancamentos = (float)($ag['Lancamentos'] ?? 1.0);
-                $defesaPenaltis = (float)($ag['DefesaPenaltis'] ?? 1.0);
-                $determinacao = (float)($ag['Determinacao'] ?? 1.0);
-                $determinacaoOriginal = (float)($ag['determinacaoOriginal'] ?? 1);
             } else {
                 $aj = $atributosJogadorDb3[$db3PlayerId] ?? [];
-                $marcacao = (float)($aj['Marcacao'] ?? 1.0);
-                $desarme = (float)($aj['Desarme'] ?? 1.0);
-                $visaoJogo = (float)($aj['VisaoJogo'] ?? 1.0);
-                $movimentacao = (float)($aj['Movimentacao'] ?? 1.0);
-                $cruzamentos = (float)($aj['Cruzamentos'] ?? 1.0);
-                $cabeceamento = (float)($aj['Cabeceamento'] ?? 1.0);
-                $tecnica = (float)($aj['Tecnica'] ?? 1.0);
-                $controleBola = (float)($aj['ControleBola'] ?? 1.0);
-                $finalizacao = (float)($aj['Finalizacao'] ?? 1.0);
-                $faroGol = (float)($aj['FaroGol'] ?? 1.0);
-                $velocidade = (float)($aj['Velocidade'] ?? 1.0);
-                $forca = (float)($aj['Forca'] ?? 1.0);
+                $marcacao = isset($aj['marcacao']) ? (float)$aj['marcacao'] : 0.0;
+                $desarme = isset($aj['desarme']) ? (float)$aj['desarme'] : 0.0;
+                $visaoJogo = isset($aj['visaojogo']) ? (float)$aj['visaojogo'] : 0.0;
+                $movimentacao = isset($aj['movimentacao']) ? (float)$aj['movimentacao'] : 0.0;
+                $cruzamentos = isset($aj['cruzamentos']) ? (float)$aj['cruzamentos'] : 0.0;
+                $cabeceamento = isset($aj['cabeceamento']) ? (float)$aj['cabeceamento'] : 0.0;
+                $tecnica = isset($aj['tecnica']) ? (float)$aj['tecnica'] : 0.0;
+                $controleBola = isset($aj['controlebola']) ? (float)$aj['controlebola'] : 0.0;
+                $finalizacao = isset($aj['finalizacao']) ? (float)$aj['finalizacao'] : 0.0;
+                $faroGol = isset($aj['farogol']) ? (float)$aj['farogol'] : 0.0;
+                $velocidade = isset($aj['velocidade']) ? (float)$aj['velocidade'] : 0.0;
+                $forca = isset($aj['forca']) ? (float)$aj['forca'] : 0.0;
+                $determinacao = isset($aj['determinacao']) ? (float)$aj['determinacao'] : 1.0;
+                $determinacaoOriginal = isset($aj['determinacaooriginal']) ? (float)$aj['determinacaooriginal'] : (float)$determinacao;
+
+                $sumJ = $marcacao + $desarme + $visaoJogo + $movimentacao + $cruzamentos + $cabeceamento + $tecnica + $controleBola + $finalizacao + $faroGol + $velocidade + $forca;
+                if ($sumJ <= 0.01) {
+                    $adj = adjustAttributes(false, $pNivel, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                    $marcacao = (float)($adj['marcacao'] ?? 1.0);
+                    $desarme = (float)($adj['desarme'] ?? 1.0);
+                    $visaoJogo = (float)($adj['visaoJogo'] ?? 1.0);
+                    $movimentacao = (float)($adj['movimentacao'] ?? 1.0);
+                    $cruzamentos = (float)($adj['cruzamentos'] ?? 1.0);
+                    $cabeceamento = (float)($adj['cabeceamento'] ?? 1.0);
+                    $tecnica = (float)($adj['tecnica'] ?? 1.0);
+                    $controleBola = (float)($adj['controleBola'] ?? 1.0);
+                    $finalizacao = (float)($adj['finalizacao'] ?? 1.0);
+                    $faroGol = (float)($adj['faroGol'] ?? 1.0);
+                    $velocidade = (float)($adj['velocidade'] ?? 1.0);
+                    $forca = (float)($adj['forca'] ?? 1.0);
+                }
 
                 $reflexos = 0.0;
                 $seguranca = 0.0;
@@ -1277,8 +1396,6 @@ class DB3Importer {
                 $jogoAereo = 0.0;
                 $lancamentos = 0.0;
                 $defesaPenaltis = 0.0;
-                $determinacao = (float)($aj['Determinacao'] ?? 1.0);
-                $determinacaoOriginal = (float)($aj['determinacaoOriginal'] ?? 1);
             }
 
             // Preparar objeto jogador
@@ -1424,7 +1541,7 @@ class DB3Importer {
                 } else {
                     // Contrato de Clube Regular: verificar se atleta está em clube de outro usuário
                     $jData = $jogadoresDataDb3[$db3PlayerId] ?? [];
-                    $normJ = $this->normalizeName(trim((string)($jData['Nome'] ?? '')));
+                    $normJ = $this->normalizeName(trim((string)($jData['nome'] ?? '')));
                     $existingJogInfo = $existingJogByExtId[$db3PlayerId] ?? ($existingJogByName[$normJ] ?? null);
 
                     $clubeOrigemId = (int)($existingJogInfo['clubeID'] ?? 0);
@@ -1459,11 +1576,11 @@ class DB3Importer {
                             );
                             $report['stats']['propostas_enviadas']++;
                             $clOrigemNome = $existingJogInfo['clubeNome'] ?? "Clube #{$clubeOrigemId}";
-                            $report['logs'][] = "Proposta automática enviada pelo atleta '{$jData['Nome']}' (F$ " . number_format($valorPasse, 0, ',', '.') . ") ao clube '{$clOrigemNome}'.";
+                            $report['logs'][] = "Proposta automática enviada pelo atleta '{$jData['nome']}' (F$ " . number_format($valorPasse, 0, ',', '.') . ") ao clube '{$clOrigemNome}'.";
                         }
                     } else {
                         // Contrato de Clube Regular normal: tipoContrato = 0
-                        $this->jogadorObj->transferir($mysqlPlayerId, $mysqlTargetClub, $isCapitao, $isPenalti, $titularidade, $posicaoBase);
+                        $this->jogadorObj->transferir($mysqlPlayerId, $mysqlTargetClub, $isCapitao, $isPenalti, $titularidade, $posicaoBase, 0, 0, 0);
                         $importedPlayersByMySQLClub[$mysqlTargetClub]['players'][] = $mysqlPlayerId;
                         if (isset($report['clubes_detalhes'][$db3CId])) {
                             $report['clubes_detalhes'][$db3CId]['jogadores_count']++;
@@ -1499,4 +1616,3 @@ class DB3Importer {
         return $report;
     }
 }
-

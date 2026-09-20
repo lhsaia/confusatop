@@ -472,6 +472,20 @@ try {
                 <p class="hub-card-desc">Consulte a base de atletas atuando fora do país.</p>
             </div>
         </a>
+
+        <!-- Parâmetros de Valores -->
+        <a href='parametros_valores.php' id='parametros-valores' class='hub-card'>
+            <div class="hub-card-hero-image">
+                <img src="/images/passe.jpg" alt="Parâmetros de Valores" />
+            </div>
+            <div class="hub-card-body">
+                <h3 class="hub-card-title">
+                    <span>Parâmetros de Valores</span>
+                    <span class="material-symbols-outlined hub-card-arrow">arrow_forward</span>
+                </h3>
+                <p class="hub-card-desc">Personalize o cálculo de passe e recalcule em massa o valor dos seus atletas.</p>
+            </div>
+        </a>
     </section>
 
     <!-- Seção: Gerenciamento Hexacolor YMT -->

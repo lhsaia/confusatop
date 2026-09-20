@@ -9,6 +9,47 @@
   },
   "days": [
     {
+      "id": "day_20_09_2026",
+      "date": "20/09/2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Edição Inline de Valores de Mercado para Administradores",
+          "desc": "Adicionada a opção para administradores alterarem diretamente na listagem de Jogadores mais Valiosos (/mercado/transferencias.php?type=jogadores) o valor de mercado de cada atleta com salvamento imediato via AJAX."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Vínculo de Seleções na Lista de Jogadores mais Valiosos",
+          "desc": "Ajustada a consulta da lista de jogadores mais valiosos para considerar apenas vínculos de clubes profissionais regulares, impedindo que convocações para seleções nacionais sobrescrevessem o clube ou duplicassem atletas na lista."
+        },
+        {
+          "badge": "new",
+          "title": "Personalização de Parâmetros de Cálculo de Passe e Recálculo em Massa",
+          "desc": "Criado novo card e painel de configuração na Minha Área para personalização detalhada dos parâmetros da fórmula de mercado (percentual de salário mensal, multiplicadores de idade, bônus de falta, pesos por setor/posição, polivalência e faixas de nível), com simulador interativo em tempo real e ferramenta de recálculo em massa de passes e salários dos atletas dos clubes do usuário."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Preservação de Foto no Merge de Atletas",
+          "desc": "Corrigida a lógica de herança de fotos durante a fusão de atletas para reconhecer e priorizar fotos personalizadas em relação aos avatares padrão do sistema, além de incluir controle visual para escolha de qual foto manter diretamente na tela de merge."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Importação de Atributos e Valores de Jogadores via DB3",
+          "desc": "Corrigido o mapeamento de tabelas e colunas no importador de arquivos .db3 para ler atributos, posições e dados de goleiros/jogadores com tolerância a maiúsculas/minúsculas, além de distribuir atributos e calcular passes realistas automaticamente quando ausentes na base de origem."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Exibição do Nome do País na Edição de Jogadores",
+          "desc": "Ajustada a lista de seleção de nacionalidade na tela de Meus Jogadores para exibir o nome completo do país em vez da sigla."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ordenação por Cabeçalhos na Lista de Meus Jogadores",
+          "desc": "Corrigida a ordenação de todas as colunas da tabela de jogadores (nome, data de nascimento, mentalidade, cobrança de falta, valor, posições, nível, país, clube e status), com alternância ascendente/descendente e indicação visual das setas."
+        }
+      ]
+    },
+    {
       "id": "day_19_09_2026",
       "date": "19/09/2026",
       "items": [

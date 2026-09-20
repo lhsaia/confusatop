@@ -210,6 +210,7 @@ if($pageType == 'maiores' || $pageType == 'ultimas'){
     }
 
     if($pageType == 'jogadores'){
+        $isAdmin = (isset($_SESSION['admin_status']) && (int)$_SESSION['admin_status'] === 1);
         echo "<div class='tbl_user_data'>";
         echo "<table id='tabelaPrincipal' class='table'>";
         echo "<thead>";
@@ -220,6 +221,9 @@ if($pageType == 'maiores' || $pageType == 'ultimas'){
                 echo "<th>País</th>";
                 echo "<th>Time</th>";
                 echo "<th>Valor</th>";
+                if ($isAdmin) {
+                    echo "<th style='width: 80px; text-align: center;'>Opções</th>";
+                }
             echo "</tr>";
             echo "</thead>";
             echo "<tbody>";
@@ -235,21 +239,18 @@ if($pageType == 'maiores' || $pageType == 'ultimas'){
                     $genderClass = "genderFem";
                 }
 
-
                 //calcular posicao se não tiver base definida
                 if($posicaoBase == ''){
                     $posicaoBase = $jogador->nomePosicaoPorCodigo((strpos($stringPosicoes, "1"))+1);
                 }
 
                 //tratamento valor
-                if($valor == 0){
-                    $valor = "F$ -";
+                $valorNum = (float)$valor;
+                if($valorNum == 0){
+                    $valorFormatado = "F$ -";
                 } else {
-                    $valor = "F$ ".round($valor/1000000,2)." M";
+                    $valorFormatado = "F$ ".round($valorNum/1000000,2)." M";
                 }
-
-                //acerto escudo
-                //$escudos = explode(".",$escudo);
 
                 echo "<tr id='".$id."'>";
                 echo "<td class='nopadding nomeJogador'>{$nomeJogador}<br><span class='posicao'>{$posicaoBase}</span><span class=' {$genderClass} genderSign'>{$genderCode}</span></td>";
@@ -258,32 +259,37 @@ if($pageType == 'maiores' || $pageType == 'ultimas'){
                 if($nacionalidade != 0){
                     echo "<td class='nopadding'><a href='/ligas/paisstatus.php?country=".$nacionalidade."'><img src='/images/bandeiras/{$bandeiraJogador}' class='bandeira nomePais' id='ban".$nacionalidade."'/></a>";
                 } else {
-                    echo "<td>";
+                    echo "<td>-";
                 }
                 echo "</td>";
                 echo "<td class='nopadding'>";
-                if($clube != 0){
+                if(!empty($clube) && !empty($escudo) && $clube != 0){
                     echo "<a href='/ligas/teamstatus.php?team=".$clube."'>";
                     echo "<img src='/images/escudos/".$escudo."' class='smallthumb'/>";
                     echo "</a>";
                 } else {
-                    echo "<span>";
-                    echo "<img src='/images/escudos/".$escudo."' class='smallthumb'/>";
-                    echo "</span>";
+                    echo "<span style='color: #94a3b8; font-size: 0.85rem;'>Sem clube</span>";
                 }
                 echo "</td>";
-                echo "<td class='nopadding'>{$valor}</td>";
+                echo "<td class='nopadding col-valor'><span class='valor-texto'>{$valorFormatado}</span><input type='number' step='100000' min='0' class='smallform input-valor' value='{$valorNum}' data-valor-original='{$valorNum}' style='display:none; max-width: 110px; text-align: right; margin: 0 auto;' /></td>";
 
+                if ($isAdmin) {
+                    echo "<td class='nopadding col-opcoes' style='text-align: center; white-space: nowrap;'>";
+                    echo "<a id='edit_{$id}' title='Alterar valor' class='clickable editar-valor-jog'><span class='material-symbols-outlined inlineButton azul'>edit</span></a>";
+                    echo "<a id='sal_{$id}' title='Salvar' class='clickable salvar-valor-jog' style='display:none;'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
+                    echo "<a id='can_{$id}' title='Cancelar' class='clickable cancelar-valor-jog' style='display:none; margin-left: 4px;'><span class='material-symbols-outlined inlineButton vermelho'>close</span></a>";
+                    echo "</td>";
+                }
 
                 echo "</tr>";
 
-                }
+            }
 
         echo "</tbody>";
         echo "</table>";
         echo "</div>";
 
-        }
+    }
 
         if($pageType == 'janelas'){
             echo "<div class='tbl_user_data'>";
@@ -869,6 +875,81 @@ $(document).on("click", '.salvar', function(event){
             // here we will handle errors and validation messages
             });
 
+});
+
+// Edição inline de valor do atleta (Admin)
+$(document).on("click", '.editar-valor-jog', function(e){
+    e.preventDefault();
+    var tbl_row = $(this).closest('tr');
+    
+    tbl_row.find('.valor-texto').hide();
+    var inputVal = tbl_row.find('.input-valor');
+    inputVal.show().focus();
+    
+    tbl_row.find('.editar-valor-jog').hide();
+    tbl_row.find('.salvar-valor-jog').show();
+    tbl_row.find('.cancelar-valor-jog').show();
+});
+
+$(document).on("click", '.cancelar-valor-jog', function(e){
+    e.preventDefault();
+    var tbl_row = $(this).closest('tr');
+    var inputVal = tbl_row.find('.input-valor');
+    
+    inputVal.val(inputVal.data('valor-original')).hide();
+    tbl_row.find('.valor-texto').show();
+    
+    tbl_row.find('.salvar-valor-jog').hide();
+    tbl_row.find('.cancelar-valor-jog').hide();
+    tbl_row.find('.editar-valor-jog').show();
+});
+
+$(document).on("click", '.salvar-valor-jog', function(e){
+    e.preventDefault();
+    var tbl_row = $(this).closest('tr');
+    var idJogador = tbl_row.attr('id');
+    var inputVal = tbl_row.find('.input-valor');
+    var novoValor = inputVal.val();
+    var btnSalvar = $(this);
+    var btnCancelar = tbl_row.find('.cancelar-valor-jog');
+    var btnEditar = tbl_row.find('.editar-valor-jog');
+    var textoValor = tbl_row.find('.valor-texto');
+
+    btnSalvar.prop('disabled', true);
+    
+    $.ajax({
+        type: 'POST',
+        url: 'alterar_valor_jogador.php',
+        data: {
+            idJogador: idJogador,
+            valor: novoValor
+        },
+        dataType: 'json'
+    }).done(function(data) {
+        btnSalvar.prop('disabled', false);
+        if (data && data.success) {
+            textoValor.text(data.valor_formatado).show();
+            inputVal.val(data.valor).data('valor-original', data.valor).hide();
+            btnSalvar.hide();
+            btnCancelar.hide();
+            btnEditar.show();
+        } else {
+            alert(data && data.error ? data.error : 'Erro ao salvar valor do atleta.');
+        }
+    }).fail(function() {
+        btnSalvar.prop('disabled', false);
+        alert('Erro na comunicação com o servidor ao alterar valor.');
+    });
+});
+
+$(document).on("keydown", '.input-valor', function(e){
+    if (e.which === 13) { // Enter
+        e.preventDefault();
+        $(this).closest('tr').find('.salvar-valor-jog').trigger('click');
+    } else if (e.which === 27) { // Escape
+        e.preventDefault();
+        $(this).closest('tr').find('.cancelar-valor-jog').trigger('click');
+    }
 });
 
     $( function() {
