@@ -171,11 +171,176 @@ echo "</main>"; // closes propostas-container
 
     $(document).ready(function() {
 
-         $('.editar').click(function(){
+    function getLeagueRowFormData(tbl_row) {
+        var id = tbl_row.attr('id');
+        var nomeLiga = tbl_row.find('#nom'+id).find('.nomeLiga').text().trim() || tbl_row.find('#nom'+id).text().trim();
+        var tierLiga = tbl_row.find('#tie'+id).text().trim();
+        var limiteIdade = tbl_row.find('#ida'+id).text().trim();
+        if (limiteIdade === '-' || limiteIdade === '') {
+            limiteIdade = '';
+        }
+        var pais = tbl_row.find('.comboPais').val();
+
+        var input = (tbl_row.find('#newlogo'+id))[0];
+        var logo = (input && input.files.length > 0) ? input.files[0] : null;
+
+        var trofeuInput = (tbl_row.find('#newtrofeu'+id))[0];
+        var trofeu = (trofeuInput && trofeuInput.files.length > 0) ? trofeuInput.files[0] : null;
+
+        var formData = new FormData();
+        formData.append('id', id);
+        formData.append('nomeLiga', nomeLiga);
+        formData.append('tierLiga', tierLiga);
+        formData.append('limiteIdade', limiteIdade);
+        formData.append('pais', pais);
+        if(logo != null){
+            formData.append('logo', logo);
+        }
+        if(trofeu != null){
+            formData.append('trofeu', trofeu);
+        }
+        return formData;
+    }
+
+    function saveLeagueRowAjax(tbl_row) {
+        return new Promise(function(resolve, reject){
+            var id = tbl_row.attr('id');
+            var formData = getLeagueRowFormData(tbl_row);
+
+            $.ajax({
+                url: 'alterar_liga.php',
+                processData: false,
+                contentType: false,
+                cache: false,
+                type: "POST",
+                dataType: 'json',
+                data: formData,
+                success: function(data) {
+                    if(data.error && data.error !== ''){
+                        reject(data.error);
+                    } else {
+                        var nomeLiga = tbl_row.find('#nom'+id).find('.nomeLiga').text().trim() || tbl_row.find('#nom'+id).text().trim();
+                        var tierLiga = tbl_row.find('#tie'+id).text().trim();
+                        var limiteIdade = tbl_row.find('#ida'+id).text().trim();
+                        var paisNome = tbl_row.find('.comboPais option:selected').text();
+                        var paisId = tbl_row.find('.comboPais').val();
+
+                        tbl_row.find('#nom'+id).find('.nomeLiga').text(nomeLiga);
+                        tbl_row.find('#tie'+id).text(tierLiga);
+                        tbl_row.find('#ida'+id).text(limiteIdade === '' ? '-' : limiteIdade);
+                        tbl_row.find('#pai'+id).text(paisNome);
+                        tbl_row.find('.comboPais').attr('id', paisId);
+
+                        var inputLogo = (tbl_row.find('#newlogo'+id))[0];
+                        if (inputLogo && inputLogo.files.length > 0) {
+                            var reader = new FileReader();
+                            reader.onload = function(e) {
+                                tbl_row.find('#log'+id).attr('src', e.target.result);
+                            };
+                            reader.readAsDataURL(inputLogo.files[0]);
+                            tbl_row.find('#newlogo'+id).val('');
+                        }
+
+                        var inputTrofeu = (tbl_row.find('#newtrofeu'+id))[0];
+                        if (inputTrofeu && inputTrofeu.files.length > 0) {
+                            var reader2 = new FileReader();
+                            reader2.onload = function(e) {
+                                if(tbl_row.find('#trof'+id).is('img')){
+                                    tbl_row.find('#trof'+id).attr('src', e.target.result);
+                                } else {
+                                    tbl_row.find('#trof'+id).replaceWith("<img class='trofeuimage' id='trof"+id+"' src='"+e.target.result+"' height='35px' title='Troféu da Liga' style='object-fit:contain;'/>");
+                                }
+                            };
+                            reader2.readAsDataURL(inputTrofeu.files[0]);
+                            tbl_row.find('#newtrofeu'+id).val('');
+                        }
+
+                        tbl_row.removeClass('in-edition');
+                        tbl_row.find('.nomeLiga').css("pointer-events","auto").css("cursor","auto");
+                        tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+                        tbl_row.find('.comboPais').hide();
+                        tbl_row.find('.nomePais').show();
+                        tbl_row.find('.salvar').hide();
+                        tbl_row.find('.cancelar').hide();
+                        tbl_row.find('.editar').show();
+                        tbl_row.find('.deletar').show();
+                        tbl_row.find('.draftar').show();
+                        tbl_row.find('.newlogoedit').hide();
+                        tbl_row.find('.logoimage').show();
+                        tbl_row.find('.newtrofeuedit').hide();
+                        tbl_row.find('.trofeuimage').show();
+
+                        resolve(data);
+                    }
+                },
+                error: function() {
+                    reject("Erro, o procedimento não foi realizado, tente novamente.");
+                }
+            });
+        });
+    }
+
+    function updateBatchFloatingBar() {
+        var editingRows = $('tr.in-edition');
+        var count = editingRows.length;
+        var bar = $('#floating-batch-bar');
+
+        if (count > 1) {
+            if (bar.length === 0) {
+                var barHtml = '<div id="floating-batch-bar" class="floating-batch-actions">' +
+                    '<div class="floating-batch-info">' +
+                    '<span class="material-symbols-outlined">edit_note</span>' +
+                    '<span id="batch-count-badge" class="floating-batch-badge">' + count + '</span>' +
+                    '<span>linhas em edição</span>' +
+                    '</div>' +
+                    '<button type="button" id="btn-batch-save-all" class="btn-batch-save">' +
+                    '<span class="material-symbols-outlined">done_all</span> Aceitar todos' +
+                    '</button>' +
+                    '<button type="button" id="btn-batch-cancel-all" class="btn-batch-cancel">' +
+                    '<span class="material-symbols-outlined">close</span> Cancelar' +
+                    '</button>' +
+                    '</div>';
+                $('body').append(barHtml);
+
+                $('#btn-batch-save-all').off('click').on('click', function(){
+                    var rowsToSave = $('tr.in-edition');
+                    if (rowsToSave.length === 0) return;
+                    var $btn = $(this);
+                    $btn.prop('disabled', true).html('<span class="material-symbols-outlined">hourglass_top</span> Salvando...');
+
+                    var promises = [];
+                    rowsToSave.each(function(){
+                        promises.push(saveLeagueRowAjax($(this)));
+                    });
+
+                    Promise.allSettled(promises).then(function(results){
+                        var errors = results.filter(function(r){ return r.status === 'rejected'; });
+                        if (errors.length > 0) {
+                            alert("Algumas ligas não puderam ser salvas (" + errors.length + " erro(s)).");
+                        }
+                        updateBatchFloatingBar();
+                    });
+                });
+
+                $('#btn-batch-cancel-all').off('click').on('click', function(){
+                    $('tr.in-edition').find('.cancelar').click();
+                });
+            } else {
+                $('#batch-count-badge').text(count);
+                bar.show();
+            }
+        } else {
+            if (bar.length > 0) {
+                bar.remove();
+            }
+        }
+    }
+
+    $('.editar').click(function(){
         var tbl_row =  $(this).closest('tr');
+        tbl_row.addClass('in-edition');
         tbl_row.find('span').each(function(index, val){
             $(this).attr('original_entry', $(this).html());
-
         });
         tbl_row.find('.nomeEditavel').css("cursor","text");
         tbl_row.find('.nomeLiga').css("cursor","text");
@@ -194,11 +359,12 @@ echo "</main>"; // closes propostas-container
 
         var paisId = tbl_row.find('.comboPais').attr('id');
         tbl_row.find('.comboPais').show().val(paisId);
-
+        updateBatchFloatingBar();
     });
 
-        $('.cancelar').click(function(){
+    $('.cancelar').click(function(){
         var tbl_row =  $(this).closest('tr');
+        tbl_row.removeClass('in-edition');
         tbl_row.find('.nomeLiga').css("pointer-events","auto");
         tbl_row.find('.nomeLiga').css("cursor","auto");
         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
@@ -217,93 +383,18 @@ echo "</main>"; // closes propostas-container
         tbl_row.find('span').each(function(index, val){
             $(this).html($(this).attr('original_entry'));
         });
+        updateBatchFloatingBar();
     });
 
     $('.salvar').click(function(){
-        var tbl_row =  $(this).closest('tr');
-        tbl_row.find('.nomeLiga').css("pointer-events","auto");
-        tbl_row.find('.nomeLiga').css("cursor","auto");
-        tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
-        tbl_row.find('.comboPais').hide();
-        tbl_row.find('.nomePais').show();
-        tbl_row.find('.salvar').hide();
-        tbl_row.find('.cancelar').hide();
-        tbl_row.find('.editar').show();
-        tbl_row.find('.deletar').show();
-        tbl_row.find('.draftar').show();
-        tbl_row.find('.newlogoedit').hide();
-        tbl_row.find('.logoimage').show();
-        tbl_row.find('.newtrofeuedit').hide();
-        tbl_row.find('.trofeuimage').show();
-
-        var id = tbl_row.attr('id');
-        var nomeLiga = tbl_row.find('#nom'+id).html();
-        var tierLiga = tbl_row.find('#tie'+id).html();
-        var limiteIdade = tbl_row.find('#ida'+id).text().trim();
-        if (limiteIdade === '-' || limiteIdade === '') {
-            limiteIdade = '';
-        }
-        var pais = tbl_row.find('.comboPais').val();
-
-        var input = (tbl_row.find('#newlogo'+id))[0];
-        var logo;
-
-        if (input && input.files.length > 0) {
-           logo = input.files[0];
-        } else {
-           logo = null;
-        }
-
-        var trofeuInput = (tbl_row.find('#newtrofeu'+id))[0];
-        var trofeu;
-        if (trofeuInput && trofeuInput.files.length > 0) {
-           trofeu = trofeuInput.files[0];
-        } else {
-           trofeu = null;
-        }
-
-        //var formId = 'form'+id;
-        //var form = document.getElementById(formId);
-         var formData = new FormData();
-         formData.append('id', id);
-         formData.append('nomeLiga', nomeLiga);
-         formData.append('tierLiga', tierLiga);
-         formData.append('limiteIdade', limiteIdade);
-         formData.append('pais', pais);
-         if(logo != null){
-            formData.append('logo', logo);
-         }
-         if(trofeu != null){
-            formData.append('trofeu', trofeu);
-         }
-
-
-    // for (var key of formData.entries()) {
-    //      console.log(key[0] + ', ' + key[1]);
-    //  }
-
-        //console.log(formData);
-         $.ajax({
-             url: 'alterar_liga.php',
-             processData: false,
-            contentType: false,
-            cache: false,
-            type: "POST",
-            dataType: 'json',
-             data: formData,
-                  success: function(data) {
-                      if(data.error != ''){
-                        alert(data.error)
-                      }
-                      location.reload();
-                  },
-                  error: function(data) {
-                      successmessage = 'Error';
-                      alert("Erro, o procedimento não foi realizado, tente novamente.");
-                      location.reload();
-                  }
-              });
-     });
+        var tbl_row = $(this).closest('tr');
+        saveLeagueRowAjax(tbl_row).then(function(){
+            updateBatchFloatingBar();
+        }).catch(function(err){
+            alert("Erro: " + err);
+            updateBatchFloatingBar();
+        });
+    });
 
 });
 

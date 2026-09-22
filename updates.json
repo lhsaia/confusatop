@@ -9,6 +9,22 @@
   },
   "days": [
     {
+      "id": "day_21_09_2026",
+      "date": "21/09/2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Edição Inline sem Recarregamento e Ações em Lote em 'Meus...'",
+          "desc": "As telas de gerenciamento (Meus Clubes, Jogadores, Técnicos, Estádios, Climas, Países, Minhas Ligas e Parâmetros) agora realizam a gravação inline via AJAX preservando a paginação e a posição da tela. Ao colocar mais de uma linha em edição, uma barra flutuante 'Aceitar todos' permite salvar ou cancelar todas as alterações simultaneamente."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Desativação de Links no Modo de Edição de Técnicos",
+          "desc": "Corrigido o comportamento ao clicar para editar o nome do técnico na tela de Meus Técnicos e na página do Clube, desabilitando o redirecionamento pelo link para permitir a alteração do texto diretamente."
+        }
+      ]
+    },
+    {
       "id": "day_20_09_2026",
       "date": "20/09/2026",
       "items": [

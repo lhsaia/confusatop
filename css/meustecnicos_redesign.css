@@ -248,11 +248,12 @@ html body #logged-user {
 }
 
 /* Thumbs */
-.playerThumb {
-  width: 32px;
-  height: 32px;
-  object-fit: cover;
-  border-radius: 6px;
+.playerThumb,
+.coachThumb {
+  width: 32px !important;
+  height: 32px !important;
+  object-fit: cover !important;
+  border-radius: 6px !important;
   background: rgba(0, 0, 0, 0.03);
   padding: 1px;
   border: 1px solid rgba(0, 0, 0, 0.08);

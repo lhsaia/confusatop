@@ -2291,6 +2291,7 @@ var idJogador = tbl_row.prop('id');
 
     if(isDono){
     tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
+    tbl_row.find('td.nomeJogador a').css('pointer-events', 'none').css('cursor', 'text');
     tbl_row.find('.nascimentoEIdade').hide();
 	tbl_row.find('.encerramentoFixo').hide();
     tbl_row.find('.encerramento').show();
@@ -2387,6 +2388,7 @@ tbl_row.find(".valor").html(valor);
             isDataDirty = false;
         var tbl_row =  $(this).closest('tr');
         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+        tbl_row.find('td.nomeJogador a').css('pointer-events', '').css('cursor', '');
         tbl_row.find("td:last-child .cell-value > a").show();
         tbl_row.find(".salvar").hide();
         tbl_row.find(".cancelar").hide();
@@ -2812,8 +2814,7 @@ var idTecnico = tbl_row.prop('id');
   if(isDono){
 
     tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
-    // tbl_row.find('.nomeEditavel').css("cursor","text");
-    // tbl_row.find('.nomeEditavel').css("pointer-events","none");
+    tbl_row.find('td.nomeJogador a').css('pointer-events', 'none').css('cursor', 'text');
     tbl_row.find('.nomePais').hide();
 
     var paisId = tbl_row.find('.comboPais').attr('id');
@@ -2864,6 +2865,7 @@ var idTecnico = tbl_row.prop('id');
             isDataDirty = false;
         var tbl_row =  $(this).closest('tr');
         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+        tbl_row.find('td.nomeJogador a').css('pointer-events', '').css('cursor', '');
         tbl_row.find('.nivel').attr('contenteditable', 'false').removeClass('editavel');
         tbl_row.find('.nascimentoEIdade').show();
         tbl_row.find('.nascimento').hide();

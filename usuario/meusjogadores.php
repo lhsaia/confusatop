@@ -73,6 +73,7 @@ var localData = [];
 var asc = true;
 var activeSort = '';
 var activeDirection = true;
+var currentPage = 1;
 
 var listaPaises =  <?php echo json_encode($listaPaises); ?>;
 
@@ -154,7 +155,7 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 			success:function(data){
 				$('#loading').hide();
 				localData = JSON.parse(data);
-				updateTable(localData, 1, activeSort, activeDirection ? 1 : 0);
+				updateTable(localData, currentPage, activeSort, activeDirection ? 1 : 0);
 			},
 			error:function(){
 				$('#loading').hide();
@@ -175,6 +176,8 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 		} else {
 			treated_page = parseInt(current_page) || 1;
 		}
+
+		currentPage = treated_page;
 
 		var from_result_num = (results_per_page * treated_page) - results_per_page;
 		var pgn = pagination(treated_page, total_pages);
@@ -375,11 +378,13 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 
 		addFilters();
 		bindEvents();
+		updateBatchFloatingBar();
 	}
 
 	function bindEvents(){
 		$(".editar").off("click").on("click", function(){
 			var tbl_row = $(this).closest("tr");
+			tbl_row.addClass("in-edition");
 
 			tbl_row.find('a').each(function(index, val){
 				$(this).attr('original_entry', $(this).html());
@@ -484,10 +489,13 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 					$(this).prop("selected", false);
 				}
 			});
+
+			updateBatchFloatingBar();
 		});
 
 		$('.cancelar').off('click').on('click', function(){
 			var tbl_row =  $(this).closest('tr');
+			tbl_row.removeClass("in-edition");
 			tbl_row.find(".salvar").hide();
 			tbl_row.find(".cancelar").hide();
 			tbl_row.find(".editar").show();
@@ -528,6 +536,8 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 			tbl_row.find('input').each(function(index, val){
 				$(this).val($(this).attr('data-original-entry'));
 			});
+
+			updateBatchFloatingBar();
 		});
 
 		$('.apagar').off('click').on('click', function(){
@@ -555,114 +565,176 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 		});
 
 		$('.salvar').off('click').on('click', function(){
-			var tbl_row =  $(this).closest('tr');
-			tbl_row.find(".salvar").hide();
-			tbl_row.find(".cancelar").hide();
-			tbl_row.find(".editar").show();
-			tbl_row.find(".apagar").show();
-			tbl_row.find(".add-referencia").show();
-			tbl_row.find("a[id^='ref']").show();
-			tbl_row.find('.linkNome').css("cursor","pointer");
-			tbl_row.find('.linkNome').css("pointer-events","auto");
-			tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
-			tbl_row.find('.nivelEditavel').attr('contenteditable', 'false').removeClass('editavel');
-			tbl_row.find('.comboCobrador').hide();
-			tbl_row.find('.comboMentalidade').hide();
-			tbl_row.find('.comboPais').hide();
-			tbl_row.find('.comboAtividade').hide();
-			tbl_row.find('.falecimentoEditavel').hide();
-			tbl_row.find('.nomeCobrador').show();
-			tbl_row.find('.nomeMentalidade').show();
-			tbl_row.find('.nomePais').show();
-			tbl_row.find('.nomeAtividade').show();
-			tbl_row.find('.nomeNascimento').show();
-			tbl_row.find('.nascimentoEditavel').hide();
-			tbl_row.find('.nomeValor').show();
-			tbl_row.find('.valorEditavel').hide();
-			tbl_row.find('.nomePosicao').show();
-			tbl_row.find('.comboPosicoes').hide();
-			tbl_row.find('.hiddenInput').hide();
-			tbl_row.find('.playerThumb').removeClass('editableThumb');
-			
-			//check se é dono do jogador
-			var donoTime = tbl_row.find(".donoClubeVinculado").html();
-			var donoJogador = $("#tabelaPrincipal").find('thead').prop("id").replace(/\D/g, "");
-			var donoPais = tbl_row.attr("data-dono-pais");
-
-			if (typeof donoTime === 'undefined'){
-				donoTime = donoJogador;
-			}
-
-			if(donoTime.localeCompare(donoJogador) == 0 || (typeof donoPais !== 'undefined' && donoPais.localeCompare(donoJogador) == 0)){
-				var isDono = true;
-			} else {
-				var isDono = false;
-			}
-
-			var idJogador = tbl_row.prop('id');
-
-			if(isDono){
-				var nascimento = tbl_row.find(".nascimentoEditavel").val();
-				var valor = parseInt(tbl_row.find(".valorEditavel").html());
-				var determinacao = "1";
-				var mentalidade = tbl_row.find(".comboMentalidade").val();
-				var cobrancaFalta = tbl_row.find(".comboCobrador").val();
-				var atividade = tbl_row.find(".comboAtividade").val();
-				var rawTime = tbl_row.find(".comboAtividade").attr("data-idTime");
-				var timeParaDemissao = (rawTime && rawTime !== "null" && rawTime !== "undefined") ? parseInt(rawTime) : 0;
-				var dataFalecimento = tbl_row.find(".falecimentoEditavel").val();
-			}
-			
-			var nome = tbl_row.find('.nomeEditavel').text();
-			var nacionalidade = tbl_row.find(".comboPais").val();
-			
-			//foto
-			var inputFoto = (tbl_row.find('#foto'+idJogador))[0];
-			var foto;
-
-			if (inputFoto && inputFoto.files && inputFoto.files.length > 0) {
-			   foto = inputFoto.files[0];
-			} else {
-			   foto = null;
-			}
-
-			var nivel = tbl_row.find(".nivelEditavel").html();
-			
-			var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
-			var isGoleiro = stringPosicoes.localeCompare("G");
-		
-			if(isGoleiro == 0){
-				var posicoes = ["1"];
-			} else {
-				var posicoes = tbl_row.find(".comboPosicoes").val();
-			}
-			
-			var formData = new FormData();
-			
-			formData.append('idJogador',idJogador);
-			formData.append('alteracao',9);
-			formData.append('posicoes',posicoes);
-			formData.append('nivel',nivel);
-			formData.append('nome',nome);
-			formData.append('nacionalidade',nacionalidade);
-
-			if(isDono){
-				formData.append('nascimento',nascimento);
-				formData.append('valor',valor);
-				formData.append('determinacao',determinacao);
-				formData.append('mentalidade',mentalidade);
-				formData.append('cobrancaFalta',cobrancaFalta);
-				formData.append('atividade',atividade);
-				formData.append('timeParaDemissao',timeParaDemissao);
-				formData.append('dataFalecimento',dataFalecimento);
-			}
-
-			if(foto != null){
-				formData.append('foto',foto);
-			}
-
-			ajaxCallJogador(formData);
+			var tbl_row = $(this).closest('tr');
+			savePlayerRowAjax(tbl_row).then(function(){
+				load_data();
+			}).catch(function(err){
+				$('#errorbox').append('<div class="alert alert-danger">Não foi possível editar o jogador: ' + err + '</div>');
+				load_data();
+			});
 		});
+	}
+
+	function getPlayerRowFormData(tbl_row) {
+		//check se é dono do jogador
+		var donoTime = tbl_row.find(".donoClubeVinculado").html();
+		var donoJogador = $("#tabelaPrincipal").find('thead').prop("id").replace(/\D/g, "");
+		var donoPais = tbl_row.attr("data-dono-pais");
+
+		if (typeof donoTime === 'undefined'){
+			donoTime = donoJogador;
+		}
+
+		if(donoTime.localeCompare(donoJogador) == 0 || (typeof donoPais !== 'undefined' && donoPais.localeCompare(donoJogador) == 0)){
+			var isDono = true;
+		} else {
+			var isDono = false;
+		}
+
+		var idJogador = tbl_row.prop('id');
+
+		if(isDono){
+			var nascimento = tbl_row.find(".nascimentoEditavel").val();
+			var valor = parseInt(tbl_row.find(".valorEditavel").html());
+			var determinacao = "1";
+			var mentalidade = tbl_row.find(".comboMentalidade").val();
+			var cobrancaFalta = tbl_row.find(".comboCobrador").val();
+			var atividade = tbl_row.find(".comboAtividade").val();
+			var rawTime = tbl_row.find(".comboAtividade").attr("data-idTime");
+			var timeParaDemissao = (rawTime && rawTime !== "null" && rawTime !== "undefined") ? parseInt(rawTime) : 0;
+			var dataFalecimento = tbl_row.find(".falecimentoEditavel").val();
+		}
+		
+		var nome = tbl_row.find('.nomeEditavel').text();
+		var nacionalidade = tbl_row.find(".comboPais").val();
+		
+		//foto
+		var inputFoto = (tbl_row.find('#foto'+idJogador))[0];
+		var foto;
+
+		if (inputFoto && inputFoto.files && inputFoto.files.length > 0) {
+		   foto = inputFoto.files[0];
+		} else {
+		   foto = null;
+		}
+
+		var nivel = tbl_row.find(".nivelEditavel").html();
+		
+		var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
+		var isGoleiro = stringPosicoes.localeCompare("G");
+	
+		if(isGoleiro == 0){
+			var posicoes = ["1"];
+		} else {
+			var posicoes = tbl_row.find(".comboPosicoes").val();
+		}
+		
+		var formData = new FormData();
+		
+		formData.append('idJogador',idJogador);
+		formData.append('alteracao',9);
+		formData.append('posicoes',posicoes);
+		formData.append('nivel',nivel);
+		formData.append('nome',nome);
+		formData.append('nacionalidade',nacionalidade);
+
+		if(isDono){
+			formData.append('nascimento',nascimento);
+			formData.append('valor',valor);
+			formData.append('determinacao',determinacao);
+			formData.append('mentalidade',mentalidade);
+			formData.append('cobrancaFalta',cobrancaFalta);
+			formData.append('atividade',atividade);
+			formData.append('timeParaDemissao',timeParaDemissao);
+			formData.append('dataFalecimento',dataFalecimento);
+		}
+
+		if(foto != null){
+			formData.append('foto',foto);
+		}
+
+		return formData;
+	}
+
+	function savePlayerRowAjax(tbl_row) {
+		return new Promise(function(resolve, reject){
+			var formData = getPlayerRowFormData(tbl_row);
+			$.ajax({
+				type        : 'POST',
+				url         : '/jogadores/editar_jogador.php',
+				data        : formData,
+				processData : false,
+				contentType : false,
+				cache       : false,
+				dataType    : 'json'
+			})
+			.done(function(data) {
+				if (! data.success) {
+					reject(data.error || "Erro ao editar jogador");
+				} else {
+					tbl_row.removeClass('in-edition');
+					resolve(data);
+				}
+			}).fail(function(jqXHR, textStatus, errorThrown ){
+				reject(errorThrown || textStatus);
+			});
+		});
+	}
+
+	function updateBatchFloatingBar() {
+		var editingRows = $('tr.in-edition');
+		var count = editingRows.length;
+		var bar = $('#floating-batch-bar');
+
+		if (count > 1) {
+			if (bar.length === 0) {
+				var barHtml = '<div id="floating-batch-bar" class="floating-batch-actions">' +
+					'<div class="floating-batch-info">' +
+					'<span class="material-symbols-outlined">edit_note</span>' +
+					'<span id="batch-count-badge" class="floating-batch-badge">' + count + '</span>' +
+					'<span>linhas em edição</span>' +
+					'</div>' +
+					'<button type="button" id="btn-batch-save-all" class="btn-batch-save">' +
+					'<span class="material-symbols-outlined">done_all</span> Aceitar todos' +
+					'</button>' +
+					'<button type="button" id="btn-batch-cancel-all" class="btn-batch-cancel">' +
+					'<span class="material-symbols-outlined">close</span> Cancelar' +
+					'</button>' +
+					'</div>';
+				$('body').append(barHtml);
+
+				$('#btn-batch-save-all').off('click').on('click', function(){
+					var rowsToSave = $('tr.in-edition');
+					if (rowsToSave.length === 0) return;
+					var $btn = $(this);
+					$btn.prop('disabled', true).html('<span class="material-symbols-outlined">hourglass_top</span> Salvando...');
+
+					var promises = [];
+					rowsToSave.each(function(){
+						promises.push(savePlayerRowAjax($(this)));
+					});
+
+					Promise.allSettled(promises).then(function(results){
+						var errors = results.filter(function(r){ return r.status === 'rejected'; });
+						if(errors.length > 0) {
+							$('#errorbox').append('<div class="alert alert-danger">Houve erro ao salvar ' + errors.length + ' jogador(es).</div>');
+						}
+						load_data();
+					});
+				});
+
+				$('#btn-batch-cancel-all').off('click').on('click', function(){
+					$('tr.in-edition').find('.cancelar').trigger('click');
+				});
+			} else {
+				$('#batch-count-badge').text(count);
+				bar.fadeIn(200);
+			}
+		} else {
+			if (bar.length > 0) {
+				bar.fadeOut(200);
+			}
+		}
 	}
 
 	$(document).on("change", ".comboAtividade", function(){
@@ -673,31 +745,6 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 			tbl_row.find(".falecimentoEditavel").hide();
 		}
 	});
-
-	function ajaxCallJogador(formData){
-		$.ajax({
-			type        : 'POST',
-			url         : '/jogadores/editar_jogador.php',
-			data        : formData,
-			processData : false,
-			contentType : false,
-			cache       : false,
-			dataType    : 'json'
-		})
-		.done(function(data) {
-			if (! data.success) {
-				window.scrollTo(0, 0);
-				$('#modalProposta').hide();
-				$('#errorbox').append('<div class="alert alert-danger">Não foi possível editar o jogador, '+data.error+'</div>');
-			} else {
-				$('#modalProposta').hide();
-				load_data();
-			}
-		}).fail(function(jqXHR, textStatus, errorThrown ){
-			$('#modalProposta').hide();
-			$('#errorbox').append('<div class="alert alert-danger">Não foi possível editar o jogador, '+errorThrown+'</div>');
-		});
-	}
 
 	$(document).on('click', '.add-referencia', function(){
 		var jogadorId = $(this).attr('data-id');

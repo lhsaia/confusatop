@@ -68,6 +68,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 var localData = [];
 var asc = true;
 var activeSort = '';
+var activeDirection = true;
+var currentPage = 1;
 
 // obtenção dos dados de estádios, países e ligas
 var listaEstadios =  <?php echo json_encode($listaEstadios); ?>;
@@ -95,16 +97,8 @@ var listaLigas =  <?php echo json_encode($listaLigas); ?>;
  };?>';
 
 $(document).ready(function($){
-	
-
-
 
 load_data();
-
-//typing timer ajax improvement
-//setup before functions
-//var typingTimer;                //timer identifier
-//var doneTypingInterval = 800;  //time in ms (5 seconds)
 
 	function delay(fn, ms){
 		let timer = 0;
@@ -117,19 +111,7 @@ load_data();
 	//on keyup, start the countdown
 	$('#caixa_pesquisa').keyup(delay(function(e){
 		load_data();
-		//clearTimeout(typingTimer);
-		//if ($('#caixa_pesquisa').val()) {
-		//	typingTimer = setTimeout(doneTyping, doneTypingInterval);
-		//}
-		//typingTimer = setTimeout(doneTyping, doneTypingInterval);
 	},800));
-
-// user is "finished typing," do something
-// function doneTyping () {
-    // load_data();
-// }
-
-//$('#caixa_pesquisa').keyup(function(){load_data()});
 
 function load_data(){
 
@@ -143,21 +125,8 @@ $.ajax({
     data:{searchText:searchText},
     success:function(data){
         $('#loading').hide();  // hide loading indicator
-        updateTable(JSON.parse(data),1,0,0);
         localData = JSON.parse(data);
-		
-		// $('.toggle_like').click(function(){
-			// let id = $(this).closest("tr").attr("id");
-			// $.ajax({
-				// url:"toggle_like.php",
-				// method:"POST",
-				// cache:false,
-				// data:{id:id},
-				// success:function(data){
-					// load_data();
-			// }
-			// });
-		// });
+        updateTable(localData, currentPage, activeSort, activeDirection ? 1 : 0);
     }
 });
 }
@@ -174,8 +143,10 @@ function updateTable(ajax_data, current_page, highlighted, direction){
     } else if(current_page == 'inicio'){
         treated_page = 1;
     } else {
-        treated_page = current_page;
+        treated_page = parseInt(current_page) || 1;
     }
+
+    currentPage = treated_page;
 
     var from_result_num = (results_per_page * treated_page) - results_per_page;
 
@@ -320,16 +291,13 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 	
 $('.quadrado-uniforme').each(function(i, obj) {
     var cores = $(this).attr('id');
-    cores = cores.match(/.{1,3}/g);
-    var fundo = "rgb(";
-    fundo += cores[0];
-    fundo += ",";
-    fundo += cores[1];
-    fundo += ",";
-    fundo += cores[2];
-    fundo += ")";
-    $(this).css({ 'background-color' : fundo, });
-
+    if (cores) {
+        cores = cores.match(/.{1,3}/g);
+        if (cores && cores.length >= 3) {
+            var fundo = "rgb(" + cores[0] + "," + cores[1] + "," + cores[2] + ")";
+            $(this).css({ 'background-color' : fundo });
+        }
+    }
 });
 
     addFilters();
@@ -349,14 +317,15 @@ $('.quadrado-uniforme').each(function(i, obj) {
 
     activeSort = highlighted;
     activeDirection = asc;
-	
-	// inclusão de formulas de edição
-	
-	 $('.editar').click(function(){
-    var tbl_row =  $(this).closest('tr');
+    updateBatchFloatingBar();
+}
+
+// Eventos delegados
+$(document).on('click', '.editar', function(){
+    var tbl_row = $(this).closest('tr');
+    tbl_row.addClass('in-edition');
     tbl_row.find('span').each(function(index, val){
         $(this).attr('original_entry', $(this).html());
-
     });
     tbl_row.find('.linkNome').css("cursor","text");
     tbl_row.find('.linkNome').css("pointer-events","none");
@@ -374,34 +343,38 @@ $('.quadrado-uniforme').each(function(i, obj) {
     tbl_row.find('.maxTorcida').show();
     tbl_row.find('.maxTorcedores').hide();
 
-        //acertar questão cores
-        tbl_row.find(".celula-uniforme :input").each(function(){
-            var rgb = $(this).closest('.quadrado-uniforme').attr('id');
+    // acertar questão cores
+    tbl_row.find(".celula-uniforme :input").each(function(){
+        var rgb = $(this).closest('.quadrado-uniforme').attr('id');
+        if (rgb) {
             var rgbp = rgb.match(/.{1,3}/g);
-            var hex = rgbToHex(rgbp);
-            $(this).val(hex);
-        });
-
-        //console.log(tbl_row.find(".celula-uniforme :input"));
+            if (rgbp && rgbp.length >= 3) {
+                var hex = rgbToHex(rgbp);
+                $(this).val(hex);
+            }
+        }
+    });
 
     tbl_row.find('.thumb').addClass('editableThumb');
 
     var paisId = tbl_row.find('.comboPais').attr('id');
     tbl_row.find('.comboPais').show().val(paisId);
 
-    var paisId = tbl_row.find('.comboTorcedores').attr('id');
-    tbl_row.find('.comboTorcedores').show().val(paisId);
+    var torcidaVal = tbl_row.find('.comboTorcedores').attr('id');
+    tbl_row.find('.comboTorcedores').show().val(torcidaVal);
 
-    var ligaId = tbl_row.find('.comboLiga').attr('id').replace(/\D/g,'');;
+    var ligaId = tbl_row.find('.comboLiga').attr('id').replace(/\D/g,'');
     tbl_row.find('.comboLiga').show().val(ligaId);
 
-        var estadioId = tbl_row.find('.comboEstadio').attr('id').replace(/\D/g,'');;
+    var estadioId = tbl_row.find('.comboEstadio').attr('id').replace(/\D/g,'');
     tbl_row.find('.comboEstadio').show().val(estadioId);
 
+    updateBatchFloatingBar();
 });
 
-    $('.cancelar').click(function(){
-    var tbl_row =  $(this).closest('tr');
+$(document).on('click', '.cancelar', function(){
+    var tbl_row = $(this).closest('tr');
+    tbl_row.removeClass('in-edition');
     tbl_row.find('.linkNome').css("cursor","pointer");
     tbl_row.find('.linkNome').css("pointer-events","auto");
 
@@ -427,69 +400,35 @@ $('.quadrado-uniforme').each(function(i, obj) {
     tbl_row.find('span').each(function(index, val){
         $(this).html($(this).attr('original_entry'));
     });
+    updateBatchFloatingBar();
 });
 
-  $(".fidelidade").each(function(){
-
-    $(this).keydown(function () {
-    // Save old value.
+$(document).on('keydown', '.fidelidade', function () {
     if (!$(this).val() || (parseInt($(this).val()) <= 10 && parseInt($(this).val()) >= 1))
-    $(this).data("old", $(this).val());
-  });
+        $(this).data("old", $(this).val());
+});
 
-  });
-
-  $(".fidelidade").each(function(){
-
-    $(this).keyup(function () {
-    // Check correct, else revert back to old value.
+$(document).on('keyup', '.fidelidade', function () {
     if (!$(this).val() || (parseInt($(this).val()) <= 10 && parseInt($(this).val()) >= 1));
     else
-      $(this).val($(this).data("old"));
-  });
+        $(this).val($(this).data("old"));
+});
 
-
-  });
-
-  $(document).on('keypress', '.siglaEditavel.editavel', function(e){
+$(document).on('keypress', '.siglaEditavel.editavel', function(e){
     if ($(this).text().length >= 3 && window.getSelection().toString().length === 0) {
-      e.preventDefault();
+        e.preventDefault();
     }
-  });
+});
 
-  $(document).on('paste', '.siglaEditavel.editavel', function(e){
+$(document).on('paste', '.siglaEditavel.editavel', function(e){
     e.preventDefault();
     var text = (e.originalEvent || e).clipboardData.getData('text/plain').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 3);
     document.execCommand('insertText', false, text);
-  });
-  
-     
-$('.salvar').click(function(){
-    var tbl_row =  $(this).closest('tr');
-    tbl_row.find('.linkNome').css("cursor","pointer");
-    tbl_row.find('.linkNome').css("pointer-events","auto");
+});
 
-    tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
-    tbl_row.find('.siglaEditavel').attr('contenteditable', 'false').removeClass('editavel');
-    tbl_row.find('.comboPais').hide();
-    tbl_row.find('.comboLiga').hide();
-    tbl_row.find('.comboEstadio').hide();
-    tbl_row.find('.nomePais').show();
-    tbl_row.find('.salvar').hide();
-    tbl_row.find('.cancelar').hide();
-    tbl_row.find('.editar').show();
-    tbl_row.find('.deletar').show();
-    tbl_row.find('.thumb').removeClass('editableThumb');
-    tbl_row.find('.hiddenInput').hide();
-    tbl_row.find('.comboTorcedores').hide();
-    tbl_row.find('.maxTorcedores').show();
-
-
-    tbl_row.find('.fidelidadeFixo').show();
-    tbl_row.find('.fidelidade').hide();
-
+function getRowFormData(tbl_row) {
     var id = tbl_row.attr('id');
-    var nomeTime = tbl_row.find('#nom'+id).html();
+    var nomeTime = tbl_row.find('#nom'+id).text().trim();
     var sigla = tbl_row.find('#sig'+id).text().trim().toUpperCase().substring(0, 3);
     var maxTorcedores = tbl_row.find('.comboTorcedores').val();
     var fidelidade = tbl_row.find('#fid'+id).val();
@@ -497,7 +436,7 @@ $('.salvar').click(function(){
     var liga = tbl_row.find('.comboLiga').val();
     var pais = tbl_row.find('.comboPais').val();
 
-    //cores1
+    // cores1
     var uni1cor1hex = tbl_row.find('[name=u1c1]').val();
     var uni1cor2hex = tbl_row.find('[name=u1c2]').val();
     var uni1cor3hex = tbl_row.find('[name=u1c3]').val();
@@ -506,7 +445,7 @@ $('.salvar').click(function(){
     var uni1cor2 = hexToRgb(uni1cor2hex);
     var uni1cor3 = hexToRgb(uni1cor3hex);
 
-    //cores2
+    // cores2
     var uni2cor1hex = tbl_row.find('[name=u2c1]').val();
     var uni2cor2hex = tbl_row.find('[name=u2c2]').val();
     var uni2cor3hex = tbl_row.find('[name=u2c3]').val();
@@ -515,45 +454,21 @@ $('.salvar').click(function(){
     var uni2cor2 = hexToRgb(uni2cor2hex);
     var uni2cor3 = hexToRgb(uni2cor3hex);
 
-    //escudo
+    // escudo
     var inputEscudo = (tbl_row.find('#escudo'+id))[0];
-    var escudo;
+    var escudo = (inputEscudo && inputEscudo.files.length > 0) ? inputEscudo.files[0] : null;
 
-    if (inputEscudo.files.length > 0) {
-       escudo = inputEscudo.files[0];
-    } else {
-       escudo = null;
-    }
-
-    //mascote
+    // mascote
     var inputMascote = (tbl_row.find('#mascote'+id))[0];
-    var mascote;
+    var mascote = (inputMascote && inputMascote.files.length > 0) ? inputMascote.files[0] : null;
 
-    if (inputMascote && inputMascote.files.length > 0) {
-       mascote = inputMascote.files[0];
-    } else {
-       mascote = null;
-    }
-
-    //uniforme 1
+    // uniforme 1
     var inputUni1 = (tbl_row.find('#uni1'+id))[0];
-    var uni1;
+    var uni1 = (inputUni1 && inputUni1.files.length > 0) ? inputUni1.files[0] : null;
 
-    if (inputUni1.files.length > 0) {
-        uni1 = inputUni1.files[0];
-    } else {
-        uni1 = null;
-    }
-
-    //uniforme 2
+    // uniforme 2
     var inputUni2 = (tbl_row.find('#uni2'+id))[0];
-    var uni2;
-
-    if (inputUni2.files.length > 0) {
-        uni2 = inputUni2.files[0];
-    } else {
-        uni2 = null;
-    }
+    var uni2 = (inputUni2 && inputUni2.files.length > 0) ? inputUni2.files[0] : null;
 
     var formData = new FormData();
     formData.append('id', id);
@@ -564,18 +479,18 @@ $('.salvar').click(function(){
     formData.append('pais', pais);
     formData.append('estadio', estadio);
     formData.append('liga', liga);
-      if(escudo != null){
+    if(escudo != null){
         formData.append('escudo', escudo);
-     }
-     if(mascote != null){
+    }
+    if(mascote != null){
         formData.append('mascote', mascote);
-     }
-     if(uni1 != null){
+    }
+    if(uni1 != null){
         formData.append('uni1', uni1);
-     }
-     if(uni2 != null){
+    }
+    if(uni2 != null){
         formData.append('uni2', uni2);
-     }
+    }
     formData.append('uni1cor1', uni1cor1);
     formData.append('uni1cor2', uni1cor2);
     formData.append('uni1cor3', uni1cor3);
@@ -583,35 +498,102 @@ $('.salvar').click(function(){
     formData.append('uni2cor2', uni2cor2);
     formData.append('uni2cor3', uni2cor3);
 
+    return formData;
+}
 
-for (var key of formData.entries()) {
-     // console.log(key[0] + ', ' + key[1]);
- }
-
-     $.ajax({
-         url: 'alterar_time.php',
-         processData: false,
-        contentType: false,
-        cache: false,
-        type: "POST",
-        dataType: 'json',
-         data: formData,
-              success: function(data) {
-                  if(data.error != ''){
-                    alert(data.error)
-                  }
-                  location.reload();
-              },
-              error: function(data) {
-                  successmessage = 'Error';
-                  alert("Erro, o procedimento não foi realizado, tente novamente.");
-                  //location.reload();
-              }
-          });
+function saveRowAjax(tbl_row) {
+    return new Promise(function(resolve, reject){
+        var formData = getRowFormData(tbl_row);
+        $.ajax({
+            url: 'alterar_time.php',
+            processData: false,
+            contentType: false,
+            cache: false,
+            type: "POST",
+            dataType: 'json',
+            data: formData,
+            success: function(data) {
+                if(data && data.error && data.error !== ''){
+                    reject(data.error);
+                } else {
+                    tbl_row.removeClass('in-edition');
+                    resolve(data);
+                }
+            },
+            error: function() {
+                reject("Erro ao conectar com o servidor.");
+            }
+        });
+    });
+}
+     
+$(document).on('click', '.salvar', function(){
+    var tbl_row = $(this).closest('tr');
+    saveRowAjax(tbl_row).then(function(){
+        load_data();
+    }).catch(function(err){
+        alert("Erro: " + err);
+        load_data();
+    });
 });
 
+function updateBatchFloatingBar() {
+    var editingRows = $('tr.in-edition');
+    var count = editingRows.length;
+    var bar = $('#floating-batch-bar');
 
-$('.promover').click(function(){
+    if (count > 1) {
+        if (bar.length === 0) {
+            var barHtml = '<div id="floating-batch-bar" class="floating-batch-actions">' +
+                '<div class="floating-batch-info">' +
+                '<span class="material-symbols-outlined">edit_note</span>' +
+                '<span id="batch-count-badge" class="floating-batch-badge">' + count + '</span>' +
+                '<span>linhas em edição</span>' +
+                '</div>' +
+                '<button type="button" id="btn-batch-save-all" class="btn-batch-save">' +
+                '<span class="material-symbols-outlined">done_all</span> Aceitar todos' +
+                '</button>' +
+                '<button type="button" id="btn-batch-cancel-all" class="btn-batch-cancel">' +
+                '<span class="material-symbols-outlined">close</span> Cancelar' +
+                '</button>' +
+                '</div>';
+            $('body').append(barHtml);
+
+            $('#btn-batch-save-all').off('click').on('click', function(){
+                var rowsToSave = $('tr.in-edition');
+                if (rowsToSave.length === 0) return;
+                var $btn = $(this);
+                $btn.prop('disabled', true).html('<span class="material-symbols-outlined">hourglass_top</span> Salvando...');
+
+                var promises = [];
+                rowsToSave.each(function(){
+                    promises.push(saveRowAjax($(this)));
+                });
+
+                Promise.allSettled(promises).then(function(results){
+                    var errors = results.filter(function(r){ return r.status === 'rejected'; });
+                    if(errors.length > 0) {
+                        alert("Houve erro ao salvar " + errors.length + " registro(s).");
+                    }
+                    load_data();
+                });
+            });
+
+            $('#btn-batch-cancel-all').off('click').on('click', function(){
+                $('tr.in-edition').find('.cancelar').trigger('click');
+            });
+        } else {
+            $('#batch-count-badge').text(count);
+            bar.fadeIn(200);
+        }
+    } else {
+        if (bar.length > 0) {
+            bar.fadeOut(200);
+        }
+    }
+}
+
+$(document).on('click', '.promover', function(){
     var clube = $(this).closest('tr').attr("id");
     var nacionalidade = $(this).closest('tr').find('.comboPais').attr("id");
     var sexo = $(this).closest('tr').attr("data-sexo");
@@ -623,42 +605,26 @@ $('.promover').click(function(){
         'clube' : clube,
         'base' : true,
         'sexo' : sexo
-    }
+    };
 
-     $.ajax({
-            type        : 'POST', // define the type of HTTP verb we want to use (POST for our form)
-            url         : '/jogadores/hexagen.php', // the url where we want to POST
-            data        : formData, // our data object
-            dataType    : 'json', // what type of data do we expect back from the server
-                        encode          : true
-            })
-
-                    .done(function(data) {
-
-            // log data to the console so we can see
-            // console.log(data);
-
-
-            if (data.success) {
-                $('#error_box').html('<div class="alert alert-success">O jogador '+data.player_info.nomeJogador+' foi promovido com sucesso!</div>');
-            } else {
-                $('#error_box').html('<div class="alert alert-danger">Não foi possível realizar a inserção, '+data.error+'</div>');
-            }
-
-}).fail(function(jqXHR, textStatus, errorThrown ){
-            // console.log("Erro");
-            // console.log(jqXHR);
-            // console.log(textStatus);
-            // console.log(errorThrown);
-            });
-
+    $.ajax({
+        type        : 'POST',
+        url         : '/jogadores/hexagen.php',
+        data        : formData,
+        dataType    : 'json',
+        encode      : true
+    }).done(function(data) {
+        if (data.success) {
+            $('#error_box').html('<div class="alert alert-success">O jogador '+data.player_info.nomeJogador+' foi promovido com sucesso!</div>');
+        } else {
+            $('#error_box').html('<div class="alert alert-danger">Não foi possível realizar a inserção, '+data.error+'</div>');
+        }
+    });
 });
-
-}
 
 $(document).on('click', '.pagination_link', function(){
     var page = $(this).attr('id');
-    updateTable(localData, page,activeSort, 1);
+    updateTable(localData, page, activeSort, 1);
 });
 
 

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
@@ -44,11 +44,12 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
     }
 ?>
 
-<script>
+<<script>
 var localData = [];
 var asc = true;
 var activeSort = '';
 var activeDirection = true;
+var currentPage = 1;
 
 var listaPaises = <?php echo json_encode($listaPaises); ?>;
 var listaClimas = <?php echo json_encode($listaClimas); ?>;
@@ -85,9 +86,7 @@ $(document).ready(function($){
             success: function(data){
                 $('#loading').hide();
                 localData = JSON.parse(data);
-                activeSort = '';
-                asc = true;
-                updateTable(localData, 1, '', 2);
+                updateTable(localData, currentPage, activeSort, activeDirection ? 1 : 0);
             },
             error: function(){
                 $('#loading').hide();
@@ -108,6 +107,8 @@ $(document).ready(function($){
         } else {
             treated_page = parseInt(current_page) || 1;
         }
+
+        currentPage = treated_page;
 
         var from_result_num = (results_per_page * treated_page) - results_per_page;
         var pgn = pagination(treated_page, total_pages);
@@ -145,7 +146,7 @@ $(document).ready(function($){
                     tbl += "<td><span class='nomeClima' id='cli" + val['ID'] + "'>" + (val['nomeClima'] || '') + "</span>";
                     tbl += "<select class='comboClima editavel' id='selcli" + val['ID'] + "' hidden>";
                     listaClimas.forEach(function(c){
-                        tbl += "<option value='" + c[0] + "' " + (val['Clima'] == c[0] ? 'selected' : '') + ">" + c[1] + "</option>";
+                        tbl += "<option value='" + c[0] + "' " + (val['idClima'] == c[0] ? 'selected' : '') + ">" + c[1] + "</option>";
                     });
                     tbl += "</select></td>";
 
@@ -195,11 +196,13 @@ $(document).ready(function($){
 
         addFilters();
         bindEvents();
+        updateBatchFloatingBar();
     }
 
     function bindEvents(){
         $('.editar').off('click').on('click', function(){
             var tbl_row = $(this).closest('tr');
+            tbl_row.addClass('in-edition');
             var id = tbl_row.attr("id");
 
             tbl_row.find('span').each(function(){
@@ -223,10 +226,12 @@ $(document).ready(function($){
 
             tbl_row.find('.comboPais').show();
             tbl_row.find('.comboClima').show();
+            updateBatchFloatingBar();
         });
 
         $('.cancelar').off('click').on('click', function(){
             var tbl_row = $(this).closest('tr');
+            tbl_row.removeClass('in-edition');
             var id = tbl_row.attr("id");
 
             tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
@@ -249,35 +254,52 @@ $(document).ready(function($){
             tbl_row.find('span').each(function(){
                 $(this).html($(this).attr('original_entry'));
             });
+            updateBatchFloatingBar();
         });
 
         $('.salvar').off('click').on('click', function(){
             var tbl_row = $(this).closest('tr');
-            var id = tbl_row.attr("id");
+            saveStadiumRowAjax(tbl_row).then(function(){
+                load_data();
+            }).catch(function(err){
+                alert("Erro: " + err);
+                load_data();
+            });
+        });
+    }
 
-            var nomeEstadio = tbl_row.find('#nom' + id).text().trim();
-            var capacidade = tbl_row.find('#capedit' + id).val();
-            var clima = tbl_row.find('.comboClima').val();
-            var pais = tbl_row.find('.comboPais').val();
-            var altitude = document.getElementById("alt" + id).checked;
-            var caldeirao = document.getElementById("cal" + id).checked;
+    function getStadiumRowFormData(tbl_row) {
+        var id = tbl_row.attr("id");
 
-            var inputFoto = (tbl_row.find('#foto' + id))[0];
-            var foto = (inputFoto && inputFoto.files.length > 0) ? inputFoto.files[0] : null;
+        var nomeEstadio = tbl_row.find('#nom' + id).text().trim();
+        var capacidade = tbl_row.find('#capedit' + id).val();
+        var clima = tbl_row.find('.comboClima').val();
+        var pais = tbl_row.find('.comboPais').val();
+        var altitude = document.getElementById("alt" + id).checked;
+        var caldeirao = document.getElementById("cal" + id).checked;
 
-            var formData = new FormData();
-            formData.append('id', id);
-            formData.append('nomeEstadio', nomeEstadio);
-            formData.append('capacidade', capacidade);
-            formData.append('clima', clima);
-            formData.append('altitude', altitude);
-            formData.append('caldeirao', caldeirao);
-            formData.append('pais', pais);
+        var inputFoto = (tbl_row.find('#foto' + id))[0];
+        var foto = (inputFoto && inputFoto.files.length > 0) ? inputFoto.files[0] : null;
 
-            if(foto != null){
-                formData.append('foto', foto);
-            }
+        var formData = new FormData();
+        formData.append('id', id);
+        formData.append('nomeEstadio', nomeEstadio);
+        formData.append('capacidade', capacidade);
+        formData.append('clima', clima);
+        formData.append('altitude', altitude);
+        formData.append('caldeirao', caldeirao);
+        formData.append('pais', pais);
 
+        if(foto != null){
+            formData.append('foto', foto);
+        }
+
+        return formData;
+    }
+
+    function saveStadiumRowAjax(tbl_row) {
+        return new Promise(function(resolve, reject){
+            var formData = getStadiumRowFormData(tbl_row);
             $.ajax({
                 url: 'alterar_estadio.php',
                 processData: false,
@@ -287,16 +309,74 @@ $(document).ready(function($){
                 dataType: 'json',
                 data: formData,
                 success: function(data){
-                    if(data.error && data.error !== ''){
-                        alert(data.error);
+                    if(data && data.error && data.error !== ''){
+                        reject(data.error);
+                    } else {
+                        tbl_row.removeClass('in-edition');
+                        resolve(data);
                     }
-                    load_data();
                 },
                 error: function(){
-                    alert("Erro, o procedimento não foi realizado. Tente novamente.");
+                    reject("Erro ao conectar com o servidor.");
                 }
             });
         });
+    }
+
+    function updateBatchFloatingBar() {
+        var editingRows = $('tr.in-edition');
+        var count = editingRows.length;
+        var bar = $('#floating-batch-bar');
+
+        if (count > 1) {
+            if (bar.length === 0) {
+                var barHtml = '<div id="floating-batch-bar" class="floating-batch-actions">' +
+                    '<div class="floating-batch-info">' +
+                    '<span class="material-symbols-outlined">edit_note</span>' +
+                    '<span id="batch-count-badge" class="floating-batch-badge">' + count + '</span>' +
+                    '<span>linhas em edição</span>' +
+                    '</div>' +
+                    '<button type="button" id="btn-batch-save-all" class="btn-batch-save">' +
+                    '<span class="material-symbols-outlined">done_all</span> Aceitar todos' +
+                    '</button>' +
+                    '<button type="button" id="btn-batch-cancel-all" class="btn-batch-cancel">' +
+                    '<span class="material-symbols-outlined">close</span> Cancelar' +
+                    '</button>' +
+                    '</div>';
+                $('body').append(barHtml);
+
+                $('#btn-batch-save-all').off('click').on('click', function(){
+                    var rowsToSave = $('tr.in-edition');
+                    if (rowsToSave.length === 0) return;
+                    var $btn = $(this);
+                    $btn.prop('disabled', true).html('<span class="material-symbols-outlined">hourglass_top</span> Salvando...');
+
+                    var promises = [];
+                    rowsToSave.each(function(){
+                        promises.push(saveStadiumRowAjax($(this)));
+                    });
+
+                    Promise.allSettled(promises).then(function(results){
+                        var errors = results.filter(function(r){ return r.status === 'rejected'; });
+                        if(errors.length > 0) {
+                            alert("Houve erro ao salvar " + errors.length + " estádio(s).");
+                        }
+                        load_data();
+                    });
+                });
+
+                $('#btn-batch-cancel-all').off('click').on('click', function(){
+                    $('tr.in-edition').find('.cancelar').trigger('click');
+                });
+            } else {
+                $('#batch-count-badge').text(count);
+                bar.fadeIn(200);
+            }
+        } else {
+            if (bar.length > 0) {
+                bar.fadeOut(200);
+            }
+        }
     }
 
     function addFilters(){

@@ -115,8 +115,6 @@ if($num>0){
 
             extract($row);
 
-            $moreInfo = $pais->readMoreInfo($id);
-
             echo "<tr id='".$id."'>";
                 //echo "<td><span id=".$id.">{$id}</span></td>";
                 echo "<td><a class='nomeLiga' href='../ligas/paisstatus.php?country=".$id."'><span class='nomeEditavel' id='nom".$id."'>{$nome}</span></a></td>";
@@ -331,11 +329,164 @@ echo('</div>');
              window.location.href = "selecoesdopais.php?idPais="+ id;
          });
 
-         $('.editar').click(function(){
+    function getCountryRowFormData(tbl_row) {
+        var id = tbl_row.attr('id');
+        var nomePais = tbl_row.find('#nom'+id).text().trim();
+        var siglaPais = tbl_row.find('#sig'+id).text().trim();
+        var federacaoPais = tbl_row.find('.comboPais').val();
+        var rank = tbl_row.find('#chk'+id).prop("checked");
+        var ranqueavel = (rank == true) ? 0 : 1;
+
+        var input = (tbl_row.find('#newlogo'+id))[0];
+        var logo = (input && input.files.length > 0) ? input.files[0] : null;
+
+        var coordenadas = tbl_row.find(".example").val().split(",");
+        var latitude = coordenadas[0];
+        var preLongitude = parseFloat(coordenadas[1]);
+        var longitude = preLongitude + Math.round(preLongitude/-360) * 360;
+
+        var formData = new FormData();
+        formData.append('id', id);
+        formData.append('nomePais', nomePais);
+        formData.append('siglaPais', siglaPais);
+        formData.append('federacaoPais', federacaoPais);
+        formData.append('ranqueavel', ranqueavel);
+        formData.append('latitude', latitude);
+        formData.append('longitude', longitude);
+
+        if(logo != null){
+            formData.append('logo', logo);
+        }
+        return formData;
+    }
+
+    function saveCountryRowAjax(tbl_row) {
+        return new Promise(function(resolve, reject){
+            var id = tbl_row.attr('id');
+            var formData = getCountryRowFormData(tbl_row);
+
+            $.ajax({
+                url: 'alterar_pais.php',
+                processData: false,
+                contentType: false,
+                cache: false,
+                type: "POST",
+                dataType: 'json',
+                data: formData,
+                success: function(data) {
+                    if(data.error && data.error !== ''){
+                        reject(data.error);
+                    } else {
+                        // Apply DOM updates directly
+                        var nomePais = tbl_row.find('#nom'+id).text().trim();
+                        var siglaPais = tbl_row.find('#sig'+id).text().trim();
+                        var fedText = tbl_row.find('.comboPais option:selected').text();
+                        var fedVal = tbl_row.find('.comboPais').val();
+                        var coordenadas = tbl_row.find(".example").val();
+
+                        tbl_row.find('#nom'+id).text(nomePais);
+                        tbl_row.find('#sig'+id).text(siglaPais);
+                        tbl_row.find('#fed'+id).text(fedText);
+                        tbl_row.find('.comboPais').attr('id', fedVal);
+                        tbl_row.find('#coo'+id).text(coordenadas);
+
+                        var inputLogo = (tbl_row.find('#newlogo'+id))[0];
+                        if (inputLogo && inputLogo.files.length > 0) {
+                            var cacheBuster = new Date().getTime();
+                            tbl_row.find('#log'+id).attr('src', '../images/bandeiras/' + siglaPais + '.webp?' + cacheBuster);
+                            tbl_row.find('#newlogo'+id).val('');
+                        }
+
+                        tbl_row.removeClass('in-edition');
+                        tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+                        tbl_row.find('.nomeLiga').css("pointer-events","auto").css("cursor","auto");
+                        tbl_row.find('.comboPais').hide();
+                        tbl_row.find('.fedPais').show();
+                        tbl_row.find('.salvar').hide();
+                        tbl_row.find('.cancelar').hide();
+                        tbl_row.find('.editar').show();
+                        tbl_row.find('.demografia').show();
+                        tbl_row.find('.selecoes').show();
+                        tbl_row.find('.exportarplanilha').show();
+                        tbl_row.find('.importarplanilha').show();
+                        tbl_row.find('.newlogoedit').hide();
+                        tbl_row.find('.logoimage').show();
+                        tbl_row.find("[id^='mapContainer']").hide();
+                        tbl_row.find(".example").hide();
+                        tbl_row.find(".coordenadas").show();
+                        tbl_row.find('.inputranking').prop("disabled", true);
+
+                        resolve(data);
+                    }
+                },
+                error: function() {
+                    reject("Erro na execução da solicitação");
+                }
+            });
+        });
+    }
+
+    function updateBatchFloatingBar() {
+        var editingRows = $('tr.in-edition');
+        var count = editingRows.length;
+        var bar = $('#floating-batch-bar');
+
+        if (count > 1) {
+            if (bar.length === 0) {
+                var barHtml = '<div id="floating-batch-bar" class="floating-batch-actions">' +
+                    '<div class="floating-batch-info">' +
+                    '<span class="material-symbols-outlined">edit_note</span>' +
+                    '<span id="batch-count-badge" class="floating-batch-badge">' + count + '</span>' +
+                    '<span>linhas em edição</span>' +
+                    '</div>' +
+                    '<button type="button" id="btn-batch-save-all" class="btn-batch-save">' +
+                    '<span class="material-symbols-outlined">done_all</span> Aceitar todos' +
+                    '</button>' +
+                    '<button type="button" id="btn-batch-cancel-all" class="btn-batch-cancel">' +
+                    '<span class="material-symbols-outlined">close</span> Cancelar' +
+                    '</button>' +
+                    '</div>';
+                $('body').append(barHtml);
+
+                $('#btn-batch-save-all').off('click').on('click', function(){
+                    var rowsToSave = $('tr.in-edition');
+                    if (rowsToSave.length === 0) return;
+                    var $btn = $(this);
+                    $btn.prop('disabled', true).html('<span class="material-symbols-outlined">hourglass_top</span> Salvando...');
+
+                    var promises = [];
+                    rowsToSave.each(function(){
+                        promises.push(saveCountryRowAjax($(this)));
+                    });
+
+                    Promise.allSettled(promises).then(function(results){
+                        var errors = results.filter(function(r){ return r.status === 'rejected'; });
+                        if (errors.length > 0) {
+                            alert("Alguns países não puderam ser salvos (" + errors.length + " erro(s)).");
+                        }
+                        updateBatchFloatingBar();
+                    });
+                });
+
+                $('#btn-batch-cancel-all').off('click').on('click', function(){
+                    $('tr.in-edition').find('.cancelar').click();
+                });
+            } else {
+                $('#batch-count-badge').text(count);
+                bar.show();
+            }
+        } else {
+            if (bar.length > 0) {
+                bar.remove();
+            }
+        }
+    }
+
+    $('.editar').click(function(){
         var tbl_row =  $(this).closest('tr');
+        tbl_row.addClass('in-edition');
         tbl_row.find('span').each(function(index, val){
             $(this).attr('original_entry', $(this).html());
-
         });
         tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
         tbl_row.find('.nomeLiga').css("cursor","text");
@@ -350,20 +501,21 @@ echo('</div>');
         tbl_row.find('.fedPais').hide();
         tbl_row.find('.newlogoedit').show();
         tbl_row.find('.logoimage').hide();
-		tbl_row.find("[id^='mapContainer']").show();
-		tbl_row.find(".example").show();
-		tbl_row.find(".coordenadas").hide();
+        tbl_row.find("[id^='mapContainer']").show();
+        tbl_row.find(".example").show();
+        tbl_row.find(".coordenadas").hide();
         var inputranking = tbl_row.find('.inputranking');
         inputranking.prop("disabled", false);
         inputranking.prop("data-original", inputranking.prop("checked"));
 
         var paisId = tbl_row.find('.comboPais').attr('id');
         tbl_row.find('.comboPais').show().val(paisId);
-
+        updateBatchFloatingBar();
     });
 
-        $('.cancelar').click(function(){
+    $('.cancelar').click(function(){
         var tbl_row =  $(this).closest('tr');
+        tbl_row.removeClass('in-edition');
         tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
         tbl_row.find('.nomeLiga').css("pointer-events","auto");
         tbl_row.find('.nomeLiga').css("cursor","auto");
@@ -378,9 +530,9 @@ echo('</div>');
         tbl_row.find('.importarplanilha').show();
         tbl_row.find('.newlogoedit').hide();
         tbl_row.find('.logoimage').show();
-		tbl_row.find("[id^='mapContainer']").hide();
-		tbl_row.find(".example").hide();
-		tbl_row.find(".coordenadas").show();
+        tbl_row.find("[id^='mapContainer']").hide();
+        tbl_row.find(".example").hide();
+        tbl_row.find(".coordenadas").show();
         var inputranking = tbl_row.find('.inputranking');
         inputranking.prop("checked", inputranking.prop("data-original"));
         inputranking.prop("disabled", true);
@@ -388,96 +540,18 @@ echo('</div>');
         tbl_row.find('span').each(function(index, val){
             $(this).html($(this).attr('original_entry'));
         });
+        updateBatchFloatingBar();
     });
 
     $('.salvar').click(function(){
-        var tbl_row =  $(this).closest('tr');
-        tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
-        tbl_row.find('.nomeLiga').css("pointer-events","auto");
-        tbl_row.find('.nomeLiga').css("cursor","auto");
-        tbl_row.find('.comboPais').hide();
-        tbl_row.find('.fedPais').show();
-        tbl_row.find('.salvar').hide();
-        tbl_row.find('.cancelar').hide();
-        tbl_row.find('.editar').show();
-        tbl_row.find('.newlogoedit').hide();
-        tbl_row.find('.logoimage').show();
-		tbl_row.find("[id^='mapContainer']").hide();
-		tbl_row.find(".example").hide();
-		tbl_row.find(".coordenadas").show();
-
-        var id = tbl_row.attr('id');
-        var nomePais = tbl_row.find('#nom'+id).html();
-        var siglaPais = tbl_row.find('#sig'+id).html();
-        var federacaoPais = tbl_row.find('.comboPais').val();
-        var rank = tbl_row.find('#chk'+id).prop("checked");
-        var inputranking = tbl_row.find('.inputranking');
-        inputranking.prop("disabled", true);
-
-        if (rank == true){
-            ranqueavel = 0;
-        } else {
-            ranqueavel = 1;
-        }
-
-        var input = (tbl_row.find('#newlogo'+id))[0];
-        var logo;
-
-        if (input.files.length > 0) {
-           logo = input.files[0];
-        } else {
-           logo = null;
-        }
-		
-		var coordenadas = tbl_row.find(".example").val().split(",");
-		var latitude = coordenadas[0];
-		var preLongitude = parseFloat(coordenadas[1]);
-		
-		let longitude = preLongitude + Math.round(preLongitude/-360) * 360;
-		
-		// console.log(preLongitude);
-		// console.log(longitude);
-
-         var formData = new FormData();
-         formData.append('id', id);
-         formData.append('nomePais', nomePais);
-         formData.append('siglaPais', siglaPais);
-         formData.append('federacaoPais', federacaoPais);
-         formData.append('ranqueavel', ranqueavel);
-		 formData.append('latitude', latitude);
-		 formData.append('longitude', longitude);
-
-         if(logo != null){
-            formData.append('logo', logo);
-         }
-
-
-    // for (var key of formData.entries()) {
-         // console.log(key[0] + ', ' + key[1]);
-     // }
-
-        //console.log(formData);
-         $.ajax({
-             url: 'alterar_pais.php',
-             processData: false,
-            contentType: false,
-            cache: false,
-            type: "POST",
-            dataType: 'json',
-             data: formData,
-                  success: function(data) {
-                      if(data.error != ''){
-                        alert(data.error)
-                      }
-                      location.reload();
-                  },
-                  error: function(data) {
-                      successmessage = 'Error';
-                      alert("Erro na execução da solicitação");
-                      //location.reload();
-                  }
-              });
-     });
+        var tbl_row = $(this).closest('tr');
+        saveCountryRowAjax(tbl_row).then(function(){
+            updateBatchFloatingBar();
+        }).catch(function(err){
+            alert("Erro: " + err);
+            updateBatchFloatingBar();
+        });
+    });
 
 });
 

@@ -744,3 +744,126 @@ input[type="number"] {
     content: "Opções";
   }
 }
+
+/* ==========================================================================
+   Barra Flutuante de Ações em Lote (Multi-edição Inline)
+   ========================================================================== */
+.floating-batch-actions {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 10px 16px;
+  border-radius: 50px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 15px rgba(56, 189, 248, 0.2);
+  animation: slideUpFloat 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #f8fafc;
+}
+
+@keyframes slideUpFloat {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.floating-batch-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f8fafc;
+  padding-left: 4px;
+}
+
+.floating-batch-badge {
+  background: #0284c7;
+  color: #ffffff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  min-width: 22px;
+  text-align: center;
+}
+
+.btn-batch-save {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  border-radius: 30px !important;
+  font-weight: 600 !important;
+  font-size: 0.88rem !important;
+  font-family: 'Outfit', sans-serif !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-batch-save:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.45) !important;
+}
+
+.btn-batch-save:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+.btn-batch-cancel {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #cbd5e1 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  padding: 8px 14px !important;
+  border-radius: 30px !important;
+  font-weight: 500 !important;
+  font-size: 0.85rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-batch-cancel:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+
+@media (max-width: 768px) {
+  .floating-batch-actions {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    justify-content: space-between;
+    border-radius: 16px;
+    padding: 10px 14px;
+  }
+  .floating-batch-info {
+    font-size: 0.8rem;
+  }
+  .btn-batch-save, .btn-batch-cancel {
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+  }
+}

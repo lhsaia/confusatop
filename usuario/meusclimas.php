@@ -39,6 +39,8 @@ var asc = true;
 var activeSort = '';
 var activeDirection = true;
 
+var currentPage = 1;
+
 var listaPaises = <?php echo json_encode($listaPaises); ?>;
 var logged = '<?php echo (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true) ? "true" : "false"; ?>';
 var admin = '<?php echo (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) ? "true" : "false"; ?>';
@@ -75,9 +77,7 @@ $(document).ready(function($){
             success: function(data){
                 $('#loading').hide();
                 localData = JSON.parse(data);
-                activeSort = '';
-                asc = true;
-                updateTable(localData, 1, '', 2);
+                updateTable(localData, currentPage, activeSort, activeDirection ? 1 : 0);
             },
             error: function(){
                 $('#loading').hide();
@@ -106,6 +106,10 @@ $(document).ready(function($){
         } else {
             treated_page = parseInt(current_page) || 1;
         }
+
+        if(treated_page < 1) treated_page = 1;
+        if(total_pages > 0 && treated_page > total_pages) treated_page = total_pages;
+        currentPage = treated_page;
 
         var from_result_num = (results_per_page * treated_page) - results_per_page;
         var pgn = pagination(treated_page, total_pages);
@@ -221,11 +225,13 @@ $(document).ready(function($){
 
         addFilters();
         bindEvents();
+        updateBatchFloatingBar();
     }
 
     function bindEvents(){
         $('.editar').off('click').on('click', function(){
             var tbl_row = $(this).closest('tr');
+            tbl_row.addClass('in-edition');
 
             tbl_row.find('span').each(function(){
                 $(this).attr('original_entry', $(this).html());
@@ -239,10 +245,12 @@ $(document).ready(function($){
             tbl_row.find('span:not(.nomeEditavel)').hide();
             tbl_row.find('.bandeira').hide();
             tbl_row.find('select').show();
+            updateBatchFloatingBar();
         });
 
         $('.cancelar').off('click').on('click', function(){
             var tbl_row = $(this).closest('tr');
+            tbl_row.removeClass('in-edition');
 
             tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
             tbl_row.find('select').hide();
@@ -256,59 +264,120 @@ $(document).ready(function($){
             tbl_row.find('span').each(function(){
                 $(this).html($(this).attr('original_entry'));
             });
+            updateBatchFloatingBar();
         });
 
         $('.salvar').off('click').on('click', function(){
             var tbl_row = $(this).closest('tr');
-            var id = tbl_row.attr("id");
+            saveClimateRowAjax(tbl_row).then(function(){
+                load_data();
+            }).catch(function(err){
+                alert("Erro: " + err);
+                load_data();
+            });
+        });
+    }
 
-            var nomeClima = tbl_row.find('#nom' + id).text().trim();
-            var tempVerao = tbl_row.find('#seltempver' + id).val();
-            var estiloVerao = tbl_row.find('#selestver' + id).val();
-            var tempOutono = tbl_row.find('#seltempout' + id).val();
-            var estiloOutono = tbl_row.find('#selestout' + id).val();
-            var tempInverno = tbl_row.find('#seltempinv' + id).val();
-            var estiloInverno = tbl_row.find('#selestinv' + id).val();
-            var tempPrimavera = tbl_row.find('#seltemppri' + id).val();
-            var estiloPrimavera = tbl_row.find('#selestpri' + id).val();
-            var hemisferio = tbl_row.find('#selhem' + id).val();
-            var pais = tbl_row.find('#selpai' + id).val();
+    function getClimateRowFormData(tbl_row) {
+        var id = tbl_row.attr("id");
+        return {
+            id: id,
+            nomeClima: tbl_row.find('#nom' + id).text().trim(),
+            tempVerao: tbl_row.find('#seltempver' + id).val(),
+            estiloVerao: tbl_row.find('#selestver' + id).val(),
+            tempOutono: tbl_row.find('#seltempout' + id).val(),
+            estiloOutono: tbl_row.find('#selestout' + id).val(),
+            tempInverno: tbl_row.find('#seltempinv' + id).val(),
+            estiloInverno: tbl_row.find('#selestinv' + id).val(),
+            tempPrimavera: tbl_row.find('#seltemppri' + id).val(),
+            estiloPrimavera: tbl_row.find('#selestpri' + id).val(),
+            hemisferio: tbl_row.find('#selhem' + id).val(),
+            pais: tbl_row.find('#selpai' + id).val()
+        };
+    }
 
+    function saveClimateRowAjax(tbl_row) {
+        return new Promise(function(resolve, reject){
+            var dataObj = getClimateRowFormData(tbl_row);
             $.ajax({
                 url: 'alterar_clima.php',
                 type: "POST",
                 dataType: 'json',
-                data: {
-                    id: id,
-                    nomeClima: nomeClima,
-                    tempVerao: tempVerao,
-                    estiloVerao: estiloVerao,
-                    tempOutono: tempOutono,
-                    estiloOutono: estiloOutono,
-                    tempInverno: tempInverno,
-                    estiloInverno: estiloInverno,
-                    tempPrimavera: tempPrimavera,
-                    estiloPrimavera: estiloPrimavera,
-                    hemisferio: hemisferio,
-                    pais: pais
-                },
+                data: dataObj,
                 success: function(data){
                     if(data && data.error && data.error !== ''){
-                        alert(data.error);
+                        reject(data.error);
+                    } else {
+                        tbl_row.removeClass('in-edition');
+                        resolve(data);
                     }
-                    load_data();
                 },
                 error: function(xhr){
-                    var msg = "Erro, o procedimento não foi realizado. Tente novamente.";
+                    var msg = "Erro ao conectar com o servidor.";
                     try {
                         var res = JSON.parse(xhr.responseText);
                         if(res && res.error) msg = res.error;
                     } catch(e){}
-                    alert(msg);
-                    load_data();
+                    reject(msg);
                 }
             });
         });
+    }
+
+    function updateBatchFloatingBar() {
+        var editingRows = $('tr.in-edition');
+        var count = editingRows.length;
+        var bar = $('#floating-batch-bar');
+
+        if (count > 1) {
+            if (bar.length === 0) {
+                var barHtml = '<div id="floating-batch-bar" class="floating-batch-actions">' +
+                    '<div class="floating-batch-info">' +
+                    '<span class="material-symbols-outlined">edit_note</span>' +
+                    '<span id="batch-count-badge" class="floating-batch-badge">' + count + '</span>' +
+                    '<span>linhas em edição</span>' +
+                    '</div>' +
+                    '<button type="button" id="btn-batch-save-all" class="btn-batch-save">' +
+                    '<span class="material-symbols-outlined">done_all</span> Aceitar todos' +
+                    '</button>' +
+                    '<button type="button" id="btn-batch-cancel-all" class="btn-batch-cancel">' +
+                    '<span class="material-symbols-outlined">close</span> Cancelar' +
+                    '</button>' +
+                    '</div>';
+                $('body').append(barHtml);
+
+                $('#btn-batch-save-all').off('click').on('click', function(){
+                    var rowsToSave = $('tr.in-edition');
+                    if (rowsToSave.length === 0) return;
+                    var $btn = $(this);
+                    $btn.prop('disabled', true).html('<span class="material-symbols-outlined">hourglass_top</span> Salvando...');
+
+                    var promises = [];
+                    rowsToSave.each(function(){
+                        promises.push(saveClimateRowAjax($(this)));
+                    });
+
+                    Promise.allSettled(promises).then(function(results){
+                        var errors = results.filter(function(r){ return r.status === 'rejected'; });
+                        if (errors.length > 0) {
+                            alert("Alguns climas não puderam ser salvos (" + errors.length + " erro(s)).");
+                        }
+                        load_data();
+                    });
+                });
+
+                $('#btn-batch-cancel-all').off('click').on('click', function(){
+                    $('tr.in-edition').find('.cancelar').click();
+                });
+            } else {
+                $('#batch-count-badge').text(count);
+                bar.show();
+            }
+        } else {
+            if (bar.length > 0) {
+                bar.remove();
+            }
+        }
     }
 
     function addFilters(){
@@ -333,7 +402,7 @@ $(document).ready(function($){
 
             var currentAsc = asc;
             asc = !asc;
-            updateTable(localData, 1, column, currentAsc ? 1 : 0);
+            updateTable(localData, currentPage, column, currentAsc ? 1 : 0);
         });
 
         $('.page_link').off('click').on('click', function(e){

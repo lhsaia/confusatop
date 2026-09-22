@@ -184,10 +184,10 @@ html body #logged-user {
   font-weight: 600 !important;
   color: #475569 !important;
   text-transform: uppercase;
-  font-size: 0.8rem !important;
-  letter-spacing: 0.5px;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.3px;
   border: none !important;
-  padding: 12px 8px !important;
+  padding: 8px 4px !important;
   vertical-align: middle !important;
   text-align: center !important;
 }
@@ -199,7 +199,7 @@ html body #logged-user {
 }
 
 #tabelaPrincipal th span.material-symbols-outlined {
-  font-size: 16px;
+  font-size: 15px;
   vertical-align: middle;
   margin-right: 2px;
 }
@@ -209,10 +209,10 @@ html body #logged-user {
 }
 
 #tabelaPrincipal td {
-  padding: 10px 8px !important;
+  padding: 6px 4px !important;
   vertical-align: middle !important;
   border: none !important;
-  font-size: 0.85rem !important;
+  font-size: 0.82rem !important;
   color: #334155 !important;
   text-align: center !important;
   background: rgba(255, 255, 255, 0.9) !important;
@@ -373,11 +373,11 @@ html body #logged-user {
 /* Inputs de Edição */
 .editavel {
   border: 1px dashed #0284c7 !important;
-  padding: 4px 6px !important;
+  padding: 2px 4px !important;
   background: rgba(2, 132, 199, 0.05) !important;
   outline: none !important;
   border-radius: 4px !important;
-  max-width: 110px !important;
+  max-width: 90px !important;
   box-sizing: border-box;
 }
 
@@ -387,7 +387,7 @@ html body #logged-user {
 }
 
 .nomeEditavel.editavel {
-  max-width: 200px !important;
+  max-width: 120px !important;
   display: inline-block !important;
   white-space: nowrap !important;
   text-overflow: ellipsis;
@@ -396,20 +396,52 @@ html body #logged-user {
 }
 
 .nascimentoEditavel {
-  max-width: 120px !important;
-  font-size: 0.8rem !important;
-  padding: 3px !important;
+  max-width: 105px !important;
+  font-size: 0.75rem !important;
+  padding: 2px !important;
 }
 
-.comboPais, .comboMentalidade, .comboCobrador, .comboAtividade, .comboPosicoes {
-  font-family: 'Montserrat', sans-serif !important;
+.valorEditavel {
+  max-width: 75px !important;
   font-size: 0.8rem !important;
+}
+
+.nivelEditavel.editavel {
+  max-width: 40px !important;
+  min-width: 30px !important;
+  display: inline-block !important;
+}
+
+.comboPais, .comboMentalidade, .comboCobrador, .comboAtividade {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.75rem !important;
   color: #334155 !important;
   border: 1px solid rgba(0, 0, 0, 0.15) !important;
   border-radius: 6px !important;
-  padding: 4px 8px !important;
+  padding: 2px 4px !important;
   background-color: #fff !important;
-  max-width: 120px !important;
+  max-width: 90px !important;
+  box-sizing: border-box;
+}
+
+.comboPosicoes {
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.75rem !important;
+  color: #334155 !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 6px !important;
+  padding: 2px 4px !important;
+  background-color: #fff !important;
+  max-width: 95px !important;
+  height: 48px !important;
+  box-sizing: border-box;
+}
+
+.actions-col, td.wide:last-child {
+  width: 75px !important;
+  min-width: 75px !important;
+  white-space: nowrap !important;
+  text-align: center !important;
 }
 
 /* Ocultação de elementos */

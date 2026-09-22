@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
@@ -266,9 +266,164 @@ $(document).ready(function() {
         });
     });
 
+    function getParamRowFormData(tbl_row) {
+        var id = tbl_row.attr('id');
+        var nome = tbl_row.find('#nom'+id).text().trim();
+        var gols = tbl_row.find('#gol'+id).text().trim();
+        var faltas = tbl_row.find('#fal'+id).text().trim();
+        var impedimentos = tbl_row.find('#imp'+id).text().trim();
+        var cartoes = tbl_row.find('#car'+id).text().trim();
+        var estilo = tbl_row.find('.comboEstilo').val();
+        var pais = tbl_row.find('.comboPais').val();
+        var selecionado = tbl_row.find('.checkboxSelecionado').is(':checked') ? 1 : 0;
+        var bandeiras = tbl_row.find('.checkboxBandeiras').is(':checked') ? 1 : 0;
+
+        return {
+            'id' : id,
+            'nome' : nome,
+            'gols' : gols,
+            'faltas' : faltas,
+            'impedimentos' : impedimentos,
+            'cartoes' : cartoes,
+            'estilo' : estilo,
+            'pais' : pais,
+            'selecionado' : selecionado,
+            'bandeiras' : bandeiras
+        };
+    }
+
+    function saveParamRowAjax(tbl_row) {
+        return new Promise(function(resolve, reject){
+            var id = tbl_row.attr('id');
+            var formData = getParamRowFormData(tbl_row);
+
+            $.ajax({
+                type: 'POST',
+                url: '/usuario/alterar_parametros.php',
+                data: formData,
+                dataType: 'json',
+                encode: true
+            }).done(function(data) {
+                if (!data.success) {
+                    reject(data.error || "Erro ao alterar parâmetros");
+                } else {
+                    var nome = tbl_row.find('#nom'+id).text().trim();
+                    var gols = parseInt(tbl_row.find('#gol'+id).text().trim()) || 0;
+                    var faltas = parseInt(tbl_row.find('#fal'+id).text().trim()) || 0;
+                    var impedimentos = parseInt(tbl_row.find('#imp'+id).text().trim()) || 0;
+                    var cartoes = parseInt(tbl_row.find('#car'+id).text().trim()) || 0;
+                    var estilo = parseInt(tbl_row.find('.comboEstilo').val()) || 3;
+                    var paisId = tbl_row.find('.comboPais').val();
+                    var paisNome = tbl_row.find('.comboPais option:selected').text();
+
+                    // Update meters
+                    tbl_row.find('#nom'+id).text(nome);
+                    tbl_row.find('#gol'+id).text(gols).siblings('.meter-bar').css('width', (gols * 5) + '%');
+                    tbl_row.find('#fal'+id).text(faltas).siblings('.meter-bar').css('width', (faltas * 5) + '%');
+                    tbl_row.find('#imp'+id).text(impedimentos).siblings('.meter-bar').css('width', (impedimentos * 10) + '%');
+                    tbl_row.find('#car'+id).text(cartoes).siblings('.meter-bar').css('width', (cartoes * 10) + '%');
+
+                    var faixaEstilo = (estilo - 3) * 50;
+                    var faixaEstiloDir = 0;
+                    var faixaEstiloEsq = 0;
+                    if(faixaEstilo > 0){
+                        faixaEstiloDir = faixaEstilo;
+                    } else if(faixaEstilo < 0){
+                        faixaEstiloEsq = faixaEstilo * -1;
+                    } else {
+                        faixaEstiloEsq = 5;
+                        faixaEstiloDir = 5;
+                    }
+                    tbl_row.find('.meter-split-left').css('width', faixaEstiloEsq + '%');
+                    tbl_row.find('.meter-split-right').css('width', faixaEstiloDir + '%');
+
+                    tbl_row.find('.comboEstilo').attr('id', estilo);
+                    tbl_row.find('.comboPais').attr('id', paisId);
+                    tbl_row.find('#pai'+id).text(paisNome);
+
+                    tbl_row.removeClass('in-edition');
+                    tbl_row.find('.checkboxSelecionado').attr("disabled", true);
+                    tbl_row.find('.checkboxBandeiras').attr("disabled", true);
+                    tbl_row.find('.meter-value').each(function(){
+                        $(this).attr('contenteditable', 'false').removeClass('editavel');
+                    });
+                    tbl_row.find('.nomeEditavel').attr('contenteditable', 'false').removeClass('editavel');
+                    tbl_row.find('.comboPais').hide();
+                    tbl_row.find('.comboEstilo').hide();
+                    tbl_row.find('.nomePais').show();
+                    tbl_row.find('.geral-estilo').show();
+                    tbl_row.find('.salvar').hide();
+                    tbl_row.find('.cancelar').hide();
+                    tbl_row.find('.editar').show();
+
+                    resolve(data);
+                }
+            }).fail(function() {
+                reject("Erro de comunicação ao salvar parâmetros.");
+            });
+        });
+    }
+
+    function updateBatchFloatingBar() {
+        var editingRows = $('tr.in-edition');
+        var count = editingRows.length;
+        var bar = $('#floating-batch-bar');
+
+        if (count > 1) {
+            if (bar.length === 0) {
+                var barHtml = '<div id="floating-batch-bar" class="floating-batch-actions">' +
+                    '<div class="floating-batch-info">' +
+                    '<span class="material-symbols-outlined">edit_note</span>' +
+                    '<span id="batch-count-badge" class="floating-batch-badge">' + count + '</span>' +
+                    '<span>linhas em edição</span>' +
+                    '</div>' +
+                    '<button type="button" id="btn-batch-save-all" class="btn-batch-save">' +
+                    '<span class="material-symbols-outlined">done_all</span> Aceitar todos' +
+                    '</button>' +
+                    '<button type="button" id="btn-batch-cancel-all" class="btn-batch-cancel">' +
+                    '<span class="material-symbols-outlined">close</span> Cancelar' +
+                    '</button>' +
+                    '</div>';
+                $('body').append(barHtml);
+
+                $('#btn-batch-save-all').off('click').on('click', function(){
+                    var rowsToSave = $('tr.in-edition');
+                    if (rowsToSave.length === 0) return;
+                    var $btn = $(this);
+                    $btn.prop('disabled', true).html('<span class="material-symbols-outlined">hourglass_top</span> Salvando...');
+
+                    var promises = [];
+                    rowsToSave.each(function(){
+                        promises.push(saveParamRowAjax($(this)));
+                    });
+
+                    Promise.allSettled(promises).then(function(results){
+                        var errors = results.filter(function(r){ return r.status === 'rejected'; });
+                        if (errors.length > 0) {
+                            alert("Alguns parâmetros não puderam ser salvos (" + errors.length + " erro(s)).");
+                        }
+                        updateBatchFloatingBar();
+                    });
+                });
+
+                $('#btn-batch-cancel-all').off('click').on('click', function(){
+                    $('tr.in-edition').find('.cancelar').click();
+                });
+            } else {
+                $('#batch-count-badge').text(count);
+                bar.show();
+            }
+        } else {
+            if (bar.length > 0) {
+                bar.remove();
+            }
+        }
+    }
+
     // Inline edit handlers
     $('.editar').click(function(){
         var tbl_row = $(this).closest('tr');
+        tbl_row.addClass('in-edition');
         tbl_row.find('span.meter-value, span.nomeEditavel').each(function(){
             $(this).attr('original_entry', $(this).html());
         });
@@ -294,10 +449,12 @@ $(document).ready(function() {
         tbl_row.find('.comboPais').show().val(paisId);
         var estiloId = tbl_row.find('.comboEstilo').attr('id');
         tbl_row.find('.comboEstilo').show().val(estiloId);
+        updateBatchFloatingBar();
     });
 
     $('.cancelar').click(function(){
         var tbl_row = $(this).closest('tr');
+        tbl_row.removeClass('in-edition');
         tbl_row.find('.checkboxSelecionado').attr("disabled", true);
         tbl_row.find('.checkboxBandeiras').attr("disabled", true);
         tbl_row.find('.meter-value').each(function(){
@@ -318,48 +475,16 @@ $(document).ready(function() {
 
         tbl_row.find('.checkboxSelecionado').prop("checked", tbl_row.find('.checkboxSelecionado').attr('original_entry') === 'true');
         tbl_row.find('.checkboxBandeiras').prop("checked", tbl_row.find('.checkboxBandeiras').attr('original_entry') === 'true');
+        updateBatchFloatingBar();
     });
 
     $('.salvar').click(function(){
         var tbl_row = $(this).closest('tr');
-        var id = tbl_row.attr('id');
-        var nome = tbl_row.find('#nom'+id).text().trim();
-        var gols = tbl_row.find('#gol'+id).text().trim();
-        var faltas = tbl_row.find('#fal'+id).text().trim();
-        var impedimentos = tbl_row.find('#imp'+id).text().trim();
-        var cartoes = tbl_row.find('#car'+id).text().trim();
-        var estilo = tbl_row.find('.comboEstilo').val();
-        var pais = tbl_row.find('.comboPais').val();
-        var selecionado = tbl_row.find('.checkboxSelecionado').is(':checked') ? 1 : 0;
-        var bandeiras = tbl_row.find('.checkboxBandeiras').is(':checked') ? 1 : 0;
-
-        var formData = {
-            'id' : id,
-            'nome' : nome,
-            'gols' : gols,
-            'faltas' : faltas,
-            'impedimentos' : impedimentos,
-            'cartoes' : cartoes,
-            'estilo' : estilo,
-            'pais' : pais,
-            'selecionado' : selecionado,
-            'bandeiras' : bandeiras
-        };
-
-        $.ajax({
-            type: 'POST',
-            url: '/usuario/alterar_parametros.php',
-            data: formData,
-            dataType: 'json',
-            encode: true
-        }).done(function(data) {
-            if (!data.success) {
-                $('#errorbox').html('<div class="alert alert-danger"><span class="closebtn">&times;</span>Houve um erro ao alterar os parâmetros: ' + data.error + '</div>');
-            } else {
-                location.reload();
-            }
-        }).fail(function() {
-            $('#errorbox').html('<div class="alert alert-danger"><span class="closebtn">&times;</span>Erro de comunicação ao salvar parâmetros.</div>');
+        saveParamRowAjax(tbl_row).then(function(){
+            updateBatchFloatingBar();
+        }).catch(function(err){
+            $('#errorbox').html('<div class="alert alert-danger"><span class="closebtn">&times;</span>Houve um erro ao alterar os parâmetros: ' + err + '</div>');
+            updateBatchFloatingBar();
         });
     });
 
