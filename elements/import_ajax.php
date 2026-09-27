@@ -434,13 +434,14 @@ if (isset($_POST['ajax'])) {
         }
 
         $filePath = "";
+        $error_msg = "";
+        $success_count = 0;
         for ($i = 0; $i <= count($filesToUpload) - 1; $i++) {
             $filePath = $filesToUpload[$i][0];
             $forbidden = $filesToUpload[$i][2];
             $importExt = $filesToUpload[$i][1];
             $importSize = $filesToUpload[$i][3];
             $originalName = $filesToUpload[$i][4];
-            $error_msg = '';
 
             if ($filePath != "" && $forbidden == 0 && $importExt == $correct_extension && $importSize <= $max_file_size) {
 
@@ -458,29 +459,20 @@ if (isset($_POST['ajax'])) {
                 }
 
                 $is_admin = (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == '1' && empty($_SESSION['impersonated']));
-                if (isset($_SESSION['jogadorTime']) && ($_SESSION['jogadorTime'] == 1 || $_SESSION['jogadorTime'] == 2)) {
-                    // Parse players and build matching list
+                if (isset($_SESSION['jogadorTime']) && $_SESSION['jogadorTime'] == 2) {
+                    // Parse players and build matching list (Apenas para importação de times .ymt)
                     $players_to_match = [];
                     
                     // Determine players list based on import type
                     $imported_players = [];
-                    if ($_SESSION['jogadorTime'] == 1) {
+                    $total_de_jogadores = $xml->elenco->Jogador->int->count();
+                    for ($j = 0; $j < $total_de_jogadores; $j++) {
                         $imported_players[] = [
-                            'xml_index' => 0,
-                            'nome' => (string)$xml->jogador->Nome,
-                            'idade' => (int)$xml->jogador->Idade,
-                            'nivel' => (int)$xml->jogador->Nivel
+                            'xml_index' => $j,
+                            'nome' => (string)$xml->jogadores->jogador[$j]->Nome,
+                            'idade' => (int)$xml->jogadores->jogador[$j]->Idade,
+                            'nivel' => (int)$xml->jogadores->jogador[$j]->Nivel
                         ];
-                    } else {
-                        $total_de_jogadores = $xml->elenco->Jogador->int->count();
-                        for ($j = 0; $j < $total_de_jogadores; $j++) {
-                            $imported_players[] = [
-                                'xml_index' => $j,
-                                'nome' => (string)$xml->jogadores->jogador[$j]->Nome,
-                                'idade' => (int)$xml->jogadores->jogador[$j]->Idade,
-                                'nivel' => (int)$xml->jogadores->jogador[$j]->Nivel
-                            ];
-                        }
                     }
 
                     // Get country_id
@@ -726,7 +718,11 @@ if (isset($_POST['ajax'])) {
                         'php_output' => $php_output
                     ]));
                 } else {
+                    $id_jogador_existente = null;
                     include($_SERVER['DOCUMENT_ROOT'] . $arquivo_tratamento);
+                    if ($is_success) {
+                        $success_count++;
+                    }
                 }
 
                 if ($xml === false) {
@@ -751,6 +747,16 @@ if (isset($_POST['ajax'])) {
             }
 
 
+        }
+
+        if ($success_count > 0 && empty($error_msg)) {
+            $is_success = true;
+        } else if ($success_count > 0 && !empty($error_msg)) {
+            $is_success = false;
+            $error_msg = "{$success_count} arquivo(s) importado(s) com sucesso, mas ocorreram erros: " . $error_msg;
+        } else if ($success_count === 0 && empty($error_msg)) {
+            $is_success = false;
+            $error_msg = "Nenhum arquivo válido foi processado.";
         }
 
         $php_output = ob_get_clean();
