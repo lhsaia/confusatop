@@ -1205,7 +1205,7 @@ $(document).on("click", '.proposta', function(event){
     $('#valorJogadorTransf').val(valorInicial);
     $('#nomeJogadorTransf').val(nomeJogador);
     $('#idJogadorTransf').val(idJogador);
-    $('#modalProposta').show();
+    $('#modalProposta').appendTo('body').css('display', 'flex').show().scrollTop(0);
 });
 
 $(".propostaTecnico").click(function(){
@@ -1228,9 +1228,8 @@ $(".propostaTecnico").click(function(){
         }
     });
 
-    $("#modalPropostaTecnico").show();
+    $("#modalPropostaTecnico").appendTo('body').css('display', 'flex').show().scrollTop(0);
     $("#idTecnicoTransf").val(id);
-
 });
 
 $("#formPropostaTecnico").submit(function(event){

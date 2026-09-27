@@ -1602,7 +1602,7 @@ $('#nomeJogadorTransf').val(nome);
 $("#idJogadorTransf").val(jogId);
 $("#clubeOrigemTransf").val(clube);
 $('#sorvete').val(sorvete);
-$('#modalProposta').show();
+$('#modalProposta').appendTo('body').css('display', 'flex').show().scrollTop(0);
 });
 
 $(document).on("click", '.propostaTecnico', function(event) {
@@ -1636,7 +1636,7 @@ $('#nomeTecnicoTransf').val(nome);
 $("#idTecnicoTransf").val(jogId);
 $("#clubeOrigemTecnico").val(clube);
 $('#sorveteTec').val(sorvete);
-$('#modalPropostaTecnico').show();
+$('#modalPropostaTecnico').appendTo('body').css('display', 'flex').show().scrollTop(0);
 });
 
 $("#formPropostaTecnico").submit(function(event){
