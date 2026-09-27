@@ -61,7 +61,10 @@ try {
         )
     );
     
-        //Content
+    $mail->CharSet = 'UTF-8';
+    $mail->Encoding = 'base64';
+
+    //Content
     $mail->isHTML(true);                                  //Set email format to HTML
 
 } catch (Exception $e) {
