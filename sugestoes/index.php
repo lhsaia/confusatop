@@ -6,6 +6,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 <?php
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 
+$isAdmin = (isset($_SESSION['admin_status']) && (int)$_SESSION['admin_status'] === 1);
 $page_title = "CONFUSA.top - Sugestões / Bugs";
 $css_filename = "home_redesign";
 $aux_css = "home_redesign";
@@ -30,7 +31,7 @@ $(document).ready(function($){
 		echo "false";
 	 };?>';
 
- var isAdmin = <?php echo (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) ? 'true' : 'false'; ?>;
+ var isAdmin = <?php echo $isAdmin ? 'true' : 'false'; ?>;
 
 load_data();
 
@@ -290,6 +291,16 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 
     var pgn = pagination(treated_page,total_pages);
 
+    function formatarDataSugestao(dataStr) {
+        if (!dataStr) return "-";
+        var parts = dataStr.split(' ');
+        var dateParts = parts[0].split('-');
+        if (dateParts.length === 3) {
+            return dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
+        }
+        return dataStr;
+    }
+
     //criar tabela dinamicamente
     var tbl = '';
     tbl += pgn;
@@ -298,19 +309,21 @@ function updateTable(ajax_data, current_page, highlighted, direction){
         tbl += "<thead id='headings'>";
             tbl += "<tr>";
                 if(logged == "true"){
-                    tbl += "<th asc='' id='suggestionTitle' class='headings' width='25%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTítulo</th>";
-                    tbl += "<th asc='' id='suggestionDescription' class='headings' width='25%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspDescrição</th>";
-                    tbl += "<th asc='' id='suggestionAuthor' class='headings' width='14%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspUsuário</th>";
-                    tbl += "<th asc='' id='suggestionType' class='headings' width='10%' class='penaltybox'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTipo</th>";
-                    tbl += "<th asc='' id='suggestionStatus' class='headings' width='12%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspStatus</th>";
+                    tbl += "<th asc='' id='suggestionTitle' class='headings' width='22%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTítulo</th>";
+                    tbl += "<th asc='' id='suggestionDescription' class='headings' width='22%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspDescrição</th>";
+                    tbl += "<th asc='' id='suggestionAuthor' class='headings' width='13%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspUsuário</th>";
+                    tbl += "<th asc='' id='suggestionDate' class='headings' width='10%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspData</th>";
+                    tbl += "<th asc='' id='suggestionType' class='headings' width='9%' class='penaltybox'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTipo</th>";
+                    tbl += "<th asc='' id='suggestionStatus' class='headings' width='10%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspStatus</th>";
                     tbl += "<th asc='' id='suggestionVote' class='headings' width='7%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspVotar</th>";
                     tbl += "<th asc='' id='suggestionVoteNumber' class='headings' width='7%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspVotos</th>";
                 } else {
-                    tbl += "<th asc='' id='suggestionTitle' class='headings' width='28%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTítulo</th>";
-                    tbl += "<th asc='' id='suggestionDescription' class='headings' width='28%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspDescrição</th>";
-                    tbl += "<th asc='' id='suggestionAuthor' class='headings' width='16%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspUsuário</th>";
-                    tbl += "<th asc='' id='suggestionType' class='headings' width='10%' class='penaltybox'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTipo</th>";
-                    tbl += "<th asc='' id='suggestionStatus' class='headings' width='11%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspStatus</th>";
+                    tbl += "<th asc='' id='suggestionTitle' class='headings' width='25%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTítulo</th>";
+                    tbl += "<th asc='' id='suggestionDescription' class='headings' width='25%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspDescrição</th>";
+                    tbl += "<th asc='' id='suggestionAuthor' class='headings' width='14%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspUsuário</th>";
+                    tbl += "<th asc='' id='suggestionDate' class='headings' width='11%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspData</th>";
+                    tbl += "<th asc='' id='suggestionType' class='headings' width='9%' class='penaltybox'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTipo</th>";
+                    tbl += "<th asc='' id='suggestionStatus' class='headings' width='9%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspStatus</th>";
                     tbl += "<th asc='' id='suggestionVoteNumber' class='headings' width='7%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspVotos</th>";
                 }
             tbl +=  "</tr>";
@@ -369,10 +382,14 @@ function updateTable(ajax_data, current_page, highlighted, direction){
             let author = val['autor_nome'] ? val['autor_nome'] : 'Anônimo';
             let author_html = "<span class='author_box' style='display: inline-flex; align-items: center; gap: 4px; font-weight: 500;'><span class='material-symbols-outlined' style='font-size: 1.1rem; color: #64748b; vertical-align: middle;'>person</span> " + $('<div>').text(author).html() + "</span>";
 
+            let date_formatted = formatarDataSugestao(val['created_at']);
+            let date_html = "<span class='date_box' style='display: inline-flex; align-items: center; gap: 4px; color: #64748b; font-size: 0.88rem; white-space: nowrap;'><span class='material-symbols-outlined' style='font-size: 1rem; color: #94a3b8; vertical-align: middle;'>calendar_today</span> " + date_formatted + "</span>";
+
             tbl += "<tr id='"+val['id']+"' >";
 				tbl +=  "<td>"+val['title']+"</td>";
 				tbl +=  "<td>"+val['description']+"</td>";
 				tbl +=  "<td>"+author_html+"</td>";
+				tbl +=  "<td>"+date_html+"</td>";
                 tbl +=  "<td>"+type+"</td>";
                 tbl +=  "<td>"+status+"</td>";
 				if(logged == "true"){
@@ -476,6 +493,7 @@ function sortResults(prop, asc) {
     if(prop === 'suggestionTitle') field = 'title';
     else if(prop === 'suggestionDescription') field = 'description';
     else if(prop === 'suggestionAuthor') field = 'autor_nome';
+    else if(prop === 'suggestionDate') field = 'created_at';
     else if(prop === 'suggestionType') field = 'type';
     else if(prop === 'suggestionStatus') field = 'status';
     else if(prop === 'suggestionVoteNumber') field = 'vote_count';
@@ -487,7 +505,12 @@ function sortResults(prop, asc) {
         let valA = a[field] !== undefined && a[field] !== null ? a[field] : '';
         let valB = b[field] !== undefined && b[field] !== null ? b[field] : '';
         
-        if (field === 'vote_count' || field === 'type' || field === 'status') {
+        if (field === 'created_at') {
+            let dateA = valA ? new Date(String(valA).replace(/-/g, '/')).getTime() || 0 : 0;
+            let dateB = valB ? new Date(String(valB).replace(/-/g, '/')).getTime() || 0 : 0;
+            if (asc) return dateA - dateB;
+            else return dateB - dateA;
+        } else if (field === 'vote_count' || field === 'type' || field === 'status') {
             valA = Number(valA) || 0;
             valB = Number(valB) || 0;
             if (asc) return valA - valB;

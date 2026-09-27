@@ -16,6 +16,20 @@ class Suggestion{
 
     public function __construct($db){
         $this->conn = $db;
+        $this->ensureCreatedAtColumn();
+    }
+
+    private function ensureCreatedAtColumn() {
+        try {
+            $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+        } catch (Exception $e) {
+            try {
+                $check = $this->conn->query("SHOW COLUMNS FROM " . $this->table_name . " LIKE 'created_at'");
+                if ($check && $check->rowCount() == 0) {
+                    $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+                }
+            } catch (Exception $ex) {}
+        }
     }
 	
 	public function readSuggestions($search_term, $user){
