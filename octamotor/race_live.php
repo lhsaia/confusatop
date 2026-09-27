@@ -354,7 +354,7 @@ function get_ajax_data(){
         setFlag("CF");
         createPodium(data);
       }
-	  if(data.timestamp > (parseFloat(data.race_info.base_timestamp) + data.race_info.max_time)){
+	  if(parseFloat(data.race_info.max_time) > 0 && data.timestamp >= (parseFloat(data.race_info.base_timestamp) + parseFloat(data.race_info.max_time))){
         setFlag("CF");
         createPodium(data);
       }

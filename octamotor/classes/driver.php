@@ -547,11 +547,9 @@ class Driver extends db_name implements \JsonSerializable{
     }
 
     public function setTire(){
-      if($this->current_tire_set != 3){
-        if(strlen($this->pit_strategy) > 0){
-          $this->current_tire_set = $this->pit_strategy[0];
-          $this->pit_strategy = substr($this->pit_strategy, 1);;
-        }
+      if(strlen($this->pit_strategy) > 0){
+        $this->current_tire_set = $this->pit_strategy[0];
+        $this->pit_strategy = substr($this->pit_strategy, 1);
       }
     }
 
@@ -568,11 +566,11 @@ class Driver extends db_name implements \JsonSerializable{
     }
 
 
-    public function hasToPit($strategy){
+    public function hasToPit($strategy, $remaining_laps = null){
 
       if($this->extra_pit == true){
-        if(($this->stint >= (2*$this->average_stint/3) && $this->current_tire_set == 2) || ($this->stint >= (4*$this->average_stint/3) && $this->current_tire_set == 1) || ($this->stint >= (4*$this->average_stint/3) && $this->current_tire_set == 3)){
-          $this->remaining_pits = $this->remaining_pits - 1;
+        if(($this->stint >= (2*$this->average_stint/3) && $this->current_tire_set == 2) || ($this->stint >= (4*$this->average_stint/3) && ($this->current_tire_set == 1 || $this->current_tire_set == 3))){
+          $this->remaining_pits = max(0, $this->remaining_pits - 1);
           $this->setTire();
         }
         $this->extra_pit = false;
@@ -581,25 +579,32 @@ class Driver extends db_name implements \JsonSerializable{
         return true;
       }
 
-      if(($this->stint >= $this->average_stint && $this->current_tire_set == 2) || ($this->stint >= ($this->average_stint * 2) && $this->current_tire_set == 1) || ($this->stint >= ($this->average_stint * 2) && $this->current_tire_set == 3)){
-
-        $correct_strategy = ($strategy) / 10;
-        $should_pit = mt_rand() / mt_getrandmax();
-
-        if(($should_pit < $correct_strategy) || ($this->stint > (2.3 * $this->average_stint))){
-          $this->remaining_pits = $this->remaining_pits - 1;
+      if($this->remaining_pits > 0){
+        // Se estiver nas voltas finais e ainda houver pit stop planejado pendente, força a realização do pit
+        if($remaining_laps !== null && $remaining_laps <= 2){
+          $this->remaining_pits = max(0, $this->remaining_pits - 1);
           $this->setTire();
           $this->resetStint();
           return true;
-        } else {
-          return false;
         }
 
-      } else {
-        return false;
+        $threshold = ($this->current_tire_set == 2) ? $this->average_stint : ($this->average_stint * 1.5);
+        if($this->stint >= $threshold){
+          $correct_strategy = ($strategy) / 10;
+          $should_pit = mt_rand() / mt_getrandmax();
+
+          if(($should_pit < $correct_strategy) || ($this->stint >= (1.3 * $threshold))){
+            $this->remaining_pits = max(0, $this->remaining_pits - 1);
+            $this->setTire();
+            $this->resetStint();
+            return true;
+          } else {
+            return false;
+          }
+        }
       }
 
-
+      return false;
     }
 
     public function getAggressiveness(){

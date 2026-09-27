@@ -148,7 +148,21 @@ class Race extends db_name {
   }
 
   public function setTotalLaps(){
-    $this->total_laps = min(ceil($this->competition->getTotalLength()/$this->track->getLength()), floor($this->competition->getMaxTime()/ $this->track->getFastestLap()));
+    $track_length = $this->track->getLength();
+    $total_length = $this->competition->getTotalLength();
+    $laps_by_distance = ($track_length > 0) ? (int)ceil($total_length / $track_length) : 0;
+
+    $max_time = $this->competition->getMaxTime();
+    $fastest_lap = $this->track->getFastestLap();
+
+    if($max_time > 0 && $fastest_lap > 0){
+      // Considera ritmo de corrida (~8% acima da volta rápida para combustível/pitstops/desgaste)
+      $estimated_lap_time = $fastest_lap * 1.08;
+      $laps_by_time = (int)floor($max_time / $estimated_lap_time);
+      $this->total_laps = ($laps_by_distance > 0) ? min($laps_by_distance, $laps_by_time) : $laps_by_time;
+    } else {
+      $this->total_laps = $laps_by_distance;
+    }
   }
 
   public function qualifying(){
@@ -406,7 +420,7 @@ class Race extends db_name {
         $racer["driver"]->setLapTime($racer["driver"]->race_lap_time($racer["car"],$this->track,$this->competition,$this->highest_level, $lap, $this->safety_car_penalty));
 
         $remaining_laps = $this->total_laps - $lap;
-        if(($remaining_laps > 5 && $this->safety_car_status == 0 && $racer["driver"]->hasToPit($racer['car']->getStrategy()))){
+        if(($remaining_laps >= 1 && $racer["driver"]->hasToPit($racer['car']->getStrategy(), $remaining_laps))){
           $racer["driver"]->pitHappened($racer["car"]->pit_stop_length($best_pit));
 
 		  //pit failures
@@ -567,10 +581,14 @@ class Race extends db_name {
 
     $this->recordResults("R-" . $lap, ($this->base_timestamp) + ($this->race_list[0]["driver"]->getTotalTime()));
 
-	if($this->race_list[0]["driver"]->getTotalTime() > $this->competition->getMaxTime()){
+	if($this->competition->getMaxTime() > 0 && $this->race_list[0]["driver"]->getTotalTime() >= $this->competition->getMaxTime()){
 		break;
 	}
 	
+    }
+
+    if(isset($this->lap_results["INFO"])){
+      $this->lap_results["INFO"]["total_laps"] = $this->current_lap;
     }
 
 
