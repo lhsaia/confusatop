@@ -170,7 +170,8 @@
             if (data.phase === 1) {
                 form.classList.remove('is-uploading');
                 if (typeof window.renderImportReview === 'function') {
-                    window.renderImportReview(data.games, data.countries || data.clubs);
+                    var entities = (data.clubs && data.clubs.length > 0) ? data.clubs : (data.countries && data.countries.length > 0 ? data.countries : []);
+                    window.renderImportReview(data.games, entities, data);
                 }
                 return;
             }

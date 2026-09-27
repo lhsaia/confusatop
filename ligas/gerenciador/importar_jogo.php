@@ -324,7 +324,10 @@ function cancelReview() {
     }
 }
 
-window.renderImportReview = function(games, clubs) {
+window.renderImportReview = function(games, clubs, fullData) {
+    if ((!clubs || clubs.length === 0) && fullData && fullData.clubs) {
+        clubs = fullData.clubs;
+    }
     games = games.filter(function(g) { return g.filename && g.filename.trim() !== ''; });
     importedGamesData = games;
 

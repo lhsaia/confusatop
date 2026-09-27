@@ -408,7 +408,10 @@ function cancelReview() {
     }
 }
 
-window.renderImportReview = function(games, countries) {
+window.renderImportReview = function(games, countries, fullData) {
+    if ((!countries || countries.length === 0) && fullData && fullData.countries) {
+        countries = fullData.countries;
+    }
     // Filtrar entradas fantasmas (sem filename)
     games = games.filter(function(g) { return g.filename && g.filename.trim() !== ''; });
     importedGamesData = games;
@@ -426,9 +429,11 @@ window.renderImportReview = function(games, countries) {
 
     // Montar options de países
     var opts = '<option value="">-- Selecione o País --</option>';
-    countries.forEach(function(c) {
-        opts += '<option value="' + c.id + '">' + c.nome + ' (' + (c.sigla || '') + ')</option>';
-    });
+    if (Array.isArray(countries)) {
+        countries.forEach(function(c) {
+            opts += '<option value="' + c.id + '">' + c.nome + ' (' + (c.sigla || '') + ')</option>';
+        });
+    }
 
     games.forEach(function(game, index) {
         // Linha de erro (arquivo inválido)
