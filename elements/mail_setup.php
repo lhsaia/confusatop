@@ -3,9 +3,16 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
 
-require '/home/lhsaia/confusa.top/utils/PHPMailer/src/Exception.php';
-require '/home/lhsaia/confusa.top/utils/PHPMailer/src/PHPMailer.php';
-require '/home/lhsaia/confusa.top/utils/PHPMailer/src/SMTP.php';
+$baseUtils = dirname(__DIR__) . '/utils/PHPMailer/src';
+if (file_exists($baseUtils . '/Exception.php')) {
+    require_once $baseUtils . '/Exception.php';
+    require_once $baseUtils . '/PHPMailer.php';
+    require_once $baseUtils . '/SMTP.php';
+} else {
+    require_once '/home/lhsaia/confusa.top/utils/PHPMailer/src/Exception.php';
+    require_once '/home/lhsaia/confusa.top/utils/PHPMailer/src/PHPMailer.php';
+    require_once '/home/lhsaia/confusa.top/utils/PHPMailer/src/SMTP.php';
+}
 
 // Carregar variaveis do .env caso nao estejam no getenv
 if (!getenv('SMTP_USER') || !getenv('SMTP_PASS')) {

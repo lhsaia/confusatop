@@ -34,30 +34,139 @@ $(document).ready(function($){
 
 load_data();
 
+var pendingStatusUpdate = null;
+
+$(document).on('focusin', '.admin_status_select', function(){
+    $(this).data('prev-val', $(this).val());
+});
+
 $(document).on('change', '.admin_status_select', function(){
 	let id = $(this).closest("tr").attr("id");
 	let newStatus = $(this).val();
+	let prevStatus = $(this).data('prev-val') !== undefined ? $(this).data('prev-val') : '0';
 	let selectElem = $(this);
-	selectElem.prop('disabled', true);
 	
-	$.ajax({
-		url: "update_status.php",
-		method: "POST",
-		dataType: "json",
-		data: { id: id, status: newStatus },
-		success: function(res){
-			if(res && res.success){
-				load_data();
-			} else {
-				alert(res && res.message ? res.message : "Erro ao atualizar status.");
-				selectElem.prop('disabled', false);
-			}
-		},
-		error: function(){
-			alert("Erro de comunicação com o servidor.");
-			selectElem.prop('disabled', false);
-		}
-	});
+    let item = null;
+    if (typeof localData !== 'undefined' && localData && localData.length) {
+        item = localData.find(function(s){ return String(s.id) === String(id); });
+    }
+    
+    let sugTitle = item ? item.title : 'Sugestão #' + id;
+    let authorName = item && item.autor_nome ? item.autor_nome : 'Anônimo';
+    let authorEmail = item && item.autor_email ? item.autor_email : '';
+    
+    let statusNames = {
+        '0': '⏳ Pendente',
+        '1': '🔄 Em processo',
+        '2': '✅ Concluído / Resolvido',
+        '3': '❌ Cancelado'
+    };
+    
+    pendingStatusUpdate = {
+        id: id,
+        newStatus: newStatus,
+        prevStatus: prevStatus,
+        selectElem: selectElem
+    };
+    
+    $('#modalSugTitle').text(sugTitle);
+    $('#modalSugNewStatus').html(statusNames[newStatus] || 'Atualizado');
+    
+    if (authorEmail && authorEmail.indexOf('@') !== -1) {
+        $('#modalSugAuthor').text(authorName + ' (' + authorEmail + ')');
+        $('#modalNotifyEmail').prop('disabled', false).prop('checked', true);
+        $('#modalEmailWarning').hide();
+        $('#modalCustomMessageField').show();
+        $('#modalNotifyContainer').css('opacity', '1');
+    } else {
+        $('#modalSugAuthor').text(authorName + ' (Sem e-mail cadastrado)');
+        $('#modalNotifyEmail').prop('disabled', true).prop('checked', false);
+        $('#modalEmailWarning').show();
+        $('#modalCustomMessageField').hide();
+        $('#modalNotifyContainer').css('opacity', '0.6');
+    }
+    
+    $('#modalCustomMessage').val('');
+    $('#statusModalOverlay').css('display', 'flex').hide().fadeIn(180);
+});
+
+function closeStatusModal(revert){
+    if(revert && pendingStatusUpdate && pendingStatusUpdate.selectElem){
+        pendingStatusUpdate.selectElem.val(pendingStatusUpdate.prevStatus);
+    }
+    $('#statusModalOverlay').fadeOut(150, function(){
+        pendingStatusUpdate = null;
+    });
+}
+
+$(document).on('click', '#modalCancelBtn, #modalCloseXBtn', function(e){
+    e.preventDefault();
+    closeStatusModal(true);
+});
+
+$(document).on('click', '#statusModalOverlay', function(e){
+    if (e.target === this) {
+        closeStatusModal(true);
+    }
+});
+
+$(document).on('change', '#modalNotifyEmail', function(){
+    if($(this).is(':checked')){
+        $('#modalCustomMessageField').slideDown(150);
+    } else {
+        $('#modalCustomMessageField').slideUp(150);
+    }
+});
+
+$(document).on('click', '#modalConfirmBtn', function(e){
+    e.preventDefault();
+    if(!pendingStatusUpdate) return;
+    
+    let id = pendingStatusUpdate.id;
+    let newStatus = pendingStatusUpdate.newStatus;
+    let selectElem = pendingStatusUpdate.selectElem;
+    let notifyEmail = $('#modalNotifyEmail').is(':checked');
+    let customMessage = $('#modalCustomMessage').val();
+    
+    selectElem.prop('disabled', true);
+    $('#modalConfirmBtn').prop('disabled', true).text('Salvando...');
+    
+    $.ajax({
+        url: "update_status.php",
+        method: "POST",
+        dataType: "json",
+        data: { 
+            id: id, 
+            status: newStatus,
+            notify_email: notifyEmail,
+            custom_message: customMessage
+        },
+        success: function(res){
+            $('#modalConfirmBtn').prop('disabled', false).text('Confirmar Alteração');
+            closeStatusModal(false);
+            if(res && res.success){
+                if(res.email_sent){
+                    // Notificação enviada
+                } else if(notifyEmail && res.email_message){
+                    alert(res.email_message);
+                }
+                load_data();
+            } else {
+                alert(res && res.message ? res.message : "Erro ao atualizar status.");
+                selectElem.prop('disabled', false);
+                selectElem.val(pendingStatusUpdate ? pendingStatusUpdate.prevStatus : '0');
+            }
+        },
+        error: function(){
+            $('#modalConfirmBtn').prop('disabled', false).text('Confirmar Alteração');
+            alert("Erro de comunicação com o servidor.");
+            selectElem.prop('disabled', false);
+            if(pendingStatusUpdate) {
+                selectElem.val(pendingStatusUpdate.prevStatus);
+            }
+            closeStatusModal(false);
+        }
+    });
 });
 
 
@@ -188,14 +297,22 @@ function updateTable(ajax_data, current_page, highlighted, direction){
     tbl += "<table id='suggestionTable' class='table'>";
         tbl += "<thead id='headings'>";
             tbl += "<tr>";
-                tbl += "<th asc='' id='suggestionTitle' class='headings' width='30%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTítulo</th>";
-                tbl +=  "<th asc='' id='suggestionDescription' class='headings' width='30%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspDescrição</th>";
-                tbl +=  "<th asc='' id='suggestionType' class='headings' width='10%' class='penaltybox'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbsp Tipo</th>";
-                tbl +=  "<th asc='' id='suggestionStatus' class='headings' width='10%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspStatus</th>";
                 if(logged == "true"){
-					tbl +=  "<th asc='' id='suggestionVote' class='headings' width='10%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspVotar</th>";
-				}
-                tbl +=  "<th asc='' id='suggestionVoteNumber' class='headings' width='10%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspVotos</th>";
+                    tbl += "<th asc='' id='suggestionTitle' class='headings' width='25%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTítulo</th>";
+                    tbl += "<th asc='' id='suggestionDescription' class='headings' width='25%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspDescrição</th>";
+                    tbl += "<th asc='' id='suggestionAuthor' class='headings' width='14%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspUsuário</th>";
+                    tbl += "<th asc='' id='suggestionType' class='headings' width='10%' class='penaltybox'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTipo</th>";
+                    tbl += "<th asc='' id='suggestionStatus' class='headings' width='12%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspStatus</th>";
+                    tbl += "<th asc='' id='suggestionVote' class='headings' width='7%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspVotar</th>";
+                    tbl += "<th asc='' id='suggestionVoteNumber' class='headings' width='7%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspVotos</th>";
+                } else {
+                    tbl += "<th asc='' id='suggestionTitle' class='headings' width='28%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTítulo</th>";
+                    tbl += "<th asc='' id='suggestionDescription' class='headings' width='28%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspDescrição</th>";
+                    tbl += "<th asc='' id='suggestionAuthor' class='headings' width='16%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspUsuário</th>";
+                    tbl += "<th asc='' id='suggestionType' class='headings' width='10%' class='penaltybox'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspTipo</th>";
+                    tbl += "<th asc='' id='suggestionStatus' class='headings' width='11%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspStatus</th>";
+                    tbl += "<th asc='' id='suggestionVoteNumber' class='headings' width='7%'><i class='ascending fa fa-sort-up hidden'></i><i class='descending fa fa-sort-down hidden'></i>&nbspVotos</th>";
+                }
             tbl +=  "</tr>";
         tbl +=  "</thead>";
         tbl +=  "<tbody>";
@@ -249,9 +366,13 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 				button_class = "<button class='toggle_like'><span class='material-symbols-outlined' style='font-size: 1.1rem;'>thumb_up</span></button>";
 			}
 
+            let author = val['autor_nome'] ? val['autor_nome'] : 'Anônimo';
+            let author_html = "<span class='author_box' style='display: inline-flex; align-items: center; gap: 4px; font-weight: 500;'><span class='material-symbols-outlined' style='font-size: 1.1rem; color: #64748b; vertical-align: middle;'>person</span> " + $('<div>').text(author).html() + "</span>";
+
             tbl += "<tr id='"+val['id']+"' >";
 				tbl +=  "<td>"+val['title']+"</td>";
 				tbl +=  "<td>"+val['description']+"</td>";
+				tbl +=  "<td>"+author_html+"</td>";
                 tbl +=  "<td>"+type+"</td>";
                 tbl +=  "<td>"+status+"</td>";
 				if(logged == "true"){
@@ -351,34 +472,36 @@ function treatResults(item){
 }
 
 function sortResults(prop, asc) {
+    var field = prop;
+    if(prop === 'suggestionTitle') field = 'title';
+    else if(prop === 'suggestionDescription') field = 'description';
+    else if(prop === 'suggestionAuthor') field = 'autor_nome';
+    else if(prop === 'suggestionType') field = 'type';
+    else if(prop === 'suggestionStatus') field = 'status';
+    else if(prop === 'suggestionVoteNumber') field = 'vote_count';
 
-if(prop == 'pontos'){
+    localData = localData.sort(function(a, b) {
+        if (a.status == 0 && b.status != 0) return -1;
+        if (a.status != 0 && b.status == 0) return 1;
+        
+        let valA = a[field] !== undefined && a[field] !== null ? a[field] : '';
+        let valB = b[field] !== undefined && b[field] !== null ? b[field] : '';
+        
+        if (field === 'vote_count' || field === 'type' || field === 'status') {
+            valA = Number(valA) || 0;
+            valB = Number(valB) || 0;
+            if (asc) return valA - valB;
+            else return valB - valA;
+        } else {
+            valA = String(valA).toLowerCase();
+            valB = String(valB).toLowerCase();
+            if (asc) return valA.localeCompare(valB, 'pt-BR');
+            else return valB.localeCompare(valA, 'pt-BR');
+        }
+    });
 
-    localData = localData.sort(
-        function(a,b){
-            if (a.status == 0 && b.status != 0) return -1;
-            if (a.status != 0 && b.status == 0) return 1;
-            if (asc) return a[prop] - b[prop];
-            if (!asc) return b[prop] - a[prop];
-            else return 0;
-        }
-    );
-} else {
-    localData = localData.sort(
-        function(a, b) {
-            if (a.status == 0 && b.status != 0) return -1;
-            if (a.status != 0 && b.status == 0) return 1;
-            if (((a[prop] < b[prop]) && (!asc))||((a[prop] > b[prop]) && (asc))) return 1;
-            else if (((a[prop] > b[prop]) && (!asc))||((a[prop] < b[prop]) && (asc))) return -1;
-            else return 0;
-        }
-    );
+    updateTable(localData, 1, prop, 0);
 }
-
-
-    updateTable(localData, 1,prop,0);
-
-    }
 
 });
 
@@ -428,11 +551,56 @@ echo "<div id='newSuggestionWrapper'><div id='newSuggestion'>
 
 echo "<div class='tbl_user_data'><img id='loading' src='/images/icons/ajax-loader.gif'></div>";
 
-echo('</div>');
-echo('</div>');
-echo('</div>');
+if ($isAdmin) {
+    echo "
+    <div id='statusModalOverlay'>
+        <div id='statusChangeModal'>
+            <div class='modal-header'>
+                <h3><span class='material-symbols-outlined' style='font-size: 1.3rem; vertical-align: middle;'>forward_to_inbox</span> Atualizar Status da Sugestão</h3>
+                <button class='modal-close-btn' id='modalCloseXBtn'>&times;</button>
+            </div>
+            <div class='modal-body'>
+                <div class='modal-info-card'>
+                    <div class='modal-info-row'>
+                        <strong style='min-width: 90px;'>Sugestão:</strong>
+                        <span id='modalSugTitle' style='color: #0f172a; font-weight: 600;'></span>
+                    </div>
+                    <div class='modal-info-row'>
+                        <strong style='min-width: 90px;'>Novo Status:</strong>
+                        <span id='modalSugNewStatus'></span>
+                    </div>
+                    <div class='modal-info-row'>
+                        <strong style='min-width: 90px;'>Autor:</strong>
+                        <span id='modalSugAuthor'></span>
+                    </div>
+                </div>
 
-//echo "<div style='clear:both; float:center'></div>";
+                <div class='modal-field'>
+                    <label class='modal-checkbox-label' id='modalNotifyContainer'>
+                        <input type='checkbox' id='modalNotifyEmail' checked>
+                        <span>Notificar o originador por e-mail sobre esta atualização</span>
+                    </label>
+                    <div id='modalEmailWarning' style='display: none; font-size: 0.82rem; color: #dc2626; margin-top: 4px; padding-left: 4px;'>
+                        <span class='material-symbols-outlined' style='font-size: 1rem; vertical-align: middle;'>warning</span> O autor não possui um e-mail válido cadastrado.
+                    </div>
+                </div>
+
+                <div class='modal-field' id='modalCustomMessageField'>
+                    <label for='modalCustomMessage'>Mensagem personalizada para o originador (opcional):</label>
+                    <textarea id='modalCustomMessage' placeholder='Ex: A funcionalidade foi implementada na versão recente e já está disponível para uso.'></textarea>
+                </div>
+            </div>
+            <div class='modal-footer'>
+                <button class='modal-btn-cancel' id='modalCancelBtn'>Cancelar</button>
+                <button class='modal-btn-confirm' id='modalConfirmBtn'>Confirmar Alteração</button>
+            </div>
+        </div>
+    </div>";
+}
+
+echo('</div>');
+echo('</div>');
+echo('</div>');
 
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 

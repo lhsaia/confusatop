@@ -23,12 +23,25 @@ class Suggestion{
 	  $user = htmlspecialchars(strip_tags($user));
 	  $search_term = "%" . $search_term . "%";
 		
-	  $query = "SELECT a.*, count(b.suggestion) as vote_count, SUM(case when b.user = ? then 1 else 0 end) as voted_by_user FROM   " . $this->table_name . " a LEFT JOIN suggestions_votes b ON b.suggestion = a.id WHERE (title LIKE ? OR description LIKE ?) GROUP BY a.id ORDER BY (a.status = 0) DESC, vote_count DESC";
+	  $query = "SELECT a.*, 
+                       COALESCE(NULLIF(u.nome, ''), NULLIF(u.nomeusuario, ''), 'Anônimo') AS autor_nome,
+                       u.nomeusuario AS autor_username,
+                       u.email AS autor_email,
+                       count(b.suggestion) as vote_count, 
+                       SUM(case when b.user = ? then 1 else 0 end) as voted_by_user 
+                FROM " . $this->table_name . " a 
+                LEFT JOIN usuarios u ON u.id = a.originator
+                LEFT JOIN suggestions_votes b ON b.suggestion = a.id 
+                WHERE (a.title LIKE ? OR a.description LIKE ? OR u.nome LIKE ? OR u.nomeusuario LIKE ?) 
+                GROUP BY a.id 
+                ORDER BY (a.status = 0) DESC, vote_count DESC";
 	  
       $stmt = $this->conn->prepare($query);
 	  $stmt->bindParam(1, $user );
 	  $stmt->bindParam(2, $search_term );
 	  $stmt->bindParam(3, $search_term );
+	  $stmt->bindParam(4, $search_term );
+	  $stmt->bindParam(5, $search_term );
       $stmt->execute();
 
       return $stmt;
@@ -82,6 +95,22 @@ class Suggestion{
 		$stmt->bindParam(":status", $status, PDO::PARAM_INT);
 		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
 		return $stmt->execute();
+	}
+
+	public function getSuggestionById($id){
+		$id = (int)$id;
+		$query = "SELECT a.*, 
+						 COALESCE(NULLIF(u.nome, ''), NULLIF(u.nomeusuario, ''), 'Anônimo') AS autor_nome,
+						 u.nomeusuario AS autor_username,
+						 u.email AS autor_email
+				  FROM " . $this->table_name . " a
+				  LEFT JOIN usuarios u ON u.id = a.originator
+				  WHERE a.id = :id
+				  LIMIT 1";
+		$stmt = $this->conn->prepare($query);
+		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
+		$stmt->execute();
+		return $stmt->fetch(PDO::FETCH_ASSOC);
 	}
 }
 ?>
