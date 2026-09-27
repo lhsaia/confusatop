@@ -64,20 +64,23 @@ if(isset($_POST['nome']) && isset($_POST['nascimento']) && $_POST['pais'] != 0 &
 	}
 
     //posicoes
-    $prePosicoes = $_POST['comboPosicoes'];
-    $stringPosicoes = '';
+    $prePosicoes = isset($_POST['comboPosicoes']) ? (array)$_POST['comboPosicoes'] : [];
+    $isGoleiro = (in_array(1, $prePosicoes) || in_array('1', $prePosicoes));
 
-    if(array_search(1,$prePosicoes) === 0){
-        $isGoleiro = true;
+    if($isGoleiro){
+        $stringPosicoes = '100000000000000';
     } else {
-        $isGoleiro = false;
-    }
-
-    foreach($prePosicoes as $key => $value){
-        if($value != 0){
-            $stringPosicoes .= "1";
-        } else {
-            $stringPosicoes .= "0";
+        $stringPosicoes = '';
+        for($i = 1; $i <= 15; $i++){
+            if($i === 1){
+                $stringPosicoes .= "0";
+            } else {
+                if(in_array($i, $prePosicoes) || in_array((string)$i, $prePosicoes)){
+                    $stringPosicoes .= "1";
+                } else {
+                    $stringPosicoes .= "0";
+                }
+            }
         }
     }
 
@@ -691,25 +694,23 @@ $(document).ready(function(){
     });
   } );
 
-  $(".comboPosicoes").on("change", function(){
-      if($(this).val() == 1){
-          $(this).prop("multiple", false);
-          $(".atributo_jogador").each(function(){
-              $(this).hide();
-          });
-          $(".atributo_goleiro").each(function(){
-              $(this).show();
-          });
-      } else {
-          $(this).prop("multiple", true);
-          $(".atributo_jogador").each(function(){
-              $(this).show();
-          });
-          $(".atributo_goleiro").each(function(){
-              $(this).hide();
-          });
+  function atualizarVisibilidadeAtributos(){
+      var val = $(".comboPosicoes").val() || [];
+      if(!Array.isArray(val)) {
+          val = [val];
       }
-  });
+      var isGoleiro = val.indexOf("1") !== -1 || val.indexOf(1) !== -1;
+      if(isGoleiro){
+          $(".atributo_jogador").hide();
+          $(".atributo_goleiro").show();
+      } else {
+          $(".atributo_jogador").show();
+          $(".atributo_goleiro").hide();
+      }
+  }
+
+  $(".comboPosicoes").on("change", atualizarVisibilidadeAtributos);
+  atualizarVisibilidadeAtributos();
 
 
   $(function () {
