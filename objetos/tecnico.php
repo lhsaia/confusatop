@@ -1308,22 +1308,9 @@ class Tecnico{
            $rowClube = $stmt->fetch(PDO::FETCH_ASSOC);
            $nomeClube  = $rowClube['Nome']   ?? 'Clube desconhecido';
            $escudoClube = $rowClube['Escudo'] ?? '';
-           $extEscudo   = $escudoClube ? substr($escudoClube, -3, 3) : '';
-           $data = '';
-           if ($escudoClube) {
-               $imgPath = $_SERVER['DOCUMENT_ROOT'] . "/images/escudos/" . $escudoClube;
-               if (file_exists($imgPath)) {
-                   $img = @file_get_contents($imgPath);
-                   if ($img !== false) {
-                       $data = base64_encode($img);
-                   }
-               }
-           }
-
-           if ($data !== '') {
-               $imgHtml = "<img align='middle' height='60' src='data:image/" . $extEscudo . ";base64," . $data . "'/>";
-           } elseif ($escudoClube) {
-               $imgHtml = "<img align='middle' height='60' src='https://confusa.top/images/escudos/" . urlencode($escudoClube) . "'/>";
+           if (!empty($escudoClube)) {
+               $escudoUrl = 'https://confusa.top/images/escudos/' . implode('/', array_map('rawurlencode', explode('/', $escudoClube)));
+               $imgHtml = "<img align='middle' height='60' src='" . $escudoUrl . "' alt='" . htmlspecialchars($nomeClube, ENT_QUOTES, 'UTF-8') . "'/>";
            } else {
                $imgHtml = '';
            }

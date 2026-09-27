@@ -3920,16 +3920,11 @@ return $stmt;
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $nomeClube = (!empty($result) && is_array($result)) ? ($result["Nome"] ?? "") : "";
         $escudoClube = (!empty($result) && is_array($result)) ? ($result["Escudo"] ?? "") : "";
-        $extEscudoClube = $escudoClube ? substr($escudoClube, -3, 3) : '';
-        $data = '';
-        if ($escudoClube) {
-            $imgPath = $_SERVER['DOCUMENT_ROOT'] . "/images/escudos/" . $escudoClube;
-            if (file_exists($imgPath)) {
-                $img = @file_get_contents($imgPath);
-                if ($img !== false) {
-                    $data = base64_encode($img);
-                }
-            }
+        if (!empty($escudoClube)) {
+            $escudoUrl = 'https://confusa.top/images/escudos/' . implode('/', array_map('rawurlencode', explode('/', $escudoClube)));
+            $imgHtml = "<img align='middle' height='60' src='" . $escudoUrl . "' alt='" . htmlspecialchars($nomeClube, ENT_QUOTES, 'UTF-8') . "'/>";
+        } else {
+            $imgHtml = "";
         }
         
     // informações transferência
@@ -3960,14 +3955,6 @@ return $stmt;
         $subject_old = "Você recebeu uma proposta de transferência no CONFUSA.TOP ";
         $subject = "[CONFUSA.top] " . $nomeClube . " fez uma proposta por " . $nomeJogador;
         $body_old = "Foi feita uma nova proposta de transferência para um jogador sob seu controle, acesse o portal para negociar.";
-        
-        if ($data !== '') {
-            $imgHtml = "<img align='middle' height='60' src='data:image/" . $extEscudoClube . ";base64," . $data . "'/>";
-        } elseif (!empty($escudoClube)) {
-            $imgHtml = "<img align='middle' height='60' src='https://confusa.top/images/escudos/" . urlencode($escudoClube) . "'/>";
-        } else {
-            $imgHtml = "";
-        }
 
         $mensagemExtraHtml = "";
         if (!empty($mensagens)) {
