@@ -1879,14 +1879,67 @@ function initDragDrop() {
         togglePlayerStyle($(this));
     });
 
-    var touchTimer;
+    var touchTimer = null;
+    var touchStartX = 0;
+    var touchStartY = 0;
+    var isLongPress = false;
+    var lastTapTime = 0;
+    var lastTapElement = null;
+
     $("[id^=draggable]").on("touchstart", function(event) {
         var element = $(this);
-        touchTimer = setTimeout(function() {
-            togglePlayerStyle(element);
-        }, 700);
-    }).on("touchend touchmove", function() {
+        var touch = event.originalEvent.touches ? event.originalEvent.touches[0] : event;
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        isLongPress = false;
+        
         clearTimeout(touchTimer);
+
+        // Toque longo com tolerância a micro-movimentos involuntários do dedo
+        touchTimer = setTimeout(function() {
+            isLongPress = true;
+            if (navigator.vibrate) {
+                try { navigator.vibrate(50); } catch(e) {}
+            }
+            togglePlayerStyle(element);
+        }, 450);
+    }).on("touchmove", function(event) {
+        if (!touchTimer) return;
+        var touch = event.originalEvent.touches ? event.originalEvent.touches[0] : event;
+        var deltaX = Math.abs(touch.clientX - touchStartX);
+        var deltaY = Math.abs(touch.clientY - touchStartY);
+        
+        // Apenas cancela se o movimento for intencional (> 14px) para não cancelar em micro-movimentos
+        if (deltaX > 14 || deltaY > 14) {
+            clearTimeout(touchTimer);
+            touchTimer = null;
+        }
+    }).on("touchend", function(event) {
+        clearTimeout(touchTimer);
+        touchTimer = null;
+
+        if (isLongPress) {
+            event.preventDefault();
+            return;
+        }
+
+        // Suporte adicional a Duplo Toque (Double Tap) rápido
+        var currentTime = new Date().getTime();
+        var tapLength = currentTime - lastTapTime;
+        var element = $(this);
+
+        if (lastTapElement && lastTapElement[0] === element[0] && tapLength < 350 && tapLength > 50) {
+            event.preventDefault();
+            if (navigator.vibrate) {
+                try { navigator.vibrate(35); } catch(e) {}
+            }
+            togglePlayerStyle(element);
+            lastTapTime = 0;
+            lastTapElement = null;
+        } else {
+            lastTapTime = currentTime;
+            lastTapElement = element;
+        }
     });
     
     // Unbind previous draggable/droppable to avoid memory leaks or double binds if called multiple times?
