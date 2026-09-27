@@ -243,6 +243,18 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
             <span style="display: inline-block; margin-top: 16px; color: #a855f7; font-weight: 600; font-size: 14px;">Fazer merge de atletas &rarr;</span>
         </a>
 
+        <!-- Card 10: Teste e Diagnóstico de E-mails -->
+        <a href="/admin/teste_email.php" class="admin-card" style="border-top: 3px solid #06b6d4 !important;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <span class="material-symbols-outlined" style="font-size: 32px; color: #06b6d4;">outgoing_mail</span>
+                <h2>Diagnóstico de E-mails</h2>
+            </div>
+            <p>
+                Verifique a integridade do servidor SMTP, status de conexão TCP e dispare testes com templates de propostas de transferência.
+            </p>
+            <span style="display: inline-block; margin-top: 16px; color: #06b6d4; font-weight: 600; font-size: 14px;">Testar envio de e-mails &rarr;</span>
+        </a>
+
     </div>
     
     <div style="margin-top: 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
