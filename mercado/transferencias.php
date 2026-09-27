@@ -28,14 +28,14 @@ switch($pageType){
 
 
         $stmt = $time->maioresTransferencias($from_record_num, $records_per_page);
-        $total_rows = $time->countAllTransfers();
+        $total_rows = $time->countAllTransfers(null, true);
         break;
     case 'ultimas':
         $nomePagina = 'Últimas Transferências';
         include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
 
         $stmt = $time->ultimasTransferencias($from_record_num, $records_per_page);
-        $total_rows = $time->countAllTransfers();
+        $total_rows = $time->countAllTransfers(null, true);
         break;
     case 'jogadores':
         $nomePagina = 'Jogadores mais Valiosos';
@@ -116,10 +116,10 @@ echo "<hr>";
 // display the products if there are any
 if($num>0){
 
-//tabela transferencias (maiores e últimas)
-if($pageType == 'maiores' || $pageType == 'ultimas'){
+//tabela transferencias (maiores, últimas e usuário)
+if($pageType == 'maiores' || $pageType == 'ultimas' || $pageType == 'usuario'){
     echo "<div class='tbl_user_data'>";
-    echo "<table id='tabelaPrincipal' class='table'>";
+    echo "<table id='tabelaPrincipal' class='table tabela-transferencias'>";
     echo "<thead>";
         echo "<tr>";
             echo "<th>Jogador</th>";
@@ -212,7 +212,7 @@ if($pageType == 'maiores' || $pageType == 'ultimas'){
     if($pageType == 'jogadores'){
         $isAdmin = (isset($_SESSION['admin_status']) && (int)$_SESSION['admin_status'] === 1);
         echo "<div class='tbl_user_data'>";
-        echo "<table id='tabelaPrincipal' class='table'>";
+        echo "<table id='tabelaPrincipal' class='table tabela-jogadores'>";
         echo "<thead>";
             echo "<tr>";
                 echo "<th>Jogador</th>";

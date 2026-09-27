@@ -714,19 +714,19 @@
   color: #0f172a !important;
 }
 
-/* Responsive Table-to-Cards styling for #tabelajogos on mobile */
+/* Responsive Table-to-Cards styling for #tabelaPrincipal on mobile */
 @media (max-width: 768px) {
-  #tabelajogos, #tabelajogos tbody, #tabelajogos tr, #tabelajogos td, #tabelajogos th {
+  #tabelaPrincipal, #tabelaPrincipal tbody, #tabelaPrincipal tr, #tabelaPrincipal td, #tabelaPrincipal th {
     display: block !important;
     width: 100% !important;
     box-sizing: border-box !important;
   }
   
-  #tabelajogos thead {
+  #tabelaPrincipal thead {
     display: none !important;
   }
   
-  #tabelajogos tbody tr {
+  #tabelaPrincipal tbody tr {
     margin-bottom: 1.25rem !important;
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
     border-radius: 14px !important;
@@ -739,41 +739,88 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
   }
   
-  #tabelajogos td {
-    padding: 6px 8px !important;
-    text-align: left !important;
+  #tabelaPrincipal td,
+  #tabelaPrincipal td.nopadding {
+    padding: 8px 12px !important;
+    text-align: right !important;
     background: transparent !important;
     border: none !important;
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     justify-content: space-between !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
     border-radius: 0 !important;
+    position: relative !important;
+    min-height: 38px !important;
   }
 
-  #tabelajogos td:last-child {
+  #tabelaPrincipal td:last-child,
+  #tabelaPrincipal td.nopadding:last-child {
     border-bottom: none !important;
-    justify-content: center !important;
-    padding-top: 10px !important;
+    justify-content: space-between !important;
+    padding-top: 8px !important;
+  }
+
+  #tabelaPrincipal td::before {
+    position: static !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    text-align: left !important;
+    margin-right: auto !important;
+    width: auto !important;
+    padding-right: 12px !important;
   }
   
-  #tabelajogos td.nomeJogador {
+  #tabelaPrincipal td.nomeJogador {
     display: block !important;
     text-align: center !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-    padding-bottom: 8px !important;
+    padding-bottom: 10px !important;
+  }
+
+  #tabelaPrincipal td.nomeJogador::before {
+    display: none !important;
   }
   
-  #tabelajogos td.nomeJogador a {
+  #tabelaPrincipal td.nomeJogador a {
     font-size: 1.1rem !important;
     display: block;
   }
 
-  /* Add column indicators on mobile */
-  #tabelajogos td:nth-child(2)::before { content: "Idade: "; font-weight: 600; color: #64748b; }
-  #tabelajogos td:nth-child(3)::before { content: "Nac.: "; font-weight: 600; color: #64748b; }
-  #tabelajogos td:nth-child(4)::before { content: "Nível: "; font-weight: 600; color: #64748b; }
-  #tabelajogos td:nth-child(5)::before { content: "Valor: "; font-weight: 600; color: #64748b; }
+  /* Indicadores de coluna no mobile para Transferências (Maiores / Últimas / Usuário) */
+  html body #tabelaPrincipal.tabela-transferencias td:nth-child(2)::before,
+  html body .tabela-transferencias td:nth-child(2)::before { content: "Idade:" !important; font-weight: 600 !important; color: #64748b !important; }
+  html body #tabelaPrincipal.tabela-transferencias td:nth-child(3)::before,
+  html body .tabela-transferencias td:nth-child(3)::before { content: "País:" !important; font-weight: 600 !important; color: #64748b !important; }
+  html body #tabelaPrincipal.tabela-transferencias td:nth-child(4)::before,
+  html body .tabela-transferencias td:nth-child(4)::before { content: "Saiu de:" !important; font-weight: 600 !important; color: #64748b !important; }
+  html body #tabelaPrincipal.tabela-transferencias td:nth-child(5)::before,
+  html body .tabela-transferencias td:nth-child(5)::before { content: "Foi para:" !important; font-weight: 600 !important; color: #64748b !important; }
+  html body #tabelaPrincipal.tabela-transferencias td:nth-child(6)::before,
+  html body .tabela-transferencias td:nth-child(6)::before { content: "Data:" !important; font-weight: 600 !important; color: #64748b !important; }
+  html body #tabelaPrincipal.tabela-transferencias td:nth-child(7)::before,
+  html body .tabela-transferencias td:nth-child(7)::before { content: "Valor:" !important; font-weight: 600 !important; color: #64748b !important; }
+
+  /* Indicadores de coluna no mobile para Jogadores Mais Valiosos */
+  html body #tabelaPrincipal.tabela-jogadores td:nth-child(2)::before,
+  html body .tabela-jogadores td:nth-child(2)::before { content: "Idade:" !important; font-weight: 600 !important; color: #64748b !important; }
+  html body #tabelaPrincipal.tabela-jogadores td:nth-child(3)::before,
+  html body .tabela-jogadores td:nth-child(3)::before { content: "Nível:" !important; font-weight: 600 !important; color: #64748b !important; }
+  html body #tabelaPrincipal.tabela-jogadores td:nth-child(4)::before,
+  html body .tabela-jogadores td:nth-child(4)::before { content: "País:" !important; font-weight: 600 !important; color: #64748b !important; }
+  html body #tabelaPrincipal.tabela-jogadores td:nth-child(5)::before,
+  html body .tabela-jogadores td:nth-child(5)::before { content: "Time:" !important; font-weight: 600 !important; color: #64748b !important; }
+  html body #tabelaPrincipal.tabela-jogadores td:nth-child(6)::before,
+  html body .tabela-jogadores td:nth-child(6)::before { content: "Valor:" !important; font-weight: 600 !important; color: #64748b !important; }
+  html body #tabelaPrincipal.tabela-jogadores td:nth-child(7)::before,
+  html body .tabela-jogadores td:nth-child(7)::before { content: "Opções:" !important; font-weight: 600 !important; color: #64748b !important; }
 }
 
 /* Floating Toast Glassmorphism for Notifications */

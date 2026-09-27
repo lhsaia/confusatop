@@ -1409,10 +1409,10 @@ function readInfo($id){
         LEFT JOIN clube d ON t.clubeDestino = d.ID
         LEFT JOIN paises r ON d.Pais = r.ID
         LEFT JOIN liga m ON d.Liga = m.ID
-        LEFT JOIN contratos_jogador o ON o.jogador = t.jogador
+        LEFT JOIN contratos_jogador o ON o.jogador = t.jogador AND o.tipoContrato = 0
         LEFT JOIN posicoes s ON o.posicaoBase = s.ID
-        WHERE status_execucao = 1
-        ORDER BY data DESC
+        WHERE t.status_execucao = 1 AND t.clubeOrigem != 0 AND t.clubeDestino != 0
+        ORDER BY t.data DESC
         LIMIT {$from_record_num},{$records_per_page}";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -1430,22 +1430,28 @@ function readInfo($id){
         LEFT JOIN clube d ON t.clubeDestino = d.ID
         LEFT JOIN paises r ON d.Pais = r.ID
         LEFT JOIN liga m ON d.Liga = m.ID
-        LEFT JOIN contratos_jogador o ON o.jogador = t.jogador
+        LEFT JOIN contratos_jogador o ON o.jogador = t.jogador AND o.tipoContrato = 0
         LEFT JOIN posicoes s ON o.posicaoBase = s.ID
-        WHERE status_execucao = 1 AND o.tipoContrato = 0 
+        WHERE t.status_execucao = 1 AND t.clubeOrigem != 0 AND t.clubeDestino != 0
         ORDER BY valor DESC LIMIT {$from_record_num},{$records_per_page}";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
     }
 
-    function countAllTransfers(){
-        $query = "SELECT count(*) as total FROM transferencias WHERE status_execucao = 1";
+    function countAllTransfers($userId = null, $onlyRealClubs = false){
+        $where = "status_execucao = 1";
+        if($userId !== null && (int)$userId > 0){
+            $where .= " AND (donoOrigem = " . (int)$userId . " OR donoDestino = " . (int)$userId . ")";
+        }
+        if($onlyRealClubs){
+            $where .= " AND clubeOrigem != 0 AND clubeDestino != 0";
+        }
+        $query = "SELECT count(*) as total FROM transferencias WHERE " . $where;
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total'];
-
+        return $row['total'] ?? 0;
     }
 
     function donoClube($clubeOrigem,$idJogador){
