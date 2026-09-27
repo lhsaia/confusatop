@@ -120,7 +120,7 @@ if($num>0){
 
             echo "<tr id='".$id."' data-sexo='".$sexo."'>";
                 //echo "<td><span id=".$id.">{$id}</span></td>";
-                echo "<td><span class='nomeEditavel' id='nom".$id."'><a class='nomeLiga fw-bold' href='../ligas/leaguestatus.php?league=".$id."' style='text-decoration:none;'>{$nome}</a></span><span class=' {$genderClass} genderSign'>{$genderCode}</span></td>";
+                echo "<td><a class='nomeLiga fw-bold' href='../ligas/leaguestatus.php?league=".$id."' style='text-decoration:none;'><span class='nomeEditavel' id='nom".$id."'>{$nome}</span></a><span class=' {$genderClass} genderSign'>{$genderCode}</span></td>";
                 echo "<td><img class='logoimage' id='log".$id."' src='../images/ligas/".$logo."' height='35px'/><div class='newlogoedit' hidden> <input type='file' id='newlogo".$id."' class=' custom-file-upload' name='file' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
                 echo "<td>".$trofeuHtml."<div class='newtrofeuedit' hidden> <input type='file' id='newtrofeu".$id."' class=' custom-file-upload' name='trofeu_file' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
                 echo "<td><span class='tier-badge nomeEditavel' id='tie".$id."'>{$tier}</span></td>";
@@ -130,10 +130,11 @@ if($num>0){
                 } else {
                     echo "<td>";
                 }
-                echo " <select class='comboPais editavel ' id='{$idPais}' hidden>'  ";
+                echo " <select class='comboPais editavel ' id='{$idPais}' hidden>  ";
                     //echo "<option>Selecione país...</option>";
                     for($i = 0; $i < count($listaPaises);$i++){
-                        echo "<option value='{$listaPaises[$i][0]}'>{$listaPaises[$i][1]}</option>";
+                        $selected = ($listaPaises[$i][0] == $idPais) ? "selected" : "";
+                        echo "<option value='{$listaPaises[$i][0]}' {$selected}>{$listaPaises[$i][1]}</option>";
                     }
                     echo "</select>";
                     echo "</td>";
@@ -173,13 +174,13 @@ echo "</main>"; // closes propostas-container
 
     function getLeagueRowFormData(tbl_row) {
         var id = tbl_row.attr('id');
-        var nomeLiga = tbl_row.find('#nom'+id).find('.nomeLiga').text().trim() || tbl_row.find('#nom'+id).text().trim();
+        var nomeLiga = tbl_row.find('#nom'+id).text().trim();
         var tierLiga = tbl_row.find('#tie'+id).text().trim();
         var limiteIdade = tbl_row.find('#ida'+id).text().trim();
         if (limiteIdade === '-' || limiteIdade === '') {
             limiteIdade = '';
         }
-        var pais = tbl_row.find('.comboPais').val();
+        var pais = tbl_row.find('.comboPais').val() || tbl_row.find('.comboPais').attr('id');
 
         var input = (tbl_row.find('#newlogo'+id))[0];
         var logo = (input && input.files.length > 0) ? input.files[0] : null;
@@ -219,13 +220,13 @@ echo "</main>"; // closes propostas-container
                     if(data.error && data.error !== ''){
                         reject(data.error);
                     } else {
-                        var nomeLiga = tbl_row.find('#nom'+id).find('.nomeLiga').text().trim() || tbl_row.find('#nom'+id).text().trim();
+                        var nomeLiga = tbl_row.find('#nom'+id).text().trim();
                         var tierLiga = tbl_row.find('#tie'+id).text().trim();
                         var limiteIdade = tbl_row.find('#ida'+id).text().trim();
                         var paisNome = tbl_row.find('.comboPais option:selected').text();
                         var paisId = tbl_row.find('.comboPais').val();
 
-                        tbl_row.find('#nom'+id).find('.nomeLiga').text(nomeLiga);
+                        tbl_row.find('#nom'+id).text(nomeLiga);
                         tbl_row.find('#tie'+id).text(tierLiga);
                         tbl_row.find('#ida'+id).text(limiteIdade === '' ? '-' : limiteIdade);
                         tbl_row.find('#pai'+id).text(paisNome);
