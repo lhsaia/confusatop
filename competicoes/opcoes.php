@@ -362,6 +362,36 @@ require_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 		</div>
 	</div>
 
+	<!-- Cores e Zonas da Tabela de Classificação -->
+	<div class="opcoes-secao">
+		<h3 class="opcoes-secao-titulo">
+			<span class="material-symbols-outlined">palette</span>
+			Zonas e Cores da Tabela de Classificação
+		</h3>
+		
+		<small style="color: #64748b; font-size: 0.85rem; display: block; margin-bottom: 12px;">
+			Configure faixas de posições na tabela com cores customizadas e legendas explicativas (ex: Libertadores, Acesso, Rebaixamento).
+		</small>
+
+		<div id="container_zonas_tabela" class="zonas-tabela-container">
+			<!-- As linhas de zonas serão inseridas aqui dinamicamente -->
+		</div>
+
+		<div style="display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap;">
+			<button type="button" class="btn-add-zona" id="btn_add_zona">
+				<span class="material-symbols-outlined" style="font-size: 1.1rem;">add_circle</span> Adicionar Zona / Faixa
+			</button>
+		</div>
+
+		<div class="zonas-presets-bar">
+			<span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">Presets rápidos:</span>
+			<button type="button" class="btn-preset-zona" data-preset="padrao_g4_z4">G4 + Z4 Padrão</button>
+			<button type="button" class="btn-preset-zona" data-preset="brasileirao">Brasileirão (Libertadores, Sula, Z4)</button>
+			<button type="button" class="btn-preset-zona" data-preset="top2_classifica">Top 2 Classificam</button>
+			<button type="button" class="btn-preset-zona" data-preset="limpar">Limpar Zonas</button>
+		</div>
+	</div>
+
 	<!-- Cartões & Suspensão -->
 	<div class="opcoes-secao">
 		<h3 class="opcoes-secao-titulo">
@@ -840,6 +870,119 @@ $(document).ready(function($){
 		}
 	});
 
+	// --- Gerenciador de Zonas e Cores da Tabela ---
+	let zonasConfig = [];
+	try {
+		let rawZonas = <?php echo !empty($options['zonas_tabela']) ? json_encode($options['zonas_tabela']) : '""'; ?>;
+		if (rawZonas && typeof rawZonas === 'string') {
+			zonasConfig = JSON.parse(rawZonas);
+		} else if (Array.isArray(rawZonas)) {
+			zonasConfig = rawZonas;
+		}
+	} catch (e) {
+		zonasConfig = [];
+	}
+
+	function renderZonas() {
+		let $cont = $("#container_zonas_tabela");
+		$cont.empty();
+		if (!zonasConfig || zonasConfig.length === 0) {
+			$cont.html('<p style="color: #94a3b8; font-size: 0.85rem; font-style: italic; margin: 4px 0;">Nenhuma zona configurada. Use os botões abaixo para adicionar faixas ou carregar um preset.</p>');
+			return;
+		}
+
+		zonasConfig.forEach(function(z, idx) {
+			let deVal = z.de !== undefined ? z.de : 1;
+			let ateVal = z.ate !== undefined ? z.ate : deVal;
+			let corVal = z.cor || '#10b981';
+			let descVal = z.descricao || '';
+
+			let $row = $(`
+				<div class="zona-item-row" data-index="${idx}">
+					<div class="zona-input-pos">
+						<span>Posição</span>
+						<input type="number" min="1" max="128" class="zona-de" value="${deVal}">
+						<span>até</span>
+						<input type="number" min="1" max="128" class="zona-ate" value="${ateVal}">
+					</div>
+					<div class="zona-input-desc">
+						<input type="text" class="zona-desc" placeholder="Descrição / Legenda (Ex: Libertadores)" value="${descVal}">
+					</div>
+					<div class="zona-input-cor">
+						<input type="color" class="zona-cor" value="${corVal}">
+					</div>
+					<button type="button" class="btn-remove-zona" title="Remover Faixa">
+						<span class="material-symbols-outlined" style="font-size: 1.1rem;">delete</span>
+					</button>
+				</div>
+			`);
+			$cont.append($row);
+		});
+	}
+
+	function syncZonasFromUI() {
+		let list = [];
+		$("#container_zonas_tabela .zona-item-row").each(function() {
+			let de = parseInt($(this).find(".zona-de").val()) || 1;
+			let ate = parseInt($(this).find(".zona-ate").val()) || de;
+			let desc = $(this).find(".zona-desc").val().trim();
+			let cor = $(this).find(".zona-cor").val() || '#10b981';
+			list.push({ de: de, ate: ate, descricao: desc, cor: cor });
+		});
+		zonasConfig = list;
+		return list;
+	}
+
+	$(document).on("click", "#btn_add_zona", function() {
+		syncZonasFromUI();
+		let lastPos = 0;
+		if (zonasConfig.length > 0) {
+			lastPos = zonasConfig[zonasConfig.length - 1].ate;
+		}
+		let newDe = lastPos + 1;
+		let newAte = newDe;
+		zonasConfig.push({ de: newDe, ate: newAte, descricao: '', cor: '#0284c7' });
+		renderZonas();
+	});
+
+	$(document).on("click", ".btn-remove-zona", function() {
+		let idx = $(this).closest(".zona-item-row").data("index");
+		syncZonasFromUI();
+		zonasConfig.splice(idx, 1);
+		renderZonas();
+	});
+
+	// Presets de Zonas
+	$(document).on("click", ".btn-preset-zona", function() {
+		let preset = $(this).data("preset");
+		let nTimes = parseInt($("#input_numerotimes").val()) || 20;
+
+		if (preset === "padrao_g4_z4") {
+			let z4Start = Math.max(5, nTimes - 3);
+			zonasConfig = [
+				{ de: 1, ate: 4, descricao: 'Classificados (G4)', cor: '#10b981' },
+				{ de: z4Start, ate: nTimes, descricao: 'Rebaixamento (Z4)', cor: '#ef4444' }
+			];
+		} else if (preset === "brasileirao") {
+			let z4Start = Math.max(13, nTimes - 3);
+			zonasConfig = [
+				{ de: 1, ate: 4, descricao: 'Fase de Grupos Libertadores', cor: '#0284c7' },
+				{ de: 5, ate: 6, descricao: 'Pré-Libertadores', cor: '#38bdf8' },
+				{ de: 7, ate: 12, descricao: 'Copa Sul-Americana', cor: '#10b981' },
+				{ de: z4Start, ate: nTimes, descricao: 'Zona de Rebaixamento', cor: '#ef4444' }
+			];
+		} else if (preset === "top2_classifica") {
+			zonasConfig = [
+				{ de: 1, ate: 2, descricao: 'Avançam de Fase', cor: '#10b981' }
+			];
+		} else if (preset === "limpar") {
+			zonasConfig = [];
+		}
+		renderZonas();
+	});
+
+	renderZonas();
+
 	// Swap inteligente entre os 4 critérios de desempate
 	const desempateSelects = ["#desempate_grupo_1", "#desempate_grupo_2", "#desempate_grupo_3", "#desempate_grupo_4"];
 	
@@ -990,6 +1133,10 @@ $(document).ready(function($){
 		formData.append('dias_semana',dias_semana);
 		formData.append('intervalo_rodadas',intervalo_rodadas);
 		formData.append('horarios_jogos',horarios_jogos);
+
+		// Zonas e Cores da Tabela
+		let zonasList = syncZonasFromUI();
+		formData.append('zonas_tabela', JSON.stringify(zonasList));
 
 		// Hexacolor
 		formData.append('hexa_balizamento', hexa_balizamento);

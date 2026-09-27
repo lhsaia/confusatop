@@ -427,6 +427,141 @@ html body .opcoes-secao select:not(.select2-multiple):focus {
   cursor: pointer;
 }
 
+/* Zonas e Cores da Tabela */
+.zonas-tabela-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.zona-item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  flex-wrap: wrap;
+}
+
+.zona-input-pos {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.zona-input-pos input[type="number"] {
+  width: 60px !important;
+  padding: 6px 8px !important;
+  text-align: center;
+  margin: 0 !important;
+}
+
+.zona-input-desc {
+  flex: 1;
+  min-width: 160px;
+}
+
+.zona-input-desc input[type="text"] {
+  width: 100% !important;
+  padding: 6px 10px !important;
+  margin: 0 !important;
+  font-size: 0.85rem !important;
+}
+
+.zona-input-cor {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.zona-input-cor input[type="color"] {
+  width: 44px !important;
+  height: 36px !important;
+  padding: 2px !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  margin: 0 !important;
+}
+
+.btn-remove-zona {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #ef4444 !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+  border-radius: 6px !important;
+  width: 34px !important;
+  height: 34px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-remove-zona:hover {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+.zonas-presets-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+}
+
+.btn-preset-zona {
+  background: rgba(2, 132, 199, 0.08) !important;
+  color: #0284c7 !important;
+  border: 1px solid rgba(2, 132, 199, 0.2) !important;
+  border-radius: 6px !important;
+  padding: 4px 10px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  font-family: 'Outfit', sans-serif !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  width: auto !important;
+  margin: 0 !important;
+}
+
+.btn-preset-zona:hover {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+.btn-add-zona {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.25) !important;
+  border-radius: 8px !important;
+  padding: 8px 14px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  font-family: 'Outfit', sans-serif !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  width: auto !important;
+  margin-top: 8px !important;
+}
+
+.btn-add-zona:hover {
+  background: #10b981 !important;
+  color: #ffffff !important;
+}
+
 /* Responsividade Mobile */
 @media (max-width: 768px) {
   .propostas-container {

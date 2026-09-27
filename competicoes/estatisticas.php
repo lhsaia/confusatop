@@ -30,6 +30,34 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $tipoCompeticao = isset($optionsComp['tipocompeticao']) ? (int)$optionsComp['tipocompeticao'] : 0;
     $numTeamsComp = isset($optionsComp['numero_times']) ? (int)$optionsComp['numero_times'] : 0;
 
+    // Zonas de Cores da Tabela de Classificação
+    $zonasTabela = [];
+    if (!empty($optionsComp['zonas_tabela'])) {
+        $decodedZonas = json_decode($optionsComp['zonas_tabela'], true);
+        if (is_array($decodedZonas)) {
+            $zonasTabela = $decodedZonas;
+        }
+    }
+
+    // Helper para obter cor/zona de uma posição na tabela
+    $getZonaPosicao = function($pos, $totalTeams) use ($zonasTabela) {
+        if (!empty($zonasTabela)) {
+            foreach ($zonasTabela as $z) {
+                $de = isset($z['de']) ? (int)$z['de'] : 1;
+                $ate = isset($z['ate']) ? (int)$z['ate'] : $de;
+                if ($pos >= $de && $pos <= $ate) {
+                    return [
+                        'custom' => true,
+                        'cor' => !empty($z['cor']) ? $z['cor'] : '#10b981',
+                        'descricao' => !empty($z['descricao']) ? $z['descricao'] : ''
+                    ];
+                }
+            }
+            return null;
+        }
+        return null;
+    };
+
     // Conectar ao SQLite da competição
     $compDatabase = new SQLiteDatabase();
     $compDatabase->fileName = $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$idCompeticao."-database.db3";
@@ -580,12 +608,19 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                 $pos = 1;
                                 $totalGrupo = count($grupoTab);
                                 foreach ($grupoTab as $team):
+                                    $zonaInfo = $getZonaPosicao($pos, $totalGrupo);
                                     $posClass = '';
-                                    if ($pos <= 2) $posClass = 'zone-g4'; // top 2 avançam
-                                    if ($pos >= $totalGrupo - 1 && $totalGrupo > 4) $posClass = 'zone-relegation';
+                                    $posStyle = '';
+                                    if ($zonaInfo) {
+                                        $posClass = 'has-custom-zone';
+                                        $posStyle = 'border-left-color: ' . htmlspecialchars($zonaInfo['cor']) . '; color: ' . htmlspecialchars($zonaInfo['cor']) . ';';
+                                    } else {
+                                        if ($pos <= 2) $posClass = 'zone-g4'; // top 2 avançam
+                                        if ($pos >= $totalGrupo - 1 && $totalGrupo > 4) $posClass = 'zone-relegation';
+                                    }
                                 ?>
                                 <tr>
-                                    <td class="pos-col <?php echo $posClass; ?>"><?php echo $pos++; ?>º</td>
+                                    <td class="pos-col <?php echo $posClass; ?>" style="<?php echo $posStyle; ?>"><?php echo $pos++; ?>º</td>
                                     <td class="team-col">
                                         <div class="team-cell">
                                             <img class="team-logo" src="/images/escudos/<?php echo $team['escudo'] ? $team['escudo'] : '0.png'; ?>" alt="Escudo" />
@@ -607,6 +642,22 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                     </div>
                 </div>
                 <?php $firstGroup = false; endforeach; ?>
+
+                <?php if (!empty($zonasTabela)): ?>
+                <div class="table-legend-container">
+                    <?php foreach ($zonasTabela as $z): ?>
+                        <div class="table-legend-item">
+                            <span class="table-legend-color" style="background-color: <?php echo htmlspecialchars($z['cor'] ?? '#10b981'); ?>;"></span>
+                            <span>
+                                <?php 
+                                $rangeTxt = (isset($z['de']) && isset($z['ate']) && $z['de'] != $z['ate']) ? "{$z['de']}º a {$z['ate']}º" : (isset($z['de']) ? "{$z['de']}º" : "");
+                                echo htmlspecialchars(trim(($rangeTxt ? "({$rangeTxt}) " : "") . ($z['descricao'] ?? ''))); 
+                                ?>
+                            </span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
             <?php else: /* Pontos corridos - tabela única */ ?>
                 <div class="stats-table-wrapper">
                     <table class="stats-table">
@@ -630,12 +681,19 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                             $pos = 1;
                             $totalTabela = count($singleTab);
                             foreach ($singleTab as $team):
+                                $zonaInfo = $getZonaPosicao($pos, $totalTabela);
                                 $posClass = '';
-                                if ($pos <= 4) $posClass = 'zone-g4';
-                                if ($pos > $totalTabela - 4 && $totalTabela > 8) $posClass = 'zone-relegation';
+                                $posStyle = '';
+                                if ($zonaInfo) {
+                                    $posClass = 'has-custom-zone';
+                                    $posStyle = 'border-left-color: ' . htmlspecialchars($zonaInfo['cor']) . '; color: ' . htmlspecialchars($zonaInfo['cor']) . ';';
+                                } else {
+                                    if ($pos <= 4) $posClass = 'zone-g4';
+                                    if ($pos > $totalTabela - 4 && $totalTabela > 8) $posClass = 'zone-relegation';
+                                }
                             ?>
                             <tr>
-                                <td class="pos-col <?php echo $posClass; ?>"><?php echo $pos++; ?>º</td>
+                                <td class="pos-col <?php echo $posClass; ?>" style="<?php echo $posStyle; ?>"><?php echo $pos++; ?>º</td>
                                 <td class="team-col">
                                     <div class="team-cell">
                                         <img class="team-logo" src="/images/escudos/<?php echo $team['escudo'] ? $team['escudo'] : '0.png'; ?>" alt="Escudo" />
@@ -655,6 +713,22 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                         </tbody>
                     </table>
                 </div>
+
+                <?php if (!empty($zonasTabela)): ?>
+                <div class="table-legend-container">
+                    <?php foreach ($zonasTabela as $z): ?>
+                        <div class="table-legend-item">
+                            <span class="table-legend-color" style="background-color: <?php echo htmlspecialchars($z['cor'] ?? '#10b981'); ?>;"></span>
+                            <span>
+                                <?php 
+                                $rangeTxt = (isset($z['de']) && isset($z['ate']) && $z['de'] != $z['ate']) ? "{$z['de']}º a {$z['ate']}º" : (isset($z['de']) ? "{$z['de']}º" : "");
+                                echo htmlspecialchars(trim(($rangeTxt ? "({$rangeTxt}) " : "") . ($z['descricao'] ?? ''))); 
+                                ?>
+                            </span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
         

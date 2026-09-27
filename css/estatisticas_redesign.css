@@ -263,16 +263,52 @@ body {
 /* Classificação Styles */
 .pos-col {
   font-family: 'Outfit', sans-serif;
-  font-weight: 600;
-  width: 40px;
+  font-weight: 700;
+  width: 44px;
+  position: relative;
+}
+
+.pos-col.has-custom-zone {
+  border-left-width: 4px !important;
+  border-left-style: solid !important;
 }
 
 .pos-col.zone-g4 {
   color: #10b981;
+  border-left: 4px solid #10b981;
 }
 
 .pos-col.zone-relegation {
   color: #ef4444;
+  border-left: 4px solid #ef4444;
+}
+
+.table-legend-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: rgba(248, 250, 252, 0.7);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.table-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.table-legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 .pts-col {

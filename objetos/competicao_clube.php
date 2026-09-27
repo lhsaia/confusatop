@@ -122,7 +122,8 @@ class Competicao_clube{
                     'max_jogos_dia' => "INT DEFAULT 0",
                     'dias_semana' => "VARCHAR(50) DEFAULT ''",
                     'intervalo_rodadas' => "INT DEFAULT 1",
-                    'horarios_jogos' => "VARCHAR(255) DEFAULT '16:00'"
+                    'horarios_jogos' => "VARCHAR(255) DEFAULT '16:00'",
+                    'zonas_tabela' => "TEXT NULL"
                 ];
 
                 foreach ($columnsToAdd as $col => $def) {
@@ -387,7 +388,7 @@ class Competicao_clube{
 
 		$id = htmlspecialchars(strip_tags($id));
 		$query = "SELECT
-                numero_times, limite_fichas, subir_live, sorteio, golfora, finalunica, tipocompeticao, criteriodesempate, criteriodesempatefinal, suspensao, zeraramarelos, expulso_dois_amarelos, alteracoeselenco, inicioalteracoes, fimalteracoes, jogadoresadicionais, estadios_times, desempate_grupos, num_grupos, times_por_grupo, tipo_preliminar, turnos_pontos_corridos, data_inicial, max_jogos_dia, dias_semana, intervalo_rodadas, horarios_jogos  
+                numero_times, limite_fichas, subir_live, sorteio, golfora, finalunica, tipocompeticao, criteriodesempate, criteriodesempatefinal, suspensao, zeraramarelos, expulso_dois_amarelos, alteracoeselenco, inicioalteracoes, fimalteracoes, jogadoresadicionais, estadios_times, desempate_grupos, num_grupos, times_por_grupo, tipo_preliminar, turnos_pontos_corridos, data_inicial, max_jogos_dia, dias_semana, intervalo_rodadas, horarios_jogos, zonas_tabela  
             FROM
                 competicao_opcoes 
             WHERE
@@ -400,7 +401,7 @@ class Competicao_clube{
 		return $options;
     }
 	
-	function alterarOpcoes($idUsuario, $numero_times, $data_limite, $subir_live, $sorteio, $gol_fora, $final_unica, $tipo_competicao, $criterio_desempate, $criterio_desempate_final, $criterio_suspensao, $zerar_amarelos, $permitir_alteracoes, $inicio_alteracoes, $fim_alteracoes, $numero_alteracoes, $id_competicao, $estadios_times = 1, $desempate_grupos = 'SG,GP,VI,CD', $num_grupos = 4, $times_por_grupo = 4, $tipo_preliminar = 1, $turnos_pontos_corridos = 2, $data_inicial = null, $max_jogos_dia = 0, $dias_semana = '', $intervalo_rodadas = 1, $horarios_jogos = '16:00', $expulso_dois_amarelos = 0){
+	function alterarOpcoes($idUsuario, $numero_times, $data_limite, $subir_live, $sorteio, $gol_fora, $final_unica, $tipo_competicao, $criterio_desempate, $criterio_desempate_final, $criterio_suspensao, $zerar_amarelos, $permitir_alteracoes, $inicio_alteracoes, $fim_alteracoes, $numero_alteracoes, $id_competicao, $estadios_times = 1, $desempate_grupos = 'SG,GP,VI,CD', $num_grupos = 4, $times_por_grupo = 4, $tipo_preliminar = 1, $turnos_pontos_corridos = 2, $data_inicial = null, $max_jogos_dia = 0, $dias_semana = '', $intervalo_rodadas = 1, $horarios_jogos = '16:00', $expulso_dois_amarelos = 0, $zonas_tabela = null){
 	
 			$idUsuario = htmlspecialchars(strip_tags($idUsuario));
 			$numero_times = htmlspecialchars(strip_tags($numero_times));
@@ -430,6 +431,7 @@ class Competicao_clube{
 			$dias_semana = htmlspecialchars(strip_tags($dias_semana));
 			$intervalo_rodadas = intval($intervalo_rodadas) > 0 ? intval($intervalo_rodadas) : 1;
 			$horarios_jogos = !empty($horarios_jogos) ? htmlspecialchars(strip_tags($horarios_jogos)) : '16:00';
+			$zonas_tabela = !empty($zonas_tabela) ? $zonas_tabela : null;
 
 			if($numero_alteracoes == "") $numero_alteracoes = 0;
 			if($inicio_alteracoes == "") $inicio_alteracoes = null;
@@ -439,7 +441,7 @@ class Competicao_clube{
 			
 			$query = "UPDATE competicao_opcoes 
             SET
-                 numero_times =:numero_times, limite_fichas=:limite_fichas, subir_live=:subir_live, sorteio=:sorteio, golfora=:golfora, finalunica=:finalunica, tipocompeticao=:tipocompeticao, criteriodesempate=:criteriodesempate, criteriodesempatefinal=:criteriodesempatefinal, suspensao=:suspensao, zeraramarelos=:zeraramarelos, expulso_dois_amarelos=:expulso_dois_amarelos, alteracoeselenco=:alteracoeselenco, inicioalteracoes=:inicioalteracoes, fimalteracoes=:fimalteracoes, jogadoresadicionais=:numeroalteracoes, estadios_times=:estadios_times, desempate_grupos=:desempate_grupos, num_grupos=:num_grupos, times_por_grupo=:times_por_grupo, tipo_preliminar=:tipo_preliminar, turnos_pontos_corridos=:turnos_pontos_corridos, data_inicial=:data_inicial, max_jogos_dia=:max_jogos_dia, dias_semana=:dias_semana, intervalo_rodadas=:intervalo_rodadas, horarios_jogos=:horarios_jogos   
+                 numero_times =:numero_times, limite_fichas=:limite_fichas, subir_live=:subir_live, sorteio=:sorteio, golfora=:golfora, finalunica=:finalunica, tipocompeticao=:tipocompeticao, criteriodesempate=:criteriodesempate, criteriodesempatefinal=:criteriodesempatefinal, suspensao=:suspensao, zeraramarelos=:zeraramarelos, expulso_dois_amarelos=:expulso_dois_amarelos, alteracoeselenco=:alteracoeselenco, inicioalteracoes=:inicioalteracoes, fimalteracoes=:fimalteracoes, jogadoresadicionais=:numeroalteracoes, estadios_times=:estadios_times, desempate_grupos=:desempate_grupos, num_grupos=:num_grupos, times_por_grupo=:times_por_grupo, tipo_preliminar=:tipo_preliminar, turnos_pontos_corridos=:turnos_pontos_corridos, data_inicial=:data_inicial, max_jogos_dia=:max_jogos_dia, dias_semana=:dias_semana, intervalo_rodadas=:intervalo_rodadas, horarios_jogos=:horarios_jogos, zonas_tabela=:zonas_tabela   
              WHERE
                 id_competicao = :idComp";
 
@@ -472,6 +474,7 @@ class Competicao_clube{
 		$stmt->bindParam(":dias_semana", $dias_semana);
 		$stmt->bindParam(":intervalo_rodadas", $intervalo_rodadas);
 		$stmt->bindParam(":horarios_jogos", $horarios_jogos);
+		$stmt->bindParam(":zonas_tabela", $zonas_tabela);
 		
 		if($stmt->execute()){
 			return true;

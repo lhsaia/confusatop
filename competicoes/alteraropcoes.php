@@ -40,8 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     $intervalo_rodadas = isset($_POST['intervalo_rodadas']) ? intval($_POST['intervalo_rodadas']) : 1;
     $horarios_jogos = !empty($_POST['horarios_jogos']) ? $_POST['horarios_jogos'] : '16:00';
     $expulso_dois_amarelos = isset($_POST['expulso_dois_amarelos']) ? intval($_POST['expulso_dois_amarelos']) : 0;
+    $zonas_tabela = isset($_POST['zonas_tabela']) ? $_POST['zonas_tabela'] : null;
 	
-	if($competicao->alterarOpcoes($idUsuario, $_POST['numero_times'], $_POST['data_limite'], $_POST['subir_live'], $_POST['sorteio'], $_POST['gol_fora'], $_POST['final_unica'], $_POST['tipo_competicao'], $_POST['criterio_desempate'], $_POST['criterio_desempate_final'], $_POST['criterio_suspensao'], $_POST['zerar_amarelos'], $_POST['permitir_alteracoes'], $_POST['inicio_alteracoes'], $_POST['fim_alteracoes'], $_POST['numero_alteracoes'], $idCompeticao, $estadios_times, $desempate_grupos, $num_grupos, $times_por_grupo, $tipo_preliminar, $turnos_pontos_corridos, $data_inicial, $max_jogos_dia, $dias_semana, $intervalo_rodadas, $horarios_jogos, $expulso_dois_amarelos)){
+	if($competicao->alterarOpcoes($idUsuario, $_POST['numero_times'], $_POST['data_limite'], $_POST['subir_live'], $_POST['sorteio'], $_POST['gol_fora'], $_POST['final_unica'], $_POST['tipo_competicao'], $_POST['criterio_desempate'], $_POST['criterio_desempate_final'], $_POST['criterio_suspensao'], $_POST['zerar_amarelos'], $_POST['permitir_alteracoes'], $_POST['inicio_alteracoes'], $_POST['fim_alteracoes'], $_POST['numero_alteracoes'], $idCompeticao, $estadios_times, $desempate_grupos, $num_grupos, $times_por_grupo, $tipo_preliminar, $turnos_pontos_corridos, $data_inicial, $max_jogos_dia, $dias_semana, $intervalo_rodadas, $horarios_jogos, $expulso_dois_amarelos, $zonas_tabela)){
 		$is_success = true;
 	} else {
 		$is_success = false;
