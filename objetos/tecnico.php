@@ -1322,33 +1322,68 @@ class Tecnico{
            $rowTransf = $stmt->fetch(PDO::FETCH_ASSOC);
            $mensagens = $rowTransf['mensagens'] ?? '';
 
+           $subject = "[CONFUSA.top] " . $nomeClube . " fez uma proposta por " . $nomeTecnico;
+
            $mensagemExtraHtml = "";
            if (!empty($mensagens)) {
                $msgsDecoded = json_decode($mensagens, true);
                if (is_array($msgsDecoded) && count($msgsDecoded) > 0) {
                    $lastMsg = end($msgsDecoded);
                    if (!empty($lastMsg['texto'])) {
-                       $mensagemExtraHtml = "<div style='margin-top:15px; padding:12px; background:#f8fafc; border-left:4px solid #0284c7; border-radius:4px; text-align:left;'><b>Mensagem:</b> <i>\"" . nl2br(htmlspecialchars($lastMsg['texto'])) . "\"</i></div>";
+                       $mensagemExtraHtml = "
+                       <div style='margin-top: 16px; padding: 14px; background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #0284c7; border-radius: 6px; text-align: left;'>
+                           <strong style='color: #0284c7; font-size: 12px; text-transform: uppercase; display: block; margin-bottom: 4px;'>Mensagem do Clube Proponente:</strong>
+                           <div style='color: #334155; font-size: 14px; font-style: italic;'>\"" . nl2br(htmlspecialchars($lastMsg['texto'])) . "\"</div>
+                       </div>";
                    }
                }
            }
 
-           $subject = "[CONFUSA.top] " . $nomeClube . " fez uma proposta por " . $nomeTecnico;
-           $html_content = '
-           <html>
-           <head></head>
-           <body>
-               <h1 align="center">Proposta de contratação de técnico</h1>
-               <div style="text-align:center;" width="100%">
-                   ' . $imgHtml . '
-                   <div><br/>
-                       O clube <strong>' . $nomeClube . '</strong> fez uma proposta para contratar o técnico
-                       <strong>' . $nomeTecnico . '</strong> (nível ' . $nivelTecnico . ').' . $mensagemExtraHtml . '<br/><br/>
-                       Acesse o portal para aceitar, rejeitar ou realizar uma contraproposta.
-                   </div>
-               </div>
-           </body>
-           </html>';
+           require_once($_SERVER['DOCUMENT_ROOT'] . "/elements/mail_template.php");
+
+           $contentHtml = "
+           <div style='text-align: center; margin-bottom: 20px;'>
+               {$imgHtml}
+               <div style='font-size: 18px; font-weight: 700; color: #0f172a; margin-top: 8px;'>" . htmlspecialchars($nomeClube) . "</div>
+           </div>
+
+           <div style='background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-bottom: 20px;'>
+               <table width='100%' border='0' cellspacing='0' cellpadding='6' style='font-size: 14px;'>
+                   <tr>
+                       <td style='color: #64748b; font-weight: 600; width: 35%;'>Técnico:</td>
+                       <td style='color: #0f172a; font-weight: 700;'>" . htmlspecialchars($nomeTecnico) . "</td>
+                   </tr>
+                   <tr>
+                       <td style='color: #64748b; font-weight: 600;'>Nível:</td>
+                       <td style='color: #0284c7; font-weight: 700;'>" . htmlspecialchars((string)$nivelTecnico) . "</td>
+                   </tr>
+                   <tr>
+                       <td style='color: #64748b; font-weight: 600;'>Tipo:</td>
+                       <td style='color: #0f172a; font-weight: 600;'>Contratação de Comissão Técnica</td>
+                   </tr>
+               </table>
+
+               {$mensagemExtraHtml}
+           </div>
+
+           <p style='color: #475569; font-size: 14px; line-height: 1.5; margin: 0; text-align: center;'>
+               Acesse o portal para <strong>aceitar</strong>, <strong>rejeitar</strong> ou realizar uma <strong>contraproposta</strong>.
+           </p>";
+
+           $html_content = renderConfusaEmail([
+               'title' => 'Proposta de Contratação de Técnico',
+               'subtitle' => 'Seu clube recebeu uma oferta para contratação de treinador.',
+               'badge' => [
+                   'text' => 'Comissão Técnica',
+                   'bg' => '#e0f2fe',
+                   'color' => '#0369a1'
+               ],
+               'content_html' => $contentHtml,
+               'btn' => [
+                   'url' => 'https://confusa.top/mercado/transferencias.php',
+                   'text' => 'Acessar Central de Transferências'
+               ]
+           ]);
 
            $sendSuccess = false;
            try {

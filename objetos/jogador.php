@@ -2030,6 +2030,22 @@ return $stmt;
 
         }
 
+        function editarNome($idJogador, $nomeJogador){
+            $idJogador = htmlspecialchars(strip_tags((string)($idJogador ?? '')));
+            $nomeJogador = htmlspecialchars(strip_tags(trim((string)($nomeJogador ?? ''))));
+
+            if(empty($nomeJogador) || empty($idJogador)){
+                return false;
+            }
+
+            $query = "UPDATE jogador SET Nome = :nome WHERE ID = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":nome", $nomeJogador);
+            $stmt->bindParam(":id", $idJogador);
+
+            return $stmt->execute();
+        }
+
         function editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono, $atividadeJogador, $mentalidadeJogador = null, $determinacaoJogador = null, $cobrancaFaltaJogador = null, $encerramentoContrato = null, $foto = null, $desdeContrato = null, $numeroCamisa = null, $dataFalecimento = null){
 
             $idJogador = htmlspecialchars(strip_tags((string)($idJogador ?? '')));
@@ -3952,9 +3968,7 @@ return $stmt;
         }
  
 
-        $subject_old = "Você recebeu uma proposta de transferência no CONFUSA.TOP ";
         $subject = "[CONFUSA.top] " . $nomeClube . " fez uma proposta por " . $nomeJogador;
-        $body_old = "Foi feita uma nova proposta de transferência para um jogador sob seu controle, acesse o portal para negociar.";
 
         $mensagemExtraHtml = "";
         if (!empty($mensagens)) {
@@ -3962,22 +3976,64 @@ return $stmt;
             if (is_array($msgsDecoded) && count($msgsDecoded) > 0) {
                 $lastMsg = end($msgsDecoded);
                 if (!empty($lastMsg['texto'])) {
-                    $mensagemExtraHtml = "<div style='margin-top:15px; padding:12px; background:#f8fafc; border-left:4px solid #0284c7; border-radius:4px; text-align:left;'><b>Mensagem:</b> <i>\"" . nl2br(htmlspecialchars($lastMsg['texto'])) . "\"</i></div>";
+                    $mensagemExtraHtml = "
+                    <div style='margin-top: 16px; padding: 14px; background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #0284c7; border-radius: 6px; text-align: left;'>
+                        <strong style='color: #0284c7; font-size: 12px; text-transform: uppercase; display: block; margin-bottom: 4px;'>Mensagem do Clube Proponente:</strong>
+                        <div style='color: #334155; font-size: 14px; font-style: italic;'>\"" . nl2br(htmlspecialchars($lastMsg['texto'])) . "\"</div>
+                    </div>";
                 }
             }
         }
 
-        $body = "<div style='text-align:center;' width='100%'>" . $imgHtml . "<div><br/>O clube "  . $nomeClube . " fez uma proposta de " . $tipoTransferencia . " por " .$nomeJogador . " no valor de F$" . $valor . $finalPeriodo . "." . $mensagemExtraHtml . " <br/><br/> Acesse o portal para aceitar, rejeitar ou realizar uma contra proposta." ;
-    
-    $html_content = ' 
-    <html> 
-    <head> 
-    </head> 
-    <body> 
-        <h1 align="center">Proposta de ' . $tipoTransferencia.'</h1> 
-        ' .$body .'
-    </body> 
-    </html>';
+        require_once($_SERVER['DOCUMENT_ROOT'] . "/elements/mail_template.php");
+
+        $contentHtml = "
+        <div style='text-align: center; margin-bottom: 20px;'>
+            {$imgHtml}
+            <div style='font-size: 18px; font-weight: 700; color: #0f172a; margin-top: 8px;'>" . htmlspecialchars($nomeClube) . "</div>
+        </div>
+
+        <div style='background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-bottom: 20px;'>
+            <table width='100%' border='0' cellspacing='0' cellpadding='6' style='font-size: 14px;'>
+                <tr>
+                    <td style='color: #64748b; font-weight: 600; width: 35%;'>Jogador:</td>
+                    <td style='color: #0f172a; font-weight: 700;'>" . htmlspecialchars($nomeJogador) . "</td>
+                </tr>
+                <tr>
+                    <td style='color: #64748b; font-weight: 600;'>Tipo:</td>
+                    <td style='color: #0f172a; font-weight: 600; text-transform: capitalize;'>" . $tipoTransferencia . "</td>
+                </tr>
+                <tr>
+                    <td style='color: #64748b; font-weight: 600;'>Valor da Oferta:</td>
+                    <td style='color: #16a34a; font-weight: 700; font-size: 16px;'>F$ " . $valor . "</td>
+                </tr>
+                <tr>
+                    <td style='color: #64748b; font-weight: 600;'>Duração:</td>
+                    <td style='color: #475569;'>" . htmlspecialchars(ltrim($finalPeriodo)) . "</td>
+                </tr>
+            </table>
+
+            {$mensagemExtraHtml}
+        </div>
+
+        <p style='color: #475569; font-size: 14px; line-height: 1.5; margin: 0; text-align: center;'>
+            Acesse o portal para <strong>aceitar</strong>, <strong>rejeitar</strong> ou realizar uma <strong>contraproposta</strong>.
+        </p>";
+
+        $html_content = renderConfusaEmail([
+            'title' => 'Nova Proposta de Transferência',
+            'subtitle' => 'Seu clube recebeu uma proposta oficial de negociação no mercado.',
+            'badge' => [
+                'text' => 'Mercado de Transferências',
+                'bg' => '#e0f2fe',
+                'color' => '#0369a1'
+            ],
+            'content_html' => $contentHtml,
+            'btn' => [
+                'url' => 'https://confusa.top/mercado/transferencias.php',
+                'text' => 'Acessar Central de Transferências'
+            ]
+        ]);
     
     $sendSuccess = false;
     try {
@@ -3988,7 +4044,7 @@ return $stmt;
         $mail->addAddress($to);
         $mail->Subject = $subject;
         $mail->Body    = $html_content;
-        $mail->isHTML(true); // Permitir e-mails em formato HTML
+        $mail->isHTML(true);
         $sendSuccess = $mail->send();
     } catch (Exception $e) {
         $sendSuccess = false;

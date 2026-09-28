@@ -172,22 +172,59 @@ if( filter_var($_POST['newemail'], FILTER_VALIDATE_EMAIL) )
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
             // Inserir solicitação no banco
+            // Inserir solicitação no banco
             $stmt_ins = $db->prepare("INSERT INTO `solicitacoes_cadastro` (nome, email, paises) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE status = 'pendente'");
             $stmt_ins->execute([$novonome, $novoemail, $novopais]);
         } catch (PDOException $e) {
             // Ignorar erro silenciosamente para não quebrar o fluxo caso o DB local não suporte ou algo assim
         }
 
-        // Enviar email via SMTP usando mail_setup.php
+        // Enviar email via SMTP usando mail_setup.php e mail_template.php
         try {
             require_once($base_dir . "/elements/mail_setup.php");
+            require_once($base_dir . "/elements/mail_template.php");
+
+            $contentAdminHtml = "
+            <div style='background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-bottom: 20px;'>
+                <table width='100%' border='0' cellspacing='0' cellpadding='6' style='font-size: 14px;'>
+                    <tr>
+                        <td style='color: #64748b; font-weight: 600; width: 30%;'>Nome:</td>
+                        <td style='color: #0f172a; font-weight: 700;'>" . htmlspecialchars($novonome) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='color: #64748b; font-weight: 600;'>E-mail:</td>
+                        <td style='color: #0284c7; font-weight: 600;'>" . htmlspecialchars($novoemail) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='color: #64748b; font-weight: 600;'>País / Interesses:</td>
+                        <td style='color: #334155;'>" . htmlspecialchars($novopais) . "</td>
+                    </tr>
+                </table>
+            </div>";
+
+            $bodyHtml = renderConfusaEmail([
+                'title' => 'Nova Solicitação de Cadastro',
+                'subtitle' => 'Um novo usuário solicitou acesso ao portal CONFUSA.top.',
+                'badge' => [
+                    'text' => 'Solicitação de Acesso',
+                    'bg' => '#fef3c7',
+                    'color' => '#b45309'
+                ],
+                'content_html' => $contentAdminHtml,
+                'btn' => [
+                    'url' => 'https://confusa.top/admin/criar_usuario.php',
+                    'text' => 'Acessar Painel de Cadastro'
+                ]
+            ]);
+
             $mail->clearAddresses();
             $mail->clearReplyTos();
             $mail->setFrom(getenv('SMTP_USER'), 'CONFUSA.top');
             $mail->addReplyTo($novoemail, $novonome);
             $mail->addAddress($to);
-            $mail->Subject = $subject;
-            $mail->Body    = $body;
+            $mail->Subject = "[CONFUSA.top] Novo pedido de cadastro: " . $novonome;
+            $mail->Body    = $bodyHtml;
+            $mail->isHTML(true);
             $sendSuccess = $mail->send();
         } catch (\Throwable $e) {
             error_log("Erro ao enviar email de login: " . $e->getMessage() . " / Mailer Error: " . ($mail->ErrorInfo ?? ''));
@@ -251,31 +288,47 @@ if($idUsuario){
     $email_msg .= "Usuário não encontrado, ";
 }
 
-
-
-
 $to = $emailEsqueceuSenha;
-$from = getenv('SMTP_USER');
-
-$headers = "From: " . $from . "\r\n";
-
-$subject = "Sua nova senha temporaria para o CONFUSA.TOP";
-$body = "Sua nova senha temporaria e: " . $presenhaTemp . "\r\n" .
-        "Altere assim que possivel no menu do usuario do site.";
-
-
 
 if( filter_var($_POST['forgetemail'], FILTER_VALIDATE_EMAIL) && $change_success)
 {
     $sendSuccess = false;
     try {
         require_once($base_dir . "/elements/mail_setup.php");
+        require_once($base_dir . "/elements/mail_template.php");
+
+        $contentResetHtml = "
+        <div style='background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-bottom: 20px;'>
+            <strong style='color: #64748b; font-size: 12px; text-transform: uppercase;'>Sua Nova Senha Temporária:</strong>
+            <div style='color: #0284c7; font-size: 20px; font-weight: 700; font-family: monospace; letter-spacing: 1px; margin-top: 6px;'>" . htmlspecialchars($presenhaTemp) . "</div>
+        </div>
+
+        <p style='color: #475569; font-size: 14px; line-height: 1.5; margin: 0;'>
+            Utilize esta senha para entrar no sistema. Assim que efetuar o login, vá ao menu de usuário e troque para uma senha de sua preferência.
+        </p>";
+
+        $bodyResetHtml = renderConfusaEmail([
+            'title' => 'Redefinição de Senha',
+            'subtitle' => 'Uma nova senha temporária foi gerada para sua conta.',
+            'badge' => [
+                'text' => 'Segurança da Conta',
+                'bg' => '#fee2e2',
+                'color' => '#b91c1c'
+            ],
+            'content_html' => $contentResetHtml,
+            'btn' => [
+                'url' => 'https://confusa.top/login.php',
+                'text' => 'Fazer Login'
+            ]
+        ]);
+
         $mail->clearAddresses();
         $mail->clearReplyTos();
         $mail->setFrom(getenv('SMTP_USER'), 'CONFUSA.top');
         $mail->addAddress($to);
-        $mail->Subject = $subject;
-        $mail->Body    = $body;
+        $mail->Subject = "[CONFUSA.top] Sua nova senha de acesso";
+        $mail->Body    = $bodyResetHtml;
+        $mail->isHTML(true);
         $sendSuccess = $mail->send();
     } catch (\Throwable $e) {
         error_log("Erro ao enviar email de esqueci senha: " . $e->getMessage() . " / Mailer Error: " . ($mail->ErrorInfo ?? ''));

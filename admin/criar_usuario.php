@@ -64,18 +64,46 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['criar'])){
                 $novonome = $usuario->nome;
                 $nomeusuario = $usuario->nomeusuario;
                 
+                require_once($_SERVER['DOCUMENT_ROOT'] . "/elements/mail_template.php");
 
-                $body = "Olá " . $novonome . "!\r\n" .
-                    "Suas informações para login seguem abaixo:\r\n".
-                    "Usuário: " . $nomeusuario . "\r\n" .
-                    "Senha: ". $presenha. "\r\n" .
-                    "Você conseguirá trocar sua senha escolhendo a opção 'Trocar senha' na barra de tarefas do site";
-                    
-                    
-                $mail->setFrom('admin@confusa.top', 'Confusa.top');
-                $mail->addAddress($novoemail);               //Name is optional
-                $mail->Subject = "Seja bem-vindo ao site CONFUSA.TOP!";
-                $mail->Body    = $body;
+                $contentHtml = "
+                <div style='background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-bottom: 20px;'>
+                    <div style='margin-bottom: 12px;'>
+                        <strong style='color: #64748b; font-size: 12px; text-transform: uppercase;'>Nome de Usuário:</strong>
+                        <div style='color: #0f172a; font-size: 16px; font-weight: 700; margin-top: 2px;'>" . htmlspecialchars($nomeusuario) . "</div>
+                    </div>
+                    <div>
+                        <strong style='color: #64748b; font-size: 12px; text-transform: uppercase;'>Senha Inicial:</strong>
+                        <div style='color: #0284c7; font-size: 18px; font-weight: 700; font-family: monospace; letter-spacing: 1px; margin-top: 2px;'>" . htmlspecialchars($presenha) . "</div>
+                    </div>
+                </div>
+
+                <p style='color: #475569; font-size: 14px; line-height: 1.5; margin: 0;'>
+                    Por segurança, recomendamos que você altere sua senha após o primeiro acesso utilizando a opção <strong>'Trocar senha'</strong> no menu superior do site.
+                </p>";
+
+                $bodyHtml = renderConfusaEmail([
+                    'title' => "Bem-vindo ao CONFUSA.top, " . htmlspecialchars($novonome) . "!",
+                    'subtitle' => 'Sua conta de acesso ao portal foi criada com sucesso pelo administrador.',
+                    'badge' => [
+                        'text' => 'Nova Conta',
+                        'bg' => '#dcfce7',
+                        'color' => '#15803d'
+                    ],
+                    'content_html' => $contentHtml,
+                    'btn' => [
+                        'url' => 'https://confusa.top/login.php',
+                        'text' => 'Acessar o CONFUSA.top'
+                    ]
+                ]);
+
+                $mail->clearAddresses();
+                $mail->clearReplyTos();
+                $mail->setFrom('admin@confusa.top', 'CONFUSA.top');
+                $mail->addAddress($novoemail);
+                $mail->Subject = "[CONFUSA.top] Seja bem-vindo ao portal!";
+                $mail->Body    = $bodyHtml;
+                $mail->isHTML(true);
                 try {
                     if ($mail->send())
                     {
