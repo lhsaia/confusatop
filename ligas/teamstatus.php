@@ -565,6 +565,10 @@ $agora = date('Y-m-d');
                             $optionsString .= "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton positive'>save</span></a>";
                             $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton vermelho'>cancel</span></a>";
 
+                        } else if(isset($_SESSION['user_id']) && ($donoJogador == $_SESSION['user_id'] || !empty($_SESSION['impersonated']))){
+                            $optionsString .= "<a id='edit".$idJogador."' title='Editar nome do jogador' class='clickable editar' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton azul'>person_edit</span></a>";
+                            $optionsString .= "<a hidden id='sal".$id."' title='Salvar' class='clickable salvar' style='margin-right: 8px;'><span class='material-symbols-outlined inlineButton positive'>save</span></a>";
+                            $optionsString .= "<a hidden id='can".$id."' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton vermelho'>cancel</span></a>";
                         }
                     } else {
                         $optionsString .= "<a id='desc".$idJogador."' title='Desconvocar jogador' class='clickable desconvocar'><span class='material-symbols-outlined inlineButton vermelho'>travel</span></a>";
@@ -2323,25 +2327,19 @@ tbl_row.find('.hiddenInput').show();
 tbl_row.find('.playerThumb').addClass('editableThumb');
 
 //garantir que o dono do time está logado e que ele é o dono do jogador também (duplo check, JS e PHP)
-var donoTime = $("tr th:last-child").prop("id").replace(/\D/g, "");
+var isDonoTime = <?php echo ($donoLogado ? 'true' : 'false'); ?>;
+var userId = "<?php echo isset($_SESSION['user_id']) ? (string)$_SESSION['user_id'] : '0'; ?>";
 var donoJogador = tbl_row.find("td:last-child").prop("id").replace(/\D/g, "");
-//var donoJogador =9;
-
-if(donoTime.localeCompare(donoJogador) == 0 || donoJogador == 0){
-    var isDono = true;
-} else {
-    var isDono = false;
-}
+var isDonoJogador = (donoJogador.localeCompare(userId) == 0 || donoJogador == "0");
 
 var idJogador = tbl_row.prop('id');
 
-// console.log(isDono);
-
-    // Jersey (always editable if permitted by role context, but here logic assumes viewing user has rights to toggle edit mode in general)
-    tbl_row.find('.jersey-icon').hide();
-    tbl_row.find('input.numeroCamisa').css('display', 'inline-block');
-
-    if(isDono){
+if(isDonoJogador && !isDonoTime){
+    // Caso 1: Jogador do usuário no exterior (clube de outro dono) -> APENAS O NOME É EDITÁVEL
+    tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
+    tbl_row.find('td.nomeJogador a').css('pointer-events', 'none').css('cursor', 'text');
+} else if(isDonoTime && isDonoJogador){
+    // Caso 2: Dono do time E dono do jogador -> TUDO É EDITÁVEL
     tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
     tbl_row.find('td.nomeJogador a').css('pointer-events', 'none').css('cursor', 'text');
     tbl_row.find('.nascimentoEIdade').hide();
@@ -2350,89 +2348,95 @@ var idJogador = tbl_row.prop('id');
     tbl_row.find('.nascimento').show();
     tbl_row.find('.posicao').hide();
 
-    //valor original pais
-
-    //valor original pais
     var idPais = tbl_row.find('.comboPais').prop("id");
     tbl_row.find(".comboPais").val(idPais);
 
     tbl_row.find('.nomePais').hide();
     tbl_row.find('.comboPais').show();
 
-    //valor original nascimento
     var nascimento = tbl_row.find(".nascimentoEIdade").html().split(" ")[0];
     var day = nascimento.split("-")[0];
     var month = nascimento.split("-")[1];
     var year = nascimento.split("-")[2];
     var nascimentoInicial = year + "-" + month + "-" + day;
     tbl_row.find('.nascimento').prop("value",nascimentoInicial);
-	
-		//console.log(nascimentoInicial);
-	
-	//valor original encerramento
+
     var encerramento = tbl_row.find(".encerramentoFixo").html();
-
-		var day = encerramento.split("-")[0];
-		var month = encerramento.split("-")[1];
-		var year = encerramento.split("-")[2];
-
-		var encerramentoInicial = year + "-" + month + "-" + day;
-
+    var encDay = encerramento.split("-")[0];
+    var encMonth = encerramento.split("-")[1];
+    var encYear = encerramento.split("-")[2];
+    var encerramentoInicial = encYear + "-" + encMonth + "-" + encDay;
     tbl_row.find('.encerramento').prop("value",encerramentoInicial);
-	
-		//valor original desde
+
 	let ultimo_clube = tbl_row.find(".ultimoClube").attr("data-ultimo-clube");
 	if(ultimo_clube == 0){
-		
-    var desde = tbl_row.find(".desdeFixo").html();
-
+        var desde = tbl_row.find(".desdeFixo").html();
 		let desde_day = desde.split("-")[0];
 		let desde_month = desde.split("-")[1];
 		let desde_year = desde.split("-")[2];
-
 		var desdeInicial = desde_year + "-" + desde_month + "-" + desde_day;
-
-    tbl_row.find('.desde').prop("value",desdeInicial);
-	
-	tbl_row.find('.desdeFixo').hide();
-	tbl_row.find('.desde').show();
+        tbl_row.find('.desde').prop("value",desdeInicial);
+        tbl_row.find('.desdeFixo').hide();
+        tbl_row.find('.desde').show();
 	}
-	
-}
 
+    tbl_row.find('.jersey-icon').hide();
+    tbl_row.find('input.numeroCamisa').css('display', 'inline-block');
+    tbl_row.find('.valorEditavel').attr('contenteditable', 'true').addClass('editavel');
+    tbl_row.find('.nivelEMod').hide();
+    tbl_row.find('.nivel').attr('contenteditable', 'true').show();
 
-tbl_row.find('.valorEditavel').attr('contenteditable', 'true').addClass('editavel');
-
-tbl_row.find('.nivelEMod').hide();
-tbl_row.find('.nivel').attr('contenteditable', 'true').show();
-
-//verificar se é goleiro
-var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
-var isGoleiro = stringPosicoes.localeCompare("G");
-
-if(isGoleiro){
-    tbl_row.find('.posicoesAtuais').hide();
-    tbl_row.find('.comboPosicoes').show();
-}
-
-//valor original posicoes
-var arrPosicoes = stringPosicoes.split('-');
-
-tbl_row.find('.comboPosicoes option').each(function(){
-    if($.inArray($(this).html(), arrPosicoes) !== -1){
-        $(this).prop("selected","selected");
+    var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
+    var isGoleiro = stringPosicoes.localeCompare("G");
+    if(isGoleiro){
+        tbl_row.find('.posicoesAtuais').hide();
+        tbl_row.find('.comboPosicoes').show();
     }
-});
 
-//valor original nivel
-var nivel = tbl_row.find(".nivelEMod").html().split(" ")[0];
-var mod = tbl_row.find(".nivelEMod").html().split(" ")[1].replace(/[{()}]/g, '');
-tbl_row.find('.nivel').html(parseInt(nivel)+parseInt(mod));
+    var arrPosicoes = stringPosicoes.split('-');
+    tbl_row.find('.comboPosicoes option').each(function(){
+        if($.inArray($(this).html(), arrPosicoes) !== -1){
+            $(this).prop("selected","selected");
+        }
+    });
 
-//valor original valor
-var valor = tbl_row.find(".valor").html().replace(/\D/g, "");
-var valor = parseInt(valor)*1000;
-tbl_row.find(".valor").html(valor);
+    var nivel = tbl_row.find(".nivelEMod").html().split(" ")[0];
+    var mod = tbl_row.find(".nivelEMod").html().split(" ")[1].replace(/[{()}]/g, '');
+    tbl_row.find('.nivel').html(parseInt(nivel)+parseInt(mod));
+
+    var valor = tbl_row.find(".valor").html().replace(/\D/g, "");
+    var valor = parseInt(valor)*1000;
+    tbl_row.find(".valor").html(valor);
+} else if(isDonoTime && !isDonoJogador){
+    // Caso 3: Dono do time, mas jogador estrangeiro -> campos do clube são editáveis
+    tbl_row.find('.jersey-icon').hide();
+    tbl_row.find('input.numeroCamisa').css('display', 'inline-block');
+    tbl_row.find('.valorEditavel').attr('contenteditable', 'true').addClass('editavel');
+    tbl_row.find('.nivelEMod').hide();
+    tbl_row.find('.nivel').attr('contenteditable', 'true').show();
+
+    var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
+    var isGoleiro = stringPosicoes.localeCompare("G");
+    if(isGoleiro){
+        tbl_row.find('.posicoesAtuais').hide();
+        tbl_row.find('.comboPosicoes').show();
+    }
+
+    var arrPosicoes = stringPosicoes.split('-');
+    tbl_row.find('.comboPosicoes option').each(function(){
+        if($.inArray($(this).html(), arrPosicoes) !== -1){
+            $(this).prop("selected","selected");
+        }
+    });
+
+    var nivel = tbl_row.find(".nivelEMod").html().split(" ")[0];
+    var mod = tbl_row.find(".nivelEMod").html().split(" ")[1].replace(/[{()}]/g, '');
+    tbl_row.find('.nivel').html(parseInt(nivel)+parseInt(mod));
+
+    var valor = tbl_row.find(".valor").html().replace(/\D/g, "");
+    var valor = parseInt(valor)*1000;
+    tbl_row.find(".valor").html(valor);
+}
 
 });
 
@@ -2653,93 +2657,79 @@ tbl_row.find(".valor").html(valor);
 		tbl_row.find('.playerThumb').removeClass('editableThumb');
 		
         //coleta de valores
-
-        //check se é dono do jogador
-        //garantir que o dono do time está logado e que ele é o dono do jogador também (duplo check, JS e PHP)
-        var donoTime = $("tr th:last-child").prop("id").replace(/\D/g, "");
+        var isDonoTime = <?php echo ($donoLogado ? 'true' : 'false'); ?>;
+        var userId = "<?php echo isset($_SESSION['user_id']) ? (string)$_SESSION['user_id'] : '0'; ?>";
         var donoJogador = tbl_row.find("td:last-child").prop("id").replace(/\D/g, "");
-        //var donoJogador =9;
-
-        if(donoTime.localeCompare(donoJogador) == 0 || donoJogador == 0){
-            var isDono = true;
-        } else {
-            var isDono = false;
-        }
-
+        var isDonoJogador = (donoJogador.localeCompare(userId) == 0 || donoJogador == "0");
         var idJogador = tbl_row.prop('id');
-		
-		let ultimo_clube = tbl_row.find(".ultimoClube").attr("data-ultimo-clube");
-	
 
-        if(isDono){
-            var nome = tbl_row.find('.nomeEditavel').html();
-            var nacionalidade = tbl_row.find(".comboPais").val();
-            var nascimento = tbl_row.find(".nascimento").val();
-			var encerramento = tbl_row.find(".encerramento").val();
-			
-			
-			
-			if(ultimo_clube == 0){
-				var desde = tbl_row.find(".desde").val();
-			}
+        var formData = new FormData();
+        formData.append('idJogador', idJogador);
+        formData.append('alteracao', 3);
+
+        if(isDonoJogador && !isDonoTime){
+            // Salvar APENAS o nome quando o jogador pertence ao usuário mas joga em clube de outro dono
+            var nome = tbl_row.find('.nomeEditavel').text().trim();
+            formData.append('nome', nome);
+            formData.append('somenteNome', 1);
+        } else {
+            let ultimo_clube = tbl_row.find(".ultimoClube").attr("data-ultimo-clube");
+
+            if(isDonoJogador){
+                var nome = tbl_row.find('.nomeEditavel').text().trim();
+                var nacionalidade = tbl_row.find(".comboPais").val();
+                var nascimento = tbl_row.find(".nascimento").val();
+                var encerramento = tbl_row.find(".encerramento").val();
+                if(ultimo_clube == 0){
+                    var desde = tbl_row.find(".desde").val();
+                }
+            }
+
+            var inputFoto = (tbl_row.find('#foto'+idJogador))[0];
+            var foto;
+            if (inputFoto && inputFoto.files && inputFoto.files.length > 0) {
+                foto = inputFoto.files[0];
+            } else {
+                foto = null;
+            }
+
+            var valor = parseInt(tbl_row.find(".valorEditavel").html());
+            var nivel = tbl_row.find(".nivel").html();
+            var idTime = $('#quadro-container').prop('class');
+
+            var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
+            var isGoleiro = stringPosicoes.localeCompare("G");
+            if(isGoleiro == 0){
+                var posicoes = ["1"];
+            } else {
+                var posicoes = tbl_row.find(".comboPosicoes").val();
+            }
+
+            formData.append('posicoes', posicoes);
+            formData.append('nivel', nivel);
+            formData.append('valor', valor);
+            formData.append('idTime', idTime);
+
+            if(isDonoJogador){
+                formData.append('nome', nome);
+                formData.append('nacionalidade', nacionalidade);
+                formData.append('nascimento', nascimento);
+                formData.append('encerramento', encerramento);
+
+                if(ultimo_clube == 0){
+                    formData.append('desde', desde);
+                }
+            }
+
+            var numeroCamisa = tbl_row.find("input.numeroCamisa").val();
+            formData.append('numeroCamisa', numeroCamisa);
+
+            if(foto != null){
+                formData.append('foto', foto);
+            }
         }
-		
-		//foto
-		var inputFoto = (tbl_row.find('#foto'+idJogador))[0];
-		var foto;
 
-		if (inputFoto.files.length > 0) {
-		   foto = inputFoto.files[0];
-		} else {
-		   foto = null;
-		}
-
-        var valor = parseInt(tbl_row.find(".valorEditavel").html());
-        var nivel = tbl_row.find(".nivel").html();
-        var idTime = $('#quadro-container').prop('class');
-		
-		var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
-		var isGoleiro = stringPosicoes.localeCompare("G");
-	
-		if(isGoleiro == 0){
-			var posicoes = ["1"];
-		} else {
-			var posicoes = tbl_row.find(".comboPosicoes").val();
-		}
-		
-		var formData = new FormData();
-		
-		formData.append('idJogador',idJogador);
-		formData.append('alteracao',3);
-		formData.append('posicoes',posicoes);
-		formData.append('nivel',nivel);
-		formData.append('valor',valor);
-		formData.append('idTime',idTime);
-
-
-if(isDono){
-	formData.append('nome',nome);
-	formData.append('nacionalidade',nacionalidade);
-	formData.append('nascimento',nascimento);
-	formData.append('encerramento',encerramento);
-
-	if(ultimo_clube ==0){
-		formData.append('desde',desde);
-	}
-}
-
-    var numeroCamisa = tbl_row.find("input.numeroCamisa").val();
-    formData.append('numeroCamisa', numeroCamisa);
-
-     if(foto != null){
-		formData.append('foto',foto);
-     }
-
-        // for (var pair of formData.entries()) {
-    // console.log(pair[0]+ ', ' + pair[1]);
-// }
-    ajaxCallJogador(formData);
-
+        ajaxCallJogador(formData);
 
     });
 

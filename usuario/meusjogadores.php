@@ -412,17 +412,11 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 			var donoJogador = $("#tabelaPrincipal").find('thead').prop("id").replace(/\D/g, "");
 			var donoPais = tbl_row.attr("data-dono-pais");
 
-			if (typeof donoTime === 'undefined'){
-				donoTime = donoJogador;
-			}
+			var isDonoJogador = (typeof donoPais !== 'undefined' && donoPais.localeCompare(donoJogador) == 0) || donoPais == "0";
+			var isDonoTime = (typeof donoTime === 'undefined' || !donoTime || donoTime === "null" || donoTime === "0" || donoTime.localeCompare(donoJogador) == 0);
 
-			if(donoTime.localeCompare(donoJogador) == 0 || (typeof donoPais !== 'undefined' && donoPais.localeCompare(donoJogador) == 0)){
-				var isDono = true;
-			} else {
-				var isDono = false;
-			}
-
-			if(isDono){
+			if(isDonoJogador && isDonoTime){
+				// Dono de ambos (ou sem clube de outro dono) -> Todos os campos editáveis
 				tbl_row.find('.comboMentalidade').show();
 				tbl_row.find('.comboAtividade').show();
 				tbl_row.find('.nomeCobrador').hide();
@@ -434,61 +428,63 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 				tbl_row.find('.nomeValor').hide();
 				tbl_row.find('.valorEditavel').show();
 				tbl_row.find('.comboCobrador').show();
+
+				tbl_row.find('.nomePais').hide();
+				var paisId = tbl_row.find('.comboPais').attr('id');
+				tbl_row.find('.comboPais').show().val(paisId);
+
+				tbl_row.find('.nivelEditavel').attr('contenteditable', 'true').addClass('editavel');
+
+				tbl_row.find('.comboCobrador option').filter(function() {
+					return $(this).text().trim() == tbl_row.find('.nomeCobrador').text().trim();
+				}).prop("selected", true);
+
+				tbl_row.find('.comboMentalidade option').filter(function() {
+					return $(this).text().trim() == tbl_row.find('.nomeMentalidade').text().trim();
+				}).prop("selected", true);
+
+				let currentDisponibilidade = tbl_row.find('.comboAtividade option').filter(function() {
+					return $(this).text().trim() == tbl_row.find('.nomeAtividade').text().trim();
+				});
+				if(currentDisponibilidade.length > 0) {
+					currentDisponibilidade.prop("selected", true);
+				} else if(tbl_row.find('.badge-falecido').length > 0) {
+					tbl_row.find('.comboAtividade').val("-3");
+				}
+
+				if(tbl_row.find('.comboAtividade').val() == "-3"){
+					tbl_row.find('.falecimentoEditavel').show();
+				} else {
+					tbl_row.find('.falecimentoEditavel').hide();
+				}
+
+				//verificar se é goleiro
+				var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
+				var isGoleiro = stringPosicoes.localeCompare("G");
+
+				if(isGoleiro){
+					tbl_row.find('.posicoesAtuais').hide();
+					tbl_row.find('.comboPosicoes').show();
+				}
+
+				//valor original posicoes
+				var arrPosicoes = stringPosicoes.split('-');
+
+				tbl_row.find('.comboPosicoes option').each(function(){
+					if($.inArray($(this).html(), arrPosicoes) !== -1){
+						$(this).prop("selected","selected");
+					} else {
+						$(this).prop("selected", false);
+					}
+				});
+			} else if(isDonoJogador && !isDonoTime){
+				// Jogador do usuário no exterior (clube de outro dono) -> Trava mantida para atributos, APENAS O NOME É EDITÁVEL
 			}
 
-			// override para permitir repaginação de praias
+			// Nome é sempre editável pelo dono do jogador
 			tbl_row.find('.nomeEditavel').attr('contenteditable', 'true').addClass('editavel');
 			tbl_row.find('.linkNome').css("cursor","text");
 			tbl_row.find('.linkNome').css("pointer-events","none");
-			
-			tbl_row.find('.nomePais').hide();
-			var paisId = tbl_row.find('.comboPais').attr('id');
-			tbl_row.find('.comboPais').show().val(paisId);
-
-			tbl_row.find('.nivelEditavel').attr('contenteditable', 'true').addClass('editavel');
-
-			tbl_row.find('.comboCobrador option').filter(function() {
-				return $(this).text().trim() == tbl_row.find('.nomeCobrador').text().trim();
-			}).prop("selected", true);
-
-			tbl_row.find('.comboMentalidade option').filter(function() {
-				return $(this).text().trim() == tbl_row.find('.nomeMentalidade').text().trim();
-			}).prop("selected", true);
-
-			let currentDisponibilidade = tbl_row.find('.comboAtividade option').filter(function() {
-				return $(this).text().trim() == tbl_row.find('.nomeAtividade').text().trim();
-			});
-			if(currentDisponibilidade.length > 0) {
-				currentDisponibilidade.prop("selected", true);
-			} else if(tbl_row.find('.badge-falecido').length > 0) {
-				tbl_row.find('.comboAtividade').val("-3");
-			}
-
-			if(tbl_row.find('.comboAtividade').val() == "-3"){
-				tbl_row.find('.falecimentoEditavel').show();
-			} else {
-				tbl_row.find('.falecimentoEditavel').hide();
-			}
-
-			//verificar se é goleiro
-			var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
-			var isGoleiro = stringPosicoes.localeCompare("G");
-
-			if(isGoleiro){
-				tbl_row.find('.posicoesAtuais').hide();
-				tbl_row.find('.comboPosicoes').show();
-			}
-
-			//valor original posicoes
-			var arrPosicoes = stringPosicoes.split('-');
-
-			tbl_row.find('.comboPosicoes option').each(function(){
-				if($.inArray($(this).html(), arrPosicoes) !== -1){
-					$(this).prop("selected","selected");
-				} else {
-					$(this).prop("selected", false);
-				}
-			});
 
 			updateBatchFloatingBar();
 		});
@@ -576,38 +572,38 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 	}
 
 	function getPlayerRowFormData(tbl_row) {
-		//check se é dono do jogador
 		var donoTime = tbl_row.find(".donoClubeVinculado").html();
 		var donoJogador = $("#tabelaPrincipal").find('thead').prop("id").replace(/\D/g, "");
 		var donoPais = tbl_row.attr("data-dono-pais");
 
-		if (typeof donoTime === 'undefined'){
-			donoTime = donoJogador;
-		}
-
-		if(donoTime.localeCompare(donoJogador) == 0 || (typeof donoPais !== 'undefined' && donoPais.localeCompare(donoJogador) == 0)){
-			var isDono = true;
-		} else {
-			var isDono = false;
-		}
+		var isDonoJogador = (typeof donoPais !== 'undefined' && donoPais.localeCompare(donoJogador) == 0) || donoPais == "0";
+		var isDonoTime = (typeof donoTime === 'undefined' || !donoTime || donoTime === "null" || donoTime === "0" || donoTime.localeCompare(donoJogador) == 0);
 
 		var idJogador = tbl_row.prop('id');
+		var nome = tbl_row.find('.nomeEditavel').text().trim();
+		var formData = new FormData();
 
-		if(isDono){
-			var nascimento = tbl_row.find(".nascimentoEditavel").val();
-			var valor = parseInt(tbl_row.find(".valorEditavel").html());
-			var determinacao = "1";
-			var mentalidade = tbl_row.find(".comboMentalidade").val();
-			var cobrancaFalta = tbl_row.find(".comboCobrador").val();
-			var atividade = tbl_row.find(".comboAtividade").val();
-			var rawTime = tbl_row.find(".comboAtividade").attr("data-idTime");
-			var timeParaDemissao = (rawTime && rawTime !== "null" && rawTime !== "undefined") ? parseInt(rawTime) : 0;
-			var dataFalecimento = tbl_row.find(".falecimentoEditavel").val();
+		formData.append('idJogador', idJogador);
+		formData.append('alteracao', 9);
+		formData.append('nome', nome);
+
+		if(isDonoJogador && !isDonoTime){
+			formData.append('somenteNome', 1);
+			return formData;
 		}
-		
-		var nome = tbl_row.find('.nomeEditavel').text();
+
+		var nascimento = tbl_row.find(".nascimentoEditavel").val();
+		var valor = parseInt(tbl_row.find(".valorEditavel").html());
+		var determinacao = "1";
+		var mentalidade = tbl_row.find(".comboMentalidade").val();
+		var cobrancaFalta = tbl_row.find(".comboCobrador").val();
+		var atividade = tbl_row.find(".comboAtividade").val();
+		var rawTime = tbl_row.find(".comboAtividade").attr("data-idTime");
+		var timeParaDemissao = (rawTime && rawTime !== "null" && rawTime !== "undefined") ? parseInt(rawTime) : 0;
+		var dataFalecimento = tbl_row.find(".falecimentoEditavel").val();
 		var nacionalidade = tbl_row.find(".comboPais").val();
-		
+		var nivel = tbl_row.find(".nivelEditavel").html();
+
 		//foto
 		var inputFoto = (tbl_row.find('#foto'+idJogador))[0];
 		var foto;
@@ -618,8 +614,6 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 		   foto = null;
 		}
 
-		var nivel = tbl_row.find(".nivelEditavel").html();
-		
 		var stringPosicoes = tbl_row.find('.posicoesAtuais').html();
 		var isGoleiro = stringPosicoes.localeCompare("G");
 	
@@ -628,29 +622,21 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 		} else {
 			var posicoes = tbl_row.find(".comboPosicoes").val();
 		}
-		
-		var formData = new FormData();
-		
-		formData.append('idJogador',idJogador);
-		formData.append('alteracao',9);
-		formData.append('posicoes',posicoes);
-		formData.append('nivel',nivel);
-		formData.append('nome',nome);
-		formData.append('nacionalidade',nacionalidade);
 
-		if(isDono){
-			formData.append('nascimento',nascimento);
-			formData.append('valor',valor);
-			formData.append('determinacao',determinacao);
-			formData.append('mentalidade',mentalidade);
-			formData.append('cobrancaFalta',cobrancaFalta);
-			formData.append('atividade',atividade);
-			formData.append('timeParaDemissao',timeParaDemissao);
-			formData.append('dataFalecimento',dataFalecimento);
-		}
+		formData.append('posicoes', posicoes);
+		formData.append('nivel', nivel);
+		formData.append('nacionalidade', nacionalidade);
+		formData.append('nascimento', nascimento);
+		formData.append('valor', valor);
+		formData.append('determinacao', determinacao);
+		formData.append('mentalidade', mentalidade);
+		formData.append('cobrancaFalta', cobrancaFalta);
+		formData.append('atividade', atividade);
+		formData.append('timeParaDemissao', timeParaDemissao);
+		formData.append('dataFalecimento', dataFalecimento);
 
 		if(foto != null){
-			formData.append('foto',foto);
+			formData.append('foto', foto);
 		}
 
 		return formData;

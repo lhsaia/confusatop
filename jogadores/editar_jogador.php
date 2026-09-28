@@ -51,88 +51,109 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         }
     } else if($tipo == 3){
         //colocar aqui dados sobre edição de jogador
-        $idDonoTime = $_SESSION['user_id'];
-        //$idDonoTime = 9;
+        $idUsuario = $_SESSION['user_id'];
         $idDonoJogador = $jogador->verificarDono($idJogador);
+        $idDonoTime = $jogador->verificarDonoTimeVinculado($idJogador);
 
-
-
-        if($idDonoTime == $idDonoJogador || $idDonoJogador == 0){
-            $nomeJogador = $_POST['nome'];
-            $nacionalidadeJogador = $_POST['nacionalidade'];
-            $nascimentoJogador = $_POST['nascimento'];
-			$encerramentoContrato = $_POST['encerramento'];
-			if(isset($_POST['desde'])){
-				$desdeContrato = $_POST['desde'];
-			} else {
-				$desdeContrato = null;
-			}
-            $isDono = true;
-        } else {
-            $nomeJogador = null;
-            $nacionalidadeJogador = null;
-            $nascimentoJogador = null;
-			$encerramentoContrato = null;
-			$desdeContrato = null;
-            $isDono = false;
+        if(is_null($idDonoTime) || $idDonoTime == 0){
+            $idDonoTime = $idUsuario;
         }
 
-        $idTime = $_POST['idTime'];
-        $valorJogador = $_POST['valor'];
-        if(isset($_POST['posicoes'])){
-            $posicoesJogador = $_POST['posicoes'];
+        $somenteNome = (isset($_POST['somenteNome']) && $_POST['somenteNome'] == 1) || ($idDonoJogador == $idUsuario && $idDonoTime != $idUsuario);
+
+        if($somenteNome){
+            if($idDonoJogador == $idUsuario || $idDonoJogador == 0 || !empty($_SESSION['impersonated'])){
+                $nomeJogador = $_POST['nome'] ?? '';
+                if($jogador->editarNome($idJogador, $nomeJogador)){
+                    $usuario->atualizarAlteracao($idUsuario);
+                    $is_success = true;
+                    $error_msg = "";
+                } else {
+                    $is_success = false;
+                    $error_msg = "Falha ao editar nome do jogador";
+                }
+            } else {
+                $is_success = false;
+                $error_msg = "Você não tem permissão para alterar o nome deste jogador.";
+            }
         } else {
-            $posicoesJogador = array();
-        }
-		
-		if(isset($_POST['numeroCamisa'])){
-			$numeroCamisa = $_POST['numeroCamisa'];
-		} else {
-			$numeroCamisa = null;
-		}
+            if($idUsuario == $idDonoJogador || $idDonoJogador == 0){
+                $nomeJogador = $_POST['nome'];
+                $nacionalidadeJogador = $_POST['nacionalidade'];
+                $nascimentoJogador = $_POST['nascimento'];
+                $encerramentoContrato = $_POST['encerramento'];
+                if(isset($_POST['desde'])){
+                    $desdeContrato = $_POST['desde'];
+                } else {
+                    $desdeContrato = null;
+                }
+                $isDono = true;
+            } else {
+                $nomeJogador = null;
+                $nacionalidadeJogador = null;
+                $nascimentoJogador = null;
+                $encerramentoContrato = null;
+                $desdeContrato = null;
+                $isDono = false;
+            }
 
-        $nivelJogador = $_POST['nivel'];
-		
-		if(isset($_FILES['foto']) && !empty($_FILES['foto'])){
-			$fileName = $_FILES['foto']['name'];
-			$fileExplode = explode(".",$fileName);
-			$fileName = $fileExplode[0] . mt_rand(1,10000).".webp";// .$fileExplode[1];
-			$fileSize = $_FILES['foto']['size'];
-			$filePath = $_FILES['foto']['tmp_name'];
-			$fileType = $_FILES['foto']['type'];
-			$fileExt = strtolower( end($fileExplode));
-			$correct_extensions = array("image/png","image/jpg","image/jpeg", "image/webp");
-			$upload_dir = "/images/jogadores/";
+            $idTime = $_POST['idTime'];
+            $valorJogador = $_POST['valor'];
+            if(isset($_POST['posicoes'])){
+                $posicoesJogador = $_POST['posicoes'];
+            } else {
+                $posicoesJogador = array();
+            }
+            
+            if(isset($_POST['numeroCamisa'])){
+                $numeroCamisa = $_POST['numeroCamisa'];
+            } else {
+                $numeroCamisa = null;
+            }
 
-			if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 8000000){
+            $nivelJogador = $_POST['nivel'];
+            
+            if(isset($_FILES['foto']) && !empty($_FILES['foto'])){
+                $fileName = $_FILES['foto']['name'];
+                $fileExplode = explode(".",$fileName);
+                $fileName = $fileExplode[0] . mt_rand(1,10000).".webp";// .$fileExplode[1];
+                $fileSize = $_FILES['foto']['size'];
+                $filePath = $_FILES['foto']['tmp_name'];
+                $fileType = $_FILES['foto']['type'];
+                $fileExt = strtolower( end($fileExplode));
+                $correct_extensions = array("image/png","image/jpg","image/jpeg", "image/webp");
+                $upload_dir = "/images/jogadores/";
 
-				$upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
-				processAndSaveWebPImage($filePath, $upload_path, 300, 90);
-				$localizacao_foto = $_SESSION['user_id'] ."-" .$fileName;
+                if($filePath != "" && in_array($fileType,$correct_extensions) && $fileSize <= 8000000){
+
+                    $upload_path = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $fileName;
+                    processAndSaveWebPImage($filePath, $upload_path, 300, 90);
+                    $localizacao_foto = $_SESSION['user_id'] ."-" .$fileName;
 
 
-			} else {
+                } else {
 
-				$error_msg .= "Não foi possível inserir a foto. ";
-				if($fileSize > 8000000){
-					$error_msg .= "Arquivo deve ser menor que 8Mb.";
-				}
-				if($filePath == ''){
-					$error_msg .= "Falha no nome do arquivo.";
-				}
-				if(in_array($fileType,$correct_extensions) == false){
-					$error_msg .= "Extensão ".$fileExt." não é permitida.";
-				}
-			}
-		}
+                    $error_msg .= "Não foi possível inserir a foto. ";
+                    if($fileSize > 8000000){
+                        $error_msg .= "Arquivo deve ser menor que 8Mb.";
+                    }
+                    if($filePath == ''){
+                        $error_msg .= "Falha no nome do arquivo.";
+                    }
+                    if(in_array($fileType,$correct_extensions) == false){
+                        $error_msg .= "Extensão ".$fileExt." não é permitida.";
+                    }
+                }
+            }
 
-        if($jogador->editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono,null,null,null,null, $encerramentoContrato, $localizacao_foto, $desdeContrato, $numeroCamisa)){
-            $usuario->atualizarAlteracao($_SESSION['user_id']);
-            $is_success = true;
-            $error_msg = "";
-        } else {
-            $is_success = false;
-            $error_msg = "Falha ao editar jogador";
+            if($jogador->editar($idJogador,$idTime,$nomeJogador,$nacionalidadeJogador,$nascimentoJogador,$valorJogador,$posicoesJogador,$nivelJogador,$isDono,null,null,null,null, $encerramentoContrato, $localizacao_foto, $desdeContrato, $numeroCamisa)){
+                $usuario->atualizarAlteracao($_SESSION['user_id']);
+                $is_success = true;
+                $error_msg = "";
+            } else {
+                $is_success = false;
+                $error_msg = "Falha ao editar jogador";
+            }
         }
     } else if($tipo == 4){
         //criar transferencia pendente
@@ -189,7 +210,25 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
               $idDonoTime = $idDonoJogador;
           }
 
-          if($idDonoTime == $idDonoJogador || $idDonoPais == $idDonoJogador){
+          $somenteNome = (isset($_POST['somenteNome']) && $_POST['somenteNome'] == 1) || ($idDonoPais == $idDonoJogador && $idDonoTime != $idDonoJogador);
+
+          if($somenteNome){
+              if($idDonoPais == $idDonoJogador || $idDonoPais == 0 || !empty($_SESSION['impersonated'])){
+                  $nomeJogador = $_POST['nome'] ?? '';
+                  if($jogador->editarNome($idJogador, $nomeJogador)){
+                      $usuario->atualizarAlteracao($idDonoJogador);
+                      $is_success = true;
+                      $error_msg = "";
+                  } else {
+                      $is_success = false;
+                      $error_msg = "Falha ao editar nome do jogador";
+                  }
+              } else {
+                  $is_success = false;
+                  $error_msg = "Você não tem permissão para editar o nome deste jogador.";
+              }
+              die(json_encode([ 'success'=> $is_success, 'error'=> $error_msg]));
+          } else if($idDonoTime == $idDonoJogador || $idDonoPais == $idDonoJogador){
               $nomeJogador = isset($_POST['nome']) ? $_POST['nome'] : null;
               $nacionalidadeJogador = isset($_POST['nacionalidade']) ? $_POST['nacionalidade'] : null;
               $nascimentoJogador = isset($_POST['nascimento']) ? $_POST['nascimento'] : null;

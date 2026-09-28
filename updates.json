@@ -9,6 +9,122 @@
   },
   "days": [
     {
+      "id": "day_27_09_2026",
+      "date": "27/09/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Edição de Nome de Jogadores no Exterior",
+          "desc": "Permitida a edição do nome de jogadores que pertencem ao usuário mesmo quando contratados por clubes de outros proprietários, tanto na tela do time quanto na listagem de jogadores, preservando a trava de proteção nos demais atributos contratuais e técnicos do atleta."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Filtro de Sugestões e Bugs em Aberto",
+          "desc": "Ajustado o filtro padrão da central de sugestões para exibir tanto itens pendentes quanto em processo (ocultando apenas completos e cancelados) com opção de alternar para visualizar todos os registros."
+        },
+        {
+          "badge": "new",
+          "title": "Salvar Visões Agrupadas no Índice de Competições",
+          "desc": "Permitido salvar e fixar dashboards de tabelas agrupadas (como Apertura + Clausura) com nome personalizado e badge destacada na listagem de competições do usuário, mantendo o cálculo dinâmico e acesso instantâneo com um clique."
+        },
+        {
+          "badge": "new",
+          "title": "Módulo de Soma de Tabelas & Dashboard Agregado (Apertura/Clausura)",
+          "desc": "Criada a página de soma de tabelas que permite selecionar duas competições para consolidar a classificação geral anual unificada, artilharia somada, líderes de assistências, cartões e médias ponderadas de notas dos jogadores."
+        },
+        {
+          "badge": "new",
+          "title": "Geração de Tabela com Inversão de Mandos (Modo Apertura & Clausura)",
+          "desc": "Adicionado assistente na geração de tabelas para espelhar confrontos de outra competição invertendo automaticamente mandantes e visitantes e alocando estádios e árbitros de forma coerente."
+        },
+        {
+          "badge": "design",
+          "title": "Padronização Visual Premium de Todos os E-mails do Sistema",
+          "desc": "Criado template HTML responsivo oficial do CONFUSA.top e padronizados todos os e-mails transacionais (propostas de jogadores e técnicos, boas-vindas a novos usuários, redefinição de senha, solicitações de cadastro e formulário de contato) com cabeçalho institucional, cards modernos, badges e botões de ação direta."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Paradas de Pit Stop no Octamotor",
+          "desc": "Corrigida a lógica de execução de estratégias de pit stop no simulador do Octamotor, eliminando o bloqueio antecipado nas voltas finais e permitindo paradas sob Safety Car e pista molhada, garantindo que todos os pilotos realizem suas paradas planejadas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Revisão e Controle de Tempo Limite de Prova no Octamotor",
+          "desc": "Ajustado o cálculo de voltas programadas e o encerramento por tempo limite na simulação de corridas do Octamotor, considerando o ritmo real de prova e interrompendo a prova com precisão para não ultrapassar a duração máxima definida pela competição."
+        },
+        {
+          "badge": "new",
+          "title": "Cores e Faixas Customizadas na Tabela de Competições",
+          "desc": "Adicionado gerenciador visual nas opções da competição para definir faixas de classificação personalizadas com posições de início e fim, seletor de cores, legendas explicativas e presets rápidos (G4+Z4, Brasileirão, Libertadores). As cores e a legenda são exibidas automaticamente na tabela de estatísticas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Importação de Jogadores (.jog) em Lote",
+          "desc": "Corrigida a importação de múltiplos arquivos .jog para processamento direto em lote, permitindo enviar vários jogadores simultaneamente para o clube selecionado sem interrupções e restringindo o assistente de duplicatas exclusivamente para importação de times (.ymt)."
+        },
+        {
+          "badge": "design",
+          "title": "Centralização dos Modais de Proposta na Visão do Usuário",
+          "desc": "Corrigido o contêiner e o posicionamento fixed dos modais de proposta de transferência e contratação de técnicos, garantindo que abram sempre centralizados no campo de visão atual da tela sem exigir rolagem da página."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Melhoria na Alternância de Aa/Am no Mobile no Campinho Tático",
+          "desc": "Adicionada tolerância a micro-movimentos do dedo no toque longo (long press) e implementado suporte a duplo toque rápido (double-tap) nos marcadores de jogadores, facilitando a troca entre atacante avançado (Aa) e recuado (Am) em telas touch."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Acentuação e Encoding nos E-mails do Sistema",
+          "desc": "Configurado o charset UTF-8 e codificação base64 padrão na inicialização do PHPMailer, corrigindo a renderização de caracteres acentuados no assunto e corpo de todos os e-mails enviados pelo portal."
+        },
+        {
+          "badge": "new",
+          "title": "Painel de Diagnóstico e Teste de E-mails",
+          "desc": "Criada uma ferramenta administrativa para monitorar a conectividade do servidor SMTP, inspecionar configurações de disparo e realizar envios de teste com simulação real de propostas e escudos de clubes."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Exibição de Escudos com Espaços nos E-mails de Proposta",
+          "desc": "Corrigida a codificação da URL dos escudos (utilizando rawurlencode e imagem HTTPS direta) nos e-mails de proposta de transferência de jogadores e técnicos, garantindo que clubes com nomes compostos ou com espaços sejam exibidos perfeitamente em todos os provedores de e-mail."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Mapeamento de Clubes na Importação de Jogos",
+          "desc": "Corrigido o repasse da lista de clubes para o componente de busca (Select2) na tela de revisão de importação de jogos, permitindo buscar e mapear clubes não encontrados na súmula."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ajustes na Tela de Últimas Transferências",
+          "desc": "Filtradas transferências com 'Sem clube' para exibir apenas negociações reais entre clubes, e corrigido o alinhamento flex no mobile para evitar sobreposição entre o valor e seu rótulo."
+        },
+        {
+          "badge": "new",
+          "title": "Coluna de Data na Central de Sugestões e Bugs",
+          "desc": "Adicionada a coluna 'Data' na tabela de sugestões e bugs, exibindo quando cada solicitação foi registrada no sistema e permitindo ordenação cronológica."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Definição de Posições na Criação de Jogadores",
+          "desc": "Corrigida a lógica de montagem da sequência binária de posições e detecção de goleiro no formulário de criação de jogadores, garantindo que jogadores de linha sejam gravados com suas posições corretas em vez de serem atribuídos como goleiros."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Edição do Nome de Ligas",
+          "desc": "Corrigida a captura do texto digitado na edição inline da tela de Minhas Ligas, garantindo que o novo nome da liga seja persistido corretamente no banco de dados e mantido após recarregar a página."
+        },
+        {
+          "badge": "new",
+          "title": "Notificação por E-mail ao Resolver Sugestões / Bugs",
+          "desc": "Ao atualizar o status de uma sugestão ou bug, o administrador agora pode disparar automaticamente um e-mail de notificação para o originador com detalhes da solicitação e incluir uma mensagem personalizada."
+        },
+        {
+          "badge": "new",
+          "title": "Identificação do Autor nas Sugestões e Bugs",
+          "desc": "Adicionada a coluna 'Usuário' na tabela da central de sugestões e bugs, exibindo quem cadastrou cada item e permitindo a ordenação e busca por autor."
+        }
+      ]
+    },
+    {
       "id": "day_21_09_2026",
       "date": "21/09/2026",
       "items": [
