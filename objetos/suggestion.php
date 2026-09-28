@@ -48,7 +48,7 @@ class Suggestion{
                 LEFT JOIN suggestions_votes b ON b.suggestion = a.id 
                 WHERE (a.title LIKE ? OR a.description LIKE ? OR u.nome LIKE ? OR u.nomeusuario LIKE ?) 
                 GROUP BY a.id 
-                ORDER BY (a.status = 0) DESC, vote_count DESC";
+                ORDER BY (a.status IN (0, 1)) DESC, (a.status = 0) DESC, vote_count DESC";
 	  
       $stmt = $this->conn->prepare($query);
 	  $stmt->bindParam(1, $user );

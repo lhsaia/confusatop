@@ -188,7 +188,7 @@ $('#add-new-suggestion').click(function(){
     $('#filter-pending').click(function (e) {
 		e.preventDefault();
 		show_all = !show_all;
-		let new_text = (show_all ? 'Mostrar apenas pendentes' : 'Mostrar todos');
+		let new_text = (show_all ? 'Mostrar pendentes e em progresso' : 'Mostrar todos');
 
 		$('#filter-pending span').text(new_text);
 
@@ -269,7 +269,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 
     var filtered_data = [];
     $.each(ajax_data, function(index, val){
-        if(show_all || (!show_all && val['status'] == 0)){
+        if(show_all || (!show_all && (val['status'] == 0 || val['status'] == 1))){
             filtered_data.push(val);
         }
     });
@@ -499,8 +499,10 @@ function sortResults(prop, asc) {
     else if(prop === 'suggestionVoteNumber') field = 'vote_count';
 
     localData = localData.sort(function(a, b) {
-        if (a.status == 0 && b.status != 0) return -1;
-        if (a.status != 0 && b.status == 0) return 1;
+        let aActive = (a.status == 0 || a.status == 1);
+        let bActive = (b.status == 0 || b.status == 1);
+        if (aActive && !bActive) return -1;
+        if (!aActive && bActive) return 1;
         
         let valA = a[field] !== undefined && a[field] !== null ? a[field] : '';
         let valB = b[field] !== undefined && b[field] !== null ? b[field] : '';
