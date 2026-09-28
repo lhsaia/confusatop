@@ -1,4 +1,4 @@
-﻿@font-face {
+@font-face {
     font-family: 'alte_din_1451_mittelschriftRg';
     src: url('din1451alt-webfont.woff2') format('woff2'),
          url('din1451alt-webfont.woff') format('woff');
@@ -30,14 +30,14 @@
 }
 
 .driver-position{
-  color:black;
-  background-color:yellow;
-  width:25px;
-  text-align:center;
-  font-family: 'Share Tech Mono';
-  font-size:1.1em;
+  color: #111111;
+  background-color: #fbbf24;
+  width: 28px;
+  text-align: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1.1em;
   font-weight: 900;
-
+  border-radius: 4px;
 }
 
 .driver-headers{
@@ -864,10 +864,52 @@ body{
 }
 
 .editable-race, .see-race{
-  width: 30px;
-  height: 30px;
-  color:black;
-  margin-left:20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.see-race{
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8 !important;
+}
+
+.see-race:hover{
+  background: #0284c7;
+  border-color: #38bdf8;
+  color: #ffffff !important;
+  transform: scale(1.08);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+.editable-race{
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: #fbbf24 !important;
+}
+
+.editable-race:hover{
+  background: #d97706;
+  border-color: #fbbf24;
+  color: #ffffff !important;
+  transform: scale(1.08);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+}
+
+.editable-race .material-symbols-outlined,
+.see-race .material-symbols-outlined{
+  font-size: 18px;
+  line-height: 1;
 }
 
 #foca-country-year-outer > span, #foca-countdown-outer > span{

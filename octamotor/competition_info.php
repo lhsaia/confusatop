@@ -259,48 +259,159 @@ var point_system;
 var extra_points;
 var car_factor;
 var competition_type;
+var current_standings_data = { drivers: [], teams: [] };
+var current_standings_tab = 'drivers';
+var current_event_type = 0;
+
+function renderStandingsTable(){
+  if(!current_standings_data || (!current_standings_data.drivers && !current_standings_data.teams)){
+    $("#container-competition-standings").html("<p class='no-data-msg' style='text-align:center; color:#888; margin-top:20px;'>Nenhum dado de classificação disponível.</p>");
+    return;
+  }
+
+  var drivers_list = current_standings_data.drivers || [];
+  var teams_list = current_standings_data.teams || [];
+
+  var html = "";
+  
+  // Standings Tab Selector
+  html += "<div class='standings-tabs-header'>";
+  html += "  <button type='button' class='standings-tab-btn " + (current_standings_tab === 'drivers' ? 'active' : '') + "' onclick='switchStandingsTab(\"drivers\")'><span class='material-symbols-outlined' style='font-size:16px;vertical-align:middle;margin-right:4px;'>person</span> Pilotos (" + drivers_list.length + ")</button>";
+  html += "  <button type='button' class='standings-tab-btn " + (current_standings_tab === 'teams' ? 'active' : '') + "' onclick='switchStandingsTab(\"teams\")'><span class='material-symbols-outlined' style='font-size:16px;vertical-align:middle;margin-right:4px;'>directions_car</span> Equipes (" + teams_list.length + ")</button>";
+  html += "</div>";
+
+  if(current_standings_tab === 'drivers'){
+    html += "<div class='standings-table-wrapper'>";
+    html += "<table id='standings-table' class='modern-standings-table'>";
+    html += "<thead>";
+    html += "<tr>";
+    html += "<th style='width:38px; text-align:center;'>#</th>";
+    html += "<th>Piloto</th>";
+    html += "<th>Equipe</th>";
+    if(current_event_type === 0){
+      html += "<th style='text-align:center;' title='Vitórias'>Vit</th>";
+    }
+    html += "<th style='text-align:right;'>Pts</th>";
+    html += "</tr>";
+    html += "</thead>";
+    html += "<tbody>";
+
+    if(drivers_list.length === 0){
+      html += "<tr><td colspan='5' style='text-align:center; color:#888; padding:15px;'>Nenhum piloto pontuou nesta etapa/temporada.</td></tr>";
+    } else {
+      var counter = 1;
+      drivers_list.forEach(function(element) {
+        var is_dnf = (element.position == -1);
+        var pos_badge_class = "pos-" + counter;
+        if(is_dnf) pos_badge_class = "pos-dnf";
+        
+        var pos_display;
+        if(is_dnf){
+          pos_display = "DNF";
+        } else if(current_event_type === 1 && element.position > 0){
+          pos_display = element.position;
+        } else {
+          pos_display = counter;
+        }
+
+        html += "<tr data-position='" + counter + "' class='" + (is_dnf ? "row-dnf" : "") + "'>";
+        html += "<td class='pos-cell'><span class='driver-position " + pos_badge_class + "'>" + pos_display + "</span></td>";
+        html += "<td class='driver-name driver-text font-bold' style='color:#f5f5f5;'>" + (element.name || "Piloto") + "</td>";
+        html += "<td class='driver-team-names driver-text' style='color:#a3a3a3;'>" + (element.team_name || "-") + "</td>";
+        if(current_event_type === 0){
+          html += "<td class='driver-text' style='text-align:center; color:#e5e5e5; font-weight:bold;'>" + (element.wins || 0) + "</td>";
+        }
+        var pts_display = (element.total_points !== undefined && element.total_points !== null) ? element.total_points : 0;
+        html += "<td class='driver-points driver-text' style='text-align:right; font-weight:bold; color:#fbbf24; font-size:1.05em;'>" + pts_display + "</td>";
+        html += "</tr>";
+        counter++;
+      });
+    }
+
+    html += "</tbody>";
+    html += "</table>";
+    html += "</div>";
+  } else {
+    // Teams Standings
+    html += "<div class='standings-table-wrapper'>";
+    html += "<table id='standings-table' class='modern-standings-table'>";
+    html += "<thead>";
+    html += "<tr>";
+    html += "<th style='width:50px; text-align:center;'>#</th>";
+    html += "<th>Equipe</th>";
+    html += "<th>Pilotos</th>";
+    if(current_event_type === 0){
+      html += "<th style='text-align:center;' title='Vitórias'>Vit</th>";
+    }
+    html += "<th style='text-align:right;'>Pts</th>";
+    html += "</tr>";
+    html += "</thead>";
+    html += "<tbody>";
+
+    if(teams_list.length === 0){
+      html += "<tr><td colspan='5' style='text-align:center; color:#888; padding:15px;'>Nenhuma equipe pontuou nesta etapa/temporada.</td></tr>";
+    } else {
+      var counter = 1;
+      teams_list.forEach(function(element) {
+        var pos_badge_class = "pos-" + counter;
+
+        html += "<tr data-position='" + counter + "'>";
+        html += "<td class='pos-cell'><span class='driver-position " + pos_badge_class + "'>" + counter + "</span></td>";
+        html += "<td class='driver-name driver-text font-bold' style='color:#f5f5f5;'>" + (element.team_name || "Equipe") + "</td>";
+        html += "<td class='driver-team-names driver-text' style='font-size:0.9em; color:#a3a3a3;'>" + (element.driver_names || "-") + "</td>";
+        if(current_event_type === 0){
+          html += "<td class='driver-text' style='text-align:center; color:#e5e5e5; font-weight:bold;'>" + (element.wins || 0) + "</td>";
+        }
+        var pts_display = (element.total_points !== undefined && element.total_points !== null) ? element.total_points : 0;
+        html += "<td class='driver-points driver-text' style='text-align:right; font-weight:bold; color:#fbbf24; font-size:1.05em;'>" + pts_display + "</td>";
+        html += "</tr>";
+        counter++;
+      });
+    }
+
+    html += "</tbody>";
+    html += "</table>";
+    html += "</div>";
+  }
+
+  $("#container-competition-standings").html(html);
+}
+
+function switchStandingsTab(tab){
+  current_standings_tab = tab;
+  renderStandingsTable();
+}
 
 function retrieveStandingsData(event_id, event_type){
+  current_event_type = event_type;
   $.ajax({
     url: 'retrieve_standings.php',
     type: 'POST',
     dataType: 'json',
-    data: {event_id: event_id,
-          event_type: event_type}
+    data: {
+      event_id: event_id,
+      event_type: event_type
+    }
   })
   .done(function(data) {
-
-     var standings_data_html = "";
-
-     //standings_data_html = "<h1>"+data.race+"</h1>";
-
-     standings_data_html += "<table id='standings-table'>";
-      standings_data_html += "<thead>";
-      standings_data_html += "<tr>";
-      standings_data_html += "<th></th>";
-      standings_data_html += "<th>Driver</th>";
-      standings_data_html += "<th>Team</th>";
-      standings_data_html += "<th>Pts</th>";
-
-      standings_data_html += "</tr>"
-      standings_data_html += "</thead>";
-      standings_data_html += "<tbody>";
-
-      var counter = 1;
-    data.standings_data.forEach(function(element) {
-      standings_data_html += "<tr data-position='"+counter+"'><td class='driver-position'>"+counter+"</td><td class='driver-name driver-team-names driver-text'>" +element.name + "</td><td class='driver-team-names driver-text'>"+element.team_name+"</td><td class='driver-team-names driver-text'>"+element.total_points+"</td></tr>";
-      counter++;
-    });
-
-  //  console.log(standings_data_html);
-
-    $("#container-competition-standings").html(standings_data_html);
-
+    if(data && data.standings_data){
+      // Support both new {drivers: [], teams: []} format and legacy array format
+      if(Array.isArray(data.standings_data)){
+        current_standings_data = {
+          drivers: data.standings_data,
+          teams: []
+        };
+      } else {
+        current_standings_data = data.standings_data;
+      }
+    } else {
+      current_standings_data = { drivers: [], teams: [] };
+    }
+    renderStandingsTable();
   })
   .fail(function() {
-
-    });
-
+    $("#container-competition-standings").html("<p style='color:tomato; text-align:center; margin-top:20px;'>Erro ao carregar classificação.</p>");
+  });
 }
 
 function retrieveRaces(season_id, panel_element){
@@ -317,22 +428,18 @@ function retrieveRaces(season_id, panel_element){
     var races_html = "";
 
     data.races_data.forEach(function(element) {
-      let add_edition;
+      let add_edition = "";
       if(!element.name){
         element.name = "Grande Prêmio de " + element.country_name;
       }
       let driver_owner = parseInt($("#select-driver option:selected").attr("data-owner"));
       if(element.status == 0 && verifyLoggedUser(driver_owner)){
-        add_edition = "<span class='editable-race'><span class='material-symbols-outlined'>edit</span></span>";
-      } else{
-		  if(element.file != null){
-			  add_edition = "<a href='/octamotor/race_live.php?file_name="+element.file+"' class='see-race' ><span class='material-symbols-outlined'>tv</span></a>";
-		  } else {
-			  add_edition = "";
-		  }
-        
+        add_edition = "<span class='editable-race' title='Editar corrida'><span class='material-symbols-outlined'>edit</span></span>";
+      } else if(element.file != null){
+        add_edition = "<a href='/octamotor/race_live.php?file_name="+element.file+"' class='see-race' title='Assistir transmissão da corrida' target='_blank' onclick='event.stopPropagation()'><span class='material-symbols-outlined'>tv</span></a>";
       }
-      races_html += "<button class='accordion-race' data-status='"+element.status+"' data-race='"+ element.id +"'><img class='flag-thumb' src='/images/bandeiras/"+element.flag+"'/> " +element.name + add_edition +" </button>";
+
+      races_html += "<button class='accordion-race' data-status='"+element.status+"' data-race='"+ element.id +"'><div class='race-title-wrapper'><img class='flag-thumb' src='/images/bandeiras/"+element.flag+"'/> <span>" +element.name + "</span></div>" + add_edition +"</button>";
     });
 
     panel_element.innerHTML = races_html;

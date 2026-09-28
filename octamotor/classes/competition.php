@@ -274,18 +274,236 @@ if($number != null){
     $event_type = htmlspecialchars(strip_tags($event_type));
     $timestamp = time();
     
-    if($event_type == 1){ //race
-      $query = "SELECT driver.name, car.team_name, position, points as total_points FROM race_position LEFT JOIN driver ON driver.id = race_position.driver LEFT JOIN car ON car.id = race_position.car WHERE race = ? AND timestamp < ? ORDER BY points DESC, position ASC";
-    } else { //season
-      $query = "SELECT driver.name, car.team_name, SUM(points) as total_points FROM race_position LEFT JOIN driver ON driver.id = race_position.driver LEFT JOIN car ON car.id = race_position.car LEFT JOIN race ON race_position.race = race.id WHERE race.season_id = ? AND timestamp < ? GROUP BY driver ORDER BY SUM(points) DESC, name DESC";
-    }
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(1,$event_id);
-    $stmt->bindParam(2,$timestamp);
-    $stmt->execute();
-    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    return $results;
+    if($event_type == 1){ // race
+      // Drivers
+      $query_drivers = "SELECT driver.name, car.team_name, position, points as total_points, car.picture as car_picture, car.logo as team_logo FROM race_position LEFT JOIN driver ON driver.id = race_position.driver LEFT JOIN car ON car.id = race_position.car WHERE race = ? AND timestamp < ? ORDER BY (CASE WHEN position > 0 THEN position WHEN position = 0 THEN 998 WHEN position = -1 THEN 999 ELSE 1000 END) ASC, points DESC, driver.name ASC";
+      $stmt_d = $this->conn->prepare($query_drivers);
+      $stmt_d->bindParam(1,$event_id);
+      $stmt_d->bindParam(2,$timestamp);
+      $stmt_d->execute();
+      $drivers_results = $stmt_d->fetchAll(PDO::FETCH_ASSOC);
 
+      // Teams
+      $query_teams = "SELECT car.id as car_id, car.team_name, car.picture as car_picture, car.logo as team_logo, SUM(points) as total_points, GROUP_CONCAT(driver.name SEPARATOR ', ') as driver_names FROM race_position LEFT JOIN car ON car.id = race_position.car LEFT JOIN driver ON driver.id = race_position.driver WHERE race = ? AND timestamp < ? GROUP BY car.id ORDER BY SUM(points) DESC, car.team_name ASC";
+      $stmt_t = $this->conn->prepare($query_teams);
+      $stmt_t->bindParam(1,$event_id);
+      $stmt_t->bindParam(2,$timestamp);
+      $stmt_t->execute();
+      $teams_results = $stmt_t->fetchAll(PDO::FETCH_ASSOC);
+
+      return [
+        "drivers" => $drivers_results,
+        "teams" => $teams_results
+      ];
+    } else { // season
+      // Drivers
+      $query_drivers = "SELECT driver.name, car.team_name, SUM(points) as total_points, car.picture as car_picture, car.logo as team_logo, COUNT(DISTINCT race_position.race) as total_races, SUM(CASE WHEN race_position.position = 1 THEN 1 ELSE 0 END) as wins, SUM(CASE WHEN race_position.position >= 1 AND race_position.position <= 3 THEN 1 ELSE 0 END) as podiums FROM race_position LEFT JOIN driver ON driver.id = race_position.driver LEFT JOIN car ON car.id = race_position.car LEFT JOIN race ON race_position.race = race.id WHERE race.season_id = ? AND timestamp < ? GROUP BY driver.id ORDER BY SUM(points) DESC, wins DESC, name ASC";
+      $stmt_d = $this->conn->prepare($query_drivers);
+      $stmt_d->bindParam(1,$event_id);
+      $stmt_d->bindParam(2,$timestamp);
+      $stmt_d->execute();
+      $drivers_results = $stmt_d->fetchAll(PDO::FETCH_ASSOC);
+
+      // Teams
+      $query_teams = "SELECT car.id as car_id, car.team_name, car.picture as car_picture, car.logo as team_logo, SUM(points) as total_points, SUM(CASE WHEN race_position.position = 1 THEN 1 ELSE 0 END) as wins, SUM(CASE WHEN race_position.position >= 1 AND race_position.position <= 3 THEN 1 ELSE 0 END) as podiums, GROUP_CONCAT(DISTINCT driver.name SEPARATOR ', ') as driver_names FROM race_position LEFT JOIN car ON car.id = race_position.car LEFT JOIN driver ON driver.id = race_position.driver LEFT JOIN race ON race_position.race = race.id WHERE race.season_id = ? AND timestamp < ? GROUP BY car.id ORDER BY SUM(points) DESC, wins DESC, car.team_name ASC";
+      $stmt_t = $this->conn->prepare($query_teams);
+      $stmt_t->bindParam(1,$event_id);
+      $stmt_t->bindParam(2,$timestamp);
+      $stmt_t->execute();
+      $teams_results = $stmt_t->fetchAll(PDO::FETCH_ASSOC);
+
+      return [
+        "drivers" => $drivers_results,
+        "teams" => $teams_results
+      ];
+    }
+  }
+
+  public function getFullCompetitionList(){
+    $query = "SELECT id, name, owner, tier, competition_type, logo FROM competition ORDER BY tier ASC, name ASC";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getStatsDriversWins($competition_id = null){
+    $filter = "";
+    if($competition_id && $competition_id !== 'all'){
+      $filter = " AND race_position.competition_id = " . intval($competition_id);
+    }
+    $query = "SELECT driver.id as driver_id, driver.name, driver.photo, p.nome as country_name, p.bandeira as country_flag, GROUP_CONCAT(DISTINCT car.team_name ORDER BY car.team_name ASC SEPARATOR ' / ') as team_name, comp.name as competition_name, COUNT(race_position.race) as total_wins FROM race_position LEFT JOIN driver ON driver.id = race_position.driver LEFT JOIN car ON car.id = race_position.car LEFT JOIN competition comp ON comp.id = race_position.competition_id LEFT JOIN ".$this->db_name.".paises p ON p.id = driver.country WHERE race_position.position = 1 {$filter} GROUP BY driver.id ORDER BY total_wins DESC, driver.name ASC LIMIT 50";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getStatsDriversPodiums($competition_id = null){
+    $filter = "";
+    if($competition_id && $competition_id !== 'all'){
+      $filter = " AND race_position.competition_id = " . intval($competition_id);
+    }
+    $query = "SELECT driver.id as driver_id, driver.name, driver.photo, p.nome as country_name, p.bandeira as country_flag, GROUP_CONCAT(DISTINCT car.team_name ORDER BY car.team_name ASC SEPARATOR ' / ') as team_name, comp.name as competition_name, COUNT(race_position.race) as total_podiums, SUM(CASE WHEN race_position.position = 1 THEN 1 ELSE 0 END) as p1, SUM(CASE WHEN race_position.position = 2 THEN 1 ELSE 0 END) as p2, SUM(CASE WHEN race_position.position = 3 THEN 1 ELSE 0 END) as p3 FROM race_position LEFT JOIN driver ON driver.id = race_position.driver LEFT JOIN car ON car.id = race_position.car LEFT JOIN competition comp ON comp.id = race_position.competition_id LEFT JOIN ".$this->db_name.".paises p ON p.id = driver.country WHERE race_position.position >= 1 AND race_position.position <= 3 {$filter} GROUP BY driver.id ORDER BY total_podiums DESC, p1 DESC, p2 DESC, p3 DESC LIMIT 50";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getStatsDriversPoints($competition_id = null){
+    $filter = "";
+    if($competition_id && $competition_id !== 'all'){
+      $filter = " AND race_position.competition_id = " . intval($competition_id);
+    }
+    $query = "SELECT driver.id as driver_id, driver.name, driver.photo, p.nome as country_name, p.bandeira as country_flag, GROUP_CONCAT(DISTINCT car.team_name ORDER BY car.team_name ASC SEPARATOR ' / ') as team_name, comp.name as competition_name, COUNT(DISTINCT race_position.race) as total_races, SUM(race_position.points) as total_points, SUM(CASE WHEN race_position.position = 1 THEN 1 ELSE 0 END) as total_wins FROM race_position LEFT JOIN driver ON driver.id = race_position.driver LEFT JOIN car ON car.id = race_position.car LEFT JOIN competition comp ON comp.id = race_position.competition_id LEFT JOIN ".$this->db_name.".paises p ON p.id = driver.country WHERE 1=1 {$filter} GROUP BY driver.id ORDER BY total_points DESC, total_wins DESC LIMIT 50";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getStatsDriversReliability($competition_id = null){
+    $filter = "";
+    if($competition_id && $competition_id !== 'all'){
+      $filter = " AND race_position.competition_id = " . intval($competition_id);
+    }
+    $query = "SELECT driver.id as driver_id, driver.name, driver.photo, p.nome as country_name, p.bandeira as country_flag, GROUP_CONCAT(DISTINCT car.team_name ORDER BY car.team_name ASC SEPARATOR ' / ') as team_name, comp.name as competition_name, COUNT(race_position.race) as total_races, SUM(CASE WHEN race_position.position = -1 THEN 1 ELSE 0 END) as total_dnf, (COUNT(race_position.race) - SUM(CASE WHEN race_position.position = -1 THEN 1 ELSE 0 END)) as total_finished, ROUND((SUM(CASE WHEN race_position.position = -1 THEN 1 ELSE 0 END) / COUNT(race_position.race)) * 100, 1) as abandon_rate, ROUND(((COUNT(race_position.race) - SUM(CASE WHEN race_position.position = -1 THEN 1 ELSE 0 END)) / COUNT(race_position.race)) * 100, 1) as finish_rate FROM race_position LEFT JOIN driver ON driver.id = race_position.driver LEFT JOIN car ON car.id = race_position.car LEFT JOIN competition comp ON comp.id = race_position.competition_id LEFT JOIN ".$this->db_name.".paises p ON p.id = driver.country WHERE 1=1 {$filter} GROUP BY driver.id HAVING total_races >= 5 ORDER BY abandon_rate ASC, total_races DESC LIMIT 50";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getStatsTeamsWins($competition_id = null){
+    $filter = "";
+    if($competition_id && $competition_id !== 'all'){
+      $filter = " AND race_position.competition_id = " . intval($competition_id);
+    }
+    $query = "SELECT car.id as car_id, car.team_name, car.picture as car_picture, car.logo as team_logo, comp.name as competition_name, COUNT(race_position.race) as total_wins FROM race_position LEFT JOIN car ON car.id = race_position.car LEFT JOIN competition comp ON comp.id = race_position.competition_id WHERE race_position.position = 1 {$filter} GROUP BY car.id ORDER BY total_wins DESC, car.team_name ASC LIMIT 50";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getStatsTeamsPoints($competition_id = null){
+    $filter = "";
+    if($competition_id && $competition_id !== 'all'){
+      $filter = " AND race_position.competition_id = " . intval($competition_id);
+    }
+    $query = "SELECT car.id as car_id, car.team_name, car.picture as car_picture, car.logo as team_logo, comp.name as competition_name, COUNT(DISTINCT race_position.race) as total_races, SUM(race_position.points) as total_points, SUM(CASE WHEN race_position.position = 1 THEN 1 ELSE 0 END) as total_wins, SUM(CASE WHEN race_position.position >= 1 AND race_position.position <= 3 THEN 1 ELSE 0 END) as total_podiums FROM race_position LEFT JOIN car ON car.id = race_position.car LEFT JOIN competition comp ON comp.id = race_position.competition_id WHERE 1=1 {$filter} GROUP BY car.id ORDER BY total_points DESC, total_wins DESC LIMIT 50";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getStatsChampions($competition_id = null){
+    $comp_filter = "";
+    if($competition_id && $competition_id !== 'all'){
+      $comp_filter = " WHERE s.competition_id = " . intval($competition_id);
+    }
+    
+    // Buscar temporadas com corridas
+    $query_seasons = "SELECT DISTINCT s.id as season_id, s.year, s.competition_id, c.name as competition_name FROM season s LEFT JOIN competition c ON c.id = s.competition_id LEFT JOIN race r ON r.season_id = s.id {$comp_filter} ORDER BY s.year DESC, s.competition_id ASC";
+    $stmt_s = $this->conn->prepare($query_seasons);
+    $stmt_s->execute();
+    $seasons = $stmt_s->fetchAll(PDO::FETCH_ASSOC);
+
+    $driver_titles = [];
+    $team_titles = [];
+    $season_history = [];
+
+    $timestamp = time();
+
+    foreach($seasons as $s){
+      $s_id = $s['season_id'];
+      
+      // Campeão de Pilotos
+      $q_d = "SELECT driver.id as driver_id, driver.name as driver_name, driver.photo, p.nome as country_name, p.bandeira as country_flag, car.team_name, SUM(points) as total_points FROM race_position LEFT JOIN driver ON driver.id = race_position.driver LEFT JOIN car ON car.id = race_position.car LEFT JOIN race ON race_position.race = race.id LEFT JOIN ".$this->db_name.".paises p ON p.id = driver.country WHERE race.season_id = ? AND timestamp < ? GROUP BY driver.id ORDER BY SUM(points) DESC, SUM(CASE WHEN race_position.position = 1 THEN 1 ELSE 0 END) DESC LIMIT 1";
+      $st_d = $this->conn->prepare($q_d);
+      $st_d->bindParam(1, $s_id);
+      $st_d->bindParam(2, $timestamp);
+      $st_d->execute();
+      $champ_d = $st_d->fetch(PDO::FETCH_ASSOC);
+
+      // Campeão de Equipes
+      $q_t = "SELECT car.id as car_id, car.team_name, car.picture as car_picture, car.logo as team_logo, SUM(points) as total_points FROM race_position LEFT JOIN car ON car.id = race_position.car LEFT JOIN race ON race_position.race = race.id WHERE race.season_id = ? AND timestamp < ? GROUP BY car.id ORDER BY SUM(points) DESC, SUM(CASE WHEN race_position.position = 1 THEN 1 ELSE 0 END) DESC LIMIT 1";
+      $st_t = $this->conn->prepare($q_t);
+      $st_t->bindParam(1, $s_id);
+      $st_t->bindParam(2, $timestamp);
+      $st_t->execute();
+      $champ_t = $st_t->fetch(PDO::FETCH_ASSOC);
+
+      if($champ_d && $champ_d['total_points'] > 0){
+        $d_id = $champ_d['driver_id'];
+        if(!isset($driver_titles[$d_id])){
+          $driver_titles[$d_id] = [
+            'driver_id' => $d_id,
+            'name' => $champ_d['driver_name'],
+            'photo' => $champ_d['photo'],
+            'country_name' => $champ_d['country_name'],
+            'country_flag' => $champ_d['country_flag'],
+            'teams' => [],
+            'team_name' => '',
+            'titles_count' => 0,
+            'years' => []
+          ];
+        }
+        $driver_titles[$d_id]['titles_count']++;
+        if(!empty($champ_d['team_name'])){
+          $driver_titles[$d_id]['teams'][] = $champ_d['team_name'];
+        }
+        $driver_titles[$d_id]['team_name'] = implode(' / ', array_unique($driver_titles[$d_id]['teams']));
+        $driver_titles[$d_id]['years'][] = $s['year'] . " (" . $s['competition_name'] . ")";
+
+        if($champ_t && $champ_t['total_points'] > 0){
+          $t_id = $champ_t['car_id'];
+          if(!isset($team_titles[$t_id])){
+            $team_titles[$t_id] = [
+              'car_id' => $t_id,
+              'team_name' => $champ_t['team_name'],
+              'car_picture' => $champ_t['car_picture'],
+              'team_logo' => $champ_t['team_logo'],
+              'titles_count' => 0,
+              'years' => []
+            ];
+          }
+          $team_titles[$t_id]['titles_count']++;
+          $team_titles[$t_id]['years'][] = $s['year'] . " (" . $s['competition_name'] . ")";
+        }
+
+        $season_history[] = [
+          'year' => $s['year'],
+          'competition_id' => $s['competition_id'],
+          'competition_name' => $s['competition_name'],
+          'driver_champion' => $champ_d['driver_name'],
+          'driver_country_flag' => $champ_d['country_flag'],
+          'driver_points' => $champ_d['total_points'],
+          'team_champion' => $champ_t['team_name'] ?? '-',
+          'team_points' => $champ_t['total_points'] ?? 0
+        ];
+      }
+    }
+
+    usort($driver_titles, function($a, $b){
+      return $b['titles_count'] - $a['titles_count'];
+    });
+
+    usort($team_titles, function($a, $b){
+      return $b['titles_count'] - $a['titles_count'];
+    });
+
+    return [
+      'driver_titles' => $driver_titles,
+      'team_titles' => $team_titles,
+      'season_history' => $season_history
+    ];
+  }
+
+  public function getStatsTrackRecords($competition_id = null){
+    $filter = "";
+    if($competition_id && $competition_id !== 'all'){
+      $filter = " AND race_position.competition_id = " . intval($competition_id);
+    }
+    $query = "SELECT t.id as track_id, t.name as track_name, t.length, t.image as track_image, p.nome as country_name, p.bandeira as country_flag, MIN(race_position.best_time) as record_time, d.name as driver_name, c.team_name, r.name as race_name, comp.name as competition_name, s.year as season_year FROM race_position LEFT JOIN race r ON r.id = race_position.race LEFT JOIN track t ON t.id = r.track_id LEFT JOIN season s ON s.id = r.season_id LEFT JOIN competition comp ON comp.id = s.competition_id LEFT JOIN driver d ON d.id = race_position.driver LEFT JOIN car c ON c.id = race_position.car LEFT JOIN ".$this->db_name.".paises p ON p.id = t.country WHERE race_position.best_time > 0 AND t.id IS NOT NULL AND t.name IS NOT NULL AND t.name != '' {$filter} GROUP BY t.id ORDER BY t.name ASC";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 
   public function createSeason($season_data){

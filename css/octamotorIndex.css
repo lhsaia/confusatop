@@ -12,9 +12,7 @@
 }
 
 html, body {
-  height: 100vh !important;
-  max-height: 100vh !important;
-  overflow: hidden !important;
+  min-height: 100vh !important;
   margin: 0 !important;
   box-sizing: border-box !important;
 }
@@ -25,6 +23,7 @@ body {
   padding-top: 60px !important;
   background-color: #282828 !important;
   background-image: none !important;
+  overflow-y: auto !important;
 }
 
 html body #top-bar {
@@ -68,15 +67,15 @@ html body #bottom-bar {
     radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 8px 9px;
   background-color:#282828;
   background-size:16px 16px;
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
+  flex: 1 0 auto !important;
+  min-height: calc(100vh - 110px) !important;
   height: auto !important;
   width:100%;
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 }
 
 #container-menu-octamotor{
@@ -85,7 +84,8 @@ html body #bottom-bar {
   justify-content: center;
   flex-basis: 50%;
   box-sizing: border-box;
-  padding: 10px 0 15px 0;
+  padding: 15px 0 20px 0;
+  gap: 8px;
 }
 
 #container-image-octamotor{
@@ -95,7 +95,8 @@ html body #bottom-bar {
   justify-content: center;
   align-items: center;
   position: relative;
-  height: 100%;
+  height: auto;
+  min-height: 480px;
 }
 
 @keyframes appear {
@@ -108,21 +109,25 @@ html body #bottom-bar {
 }
 
 .octamotor-menu{
-  width: 80%;
-  max-width: 500px;
-  border: 3px solid;
-  background-color: black;
-  font-family: krunchbold;
-  font-size: 1.85em;
+  width: 85%;
+  max-width: 480px;
+  height: 58px;
+  min-height: 58px;
+  border: 2.5px solid;
+  background-color: #0f0f0f;
+  font-family: krunchbold, sans-serif;
+  font-size: 1.65em;
+  letter-spacing: 0.5px;
   border-radius: 10px;
-  padding: 12px 0 12px 115px;
-  margin: 14px 10px 0px 40px;
-  box-shadow: 0 0 3pt 2pt black;
-  animation: appear 2s;
+  padding: 0 0 0 90px;
+  margin: 4px 10px 4px 40px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  animation: appear 1.5s ease;
   box-sizing: border-box;
   position: relative;
   display: flex;
   align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 @keyframes spin {
@@ -146,16 +151,21 @@ html body #bottom-bar {
   background-position: center;
   background-size: contain;
   display: block;
-  width: 86px;
-  height: 86px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   position: absolute;
   left: 14px;
-  top: calc(50% - 43px);
+  top: calc(50% - 27px);
   margin: 0;
   box-shadow: 0 -1px 1px #fff, 0 1px 1px #000, inset 0 -1px 1px rgba(0,0,0,0.5), inset 0 -1px 1px rgba(0,0,0,0.8);
   animation: spin 2s ease 0.3s 1 normal;
   animation-fill-mode: forwards;
+}
+
+.octamotor-menu:hover {
+  transform: translateX(6px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.9), 0 0 16px currentColor;
 }
 
 .orange::before{
@@ -208,13 +218,22 @@ html body #bottom-bar {
 }
 
 .purple::before{
-    background-color: gray;
-    animation: none !important;
+    background-color: #a855f7;
 }
 
 .purple{
-  color:purple;
-  border-color:purple;
+  color: #c084fc;
+  border-color: #a855f7;
+}
+
+.octamotor-menu:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7), 0 0 15px currentColor;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.octamotor-menu {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 html body #logged-user {

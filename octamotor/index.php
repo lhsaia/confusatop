@@ -33,7 +33,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
     <a class="octamotor-menu white" href="track_info.php">Circuitos</a>
     <a class="octamotor-menu yellow" href="competition_info.php">Competições</a>
     <a class="octamotor-menu red" href="live_info.php">Ao vivo</a>
-    <a class="octamotor-menu purple disabled">Estatísticas</a>
+    <a class="octamotor-menu purple" href="stats.php">Estatísticas</a>
   </div>
   <div id="container-image-octamotor">
     <div class="image-wrapper">

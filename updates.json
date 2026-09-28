@@ -14,6 +14,26 @@
       "items": [
         {
           "badge": "bugfix",
+          "title": "Visibilidade e Estilização do Botão de Transmissão (TV) no Octamotor",
+          "desc": "Corrigida a cor do ícone de TV nas etapas de competições do Octamotor que ficava preto sobre fundo escuro, adicionando botão com acabamento ciano neon, efeito hover e propagação de clique isolada para assistir à corrida."
+        },
+        {
+          "badge": "new",
+          "title": "Central de Estatísticas & Hall da Fama do Octamotor",
+          "desc": "Implementada a tela completa de estatísticas do Octamotor com filtros por categoria (FOCA, FOCA 2, ligas regionais e geral), Hall da Fama com maiores vencedores, títulos de temporadas de pilotos e construtores, pontos acumulados, taxa de confiabilidade/DNF e recordes de tempo por circuito."
+        },
+        {
+          "badge": "new",
+          "title": "Classificação de Equipes e Construtores",
+          "desc": "Adicionado seletor de abas nas competições do Octamotor para alternar instantaneamente entre a Classificação de Pilotos e a Classificação de Equipes/Construtores tanto por temporada quanto por corrida individual."
+        },
+        {
+          "badge": "design",
+          "title": "Revamp Visual & Acabamento Automobilístico no Octamotor",
+          "desc": "Modernização visual com glassmorphism escuro refinado, realce dos botões com animação das rodas na home, badges de pódio em ouro/prata/bronze e tabelas modernas, preservando a essência e o fundo clássico automobilístico."
+        },
+        {
+          "badge": "bugfix",
           "title": "Edição de Nome de Jogadores no Exterior",
           "desc": "Permitida a edição do nome de jogadores que pertencem ao usuário mesmo quando contratados por clubes de outros proprietários, tanto na tela do time quanto na listagem de jogadores, preservando a trava de proteção nos demais atributos contratuais e técnicos do atleta."
         },
