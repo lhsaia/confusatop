@@ -132,6 +132,21 @@ class Competicao_clube{
                         $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN {$col} {$def}");
                     }
                 }
+
+                // 3. Garantir tabela competicoes_agrupadas (Visões agregadas salvas)
+                $this->conn->exec("
+                    CREATE TABLE IF NOT EXISTS competicoes_agrupadas (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        nome VARCHAR(150) NOT NULL,
+                        id_competicao_1 INT NOT NULL,
+                        id_competicao_2 INT NOT NULL,
+                        dono INT NOT NULL,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        INDEX idx_ca_dono (dono),
+                        INDEX idx_ca_comp1 (id_competicao_1),
+                        INDEX idx_ca_comp2 (id_competicao_2)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                ");
             }
         } catch (Exception $e) {
             error_log("Erro ao verificar/migrar schema de competicao_opcoes: " . $e->getMessage());
@@ -245,14 +260,21 @@ class Competicao_clube{
 		$item_pesquisado = htmlspecialchars(strip_tags($item_pesquisado));
 
 		if($dono === null || $dono === 0 || $dono === '0' || $dono === ''){
-			$query = "SELECT * FROM (SELECT
-						a.id, a.nome, a.logo, a.trofeu, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais,
-						(SELECT COUNT(*) FROM jogos_clube jc WHERE jc.competicao_id = a.id AND (jc.status = 1 OR jc.timeA_gols IS NOT NULL)) as jogos_simulados
-						FROM " . $this->table_name . " a
-						LEFT JOIN paises p ON a.sede = p.id
-						LEFT JOIN federacoes f ON a.federacao = f.id
-						ORDER BY
-							a.Nome ASC ) t1 WHERE Nome LIKE ? LIMIT 150";
+			$query = "SELECT * FROM (
+                        SELECT
+                            a.id, a.nome, a.logo, a.trofeu, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais,
+                            (SELECT COUNT(*) FROM jogos_clube jc WHERE jc.competicao_id = a.id AND (jc.status = 1 OR jc.timeA_gols IS NOT NULL)) as jogos_simulados,
+                            0 as is_agrupada, 0 as id_competicao_1, 0 as id_competicao_2
+                        FROM " . $this->table_name . " a
+                        LEFT JOIN paises p ON a.sede = p.id
+                        LEFT JOIN federacoes f ON a.federacao = f.id
+                        UNION ALL
+                        SELECT
+                            ca.id, ca.nome, '0.png' as logo, NULL as trofeu, 99 as tipo, 'Tabela Acumulada' as federacao, 0 as idFederacao, 0 as idSede, '-' as sede, '' as ano, 0 as genero, '' as siglaSede, '' as bandeiraSede, ca.dono, ca.dono as idDonoPais,
+                            0 as jogos_simulados,
+                            1 as is_agrupada, ca.id_competicao_1, ca.id_competicao_2
+                        FROM competicoes_agrupadas ca
+                     ) t1 WHERE Nome LIKE ? ORDER BY is_agrupada DESC, Nome ASC LIMIT 150";
 
 			$stmt = $this->conn->prepare( $query );
 			$item_pesquisado = "%" . $item_pesquisado . "%";
@@ -264,14 +286,21 @@ class Competicao_clube{
 			return $stmt;
 		} else {
 			$dono = htmlspecialchars(strip_tags($dono));
-			$query = "SELECT * FROM (SELECT
-						a.id, a.nome, a.logo, a.trofeu, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais,
-						(SELECT COUNT(*) FROM jogos_clube jc WHERE jc.competicao_id = a.id AND (jc.status = 1 OR jc.timeA_gols IS NOT NULL)) as jogos_simulados
-						FROM " . $this->table_name . " a
-						LEFT JOIN paises p ON a.sede = p.id
-						LEFT JOIN federacoes f ON a.federacao = f.id
-						ORDER BY
-							a.Nome ASC ) t1 WHERE dono = ? AND Nome LIKE ? LIMIT 150";
+			$query = "SELECT * FROM (
+                        SELECT
+                            a.id, a.nome, a.logo, a.trofeu, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais,
+                            (SELECT COUNT(*) FROM jogos_clube jc WHERE jc.competicao_id = a.id AND (jc.status = 1 OR jc.timeA_gols IS NOT NULL)) as jogos_simulados,
+                            0 as is_agrupada, 0 as id_competicao_1, 0 as id_competicao_2
+                        FROM " . $this->table_name . " a
+                        LEFT JOIN paises p ON a.sede = p.id
+                        LEFT JOIN federacoes f ON a.federacao = f.id
+                        UNION ALL
+                        SELECT
+                            ca.id, ca.nome, '0.png' as logo, NULL as trofeu, 99 as tipo, 'Tabela Acumulada' as federacao, 0 as idFederacao, 0 as idSede, '-' as sede, '' as ano, 0 as genero, '' as siglaSede, '' as bandeiraSede, ca.dono, ca.dono as idDonoPais,
+                            0 as jogos_simulados,
+                            1 as is_agrupada, ca.id_competicao_1, ca.id_competicao_2
+                        FROM competicoes_agrupadas ca
+                     ) t1 WHERE dono = ? AND Nome LIKE ? ORDER BY is_agrupada DESC, Nome ASC LIMIT 150";
 
 			$stmt = $this->conn->prepare( $query );
 			$item_pesquisado = "%" . $item_pesquisado . "%";
@@ -283,7 +312,39 @@ class Competicao_clube{
 
 			return $stmt;
 		}
-}
+    }
+
+    function salvarCompeticaoAgrupada($nome, $idComp1, $idComp2, $dono) {
+        $nome = trim(strip_tags($nome));
+        $idComp1 = (int)$idComp1;
+        $idComp2 = (int)$idComp2;
+        $dono = (int)$dono;
+
+        if ($nome === '' || $idComp1 <= 0 || $idComp2 <= 0) {
+            return false;
+        }
+
+        $stmt = $this->conn->prepare("INSERT INTO competicoes_agrupadas (nome, id_competicao_1, id_competicao_2, dono) VALUES (:nome, :c1, :c2, :dono)");
+        return $stmt->execute([
+            ':nome' => $nome,
+            ':c1' => $idComp1,
+            ':c2' => $idComp2,
+            ':dono' => $dono
+        ]);
+    }
+
+    function excluirCompeticaoAgrupada($idAgrupada, $dono, $isAdmin = false) {
+        $idAgrupada = (int)$idAgrupada;
+        if ($idAgrupada <= 0) return false;
+
+        if ($isAdmin) {
+            $stmt = $this->conn->prepare("DELETE FROM competicoes_agrupadas WHERE id = :id");
+            return $stmt->execute([':id' => $idAgrupada]);
+        } else {
+            $stmt = $this->conn->prepare("DELETE FROM competicoes_agrupadas WHERE id = :id AND dono = :dono");
+            return $stmt->execute([':id' => $idAgrupada, ':dono' => $dono]);
+        }
+    }
 
 
     function alterar($id,$nome,$sede,$ano,$federacao,$logo = null, $tipo = null, $trofeu = null){

@@ -936,3 +936,36 @@ hr {
   border-color: rgba(0, 0, 0, 0.25) !important;
   transform: translateY(-1px) !important;
 }
+
+/* ==========================================================================
+   Estilos de Linhas de Competição Agrupada (Tabela Acumulada / Apertura+Clausura)
+   ========================================================================== */
+tr.row-competicao-agrupada {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.06) 0%, rgba(14, 165, 233, 0.06) 100%) !important;
+  border-left: 3px solid #6366f1 !important;
+}
+
+tr.row-competicao-agrupada:hover {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.12) 0%, rgba(14, 165, 233, 0.12) 100%) !important;
+}
+
+.badge-tipo-agrupada {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 2px 8px !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+  background: linear-gradient(135deg, #6366f1, #0284c7) !important;
+  color: #ffffff !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin-left: 6px !important;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3) !important;
+}
+
+.badge-tipo-agrupada span.material-symbols-outlined {
+  font-size: 0.85rem !important;
+}
+

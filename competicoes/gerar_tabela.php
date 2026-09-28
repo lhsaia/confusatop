@@ -32,9 +32,109 @@ if (!$isAdmin && $_SESSION['user_id'] != $dono) {
 $options = $competicao->getOptions($idCompeticao);
 $isSlots = (isset($options['sorteio']) && intval($options['sorteio']) == 2);
 $estadios_times = isset($options['estadios_times']) ? intval($options['estadios_times']) : 1;
+$espelharCompeticaoId = isset($_POST['espelhar_id']) ? intval($_POST['espelhar_id']) : 0;
 
 // Clean existing games
 $competicao->limparJogos($idCompeticao);
+
+// Get SQLite connection for referees and stadiums
+$liteDatabase = new SQLiteDatabase();
+$liteDatabase->fileName = $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$idCompeticao."-database.db3";
+$ldb = $liteDatabase->getConnection();
+
+$arbitros = [];
+try {
+    if($ldb){
+        $arbitro_obj = new TrioArbitragem($ldb);
+        $stmtArbitros = $arbitro_obj->carregarListaArbitrosSqlite();
+        if($stmtArbitros){
+            $arbitros = $stmtArbitros->fetchAll(PDO::FETCH_ASSOC);
+        }
+    }
+} catch(Exception $e) {
+    $arbitros = [];
+}
+
+$estadios = [];
+try {
+    if($ldb){
+        $stmtEstadios = $ldb->query("SELECT ID FROM estadio");
+        if($stmtEstadios){
+            $estadios = $stmtEstadios->fetchAll(PDO::FETCH_ASSOC);
+        }
+    }
+} catch(Exception $e) {
+    $estadios = [];
+}
+
+// -------------------------------------------------------------
+// MODO APERTURA / CLAUSURA: ESPELHAMENTO COM INVERSÃO DE MANDOS
+// -------------------------------------------------------------
+if ($espelharCompeticaoId > 0) {
+    $stmtOrigem = $db->prepare("SELECT timeA_id, timeA_nome, timeB_id, timeB_nome, fase, grupo, neutro 
+                                FROM jogos_clube 
+                                WHERE competicao_id = :idOrigem AND simulador_interno = 1 
+                                ORDER BY id ASC");
+    $stmtOrigem->bindParam(':idOrigem', $espelharCompeticaoId, PDO::PARAM_INT);
+    $stmtOrigem->execute();
+    $jogosOrigem = $stmtOrigem->fetchAll(PDO::FETCH_ASSOC);
+
+    if (empty($jogosOrigem)) {
+        die(json_encode(['success' => false, 'error' => 'A competição de origem selecionada não possui jogos agendados para espelhamento.']));
+    }
+
+    require_once $_SERVER['DOCUMENT_ROOT'] . "/config/sqliteDatabase.php";
+    $scheduler = new CompetitionMatchScheduler($options);
+
+    $totalJogosEspelhados = 0;
+    $currentFase = null;
+    $currentGrupo = null;
+
+    foreach ($jogosOrigem as $jOrigem) {
+        $faseOrigem = intval($jOrigem['fase']);
+        $grupoOrigem = trim($jOrigem['grupo'] ?? '');
+
+        // Se mudou de grupo/fase e não é a primeira iteração, podemos avançar rodada se apropriado
+        if ($currentFase !== null && ($currentFase != $faseOrigem || ($currentGrupo !== '' && $currentGrupo != $grupoOrigem))) {
+            // manter agrupamento
+        }
+        $currentFase = $faseOrigem;
+        $currentGrupo = $grupoOrigem;
+
+        // Inversão de Mandos: Quem era visitante vira mandante, quem era mandante vira visitante
+        $novoHomeId = intval($jOrigem['timeB_id'] ?? 0);
+        $novoHomeNome = $jOrigem['timeB_nome'] ?? null;
+        $novoAwayId = intval($jOrigem['timeA_id'] ?? 0);
+        $novoAwayNome = $jOrigem['timeA_nome'] ?? null;
+
+        $novoEstId = getStadiumForMatch($ldb, $novoHomeId, $estadios_times, $estadios);
+        $novoArbId = count($arbitros) > 0 ? $arbitros[array_rand($arbitros)]['ID'] : 0;
+        $dataMatch = $scheduler->getNextMatchDateTime();
+        $isNeutro = (isset($jOrigem['neutro']) && intval($jOrigem['neutro']) == 1) ? "true" : "false";
+
+        // Inserir novo confronto espelhado
+        $competicao->inserirJogo(
+            $idCompeticao,
+            ($novoHomeId > 0 ? $novoHomeId : $novoHomeNome),
+            ($novoAwayId > 0 ? $novoAwayId : $novoAwayNome),
+            $faseOrigem,
+            $novoArbId,
+            $novoEstId,
+            $dataMatch,
+            $isNeutro,
+            $grupoOrigem
+        );
+        $totalJogosEspelhados++;
+    }
+
+    echo json_encode([
+        'success' => true,
+        'total_jogos' => $totalJogosEspelhados,
+        'modo' => 'espelhado_invertido',
+        'origem_id' => $espelharCompeticaoId
+    ]);
+    exit;
+}
 
 // Load teams from MariaDB
 $stmt = $competicao->carregarListaTimes($idCompeticao);

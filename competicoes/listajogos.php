@@ -117,6 +117,20 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 		$addArray = array($ID, $Nome);
 		$listaEstadios[] = $addArray;
 	}
+
+	// query lista de competições para espelhamento (Apertura / Clausura)
+	$listaOutrasCompeticoes = [];
+	try {
+		$stmtOutras = $db->prepare("SELECT id, nome, ano FROM competicao_lista WHERE id != :id ORDER BY ano DESC, nome ASC");
+		$stmtOutras->bindParam(':id', $idCompeticao, PDO::PARAM_INT);
+		$stmtOutras->execute();
+		while ($rOutra = $stmtOutras->fetch(PDO::FETCH_ASSOC)) {
+			$listaOutrasCompeticoes[] = [
+				'id' => (int)$rOutra['id'],
+				'nome' => $rOutra['nome'] . " " . $rOutra['ano']
+			];
+		}
+	} catch (\Throwable $e) {}
 	
 	echo '<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>';
 ?>
@@ -331,33 +345,71 @@ $(document).ready(function($){
 	});
 	 
 	$(document).on('click', '#gerar_tabela', function(){
-		if(confirm("Deseja gerar a tabela de jogos? Isso apagará os jogos atuais desta competição!")){
-			showLoading();
-			$.ajax({
-				url: "gerar_tabela.php",
-				method: "POST",
-				data: {id: codigo_competicao, tipo: '<?php echo isset($options['tipocompeticao']) ? (int)$options['tipocompeticao'] : 0; ?>'},
-				success: function(data){
-					hideLoading();
-					try {
-						let res = typeof data === 'object' ? data : JSON.parse(data);
-						if(res.success){
-							alert("Sucesso! Foram gerados " + (res.total_jogos || 0) + " jogos para a competição.");
-							location.reload();
-						} else {
-							alert("Erro ao gerar tabela: " + res.error);
-						}
-					} catch(err) {
-						// console.error("Resposta inválida do gerar_tabela:", data);
-						alert("Erro na resposta do servidor: " + data);
-					}
-				},
-				error: function(xhr, status, error){
-					hideLoading();
-					alert("Erro de conexão ao gerar tabela: " + error);
-				}
-			});
+		$('#modalGerarTabela').fadeIn(200);
+	});
+
+	$(document).on('click', '#btn-fechar-modal-gerar, #btn-cancelar-gerar', function(){
+		$('#modalGerarTabela').fadeOut(200);
+	});
+
+	$('input[name="modo_geracao_tabela"]').on('change', function(){
+		if($(this).val() === 'espelho'){
+			$('#wrapper_competicao_espelho').slideDown(150);
+		} else {
+			$('#wrapper_competicao_espelho').slideUp(150);
 		}
+	});
+
+	$(document).on('click', '#btn-confirmar-gerar-tabela', function(){
+		let modo = $('input[name="modo_geracao_tabela"]:checked').val();
+		let espelharId = 0;
+
+		if(modo === 'espelho'){
+			espelharId = $('#select_competicao_espelho').val();
+			if(!espelharId || parseInt(espelharId) <= 0){
+				alert("Por favor, selecione a competição de origem para espelhar.");
+				return;
+			}
+		}
+
+		let confirmMsg = (modo === 'espelho')
+			? "Deseja espelhar os confrontos da competição selecionada invertendo todos os mandos de campo? Isso apagará os jogos atuais desta competição!"
+			: "Deseja gerar a tabela de jogos automaticamente? Isso apagará os jogos atuais desta competição!";
+
+		if(!confirm(confirmMsg)){
+			return;
+		}
+
+		$('#modalGerarTabela').hide();
+		showLoading();
+
+		$.ajax({
+			url: "gerar_tabela.php",
+			method: "POST",
+			data: {
+				id: codigo_competicao,
+				tipo: '<?php echo isset($options['tipocompeticao']) ? (int)$options['tipocompeticao'] : 0; ?>',
+				espelhar_id: espelharId
+			},
+			success: function(data){
+				hideLoading();
+				try {
+					let res = typeof data === 'object' ? data : JSON.parse(data);
+					if(res.success){
+						alert("Sucesso! Foram gerados " + (res.total_jogos || 0) + " jogos para a competição.");
+						location.reload();
+					} else {
+						alert("Erro ao gerar tabela: " + res.error);
+					}
+				} catch(err) {
+					alert("Erro na resposta do servidor: " + data);
+				}
+			},
+			error: function(xhr, status, error){
+				hideLoading();
+				alert("Erro de conexão ao gerar tabela: " + error);
+			}
+		});
 	});
 	 
 	function selectElement(id, valueToSelect) {    
@@ -1032,6 +1084,63 @@ $(document).ready(function($){
             <a href="competitionstatus.php?id=<?php echo $idCompeticao; ?>" style="display: inline-block; padding: 10px 20px; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 8px; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(0, 0, 0, 0.06)'" onmouseout="this.style.background='rgba(0, 0, 0, 0.03)'">
                 ← Voltar para a Competição
             </a>
+        </div>
+    </div>
+
+    <!-- Modal de Geração de Tabela (Normal ou Espelhada/Apertura-Clausura) -->
+    <div id="modalGerarTabela" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(9, 13, 22, 0.6); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:9999; justify-content:center; align-items:center;">
+        <div style="position:relative; top:50%; transform:translateY(-50%); margin:0 auto; background:rgba(255, 255, 255, 0.98); border-radius:18px; border:1px solid rgba(0,0,0,0.08); box-shadow:0 20px 40px rgba(0,0,0,0.25); max-width:480px; width:92%; padding:25px; box-sizing:border-box;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid rgba(0,0,0,0.06); padding-bottom:10px;">
+                <h3 style="margin:0; font-family:'Outfit', sans-serif; font-size:1.25rem; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                    <span class="material-symbols-outlined" style="color:#0284c7;">table_rows</span>
+                    Gerar Tabela de Jogos
+                </h3>
+                <span id="btn-fechar-modal-gerar" style="cursor:pointer; color:#64748b; font-size:1.4rem;" class="material-symbols-outlined">close</span>
+            </div>
+
+            <p style="font-size:0.88rem; color:#64748b; margin-top:0; margin-bottom:16px; line-height:1.4;">
+                Escolha como deseja montar o calendário e os confrontos desta competição:
+            </p>
+
+            <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+                <label style="display:flex; align-items:flex-start; gap:10px; background:#f8fafc; padding:12px 14px; border-radius:10px; border:1px solid #e2e8f0; cursor:pointer;">
+                    <input type="radio" name="modo_geracao_tabela" value="normal" checked style="margin-top:3px; accent-color:#0284c7;"/>
+                    <div>
+                        <strong style="display:block; font-size:0.92rem; color:#1e293b; font-family:'Outfit', sans-serif;">Geração Automática Padrão</strong>
+                        <span style="font-size:0.8rem; color:#64748b;">Sorteia ou monta os confrontos de acordo com a fórmula e parâmetros definidos nas opções da competição.</span>
+                    </div>
+                </label>
+
+                <label style="display:flex; align-items:flex-start; gap:10px; background:#f8fafc; padding:12px 14px; border-radius:10px; border:1px solid #e2e8f0; cursor:pointer;">
+                    <input type="radio" name="modo_geracao_tabela" value="espelho" style="margin-top:3px; accent-color:#0284c7;"/>
+                    <div>
+                        <strong style="display:block; font-size:0.92rem; color:#1e293b; font-family:'Outfit', sans-serif;">Modo Apertura & Clausura (Inverter Mandos)</strong>
+                        <span style="font-size:0.8rem; color:#64748b;">Espelha exatamente a mesma ordem de confrontos e grupos de outra competição, invertendo os mandantes e visitantes.</span>
+                    </div>
+                </label>
+            </div>
+
+            <div id="wrapper_competicao_espelho" style="display:none; margin-bottom:20px; background:#f0f9ff; padding:12px 14px; border-radius:10px; border:1px solid #bae6fd;">
+                <label for="select_competicao_espelho" style="display:block; font-size:0.82rem; font-weight:600; color:#0369a1; margin-bottom:6px;">
+                    Selecione a Competição Base (ex: Apertura / Turno 1):
+                </label>
+                <select id="select_competicao_espelho" style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid #93c5fd; background:#fff; font-size:0.88rem; color:#0f172a;">
+                    <option value="">-- Selecione a competição de origem --</option>
+                    <?php foreach($listaOutrasCompeticoes as $outraComp): ?>
+                        <option value="<?php echo $outraComp['id']; ?>"><?php echo htmlspecialchars($outraComp['nome']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                <button type="button" id="btn-cancelar-gerar" style="padding:8px 16px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; font-weight:600; font-size:0.85rem; color:#475569; cursor:pointer;">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirmar-gerar-tabela" style="padding:8px 20px; background:#0284c7; border:none; border-radius:8px; font-weight:600; font-size:0.85rem; color:#fff; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                    <span class="material-symbols-outlined" style="font-size:1.1rem;">check_circle</span>
+                    Confirmar Geração
+                </button>
+            </div>
         </div>
     </div>
 </main>

@@ -230,16 +230,40 @@ function updateTable(ajax_data, current_page, highlighted, direction){
             }
 			
 			// geração da tabela
-			let tipoBadge = (parseInt(val['tipo']) === 1) ? "<span class='badge-tipo-nacional'>Nacional</span>" : "";
-            let trofeuHtml = (val['trofeu'] && val['trofeu'] !== '') 
-                ? "<img class='thumb trofeuThumb' src='/images/trofeus/"+val['trofeu']+"' title='Troféu' style='max-height:30px; max-width:40px; object-fit:contain;' />" 
-                : "<span class='trofeuThumb' style='font-size:0.85rem; color:#94a3b8;'>-</span>";
+            let isAgrupada = (parseInt(val['is_agrupada'] || 0) === 1);
+            let rowClass = isAgrupada ? "class='row-competicao-agrupada'" : "";
+			let tipoBadge = "";
+            if (isAgrupada) {
+                tipoBadge = "<span class='badge-tipo-agrupada'><span class='material-symbols-outlined'>calculate</span>Agregada</span>";
+            } else if (parseInt(val['tipo']) === 1) {
+                tipoBadge = "<span class='badge-tipo-nacional'>Nacional</span>";
+            }
 
-			tbl += "<tr id='"+val['id']+"' data-sexo='"+val['sexo']+"' >";
-				tbl +=  "<td data-label='Competição'><span class='nomeEditavel' id='nom"+val['id']+"'><a class='linkNome' href='/competicoes/competitionstatus.php?id="+val['id']+"' >"+val['nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span>" + tipoBadge + "</td>";
-				tbl += "<td data-label='Logo'><div class='imageUpload'><img class='thumb logoThumb' src='/images/competicoes/"+val['logo']+"' /> <input type='file' hidden id='logo"+val['id']+"' class='hiddenInput custom-file-upload' name='logo' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
-				tbl += "<td data-label='Troféu'><div class='imageUpload'>"+trofeuHtml+" <input type='file' hidden id='trofeu"+val['id']+"' class='hiddenInput custom-file-upload' name='trofeu' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
-				tbl += "<td data-label='Ano'><span class='fidelidadeFixo'>"+val['ano']+"</span><input type='number' min='1' max='2100' class=' fidelidade inputHerdeiro' value="+val['ano']+" id='ano"+val['id']+"' hidden></td>";
+            let compLink = isAgrupada 
+                ? "/competicoes/soma_tabelas.php?comp1=" + val['id_competicao_1'] + "&comp2=" + val['id_competicao_2']
+                : "/competicoes/competitionstatus.php?id=" + val['id'];
+
+            let trofeuHtml = "";
+            if (isAgrupada) {
+                trofeuHtml = "<span class='material-symbols-outlined' style='color:#6366f1; font-size:1.4rem;' title='Tabela Acumulada'>functions</span>";
+            } else {
+                trofeuHtml = (val['trofeu'] && val['trofeu'] !== '') 
+                    ? "<img class='thumb trofeuThumb' src='/images/trofeus/"+val['trofeu']+"' title='Troféu' style='max-height:30px; max-width:40px; object-fit:contain;' />" 
+                    : "<span class='trofeuThumb' style='font-size:0.85rem; color:#94a3b8;'>-</span>";
+            }
+
+            let logoHtml = "";
+            if (isAgrupada) {
+                logoHtml = "<span class='material-symbols-outlined' style='color:#0284c7; font-size:1.4rem;' title='Tabela Agregada'>table_chart</span>";
+            } else {
+                logoHtml = "<img class='thumb logoThumb' src='/images/competicoes/"+val['logo']+"' /> <input type='file' hidden id='logo"+val['id']+"' class='hiddenInput custom-file-upload' name='logo' accept='.jpg,.png,.jpeg,.webp'/>";
+            }
+
+			tbl += "<tr id='"+val['id']+"' data-sexo='"+val['sexo']+"' data-agrupada='"+(isAgrupada ? "1" : "0")+"' " + rowClass + " >";
+				tbl +=  "<td data-label='Competição'><span class='nomeEditavel' id='nom"+val['id']+"'><a class='linkNome' href='"+compLink+"' style='"+(isAgrupada ? "font-weight:700; color:#4338ca;" : "")+"'>"+val['nome']+"</a></span>" + (isAgrupada ? "" : "<span class=' "+genderClass+" genderSign'>"+genderCode+"</span>") + tipoBadge + "</td>";
+				tbl += "<td data-label='Logo'><div class='imageUpload'>"+logoHtml+"</div></td>";
+				tbl += "<td data-label='Troféu'><div class='imageUpload'>"+trofeuHtml+"</div></td>";
+				tbl += "<td data-label='Ano'><span class='fidelidadeFixo'>"+(val['ano'] || "-")+"</span><input type='number' min='1' max='2100' class=' fidelidade inputHerdeiro' value='"+val['ano']+"' id='ano"+val['id']+"' hidden></td>";
                 
 				if(val['federacao'] != null){
                     tbl += "<td class='wide' data-label='Federação'>  <span class='nomePais' id='fed"+val['id']+"'>"+val['federacao']+"</span>";
@@ -255,10 +279,10 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                 tbl += "</select>";
 				tbl += "</td>";
 				
-				if(val['idSede'] != 0){
+				if(val['idSede'] != 0 && !isAgrupada){
                     tbl += "<td class='wide' data-label='Sede'><img src='/images/bandeiras/"+val['bandeiraSede']+"' class='bandeira nomePais' id='ban"+val['id']+"'>  <span class='nomePais' id='pai"+val['id']+"'>"+val['siglaSede']+"</span>";
                 } else {
-                    tbl += "<td data-label='Sede'><span class='nomePais' id='pai"+val['id']+"'>Sem sede fixa</span>";
+                    tbl += "<td data-label='Sede'><span class='nomePais' id='pai"+val['id']+"'>" + (isAgrupada ? "-" : "Sem sede fixa") + "</span>";
                 }
                 tbl += "<select class='comboPais editavel' id='"+val['idSede']+"' hidden>'  ";
 						tbl += "<option value='0'>Sem sede fixa</option>";
@@ -272,14 +296,21 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                 let optionsString = "<td class='wide' data-label='Opções'>";
 
                 if(logged == "true"){
-                    if(admin == "true" || user_id == val['dono'] || user_id == val['idDonoPais']){
-                        optionsString += "<a id='edi"+val['id']+"' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
-                        let numSimulados = parseInt(val['jogos_simulados'] || 0);
-                        if (numSimulados === 0) {
-                            optionsString += "<a id='del"+val['id']+"' title='Excluir Competição' class='clickable deletar'><span class='material-symbols-outlined inlineButton negative'>delete</span></a>";
+                    if (isAgrupada) {
+                        if(admin == "true" || user_id == val['dono']){
+                            optionsString += "<a href='"+compLink+"' title='Abrir Dashboard Agregado' class='clickable' style='margin-right:6px;'><span class='material-symbols-outlined inlineButton' style='color:#0284c7;'>open_in_new</span></a>";
+                            optionsString += "<a id='delAgr"+val['id']+"' data-id-agrupada='"+val['id']+"' title='Remover Visão Agregada' class='clickable deletar-agrupada'><span class='material-symbols-outlined inlineButton negative'>delete</span></a>";
                         }
-                        optionsString += "<a hidden id='sal"+val['id']+"' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
-                        optionsString += "<a hidden id='can"+val['id']+"' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
+                    } else {
+                        if(admin == "true" || user_id == val['dono'] || user_id == val['idDonoPais']){
+                            optionsString += "<a id='edi"+val['id']+"' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
+                            let numSimulados = parseInt(val['jogos_simulados'] || 0);
+                            if (numSimulados === 0) {
+                                optionsString += "<a id='del"+val['id']+"' title='Excluir Competição' class='clickable deletar'><span class='material-symbols-outlined inlineButton negative'>delete</span></a>";
+                            }
+                            optionsString += "<a hidden id='sal"+val['id']+"' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
+                            optionsString += "<a hidden id='can"+val['id']+"' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
+                        }
                     }
                 }
                 optionsString += "</td>";
@@ -496,7 +527,7 @@ for (var key of formData.entries()) {
 
 });
 
-$('.deletar').click(function(){
+$(document).on('click', '.deletar', function(){
     var tbl_row = $(this).closest('tr');
     var id = tbl_row.attr('id');
     var nome = tbl_row.find('#nom'+id).text().trim();
@@ -517,6 +548,29 @@ $('.deletar').click(function(){
         }).fail(function(jqXHR, textStatus, errorThrown) {
             window.scrollTo(0, 0);
             $('#errorbox').html('<div class="alert alert-danger">Erro de comunicação ao excluir competição: ' + errorThrown + '</div>');
+        });
+    }
+});
+
+$(document).on('click', '.deletar-agrupada', function(){
+    var tbl_row = $(this).closest('tr');
+    var idAgrupada = $(this).data('id-agrupada') || tbl_row.attr('id');
+    var nome = tbl_row.find('#nom'+idAgrupada).text().trim();
+
+    if (confirm('Deseja remover a visão agrupada "' + nome + '" da sua lista? (As competições originais não serão afetadas).')) {
+        $.ajax({
+            url: 'excluir_visao_agrupada.php',
+            type: 'POST',
+            dataType: 'json',
+            data: { id: idAgrupada }
+        }).done(function(data) {
+            if (!data.success) {
+                alert('Não foi possível remover: ' + (data.error || 'Erro desconhecido'));
+            } else {
+                location.reload();
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            alert('Erro de comunicação: ' + errorThrown);
         });
     }
 });
@@ -628,6 +682,10 @@ if(prop == 'pontos'){
                     <input type="text" id='caixa_pesquisa' placeholder='Pesquisar...'>
                     <span class='material-symbols-outlined'>search</span>
                 </div>
+                <a href="/competicoes/soma_tabelas.php" class="btn-action-primary" id="btn-soma-tabelas" style="background: #0284c7;" title="Somar tabelas e estatísticas de duas competições (Modo Apertura & Clausura)">
+                    <span class="material-symbols-outlined">calculate</span>
+                    <span>Soma de Tabelas</span>
+                </a>
                 <?php if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true && !($_SESSION['emTestes'] ?? false)): ?>
                     <a href="/competicoes/criar_competicao.php" class="btn-action-primary" id="btn-criar-competicao">
                         <span class="material-symbols-outlined">add_circle</span>
