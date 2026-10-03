@@ -25,6 +25,30 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         die(json_encode(['success' => false, 'error' => 'Dados inválidos ou campos obrigatórios não preenchidos.']));
     }
 
+    $validClimateMap = [
+        'Muito Frio' => ['options' => ['Neve Forte', 'Neve', 'Neve Ocasional'], 'default' => 'Neve'],
+        'Frio' => ['options' => ['Neblina', 'Chuvoso', 'Ventos Fortes'], 'default' => 'Chuvoso'],
+        'Normal' => ['options' => ['Chuvoso', 'Equilibrado', 'Ventos Fortes'], 'default' => 'Equilibrado'],
+        'Quente' => ['options' => ['Chuvoso', 'Ventos Fortes', 'Seco'], 'default' => 'Ventos Fortes'],
+        'Muito Quente' => ['options' => ['Ventos Fortes', 'Seco', 'Árido'], 'default' => 'Seco']
+    ];
+
+    function sanitizeClimateSeasonPair($temp, $estilo, $validMap) {
+        if (!isset($validMap[$temp])) {
+            $temp = 'Normal';
+        }
+        $allowed = $validMap[$temp]['options'];
+        if (!in_array($estilo, $allowed)) {
+            $estilo = $validMap[$temp]['default'];
+        }
+        return [$temp, $estilo];
+    }
+
+    list($tempVerao, $estiloVerao) = sanitizeClimateSeasonPair($tempVerao, $estiloVerao, $validClimateMap);
+    list($tempOutono, $estiloOutono) = sanitizeClimateSeasonPair($tempOutono, $estiloOutono, $validClimateMap);
+    list($tempInverno, $estiloInverno) = sanitizeClimateSeasonPair($tempInverno, $estiloInverno, $validClimateMap);
+    list($tempPrimavera, $estiloPrimavera) = sanitizeClimateSeasonPair($tempPrimavera, $estiloPrimavera, $validClimateMap);
+
     //estabelecer conexão com banco de dados
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/clima.php");

@@ -667,21 +667,31 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 <div id="modal-estadio" class="custom-modal-backdrop" style="display: none;">
     <div class="custom-modal-card">
         <div class="custom-modal-header">
-            <h3><span class="material-symbols-outlined">stadium</span> Novo Estádio</h3>
-            <button type="button" class="custom-modal-close" id="btn-fechar-modal-estadio">&times;</button>
+            <div class="custom-modal-title-group">
+                <div class="modal-header-icon">
+                    <span class="material-symbols-outlined">stadium</span>
+                </div>
+                <div>
+                    <h3>Novo Estádio</h3>
+                    <p class="modal-subtitle">Cadastre um estádio personalizado para o clube</p>
+                </div>
+            </div>
+            <button type="button" class="custom-modal-close" id="btn-fechar-modal-estadio" title="Fechar">&times;</button>
         </div>
         <div class="custom-modal-body">
             <div id="modal-estadio-feedback"></div>
             
-            <label for="modal-estadio-nome">Nome do Estádio *</label>
-            <input type="text" id="modal-estadio-nome" class="form-control" placeholder="Ex: Estádio Monumental" required />
+            <div class="modal-form-group">
+                <label for="modal-estadio-nome">Nome do Estádio *</label>
+                <input type="text" id="modal-estadio-nome" class="form-control" placeholder="Ex: Arena Alviazul, Monumental..." required />
+            </div>
 
             <div class="modal-form-grid">
-                <div>
+                <div class="modal-form-group">
                     <label for="modal-estadio-capacidade">Capacidade *</label>
                     <input type="number" id="modal-estadio-capacidade" class="form-control" placeholder="Ex: 50000" min="500" step="100" value="30000" required />
                 </div>
-                <div>
+                <div class="modal-form-group">
                     <label for="modal-estadio-pais">País *</label>
                     <select id="modal-estadio-pais" class="form-control" required>
                         <option value="">Selecione o país...</option>
@@ -695,25 +705,38 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
                 </div>
             </div>
 
-            <label for="modal-estadio-clima">Clima *</label>
-            <select id="modal-estadio-clima" class="form-control" required>
-                <option value="">Selecione o clima...</option>
-                <?php
-                $stmtClimaModal = $clima->read($_SESSION['user_id']);
-                while ($rowClima = $stmtClimaModal->fetch(PDO::FETCH_ASSOC)){
-                    echo "<option value='{$rowClima['ID']}'>{$rowClima['Nome']}</option>";
-                }
-                ?>
-            </select>
+            <div class="modal-form-group">
+                <div class="field-label-row modal-field-label-row">
+                    <label for="modal-estadio-clima">Clima *</label>
+                    <button type="button" class="btn-action-inline" id="btn-abrir-modal-clima">
+                        <span class="material-symbols-outlined" style="font-size: 15px;">add_circle</span> Novo Clima
+                    </button>
+                </div>
+                <select id="modal-estadio-clima" class="form-control" required>
+                    <option value="">Selecione o clima...</option>
+                    <?php
+                    $stmtClimaModal = $clima->read($_SESSION['user_id']);
+                    while ($rowClima = $stmtClimaModal->fetch(PDO::FETCH_ASSOC)){
+                        echo "<option value='{$rowClima['ID']}'>{$rowClima['Nome']}</option>";
+                    }
+                    ?>
+                </select>
+            </div>
 
-            <div class="modal-checkbox-row">
-                <label class="custom-checkbox-label">
+            <div class="modal-checkbox-cards">
+                <label class="modal-toggle-card">
                     <input type="checkbox" id="modal-estadio-altitude" value="1">
-                    <span>Possui Altitude</span>
+                    <div class="toggle-card-info">
+                        <span class="toggle-card-title"><span class="material-symbols-outlined">landscape</span> Altitude Elevada</span>
+                        <span class="toggle-card-desc">Impacta o fôlego e o ritmo do jogo</span>
+                    </div>
                 </label>
-                <label class="custom-checkbox-label">
+                <label class="modal-toggle-card">
                     <input type="checkbox" id="modal-estadio-caldeirao" value="1">
-                    <span>Estádio Caldeirão</span>
+                    <div class="toggle-card-info">
+                        <span class="toggle-card-title"><span class="material-symbols-outlined">local_fire_department</span> Estádio Caldeirão</span>
+                        <span class="toggle-card-desc">Pressão e força do fator local</span>
+                    </div>
                 </label>
             </div>
         </div>
@@ -721,6 +744,187 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
             <button type="button" class="btn-modal-secondary" id="btn-cancelar-modal-estadio">Cancelar</button>
             <button type="button" class="btn-modal-primary" id="btn-salvar-modal-estadio">
                 <span class="material-symbols-outlined">save</span> Salvar Estádio
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Criar Clima -->
+<div id="modal-clima" class="custom-modal-backdrop" style="display: none;">
+    <div class="custom-modal-card custom-modal-card-large">
+        <div class="custom-modal-header">
+            <div class="custom-modal-title-group">
+                <div class="modal-header-icon modal-header-icon-orange">
+                    <span class="material-symbols-outlined">partly_cloudy_day</span>
+                </div>
+                <div>
+                    <h3>Novo Clima</h3>
+                    <p class="modal-subtitle">Defina o comportamento das 4 estações do ano</p>
+                </div>
+            </div>
+            <button type="button" class="custom-modal-close" id="btn-fechar-modal-clima" title="Fechar">&times;</button>
+        </div>
+        <div class="custom-modal-body">
+            <div id="modal-clima-feedback"></div>
+
+            <div class="modal-form-grid">
+                <div class="modal-form-group">
+                    <label for="modal-clima-nome">Nome do Clima *</label>
+                    <input type="text" id="modal-clima-nome" class="form-control" placeholder="Ex: Tropical Úmido, Continental..." required />
+                </div>
+                <div class="modal-form-group">
+                    <label for="modal-clima-pais">País *</label>
+                    <select id="modal-clima-pais" class="form-control" required>
+                        <option value="">Selecione o país...</option>
+                        <?php
+                        $stmtPaisesModalClima = $pais->read($_SESSION['user_id']);
+                        while ($rowPais = $stmtPaisesModalClima->fetch(PDO::FETCH_ASSOC)){
+                            echo "<option value='{$rowPais['id']}'>{$rowPais['nome']}</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-form-group">
+                <label for="modal-clima-hemisferio">Hemisfério</label>
+                <select id="modal-clima-hemisferio" class="form-control" required>
+                    <option value="Sul" selected>Hemisfério Sul</option>
+                    <option value="Norte">Hemisfério Norte</option>
+                </select>
+            </div>
+
+            <!-- Estações do Ano -->
+            <div class="modal-seasons-grid">
+                <!-- Verão -->
+                <div class="modal-season-card">
+                    <div class="modal-season-title"><span class="material-symbols-outlined season-icon-summer">wb_sunny</span> Verão</div>
+                    <div class="modal-season-inputs">
+                        <div>
+                            <span class="modal-mini-label">Temperatura</span>
+                            <select id="modal-clima-tempVerao" class="form-control form-control-sm">
+                                <option value="Muito Frio">Muito Frio</option>
+                                <option value="Frio">Frio</option>
+                                <option value="Normal">Normal</option>
+                                <option value="Quente" selected>Quente</option>
+                                <option value="Muito Quente">Muito Quente</option>
+                            </select>
+                        </div>
+                        <div>
+                            <span class="modal-mini-label">Condição</span>
+                            <select id="modal-clima-estiloVerao" class="form-control form-control-sm">
+                                <option value="Neve Forte">Neve Forte</option>
+                                <option value="Neve">Neve</option>
+                                <option value="Neve Ocasional">Neve Ocasional</option>
+                                <option value="Neblina">Neblina</option>
+                                <option value="Chuvoso" selected>Chuvoso</option>
+                                <option value="Ventos Fortes">Ventos Fortes</option>
+                                <option value="Equilibrado">Equilibrado</option>
+                                <option value="Seco">Seco</option>
+                                <option value="Árido">Árido</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Outono -->
+                <div class="modal-season-card">
+                    <div class="modal-season-title"><span class="material-symbols-outlined season-icon-autumn">eco</span> Outono</div>
+                    <div class="modal-season-inputs">
+                        <div>
+                            <span class="modal-mini-label">Temperatura</span>
+                            <select id="modal-clima-tempOutono" class="form-control form-control-sm">
+                                <option value="Muito Frio">Muito Frio</option>
+                                <option value="Frio">Frio</option>
+                                <option value="Normal" selected>Normal</option>
+                                <option value="Quente">Quente</option>
+                                <option value="Muito Quente">Muito Quente</option>
+                            </select>
+                        </div>
+                        <div>
+                            <span class="modal-mini-label">Condição</span>
+                            <select id="modal-clima-estiloOutono" class="form-control form-control-sm">
+                                <option value="Neve Forte">Neve Forte</option>
+                                <option value="Neve">Neve</option>
+                                <option value="Neve Ocasional">Neve Ocasional</option>
+                                <option value="Neblina">Neblina</option>
+                                <option value="Chuvoso">Chuvoso</option>
+                                <option value="Ventos Fortes">Ventos Fortes</option>
+                                <option value="Equilibrado" selected>Equilibrado</option>
+                                <option value="Seco">Seco</option>
+                                <option value="Árido">Árido</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inverno -->
+                <div class="modal-season-card">
+                    <div class="modal-season-title"><span class="material-symbols-outlined season-icon-winter">ac_unit</span> Inverno</div>
+                    <div class="modal-season-inputs">
+                        <div>
+                            <span class="modal-mini-label">Temperatura</span>
+                            <select id="modal-clima-tempInverno" class="form-control form-control-sm">
+                                <option value="Muito Frio">Muito Frio</option>
+                                <option value="Frio" selected>Frio</option>
+                                <option value="Normal">Normal</option>
+                                <option value="Quente">Quente</option>
+                                <option value="Muito Quente">Muito Quente</option>
+                            </select>
+                        </div>
+                        <div>
+                            <span class="modal-mini-label">Condição</span>
+                            <select id="modal-clima-estiloInverno" class="form-control form-control-sm">
+                                <option value="Neve Forte">Neve Forte</option>
+                                <option value="Neve">Neve</option>
+                                <option value="Neve Ocasional">Neve Ocasional</option>
+                                <option value="Neblina">Neblina</option>
+                                <option value="Chuvoso">Chuvoso</option>
+                                <option value="Ventos Fortes">Ventos Fortes</option>
+                                <option value="Equilibrado" selected>Equilibrado</option>
+                                <option value="Seco">Seco</option>
+                                <option value="Árido">Árido</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Primavera -->
+                <div class="modal-season-card">
+                    <div class="modal-season-title"><span class="material-symbols-outlined season-icon-spring">local_florist</span> Primavera</div>
+                    <div class="modal-season-inputs">
+                        <div>
+                            <span class="modal-mini-label">Temperatura</span>
+                            <select id="modal-clima-tempPrimavera" class="form-control form-control-sm">
+                                <option value="Muito Frio">Muito Frio</option>
+                                <option value="Frio">Frio</option>
+                                <option value="Normal" selected>Normal</option>
+                                <option value="Quente">Quente</option>
+                                <option value="Muito Quente">Muito Quente</option>
+                            </select>
+                        </div>
+                        <div>
+                            <span class="modal-mini-label">Condição</span>
+                            <select id="modal-clima-estiloPrimavera" class="form-control form-control-sm">
+                                <option value="Neve Forte">Neve Forte</option>
+                                <option value="Neve">Neve</option>
+                                <option value="Neve Ocasional">Neve Ocasional</option>
+                                <option value="Neblina">Neblina</option>
+                                <option value="Chuvoso">Chuvoso</option>
+                                <option value="Ventos Fortes">Ventos Fortes</option>
+                                <option value="Equilibrado" selected>Equilibrado</option>
+                                <option value="Seco">Seco</option>
+                                <option value="Árido">Árido</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn-modal-secondary" id="btn-cancelar-modal-clima">Cancelar</button>
+            <button type="button" class="btn-modal-primary" id="btn-salvar-modal-clima">
+                <span class="material-symbols-outlined">save</span> Salvar Clima
             </button>
         </div>
     </div>
@@ -1050,6 +1254,156 @@ function updateNames(){
           error: function() {
               btn.prop('disabled', false).html('<span class="material-symbols-outlined">save</span> Salvar Estádio');
               $('#modal-estadio-feedback').html('<div class="modal-alert-error">Erro de comunicação ao criar estádio.</div>');
+          }
+      });
+  });
+
+  // Modal Novo Clima
+  var climateStylesMap = {
+      'Muito Frio': {
+          options: ['Neve Forte', 'Neve', 'Neve Ocasional'],
+          default: 'Neve'
+      },
+      'Frio': {
+          options: ['Neblina', 'Chuvoso', 'Ventos Fortes'],
+          default: 'Chuvoso'
+      },
+      'Normal': {
+          options: ['Chuvoso', 'Equilibrado', 'Ventos Fortes'],
+          default: 'Equilibrado'
+      },
+      'Quente': {
+          options: ['Chuvoso', 'Ventos Fortes', 'Seco'],
+          default: 'Ventos Fortes'
+      },
+      'Muito Quente': {
+          options: ['Ventos Fortes', 'Seco', 'Árido'],
+          default: 'Seco'
+      }
+  };
+
+  function updateClimaModalEstilos(tempSelectId, estiloSelectId) {
+      var temp = $('#' + tempSelectId).val();
+      var mapping = climateStylesMap[temp] || climateStylesMap['Normal'];
+      var estiloSelect = $('#' + estiloSelectId);
+      var currentVal = estiloSelect.val();
+      
+      estiloSelect.empty();
+      mapping.options.forEach(function(opt) {
+          estiloSelect.append($('<option>', { value: opt, text: opt }));
+      });
+      
+      if (mapping.options.indexOf(currentVal) !== -1) {
+          estiloSelect.val(currentVal);
+      } else {
+          estiloSelect.val(mapping.default);
+      }
+  }
+
+  $('#modal-clima-tempVerao').on('change', function() { updateClimaModalEstilos('modal-clima-tempVerao', 'modal-clima-estiloVerao'); });
+  $('#modal-clima-tempOutono').on('change', function() { updateClimaModalEstilos('modal-clima-tempOutono', 'modal-clima-estiloOutono'); });
+  $('#modal-clima-tempInverno').on('change', function() { updateClimaModalEstilos('modal-clima-tempInverno', 'modal-clima-estiloInverno'); });
+  $('#modal-clima-tempPrimavera').on('change', function() { updateClimaModalEstilos('modal-clima-tempPrimavera', 'modal-clima-estiloPrimavera'); });
+
+  $('#btn-abrir-modal-clima').on('click', function() {
+      $('#modal-clima-feedback').empty();
+      var paisEstadio = $('#modal-estadio-pais').val() || $('#pais').val();
+      if (paisEstadio && paisEstadio != '0') {
+          $('#modal-clima-pais').val(paisEstadio);
+      }
+      updateClimaModalEstilos('modal-clima-tempVerao', 'modal-clima-estiloVerao');
+      updateClimaModalEstilos('modal-clima-tempOutono', 'modal-clima-estiloOutono');
+      updateClimaModalEstilos('modal-clima-tempInverno', 'modal-clima-estiloInverno');
+      updateClimaModalEstilos('modal-clima-tempPrimavera', 'modal-clima-estiloPrimavera');
+      $('#modal-clima').fadeIn(200);
+      $('#modal-clima-nome').focus();
+  });
+
+  function fecharModalClima() {
+      $('#modal-clima').fadeOut(200);
+      $('#modal-clima-feedback').empty();
+  }
+
+  $('#btn-fechar-modal-clima, #btn-cancelar-modal-clima').on('click', fecharModalClima);
+
+  $('#modal-clima').on('click', function(e) {
+      if ($(e.target).is('#modal-clima')) {
+          fecharModalClima();
+      }
+  });
+
+  $('#btn-salvar-modal-clima').on('click', function() {
+      var btn = $(this);
+      var nome = $('#modal-clima-nome').val().trim();
+      var pais = $('#modal-clima-pais').val();
+      var hemisferio = $('#modal-clima-hemisferio').val();
+      var tempVerao = $('#modal-clima-tempVerao').val();
+      var estiloVerao = $('#modal-clima-estiloVerao').val();
+      var tempOutono = $('#modal-clima-tempOutono').val();
+      var estiloOutono = $('#modal-clima-estiloOutono').val();
+      var tempInverno = $('#modal-clima-tempInverno').val();
+      var estiloInverno = $('#modal-clima-estiloInverno').val();
+      var tempPrimavera = $('#modal-clima-tempPrimavera').val();
+      var estiloPrimavera = $('#modal-clima-estiloPrimavera').val();
+
+      if (!nome) {
+          $('#modal-clima-feedback').html('<div class="modal-alert-error">Preencha o nome do clima.</div>');
+          $('#modal-clima-nome').focus();
+          return;
+      }
+      if (!pais || pais == '0') {
+          $('#modal-clima-feedback').html('<div class="modal-alert-error">Selecione o país do clima.</div>');
+          $('#modal-clima-pais').focus();
+          return;
+      }
+
+      btn.prop('disabled', true).text('Salvando...');
+
+      $.ajax({
+          url: '/api/clima/criar.php',
+          type: 'POST',
+          dataType: 'json',
+          data: {
+              nome: nome,
+              pais: pais,
+              hemisferio: hemisferio,
+              tempVerao: tempVerao,
+              estiloVerao: estiloVerao,
+              tempOutono: tempOutono,
+              estiloOutono: estiloOutono,
+              tempInverno: tempInverno,
+              estiloInverno: estiloInverno,
+              tempPrimavera: tempPrimavera,
+              estiloPrimavera: estiloPrimavera
+          },
+          success: function(response) {
+              btn.prop('disabled', false).html('<span class="material-symbols-outlined">save</span> Salvar Clima');
+              if (response && response.success) {
+                  // Adiciona a nova opção ao select de climas no modal de estádio e seleciona
+                  var novaOpcaoClima = $('<option>', {
+                      value: response.id,
+                      text: response.nome
+                  });
+                  $('#modal-estadio-clima').append(novaOpcaoClima);
+                  $('#modal-estadio-clima').val(response.id);
+
+                  // Limpa inputs do modal clima
+                  $('#modal-clima-nome').val('');
+
+                  fecharModalClima();
+
+                  // Mostra aviso de sucesso no modal de estádio
+                  var alertBox = $('<div class="modal-alert-success">Clima "' + response.nome + '" criado e selecionado!</div>');
+                  $('#modal-estadio-feedback').html(alertBox);
+                  setTimeout(function() { alertBox.fadeOut(400); }, 4000);
+              } else {
+                  var erroMsg = (response && response.message) ? response.message : 'Erro ao criar o clima.';
+                  $('#modal-clima-feedback').html('<div class="modal-alert-error">' + erroMsg + '</div>');
+              }
+          },
+          error: function() {
+              btn.prop('disabled', false).html('<span class="material-symbols-outlined">save</span> Salvar Clima');
+              $('#modal-clima-feedback').html('<div class="modal-alert-error">Erro de comunicação ao criar clima.</div>');
           }
       });
   });

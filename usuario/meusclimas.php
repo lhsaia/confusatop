@@ -49,6 +49,38 @@ var user_id = '<?php echo $_SESSION['user_id'] ?? 0; ?>';
 var tempOptions = ['Muito Frio', 'Frio', 'Normal', 'Quente', 'Muito Quente'];
 var estOptions = ['Neve Forte', 'Neve', 'Neve Ocasional', 'Neblina', 'Chuvoso', 'Ventos Fortes', 'Equilibrado', 'Seco', 'Árido'];
 
+var climateStylesMap = {
+    'Muito Frio': {
+        options: ['Neve Forte', 'Neve', 'Neve Ocasional'],
+        default: 'Neve'
+    },
+    'Frio': {
+        options: ['Neblina', 'Chuvoso', 'Ventos Fortes'],
+        default: 'Chuvoso'
+    },
+    'Normal': {
+        options: ['Chuvoso', 'Equilibrado', 'Ventos Fortes'],
+        default: 'Equilibrado'
+    },
+    'Quente': {
+        options: ['Chuvoso', 'Ventos Fortes', 'Seco'],
+        default: 'Ventos Fortes'
+    },
+    'Muito Quente': {
+        options: ['Ventos Fortes', 'Seco', 'Árido'],
+        default: 'Seco'
+    }
+};
+
+function buildEstiloOptions(temp, selectedValue){
+    var mapping = climateStylesMap[temp] || climateStylesMap['Normal'];
+    var html = '';
+    mapping.options.forEach(function(item){
+        html += "<option value='" + item + "' " + (selectedValue === item ? 'selected' : '') + ">" + item + "</option>";
+    });
+    return html;
+}
+
 $(document).ready(function($){
 
     function delay(fn, ms){
@@ -149,28 +181,28 @@ $(document).ready(function($){
                     tbl += "<select class='comboTempVer editavel' id='seltempver" + val['ID'] + "' hidden>" + buildOptions(tempOptions, val['TempVerao']) + "</select></td>";
 
                     tbl += "<td><span class='nomeEstVer'>" + val['EstiloVerao'] + "</span>";
-                    tbl += "<select class='comboEstVer editavel' id='selestver" + val['ID'] + "' hidden>" + buildOptions(estOptions, val['EstiloVerao']) + "</select></td>";
+                    tbl += "<select class='comboEstVer editavel' id='selestver" + val['ID'] + "' hidden>" + buildEstiloOptions(val['TempVerao'], val['EstiloVerao']) + "</select></td>";
 
                     // Outono
                     tbl += "<td><span class='nomeTempOut'>" + val['TempOutono'] + "</span>";
                     tbl += "<select class='comboTempOut editavel' id='seltempout" + val['ID'] + "' hidden>" + buildOptions(tempOptions, val['TempOutono']) + "</select></td>";
 
                     tbl += "<td><span class='nomeEstOut'>" + val['EstiloOutono'] + "</span>";
-                    tbl += "<select class='comboEstOut editavel' id='selestout" + val['ID'] + "' hidden>" + buildOptions(estOptions, val['EstiloOutono']) + "</select></td>";
+                    tbl += "<select class='comboEstOut editavel' id='selestout" + val['ID'] + "' hidden>" + buildEstiloOptions(val['TempOutono'], val['EstiloOutono']) + "</select></td>";
 
                     // Inverno
                     tbl += "<td><span class='nomeTempInv'>" + val['TempInverno'] + "</span>";
                     tbl += "<select class='comboTempInv editavel' id='seltempinv" + val['ID'] + "' hidden>" + buildOptions(tempOptions, val['TempInverno']) + "</select></td>";
 
                     tbl += "<td><span class='nomeEstInv'>" + val['EstiloInverno'] + "</span>";
-                    tbl += "<select class='comboEstInv editavel' id='selestinv" + val['ID'] + "' hidden>" + buildOptions(estOptions, val['EstiloInverno']) + "</select></td>";
+                    tbl += "<select class='comboEstInv editavel' id='selestinv" + val['ID'] + "' hidden>" + buildEstiloOptions(val['TempInverno'], val['EstiloInverno']) + "</select></td>";
 
                     // Primavera
                     tbl += "<td><span class='nomeTempPri'>" + val['TempPrimavera'] + "</span>";
                     tbl += "<select class='comboTempPri editavel' id='seltemppri" + val['ID'] + "' hidden>" + buildOptions(tempOptions, val['TempPrimavera']) + "</select></td>";
 
                     tbl += "<td><span class='nomeEstPri'>" + val['EstiloPrimavera'] + "</span>";
-                    tbl += "<select class='comboEstPri editavel' id='selestpri" + val['ID'] + "' hidden>" + buildOptions(estOptions, val['EstiloPrimavera']) + "</select></td>";
+                    tbl += "<select class='comboEstPri editavel' id='selestpri" + val['ID'] + "' hidden>" + buildEstiloOptions(val['TempPrimavera'], val['EstiloPrimavera']) + "</select></td>";
 
                     // Hemisfério
                     var hemisferioTexto = (val['Hemisferio'] === 1 || val['Hemisferio'] === '1' || val['Hemisferio'] === 'Sul') ? 'Sul' : 'Norte';
@@ -245,6 +277,48 @@ $(document).ready(function($){
             tbl_row.find('span:not(.nomeEditavel)').hide();
             tbl_row.find('.bandeira').hide();
             tbl_row.find('select').show();
+
+            // Sincronização dinâmica de estilos ao mudar temperatura
+            tbl_row.find('.comboTempVer').off('change').on('change', function(){
+                var row = $(this).closest('tr');
+                var id = row.attr('id');
+                var temp = $(this).val();
+                var estiloSelect = row.find('#selestver' + id);
+                var currentVal = estiloSelect.val();
+                var mapping = climateStylesMap[temp] || climateStylesMap['Normal'];
+                estiloSelect.html(buildEstiloOptions(temp, mapping.options.indexOf(currentVal) !== -1 ? currentVal : mapping.default));
+            });
+
+            tbl_row.find('.comboTempOut').off('change').on('change', function(){
+                var row = $(this).closest('tr');
+                var id = row.attr('id');
+                var temp = $(this).val();
+                var estiloSelect = row.find('#selestout' + id);
+                var currentVal = estiloSelect.val();
+                var mapping = climateStylesMap[temp] || climateStylesMap['Normal'];
+                estiloSelect.html(buildEstiloOptions(temp, mapping.options.indexOf(currentVal) !== -1 ? currentVal : mapping.default));
+            });
+
+            tbl_row.find('.comboTempInv').off('change').on('change', function(){
+                var row = $(this).closest('tr');
+                var id = row.attr('id');
+                var temp = $(this).val();
+                var estiloSelect = row.find('#selestinv' + id);
+                var currentVal = estiloSelect.val();
+                var mapping = climateStylesMap[temp] || climateStylesMap['Normal'];
+                estiloSelect.html(buildEstiloOptions(temp, mapping.options.indexOf(currentVal) !== -1 ? currentVal : mapping.default));
+            });
+
+            tbl_row.find('.comboTempPri').off('change').on('change', function(){
+                var row = $(this).closest('tr');
+                var id = row.attr('id');
+                var temp = $(this).val();
+                var estiloSelect = row.find('#selestpri' + id);
+                var currentVal = estiloSelect.val();
+                var mapping = climateStylesMap[temp] || climateStylesMap['Normal'];
+                estiloSelect.html(buildEstiloOptions(temp, mapping.options.indexOf(currentVal) !== -1 ? currentVal : mapping.default));
+            });
+
             updateBatchFloatingBar();
         });
 

@@ -249,21 +249,48 @@ $(document).ready(function(){
         div.fadeOut(300, function(){ $(this).remove(); });
     });
 
+    var climateStylesMap = {
+        'Muito Frio': {
+            options: ['Neve Forte', 'Neve', 'Neve Ocasional'],
+            default: 'Neve'
+        },
+        'Frio': {
+            options: ['Neblina', 'Chuvoso', 'Ventos Fortes'],
+            default: 'Chuvoso'
+        },
+        'Normal': {
+            options: ['Chuvoso', 'Equilibrado', 'Ventos Fortes'],
+            default: 'Equilibrado'
+        },
+        'Quente': {
+            options: ['Chuvoso', 'Ventos Fortes', 'Seco'],
+            default: 'Ventos Fortes'
+        },
+        'Muito Quente': {
+            options: ['Ventos Fortes', 'Seco', 'Árido'],
+            default: 'Seco'
+        }
+    };
+
     function updateEstilos(selectTemp){
         var temp = $(selectTemp).val();
         var targetEstiloId = $(selectTemp).data('estilo');
         var estiloSelect = $('#' + targetEstiloId);
+        var mapping = climateStylesMap[temp] || climateStylesMap['Normal'];
+        var currentVal = estiloSelect.val();
 
-        if(temp === 'Muito Quente' || temp === 'Quente'){
-            estiloSelect.find("option[value*='Neve']").hide();
-            if(estiloSelect.val() && estiloSelect.val().indexOf('Neve') !== -1){
-                estiloSelect.val('Equilibrado');
-            }
-        } else if(temp === 'Muito Frio'){
-            estiloSelect.find("option[value='Árido']").hide();
-            estiloSelect.find("option[value*='Neve']").show();
+        estiloSelect.empty();
+        mapping.options.forEach(function(opt){
+            estiloSelect.append($('<option>', {
+                value: opt,
+                text: opt
+            }));
+        });
+
+        if (mapping.options.indexOf(currentVal) !== -1) {
+            estiloSelect.val(currentVal);
         } else {
-            estiloSelect.find("option").show();
+            estiloSelect.val(mapping.default);
         }
     }
 

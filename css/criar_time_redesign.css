@@ -242,37 +242,63 @@ label.custom-file-upload:hover {
 
 /* Field Header Flex (ex: Estádio com botão Novo) */
 .field-label-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 16px;
-  margin-bottom: 4px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-top: 16px !important;
+  margin-bottom: 4px !important;
+  width: 100% !important;
 }
 
 .field-label-row label {
   margin: 0 !important;
 }
 
+/* High specificity inline action buttons (Novo Estádio / Novo Clima) */
+html body button.btn-action-inline,
+html body #inscricao button.btn-action-inline,
+html body .custom-modal-card button.btn-action-inline,
 .btn-action-inline {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(2, 132, 199, 0.08);
-  border: 1px solid rgba(2, 132, 199, 0.25);
-  color: #0284c7;
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.82rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  width: auto !important;
+  max-width: fit-content !important;
+  min-width: 0 !important;
+  flex: 0 0 auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  background: rgba(2, 132, 199, 0.08) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  color: #0284c7 !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  padding: 4px 10px !important;
+  margin: 0 !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  line-height: 1.2 !important;
+  box-shadow: none !important;
+  transition: all 0.2s ease !important;
 }
 
+html body button.btn-action-inline:hover,
+html body #inscricao button.btn-action-inline:hover,
+html body .custom-modal-card button.btn-action-inline:hover,
 .btn-action-inline:hover {
-  background: #0284c7;
-  color: #ffffff;
-  border-color: #0284c7;
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+  opacity: 1 !important;
+}
+
+html body button.btn-action-inline .material-symbols-outlined,
+.btn-action-inline .material-symbols-outlined {
+  font-size: 15px !important;
+  color: inherit !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
 }
 
 /* Multi-selects manual naming lists */
@@ -468,39 +494,54 @@ select[multiple] {
   font-family: 'Material Symbols Outlined' !important;
 }
 
-/* Modal Novo Estádio Styling */
+/* ==========================================================================
+   Modais Modernos (Novo Estádio & Novo Clima)
+   ========================================================================== */
+
 .custom-modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(15, 23, 42, 0.65);
+  background: rgba(15, 23, 42, 0.7) !important;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  z-index: 99999;
+  z-index: 99998;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 1.25rem;
   box-sizing: border-box;
 }
 
-.custom-modal-card {
-  background: #ffffff;
-  border-radius: 18px;
-  width: 100%;
-  max-width: 520px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  animation: modalFadeIn 0.25s ease-out;
+#modal-clima.custom-modal-backdrop {
+  z-index: 100000 !important;
+  background: rgba(15, 23, 42, 0.75) !important;
 }
 
-@keyframes modalFadeIn {
+.custom-modal-card {
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  width: 100% !important;
+  max-width: 540px !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  overflow: hidden;
+  animation: modalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.custom-modal-card-large {
+  max-width: 620px !important;
+}
+
+@keyframes modalScaleIn {
   from {
     opacity: 0;
-    transform: translateY(-15px) scale(0.97);
+    transform: translateY(12px) scale(0.96);
   }
   to {
     opacity: 1;
@@ -509,64 +550,119 @@ select[multiple] {
 }
 
 .custom-modal-header {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 1.25rem 1.75rem !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
+}
+
+.custom-modal-title-group {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: #f8fafc;
+  gap: 12px;
+}
+
+.modal-header-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(2, 132, 199, 0.1);
+  color: #0284c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal-header-icon .material-symbols-outlined {
+  font-size: 22px !important;
+  color: #0284c7 !important;
+}
+
+.modal-header-icon-orange {
+  background: rgba(245, 158, 11, 0.12) !important;
+  color: #d97706 !important;
+}
+
+.modal-header-icon-orange .material-symbols-outlined {
+  color: #d97706 !important;
 }
 
 .custom-modal-header h3 {
-  margin: 0;
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #1e293b;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  margin: 0 !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.2 !important;
 }
 
-.custom-modal-header h3 .material-symbols-outlined {
-  color: #0284c7;
+.modal-subtitle {
+  margin: 2px 0 0 0 !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.8rem !important;
+  color: #64748b !important;
+  font-weight: 400 !important;
 }
 
 .custom-modal-close {
-  background: transparent;
-  border: none;
-  font-size: 1.6rem;
-  line-height: 1;
-  color: #64748b;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.2s ease;
+  background: transparent !important;
+  border: none !important;
+  font-size: 1.6rem !important;
+  line-height: 1 !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  padding: 4px 8px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .custom-modal-close:hover {
-  color: #0f172a;
+  background: rgba(0, 0, 0, 0.05) !important;
+  color: #0f172a !important;
 }
 
 .custom-modal-body {
-  padding: 1.5rem;
-  max-height: 70vh;
-  overflow-y: auto;
+  padding: 1.5rem 1.75rem !important;
+  overflow-y: auto !important;
+  flex: 1;
 }
 
-.custom-modal-body label {
+.modal-form-group {
+  margin-bottom: 14px;
+}
+
+.modal-form-group:last-child {
+  margin-bottom: 0;
+}
+
+.custom-modal-body label:not(.modal-toggle-card) {
   font-family: 'Outfit', sans-serif !important;
-  font-size: 0.8rem !important;
-  font-weight: 600 !important;
-  color: #475569 !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
   display: block !important;
-  margin-top: 12px !important;
-  margin-bottom: 4px !important;
+  margin-top: 0 !important;
+  margin-bottom: 6px !important;
   text-transform: uppercase !important;
   letter-spacing: 0.5px !important;
 }
 
-.custom-modal-body label:first-of-type {
+.modal-field-label-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
   margin-top: 0 !important;
+  margin-bottom: 6px !important;
+}
+
+.modal-field-label-row label {
+  margin-bottom: 0 !important;
 }
 
 .custom-modal-body input[type='text'],
@@ -574,15 +670,20 @@ select[multiple] {
 .custom-modal-body select {
   width: 100% !important;
   background: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.15) !important;
-  border-radius: 8px !important;
-  padding: 9px 12px !important;
-  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  color: #1e293b !important;
   font-family: 'Montserrat', sans-serif !important;
   font-size: 0.92rem !important;
   outline: none !important;
-  transition: all 0.25s ease !important;
+  transition: all 0.2s ease !important;
   box-sizing: border-box !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+}
+
+.custom-modal-body input::placeholder {
+  color: #94a3b8 !important;
 }
 
 .custom-modal-body input:focus,
@@ -594,104 +695,256 @@ select[multiple] {
 .modal-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 14px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .modal-form-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+/* Checkbox Toggle Cards */
+.modal-checkbox-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+@media (max-width: 520px) {
+  .modal-checkbox-cards {
     grid-template-columns: 1fr;
   }
 }
 
-.modal-checkbox-row {
-  display: flex;
-  gap: 20px;
-  margin-top: 16px;
-  flex-wrap: wrap;
-}
-
-.custom-checkbox-label {
+.modal-toggle-card {
   display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
   cursor: pointer !important;
-  font-family: 'Montserrat', sans-serif !important;
-  font-size: 0.88rem !important;
-  font-weight: 500 !important;
-  color: #334155 !important;
+  transition: all 0.2s ease !important;
+  margin: 0 !important;
   text-transform: none !important;
   letter-spacing: normal !important;
-  margin: 0 !important;
 }
 
-.custom-checkbox-label input[type="checkbox"] {
+.modal-toggle-card:hover {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.modal-toggle-card input[type="checkbox"] {
   width: 18px !important;
   height: 18px !important;
   accent-color: #0284c7 !important;
   cursor: pointer !important;
-  margin: 0 !important;
+  margin: 2px 0 0 0 !important;
+  flex-shrink: 0;
 }
 
-.custom-modal-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+.toggle-card-info {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  background: #f8fafc;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.btn-modal-secondary {
-  background: #e2e8f0;
-  color: #475569;
-  border: none;
-  padding: 9px 16px;
-  border-radius: 8px;
+.toggle-card-title {
   font-family: 'Outfit', sans-serif;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-modal-secondary:hover {
-  background: #cbd5e1;
+  font-weight: 700;
+  font-size: 0.88rem;
   color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
-.btn-modal-primary {
-  background: linear-gradient(135deg, #0284c7, #0369a1);
-  color: #ffffff;
-  border: none;
-  padding: 9px 18px;
-  border-radius: 8px;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  display: inline-flex;
+.toggle-card-title .material-symbols-outlined {
+  font-size: 16px !important;
+  color: #0284c7 !important;
+}
+
+.toggle-card-desc {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+/* Seasons Grid inside Clima Modal */
+.modal-seasons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+@media (max-width: 540px) {
+  .modal-seasons-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modal-season-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.modal-season-title {
+  display: flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #1e293b;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
+.season-icon-summer {
+  color: #f59e0b !important;
+}
+
+.season-icon-autumn {
+  color: #d97706 !important;
+}
+
+.season-icon-winter {
+  color: #0284c7 !important;
+}
+
+.season-icon-spring {
+  color: #10b981 !important;
+}
+
+.modal-season-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.modal-mini-label {
+  display: block;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  letter-spacing: 0.3px;
+}
+
+.custom-modal-body .form-control-sm {
+  padding: 7px 10px !important;
+  font-size: 0.82rem !important;
+  border-radius: 8px !important;
+}
+
+/* Modal Footer */
+.custom-modal-footer {
+  padding: 1.15rem 1.75rem !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.07) !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+  background: #f8fafc !important;
+}
+
+html body button.btn-modal-secondary,
+.btn-modal-secondary {
+  width: auto !important;
+  margin: 0 !important;
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 10px 18px !important;
+  border-radius: 10px !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.92rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+html body button.btn-modal-secondary:hover,
+.btn-modal-secondary:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html body button.btn-modal-primary,
+.btn-modal-primary {
+  width: auto !important;
+  margin: 0 !important;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  padding: 10px 22px !important;
+  border-radius: 10px !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 0.92rem !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;
+}
+
+html body button.btn-modal-primary:hover,
 .btn-modal-primary:hover {
-  background: linear-gradient(135deg, #0369a1, #075985);
-  box-shadow: 0 6px 14px rgba(2, 132, 199, 0.35);
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.45) !important;
+  transform: translateY(-1px);
 }
 
 .btn-modal-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
 }
 
-.modal-alert-error {
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 0.88rem;
-  margin-bottom: 12px;
+.btn-modal-primary .material-symbols-outlined {
+  color: #ffffff !important;
+  font-size: 18px !important;
 }
+
+/* Modal Alerts */
+.modal-alert-error {
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fecaca !important;
+  padding: 10px 14px !important;
+  border-radius: 10px !important;
+  font-size: 0.88rem !important;
+  font-family: 'Montserrat', sans-serif !important;
+  margin-bottom: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.modal-alert-success {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+  padding: 10px 14px !important;
+  border-radius: 10px !important;
+  font-size: 0.88rem !important;
+  font-family: 'Montserrat', sans-serif !important;
+  margin-bottom: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
