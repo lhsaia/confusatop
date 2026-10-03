@@ -255,6 +255,18 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
             <span style="display: inline-block; margin-top: 16px; color: #06b6d4; font-weight: 600; font-size: 14px;">Testar envio de e-mails &rarr;</span>
         </a>
 
+        <!-- Card 11: Gestão de Origens e Demografia -->
+        <a href="/admin/origens.php" class="admin-card" style="border-top: 3px solid #38bdf8 !important;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <span class="material-symbols-outlined" style="font-size: 32px; color: #38bdf8;">public</span>
+                <h2>Origens & Demografia</h2>
+            </div>
+            <p>
+                Gerencie culturas, adicione e edite nomes próprios e sobrenomes, importe termos em lote e sincronize o catálogo de demografias.
+            </p>
+            <span style="display: inline-block; margin-top: 16px; color: #38bdf8; font-weight: 600; font-size: 14px;">Gerenciar origens &rarr;</span>
+        </a>
+
     </div>
     
     <div style="margin-top: 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">

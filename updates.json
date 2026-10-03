@@ -9,6 +9,17 @@
   },
   "days": [
     {
+      "id": "day_03_10_2026",
+      "date": "03/10/2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Painel de Gestão de Origens & Demografia para Administradores",
+          "desc": "Implementado módulo completo no painel administrativo para gerenciar o catálogo de origens culturais, cadastrar novas culturas, adicionar e editar primeiros nomes e sobrenomes com flags de gênero (M/F), importar listas em lote com higienização de marcadores e opção de detecção automática de gênero por sufixos eslavos/russos (ov/ova, ev/eva, in/ina, sky/skaya)."
+        }
+      ]
+    },
+    {
       "id": "day_02_10_2026",
       "date": "02/10/2026",
       "items": [
