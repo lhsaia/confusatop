@@ -96,6 +96,22 @@ $jogador = new Jogador($db);
             </div>
         </a>
 
+        <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
+        <!-- Minhas Transferências -->
+        <a href='transferencias.php?type=usuario' class='hub-card'>
+            <div class="hub-card-hero-image">
+                <img src="/images/mercado/minhastransferencias.webp" alt="Minhas Transferências" />
+            </div>
+            <div class="hub-card-body">
+                <h3 class="hub-card-title">
+                    <span>Minhas Transferências</span>
+                    <span class="material-symbols-outlined hub-card-arrow">arrow_forward</span>
+                </h3>
+                <p class="hub-card-desc">Histórico completo de negociações e balanço financeiro dos seus clubes e atletas.</p>
+            </div>
+        </a>
+        <?php endif; ?>
+
         <!-- Janelas de Transferência -->
         <a href='transferencias.php?type=janelas' class='hub-card'>
             <div class="hub-card-hero-image">

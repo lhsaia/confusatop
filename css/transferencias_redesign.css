@@ -941,3 +941,102 @@
   white-space: nowrap !important;
 }
 
+/* KPI Cards de Consolidação Financeira (Transferências do Usuário) */
+.fin-kpi-grid {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.fin-kpi-card {
+  flex: 1 1 200px;
+  min-width: 180px;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.fin-kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.fin-kpi-card .kpi-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fin-kpi-card .kpi-label .material-symbols-outlined {
+  font-size: 1.1rem;
+}
+
+.fin-kpi-card .kpi-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.fin-kpi-card.receitas { border-left: 4px solid #059669; }
+.fin-kpi-card.receitas .kpi-label, .fin-kpi-card.receitas .kpi-value { color: #059669; }
+
+.fin-kpi-card.gastos { border-left: 4px solid #dc2626; }
+.fin-kpi-card.gastos .kpi-label, .fin-kpi-card.gastos .kpi-value { color: #dc2626; }
+
+.fin-kpi-card.balanco { border-left: 4px solid #0284c7; }
+.fin-kpi-card.balanco .kpi-label { color: #0284c7; }
+.fin-kpi-card.balanco.positivo .kpi-value { color: #059669; }
+.fin-kpi-card.balanco.negativo .kpi-value { color: #dc2626; }
+
+/* Tags de Tipo de Transferência do Usuário */
+.tag-transf {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tag-venda {
+  background-color: rgba(5, 150, 105, 0.12);
+  color: #059669;
+  border: 1px solid rgba(5, 150, 105, 0.3);
+}
+
+.tag-compra {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.tag-interna {
+  background-color: rgba(2, 132, 199, 0.1);
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.3);
+}
+
+.tag-exterior {
+  background-color: rgba(147, 51, 234, 0.1);
+  color: #7e22ce;
+  border: 1px solid rgba(147, 51, 234, 0.3);
+}
+
+

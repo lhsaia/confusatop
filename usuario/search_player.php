@@ -1,4 +1,9 @@
 <?php  
+	if (!ob_start("ob_gzhandler")) {
+		ob_start();
+	}
+	header('Content-Type: application/json; charset=utf-8');
+
 	require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 	
 	if(isset($_SESSION['user_id']) && $_SESSION['user_id'] <> 0){

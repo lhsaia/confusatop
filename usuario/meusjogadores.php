@@ -31,7 +31,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	$pais = new Pais($db);
 	
 	// query caixa de seleção países desse dono
-	$stmtPais = $pais->read();
+	$stmtPais = $pais->read($_SESSION['user_id'] ?? 0);
 	$listaPaises = array();
 	while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
 		extract($row_pais);
@@ -69,11 +69,14 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
 <script>
 
+var rawPlayerData = [];
 var localData = [];
 var asc = true;
 var activeSort = '';
 var activeDirection = true;
 var currentPage = 1;
+var selectedGender = 'all';
+var selectedCountry = 'all';
 
 var listaPaises =  <?php echo json_encode($listaPaises); ?>;
 
@@ -138,24 +141,117 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 		}
 	}
 
-	//on keyup, start the countdown
-	$('#caixa_pesquisa').keyup(delay(function(e){
-		load_data();
-	}, 400));
+	function sortLocalData(column, isAsc) {
+		localData.sort(function(a, b){
+			var valA = a[column];
+			var valB = b[column];
+
+			if(column === 'Nivel' || column === 'valor' || column === 'valorAtualizado' || column === 'disponibilidade' || column === 'Idade'){
+				valA = Number(valA) || 0;
+				valB = Number(valB) || 0;
+				return isAsc ? (valA - valB) : (valB - valA);
+			} else if(column === 'Nascimento'){
+				valA = valA || '';
+				valB = valB || '';
+				return isAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+			} else if(column === 'StringPosicoes'){
+				var posA = createPositionString(valA || '');
+				var posB = createPositionString(valB || '');
+				return isAsc ? posA.localeCompare(posB, 'pt-BR', { sensitivity: 'base' }) : posB.localeCompare(posA, 'pt-BR', { sensitivity: 'base' });
+			} else {
+				valA = (valA !== null && valA !== undefined) ? valA.toString().trim() : '';
+				valB = (valB !== null && valB !== undefined) ? valB.toString().trim() : '';
+				return isAsc ? valA.localeCompare(valB, 'pt-BR', { sensitivity: 'base', numeric: true }) : valB.localeCompare(valA, 'pt-BR', { sensitivity: 'base', numeric: true });
+			}
+		});
+	}
+
+	function applyFilters(resetPage){
+		if (resetPage === true) {
+			currentPage = 1;
+		}
+		var searchText = ($('#caixa_pesquisa').val() || '').trim().toLowerCase();
+		
+		localData = rawPlayerData.filter(function(item){
+			// Filtro de gênero
+			if (selectedGender !== 'all') {
+				if (String(item.sexo) !== String(selectedGender)) {
+					return false;
+				}
+			}
+
+			// Filtro de país
+			if (selectedCountry !== 'all') {
+				if (String(item.idPais) !== String(selectedCountry)) {
+					return false;
+				}
+			}
+
+			// Filtro de texto (nome, clube vinculado, sigla de país)
+			if (searchText !== '') {
+				var nome = (item.Nome || '').toLowerCase();
+				var clube = (item.clubeVinculado || '').toLowerCase();
+				var sigla = (item.siglaPais || '').toLowerCase();
+				if (nome.indexOf(searchText) === -1 && clube.indexOf(searchText) === -1 && sigla.indexOf(searchText) === -1) {
+					return false;
+				}
+			}
+
+			return true;
+		});
+
+		// Reaplicar ordenação se existir coluna ativa
+		if (activeSort) {
+			sortLocalData(activeSort, activeDirection);
+		}
+
+		updateTable(localData, currentPage, activeSort, activeDirection ? 1 : 0);
+	}
+
+	// Filtro textual em tempo real
+	$('#caixa_pesquisa').on('input keyup', delay(function(e){
+		applyFilters(true);
+	}, 150));
+
+	// Filtro de gênero (Pill buttons)
+	$(document).on('click', '.gender-btn', function(){
+		$('.gender-btn').removeClass('active');
+		$(this).addClass('active');
+		selectedGender = $(this).attr('data-gender');
+		applyFilters(true);
+	});
+
+	// Filtro de país (Dropdown)
+	$(document).on('change', '#filtro_pais', function(){
+		selectedCountry = $(this).val();
+		applyFilters(true);
+	});
 	
 	function load_data(){
-		var searchText = $('#caixa_pesquisa').val();
-		$('#loading').show();
+		var cacheKey = 'confusa_meusjogadores_' + user_id;
+		var cached = sessionStorage.getItem(cacheKey);
+
+		if (cached && rawPlayerData.length === 0) {
+			try {
+				rawPlayerData = JSON.parse(cached);
+				applyFilters();
+			} catch(e){}
+		} else if (rawPlayerData.length === 0) {
+			$('#loading').show();
+		}
 
 		$.ajax({
 			url:"search_player.php",
 			method:"POST",
 			cache:false,
-			data:{searchText:searchText},
+			data:{searchText: ''},
 			success:function(data){
 				$('#loading').hide();
-				localData = JSON.parse(data);
-				updateTable(localData, currentPage, activeSort, activeDirection ? 1 : 0);
+				rawPlayerData = (typeof data === 'string') ? JSON.parse(data) : data;
+				try {
+					sessionStorage.setItem(cacheKey, JSON.stringify(rawPlayerData));
+				} catch(e){}
+				applyFilters();
 			},
 			error:function(){
 				$('#loading').hide();
@@ -238,7 +334,7 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 						let fotoClass = isFalecido ? "playerThumb foto-falecido" : "playerThumb";
 
 						tbl += "<tr id='"+val['ID']+"' data-sexo='"+val['sexo']+"' data-dono-pais='"+val['idDonoPais']+"' >";
-							tbl += "<td><div class='imageUpload'><img class='"+fotoClass+"' src='/images/jogadores/"+val['foto']+"' /> <input type='file' hidden id='foto"+val['ID']+"' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
+							tbl += "<td><div class='imageUpload'><img class='"+fotoClass+"' src='/images/jogadores/"+val['foto']+"' loading='lazy' /> <input type='file' hidden id='foto"+val['ID']+"' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
 							tbl +=  "<td><span class='nomeEditavel' id='nom"+val['ID']+"'><a class='linkNome' href='/ligas/playerstatus.php?player="+val['ID']+"' >"+val['Nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span></td>";
 							tbl += "<td><span class='nomeNascimento' id='nas"+ val['ID']+"'>"+ nascimentoDisplay + " (" +val['Idade']+") "+" </span><input id='selnas"+val['ID']+"' class='nascimentoEditavel editavel' type='date' value='"+val['Nascimento']+"' hidden/></td>";
 							tbl += "<td><span class='nomeMentalidade' id='men"+ val['ID']+"'>"+ val['Mentalidade'] +"</span><select id='selmen"+val['ID']+"' class='comboMentalidade editavel' value='"+val['Mentalidade']+"' hidden>";
@@ -271,7 +367,7 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 							tbl += "<td><span class='nivelEditavel' id='niv"+val['ID']+"'>"+val['Nivel']+"</span></td>";
 							
 							if(val['idPais'] != 0){
-								tbl += "<td class='wide'><img src='/images/bandeiras/"+val['bandeiraPais']+"' class='bandeira nomePais' id='ban"+val['ID']+"'>  <span class='nomePais' id='pai"+val['ID']+"'>"+val['siglaPais']+"</span>";
+								tbl += "<td class='wide'><img src='/images/bandeiras/"+val['bandeiraPais']+"' class='bandeira nomePais' id='ban"+val['ID']+"' loading='lazy'>  <span class='nomePais' id='pai"+val['ID']+"'>"+val['siglaPais']+"</span>";
 							} else {
 								tbl += "<td>";
 							}
@@ -284,7 +380,7 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 							tbl += "</td>";
 							
 							if(val['clubeVinculado'] != null){
-								tbl += "<td><a href='/ligas/teamstatus.php?team="+val['idClubeVinculado']+"' id='dis"+val['ID']+"'><img class='minithumb' src='/images/escudos/"+val['escudoClubeVinculado']+"'>"+val['clubeVinculado']+"</a><span class='donoClubeVinculado' hidden>"+val['donoClubeVinculado']+"</span></td>";
+								tbl += "<td><a href='/ligas/teamstatus.php?team="+val['idClubeVinculado']+"' id='dis"+val['ID']+"'><img class='minithumb' src='/images/escudos/"+val['escudoClubeVinculado']+"' loading='lazy'>"+val['clubeVinculado']+"</a><span class='donoClubeVinculado' hidden>"+val['donoClubeVinculado']+"</span></td>";
 							} else {
 								tbl += "<td>-</td>";
 							}
@@ -795,35 +891,14 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
 			if(!column) return;
 
 			if(activeSort !== column){
-				asc = true;
+				activeDirection = true;
+			} else {
+				activeDirection = !activeDirection;
 			}
+			activeSort = column;
 
-			localData.sort(function(a, b){
-				var valA = a[column];
-				var valB = b[column];
-
-				if(column === 'Nivel' || column === 'valor' || column === 'valorAtualizado' || column === 'disponibilidade' || column === 'Idade'){
-					valA = Number(valA) || 0;
-					valB = Number(valB) || 0;
-					return asc ? (valA - valB) : (valB - valA);
-				} else if(column === 'Nascimento'){
-					valA = valA || '';
-					valB = valB || '';
-					return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-				} else if(column === 'StringPosicoes'){
-					var posA = createPositionString(valA || '');
-					var posB = createPositionString(valB || '');
-					return asc ? posA.localeCompare(posB, 'pt-BR', { sensitivity: 'base' }) : posB.localeCompare(posA, 'pt-BR', { sensitivity: 'base' });
-				} else {
-					valA = (valA !== null && valA !== undefined) ? valA.toString().trim() : '';
-					valB = (valB !== null && valB !== undefined) ? valB.toString().trim() : '';
-					return asc ? valA.localeCompare(valB, 'pt-BR', { sensitivity: 'base', numeric: true }) : valB.localeCompare(valA, 'pt-BR', { sensitivity: 'base', numeric: true });
-				}
-			});
-
-			var currentAsc = asc;
-			asc = !asc;
-			updateTable(localData, 1, column, currentAsc ? 1 : 0);
+			sortLocalData(activeSort, activeDirection);
+			updateTable(localData, 1, activeSort, activeDirection ? 1 : 0);
 		});
 
 		$('.pagination_link').off('click').on('click', function(e){
@@ -842,10 +917,40 @@ var listaCobradores =  <?php echo json_encode($listaCobradores); ?>;
     <div class="propostas-card">
         <div class="header-actions-container">
             <h2 class="propostas-title">Quadro de jogadores - <?php echo $_SESSION['nomereal']?></h2>
-            <div class="d-flex" style="gap: 10px; flex-wrap: wrap; align-items: center;">
-                <div id='search_wrapper'><input type='text' id='caixa_pesquisa' placeholder='Pesquisar...'><span class="material-symbols-outlined">search</span></div>
+            <div class="header-buttons-wrapper">
                 <button class='btn-action-primary' onclick="window.location='/jogadores/criar_jogador.php';"><span class="material-symbols-outlined">person_add</span> Criar jogador</button>
                 <button class='btn-action-primary' onclick="window.location='/jogadores/importar_jogador.php';"><span class="material-symbols-outlined">upload</span> Importar jogador</button>
+            </div>
+        </div>
+
+        <!-- Barra de Filtros e Busca -->
+        <div class="filter-controls-bar">
+            <div id='search_wrapper'><input type='text' id='caixa_pesquisa' placeholder='Pesquisar jogador...'><span class="material-symbols-outlined">search</span></div>
+            
+            <div class="filter-select-wrapper">
+                <span class="material-symbols-outlined filter-icon">public</span>
+                <select id="filtro_pais" class="filter-select">
+                    <option value="all">Todos os países</option>
+                    <?php foreach($listaPaises as $p): ?>
+                        <option value="<?php echo htmlspecialchars($p[0]); ?>"><?php echo htmlspecialchars($p[1]); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="gender-toggle-group" id="filtro_genero">
+                <button type="button" class="gender-btn active" data-gender="all">Todos</button>
+                <button type="button" class="gender-btn" data-gender="0">
+                    <span class="gender-badge-icon male">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="14" r="5"></circle><line x1="19" y1="5" x2="13.6" y2="10.4"></line><polyline points="15 5 19 5 19 9"></polyline></svg>
+                    </span>
+                    Masculino
+                </button>
+                <button type="button" class="gender-btn" data-gender="1">
+                    <span class="gender-badge-icon female">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5"></circle><line x1="12" y1="14" x2="12" y2="21"></line><line x1="9" y1="18" x2="15" y2="18"></line></svg>
+                    </span>
+                    Feminino
+                </button>
             </div>
         </div>
         

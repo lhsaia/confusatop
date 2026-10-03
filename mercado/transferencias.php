@@ -97,7 +97,47 @@ if (!$isAjax) {
 if(isset($stmt)){
     $num = $stmt->rowCount();
 
-
+    if ($pageType == 'usuario' && isset($userId) && $userId > 0) {
+        $resumoFinanceiro = $time->resumoFinanceiroUsuario($userId);
+        $vendasFmt = round((float)($resumoFinanceiro['totalVendas'] ?? 0) / 1000000, 2);
+        $comprasFmt = round((float)($resumoFinanceiro['totalCompras'] ?? 0) / 1000000, 2);
+        $balanco = (float)($resumoFinanceiro['totalVendas'] ?? 0) - (float)($resumoFinanceiro['totalCompras'] ?? 0);
+        $balancoFmt = round($balanco / 1000000, 2);
+        $balancoClass = $balanco > 0 ? 'positivo' : ($balanco < 0 ? 'negativo' : '');
+        $balancoSinal = $balanco > 0 ? '+' : '';
+        $totalTransacoes = (int)($resumoFinanceiro['totalTransacoes'] ?? 0);
+        ?>
+        <div class="fin-kpi-grid">
+            <div class="fin-kpi-card receitas">
+                <div class="kpi-label"><span class="material-symbols-outlined">trending_up</span> Total em Vendas</div>
+                <div class="kpi-value">F$ <?php echo number_format($vendasFmt, 2, ',', '.'); ?> M</div>
+                <span style="font-size: 0.8rem; color: #64748b;"><?php echo (int)($resumoFinanceiro['qtdVendas'] ?? 0); ?> vendas</span>
+            </div>
+            <div class="fin-kpi-card gastos">
+                <div class="kpi-label"><span class="material-symbols-outlined">trending_down</span> Total em Compras</div>
+                <div class="kpi-value">F$ <?php echo number_format($comprasFmt, 2, ',', '.'); ?> M</div>
+                <span style="font-size: 0.8rem; color: #64748b;"><?php echo (int)($resumoFinanceiro['qtdCompras'] ?? 0); ?> compras</span>
+            </div>
+            <div class="fin-kpi-card balanco <?php echo $balancoClass; ?>">
+                <div class="kpi-label"><span class="material-symbols-outlined">account_balance_wallet</span> Balanço Líquido</div>
+                <div class="kpi-value">F$ <?php echo $balancoSinal . number_format($balancoFmt, 2, ',', '.'); ?> M</div>
+                <span style="font-size: 0.8rem; color: #64748b;"><?php echo $balanco >= 0 ? 'Superávit comercial' : 'Déficit comercial'; ?></span>
+            </div>
+            <div class="fin-kpi-card">
+                <div class="kpi-label"><span class="material-symbols-outlined">swap_horiz</span> Movimentações</div>
+                <div class="kpi-value"><?php echo $totalTransacoes; ?></div>
+                <span style="font-size: 0.8rem; color: #64748b;">
+                    <?php 
+                        $extraInfo = [];
+                        if (!empty($resumoFinanceiro['qtdInternas'])) { $extraInfo[] = (int)$resumoFinanceiro['qtdInternas'] . ' internas'; }
+                        if (!empty($resumoFinanceiro['qtdExterior'])) { $extraInfo[] = (int)$resumoFinanceiro['qtdExterior'] . ' no exterior'; }
+                        echo !empty($extraInfo) ? implode(' • ', $extraInfo) : 'Total concluído';
+                    ?>
+                </span>
+            </div>
+        </div>
+        <?php
+    }
 
 // the page where this paging is used
 $page_url = "transferencias.php?type=".$pageType."&";
@@ -128,6 +168,9 @@ if($pageType == 'maiores' || $pageType == 'ultimas' || $pageType == 'usuario'){
             echo "<th>Saiu de</th>";
             echo "<th>Foi para</th>";
             echo "<th>Data</th>";
+            if($pageType == 'usuario'){
+                echo "<th>Tipo</th>";
+            }
             echo "<th>Valor</th>";
         echo "</tr>";
         echo "</thead>";
@@ -164,11 +207,10 @@ if($pageType == 'maiores' || $pageType == 'ultimas' || $pageType == 'usuario'){
             echo "<td class='nopadding nomeJogador'>{$nomeJogador}<br><span class='posicao'>{$posicaoBase}</span><span class=' {$genderClass} genderSign'>{$genderCode}</span></td>";
             echo "<td class='nopadding'>{$idade}</td>";
             if($nacionalidade != 0){
-                echo "<td class='nopadding'><a href='/ligas/paisstatus.php?country=".$nacionalidade."'><img src='/images/bandeiras/{$bandeiraJogador}' class='bandeira nomePais' id='ban".$nacionalidade."'/></a>";
+                echo "<td class='nopadding'><a href='/ligas/paisstatus.php?country=".$nacionalidade."'><img src='/images/bandeiras/{$bandeiraJogador}' class='bandeira nomePais' id='ban".$nacionalidade."'/></a></td>";
             } else {
-                echo "<td>";
+                echo "<td class='nopadding'>-</td>";
             }
-            echo "</td>";
             echo "<td class='nopadding'>";
             if($idClubeOrigem != 0){
                 echo "<a href='/ligas/teamstatus.php?team=".$idClubeOrigem."'>";
@@ -196,6 +238,25 @@ if($pageType == 'maiores' || $pageType == 'ultimas' || $pageType == 'usuario'){
             }
             echo "</td>";
             echo "<td class='nopadding'>".date('d/m/Y', strtotime($data))."</td>";
+            if($pageType == 'usuario'){
+                $userIdNum = (int)($_SESSION['user_id'] ?? 0);
+                $dOrigem = isset($donoOrigem) ? (int)$donoOrigem : 0;
+                $dDestino = isset($donoDestino) ? (int)$donoDestino : 0;
+                $dJogador = isset($donoJogador) ? (int)$donoJogador : 0;
+
+                if ($dOrigem === $userIdNum && $dDestino === $userIdNum) {
+                    $tipoTag = "<span class='tag-transf tag-interna' title='Transferência interna entre seus clubes'>Interna</span>";
+                } else if ($dOrigem === $userIdNum) {
+                    $tipoTag = "<span class='tag-transf tag-venda' title='Venda de atleta do seu clube'>Venda</span>";
+                } else if ($dDestino === $userIdNum) {
+                    $tipoTag = "<span class='tag-transf tag-compra' title='Compra de atleta para o seu clube'>Compra</span>";
+                } else if ($dJogador === $userIdNum) {
+                    $tipoTag = "<span class='tag-transf tag-exterior' title='Atleta nacional negociado no exterior'>Exterior</span>";
+                } else {
+                    $tipoTag = "<span class='tag-transf'>Transferência</span>";
+                }
+                echo "<td class='nopadding'>{$tipoTag}</td>";
+            }
             echo "<td class='nopadding'>{$valor}</td>";
 
 

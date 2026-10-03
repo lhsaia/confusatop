@@ -1023,7 +1023,7 @@ class Tecnico{
             SELECT t.id FROM transferencias_tecnico t
             LEFT JOIN clube d ON t.clubeDestino = d.id
             LEFT JOIN paises p ON d.Pais = p.id
-            WHERE p.dono = ? ";
+            WHERE p.dono = ? AND (t.status_execucao != 1 OR (t.clubeOrigem != 0 AND t.clubeDestino != 0))";
             } else {
                 $subQuery = "";
             }
@@ -1063,7 +1063,7 @@ class Tecnico{
             LEFT JOIN tecnico j ON t.tecnico = j.id
             LEFT JOIN paises p ON d.Pais = p.id
             LEFT JOIN clube c ON t.clubeOrigem = c.id
-            WHERE p.dono = ?
+            WHERE p.dono = ? AND (t.status_execucao != 1 OR (t.clubeOrigem != 0 AND t.clubeDestino != 0))
             ORDER BY precedencia ASC, data DESC
             LIMIT " . (int)$from_record_num . ", " . (int)$records_per_page;
 

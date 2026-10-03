@@ -118,6 +118,123 @@ html body #logged-user {
   font-size: 20px;
 }
 
+/* Barra de Filtros e Controles */
+.filter-controls-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  padding: 4px 0;
+}
+
+.filter-select-wrapper {
+  display: inline-flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 6px 12px;
+  gap: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  transition: all 0.2s ease;
+}
+
+.filter-select-wrapper:focus-within {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+.filter-select-wrapper .filter-icon {
+  color: #64748b;
+  font-size: 19px;
+}
+
+.filter-select {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.85rem !important;
+  color: #334155 !important;
+  cursor: pointer;
+  padding-right: 4px;
+}
+
+.filter-select option {
+  color: #0f172a;
+  background: #ffffff;
+}
+
+/* Grupo de botões de gênero (Pill buttons) */
+.gender-toggle-group {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 3px;
+  border-radius: 9px;
+  gap: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.gender-btn {
+  border: none !important;
+  background: transparent !important;
+  color: #64748b !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  padding: 5px 12px !important;
+  border-radius: 7px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  line-height: 1.2 !important;
+}
+
+.gender-btn:hover {
+  color: #0f172a !important;
+}
+
+.gender-btn.active {
+  background: #ffffff !important;
+  color: #0284c7 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08) !important;
+}
+
+.gender-badge-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.gender-badge-icon.male {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+}
+
+.gender-badge-icon.female {
+  background: rgba(236, 72, 153, 0.12);
+  color: #ec4899;
+}
+
+.gender-btn.active .gender-badge-icon.male {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.gender-btn.active .gender-badge-icon.female {
+  background: #ec4899;
+  color: #ffffff;
+}
+
 /* Botões de Ação */
 .btn-action-primary {
   border: none !important;
@@ -533,6 +650,29 @@ html body #logged-user {
   }
   #caixa_pesquisa {
     width: 100%;
+  }
+  .filter-controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .filter-select-wrapper {
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: space-between;
+  }
+  .filter-select {
+    width: 100%;
+  }
+  .gender-toggle-group {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+  }
+  .gender-btn {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
   }
 
   /* Transformação da Tabela em Cards */

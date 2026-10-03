@@ -1439,11 +1439,82 @@ function readInfo($id){
         return $stmt;
     }
 
+    function todasTransferenciasUsuario($from_record_num, $records_per_page, $userId){
+        $userId = (int)$userId;
+        $from = (int)$from_record_num;
+        $records = (int)$records_per_page;
+
+        $query = "SELECT j.Sexo as sexo, j.id as id, j.Nome as nomeJogador, s.Nome as posicaoBase, j.StringPosicoes as stringPosicoes, j.Pais as nacionalidade, p.Bandeira as bandeiraJogador, FLOOR(DATEDIFF(t.data,j.Nascimento)/365) as idade, c.Nome as clubeOrigem, d.Nome as clubeDestino, t.data, c.Pais as paisClubeOrigem, q.Bandeira as bandeiraClubeOrigem, d.Pais as paisClubeDestino, r.Bandeira as bandeiraClubeDestino, l.Nome as ligaOrigem, m.Nome as ligaDestino, c.Escudo as escudoOrigem, d.Escudo as escudoDestino, t.clubeOrigem as idClubeOrigem, t.clubeDestino as idClubeDestino, l.ID as idLigaOrigem, m.ID as idLigaDestino, CASE WHEN t.clubeOrigem = 0 OR t.clubeDestino = 0 THEN 0 ELSE t.valor END as valor, t.emprestimo, q.dono as donoOrigem, r.dono as donoDestino, p.dono as donoJogador
+        FROM transferencias t
+        LEFT JOIN jogador j ON t.jogador = j.ID
+        LEFT JOIN paises p ON j.Pais = p.ID
+        LEFT JOIN clube c ON t.clubeOrigem = c.ID
+        LEFT JOIN paises q ON c.Pais = q.ID
+        LEFT JOIN liga l ON c.Liga = l.ID
+        LEFT JOIN clube d ON t.clubeDestino = d.ID
+        LEFT JOIN paises r ON d.Pais = r.ID
+        LEFT JOIN liga m ON d.Liga = m.ID
+        LEFT JOIN contratos_jogador o ON o.jogador = t.jogador AND o.tipoContrato = 0
+        LEFT JOIN posicoes s ON o.posicaoBase = s.ID
+        WHERE t.status_execucao = 1 
+          AND t.clubeOrigem != 0 
+          AND t.clubeDestino != 0 
+          AND (q.dono = {$userId} OR r.dono = {$userId} OR p.dono = {$userId})
+        ORDER BY t.data DESC
+        LIMIT {$from}, {$records}";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt;
+    }
+
+    function resumoFinanceiroUsuario($userId){
+        $userId = (int)$userId;
+        $query = "SELECT 
+            COALESCE(SUM(CASE WHEN q.dono = {$userId} THEN t.valor ELSE 0 END), 0) as totalVendas,
+            COALESCE(SUM(CASE WHEN r.dono = {$userId} THEN t.valor ELSE 0 END), 0) as totalCompras,
+            COUNT(t.id) as totalTransacoes,
+            COALESCE(SUM(CASE WHEN q.dono = {$userId} AND (r.dono != {$userId} OR r.dono IS NULL) THEN 1 ELSE 0 END), 0) as qtdVendas,
+            COALESCE(SUM(CASE WHEN r.dono = {$userId} AND (q.dono != {$userId} OR q.dono IS NULL) THEN 1 ELSE 0 END), 0) as qtdCompras,
+            COALESCE(SUM(CASE WHEN q.dono = {$userId} AND r.dono = {$userId} THEN 1 ELSE 0 END), 0) as qtdInternas,
+            COALESCE(SUM(CASE WHEN p.dono = {$userId} AND (q.dono != {$userId} OR q.dono IS NULL) AND (r.dono != {$userId} OR r.dono IS NULL) THEN 1 ELSE 0 END), 0) as qtdExterior
+        FROM transferencias t
+        LEFT JOIN jogador j ON t.jogador = j.ID
+        LEFT JOIN paises p ON j.Pais = p.ID
+        LEFT JOIN clube c ON t.clubeOrigem = c.ID
+        LEFT JOIN paises q ON c.Pais = q.ID
+        LEFT JOIN clube d ON t.clubeDestino = d.ID
+        LEFT JOIN paises r ON d.Pais = r.ID
+        WHERE t.status_execucao = 1 
+          AND t.clubeOrigem != 0 
+          AND t.clubeDestino != 0 
+          AND (q.dono = {$userId} OR r.dono = {$userId} OR p.dono = {$userId})";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     function countAllTransfers($userId = null, $onlyRealClubs = false){
-        $where = "status_execucao = 1";
         if($userId !== null && (int)$userId > 0){
-            $where .= " AND (donoOrigem = " . (int)$userId . " OR donoDestino = " . (int)$userId . ")";
+            $userId = (int)$userId;
+            $query = "SELECT count(*) as total 
+            FROM transferencias t
+            LEFT JOIN jogador j ON t.jogador = j.ID
+            LEFT JOIN paises p ON j.Pais = p.ID
+            LEFT JOIN clube c ON t.clubeOrigem = c.ID
+            LEFT JOIN paises q ON c.Pais = q.ID
+            LEFT JOIN clube d ON t.clubeDestino = d.ID
+            LEFT JOIN paises r ON d.Pais = r.ID
+            WHERE t.status_execucao = 1 
+              AND t.clubeOrigem != 0 
+              AND t.clubeDestino != 0 
+              AND (q.dono = {$userId} OR r.dono = {$userId} OR p.dono = {$userId})";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return (int)($row['total'] ?? 0);
         }
+
+        $where = "status_execucao = 1";
         if($onlyRealClubs){
             $where .= " AND clubeOrigem != 0 AND clubeDestino != 0";
         }
@@ -1451,7 +1522,7 @@ function readInfo($id){
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total'] ?? 0;
+        return (int)($row['total'] ?? 0);
     }
 
     function donoClube($clubeOrigem,$idJogador){

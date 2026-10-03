@@ -9,6 +9,32 @@
   },
   "days": [
     {
+      "id": "day_02_10_2026",
+      "date": "02/10/2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Filtros por Gênero e País em Meus Jogadores",
+          "desc": "Adicionados controles modernos na tela de Meus Jogadores com seletor rápido de gênero (Todos, Masculino e Feminino) e dropdown de países, permitindo filtrar instantaneamente o elenco em tempo real."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Fim do Limite de 150 Jogadores e Carregamento Otimizado",
+          "desc": "Removida a limitação de 150 registros na listagem de Meus Jogadores com ativação de compressão de transferência e lazy loading de imagens, permitindo visualizar e ordenar todo o elenco completo sem lentidão."
+        },
+        {
+          "badge": "new",
+          "title": "Página e Balanço de Minhas Transferências",
+          "desc": "Adicionada a página consolidada de transferências do usuário no Mercado com balanço financeiro unificado (total em vendas, compras e saldo líquido) e histórico completo de transações dos clubes e atletas nacionais no exterior."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Filtro de Propostas Concluídas",
+          "desc": "Ajustado o painel de propostas de jogadores e técnicos para exibir apenas transferências reais entre clubes nas propostas concluídas, ocultando movimentações diretas de agentes livres/sem clube."
+        }
+      ]
+    },
+    {
       "id": "day_27_09_2026",
       "date": "27/09/2026",
       "items": [
