@@ -63,6 +63,30 @@ function sincronizarContadoresOrigem(PDO $db, int $idOrigem): void {
     ]);
 }
 
+/**
+ * Higieniza e normaliza nomes e sobrenomes:
+ * - Remove marcadores de lista (- , • , * , 1. , etc.)
+ * - Normaliza apóstrofos tipográficos/curvos (‘, ’, `, ´) para apóstrofo padrão (')
+ * - Remove aspas nas extremidades mantendo apóstrofos internos (ex: "O'Brien" -> O'Brien)
+ * - Remove múltiplos espaços e tags HTML
+ */
+function sanitizarTermoNome(string $termo): string {
+    $limpo = strip_tags(trim($termo));
+    // Remove marcadores de lista iniciais (- , • , * , 1. , etc.)
+    $limpo = preg_replace('/^(\s*[-–—*•·+>]|\s*\d+[\.\)\-:\s])+\s*/u', '', $limpo);
+    // Remove anotações entre parênteses/colchetes no final (ex: "Ivanov (russo)" -> "Ivanov", "Smith [ENG]" -> "Smith")
+    $limpo = preg_replace('/\s*[\(\[\{].*?[\)\]\}]\s*$/u', '', $limpo);
+    // Normaliza apóstrofos tipográficos (‘, ’, `, ´) para apóstrofo padrão (')
+    $limpo = str_replace(["‘", "’", "`", "´", "ʼ", "ʻ"], "'", $limpo);
+    // Remove aspas nas extremidades
+    $limpo = preg_replace('/^["\']+|["\']+$/u', '', $limpo);
+    // Remove espaços extras
+    $limpo = preg_replace('/\s+/u', ' ', $limpo);
+    // Limita ao tamanho máximo da coluna no banco (VARCHAR 30)
+    $limpo = mb_substr(trim($limpo), 0, 30, 'UTF-8');
+    return trim($limpo);
+}
+
 $action = $_POST['action'] ?? ($_GET['action'] ?? '');
 
 try {
@@ -229,7 +253,7 @@ try {
         // ==========================================
         case 'adicionar_nome':
             $idOrigem = (int)($_POST['origem'] ?? 0);
-            $nome = trim((string)($_POST['nome'] ?? ''));
+            $nome = sanitizarTermoNome((string)($_POST['nome'] ?? ''));
             $m = (int)($_POST['m'] ?? 0) === 1 ? 1 : 0;
             $f = (int)($_POST['f'] ?? 0) === 1 ? 1 : 0;
 
@@ -269,7 +293,7 @@ try {
         case 'editar_nome':
             $id = (int)($_POST['id'] ?? 0);
             $idOrigem = (int)($_POST['origem'] ?? 0);
-            $nome = trim((string)($_POST['nome'] ?? ''));
+            $nome = sanitizarTermoNome((string)($_POST['nome'] ?? ''));
             $m = (int)($_POST['m'] ?? 0) === 1 ? 1 : 0;
             $f = (int)($_POST['f'] ?? 0) === 1 ? 1 : 0;
 
@@ -383,7 +407,7 @@ try {
         // ==========================================
         case 'adicionar_sobrenome':
             $idOrigem = (int)($_POST['origem'] ?? 0);
-            $sobrenome = trim((string)($_POST['sobrenome'] ?? ''));
+            $sobrenome = sanitizarTermoNome((string)($_POST['sobrenome'] ?? ''));
             $m = (int)($_POST['m'] ?? 0) === 1 ? 1 : 0;
             $f = (int)($_POST['f'] ?? 0) === 1 ? 1 : 0;
 
@@ -423,7 +447,7 @@ try {
         case 'editar_sobrenome':
             $id = (int)($_POST['id'] ?? 0);
             $idOrigem = (int)($_POST['origem'] ?? 0);
-            $sobrenome = trim((string)($_POST['sobrenome'] ?? ''));
+            $sobrenome = sanitizarTermoNome((string)($_POST['sobrenome'] ?? ''));
             $m = (int)($_POST['m'] ?? 0) === 1 ? 1 : 0;
             $f = (int)($_POST['f'] ?? 0) === 1 ? 1 : 0;
 
@@ -516,12 +540,7 @@ try {
             $itensProcessar = [];
 
             foreach ($linhas as $linha) {
-                $limpo = trim($linha);
-                // Remove marcadores de lista, traços, bullets, numerações iniciais (ex: "- Nome", "• Nome", "* Nome", "1. Nome", "1 - Nome")
-                $limpo = preg_replace('/^(\s*[-–—*•·+>]|\s*\d+[\.\)\-:\s])+\s*/u', '', $limpo);
-                // Remove aspas ou caracteres estranhos nas pontas
-                $limpo = preg_replace('/^["\']+|["\']+$/u', '', $limpo);
-                $limpo = trim($limpo);
+                $limpo = sanitizarTermoNome($linha);
                 if ($limpo !== '' && !in_array($limpo, $itensProcessar, true)) {
                     $itensProcessar[] = $limpo;
                 }
