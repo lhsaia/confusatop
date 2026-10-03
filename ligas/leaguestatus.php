@@ -223,7 +223,7 @@ if($isOwnerOrAdmin){
                     <tr id="<?php echo $idTime; ?>" class="<?php echo $idLiga; ?>" data-pais="<?php echo $idPais; ?>" data-estadio="<?php echo $estadioId; ?>" data-maxtorcedores="<?php echo $maxTorcedores; ?>" data-fidelidade="<?php echo $fidelidade; ?>" data-u1c1="<?php echo $uni1cor1; ?>" data-u1c2="<?php echo $uni1cor2; ?>" data-u1c3="<?php echo $uni1cor3; ?>" data-u2c1="<?php echo $uni2cor1; ?>" data-u2c2="<?php echo $uni2cor2; ?>" data-u2c3="<?php echo $uni2cor3; ?>">
                         <td class="cell-clube">
                             <div class="imageUpload">
-                                <img class="logoliga thumb" src="/images/escudos/<?php echo htmlspecialchars($escudos); ?>" height="30px"/>
+                                <img class="logoliga thumb" src="/images/escudos/<?php echo htmlspecialchars($escudos); ?>" height="30px" loading="lazy" decoding="async"/>
                                 <?php if($isOwnerOrAdmin): ?>
                                     <input type="file" hidden id="escudo<?php echo $idTime; ?>" class="hiddenInput" name="escudo" accept=".jpg,.png,.jpeg"/>
                                 <?php endif; ?>
@@ -235,13 +235,13 @@ if($isOwnerOrAdmin){
                         <td data-label="Uniformes">
                             <span class="cell-value">
                                 <div class="imageUpload" style="margin-right: 5px;">
-                                    <img class="thumb thumb-uni1" src="<?php echo !empty($uniforme1) ? '/images/uniformes/' . htmlspecialchars($uniforme1) : '/images/placeholder.png'; ?>" height="30px"/>
+                                    <img class="thumb thumb-uni1" src="<?php echo !empty($uniforme1) ? '/images/uniformes/' . htmlspecialchars($uniforme1) : '/images/placeholder.png'; ?>" height="30px" loading="lazy" decoding="async"/>
                                     <?php if($isOwnerOrAdmin): ?>
                                         <input type="file" hidden id="uni1<?php echo $idTime; ?>" class="hiddenInput" name="uni1" accept=".jpg,.png,.jpeg"/>
                                     <?php endif; ?>
                                 </div>
                                 <div class="imageUpload">
-                                    <img class="thumb thumb-uni2" src="<?php echo !empty($uniforme2) ? '/images/uniformes/' . htmlspecialchars($uniforme2) : '/images/placeholder.png'; ?>" height="30px"/>
+                                    <img class="thumb thumb-uni2" src="<?php echo !empty($uniforme2) ? '/images/uniformes/' . htmlspecialchars($uniforme2) : '/images/placeholder.png'; ?>" height="30px" loading="lazy" decoding="async"/>
                                     <?php if($isOwnerOrAdmin): ?>
                                         <input type="file" hidden id="uni2<?php echo $idTime; ?>" class="hiddenInput" name="uni2" accept=".jpg,.png,.jpeg"/>
                                     <?php endif; ?>

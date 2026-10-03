@@ -115,18 +115,18 @@ if($num>0){
 
             $limiteIdadeDisplay = (!empty($limite_idade) && intval($limite_idade) > 0) ? $limite_idade : '-';
             $trofeuHtml = (!empty($trofeu)) 
-                ? "<img class='trofeuimage' id='trof".$id."' src='/images/trofeus/".$trofeu."' height='35px' title='Troféu da Liga' style='object-fit:contain;'/>" 
+                ? "<img class='trofeuimage' id='trof".$id."' src='/images/trofeus/".$trofeu."' height='35px' title='Troféu da Liga' style='object-fit:contain;' loading='lazy' decoding='async'/>" 
                 : "<span class='trofeuimage' id='trof".$id."' style='font-size:0.85rem; color:#94a3b8;'>-</span>";
 
             echo "<tr id='".$id."' data-sexo='".$sexo."'>";
                 //echo "<td><span id=".$id.">{$id}</span></td>";
                 echo "<td><a class='nomeLiga fw-bold' href='../ligas/leaguestatus.php?league=".$id."' style='text-decoration:none;'><span class='nomeEditavel' id='nom".$id."'>{$nome}</span></a><span class=' {$genderClass} genderSign'>{$genderCode}</span></td>";
-                echo "<td><img class='logoimage' id='log".$id."' src='../images/ligas/".$logo."' height='35px'/><div class='newlogoedit' hidden> <input type='file' id='newlogo".$id."' class=' custom-file-upload' name='file' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
+                echo "<td><img class='logoimage' id='log".$id."' src='../images/ligas/".$logo."' height='35px' loading='lazy' decoding='async'/><div class='newlogoedit' hidden> <input type='file' id='newlogo".$id."' class=' custom-file-upload' name='file' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
                 echo "<td>".$trofeuHtml."<div class='newtrofeuedit' hidden> <input type='file' id='newtrofeu".$id."' class=' custom-file-upload' name='trofeu_file' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
                 echo "<td><span class='tier-badge nomeEditavel' id='tie".$id."'>{$tier}</span></td>";
                 echo "<td><span class='idade-badge nomeEditavel' id='ida".$id."' title='Limite de idade (vazio ou - para sem limite)'>{$limiteIdadeDisplay}</span></td>";
                 if($idPais != 0){
-                    echo "<td class='wide'><img src='/images/bandeiras/{$bandeiraPais}' class='bandeira nomePais' id='ban".$id."'>  <span class='nomePais' id='pai".$id."'>{$siglaPais}</span>";
+                    echo "<td class='wide'><img src='/images/bandeiras/{$bandeiraPais}' class='bandeira nomePais' id='ban".$id."' loading='lazy' decoding='async'>  <span class='nomePais' id='pai".$id."'>{$siglaPais}</span>";
                 } else {
                     echo "<td>";
                 }

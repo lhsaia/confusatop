@@ -851,10 +851,10 @@ echo "<tbody>";
                 } else {
                 echo "<span>";
                 }
-                echo "<img src='/images/escudos/".$escudoOrigem."' class='minithumb'/>{$nomeOrigem}";
+                echo "<img src='/images/escudos/".$escudoOrigem."' class='minithumb' loading='lazy' decoding='async'/>{$nomeOrigem}";
                 if($idOrigem != 0){
                     echo "</a>";
-                    echo "<br/><a class='posicao' href='/ligas/leaguestatus.php?league=".$idLigaOrigem."'><img src='/images/bandeiras/{$bandeiraOrigem}' class='minithumb' id='ban".$paisOrigem."'/>{$nomeLigaOrigem}</a>";
+                    echo "<br/><a class='posicao' href='/ligas/leaguestatus.php?league=".$idLigaOrigem."'><img src='/images/bandeiras/{$bandeiraOrigem}' class='minithumb' id='ban".$paisOrigem."' loading='lazy' decoding='async'/>{$nomeLigaOrigem}</a>";
                 } else {
                     echo "</span>";
                 }
@@ -865,10 +865,10 @@ echo "<tbody>";
                 } else {
                 echo "<span>";
                 }
-                echo "<img src='/images/escudos/".$escudoDestino."' class='minithumb'/>{$nomeDestino}";
+                echo "<img src='/images/escudos/".$escudoDestino."' class='minithumb' loading='lazy' decoding='async'/>{$nomeDestino}";
                 if($idDestino != 0){
                     echo "</a>";
-                    echo "<br/><a class='posicao' href='/ligas/leaguestatus.php?league=".$idLigaDestino."'><img src='/images/bandeiras/{$bandeiraDestino}' class='minithumb' id='ban".$paisDestino."'/>{$nomeLigaDestino}</a>";
+                    echo "<br/><a class='posicao' href='/ligas/leaguestatus.php?league=".$idLigaDestino."'><img src='/images/bandeiras/{$bandeiraDestino}' class='minithumb' id='ban".$paisDestino."' loading='lazy' decoding='async'/>{$nomeLigaDestino}</a>";
                     $jogos_cl = 0;
                     $gols_cl = 0;
                     $amarelos_cl = 0;

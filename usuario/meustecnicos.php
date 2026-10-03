@@ -203,7 +203,7 @@ $(document).ready(function($){
                     var nascimentoText = nascimentoDisplay ? (nascimentoDisplay + (idadeDisplay !== '' ? " (" + idadeDisplay + ")" : "")) : (idadeDisplay !== '' ? idadeDisplay : "-");
 
                     tbl += "<tr id='" + val['ID'] + "' data-dono-pais='" + (val['idDonoPais'] || '') + "'>";
-                    tbl += "<td><div class='imageUpload'><img class='" + fotoClass + "' src='" + fotoSrc + "' /> <input type='file' hidden id='foto" + val['ID'] + "' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
+                    tbl += "<td><div class='imageUpload'><img class='" + fotoClass + "' src='" + fotoSrc + "' loading='lazy' decoding='async'/> <input type='file' hidden id='foto" + val['ID'] + "' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
                     tbl += "<td><span class='nomeCoach nomeEditavel' id='nom" + val['ID'] + "'><a href='/ligas/coachstatus.php?coach=" + val['ID'] + "' class='player-name-link'>" + val['Nome'] + "</a></span></td>";
                     tbl += "<td><span class='nomeNascimento' id='nas" + val['ID'] + "'>" + nascimentoText + "</span><input id='selnas" + val['ID'] + "' class='nascimentoEditavel editavel' type='date' value='" + (val['Nascimento'] || '') + "' hidden/></td>";
                     tbl += "<td><span class='nivelEditavel' id='niv" + val['ID'] + "'>" + val['Nivel'] + "</span></td>";
@@ -222,7 +222,7 @@ $(document).ready(function($){
                     });
                     tbl += "</select></td>";
 
-                    tbl += "<td><img src='/images/bandeiras/" + (val['bandeiraPais'] || 'flag.png') + "' class='bandeira nomePais' id='ban" + val['ID'] + "'> <span class='nomePais' id='pai" + val['ID'] + "'>" + (val['siglaPais'] || '') + "</span>";
+                    tbl += "<td><img src='/images/bandeiras/" + (val['bandeiraPais'] || 'flag.png') + "' class='bandeira nomePais' id='ban" + val['ID'] + "' loading='lazy' decoding='async'> <span class='nomePais' id='pai" + val['ID'] + "'>" + (val['siglaPais'] || '') + "</span>";
                     tbl += "<select class='comboPais editavel' id='selpai" + val['ID'] + "' hidden>";
                     listaPaises.forEach(function(p){
                         tbl += "<option value='" + p[0] + "' " + (val['idPais'] == p[0] ? 'selected' : '') + ">" + p[1] + "</option>";
@@ -232,7 +232,7 @@ $(document).ready(function($){
                     tbl += "<td>";
                     if(val['clubeVinculado']){
                         var escudoClube = val['escudoClubeVinculado'] ? '/images/escudos/' + val['escudoClubeVinculado'] : '/images/escudos/0.png';
-                        tbl += "<a href='/ligas/teamstatus.php?team=" + val['idClubeVinculado'] + "' id='dis" + val['ID'] + "' class='player-name-link'><img class='minithumb' src='" + escudoClube + "'> " + val['clubeVinculado'] + "</a>";
+                        tbl += "<a href='/ligas/teamstatus.php?team=" + val['idClubeVinculado'] + "' id='dis" + val['ID'] + "' class='player-name-link'><img class='minithumb' src='" + escudoClube + "' loading='lazy' decoding='async'> " + val['clubeVinculado'] + "</a>";
                         tbl += "<span class='donoClubeVinculado' hidden>" + (val['donoClubeVinculado'] || '') + "</span>";
                     } else {
                         tbl += "-";

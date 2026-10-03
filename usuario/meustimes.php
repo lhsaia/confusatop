@@ -197,14 +197,14 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 			tbl += "<tr id='"+val['id']+"' data-sexo='"+val['sexo']+"' >";
 				tbl +=  "<td><span class='nomeEditavel' id='nom"+val['id']+"'><a class='linkNome' href='/ligas/teamstatus.php?team="+val['id']+"' >"+val['Nome']+"</a></span><span class=' "+genderClass+" genderSign'>"+genderCode+"</span></td>";
 				tbl += "<td><span class='siglaEditavel' id='sig"+val['id']+"'>"+(val['TresLetras'] ? val['TresLetras'] : '')+"</span></td>";
-				tbl += "<td><div class='imageUpload'><img class='thumb' src='/images/escudos/"+val['Escudo']+"' /> <input type='file' hidden id='escudo"+val['id']+"' class='hiddenInput custom-file-upload' name='escudo' accept='.jpg,.png,.jpeg'/></div></td>";
+				tbl += "<td><div class='imageUpload'><img class='thumb' src='/images/escudos/"+val['Escudo']+"' loading='lazy' decoding='async'/> <input type='file' hidden id='escudo"+val['id']+"' class='hiddenInput custom-file-upload' name='escudo' accept='.jpg,.png,.jpeg'/></div></td>";
 
 				let mascoteThumb = val['mascote'] && val['mascote'] != 'null' && val['mascote'] != '0.png' && val['mascote'] != '0' ? '/images/mascotes/' + val['mascote'] : '/images/mascotes/placeholder.png';
-				tbl += "<td><div class='imageUpload'><img class='thumb' src='"+mascoteThumb+"' /> <input type='file' hidden id='mascote"+val['id']+"' class='hiddenInput custom-file-upload' name='mascote' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
+				tbl += "<td><div class='imageUpload'><img class='thumb' src='"+mascoteThumb+"' loading='lazy' decoding='async'/> <input type='file' hidden id='mascote"+val['id']+"' class='hiddenInput custom-file-upload' name='mascote' accept='.jpg,.png,.jpeg,.webp'/></div></td>";
 
-				tbl += "<td><div class='imageUpload'><img class='thumb' src='/images/uniformes/"+val['Uniforme1']+"' /> <input type='file' hidden id='uni1"+val['id']+"' class='hiddenInput custom-file-upload' name='uni1' accept='.jpg,.png,.jpeg'/></div></td>";
+				tbl += "<td><div class='imageUpload'><img class='thumb' src='/images/uniformes/"+val['Uniforme1']+"' loading='lazy' decoding='async'/> <input type='file' hidden id='uni1"+val['id']+"' class='hiddenInput custom-file-upload' name='uni1' accept='.jpg,.png,.jpeg'/></div></td>";
 				tbl += "<td class='celula-uniforme'><div class='quadrado-uniforme' id='"+val['Uni1Cor1']+"'><input type='color' name='u1c1' hidden class='hiddenInput' /></div><div class='quadrado-uniforme' id='"+val['Uni1Cor2']+"'><input type='color' name='u1c2' hidden class='hiddenInput' /></div><div class='quadrado-uniforme' id='"+val['Uni1Cor3']+"'><input type='color' name='u1c3' hidden class='hiddenInput' /></div></td>";
-				tbl += "<td><div class='imageUpload'><img class='thumb' src='/images/uniformes/"+val['Uniforme2']+"' /> <input type='file' hidden id='uni2"+val['id']+"' class='hiddenInput custom-file-upload' name='uni2' accept='.jpg,.png,.jpeg'/></div></td>";
+				tbl += "<td><div class='imageUpload'><img class='thumb' src='/images/uniformes/"+val['Uniforme2']+"' loading='lazy' decoding='async'/> <input type='file' hidden id='uni2"+val['id']+"' class='hiddenInput custom-file-upload' name='uni2' accept='.jpg,.png,.jpeg'/></div></td>";
 				tbl += "<td class='celula-uniforme'><div class='quadrado-uniforme' id='"+val['Uni2Cor1']+"'><input type='color' name='u2c1' hidden class='hiddenInput' /></div><div class='quadrado-uniforme' id='"+val['Uni2Cor2']+"'><input type='color' name='u2c2' hidden class='hiddenInput' /></div><div class='quadrado-uniforme' id='"+val['Uni2Cor3']+"'><input type='color' name='u2c3' hidden class='hiddenInput' /></div></td>";
 				tbl += "<td class='wide'><span class='nomePais' id='est"+val['id']+"'>"+val['nomeEstadio']+" ("+val['capacidade']+")</span>";
 					tbl += "<select class='comboEstadio editavel' id='selest"+val['estadioId']+"' hidden>  ";
@@ -238,7 +238,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
 				"</select></td>";
 				tbl += "<td><span class='fidelidadeFixo'>"+val['Fidelidade']+"</span><input type='number' min='1' max='10' class=' fidelidade inputHerdeiro' value="+val['Fidelidade']+" id='fid"+val['id']+"' hidden></td>";
                 if(val['liga'] != 0){
-                    tbl += "<td class='wide'><img src='/images/ligas/"+val['logo']+"' class='bandeira nomePais' id='log"+val['id']+"'>  <span class='nomePais' id='lig"+val['id']+"'>"+val['nomeLiga']+"</span>";
+                    tbl += "<td class='wide'><img src='/images/ligas/"+val['logo']+"' class='bandeira nomePais' id='log"+val['id']+"' loading='lazy' decoding='async'>  <span class='nomePais' id='lig"+val['id']+"'>"+val['nomeLiga']+"</span>";
                 } else {
                     tbl += "<td>";
                 }
@@ -250,7 +250,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                 tbl += "</select>";
 				tbl += "</td>";
                 if(val['idPais'] != 0){
-                    tbl += "<td class='wide'><img src='/images/bandeiras/"+val['bandeiraPais']+"' class='bandeira nomePais' id='ban"+val['id']+"'>  <span class='nomePais' id='pai"+val['id']+"'>"+val['siglaPais']+"</span>";
+                    tbl += "<td class='wide'><img src='/images/bandeiras/"+val['bandeiraPais']+"' class='bandeira nomePais' id='ban"+val['id']+"' loading='lazy' decoding='async'>  <span class='nomePais' id='pai"+val['id']+"'>"+val['siglaPais']+"</span>";
                 } else {
                     tbl += "<td>";
                 }

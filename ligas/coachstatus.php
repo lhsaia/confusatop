@@ -302,11 +302,11 @@ $fotoClass = $isFalecido ? 'margin-left foto-falecido' : 'margin-left';
                                     $bandeiraOrigem = $row['bandeiraOrigem'] ?? 'flag.png';
                                     $nomeLigaOrigem = $row['nomeLigaOrigem'] ?? '';
                                     echo "<a href='/ligas/teamstatus.php?team={$row['idOrigem']}' style='display:inline-flex; align-items:center; gap:6px; color:#0284c7; text-decoration:none; font-weight:600;'>";
-                                    echo "<img src='/images/escudos/{$escudoOrigem}' class='minithumb' onerror=\"this.src='/images/escudos/shield.png';\" /> " . htmlspecialchars($nomeOrigem);
+                                    echo "<img src='/images/escudos/{$escudoOrigem}' class='minithumb' onerror=\"this.src='/images/escudos/shield.png';\" loading='lazy' decoding='async'/> " . htmlspecialchars($nomeOrigem);
                                     echo "</a>";
                                     if (!empty($row['idLigaOrigem'])) {
                                         echo "<br/><a class='posicao' href='/ligas/leaguestatus.php?league={$row['idLigaOrigem']}' style='font-size:0.8rem; color:#64748b; text-decoration:none;'>";
-                                        echo "<img src='/images/bandeiras/{$bandeiraOrigem}' class='minithumb' /> " . htmlspecialchars($nomeLigaOrigem);
+                                        echo "<img src='/images/bandeiras/{$bandeiraOrigem}' class='minithumb' loading='lazy' decoding='async'/> " . htmlspecialchars($nomeLigaOrigem);
                                         echo "</a>";
                                     }
                                 } else {
@@ -322,11 +322,11 @@ $fotoClass = $isFalecido ? 'margin-left foto-falecido' : 'margin-left';
                                     $bandeiraDestino = $row['bandeiraDestino'] ?? 'flag.png';
                                     $nomeLigaDestino = $row['nomeLigaDestino'] ?? '';
                                     echo "<a href='/ligas/teamstatus.php?team={$row['idDestino']}' style='display:inline-flex; align-items:center; gap:6px; color:#0284c7; text-decoration:none; font-weight:600;'>";
-                                    echo "<img src='/images/escudos/{$escudoDestino}' class='minithumb' onerror=\"this.src='/images/escudos/shield.png';\" /> " . htmlspecialchars($nomeDestino);
+                                    echo "<img src='/images/escudos/{$escudoDestino}' class='minithumb' onerror=\"this.src='/images/escudos/shield.png';\" loading='lazy' decoding='async'/> " . htmlspecialchars($nomeDestino);
                                     echo "</a>";
                                     if (!empty($row['idLigaDestino'])) {
                                         echo "<br/><a class='posicao' href='/ligas/leaguestatus.php?league={$row['idLigaDestino']}' style='font-size:0.8rem; color:#64748b; text-decoration:none;'>";
-                                        echo "<img src='/images/bandeiras/{$bandeiraDestino}' class='minithumb' /> " . htmlspecialchars($nomeLigaDestino);
+                                        echo "<img src='/images/bandeiras/{$bandeiraDestino}' class='minithumb' loading='lazy' decoding='async'/> " . htmlspecialchars($nomeLigaDestino);
                                         echo "</a>";
                                     }
                                 } else {

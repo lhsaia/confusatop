@@ -400,11 +400,11 @@ if($rowTec) {
     $rowTec['Nascimento'] = !empty($rowTec['Nascimento']) ? date("d-m-Y", strtotime($rowTec['Nascimento'])) : '';
 
     echo "<tr id='tec".$rowTec['ID']."' data-sexo='".$rowTec['Sexo']."'>";
-    echo "<td class='nopadding'><div class='foto_jogador'><a href='/ligas/coachstatus.php?coach={$rowTec['ID']}'><img class='playerThumb' src='/images/tecnicos/".$rowTec['foto']."'></a></div></td>";
+    echo "<td class='nopadding'><div class='foto_jogador'><a href='/ligas/coachstatus.php?coach={$rowTec['ID']}'><img class='playerThumb' src='/images/tecnicos/".$rowTec['foto']."' loading='lazy' decoding='async'></a></div></td>";
     echo "<td class='nopadding nomeJogador'><a href='/ligas/coachstatus.php?coach={$rowTec['ID']}' style='color:#0f172a; text-decoration:none; font-weight:600;'><span class='nomeEditavel'>{$rowTec['Nome']}</span></a><br><span class='posicao'>Técnico</span></td>";
     echo "<td data-label='Posições'><span class='cell-value'>T</span></td>";
     if($rowTec['idPais'] != 0){
-        echo "<td class='nopadding' data-label='Nac.'><span class='cell-value'><img src='/images/bandeiras/{$rowTec['bandeiraPais']}' class='bandeira nomePais' id='ban".$rowTec['idPais']."'>  <span class='nomePais' id='pai".$rowTec['idPais']."'>{$rowTec['siglaPais']}</span>";
+        echo "<td class='nopadding' data-label='Nac.'><span class='cell-value'><img src='/images/bandeiras/{$rowTec['bandeiraPais']}' class='bandeira nomePais' id='ban".$rowTec['idPais']."' loading='lazy' decoding='async'>  <span class='nomePais' id='pai".$rowTec['idPais']."'>{$rowTec['siglaPais']}</span>";
     } else {
         echo "<td data-label='Nac.'><span class='cell-value'>";
     }
@@ -516,7 +516,7 @@ $agora = date('Y-m-d');
 
 
             echo "<tr data-id-dono-vinculado='".$clubeVinculado."' data-sexo='".$sexoJogador."' id='".$idJogador."' class='".$titular." ".($bloqueadoPorIdade ? "jogador-bloqueado-idade" : "")."' data-bloqueado-idade='".($bloqueadoPorIdade ? "1" : "0")."'>";
-            echo "<td class='nopadding'><div class='foto_jogador'><div class='imageUpload'><img class='playerThumb' src='/images/jogadores/".$foto."' /> <input type='file' hidden id='foto".$idJogador."' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div>
+            echo "<td class='nopadding'><div class='foto_jogador'><div class='imageUpload'><img class='playerThumb' src='/images/jogadores/".$foto."' loading='lazy' decoding='async'/> <input type='file' hidden id='foto".$idJogador."' class='hiddenInput custom-file-upload' name='foto' accept='.jpg,.png,.jpeg,.webp'/></div>
                 <div class='jersey-container'>
                     <div class='jersey-icon' title='Número da camisa'>{$numeroCamisa}</div>
                     <input type='number' class='editavel numeroCamisa' value='{$numeroCamisa}' min='1' max='99' style='display:none;'>
@@ -531,7 +531,7 @@ $agora = date('Y-m-d');
                 echo "</select>";
                 echo "</span></td>";
                 if($idPais != 0){
-                    echo "<td class='nopadding' data-label='Nac.'><span class='cell-value'><img src='/images/bandeiras/{$bandeiraPais}' class='bandeira nomePais' id='ban".$idPais."'>  <span class='nomePais' id='pai".$idPais."'>{$siglaPais}</span></span>";
+                    echo "<td class='nopadding' data-label='Nac.'><span class='cell-value'><img src='/images/bandeiras/{$bandeiraPais}' class='bandeira nomePais' id='ban".$idPais."' loading='lazy' decoding='async'>  <span class='nomePais' id='pai".$idPais."'>{$siglaPais}</span></span>";
                 } else {
                     echo "<td data-label='Nac.'><span class='cell-value'>";
                 }

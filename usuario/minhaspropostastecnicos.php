@@ -106,17 +106,17 @@ if($num>0){
             $mensagensJsonAttr = htmlspecialchars(json_encode($mensagensArr), ENT_QUOTES, 'UTF-8');
 
             echo "<tr id='".$idTransferencia."' class='tipo".$status_execucao."' data-tecnico='".htmlspecialchars($nomeJogador, ENT_QUOTES)."'>";
-                echo "<td><img src='/images/icons/".$direcao.".png' width='30px' height='30px'/></td>";
+                echo "<td><img src='/images/icons/".$direcao.".png' width='30px' height='30px' loading='lazy' decoding='async'/></td>";
                 echo "<td data-label='Técnico'><a href='/ligas/coachstatus.php?coach={$idJogador}' style='color:#0284c7; text-decoration:none; font-weight:600;'><span class='nomeEditavel'>{$nomeJogador}</span></a></td>";
                 echo "<td data-label='Nível'><span class='nomeEditavel'>{$nivelJogador}</span></td>";
-                echo "<td data-label='Origem'><img class='thumb' src='/images/escudos/".$escudoOrigem . "' />";
+                echo "<td data-label='Origem'><img class='thumb' src='/images/escudos/".$escudoOrigem . "' loading='lazy' decoding='async'/>";
                 if(!empty($idClubeOrigem)){
                   echo "<a href='/ligas/teamstatus.php?team={$idClubeOrigem}' class='nomeEditavel'>{$clubeOrigem}</a>";
                 } else {
                   echo "<span class='nomeEditavel'>{$clubeOrigem}</span>";
                 }
                 echo "</td>";
-                echo "<td data-label='Destino'><img class='thumb' src='/images/escudos/".$escudoDestino . "' />";
+                echo "<td data-label='Destino'><img class='thumb' src='/images/escudos/".$escudoDestino . "' loading='lazy' decoding='async'/>";
                 if(!empty($idClubeDestino)){
                   echo "<a href='/ligas/teamstatus.php?team={$idClubeDestino}' class='nomeEditavel'>{$clubeDestino}</a>";
                 } else {

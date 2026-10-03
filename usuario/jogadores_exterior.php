@@ -187,13 +187,13 @@ function renderTable(data, page) {
         var paisHtml = "-";
         if (item.idPais && item.idPais != 0) {
             var flagSrc = item.bandeiraPais ? "/images/bandeiras/" + item.bandeiraPais : "/images/bandeiras/flag.png";
-            paisHtml = "<a href='/ligas/paisstatus.php?country=" + item.idPais + "' title='" + (item.siglaPais || "") + "'><img src='" + flagSrc + "' class='bandeira' alt='" + (item.siglaPais || "") + "'> <strong>" + (item.siglaPais || "") + "</strong></a>";
+            paisHtml = "<a href='/ligas/paisstatus.php?country=" + item.idPais + "' title='" + (item.siglaPais || "") + "'><img src='" + flagSrc + "' class='bandeira' alt='" + (item.siglaPais || "") + "' loading='lazy' decoding='async'> <strong>" + (item.siglaPais || "") + "</strong></a>";
         }
 
         var clubeHtml = "Sem Clube";
         if (item.clubeVinculado) {
             var escudoSrc = item.escudoClubeVinculado ? "/images/escudos/" + item.escudoClubeVinculado : "/images/escudos/shield.png";
-            clubeHtml = "<a href='/ligas/teamstatus.php?team=" + item.idClubeVinculado + "'><img class='minithumb' src='" + escudoSrc + "' alt='Clube'>" + item.clubeVinculado + "</a>";
+            clubeHtml = "<a href='/ligas/teamstatus.php?team=" + item.idClubeVinculado + "'><img class='minithumb' src='" + escudoSrc + "' alt='Clube' loading='lazy' decoding='async'>" + item.clubeVinculado + "</a>";
         }
 
         var posicoesFormatadas = item.posicoesFormatadas || item.StringPosicoes || '';

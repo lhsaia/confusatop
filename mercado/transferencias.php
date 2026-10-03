@@ -207,7 +207,7 @@ if($pageType == 'maiores' || $pageType == 'ultimas' || $pageType == 'usuario'){
             echo "<td class='nopadding nomeJogador'>{$nomeJogador}<br><span class='posicao'>{$posicaoBase}</span><span class=' {$genderClass} genderSign'>{$genderCode}</span></td>";
             echo "<td class='nopadding'>{$idade}</td>";
             if($nacionalidade != 0){
-                echo "<td class='nopadding'><a href='/ligas/paisstatus.php?country=".$nacionalidade."'><img src='/images/bandeiras/{$bandeiraJogador}' class='bandeira nomePais' id='ban".$nacionalidade."'/></a></td>";
+                echo "<td class='nopadding'><a href='/ligas/paisstatus.php?country=".$nacionalidade."'><img src='/images/bandeiras/{$bandeiraJogador}' class='bandeira nomePais' id='ban".$nacionalidade."' loading='lazy' decoding='async'/></a></td>";
             } else {
                 echo "<td class='nopadding'>-</td>";
             }
@@ -217,10 +217,10 @@ if($pageType == 'maiores' || $pageType == 'ultimas' || $pageType == 'usuario'){
             } else {
                 echo "<span>";
             }
-            echo "<img src='/images/escudos/".$escudoOrigem."' class='minithumb'/>{$clubeOrigem}";
+            echo "<img src='/images/escudos/".$escudoOrigem."' class='minithumb' loading='lazy' decoding='async'/>{$clubeOrigem}";
             if($idClubeOrigem != 0){
             echo "</a>";
-            echo "<br/><a class='posicao' href='/ligas/leaguestatus.php?league=".$idLigaOrigem."'><img src='/images/bandeiras/{$bandeiraClubeOrigem}' class='minithumb' id='ban".$paisClubeOrigem."'/>{$ligaOrigem}</a>";
+            echo "<br/><a class='posicao' href='/ligas/leaguestatus.php?league=".$idLigaOrigem."'><img src='/images/bandeiras/{$bandeiraClubeOrigem}' class='minithumb' id='ban".$paisClubeOrigem."' loading='lazy' decoding='async'/>{$ligaOrigem}</a>";
             } else {
             echo "</span>";
             }
@@ -231,10 +231,10 @@ if($pageType == 'maiores' || $pageType == 'ultimas' || $pageType == 'usuario'){
             } else {
                 echo "<span>";
             }
-            echo "<img src='/images/escudos/".$escudoDestino."' class='minithumb'/>{$clubeDestino}";
+            echo "<img src='/images/escudos/".$escudoDestino."' class='minithumb' loading='lazy' decoding='async'/>{$clubeDestino}";
             if($idClubeDestino != 0){
             echo "</a>";
-            echo "<br/><a class='posicao' href='/ligas/leaguestatus.php?league=".$idLigaDestino."'><img src='/images/bandeiras/{$bandeiraClubeDestino}' class='minithumb' id='ban".$paisClubeDestino."'/>{$ligaDestino}</a>";
+            echo "<br/><a class='posicao' href='/ligas/leaguestatus.php?league=".$idLigaDestino."'><img src='/images/bandeiras/{$bandeiraClubeDestino}' class='minithumb' id='ban".$paisClubeDestino."' loading='lazy' decoding='async'/>{$ligaDestino}</a>";
             }
             echo "</td>";
             echo "<td class='nopadding'>".date('d/m/Y', strtotime($data))."</td>";
@@ -318,7 +318,7 @@ if($pageType == 'maiores' || $pageType == 'ultimas' || $pageType == 'usuario'){
                 echo "<td class='nopadding'>{$idade}</td>";
                 echo "<td class='nopadding'>{$Nivel}</td>";
                 if($nacionalidade != 0){
-                    echo "<td class='nopadding'><a href='/ligas/paisstatus.php?country=".$nacionalidade."'><img src='/images/bandeiras/{$bandeiraJogador}' class='bandeira nomePais' id='ban".$nacionalidade."'/></a>";
+                    echo "<td class='nopadding'><a href='/ligas/paisstatus.php?country=".$nacionalidade."'><img src='/images/bandeiras/{$bandeiraJogador}' class='bandeira nomePais' id='ban".$nacionalidade."' loading='lazy' decoding='async'/></a>";
                 } else {
                     echo "<td>-";
                 }
@@ -326,7 +326,7 @@ if($pageType == 'maiores' || $pageType == 'ultimas' || $pageType == 'usuario'){
                 echo "<td class='nopadding'>";
                 if(!empty($clube) && !empty($escudo) && $clube != 0){
                     echo "<a href='/ligas/teamstatus.php?team=".$clube."'>";
-                    echo "<img src='/images/escudos/".$escudo."' class='smallthumb'/>";
+                    echo "<img src='/images/escudos/".$escudo."' class='smallthumb' loading='lazy' decoding='async'/>";
                     echo "</a>";
                 } else {
                     echo "<span style='color: #94a3b8; font-size: 0.85rem;'>Sem clube</span>";
@@ -402,7 +402,7 @@ if($pageType == 'maiores' || $pageType == 'ultimas' || $pageType == 'usuario'){
 
                     echo "<tr id='".$idPais."'>";
                     echo "<td class='leftalign nopadding";
-                    echo "'><a href='/ligas/paisstatus.php?country=".$idPais."'><img src='/images/bandeiras/{$bandeira}' class='paddingright bandeira nomePais' id='ban".$idPais."'/>{$nome}</a>";
+                    echo "'><a href='/ligas/paisstatus.php?country=".$idPais."'><img src='/images/bandeiras/{$bandeira}' class='paddingright bandeira nomePais' id='ban".$idPais."' loading='lazy' decoding='async'/>{$nome}</a>";
                     echo "<td class='nopadding mercado".$statusAtual."'>{$statusAtual}</td>";
                     foreach($calendario as $index => $mes){
                         if($mes == 1){
@@ -1299,11 +1299,11 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                     // Club & League
                     tbl += "<br><span class='sub-info' style='font-size: 0.72rem; color: #64748b; font-weight: 500;'>";
                     if(val['idClube'] != 0){
-                        tbl += "<a href='/ligas/teamstatus.php?team="+val['idClube']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/escudos/"+val['escudoClube']+"' class='minithumb'/>"+val['nomeClube']+"</a>";
+                        tbl += "<a href='/ligas/teamstatus.php?team="+val['idClube']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/escudos/"+val['escudoClube']+"' class='minithumb' loading='lazy' decoding='async'/>"+val['nomeClube']+"</a>";
                         if(isEmprestado && val['nomeClubeOrigem'] && val['nomeClubeOrigem'] !== val['nomeClube']){
                             tbl += " <span style='font-size: 0.7rem; color: #d97706; font-weight: 600;'>(Empréstimo de "+val['nomeClubeOrigem']+")</span>";
                         }
-                        tbl += " | <a href='/ligas/leaguestatus.php?league="+val['idLiga']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/bandeiras/"+val['bandeiraClube']+"' class='minithumb' id='ban"+val['paisClube']+"'/>"+val['ligaClube']+"</a>";
+                        tbl += " | <a href='/ligas/leaguestatus.php?league="+val['idLiga']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/bandeiras/"+val['bandeiraClube']+"' class='minithumb' id='ban"+val['paisClube']+"' loading='lazy' decoding='async'/>"+val['ligaClube']+"</a>";
                     } else {
                         tbl += "Sem Clube";
                     }
@@ -1324,8 +1324,8 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                     // Club & League
                     tbl += "<br><span class='sub-info' style='font-size: 0.72rem; color: #64748b; font-weight: 500;'>";
                     if(val['idClube'] != 0){
-                        tbl += "<a href='/ligas/teamstatus.php?team="+val['idClube']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/escudos/"+val['escudoClube']+"' class='minithumb'/>"+val['nomeClube']+"</a>";
-                        tbl += " | <a href='/ligas/leaguestatus.php?league="+val['idLiga']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/bandeiras/"+val['bandeiraClube']+"' class='minithumb' id='ban"+val['paisClube']+"'/>"+val['ligaClube']+"</a>";
+                        tbl += "<a href='/ligas/teamstatus.php?team="+val['idClube']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/escudos/"+val['escudoClube']+"' class='minithumb' loading='lazy' decoding='async'/>"+val['nomeClube']+"</a>";
+                        tbl += " | <a href='/ligas/leaguestatus.php?league="+val['idLiga']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/bandeiras/"+val['bandeiraClube']+"' class='minithumb' id='ban"+val['paisClube']+"' loading='lazy' decoding='async'/>"+val['ligaClube']+"</a>";
                     } else {
                         tbl += "Sem Clube";
                     }
@@ -1338,7 +1338,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                 }
                 tbl += "<td class='nopadding'>"+val['idadeJogador']+"</td>";
                 if(val['nacionalidade'] != 0){
-                tbl += "<td class='nopadding'><a href='/ligas/paisstatus.php?country="+val['nacionalidade']+"'><img src='/images/bandeiras/"+val['bandeira']+"' class='bandeira nomePais' id='ban"+val['nacionalidade']+"'/></a>";
+                tbl += "<td class='nopadding'><a href='/ligas/paisstatus.php?country="+val['nacionalidade']+"'><img src='/images/bandeiras/"+val['bandeira']+"' class='bandeira nomePais' id='ban"+val['nacionalidade']+"' loading='lazy' decoding='async'/></a>";
                 } else {
                 tbl += "<td>";
                 }
