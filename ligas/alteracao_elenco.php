@@ -43,7 +43,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $usuario->atualizarAlteracao($_SESSION['user_id']);
     } else {
         $is_success = false;
-        $error_msg .= "Falha ao realizar alteração no banco de dados";
+        $error_msg .= !empty($time->ultimo_erro) ? $time->ultimo_erro : "Falha ao realizar alteração no banco de dados";
     }
 
 } else {

@@ -1509,27 +1509,31 @@ $(document).on("click", '.convocar', function(event){
     var nacionalidadeJogador = arrayJogador.nacionalidade;
 
     var counter = 0;
+    var firstMatchSelected = false;
     $("#selecaoDestino option").each(function(){
 
-        if($(this).attr("data-sexo") == sexoJogador && $(this).attr("data-pais") == nacionalidadeJogador){
-
+        var isEligible = false;
+        if($(this).attr("data-sexo") == sexoJogador && $(this).attr("data-pais") == nacionalidadeJogador && $(this).val() !== 'erro'){
             if($(this).attr("data-status") == 1){
-                $(this).show();
-                counter = counter + 1;
-                $(this).prop('selected', true);
+                isEligible = true;
             } else if($(this).attr("data-status") == 2 && idadeJogador <= 21 ){
-                $(this).show();
-                counter = counter + 1;
+                isEligible = true;
             } else if($(this).attr("data-status") == 3 && idadeJogador <= 20 ){
-                $(this).show();
-                counter = counter + 1;
+                isEligible = true;
             } else if($(this).attr("data-status") == 4 && idadeJogador <= 18 ){
-                $(this).show();
-                counter = counter + 1;
-            } else {
-                $(this).hide();
+                isEligible = true;
             }
+        }
 
+        if(isEligible){
+            $(this).show();
+            counter = counter + 1;
+            if(!firstMatchSelected){
+                $(this).prop('selected', true);
+                firstMatchSelected = true;
+            } else {
+                $(this).prop('selected', false);
+            }
         } else {
             $(this).hide();
             $(this).prop('selected', false);
@@ -1568,6 +1572,8 @@ $(document).on("click", '.convocarTecnico', function(event){
             if(!firstMatchSelected){
                 $(this).prop('selected', true);
                 firstMatchSelected = true;
+            } else {
+                $(this).prop('selected', false);
             }
             counter = counter + 1;
         } else {

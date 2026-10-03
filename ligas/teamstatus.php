@@ -270,6 +270,13 @@ $perc_estrangeiros = $total_rows > 0 ? number_format(($estrangeiros / $total_row
                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">auto_stories</span>
                 <span>Apresentação</span>
             </a>
+            <?php if($is_selecao && ($donoLogado || !empty($_SESSION['impersonated']))): ?>
+                <!-- Botão Convocar Atletas (Drawer) -->
+                <a href="javascript:void(0)" id="btn-abrir-drawer-convocacao" class="btn-convocar-atletas" role="button" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: #fff; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); width: auto; max-width: max-content; flex: 0 0 auto;" title="Abrir painel prático de convocação de atletas">
+                    <span class="material-symbols-outlined" style="font-size: 1.15rem;">group_add</span>
+                    <span>Convocar Atletas</span>
+                </a>
+            <?php endif; ?>
             <!-- Botão Time Traveler -->
             <a href="/times/time_traveler.php?team=<?php echo $idTime; ?>" class="btn-time-traveler" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: #0f172a; color: #fff; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 0.9rem; transition: background 0.2s;" title="Reconstituir o elenco do time em qualquer data do passado">
                 <span class="material-symbols-outlined" style="font-size: 1.1rem; color: #38bdf8;">history_toggle_off</span>
@@ -1791,6 +1798,10 @@ $(document).on("click", ".quick-move-btn", function(e) {
 
     var tipoAlteracao;
     if (action === 'promote-suplente') {
+        if (total_reserva >= 12) {
+            alert('Já existem 12 jogadores reservas!');
+            return;
+        }
         tipoAlteracao = 2; // Suplente -> Reserva
     } else if (action === 'demote-reserva') {
         tipoAlteracao = 3; // Reserva -> Suplente
@@ -3024,6 +3035,395 @@ var idTecnico = tbl_row.prop('id');
 </div> <!-- close #quadro-container -->
 </div> <!-- close .propostas-card -->
 </main> <!-- close .propostas-container -->
+
+<?php if($is_selecao && ($donoLogado || !empty($_SESSION['impersonated']))): ?>
+<!-- Drawer / Modal de Convocação Rápida para Seleções (Renderizado fora do propostas-card para ocupar viewport completa) -->
+<div id="drawerConvocacaoOverlay" class="drawer-convocacao-overlay"></div>
+<div id="drawerConvocacao" class="drawer-convocacao">
+    <div class="drawer-header">
+        <div class="drawer-header-info">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="material-symbols-outlined" style="color: #10b981; font-size: 26px;">public</span>
+                <h3 class="drawer-title" style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 1.35rem; color: #0f172a;">
+                    Convocar Atletas - <?php echo htmlspecialchars($nome_time); ?>
+                </h3>
+            </div>
+            <p class="drawer-subtitle" id="drawerConvocacaoMeta" style="margin: 4px 0 0 0; font-size: 0.85rem; color: #64748b;">
+                Carregando jogadores elegíveis do país...
+            </p>
+        </div>
+        <button type="button" id="btnFecharDrawerConvocacao" class="btn-fechar-drawer" title="Fechar painel">&times;</button>
+    </div>
+
+    <!-- Filtros Rápidos -->
+    <div class="drawer-filters-container">
+        <div class="drawer-search-wrapper">
+            <span class="material-symbols-outlined drawer-search-icon">search</span>
+            <input type="text" id="drawerSearchInput" placeholder="Buscar atleta por nome, clube ou posição..." autocomplete="off">
+        </div>
+        <div class="drawer-pills-wrapper">
+            <button type="button" class="drawer-pos-pill active" data-pos="TODOS">Todos</button>
+            <button type="button" class="drawer-pos-pill" data-pos="G">Goleiros</button>
+            <button type="button" class="drawer-pos-pill" data-pos="DEF">Defensores</button>
+            <button type="button" class="drawer-pos-pill" data-pos="MEI">Meio-campo</button>
+            <button type="button" class="drawer-pos-pill" data-pos="ATA">Atacantes</button>
+            <button type="button" class="drawer-pos-pill" data-pos="CONVOCADOS" style="margin-left: auto; border-color: #10b981; color: #059669;">Convocados (<span id="drawerCountConvocados">0</span>)</button>
+        </div>
+    </div>
+
+    <!-- Lista de Atletas -->
+    <div class="drawer-body" id="drawerJogadoresLista">
+        <div style="text-align: center; padding: 40px 20px; color: #64748b;">
+            <div class="spinner-border" style="display: inline-block; width: 2rem; height: 2rem; vertical-align: text-bottom; border: .25em solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spinner-border .75s linear infinite;"></div>
+            <p style="margin-top: 10px; font-weight: 600;">Buscando base de jogadores...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+var drawerElegiveisData = [];
+var drawerSelectedPos = 'TODOS';
+var drawerSearchTerm = '';
+var selecaoTeamId = <?php echo (int)$idTime; ?>;
+var selecaoStatusTipo = <?php echo (int)($status_time ?? 1); ?>;
+var drawerSearchTimer = null;
+
+function getDrawerCacheKey() {
+    return 'confusa_drawer_elegiveis_' + selecaoTeamId;
+}
+
+function abrirDrawerConvocacao() {
+    $('#drawerConvocacaoOverlay').addClass('open');
+    $('#drawerConvocacao').addClass('open');
+    $('body').css('overflow', 'hidden');
+
+    var cacheKey = getDrawerCacheKey();
+    var cached = sessionStorage.getItem(cacheKey);
+
+    // Se já tiver dados na memória ou no cache local, renderiza INSTANTANEAMENTE
+    if (drawerElegiveisData && drawerElegiveisData.length > 0) {
+        renderizarJogadoresDrawer();
+        carregarElegiveisDrawer(true); // Atualiza em background silencioso
+    } else if (cached) {
+        try {
+            var parsed = JSON.parse(cached);
+            if (parsed && parsed.jogadores && parsed.jogadores.length > 0) {
+                drawerElegiveisData = parsed.jogadores;
+                var selecaoInfo = parsed.selecao || {};
+                var metaText = 'Total: <strong>' + selecaoInfo.totalElegiveis + '</strong> atletas elegíveis | Convocados atuais: <strong style="color: #10b981;">' + selecaoInfo.totalConvocados + '</strong>';
+                if (selecaoInfo.idadeMax < 90) {
+                    metaText += ' | Limite: <strong>Sub-' + selecaoInfo.idadeMax + '</strong>';
+                }
+                $('#drawerConvocacaoMeta').html(metaText);
+                $('#drawerCountConvocados').text(selecaoInfo.totalConvocados);
+                renderizarJogadoresDrawer();
+                carregarElegiveisDrawer(true); // Atualiza em background silencioso
+                return;
+            }
+        } catch(e) {}
+        carregarElegiveisDrawer(false);
+    } else {
+        carregarElegiveisDrawer(false);
+    }
+}
+
+function fecharDrawerConvocacao() {
+    $('#drawerConvocacaoOverlay').removeClass('open');
+    $('#drawerConvocacao').removeClass('open');
+    $('body').css('overflow', 'auto');
+}
+
+function carregarElegiveisDrawer(isSilent) {
+    if (!isSilent) {
+        $('#drawerJogadoresLista').html(`
+            <div style="text-align: center; padding: 40px 20px; color: #64748b;">
+                <span class="material-symbols-outlined" style="font-size: 32px; animation: spin 1s infinite linear;">sync</span>
+                <p style="margin-top: 8px; font-weight: 600;">Carregando atletas elegíveis...</p>
+            </div>
+        `);
+    }
+
+    $.ajax({
+        url: '/jogadores/buscar_elegiveis_selecao.php',
+        type: 'GET',
+        data: { idSelecao: selecaoTeamId },
+        dataType: 'json'
+    }).done(function(res) {
+        if (!res.success) {
+            if (!isSilent) {
+                $('#drawerJogadoresLista').html('<div class="alert alert-danger" style="margin: 20px;">' + (res.error || 'Erro ao carregar') + '</div>');
+            }
+            return;
+        }
+
+        drawerElegiveisData = res.jogadores || [];
+        var selecaoInfo = res.selecao || {};
+        
+        var metaText = 'Total: <strong>' + selecaoInfo.totalElegiveis + '</strong> atletas elegíveis | Convocados atuais: <strong style="color: #10b981;">' + selecaoInfo.totalConvocados + '</strong>';
+        if (selecaoInfo.idadeMax < 90) {
+            metaText += ' | Limite: <strong>Sub-' + selecaoInfo.idadeMax + '</strong>';
+        }
+        $('#drawerConvocacaoMeta').html(metaText);
+        $('#drawerCountConvocados').text(selecaoInfo.totalConvocados);
+
+        try {
+            sessionStorage.setItem(getDrawerCacheKey(), JSON.stringify(res));
+        } catch(e) {}
+
+        renderizarJogadoresDrawer();
+    }).fail(function() {
+        if (!isSilent) {
+            $('#drawerJogadoresLista').html('<div class="alert alert-danger" style="margin: 20px;">Erro de comunicação ao carregar atletas.</div>');
+        }
+    });
+}
+
+function renderizarJogadoresDrawer() {
+    var filtered = drawerElegiveisData.filter(function(j) {
+        // Filtro texto
+        if (drawerSearchTerm) {
+            var term = drawerSearchTerm.toLowerCase();
+            var nome = (j.nomeJogador || '').toLowerCase();
+            var clube = (j.clubeAtual || '').toLowerCase();
+            var pos = (j.posicoesFormatadas || '').toLowerCase();
+            if (nome.indexOf(term) === -1 && clube.indexOf(term) === -1 && pos.indexOf(term) === -1) {
+                return false;
+            }
+        }
+
+        // Filtro posição / convocados
+        if (drawerSelectedPos === 'CONVOCADOS') {
+            return j.convocadoAqui;
+        } else if (drawerSelectedPos === 'G') {
+            return (j.StringPosicoes && j.StringPosicoes.charAt(0) === '1');
+        } else if (drawerSelectedPos === 'DEF') {
+            return (j.StringPosicoes && (
+                j.StringPosicoes.charAt(1) === '1' || j.StringPosicoes.charAt(2) === '1' || 
+                j.StringPosicoes.charAt(3) === '1' || j.StringPosicoes.charAt(4) === '1' || j.StringPosicoes.charAt(5) === '1'
+            ));
+        } else if (drawerSelectedPos === 'MEI') {
+            return (j.StringPosicoes && (
+                j.StringPosicoes.charAt(6) === '1' || j.StringPosicoes.charAt(7) === '1' || 
+                j.StringPosicoes.charAt(8) === '1' || j.StringPosicoes.charAt(9) === '1' || j.StringPosicoes.charAt(12) === '1'
+            ));
+        } else if (drawerSelectedPos === 'ATA') {
+            return (j.StringPosicoes && (
+                j.StringPosicoes.charAt(10) === '1' || j.StringPosicoes.charAt(11) === '1' || 
+                j.StringPosicoes.charAt(13) === '1' || j.StringPosicoes.charAt(14) === '1'
+            ));
+        }
+
+        return true;
+    });
+
+    if (filtered.length === 0) {
+        $('#drawerJogadoresLista').html('<div style="text-align: center; padding: 40px 20px; color: #64748b;"><span class="material-symbols-outlined" style="font-size: 40px; opacity: 0.5;">person_search</span><p style="margin-top: 8px;">Nenhum jogador encontrado com os filtros atuais.</p></div>');
+        return;
+    }
+
+    var html = '<div class="drawer-cards-grid">';
+    filtered.forEach(function(j) {
+        var isConvocado = j.convocadoAqui;
+        var cardClass = isConvocado ? 'drawer-player-card convocado' : 'drawer-player-card';
+        var fotoSrc = j.foto ? '/images/jogadores/' + encodeURIComponent(j.foto) : '/images/jogadores/default.webp';
+        var escudoSrc = j.escudoClubeAtual ? '/images/escudos/' + encodeURIComponent(j.escudoClubeAtual) : '/images/escudos/0.png';
+        var clubeNome = j.clubeAtual || 'Sem Clube';
+
+        var actionBtn = '';
+        if (isConvocado) {
+            actionBtn = `
+                <button type="button" class="btn-drawer-action btn-desconvocar" data-id="${j.idJogador}" title="Remover da convocação">
+                    <span class="material-symbols-outlined">remove_circle_outline</span> Desconvocar
+                </button>
+            `;
+        } else {
+            actionBtn = `
+                <button type="button" class="btn-drawer-action btn-convocar" data-id="${j.idJogador}" title="Convocar para esta seleção">
+                    <span class="material-symbols-outlined">add_circle</span> Convocar
+                </button>
+            `;
+        }
+
+        var badgeOutra = '';
+        if (j.outraSelecao) {
+            badgeOutra = `<span class="drawer-badge-outra" title="Também convocado em: ${j.outraSelecao}">Em ${j.outraSelecao}</span>`;
+        }
+
+        html += `
+            <div class="${cardClass}" id="drawer-player-${j.idJogador}">
+                <div class="drawer-player-main">
+                    <div class="drawer-player-avatar-wrapper">
+                        <img src="${fotoSrc}" class="drawer-player-avatar" onerror="this.onerror=null; this.src='/images/jogadores/default.webp';" loading="lazy">
+                        <span class="drawer-player-level">${j.Nivel}</span>
+                    </div>
+                    <div class="drawer-player-details">
+                        <div class="drawer-player-name-row">
+                            <a href="/ligas/playerstatus.php?player=${j.idJogador}" target="_blank" class="drawer-player-name">${j.nomeJogador}</a>
+                            ${isConvocado ? '<span class="drawer-badge-status-conv">CONVOCADO</span>' : ''}
+                            ${badgeOutra}
+                        </div>
+                        <div class="drawer-player-subinfo">
+                            <span class="drawer-pos-tag">${j.posicoesFormatadas || 'N/D'}</span>
+                            <span class="drawer-separator">•</span>
+                            <span>${j.idade} anos</span>
+                            <span class="drawer-separator">•</span>
+                            <span class="drawer-club-tag">
+                                <img src="${escudoSrc}" onerror="this.onerror=null; this.src='/images/escudos/0.png';">
+                                ${clubeNome}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="drawer-player-action-box">
+                    ${actionBtn}
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+
+    $('#drawerJogadoresLista').html(html);
+}
+
+// Eventos do Drawer
+$(document).on('click', '#btn-abrir-drawer-convocacao', function(e) {
+    e.preventDefault();
+    abrirDrawerConvocacao();
+});
+
+$(document).on('click', '#btnFecharDrawerConvocacao, #drawerConvocacaoOverlay', function() {
+    fecharDrawerConvocacao();
+});
+
+// Filtros com Debounce
+$(document).on('input', '#drawerSearchInput', function() {
+    var val = $(this).val().trim();
+    clearTimeout(drawerSearchTimer);
+    drawerSearchTimer = setTimeout(function() {
+        drawerSearchTerm = val;
+        renderizarJogadoresDrawer();
+    }, 120);
+});
+
+$(document).on('click', '.drawer-pos-pill', function() {
+    $('.drawer-pos-pill').removeClass('active');
+    $(this).addClass('active');
+    drawerSelectedPos = $(this).attr('data-pos');
+    renderizarJogadoresDrawer();
+});
+
+// Ação de Convocar via Drawer
+$(document).on('click', '.btn-drawer-action.btn-convocar', function(e) {
+    e.preventDefault();
+    var btn = $(this);
+    var idJogador = btn.data('id');
+    btn.prop('disabled', true).html('<span class="material-symbols-outlined" style="animation: spin 1s infinite linear;">sync</span>');
+
+    $.ajax({
+        type: 'POST',
+        url: '/jogadores/convocar.php',
+        data: {
+            idJogador: idJogador,
+            selecaoDestino: selecaoTeamId,
+            tipoContrato: selecaoStatusTipo
+        },
+        dataType: 'json'
+    }).done(function(data) {
+        if (!data.success) {
+            alert('Não foi possível convocar: ' + (data.error || 'Erro desconhecido'));
+            btn.prop('disabled', false).html('<span class="material-symbols-outlined">add_circle</span> Convocar');
+        } else {
+            // Atualizar estado local
+            var jog = drawerElegiveisData.find(j => j.idJogador == idJogador);
+            if (jog) jog.convocadoAqui = true;
+
+            var totalConvs = drawerElegiveisData.filter(j => j.convocadoAqui).length;
+            $('#drawerCountConvocados').text(totalConvs);
+
+            try {
+                sessionStorage.setItem(getDrawerCacheKey(), JSON.stringify({
+                    success: true,
+                    selecao: {
+                        id: selecaoTeamId,
+                        totalConvocados: totalConvs,
+                        totalElegiveis: drawerElegiveisData.length
+                    },
+                    jogadores: drawerElegiveisData
+                }));
+            } catch(e) {}
+
+            renderizarJogadoresDrawer();
+
+            // Atualiza elenco da página principal silenciosamente
+            reloadPageContent();
+        }
+    }).fail(function() {
+        alert('Erro de comunicação com o servidor');
+        btn.prop('disabled', false).html('<span class="material-symbols-outlined">add_circle</span> Convocar');
+    });
+});
+
+// Ação de Desconvocar via Drawer
+$(document).on('click', '.btn-drawer-action.btn-desconvocar', function(e) {
+    e.preventDefault();
+    var btn = $(this);
+    var idJogador = btn.data('id');
+    
+    if (!confirm('Deseja remover este jogador da convocação?')) {
+        return;
+    }
+
+    btn.prop('disabled', true).html('<span class="material-symbols-outlined" style="animation: spin 1s infinite linear;">sync</span>');
+
+    let formData = new FormData();
+    formData.append('idJogador', idJogador);
+    formData.append('alteracao', 2);
+    formData.append('idTime', selecaoTeamId);
+
+    $.ajax({
+        type: 'POST',
+        url: '/jogadores/editar_jogador.php',
+        data: formData,
+        processData: false,
+        contentType: false,
+        cache: false,
+        dataType: 'json'
+    }).done(function(data) {
+        if (!data.success) {
+            alert('Não foi possível desconvocar: ' + (data.error || 'Erro desconhecido'));
+            btn.prop('disabled', false).html('<span class="material-symbols-outlined">remove_circle_outline</span> Desconvocar');
+        } else {
+            // Atualizar estado local
+            var jog = drawerElegiveisData.find(j => j.idJogador == idJogador);
+            if (jog) jog.convocadoAqui = false;
+
+            var totalConvs = drawerElegiveisData.filter(j => j.convocadoAqui).length;
+            $('#drawerCountConvocados').text(totalConvs);
+
+            try {
+                sessionStorage.setItem(getDrawerCacheKey(), JSON.stringify({
+                    success: true,
+                    selecao: {
+                        id: selecaoTeamId,
+                        totalConvocados: totalConvs,
+                        totalElegiveis: drawerElegiveisData.length
+                    },
+                    jogadores: drawerElegiveisData
+                }));
+            } catch(e) {}
+
+            renderizarJogadoresDrawer();
+
+            // Atualiza elenco da página principal silenciosamente
+            reloadPageContent();
+        }
+    }).fail(function() {
+        alert('Erro de comunicação ao desconvocar');
+        btn.prop('disabled', false).html('<span class="material-symbols-outlined">remove_circle_outline</span> Desconvocar');
+    });
+});
+</script>
+<?php endif; ?>
 
 <?php
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");

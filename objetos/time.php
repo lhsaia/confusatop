@@ -960,6 +960,19 @@ function readInfo($id){
                 }
             }
 
+            // Verificar limite máximo de 12 reservas (titularidade = 0)
+            if($time != null && ($tipoAlteracao == 2 || $tipoAlteracao == 5)){
+                $queryCountRes = "SELECT COUNT(*) FROM contratos_jogador WHERE clube = ? AND titularidade = 0";
+                $stmtCountRes = $this->conn->prepare($queryCountRes);
+                $stmtCountRes->bindParam(1, $time);
+                $stmtCountRes->execute();
+                $totalReservasAtual = (int)$stmtCountRes->fetchColumn();
+                if($totalReservasAtual >= 12){
+                    $this->ultimo_erro = "Já existem 12 jogadores reservas!";
+                    return false;
+                }
+            }
+
             //tipos de alteraçao
             //0 - troca entre titular e reserva
             //1 - troca entre reserva e suplente
