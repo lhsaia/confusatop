@@ -7,6 +7,7 @@ error_reporting( E_ALL );
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
   require_once $_SERVER['DOCUMENT_ROOT']."/octamotor/config/database.php";
   require_once $_SERVER['DOCUMENT_ROOT']."/octamotor/classes/track.php";
+  require_once $_SERVER['DOCUMENT_ROOT']."/octamotor/classes/circuit_vectorizer.php";
   include_once $_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php";
 
   $track_data = array();
@@ -61,6 +62,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     if($track->updateTrack($id, $track_data)){
       $is_success = true;
       $error_msg = "Atualização realizada com sucesso!";
+      if(!empty($track_data["image"])){
+        CircuitVectorizer::clearCache($track_data["image"]);
+        CircuitVectorizer::getTrackSvgData($track_data["image"]);
+      }
     } else {
       $is_success = false;
       $error_msg = "Houve um erro na solicitação. Caso o erro persista, entre em contato com os admins.";
@@ -71,6 +76,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     if($track->insertTrack($track_data)){
       $is_success = true;
       $error_msg = "Criação realizada com sucesso!";
+      if(!empty($track_data["image"])){
+        CircuitVectorizer::getTrackSvgData($track_data["image"]);
+      }
     } else {
       $is_success = false;
       $error_msg = "Houve um erro na solicitação. Caso o erro persista, entre em contato com os admins.";

@@ -1094,10 +1094,268 @@ body{
 }
 
 #container-race-podium{
+	background-color: #0b0f19;
+	max-height: 340px;
+	min-height: 280px;
+	padding: 0;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
 
-	background-color:black;
-	max-height:300px;
-	padding:0;
+/* Live Track Radar */
+#track-radar-container {
+  width: 100%;
+  height: 100%;
+  min-height: 270px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  position: relative;
+  background: radial-gradient(circle at 50% 50%, #111827 0%, #030712 100%);
+  border-radius: 10px;
+}
+
+.radar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 6px;
+  z-index: 5;
+}
+
+.radar-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.95em;
+  color: #38bdf8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.radar-icon {
+  font-size: 18px;
+  color: #38bdf8;
+  animation: radarRotate 4s linear infinite;
+}
+
+@keyframes radarRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.radar-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.radar-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72em;
+  font-weight: 800;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  padding: 2px 7px;
+  border-radius: 12px;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+  animation: liveDotPulse 1.2s infinite;
+}
+
+@keyframes liveDotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
+}
+
+#btn-toggle-radar-view {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s;
+}
+
+#btn-toggle-radar-view:hover {
+  background: #0284c7;
+  border-color: #38bdf8;
+  color: #fff;
+  transform: scale(1.05);
+}
+
+#btn-toggle-radar-view .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.radar-map-wrapper {
+  flex: 1;
+  width: 100%;
+  height: calc(100% - 30px);
+  min-height: 210px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+#track-radar-svg {
+  width: 100%;
+  height: 100%;
+  max-height: 230px;
+  overflow: visible;
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.15));
+}
+
+.radar-track-base {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 14;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.radar-track-active {
+  fill: none;
+  stroke: #0284c7;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 5px #38bdf8);
+}
+
+.radar-car-item {
+  cursor: pointer;
+  transition: transform 0.05s ease-out;
+}
+
+.radar-car-circle {
+  transition: r 0.15s ease, stroke-width 0.15s ease;
+  stroke: #000;
+  stroke-width: 1.5;
+}
+
+.radar-car-item.is-leader .radar-car-circle {
+  stroke: #fbbf24;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px #fbbf24);
+}
+
+.radar-car-item.is-hovered .radar-car-circle {
+  r: 9 !important;
+  stroke: #fff;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 8px #38bdf8);
+}
+
+.radar-car-text {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  font-weight: 900;
+  fill: #ffffff;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  text-shadow: 0 0 2px #000;
+}
+
+.radar-car-item.is-out {
+  opacity: 0.3;
+}
+
+.radar-sc-pulse {
+  fill: rgba(234, 179, 8, 0.3);
+  animation: scPulse 1s infinite;
+}
+
+@keyframes scPulse {
+  0% { r: 6; opacity: 0.8; }
+  100% { r: 12; opacity: 0; }
+}
+
+.radar-sc-dot {
+  fill: #eab308;
+  stroke: #000;
+  stroke-width: 1.5;
+}
+
+.radar-sc-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 7px;
+  font-weight: 900;
+  fill: #000;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.radar-tooltip {
+  position: absolute;
+  display: none;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8em;
+  color: #fff;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.radar-tooltip-pos {
+  display: inline-block;
+  background: #fbbf24;
+  color: #111;
+  font-weight: 900;
+  font-family: 'Share Tech Mono', monospace;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-right: 5px;
+}
+
+.radar-tooltip-name {
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.radar-tooltip-team {
+  font-size: 0.85em;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.radar-tooltip-gap {
+  font-size: 0.85em;
+  color: #38bdf8;
+  margin-top: 2px;
+  font-family: 'Share Tech Mono', monospace;
 }
 
 #main-sponsor {
@@ -1221,13 +1479,44 @@ margin-top:15px;
 	margin:5px;
 }
 
-#bck_lap, #fwd_lap, #replay-race{
-	width:40px;
-	padding:5px;
-	border-radius:5px;
-	margin:5px;
-	background-color:white;
-	color:black;
+#bck_lap, #fwd_lap, #replay-race, #replay-play, #replay-restart{
+	width: 38px;
+	height: 38px;
+	padding: 0;
+	border-radius: 8px;
+	margin: 0 4px;
+	background: rgba(30, 41, 59, 0.9);
+	border: 1px solid rgba(56, 189, 248, 0.4);
+	color: #38bdf8;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	vertical-align: middle;
+}
+
+#bck_lap:hover, #fwd_lap:hover, #replay-race:hover, #replay-play:hover, #replay-restart:hover{
+	background: #0284c7;
+	border-color: #38bdf8;
+	color: #ffffff;
+	transform: scale(1.08);
+	box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+#replay-speed{
+	height: 38px;
+	padding: 0 10px;
+	border-radius: 8px;
+	margin: 0 4px;
+	background: rgba(30, 41, 59, 0.9);
+	border: 1px solid rgba(56, 189, 248, 0.4);
+	color: #38bdf8;
+	font-weight: bold;
+	font-family: 'Share Tech Mono', monospace;
+	cursor: pointer;
+	vertical-align: middle;
+	outline: none;
 }
 
 #circuit-selection, #competition-selection, #race-scheduled-date, #race-scheduled-time {

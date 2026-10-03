@@ -211,6 +211,25 @@ class Track extends db_name {
     return $results;
   }
 
+  public function getTrackImageByName($name){
+    $query = "SELECT image FROM track WHERE name = :name LIMIT 1";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(":name", $name);
+    $stmt->execute();
+    $img = $stmt->fetchColumn();
+    if (!$img && !empty($name)) {
+        $clean = trim(preg_replace('/(International|Circuit|Autodr[oó]me|Aut[oó]dromo|Speedway|Raceway|National|Street|Racetrack)/iu', '', $name));
+        if (mb_strlen($clean) >= 3) {
+            $like = "%" . $clean . "%";
+            $stmt2 = $this->conn->prepare("SELECT image FROM track WHERE name LIKE :like LIMIT 1");
+            $stmt2->bindParam(":like", $like);
+            $stmt2->execute();
+            $img = $stmt2->fetchColumn();
+        }
+    }
+    return $img ?: '';
+  }
+
 
 
 

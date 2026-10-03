@@ -65,6 +65,31 @@ $track_list = $track->getTracksList();
       </div>
       </div>
       <div id="container-race-podium">
+        <div id="track-radar-container" style="display: none;">
+          <div class="radar-header">
+            <div class="radar-title">
+              <span class="material-symbols-outlined radar-icon">radar</span>
+              <span id="radar-track-name">Circuito</span>
+            </div>
+            <div class="radar-controls">
+              <span class="radar-live-badge"><span class="pulse-dot"></span> AO VIVO</span>
+              <button type="button" id="btn-toggle-radar-view" title="Alternar visualização"><span class="material-symbols-outlined">swap_horiz</span></button>
+            </div>
+          </div>
+          <div class="radar-map-wrapper">
+            <svg id="track-radar-svg" preserveAspectRatio="xMidYMid meet">
+              <path id="track-radar-base-path" class="radar-track-base" />
+              <path id="track-radar-active-path" class="radar-track-active" />
+              <g id="radar-safety-car" class="radar-car-group" style="display: none;">
+                <circle class="radar-sc-pulse" r="8" />
+                <circle class="radar-sc-dot" r="5" />
+                <text class="radar-sc-label" y="2.5">SC</text>
+              </g>
+              <g id="radar-cars-group"></g>
+            </svg>
+            <div id="radar-tooltip" class="radar-tooltip"></div>
+          </div>
+        </div>
 		<div id='raceNameBar'>
 		<img src='' id='competitionLogo'/><div id='raceLogo'></div></div>
 		<!--<div id='main-sponsor' style='--urlSponsor:url(/images/marcas/moon_wrap.png)'/></div> -->
@@ -109,16 +134,23 @@ $track_list = $track->getTracksList();
 		 $json = json_decode($str_file, true); // decode the JSON into an associative array
 		 if (is_array($json) && isset($json['INFO']['base_timestamp'])) {
 			 $baseTimestamp = $json['INFO']["base_timestamp"];
-			 $time_diff = time() - ($baseTimestamp + 86400);
-			 if($time_diff > 0){
-				  //$command_center .= "<button id='bck_lap'><span class='material-symbols-outlined'>skip_previous</span></button><button id='fwd_lap'><span class='material-symbols-outlined'>skip_next</span></button>";
-				  $command_center .= "<button id='replay-race'><span class='material-symbols-outlined'>play_circle</span></button>";
+			 $isTestFile = (strpos($file, 'test.json') !== false);
+			 $maxTime = isset($json['INFO']['max_time']) && floatval($json['INFO']['max_time']) > 0 ? floatval($json['INFO']['max_time']) : 7200;
+			 $raceFinished = (time() >= ($baseTimestamp + $maxTime));
+
+			 // Apenas corridas que JÁ ACONTECERAM (finalizadas no passado) ou arquivos de teste exibem controles de replay
+			 if ($isTestFile || $raceFinished) {
+				 $command_center .= "<button id='replay-play' title='Reproduzir / Pausar Corrida'><span class='material-symbols-outlined'>play_arrow</span></button>";
+				 $command_center .= "<button id='bck_lap' title='Voltar Volta (-60s)'><span class='material-symbols-outlined'>skip_previous</span></button>";
+				 $command_center .= "<button id='fwd_lap' title='Avançar Volta (+60s)'><span class='material-symbols-outlined'>skip_next</span></button>";
+				 $command_center .= "<select id='replay-speed' title='Velocidade da Reprodução'><option value='1'>1x (Real)</option><option value='2'>2x</option><option value='5'>5x</option><option value='10'>10x</option></select>";
+				 $command_center .= "<button id='replay-restart' title='Reiniciar Corrida do Início'><span class='material-symbols-outlined'>replay</span></button>";
 			 }
 		 }
 	 }
  }
 
-	 
+ 
 
 
  ?>
@@ -150,22 +182,63 @@ $("document").ready(function(){
 	var bestLapPosition;
   var race_started = 0;
   
+  // Replay playback engine state
+  var replayPlaying = false;
+  var replaySpeed = 1;
+  var replayTimer = null;
 
-  
-   $("#replay-race").click(function(){
-	  fakeTimeOffset = fakeTimeOffset + 60;
-	  get_ajax_data();
-	  $("#toolbar").html("<button id='bck_lap'><span class='material-symbols-outlined'>skip_previous</span></button><button id='fwd_lap'><span class='material-symbols-outlined'>skip_next</span></button>");
-		  
-		$("#bck_lap").click(function(){
-		  fakeTimeOffset = fakeTimeOffset - 60;
-		  get_ajax_data();
-		});
-	
-		$("#fwd_lap").click(function(){
-		  fakeTimeOffset = fakeTimeOffset + 60;
-		  get_ajax_data();
-		});
+  function startReplayPlay() {
+    replayPlaying = true;
+    $("#replay-play").html("<span class='material-symbols-outlined'>pause</span>");
+    if (replayTimer) clearInterval(replayTimer);
+    
+    // Ticker to advance replay automatically in real-time
+    replayTimer = setInterval(function() {
+      fakeTimeOffset += (1 * replaySpeed);
+      // Synchronize data periodically
+      if (fakeTimeOffset % Math.max(1, Math.round(3 / replaySpeed)) === 0) {
+        get_ajax_data();
+      }
+    }, 1000 / replaySpeed);
+  }
+
+  function pauseReplayPlay() {
+    replayPlaying = false;
+    $("#replay-play").html("<span class='material-symbols-outlined'>play_arrow</span>");
+    if (replayTimer) {
+      clearInterval(replayTimer);
+      replayTimer = null;
+    }
+  }
+
+  $(document).on("click", "#replay-play", function(){
+    if (replayPlaying) {
+      pauseReplayPlay();
+    } else {
+      startReplayPlay();
+    }
+  });
+
+  $(document).on("change", "#replay-speed", function(){
+    replaySpeed = parseInt($(this).val()) || 1;
+    if (replayPlaying) {
+      startReplayPlay();
+    }
+  });
+
+  $(document).on("click", "#replay-restart", function(){
+    fakeTimeOffset = 0;
+    get_ajax_data();
+  });
+
+  $(document).on("click", "#bck_lap", function(){
+    fakeTimeOffset = Math.max(0, fakeTimeOffset - 60);
+    get_ajax_data();
+  });
+
+  $(document).on("click", "#fwd_lap", function(){
+    fakeTimeOffset = fakeTimeOffset + 60;
+    get_ajax_data();
   });
   
 
@@ -560,7 +633,8 @@ if(row.lap != 0){
 
 
             //console.log(row);
-          tbl += "<tr>";
+          var driverRowId = row.driver_id || row.name.replace(/[^a-zA-Z0-9]/g, '_');
+          tbl += "<tr data-driver-id='" + driverRowId + "'>";
           tbl += "<td class='driver-position-gain "+gain_class+"'>" + Math.abs(row.position_gain) + "</td>";
 		  tbl += "<td class='driver-position" + outQualiStatus + "'>" + position + "</td>";
           tbl += "<td class='driver-name driver-team-names driver-text'>"+ row.name +"</td>";
@@ -797,32 +871,34 @@ function convertGapView(time_in_seconds, position){
 function clearPodium(data){
 	$("#podium-container").hide();
 	$("#raceNameBar").hide();
-	$("#competition-big-logo").show();
+
+	if (data.track_svg && data.track_svg.svg_path) {
+		$("#track-radar-container").show();
+		$("#competition-big-logo").hide();
+		updateTrackRadarData(data);
+	} else {
+		$("#track-radar-container").hide();
+		$("#competition-big-logo").show();
+	}
 	
-		let competition_name = data.race_info.competition;
+	let competition_name = data.race_info.competition;
 	
-		$.ajax({
-			url: 'get_competition_logo.php',
-			type: 'POST',
-			dataType: 'json',
-			data: {competition_name: competition_name}
-			})
-		.done(function(competition_data) {
-		
-		  
-			$("#competition-big-logo").attr("src","/octamotor/images/competition/" + competition_data);
-			
-		  
-		})
-		  .fail(function(xhr, status, error) {
-			// console.log("error");
-			// console.log(xhr.responseText);
-		});
-	
+	$.ajax({
+		url: 'get_competition_logo.php',
+		type: 'POST',
+		dataType: 'json',
+		data: {competition_name: competition_name}
+	})
+	.done(function(competition_data) {
+		$("#competition-big-logo").attr("src","/octamotor/images/competition/" + competition_data);
+	})
+	.fail(function(xhr, status, error) {
+		// console.log("error");
+	});
 }
 
 function createPodium(data){
-	
+	$("#track-radar-container").hide();
 	$("#podium-container").show();
 	$("#raceNameBar").show();
 	$("#competition-big-logo").hide();
@@ -858,7 +934,6 @@ function createPodium(data){
 		})
 		  .fail(function(xhr, status, error) {
 			// console.log("error");
-			// console.log(xhr.responseText);
 		});
 	
 	$.ajax({
@@ -868,24 +943,259 @@ function createPodium(data){
 			data: {competition_name: competition_name}
 			})
 		.done(function(competition_data) {
-		
-		  
 			$("#competitionLogo").attr("src","/octamotor/images/competition/" + competition_data);
 			$("#raceLogo").html("<span>" + $("#race-name").text() + "</span>");
-			
-		  
 		})
-		  .fail(function(xhr, status, error) {
+		.fail(function(xhr, status, error) {
 			// console.log("error");
-			// console.log(xhr.responseText);
 		});
 	
 		$("#raceNameBar").addClass("animated");
-		
 		$(".racer-podium").addClass("animate");
-
-
 }
+
+// --- TRACK RADAR SIMULATION ENGINE ---
+var trackRadarSvgData = null;
+var trackRadarCars = [];
+var trackPathLength = 0;
+var radarAnimFrameId = null;
+var radarHoveredDriverId = null;
+
+const TEAM_PALETTE = [
+  '#38bdf8', '#ef4444', '#22c55e', '#fbbf24', '#a855f7',
+  '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#14b8a6',
+  '#e11d48', '#6366f1', '#eab308', '#10b981', '#f43f5e'
+];
+
+function getTeamColor(teamName, idx) {
+  if (!teamName) return TEAM_PALETTE[idx % TEAM_PALETTE.length];
+  let hash = 0;
+  for (let i = 0; i < teamName.length; i++) {
+    hash = teamName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const colorIdx = Math.abs(hash) % TEAM_PALETTE.length;
+  return TEAM_PALETTE[colorIdx];
+}
+
+function initTrackRadar(svgData, trackName) {
+  if (!svgData || !svgData.svg_path) return;
+  trackRadarSvgData = svgData;
+
+  const svg = document.getElementById("track-radar-svg");
+  if (svg) {
+    svg.setAttribute("viewBox", svgData.viewBox || "0 0 450 450");
+  }
+
+  const basePath = document.getElementById("track-radar-base-path");
+  const activePath = document.getElementById("track-radar-active-path");
+  if (basePath) basePath.setAttribute("d", svgData.svg_path);
+  if (activePath) {
+    activePath.setAttribute("d", svgData.svg_path);
+    trackPathLength = activePath.getTotalLength();
+  }
+
+  if (trackName) {
+    $("#radar-track-name").text(trackName);
+  }
+
+  if (!radarAnimFrameId) {
+    radarAnimFrameId = requestAnimationFrame(renderTrackRadar);
+  }
+}
+
+function updateTrackRadarData(data) {
+  if (data.track_svg) {
+    initTrackRadar(data.track_svg, data.race_info ? data.race_info.track_name : "");
+  }
+
+  if (!data.total_data || data.total_data.length === 0) return;
+
+  trackRadarCars = [];
+  data.total_data.forEach(function(row, idx) {
+    const position = idx + 1;
+    const driverId = row.driver_id || row.name.replace(/[^a-zA-Z0-9]/g, '_');
+    const number = row.number || position;
+    const team = row.team || "";
+    const name = row.tv_name || row.name || "";
+    const color = getTeamColor(team, idx);
+    const isOut = (row.status < 0 || row.gap === "OUT");
+    const isPit = (row.pits > 0 && row.last_lap === "PIT");
+    const lap = parseInt(row.lap) || 0;
+    const lastLap = parseFloat(row.last_lap) || 75;
+    const totalTime = parseFloat(row.total_time) || 0;
+
+    trackRadarCars.push({
+      id: driverId,
+      number: number,
+      name: name,
+      team: team,
+      color: color,
+      position: position,
+      isLeader: (position === 1),
+      isOut: isOut,
+      isPit: isPit,
+      lap: lap,
+      lastLap: lastLap,
+      totalTime: totalTime,
+      gap: row.gap
+    });
+  });
+
+  // Safety car
+  const scElem = document.getElementById("radar-safety-car");
+  if (scElem) {
+    scElem.style.display = (data.safety_car_status == 1) ? "block" : "none";
+  }
+
+  // Build SVG car elements
+  const carsGroup = document.getElementById("radar-cars-group");
+  if (carsGroup) {
+    carsGroup.innerHTML = "";
+    trackRadarCars.forEach(function(car) {
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      g.setAttribute("id", "radar-car-" + car.id);
+      g.setAttribute("class", "radar-car-item " + (car.isLeader ? "is-leader " : "") + (car.isOut ? "is-out " : ""));
+
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("class", "radar-car-circle");
+      circle.setAttribute("r", car.isLeader ? "7.5" : "6");
+      circle.setAttribute("fill", car.color);
+
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("class", "radar-car-text");
+      text.textContent = car.number;
+
+      g.appendChild(circle);
+      g.appendChild(text);
+
+      // Hover events
+      g.addEventListener("mouseenter", function(e) {
+        radarHoveredDriverId = car.id;
+        g.classList.add("is-hovered");
+        showRadarTooltip(e, car);
+      });
+      g.addEventListener("mouseleave", function() {
+        radarHoveredDriverId = null;
+        g.classList.remove("is-hovered");
+        hideRadarTooltip();
+      });
+      g.addEventListener("mousemove", function(e) {
+        showRadarTooltip(e, car);
+      });
+
+      carsGroup.appendChild(g);
+    });
+  }
+}
+
+function showRadarTooltip(e, car) {
+  const tooltip = document.getElementById("radar-tooltip");
+  const wrapper = document.querySelector(".radar-map-wrapper");
+  if (!tooltip || !wrapper) return;
+
+  const rect = wrapper.getBoundingClientRect();
+  const x = e.clientX - rect.left + 12;
+  const y = e.clientY - rect.top - 10;
+
+  let gapText = (car.position === 1) ? "LÍDER" : ("GAP: " + (typeof car.gap === "number" ? ("+" + car.gap.toFixed(3) + "s") : car.gap));
+  if (car.isOut) gapText = "ABANDONOU (DNF)";
+
+  tooltip.innerHTML = "<span class='radar-tooltip-pos'>P" + car.position + "</span>" +
+                      "<span class='radar-tooltip-name'>" + car.name + " (#" + car.number + ")</span>" +
+                      "<div class='radar-tooltip-team'>" + car.team + "</div>" +
+                      "<div class='radar-tooltip-gap'>" + gapText + "</div>";
+
+  tooltip.style.left = Math.min(x, rect.width - 150) + "px";
+  tooltip.style.top = Math.max(10, y) + "px";
+  tooltip.style.display = "block";
+}
+
+function hideRadarTooltip() {
+  const tooltip = document.getElementById("radar-tooltip");
+  if (tooltip) tooltip.style.display = "none";
+}
+
+function renderTrackRadar() {
+  const activePath = document.getElementById("track-radar-active-path");
+  if (activePath && trackPathLength > 0 && trackRadarCars.length > 0) {
+    const now = performance.now() / 1000;
+
+    trackRadarCars.forEach(function(car, idx) {
+      const carElem = document.getElementById("radar-car-" + car.id);
+      if (!carElem) return;
+
+      if (car.isOut) {
+        const pt = activePath.getPointAtLength(0.01 * trackPathLength);
+        const circle = carElem.querySelector("circle");
+        const text = carElem.querySelector("text");
+        if (circle) { circle.setAttribute("cx", pt.x); circle.setAttribute("cy", pt.y); }
+        if (text) { text.setAttribute("x", pt.x); text.setAttribute("y", pt.y); }
+        return;
+      }
+
+      const lapDuration = Math.max(20, car.lastLap || 75);
+      let baseProgress = (now / lapDuration) % 1;
+      let posOffset = (idx * 0.045);
+      let progress = (baseProgress - posOffset + 1) % 1;
+
+      const pt = activePath.getPointAtLength(progress * trackPathLength);
+      const circle = carElem.querySelector("circle");
+      const text = carElem.querySelector("text");
+
+      if (circle) {
+        circle.setAttribute("cx", pt.x);
+        circle.setAttribute("cy", pt.y);
+      }
+      if (text) {
+        text.setAttribute("x", pt.x);
+        text.setAttribute("y", pt.y);
+      }
+    });
+
+    // Safety Car position
+    const scElem = document.getElementById("radar-safety-car");
+    if (scElem && scElem.style.display !== "none") {
+      const leaderDuration = Math.max(30, (trackRadarCars[0] ? trackRadarCars[0].lastLap : 75) * 1.4);
+      const scProgress = ((now / leaderDuration) + 0.02) % 1;
+      const pt = activePath.getPointAtLength(scProgress * trackPathLength);
+      const circles = scElem.querySelectorAll("circle");
+      const text = scElem.querySelector("text");
+      circles.forEach(c => { c.setAttribute("cx", pt.x); c.setAttribute("cy", pt.y); });
+      if (text) { text.setAttribute("x", pt.x); text.setAttribute("y", pt.y); }
+    }
+  }
+
+  radarAnimFrameId = requestAnimationFrame(renderTrackRadar);
+}
+
+// Toggle radar view button
+$(document).on("click", "#btn-toggle-radar-view", function() {
+  if ($("#track-radar-container").is(":visible")) {
+    $("#track-radar-container").hide();
+    $("#competition-big-logo").show();
+  } else {
+    $("#competition-big-logo").hide();
+    $("#podium-container").hide();
+    $("#raceNameBar").hide();
+    $("#track-radar-container").show();
+  }
+});
+
+// Table row hover sync with radar
+$(document).on("mouseenter", "#drivers-table tr", function() {
+  const driverId = $(this).attr("data-driver-id");
+  if (driverId) {
+    const carElem = document.getElementById("radar-car-" + driverId);
+    if (carElem) carElem.classList.add("is-hovered");
+  }
+});
+$(document).on("mouseleave", "#drivers-table tr", function() {
+  const driverId = $(this).attr("data-driver-id");
+  if (driverId) {
+    const carElem = document.getElementById("radar-car-" + driverId);
+    if (carElem) carElem.classList.remove("is-hovered");
+  }
+});
 
 function createStartingGrid(data){
 

@@ -112,3 +112,4 @@ octamotor/config/database.php
 octamotor/config/database.php
 /images/bandeiras
 octamotor/classes/db_name.php
+*.json

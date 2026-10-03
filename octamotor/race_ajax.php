@@ -5,6 +5,9 @@ ini_set( 'display_errors', true );
 error_reporting( E_ALL );
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/octamotor/config/database.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/octamotor/classes/track.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/octamotor/classes/circuit_vectorizer.php';
 
 if(isset($_POST['file_name']) && $_POST['file_name'] != ""){
 	$file_name = $_POST['file_name'];
@@ -33,58 +36,78 @@ $auxiliary_table = array();
 
 	$race_info = array_shift($lap_results);
 
-	if($_POST["fakeTimeOffset"] == 0){
+	$track_svg = null;
+	if (!empty($race_info['track_name'])) {
+		$odb_ajax = new OctamotorDatabase();
+		$conn_ajax = $odb_ajax->getConnection();
+		if ($conn_ajax) {
+			$trackObj = new Track($conn_ajax);
+			$trackImage = $trackObj->getTrackImageByName($race_info['track_name']);
+			if (!empty($trackImage)) {
+				$track_svg = CircuitVectorizer::getTrackSvgData($trackImage);
+			}
+		}
+	}
+
+	$is_test_file = (strpos($file_name, 'test.json') !== false);
+	$base_timestamp = isset($race_info['base_timestamp']) ? floatval($race_info['base_timestamp']) : 0;
+	$fake_offset = isset($_POST["fakeTimeOffset"]) ? floatval($_POST["fakeTimeOffset"]) : 0;
+
+	// Se for corrida oficial de campeonato e ainda NÃO ACONTECEU (está no futuro), bloqueia fakeTimeOffset para não vazar o resultado antecipadamente
+	if (!$is_test_file && time() < $base_timestamp) {
 		$current_timestamp = time();
 	} else {
-		$current_timestamp = $_POST["baseTimestamp"] + $_POST["fakeTimeOffset"];
+		if($fake_offset == 0){
+			$current_timestamp = time();
+		} else {
+			$current_timestamp = (isset($_POST["baseTimestamp"]) && floatval($_POST["baseTimestamp"]) > 0 ? floatval($_POST["baseTimestamp"]) : $base_timestamp) + $fake_offset;
+		}
 	}
-	
 
 	$reverse_laps = array_reverse($lap_results);
 	$breakNext = false;
+	$current_step = "G-0";
+	$rain_status = 0;
+	$safety_car_status = 0;
+	$air_temp = 20;
+	$track_temp = 25;
+	$timestamp = $base_timestamp > 0 ? $base_timestamp : time();
 
 	foreach($reverse_laps as $key => $event){
-		if($event[0]['timestamp'] < $current_timestamp && $breakNext == false){
+		if(isset($event[0]['timestamp']) && $event[0]['timestamp'] < $current_timestamp && $breakNext == false){
 			$current_step = $key;
-			$rain_status = $event[0]['rain_status'];
-			$safety_car_status = $event[0]['safety_car_status'];
-			$air_temp = $event[0]['air_temp'];
-			$track_temp = $event[0]['track_temp'];
+			$rain_status = $event[0]['rain_status'] ?? 0;
+			$safety_car_status = $event[0]['safety_car_status'] ?? 0;
+			$air_temp = $event[0]['air_temp'] ?? 20;
+			$track_temp = $event[0]['track_temp'] ?? 25;
 			$timestamp = $event[0]['timestamp'];
 			$breakNext = true;
-		} else if($event[0]['timestamp'] < $current_timestamp && $breakNext == true){
+		} else if(isset($event[0]['timestamp']) && $event[0]['timestamp'] < $current_timestamp && $breakNext == true){
 			$previous_step = $key;
 			$breakNext = false;
 			break;
 		}
-		// else {
-		// 	$current_step = array_keys($lap_results)[0];
-		// 	$rain_status = $event[0]['rain_status'];
-		// 	$safety_car_status = $event[0]['safety_car_status'];
-		// 	$air_temp = $event[0]['air_temp'];
-		// 	$track_temp = $event[0]['track_temp'];
-		// }
 	}
 
-if($current_step[0] == "R"){
+if(isset($current_step[0]) && $current_step[0] == "R"){
 	$stage_number = "R";
-} else if($current_step[0] == "P"){
+} else if(isset($current_step[0]) && $current_step[0] == "P"){
 	$stage_number = "PQ";
-} else if ($current_step[0] == "Q") {
-	if($current_step[1] == "C"){
+} else if (isset($current_step[0]) && $current_step[0] == "Q") {
+	if(isset($current_step[1]) && $current_step[1] == "C"){
 		$stage_number = "QC";
 	} else {
 		$stage_number = "QE";
 	}
-} else if($current_step[0] == "G") {
+} else if(isset($current_step[0]) && $current_step[0] == "G") {
 	$stage_number = "G";
 } else {
 	$stage_number = "A";
 }
 
 
-$single_lap_data = $lap_results[$current_step];
-if(isset($previous_step)){
+$single_lap_data = $lap_results[$current_step] ?? (isset($lap_results['G-0']) ? $lap_results['G-0'] : (reset($lap_results) ?: []));
+if(isset($previous_step) && isset($lap_results[$previous_step])){
 	$previous_lap_data = $lap_results[$previous_step];
 }
 
@@ -128,6 +151,9 @@ preg_match_all('!\d+!', $current_step, $lap_number_array);
 
 			$row_data = array();
 			
+			$row_data['driver_id'] = $driver["driver"]["id"];
+			$row_data['number'] = $driver["driver"]["number"] ?? "";
+			$row_data['status'] = $driver["driver"]["status"] ?? 0;
 			$row_data['position_gain'] = $previous_position - $position;
 			if(isset($driver['car']['tv_name'])){
 				$row_data['team_tv_name'] = $driver['car']['tv_name'];
@@ -242,7 +268,7 @@ if($stage_number == "R"){
 }
 
 
-die(json_encode([ 'total_data'=> $total_data, 'current_step' => $current_step, 'race_info' => $race_info, 'rain_status' => $rain_status, 'safety_car_status' => $safety_car_status, 'air_temp' => $air_temp, 'track_temp' => $track_temp, 'timestamp' => $timestamp]));
+die(json_encode([ 'total_data'=> $total_data, 'current_step' => $current_step, 'race_info' => $race_info, 'rain_status' => $rain_status, 'safety_car_status' => $safety_car_status, 'air_temp' => $air_temp, 'track_temp' => $track_temp, 'timestamp' => $timestamp, 'track_svg' => $track_svg]));
 
 
 ?>
