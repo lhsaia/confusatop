@@ -9,6 +9,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/objetos/clima.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/estadio.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
@@ -22,6 +23,7 @@ $db = $database->getConnection();
 // pass connection to objects
 $jogador = new Jogador($db);
 $pais = new Pais($db);
+$clima = new Clima($db);
 $time = new Time($db);
 $estadio = new Estadio($db);
 $liga = new Liga($db);
@@ -30,7 +32,14 @@ $tecnico = new Tecnico($db);
 
 if (!function_exists('hexToRgb')) {
     function hexToRgb($hex){
-        list($r, $g, $b) = sscanf($hex, "#%02x%02x%02x");
+        $hex = ltrim(trim((string)$hex), '#');
+        if (strlen($hex) === 3) {
+            $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+        }
+        if (strlen($hex) !== 6) {
+            $hex = '000000';
+        }
+        list($r, $g, $b) = sscanf($hex, "%02x%02x%02x");
         return str_pad($r, 3, "0", STR_PAD_LEFT) . str_pad($g, 3, "0", STR_PAD_LEFT) . str_pad($b, 3, "0", STR_PAD_LEFT);
     }
 }
@@ -415,10 +424,28 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
         <input type="file" id='uni1' name='uni1' accept=".jpg,.png,.jpeg,.webp" style="display: none !important;">
 
         <label>Cores uniforme titular</label>
-        <div class="cores-container">
-            <input type="color" name='cor1uni1'>
-            <input type="color" name='cor2uni1' value='#ffffff'>
-            <input type="color" name='cor3uni1'>
+        <div class="cores-grid">
+            <div class="color-picker-box">
+                <span class="color-picker-label">Cor 1</span>
+                <div class="color-picker-input-group">
+                    <input type="color" id="cor1uni1" name="cor1uni1" value="#000000">
+                    <input type="text" class="color-hex-input" data-color-target="cor1uni1" value="#000000" maxlength="7" placeholder="#000000" spellcheck="false">
+                </div>
+            </div>
+            <div class="color-picker-box">
+                <span class="color-picker-label">Cor 2</span>
+                <div class="color-picker-input-group">
+                    <input type="color" id="cor2uni1" name="cor2uni1" value="#ffffff">
+                    <input type="text" class="color-hex-input" data-color-target="cor2uni1" value="#ffffff" maxlength="7" placeholder="#ffffff" spellcheck="false">
+                </div>
+            </div>
+            <div class="color-picker-box">
+                <span class="color-picker-label">Cor 3</span>
+                <div class="color-picker-input-group">
+                    <input type="color" id="cor3uni1" name="cor3uni1" value="#000000">
+                    <input type="text" class="color-hex-input" data-color-target="cor3uni1" value="#000000" maxlength="7" placeholder="#000000" spellcheck="false">
+                </div>
+            </div>
         </div>
 
         <label>Uniforme reserva</label>
@@ -430,10 +457,28 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
         <input type="file" id='uni2' name='uni2' accept=".jpg,.png,.jpeg,.webp" style="display: none !important;">
 
         <label>Cores uniforme reserva</label>
-        <div class="cores-container">
-            <input type="color" name='cor1uni2' value='#ffffff'>
-            <input type="color" name='cor2uni2'>
-            <input type="color" name='cor3uni2' value='#ffffff'>
+        <div class="cores-grid">
+            <div class="color-picker-box">
+                <span class="color-picker-label">Cor 1</span>
+                <div class="color-picker-input-group">
+                    <input type="color" id="cor1uni2" name="cor1uni2" value="#ffffff">
+                    <input type="text" class="color-hex-input" data-color-target="cor1uni2" value="#ffffff" maxlength="7" placeholder="#ffffff" spellcheck="false">
+                </div>
+            </div>
+            <div class="color-picker-box">
+                <span class="color-picker-label">Cor 2</span>
+                <div class="color-picker-input-group">
+                    <input type="color" id="cor2uni2" name="cor2uni2" value="#000000">
+                    <input type="text" class="color-hex-input" data-color-target="cor2uni2" value="#000000" maxlength="7" placeholder="#000000" spellcheck="false">
+                </div>
+            </div>
+            <div class="color-picker-box">
+                <span class="color-picker-label">Cor 3</span>
+                <div class="color-picker-input-group">
+                    <input type="color" id="cor3uni2" name="cor3uni2" value="#ffffff">
+                    <input type="text" class="color-hex-input" data-color-target="cor3uni2" value="#ffffff" maxlength="7" placeholder="#ffffff" spellcheck="false">
+                </div>
+            </div>
         </div>
 
         <label for="maxTorcida">Máx. Torcida</label>
@@ -504,7 +549,12 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
                 ?>
 
 
-        <label for="estadio">Estádio</label>
+        <div class="field-label-row">
+            <label for="estadio">Estádio</label>
+            <button type="button" class="btn-action-inline" id="btn-abrir-modal-estadio">
+                <span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Novo Estádio
+            </button>
+        </div>
         <?php
                 // ler times do banco de dados
                 $stmt = $estadio->read($_SESSION['user_id']);
@@ -613,6 +663,69 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 </div>
 </div>
 
+<!-- Modal Criar Estádio -->
+<div id="modal-estadio" class="custom-modal-backdrop" style="display: none;">
+    <div class="custom-modal-card">
+        <div class="custom-modal-header">
+            <h3><span class="material-symbols-outlined">stadium</span> Novo Estádio</h3>
+            <button type="button" class="custom-modal-close" id="btn-fechar-modal-estadio">&times;</button>
+        </div>
+        <div class="custom-modal-body">
+            <div id="modal-estadio-feedback"></div>
+            
+            <label for="modal-estadio-nome">Nome do Estádio *</label>
+            <input type="text" id="modal-estadio-nome" class="form-control" placeholder="Ex: Estádio Monumental" required />
+
+            <div class="modal-form-grid">
+                <div>
+                    <label for="modal-estadio-capacidade">Capacidade *</label>
+                    <input type="number" id="modal-estadio-capacidade" class="form-control" placeholder="Ex: 50000" min="500" step="100" value="30000" required />
+                </div>
+                <div>
+                    <label for="modal-estadio-pais">País *</label>
+                    <select id="modal-estadio-pais" class="form-control" required>
+                        <option value="">Selecione o país...</option>
+                        <?php
+                        $stmtPaisesModal = $pais->read($_SESSION['user_id']);
+                        while ($rowPais = $stmtPaisesModal->fetch(PDO::FETCH_ASSOC)){
+                            echo "<option value='{$rowPais['id']}'>{$rowPais['nome']}</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+            </div>
+
+            <label for="modal-estadio-clima">Clima *</label>
+            <select id="modal-estadio-clima" class="form-control" required>
+                <option value="">Selecione o clima...</option>
+                <?php
+                $stmtClimaModal = $clima->read($_SESSION['user_id']);
+                while ($rowClima = $stmtClimaModal->fetch(PDO::FETCH_ASSOC)){
+                    echo "<option value='{$rowClima['ID']}'>{$rowClima['Nome']}</option>";
+                }
+                ?>
+            </select>
+
+            <div class="modal-checkbox-row">
+                <label class="custom-checkbox-label">
+                    <input type="checkbox" id="modal-estadio-altitude" value="1">
+                    <span>Possui Altitude</span>
+                </label>
+                <label class="custom-checkbox-label">
+                    <input type="checkbox" id="modal-estadio-caldeirao" value="1">
+                    <span>Estádio Caldeirão</span>
+                </label>
+            </div>
+        </div>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn-modal-secondary" id="btn-cancelar-modal-estadio">Cancelar</button>
+            <button type="button" class="btn-modal-primary" id="btn-salvar-modal-estadio">
+                <span class="material-symbols-outlined">save</span> Salvar Estádio
+            </button>
+        </div>
+    </div>
+</div>
+
   <script>
   $( function() {
     $( "#sliderNiveis" ).slider({
@@ -684,16 +797,12 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
     $("#pais").on("change", function(){
         updateLeagues();
-updateNames();
-  });
-
-
-
-
+        updateNames();
+    });
 
 $("#sexo").on("change", function(){
-updateLeagues();
-updateNames();
+    updateLeagues();
+    updateNames();
 });
 
 function updateLeagues(){
@@ -701,56 +810,46 @@ function updateLeagues(){
     var sexoUsado = $('#sexo').val();
 
     $("#liga option").each(function(){
-
         var sexoLiga = $(this).attr("data-sexo");
         if (sexoLiga != sexoUsado || $(this).attr("data-pais") != paisSelecionado ){
             $(this).hide();
         } else {
             $(this).show();
         }
-
     });
-
 }
 
 function updateNames(){
+    var sexo = $("#sexo").val();
 
-var sexo = $("#sexo").val();
+    $("#origemNomes option").each(function(){
+        if (sexo == 0){
+            var temNome = $(this).attr("data-nomeMasc");
+        } else {
+            var temNome = $(this).attr("data-nomeFem");
+        }
 
-$("#origemNomes option").each(function(){
+        if (temNome < 2){
+            $(this).hide();
+        } else {
+            $(this).show();
+        }
+    });
 
-    if (sexo == 0){
-    var temNome = $(this).attr("data-nomeMasc");
-} else {
-    var temNome = $(this).attr("data-nomeFem");
+    $("#origemSobrenomes option").each(function(){
+        if (sexo == 0){
+            var temSobrenome = $(this).attr("data-sobrenomeMasc");
+        } else {
+            var temSobrenome = $(this).attr("data-sobrenomeFem");
+        }
+
+        if (temSobrenome < 2){
+            $(this).hide();
+        } else {
+            $(this).show();
+        }
+    });
 }
-
-if (temNome < 2){
-$(this).hide();
-} else {
-  $(this).show();
-}
-});
-
-$("#origemSobrenomes option").each(function(){
-
-    if (sexo == 0){
-
-    var temSobrenome = $(this).attr("data-sobrenomeMasc");
-} else {
-
-    var temSobrenome = $(this).attr("data-sobrenomeFem");
-}
-
-if (temSobrenome < 2){
-$(this).hide();
-} else {
-$(this).show();
-}
-});
-}
-
-
 
   $(function () {
   $("#fidelidade").keydown(function () {
@@ -805,6 +904,34 @@ $(this).show();
       }
   });
 
+  // Sincronização Cores <-> Hexadecimal
+  $('input[type="color"]').on('input change', function() {
+      var colorVal = $(this).val().toUpperCase();
+      var targetInput = $('.color-hex-input[data-color-target="' + $(this).attr('id') + '"]');
+      targetInput.val(colorVal);
+  });
+
+  $('.color-hex-input').on('input change blur', function(e) {
+      var rawVal = $(this).val().trim();
+      var colorTargetId = $(this).data('color-target');
+      var colorPicker = $('#' + colorTargetId);
+      
+      if (rawVal.length > 0) {
+          if (!rawVal.startsWith('#')) {
+              rawVal = '#' + rawVal;
+          }
+          if (e.type === 'blur' || e.type === 'change') {
+              if (/^#[0-9A-Fa-f]{3}$/.test(rawVal)) {
+                  rawVal = '#' + rawVal[1] + rawVal[1] + rawVal[2] + rawVal[2] + rawVal[3] + rawVal[3];
+              }
+              $(this).val(rawVal.toUpperCase());
+          }
+          if (/^#[0-9A-Fa-f]{6}$/.test(rawVal)) {
+              colorPicker.val(rawVal);
+          }
+      }
+  });
+
   $('button[type="reset"]').on('click', function(){
       $('#nomeEscudo').text('Clique para selecionar o escudo');
       $('#escudo-preview').hide().attr('src', '');
@@ -812,6 +939,119 @@ $(this).show();
       $('#uni1-preview').hide().attr('src', '');
       $('#nomeUni2').text('Clique para selecionar o uniforme reserva');
       $('#uni2-preview').hide().attr('src', '');
+
+      setTimeout(function() {
+          $('.color-hex-input').each(function() {
+              var target = $('#' + $(this).data('color-target'));
+              if (target.length) {
+                  $(this).val(target.val().toUpperCase());
+              }
+          });
+      }, 50);
+  });
+
+  // Modal Novo Estádio
+  $('#btn-abrir-modal-estadio').on('click', function() {
+      $('#modal-estadio-feedback').empty();
+      var paisAtual = $('#pais').val();
+      if (paisAtual && paisAtual != '0') {
+          $('#modal-estadio-pais').val(paisAtual);
+      }
+      $('#modal-estadio').fadeIn(200);
+      $('#modal-estadio-nome').focus();
+  });
+
+  function fecharModalEstadio() {
+      $('#modal-estadio').fadeOut(200);
+      $('#modal-estadio-feedback').empty();
+  }
+
+  $('#btn-fechar-modal-estadio, #btn-cancelar-modal-estadio').on('click', fecharModalEstadio);
+
+  $('#modal-estadio').on('click', function(e) {
+      if ($(e.target).is('#modal-estadio')) {
+          fecharModalEstadio();
+      }
+  });
+
+  $('#btn-salvar-modal-estadio').on('click', function() {
+      var btn = $(this);
+      var nome = $('#modal-estadio-nome').val().trim();
+      var capacidade = $('#modal-estadio-capacidade').val();
+      var pais = $('#modal-estadio-pais').val();
+      var clima = $('#modal-estadio-clima').val();
+      var altitude = $('#modal-estadio-altitude').is(':checked') ? 1 : 0;
+      var caldeirao = $('#modal-estadio-caldeirao').is(':checked') ? 1 : 0;
+
+      if (!nome) {
+          $('#modal-estadio-feedback').html('<div class="modal-alert-error">Preencha o nome do estádio.</div>');
+          $('#modal-estadio-nome').focus();
+          return;
+      }
+      if (!capacidade || capacidade < 1) {
+          $('#modal-estadio-feedback').html('<div class="modal-alert-error">Informe uma capacidade válida.</div>');
+          $('#modal-estadio-capacidade').focus();
+          return;
+      }
+      if (!pais || pais == '0') {
+          $('#modal-estadio-feedback').html('<div class="modal-alert-error">Selecione o país do estádio.</div>');
+          $('#modal-estadio-pais').focus();
+          return;
+      }
+      if (!clima || clima == '0') {
+          $('#modal-estadio-feedback').html('<div class="modal-alert-error">Selecione o clima do estádio.</div>');
+          $('#modal-estadio-clima').focus();
+          return;
+      }
+
+      btn.prop('disabled', true).text('Salvando...');
+
+      $.ajax({
+          url: '/api/estadio/criar.php',
+          type: 'POST',
+          dataType: 'json',
+          data: {
+              nome: nome,
+              capacidade: capacidade,
+              pais: pais,
+              clima: clima,
+              altitude: altitude,
+              caldeirao: caldeirao
+          },
+          success: function(response) {
+              btn.prop('disabled', false).html('<span class="material-symbols-outlined">save</span> Salvar Estádio');
+              if (response && response.success) {
+                  // Adiciona a nova opção ao select de estádios e seleciona
+                  var novaOpcao = $('<option>', {
+                      value: response.id,
+                      text: response.nome + ' (' + response.capacidade + ')',
+                      'data-pais': response.pais
+                  });
+                  $('#estadio').append(novaOpcao);
+                  $('#estadio').val(response.id);
+
+                  // Limpa inputs do modal
+                  $('#modal-estadio-nome').val('');
+                  $('#modal-estadio-capacidade').val('30000');
+                  $('#modal-estadio-altitude').prop('checked', false);
+                  $('#modal-estadio-caldeirao').prop('checked', false);
+
+                  fecharModalEstadio();
+
+                  // Mostra feedback no formulário principal
+                  var toast = $('<div class="alert alert-success alert-btn"><span class="closebtn">&times;</span>Estádio "' + response.nome + '" criado e selecionado com sucesso!</div>');
+                  $('#errorbox').html(toast);
+                  setTimeout(function() { toast.fadeOut(400); }, 5000);
+              } else {
+                  var erroMsg = (response && response.message) ? response.message : 'Erro ao criar o estádio.';
+                  $('#modal-estadio-feedback').html('<div class="modal-alert-error">' + erroMsg + '</div>');
+              }
+          },
+          error: function() {
+              btn.prop('disabled', false).html('<span class="material-symbols-outlined">save</span> Salvar Estádio');
+              $('#modal-estadio-feedback').html('<div class="modal-alert-error">Erro de comunicação ao criar estádio.</div>');
+          }
+      });
   });
 });
 

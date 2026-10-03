@@ -14,6 +14,21 @@
       "items": [
         {
           "badge": "new",
+          "title": "Criação Rápida de Estádio no Cadastro de Times",
+          "desc": "Adicionado botão e modal para cadastrar novos estádios diretamente na tela de Criação de Time via AJAX, selecionando o novo estádio automaticamente sem sair da página."
+        },
+        {
+          "badge": "new",
+          "title": "Entrada Hexadecimal para Cores dos Uniformes",
+          "desc": "Adicionados campos de texto para inserção direta de códigos hexadecimais ao lado dos seletores de cor dos uniformes titular e reserva, com sincronização bidirecional em tempo real."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Posicionamento do Card de Status e Semáforo da FOCA",
+          "desc": "Ajustada a altura e alinhamento vertical do card de bandeiras (Safety Car, Chequered Flag) para que os textos fiquem perfeitamente centralizados e longe da borda inferior, além de corrigir o dimensionamento e posicionamento interno das luzes do semáforo de largada dentro do gantry."
+        },
+        {
+          "badge": "new",
           "title": "Painel de Gestão de Origens & Demografia para Administradores",
           "desc": "Implementado módulo completo no painel administrativo para gerenciar o catálogo de origens culturais, cadastrar novas culturas, adicionar e editar primeiros nomes e sobrenomes com flags de gênero (M/F), importar listas em lote com higienização de marcadores e opção de detecção automática de gênero por sufixos eslavos/russos (ov/ova, ev/eva, in/ina, sky/skaya)."
         }
