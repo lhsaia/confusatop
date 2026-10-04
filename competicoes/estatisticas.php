@@ -74,18 +74,24 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         if (!empty($row['Escudo'])) {
             $row['Escudo'] = basename($row['Escudo']);
         }
+        if (!empty($row['Nome'])) {
+            $row['Nome'] = trim(html_entity_decode(html_entity_decode(stripslashes($row['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        }
         $clubes[$row['ID']] = $row;
     }
 
     // Carregar clubes cadastrados no portal (MariaDB) para garantir nomes/escudos atualizados
     try {
-        $stmtPortalTimes = $db->query("SELECT id, nome as Nome, sigla as TresLetras, escudo as Escudo FROM time");
+        $stmtPortalTimes = $db->query("SELECT ID, Nome, TresLetras, Escudo FROM clube");
         if ($stmtPortalTimes) {
             while ($pTime = $stmtPortalTimes->fetch(PDO::FETCH_ASSOC)) {
                 if (!empty($pTime['Escudo'])) {
                     $pTime['Escudo'] = basename($pTime['Escudo']);
                 }
-                $clubes[(int)$pTime['id']] = $pTime;
+                if (!empty($pTime['Nome'])) {
+                    $pTime['Nome'] = trim(html_entity_decode(html_entity_decode(stripslashes($pTime['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                }
+                $clubes[(int)$pTime['ID']] = $pTime;
             }
         }
     } catch (\Throwable $e) {}
@@ -106,8 +112,33 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $stmtJogadores = $cdb->query("SELECT ID, Nome, Nivel FROM jogador");
     $jogadoresMap = [];
     while ($row = $stmtJogadores->fetch(PDO::FETCH_ASSOC)) {
+        if (!empty($row['Nome'])) {
+            $row['Nome'] = trim(html_entity_decode(html_entity_decode(stripslashes($row['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        }
         $jogadoresMap[$row['ID']] = $row;
     }
+
+    // Carregar / enriquecer nomes de jogadores cadastrados no MariaDB
+    try {
+        $stmtPortalJogadores = $db->query("SELECT id, Nome, Nivel FROM jogador");
+        if ($stmtPortalJogadores) {
+            while ($pJog = $stmtPortalJogadores->fetch(PDO::FETCH_ASSOC)) {
+                $pId = (int)$pJog['id'];
+                $cleanNome = trim(html_entity_decode(html_entity_decode(stripslashes($pJog['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                if (!empty($cleanNome)) {
+                    if (!isset($jogadoresMap[$pId])) {
+                        $jogadoresMap[$pId] = [
+                            'ID' => $pId,
+                            'Nome' => $cleanNome,
+                            'Nivel' => $pJog['Nivel'] ?? 0
+                        ];
+                    } else {
+                        $jogadoresMap[$pId]['Nome'] = $cleanNome;
+                    }
+                }
+            }
+        }
+    } catch (\Throwable $e) {}
     
     // 3. Mapear Jogador -> Clube pelo Elenco no SQLite
     $stmtElenco = $cdb->query("SELECT * FROM elenco");
@@ -614,9 +645,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                     if ($zonaInfo) {
                                         $posClass = 'has-custom-zone';
                                         $posStyle = 'border-left-color: ' . htmlspecialchars($zonaInfo['cor']) . '; color: ' . htmlspecialchars($zonaInfo['cor']) . ';';
-                                    } else {
-                                        if ($pos <= 2) $posClass = 'zone-g4'; // top 2 avançam
-                                        if ($pos >= $totalGrupo - 1 && $totalGrupo > 4) $posClass = 'zone-relegation';
                                     }
                                 ?>
                                 <tr>
@@ -687,9 +715,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                 if ($zonaInfo) {
                                     $posClass = 'has-custom-zone';
                                     $posStyle = 'border-left-color: ' . htmlspecialchars($zonaInfo['cor']) . '; color: ' . htmlspecialchars($zonaInfo['cor']) . ';';
-                                } else {
-                                    if ($pos <= 4) $posClass = 'zone-g4';
-                                    if ($pos > $totalTabela - 4 && $totalTabela > 8) $posClass = 'zone-relegation';
                                 }
                             ?>
                             <tr>

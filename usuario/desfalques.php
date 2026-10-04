@@ -52,6 +52,12 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
     // Processar posições formatadas para o DM
     foreach ($jogadoresDM as &$dmJog) {
+        if (!empty($dmJog['Nome'])) {
+            $dmJog['Nome'] = trim(html_entity_decode(html_entity_decode(stripslashes($dmJog['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        }
+        if (!empty($dmJog['clube_nome'])) {
+            $dmJog['clube_nome'] = trim(html_entity_decode(html_entity_decode(stripslashes($dmJog['clube_nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        }
         $sp = $dmJog['StringPosicoes'] ?? '';
         $posicoes = [];
         for ($i = 0; $i < strlen($sp); $i++) {
@@ -108,6 +114,12 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         // Filtrar apenas suspensos de competições e clubes ainda ativos
         $clubesAtivosCache = [];
         foreach ($rawSuspensos as $rSus) {
+            if (!empty($rSus['jogador_nome'])) {
+                $rSus['jogador_nome'] = trim(html_entity_decode(html_entity_decode(stripslashes($rSus['jogador_nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            }
+            if (!empty($rSus['clube_nome'])) {
+                $rSus['clube_nome'] = trim(html_entity_decode(html_entity_decode(stripslashes($rSus['clube_nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            }
             $cId = (int)$rSus['id_competicao'];
             $tId = (int)$rSus['clube_id'];
             $cacheKey = "{$cId}_{$tId}";

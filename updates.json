@@ -9,6 +9,27 @@
   },
   "days": [
     {
+      "id": "day_04_10_2026",
+      "date": "04/10/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção de Encoding e Apóstrofos em Nomes de Jogadores e Estatísticas",
+          "desc": "Implementada decodificação completa de entidades HTML e caracteres de escape em nomes de jogadores e clubes nas tabelas de artilharia, assistências, suspensões, pendurados e departamento médico, além de prevenir a gravação indevida de entidades nos métodos de cadastro e edição de atletas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Exibição Fiel das Zonas e Faixas na Tabela de Estatísticas",
+          "desc": "Removidos os estilos de zonas e rebaixamento padrão forçados que eram atribuídos automaticamente em tabelas de pontos corridos e grupos, exibindo agora exclusivamente as faixas e cores que forem configuradas nas opções da competição."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Sincronização de Escudos e Clubes do Portal nas Estatísticas",
+          "desc": "Corrigida a consulta aos clubes no banco de dados principal nas páginas de estatísticas, soma de tabelas e exportação da competição, garantindo que escudos, siglas e nomes reais cadastrados no portal sobrescrevam os caminhos locais do SQLite e não gerem erros 404."
+        }
+      ]
+    },
+    {
       "id": "day_03_10_2026",
       "date": "03/10/2026",
       "items": [

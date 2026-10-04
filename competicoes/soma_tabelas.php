@@ -30,13 +30,13 @@ if ($stmtAll) {
 // Carregar clubes cadastrados no portal para nomes e escudos atualizados
 $clubesPortal = [];
 try {
-    $stmtTimes = $db->query("SELECT id, nome as Nome, sigla as TresLetras, escudo as Escudo FROM time");
+    $stmtTimes = $db->query("SELECT ID, Nome, TresLetras, Escudo FROM clube");
     if ($stmtTimes) {
         while ($pTime = $stmtTimes->fetch(PDO::FETCH_ASSOC)) {
             if (!empty($pTime['Escudo'])) {
                 $pTime['Escudo'] = basename($pTime['Escudo']);
             }
-            $clubesPortal[(int)$pTime['id']] = $pTime;
+            $clubesPortal[(int)$pTime['ID']] = $pTime;
         }
     }
 } catch (\Throwable $e) {}
@@ -88,6 +88,9 @@ function processarDadosCompeticao($compId, $db, $clubesPortal, $infoComp) {
             $stmtJ = $cdb->query("SELECT ID, Nome, Nivel FROM jogador");
             if ($stmtJ) {
                 while ($rj = $stmtJ->fetch(PDO::FETCH_ASSOC)) {
+                    if (!empty($rj['Nome'])) {
+                        $rj['Nome'] = trim(html_entity_decode(html_entity_decode(stripslashes($rj['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                    }
                     $jogadoresMap[(int)$rj['ID']] = $rj;
                 }
             }

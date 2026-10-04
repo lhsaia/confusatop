@@ -52,10 +52,13 @@ if ($cdb) {
 }
 
 try {
-    $stmtPortalTimes = $db->query("SELECT id, nome as Nome, sigla as TresLetras FROM time");
+    $stmtPortalTimes = $db->query("SELECT ID, Nome, TresLetras FROM clube");
     if ($stmtPortalTimes) {
         while ($pTime = $stmtPortalTimes->fetch(PDO::FETCH_ASSOC)) {
-            $clubes[(int)$pTime['id']] = $pTime;
+            if (!empty($pTime['Nome'])) {
+                $pTime['Nome'] = trim(html_entity_decode(html_entity_decode(stripslashes($pTime['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            }
+            $clubes[(int)$pTime['ID']] = $pTime;
         }
     }
 } catch (\Throwable $e) {}
@@ -67,11 +70,36 @@ if ($cdb) {
         $stmtJogadores = $cdb->query("SELECT ID, Nome, Nivel FROM jogador");
         if ($stmtJogadores) {
             while ($row = $stmtJogadores->fetch(PDO::FETCH_ASSOC)) {
+                if (!empty($row['Nome'])) {
+                    $row['Nome'] = trim(html_entity_decode(html_entity_decode(stripslashes($row['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                }
                 $jogadoresMap[(int)$row['ID']] = $row;
             }
         }
     } catch (\Throwable $e) {}
 }
+
+// Carregar / enriquecer nomes de jogadores cadastrados no MariaDB
+try {
+    $stmtPortalJogadores = $db->query("SELECT id, Nome, Nivel FROM jogador");
+    if ($stmtPortalJogadores) {
+        while ($pJog = $stmtPortalJogadores->fetch(PDO::FETCH_ASSOC)) {
+            $pId = (int)$pJog['id'];
+            $cleanNome = trim(html_entity_decode(html_entity_decode(stripslashes($pJog['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            if (!empty($cleanNome)) {
+                if (!isset($jogadoresMap[$pId])) {
+                    $jogadoresMap[$pId] = [
+                        'ID' => $pId,
+                        'Nome' => $cleanNome,
+                        'Nivel' => $pJog['Nivel'] ?? 0
+                    ];
+                } else {
+                    $jogadoresMap[$pId]['Nome'] = $cleanNome;
+                }
+            }
+        }
+    }
+} catch (\Throwable $e) {}
 
 // Mapear Jogador -> Clube
 $jogadorClubeMap = [];

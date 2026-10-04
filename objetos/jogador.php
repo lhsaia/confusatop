@@ -96,7 +96,7 @@ class Jogador{
         $stmt = $this->conn->prepare($query);
 
         // posted values
-        $this->nomeJogador = htmlspecialchars(strip_tags((string)($this->nomeJogador ?? '')));
+        $this->nomeJogador = trim(html_entity_decode(strip_tags((string)($this->nomeJogador ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         $this->nascimento = htmlspecialchars(strip_tags((string)($this->nascimento ?? '')));
         $this->mentalidade = htmlspecialchars(strip_tags((string)($this->mentalidade ?? '')));
         $this->cobradorFalta = htmlspecialchars(strip_tags((string)($this->cobradorFalta ?? '')));
@@ -202,7 +202,7 @@ class Jogador{
 
         $stmt = $this->conn->prepare($query);
 
-        $this->nomeJogador = htmlspecialchars(strip_tags((string)($this->nomeJogador ?? '')));
+        $this->nomeJogador = trim(html_entity_decode(strip_tags((string)($this->nomeJogador ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         $this->nascimento = htmlspecialchars(strip_tags((string)($this->nascimento ?? '')));
         $this->mentalidade = htmlspecialchars(strip_tags((string)($this->mentalidade ?? '')));
         $this->cobradorFalta = htmlspecialchars(strip_tags((string)($this->cobradorFalta ?? '')));
@@ -2036,7 +2036,7 @@ return $stmt;
 
         function editarNome($idJogador, $nomeJogador){
             $idJogador = htmlspecialchars(strip_tags((string)($idJogador ?? '')));
-            $nomeJogador = htmlspecialchars(strip_tags(trim((string)($nomeJogador ?? ''))));
+            $nomeJogador = trim(html_entity_decode(strip_tags((string)($nomeJogador ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 
             if(empty($nomeJogador) || empty($idJogador)){
                 return false;
@@ -2054,7 +2054,7 @@ return $stmt;
 
             $idJogador = htmlspecialchars(strip_tags((string)($idJogador ?? '')));
             $idTime = ($idTime !== null && $idTime !== '') ? htmlspecialchars(strip_tags((string)$idTime)) : null;
-            $nomeJogador = htmlspecialchars(strip_tags((string)($nomeJogador ?? '')));
+            $nomeJogador = trim(html_entity_decode(strip_tags((string)($nomeJogador ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
             $nacionalidadeJogador = htmlspecialchars(strip_tags((string)($nacionalidadeJogador ?? '')));
             $nascimentoJogador = htmlspecialchars(strip_tags((string)($nascimentoJogador ?? '')));
             $valorJogador = htmlspecialchars(strip_tags((string)($valorJogador ?? '')));
@@ -4351,9 +4351,9 @@ public function resolverEmprestimos(){
 
 				$stmt = $this->conn->prepare($query);
 
-				$this->id=htmlspecialchars(strip_tags($this->id));
-				$this->nomeJogador=htmlspecialchars(strip_tags($this->nomeJogador));
-				$this->nascimento=htmlspecialchars(strip_tags($this->nascimento));
+				$this->id=htmlspecialchars(strip_tags((string)$this->id));
+				$this->nomeJogador=trim(html_entity_decode(strip_tags((string)$this->nomeJogador), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+				$this->nascimento=htmlspecialchars(strip_tags((string)$this->nascimento));
 				$this->mentalidade=htmlspecialchars(strip_tags($this->mentalidade));
 				$this->cobradorFalta=htmlspecialchars(strip_tags($this->cobradorFalta));
 				$this->nivel=htmlspecialchars(strip_tags($this->nivel));
