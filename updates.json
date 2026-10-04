@@ -13,6 +13,51 @@
       "date": "03/10/2026",
       "items": [
         {
+          "badge": "bugfix",
+          "title": "Correção Estrutural de Layout e Vetorização com Padding no Octamotor",
+          "desc": "Corrigido o aninhamento de divs na tela ao vivo do Octamotor restaurando a tabela de classificação lado a lado na metade direita da tela, posicionado o botão de alternar visualização de forma limpa junto aos controles sem sobrepor o badge 'AO VIVO', e adicionado padding perimetral com seleção por área no vetorizador para contornar perfeitamente o traçado em pistas que tocam as bordas da imagem como Bombin."
+        },
+        {
+          "badge": "new",
+          "title": "Painel Drawer de Convocação Rápida para Seleções",
+          "desc": "Criado painel lateral deslizante (Drawer) em tela cheia na tela da Seleção Nacional para convocar e desconvocar atletas com 1 clique, busca em tempo real, filtros por posição (Goleiros, Defensores, Meio-campo, Atacantes e Convocados), exibição de clube atual, nível e proteção contra flickering de imagens com sincronização instantânea do elenco."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Física do Radar, Grid de Largada e Vetorização de Circuitos",
+          "desc": "Ajustado o radar de pista do Octamotor para manter os carros estacionados no grid antes da largada (sem voltas antes do sinal verde), implementado modelo de pelotão com distâncias e gaps reais (líder sempre na frente puxando o ritmo da prova), e adicionada resolução inteligente de nomes de autódromos para carregar perfeitamente o traçado em qualquer corrida de campeonato."
+        },
+        {
+          "badge": "new",
+          "title": "Radar Dinâmico de Pista ao Vivo no Octamotor",
+          "desc": "Implementado o radar de pista em tempo real na tela de corrida ao vivo que vetoriza automaticamente os traçados a partir dos PNGs das pistas e renderiza os carros correndo pelo circuito a 60 FPS com números, cores das equipes, destaque de líder, Safety Car, tooltips informativos e sincronização ao passar o mouse na tabela de classificação."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Limite Máximo de 12 Reservas no Painel do Time",
+          "desc": "Restaurada e reforçada a validação de no máximo 12 jogadores no banco de reservas tanto nos botões de ação rápida quanto na troca manual e na validação do backend."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Seleção Padrão Correta ao Convocar Jogadores",
+          "desc": "Corrigido o seletor do modal de convocação na busca de jogadores para selecionar automaticamente a primeira seleção compatível e válida (país, sexo e idade), evitando que seleções anteriores ou de outras categorias permaneçam selecionadas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Padronização das Regras e Restrições de Clima do Hexacolor",
+          "desc": "Alinhadas todas as opções de estilo/condição climática às regras oficiais do motor Hexacolor com base na temperatura (Muito Frio, Frio, Normal, Quente e Muito Quente) na Criação de Clima, no painel de Meus Climas e no modal de criação rápida."
+        },
+        {
+          "badge": "new",
+          "title": "Criação Rápida de Clima no Cadastro de Estádio",
+          "desc": "Adicionada opção e modal integrado para cadastrar novos climas e definir o comportamento sazonal das estações diretamente a partir do modal de Novo Estádio, com atualização instantânea do seletor."
+        },
+        {
+          "badge": "design",
+          "title": "Redesign Completo dos Modais de Estádio e Clima",
+          "desc": "Reformulação visual moderna dos modais com backdrop com desfoque, tipografia em Outfit, cards interativos para Altitude/Caldeirão e bloco sazonal com ícones temáticos para as quatro estações."
+        },
+        {
           "badge": "new",
           "title": "Criação Rápida de Estádio no Cadastro de Times",
           "desc": "Adicionado botão e modal para cadastrar novos estádios diretamente na tela de Criação de Time via AJAX, selecionando o novo estádio automaticamente sem sair da página."

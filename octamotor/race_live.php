@@ -73,7 +73,7 @@ $track_list = $track->getTracksList();
             </div>
             <div class="radar-controls">
               <span class="radar-live-badge"><span class="pulse-dot"></span> AO VIVO</span>
-              <button type="button" id="btn-toggle-radar-view" title="Alternar visualização"><span class="material-symbols-outlined">swap_horiz</span></button>
+              <button type="button" class="btn-toggle-view-action" title="Exibir Logo / Pódio da Competição"><span class="material-symbols-outlined">swap_horiz</span></button>
             </div>
           </div>
           <div class="radar-map-wrapper">
@@ -90,15 +90,19 @@ $track_list = $track->getTracksList();
             <div id="radar-tooltip" class="radar-tooltip"></div>
           </div>
         </div>
-		<div id='raceNameBar'>
-		<img src='' id='competitionLogo'/><div id='raceLogo'></div></div>
-		<!--<div id='main-sponsor' style='--urlSponsor:url(/images/marcas/moon_wrap.png)'/></div> -->
-		<div id='podium-container'>
-			<div class='racer-podium second-place'><div class='podium-flag'></div><div class='podium-name'></div><div class='podium-team'></div><div class='podium-picture'></div></div>
-			<div class='racer-podium first-place'><div class='podium-flag'></div><div class='podium-name'></div><div class='podium-team'></div><div class='podium-picture'></div></div>
-			<div class='racer-podium third-place'><div class='podium-flag'></div><div class='podium-name'></div><div class='podium-team'></div><div class='podium-picture'></div></div>	
-		</div>
-		<img src='' id='competition-big-logo'/> 
+        <div id="podium-view-wrapper">
+          <button type="button" id="podium-toggle-btn" class="btn-toggle-view-action" title="Exibir Radar da Pista"><span class="material-symbols-outlined">radar</span></button>
+          <div id='raceNameBar'>
+            <img src='' id='competitionLogo'/><div id='raceLogo'></div>
+          </div>
+          <!--<div id='main-sponsor' style='--urlSponsor:url(/images/marcas/moon_wrap.png)'/></div> -->
+          <div id='podium-container'>
+            <div class='racer-podium second-place'><div class='podium-flag'></div><div class='podium-name'></div><div class='podium-team'></div><div class='podium-picture'></div></div>
+            <div class='racer-podium first-place'><div class='podium-flag'></div><div class='podium-name'></div><div class='podium-team'></div><div class='podium-picture'></div></div>
+            <div class='racer-podium third-place'><div class='podium-flag'></div><div class='podium-name'></div><div class='podium-team'></div><div class='podium-picture'></div></div>	
+          </div>
+          <img src='' id='competition-big-logo'/> 
+        </div>
       </div>
       <hr/>
       <?php
@@ -181,13 +185,21 @@ $("document").ready(function(){
 	var raw_data = [];
 	var bestLapPosition;
   var race_started = 0;
+  var startLightsActive = false;
+  var lastTrackedLap = null;
+  var raceCurrentStage = "";
+  var raceCurrentStageCode = 0;
+  var radarAnimLastTimestamp = null;
+  var radarElapsedLapTime = 0;
   
   // Replay playback engine state
+  var replayActive = false;
   var replayPlaying = false;
   var replaySpeed = 1;
   var replayTimer = null;
 
   function startReplayPlay() {
+    replayActive = true;
     replayPlaying = true;
     $("#replay-play").html("<span class='material-symbols-outlined'>pause</span>");
     if (replayTimer) clearInterval(replayTimer);
@@ -227,16 +239,24 @@ $("document").ready(function(){
   });
 
   $(document).on("click", "#replay-restart", function(){
+    replayActive = true;
+    pauseReplayPlay();
     fakeTimeOffset = 0;
+    race_started = 0;
+    addedTime = 0;
+    radarElapsedLapTime = 0;
+    radarAnimLastTimestamp = null;
     get_ajax_data();
   });
 
   $(document).on("click", "#bck_lap", function(){
+    replayActive = true;
     fakeTimeOffset = Math.max(0, fakeTimeOffset - 60);
     get_ajax_data();
   });
 
   $(document).on("click", "#fwd_lap", function(){
+    replayActive = true;
     fakeTimeOffset = fakeTimeOffset + 60;
     get_ajax_data();
   });
@@ -277,15 +297,21 @@ $("document").ready(function(){
   });
 
   get_ajax_data();
-  setInterval( get_ajax_data, 30000 );
+  setInterval( get_ajax_data, 5000 );
 
 function get_ajax_data(){
+  var postData = { file_name: file_name };
+  if (replayActive || replayPlaying || fakeTimeOffset > 0) {
+    postData.is_replay = 1;
+    postData.fakeTimeOffset = fakeTimeOffset;
+    postData.baseTimestamp = baseTimestamp;
+  }
 	
   $.ajax({
   url: 'race_ajax.php',
   type: 'POST',
   dataType: 'json',
-  data: {file_name: file_name, fakeTimeOffset: fakeTimeOffset, baseTimestamp: baseTimestamp}
+  data: postData
   })
   .done(function(data) {
 	  
@@ -381,6 +407,9 @@ function get_ajax_data(){
 
     }
 
+    raceCurrentStage = data.current_step || "";
+    raceCurrentStageCode = stage_code;
+
     //weather box
     if(stage_code > 0){
       rain_status = data.rain_status ?? '';
@@ -395,7 +424,7 @@ function get_ajax_data(){
     //flag box
     if(data.safety_car_status == 1){
       setFlag("SC");
-    } else {
+    } else if (!startLightsActive && (data.current_step !== "R-0" || race_started === 1)) {
       if(current_flag == "SC"){
         setFlag("GF");
       } else {
@@ -404,20 +433,29 @@ function get_ajax_data(){
     }
 
     if(stage_code != 4){
-      if(data.current_step == "R-0" && race_started == 0){
+      if(data.current_step == "R-0" && race_started == 0 && !startLightsActive){
+        startLightsActive = true;
         setFlag("SL");
-        startLights();
-        setTimeout(function(){
+        startLights(function() {
           setFlag("NO");
-          display_table(data)
-        }, 8000);
-        race_started = 1;
+          race_started = 1;
+          startLightsActive = false;
+          radarElapsedLapTime = 0;
+          radarAnimLastTimestamp = null;
+          display_table(data);
+          updateTrackRadarData(data);
+        });
       } else {
+        if(stage_code == 5 && data.current_step != "R-0"){
+          race_started = 1;
+          startLightsActive = false;
+        }
         display_table(data);
       }
     } else {
       //display_table(data);
       race_started = 0;
+      startLightsActive = false;
       createStartingGrid(data);
     }
 
@@ -507,9 +545,9 @@ if(addedTime == 0){
   $("#minute-box").html(minutes);
   $("#second-box").html(seconds);
 
-  // if(time_offset < 0){
-  //   get_ajax_data();
-  // }
+  if(time_offset <= 0 && update_flag == 1){
+    get_ajax_data();
+  }
 
   var current_hour = Math.floor((now_time % (60 * 60 * 24)) / ( 60 * 60));
   var current_minutes = Math.floor((now_time % (60 * 60)) / ( 60));
@@ -868,16 +906,26 @@ function convertGapView(time_in_seconds, position){
 
 }
 
+var radarUserPreference = null;
+
 function clearPodium(data){
 	$("#podium-container").hide();
 	$("#raceNameBar").hide();
 
 	if (data.track_svg && data.track_svg.svg_path) {
-		$("#track-radar-container").show();
-		$("#competition-big-logo").hide();
 		updateTrackRadarData(data);
+		if (radarUserPreference === 'podium') {
+			$("#track-radar-container").hide();
+			$("#podium-view-wrapper").show();
+			$("#competition-big-logo").show();
+		} else {
+			$("#podium-view-wrapper").hide();
+			$("#track-radar-container").show();
+			$("#competition-big-logo").hide();
+		}
 	} else {
 		$("#track-radar-container").hide();
+		$("#podium-view-wrapper").show();
 		$("#competition-big-logo").show();
 	}
 	
@@ -898,10 +946,19 @@ function clearPodium(data){
 }
 
 function createPodium(data){
-	$("#track-radar-container").hide();
-	$("#podium-container").show();
-	$("#raceNameBar").show();
-	$("#competition-big-logo").hide();
+	if (data.track_svg && data.track_svg.svg_path) {
+		updateTrackRadarData(data);
+	}
+	if (radarUserPreference === 'radar' && data.track_svg && data.track_svg.svg_path) {
+		$("#podium-view-wrapper").hide();
+		$("#track-radar-container").show();
+	} else {
+		$("#track-radar-container").hide();
+		$("#podium-view-wrapper").show();
+		$("#podium-container").show();
+		$("#raceNameBar").show();
+		$("#competition-big-logo").hide();
+	}
 	
 	let podium_drivers = [data.total_data[0].name, data.total_data[1].name, data.total_data[2].name];
 	let competition_name = data.race_info.competition;
@@ -1008,21 +1065,45 @@ function updateTrackRadarData(data) {
     initTrackRadar(data.track_svg, data.race_info ? data.race_info.track_name : "");
   }
 
-  if (!data.total_data || data.total_data.length === 0) return;
+  const currentLapStep = data.current_step || "";
+  lastTrackedLap = currentLapStep;
+
+  const rows = Object.values(data.total_data || {});
+  if (rows.length === 0) return;
+
+  const oldGapMap = {};
+  const oldProgressMap = {};
+  trackRadarCars.forEach(function(c) {
+    if (typeof c.currentGapToLeader === "number") {
+      oldGapMap[c.id] = c.currentGapToLeader;
+    }
+    if (typeof c.currentProgress === "number") {
+      oldProgressMap[c.id] = c.currentProgress;
+    }
+  });
 
   trackRadarCars = [];
-  data.total_data.forEach(function(row, idx) {
+  rows.forEach(function(row, idx) {
     const position = idx + 1;
     const driverId = row.driver_id || row.name.replace(/[^a-zA-Z0-9]/g, '_');
     const number = row.number || position;
     const team = row.team || "";
     const name = row.tv_name || row.name || "";
     const color = getTeamColor(team, idx);
-    const isOut = (row.status < 0 || row.gap === "OUT");
+    const isIncident = (row.status < 0 || row.gap === "OUT");
+    // Batidos aparecem como OUT somente APÓS a largada oficial executada (nunca em G-0 ou R-0 antes do sinal verde)
+    const isOut = isIncident && (race_started === 1 && raceCurrentStage !== "G-0" && raceCurrentStage !== "R-0");
     const isPit = (row.pits > 0 && row.last_lap === "PIT");
     const lap = parseInt(row.lap) || 0;
     const lastLap = parseFloat(row.last_lap) || 75;
     const totalTime = parseFloat(row.total_time) || 0;
+
+    const initialProgress = (oldProgressMap[driverId] !== undefined) 
+      ? oldProgressMap[driverId] 
+      : (0.99 - (idx * 0.012));
+    const initialGap = (oldGapMap[driverId] !== undefined)
+      ? oldGapMap[driverId]
+      : (idx * 0.8);
 
     trackRadarCars.push({
       id: driverId,
@@ -1037,7 +1118,10 @@ function updateTrackRadarData(data) {
       lap: lap,
       lastLap: lastLap,
       totalTime: totalTime,
-      gap: row.gap
+      gap: row.gap,
+      currentProgress: initialProgress,
+      currentGapToLeader: initialGap,
+      targetGapToLeader: initialGap
     });
   });
 
@@ -1115,28 +1199,99 @@ function hideRadarTooltip() {
   if (tooltip) tooltip.style.display = "none";
 }
 
-function renderTrackRadar() {
+function renderTrackRadar(timestamp) {
   const activePath = document.getElementById("track-radar-active-path");
   if (activePath && trackPathLength > 0 && trackRadarCars.length > 0) {
-    const now = performance.now() / 1000;
+    if (!radarAnimLastTimestamp) radarAnimLastTimestamp = timestamp;
+    const dt = Math.min(0.1, (timestamp - radarAnimLastTimestamp) / 1000);
+    radarAnimLastTimestamp = timestamp;
+
+    const isGrid = (raceCurrentStage === "G-0" || (raceCurrentStage === "R-0" && race_started === 0) || raceCurrentStageCode === 4);
+    const isRacing = (raceCurrentStageCode === 5 || (raceCurrentStage && raceCurrentStage.indexOf("R-") === 0));
+
+    // Advance lap progress (animates continuously and smoothly around track)
+    const leaderLapTime = Math.max(30, (trackRadarCars[0] && trackRadarCars[0].lastLap ? trackRadarCars[0].lastLap : 75));
+    if (isRacing && !isGrid) {
+      const speedMultiplier = replayPlaying ? replaySpeed : 1.0;
+      radarElapsedLapTime = (radarElapsedLapTime + dt * speedMultiplier) % leaderLapTime;
+    }
+
+    const leaderProgress = (isRacing && !isGrid) ? (radarElapsedLapTime / leaderLapTime) : 0;
+
+    // Calcula a distância acumulada para o líder (gapToLeaderSec) para todos os carros
+    const leaderTotalTime = trackRadarCars[0] ? (trackRadarCars[0].totalTime || 0) : 0;
+    let runningGap = 0;
+    trackRadarCars.forEach(function(car, idx) {
+      if (idx === 0) {
+        car.targetGapToLeader = 0;
+        runningGap = 0;
+      } else {
+        if (car.totalTime > 0 && leaderTotalTime > 0 && car.totalTime >= leaderTotalTime) {
+          car.targetGapToLeader = car.totalTime - leaderTotalTime;
+        } else {
+          // Fallback somando os gaps relativos informados
+          let relativeGap = 0;
+          if (typeof car.gap === "number") {
+            relativeGap = car.gap;
+          } else if (typeof car.gap === "string" && car.gap !== "OUT" && car.gap !== "0" && car.gap !== "-") {
+            const str = car.gap.trim().replace(/^\+/, '');
+            if (str.indexOf("LAP") !== -1) {
+              relativeGap = leaderLapTime;
+            } else if (str.indexOf(":") !== -1) {
+              const parts = str.split(":");
+              relativeGap = (parseFloat(parts[0]) || 0) * 60 + (parseFloat(parts[1]) || 0);
+            } else {
+              const num = parseFloat(str);
+              relativeGap = !isNaN(num) ? num : 0.8;
+            }
+          } else {
+            relativeGap = 0.8;
+          }
+          runningGap += relativeGap;
+          car.targetGapToLeader = runningGap;
+        }
+      }
+
+      // Suavização do gap em segundos (damping suave do intervalo de tempo)
+      if (car.currentGapToLeader === undefined) car.currentGapToLeader = car.targetGapToLeader;
+      car.currentGapToLeader += (car.targetGapToLeader - car.currentGapToLeader) * Math.min(1.0, dt * 2.5);
+    });
 
     trackRadarCars.forEach(function(car, idx) {
       const carElem = document.getElementById("radar-car-" + car.id);
       if (!carElem) return;
 
+      let progress = 0;
+
       if (car.isOut) {
-        const pt = activePath.getPointAtLength(0.01 * trackPathLength);
-        const circle = carElem.querySelector("circle");
-        const text = carElem.querySelector("text");
-        if (circle) { circle.setAttribute("cx", pt.x); circle.setAttribute("cy", pt.y); }
-        if (text) { text.setAttribute("x", pt.x); text.setAttribute("y", pt.y); }
-        return;
+        // DNF: Estacionado na área de escape/box
+        progress = 0.02 + (idx * 0.003);
+        carElem.style.opacity = "0.35";
+      } else if (isGrid) {
+        // ANTES DA LARGADA / GRID: Alinhado nas baias de largada ordenadas antes da linha de chegada
+        progress = 0.99 - (idx * 0.012);
+        carElem.style.opacity = "1";
+      } else {
+        // EM CORRIDA: Todos os carros avançam continuamente para frente
+        carElem.style.opacity = car.isPit ? "0.6" : "1";
+
+        const isLap0 = (raceCurrentStage === "R-0");
+        if (isLap0) {
+          // Na volta de largada: todos os carros aceleram para a frente a partir de suas posições no grid
+          const gridSlot = 0.99 - (idx * 0.012);
+          const carSpeedFactor = 1.0 - (idx * 0.006);
+          progress = gridSlot + (radarElapsedLapTime / leaderLapTime) * carSpeedFactor;
+        } else {
+          // Posição de cada carro é calculada a partir do gap suavizado em segundos
+          const gapSec = car.currentGapToLeader || 0;
+          const gapFraction = Math.min(0.85, (gapSec % leaderLapTime) / leaderLapTime);
+          progress = leaderProgress - gapFraction;
+        }
       }
 
-      const lapDuration = Math.max(20, car.lastLap || 75);
-      let baseProgress = (now / lapDuration) % 1;
-      let posOffset = (idx * 0.045);
-      let progress = (baseProgress - posOffset + 1) % 1;
+      // Normalização segura [0, 1) mantendo a direção contínua para frente
+      progress = ((progress % 1) + 1) % 1;
+      car.currentProgress = progress;
 
       const pt = activePath.getPointAtLength(progress * trackPathLength);
       const circle = carElem.querySelector("circle");
@@ -1155,8 +1310,7 @@ function renderTrackRadar() {
     // Safety Car position
     const scElem = document.getElementById("radar-safety-car");
     if (scElem && scElem.style.display !== "none") {
-      const leaderDuration = Math.max(30, (trackRadarCars[0] ? trackRadarCars[0].lastLap : 75) * 1.4);
-      const scProgress = ((now / leaderDuration) + 0.02) % 1;
+      const scProgress = isRacing ? ((leaderProgress + 0.02) % 1) : 0.06;
       const pt = activePath.getPointAtLength(scProgress * trackPathLength);
       const circles = scElem.querySelectorAll("circle");
       const text = scElem.querySelector("text");
@@ -1168,15 +1322,24 @@ function renderTrackRadar() {
   radarAnimFrameId = requestAnimationFrame(renderTrackRadar);
 }
 
-// Toggle radar view button
-$(document).on("click", "#btn-toggle-radar-view", function() {
+// Toggle radar / podium view button
+$(document).on("click", ".btn-toggle-view-action", function() {
   if ($("#track-radar-container").is(":visible")) {
+    radarUserPreference = 'podium';
     $("#track-radar-container").hide();
-    $("#competition-big-logo").show();
+    $("#podium-view-wrapper").show();
+    if ($("#podium-container .first-place .podium-name").text().trim() !== "") {
+      $("#podium-container").show();
+      $("#raceNameBar").show();
+      $("#competition-big-logo").hide();
+    } else {
+      $("#competition-big-logo").show();
+      $("#podium-container").hide();
+      $("#raceNameBar").hide();
+    }
   } else {
-    $("#competition-big-logo").hide();
-    $("#podium-container").hide();
-    $("#raceNameBar").hide();
+    radarUserPreference = 'radar';
+    $("#podium-view-wrapper").hide();
     $("#track-radar-container").show();
   }
 });
@@ -1379,10 +1542,15 @@ function raceLights(){
 
 }
 
-function startLights() {
+var raf = null;
+var timeout = null;
+var lightsOutTime = 0;
+
+function startLights(onStart) {
+  if (raf) cancelAnimationFrame(raf);
+  if (timeout) clearTimeout(timeout);
 
   const lights = Array.prototype.slice.call(document.querySelectorAll('.light-strip'));
-
 
   for (const light of lights) {
     light.classList.remove('on');
@@ -1398,17 +1566,21 @@ function startLights() {
       for (const light of lights.slice(0, toLight)) {
         light.classList.add('on');
       }
+      lightsOn = toLight;
     }
 
     if (toLight < 5) {
       raf = requestAnimationFrame(frame);
     } else {
-      const delay = Math.random() * 4000 + 1000;
+      const delay = Math.random() * 3000 + 1500;
       timeout = setTimeout(() => {
         for (const light of lights) {
           light.classList.remove('on');
         }
         lightsOutTime = performance.now();
+        if (typeof onStart === "function") {
+          onStart();
+        }
       }, delay);
     }
   }

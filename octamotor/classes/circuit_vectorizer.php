@@ -5,7 +5,7 @@ class CircuitVectorizer {
 
     private static function getCacheDir() {
         if (self::$cacheDir === null) {
-            $root = $_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__, 2);
+            $root = !empty($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__, 2);
             self::$cacheDir = $root . '/octamotor/images/track/cache/';
             if (!is_dir(self::$cacheDir)) {
                 @mkdir(self::$cacheDir, 0777, true);
@@ -17,10 +17,13 @@ class CircuitVectorizer {
     /**
      * Retorna os dados do traçado SVG (com cache automático).
      */
-    public static function getTrackSvgData($imageFileName) {
-        if (empty($imageFileName)) return null;
+    public static function getTrackSvgData($imageFileName, $trackName = '') {
+        if (empty($imageFileName) && empty($trackName)) return null;
 
-        $cacheFile = self::getCacheDir() . md5($imageFileName) . '.json';
+        $actualFile = self::resolveActualTrackFile($imageFileName, $trackName);
+        if (!$actualFile) return null;
+
+        $cacheFile = self::getCacheDir() . md5($actualFile) . '.json';
         if (file_exists($cacheFile)) {
             $cached = json_decode(file_get_contents($cacheFile), true);
             if (is_array($cached) && !empty($cached['svg_path'])) {
@@ -28,8 +31,8 @@ class CircuitVectorizer {
             }
         }
 
-        $root = $_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__, 2);
-        $imagePath = $root . '/octamotor/images/track/' . $imageFileName;
+        $root = !empty($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__, 2);
+        $imagePath = $root . '/octamotor/images/track/' . $actualFile;
 
         $svgData = self::traceCircuit($imagePath);
         if ($svgData) {
@@ -40,10 +43,63 @@ class CircuitVectorizer {
     }
 
     /**
+     * Resolve o arquivo físico real da pista mesmo se houver divergência de sufixo numérico aleatório
+     */
+    public static function resolveActualTrackFile($requestedFileName, $trackName = '') {
+        $root = !empty($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__, 2);
+        $trackDir = $root . '/octamotor/images/track/';
+
+        if (!empty($requestedFileName) && file_exists($trackDir . $requestedFileName)) {
+            return $requestedFileName;
+        }
+
+        if (!is_dir($trackDir)) return null;
+        $allFiles = scandir($trackDir);
+        $validFiles = [];
+        foreach ($allFiles as $f) {
+            if (preg_match('/\.(png|jpg|webp)$/i', $f)) {
+                $validFiles[] = $f;
+            }
+        }
+
+        $candidates = array_filter([$requestedFileName, $trackName]);
+        foreach ($candidates as $candidate) {
+            $clean = preg_replace('/^\d+-/', '', $candidate);
+            $clean = preg_replace('/\d+\.(png|jpg|webp)$/i', '', $clean);
+            $clean = preg_replace('/(International|Circuit|Autodr[oó]me|Aut[oó]dromo|Speedway|Raceway|National|Street|Racetrack)/iu', '', $clean);
+            $clean = trim($clean);
+            if (mb_strlen($clean) >= 3) {
+                foreach ($validFiles as $f) {
+                    if (stripos($f, $clean) !== false) {
+                        return $f;
+                    }
+                }
+            }
+        }
+
+        foreach ($candidates as $candidate) {
+            $words = preg_split('/[\s\-_]+/', $candidate);
+            foreach ($words as $w) {
+                $w = trim($w);
+                if (mb_strlen($w) >= 4 && !preg_match('/(International|Circuit|Autodrome|Autodromo|Speedway|Raceway|National|Street|Racetrack)/i', $w)) {
+                    foreach ($validFiles as $f) {
+                        if (stripos($f, $w) !== false) {
+                            return $f;
+                        }
+                    }
+                }
+            }
+        }
+
+        return !empty($requestedFileName) ? $requestedFileName : null;
+    }
+
+    /**
      * Limpa o cache de um traçado
      */
     public static function clearCache($imageFileName) {
-        $cacheFile = self::getCacheDir() . md5($imageFileName) . '.json';
+        $actualFile = self::resolveActualTrackFile($imageFileName);
+        $cacheFile = self::getCacheDir() . md5($actualFile ?: $imageFileName) . '.json';
         if (file_exists($cacheFile)) {
             @unlink($cacheFile);
         }
@@ -68,97 +124,186 @@ class CircuitVectorizer {
             return null;
         }
 
-        // Criar grade binária
+        // Amostragem robusta de bordas para obter a cor mediana de fundo (branco, preto, transparente ou colorido)
+        $borderR = []; $borderG = []; $borderB = []; $borderA = [];
+        for ($x = 0; $x < $w; $x += max(1, (int)($w / 50))) {
+            $c1 = imagecolorsforindex($im, imagecolorat($im, $x, 0));
+            $c2 = imagecolorsforindex($im, imagecolorat($im, $x, $h - 1));
+            $borderR[] = $c1['red']; $borderR[] = $c2['red'];
+            $borderG[] = $c1['green']; $borderG[] = $c2['green'];
+            $borderB[] = $c1['blue']; $borderB[] = $c2['blue'];
+            $borderA[] = $c1['alpha']; $borderA[] = $c2['alpha'];
+        }
+        for ($y = 0; $y < $h; $y += max(1, (int)($h / 50))) {
+            $c1 = imagecolorsforindex($im, imagecolorat($im, 0, $y));
+            $c2 = imagecolorsforindex($im, imagecolorat($im, $w - 1, $y));
+            $borderR[] = $c1['red']; $borderR[] = $c2['red'];
+            $borderG[] = $c1['green']; $borderG[] = $c2['green'];
+            $borderB[] = $c1['blue']; $borderB[] = $c2['blue'];
+            $borderA[] = $c1['alpha']; $borderA[] = $c2['alpha'];
+        }
+
+        sort($borderR); sort($borderG); sort($borderB); sort($borderA);
+        $mid = (int)(count($borderR) / 2);
+        $bgR = $borderR[$mid];
+        $bgG = $borderG[$mid];
+        $bgB = $borderB[$mid];
+        $bgA = $borderA[$mid];
+
+        // Adiciona padding ao redor da imagem para evitar que pistas que tocam a borda do canvas se fundam com os limites da imagem
+        $pad = 10;
+        $gridW = $w + ($pad * 2);
+        $gridH = $h + ($pad * 2);
+
         $grid = [];
-        $firstX = -1; $firstY = -1;
+        for ($y = 0; $y < $gridH; $y++) {
+            $grid[$y] = array_fill(0, $gridW, 0);
+        }
 
         for ($y = 0; $y < $h; $y++) {
-            $grid[$y] = [];
             for ($x = 0; $x < $w; $x++) {
                 $rgba = imagecolorat($im, $x, $y);
-                $alpha = ($rgba >> 24) & 0x7F; // 0 = opaco, 127 = transparente
-                $r = ($rgba >> 16) & 0xFF;
-                $g = ($rgba >> 8) & 0xFF;
-                $b = $rgba & 0xFF;
-                $brightness = ($r + $g + $b) / 3;
+                $c = imagecolorsforindex($im, $rgba);
+                $r = $c['red']; $g = $c['green']; $b = $c['blue']; $a = $c['alpha'];
 
-                // Detectar se é linha da pista (opaco e brilhante, ou linha escura em fundo branco)
-                $isLine = ($alpha < 90 && $brightness > 50);
-                $grid[$y][$x] = $isLine ? 1 : 0;
+                $colorDiff = sqrt(pow($r - $bgR, 2) + pow($g - $bgG, 2) + pow($b - $bgB, 2));
+                $alphaDiff = abs($a - $bgA);
 
-                if ($isLine && $firstX === -1) {
-                    $firstX = $x;
-                    $firstY = $y;
+                $isTrack = ($colorDiff > 40 || $alphaDiff > 40);
+
+                $grid[$y + $pad][$x + $pad] = $isTrack ? 1 : 0;
+            }
+        }
+        // Detecta pixels vermelhos da linha de largada/chegada
+        $redX = []; $redY = [];
+        for ($y = 0; $y < $h; $y++) {
+            for ($x = 0; $x < $w; $x++) {
+                $rgba = imagecolorat($im, $x, $y);
+                $c = imagecolorsforindex($im, $rgba);
+                if ($c['red'] > 175 && $c['green'] < 70 && $c['blue'] < 70 && $c['alpha'] < 50) {
+                    $redX[] = $x;
+                    $redY[] = $y;
                 }
             }
         }
+        $finishLineCenter = null;
+        if (!empty($redX)) {
+            $finishLineCenter = [
+                'x' => array_sum($redX) / count($redX),
+                'y' => array_sum($redY) / count($redY)
+            ];
+        }
+
         imagedestroy($im);
 
-        if ($firstX === -1) return null;
-
-        // Algoritmo de Moore-Neighbor Tracing para contorno fechado
+        // Encontra todos os contornos fechados e seleciona o circuito principal (maior área cercada)
+        $visited = [];
+        $bestContour = [];
+        $bestArea = 0;
         $dirs = [
-            [0, -1], [1, -1], [1, 0], [1, 1],
-            [0, 1], [-1, 1], [-1, 0], [-1, -1]
+            [-1, -1], [0, -1], [1, -1],
+            [1, 0],            [1, 1],
+            [0, 1],   [-1, 1], [-1, 0]
         ];
 
-        $contour = [];
-        $startX = $firstX;
-        $startY = $firstY;
-        $currX = $startX;
-        $currY = $startY;
-        $backtrackDir = 6; // Oeste
+        for ($y = 0; $y < $gridH; $y++) {
+            for ($x = 0; $x < $gridW; $x++) {
+                if ($grid[$y][$x] === 1 && empty($visited["$x,$y"])) {
+                    $contour = [];
+                    $currX = $x;
+                    $currY = $y;
+                    $contour[] = ['x' => $currX - $pad, 'y' => $currY - $pad];
+                    $visited["$currX,$currY"] = true;
 
-        $maxSteps = $w * $h;
-        $steps = 0;
+                    $backtrackDir = 0;
+                    $maxSteps = $gridW * $gridH;
+                    $steps = 0;
 
-        $contour[] = ['x' => $startX, 'y' => $startY];
+                    do {
+                        $foundNext = false;
+                        for ($i = 0; $i < 8; $i++) {
+                            $checkDir = ($backtrackDir + $i) % 8;
+                            $nx = $currX + $dirs[$checkDir][0];
+                            $ny = $currY + $dirs[$checkDir][1];
 
-        while ($steps < $maxSteps) {
-            $steps++;
-            $found = false;
-            for ($i = 0; $i < 8; $i++) {
-                $dirIdx = ($backtrackDir + 1 + $i) % 8;
-                $nx = $currX + $dirs[$dirIdx][0];
-                $ny = $currY + $dirs[$dirIdx][1];
+                            if ($nx >= 0 && $nx < $gridW && $ny >= 0 && $ny < $gridH && !empty($grid[$ny][$nx])) {
+                                $currX = $nx;
+                                $currY = $ny;
+                                $contour[] = ['x' => $currX - $pad, 'y' => $currY - $pad];
+                                $visited["$currX,$currY"] = true;
+                                $backtrackDir = ($checkDir + 5) % 8;
+                                $foundNext = true;
+                                break;
+                            }
+                        }
+                        if (!$foundNext) break;
+                        $steps++;
+                        if ($currX === $x && $currY === $y && $steps > 15) {
+                            break;
+                        }
+                    } while ($steps < $maxSteps);
 
-                if ($nx >= 0 && $nx < $w && $ny >= 0 && $ny < $h && isset($grid[$ny][$nx]) && $grid[$ny][$nx] === 1) {
-                    $currX = $nx;
-                    $currY = $ny;
-                    $contour[] = ['x' => $currX, 'y' => $currY];
-                    $backtrackDir = ($dirIdx + 4) % 8;
-                    $found = true;
-                    break;
+                    if (count($contour) >= 20) {
+                        // Calcula a área do polígono do contorno
+                        $area = 0;
+                        $cntCount = count($contour);
+                        for ($pi = 0; $pi < $cntCount; $pi++) {
+                            $pj = ($pi + 1) % $cntCount;
+                            $area += $contour[$pi]['x'] * $contour[$pj]['y'];
+                            $area -= $contour[$pj]['x'] * $contour[$pi]['y'];
+                        }
+                        $area = abs($area) / 2;
+
+                        if ($area > $bestArea) {
+                            $bestArea = $area;
+                            $bestContour = $contour;
+                        }
+                    }
                 }
             }
+        }
 
-            if (!$found) break;
+        if (empty($bestContour) || count($bestContour) < 15) return null;
 
-            if ($currX === $startX && $currY === $startY && count($contour) > 20) {
-                break;
+        // Se encontrou a linha de largada/chegada vermelha, rotaciona o contorno para começar exatamente nela
+        if ($finishLineCenter !== null) {
+            $closestIdx = 0;
+            $minDist = PHP_FLOAT_MAX;
+            foreach ($bestContour as $idx => $pt) {
+                $d = pow($pt['x'] - $finishLineCenter['x'], 2) + pow($pt['y'] - $finishLineCenter['y'], 2);
+                if ($d < $minDist) {
+                    $minDist = $d;
+                    $closestIdx = $idx;
+                }
+            }
+            if ($closestIdx > 0) {
+                $bestContour = array_merge(
+                    array_slice($bestContour, $closestIdx),
+                    array_slice($bestContour, 0, $closestIdx)
+                );
             }
         }
 
-        if (count($contour) < 20) return null;
+        // Simplificação / sub-amostragem proporcional para curva suave
+        $totalPoints = count($bestContour);
+        $targetPoints = min(120, max(35, (int)($totalPoints / 12)));
+        $stepSize = max(1, (int)($totalPoints / $targetPoints));
 
-        // Amostragem proporcional para ~60 pontos de controle suaves
-        $targetCount = 60;
-        $step = count($contour) / $targetCount;
-        $sampled = [];
-        for ($i = 0; $i < $targetCount; $i++) {
-            $idx = (int)floor($i * $step);
-            $sampled[] = $contour[$idx];
+        $simplified = [];
+        for ($i = 0; $i < $totalPoints; $i += $stepSize) {
+            $simplified[] = $bestContour[$i];
         }
+        if (count($simplified) < 8) return null;
 
         // Gera o path SVG usando splines Catmull-Rom para Bezier Cúbico fechado
-        $svgPath = self::pointsToSmoothSvg($sampled);
+        $svgPath = self::pointsToSmoothSvg($simplified);
 
         return [
             'svg_path' => $svgPath,
             'viewBox' => "0 0 {$w} {$h}",
             'width' => $w,
             'height' => $h,
-            'points_count' => count($sampled)
+            'points_count' => count($simplified)
         ];
     }
 

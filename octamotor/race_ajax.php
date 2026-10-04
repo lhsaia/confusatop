@@ -43,25 +43,22 @@ $auxiliary_table = array();
 		if ($conn_ajax) {
 			$trackObj = new Track($conn_ajax);
 			$trackImage = $trackObj->getTrackImageByName($race_info['track_name']);
-			if (!empty($trackImage)) {
-				$track_svg = CircuitVectorizer::getTrackSvgData($trackImage);
-			}
+			$track_svg = CircuitVectorizer::getTrackSvgData($trackImage, $race_info['track_name']);
 		}
 	}
 
 	$is_test_file = (strpos($file_name, 'test.json') !== false);
 	$base_timestamp = isset($race_info['base_timestamp']) ? floatval($race_info['base_timestamp']) : 0;
-	$fake_offset = isset($_POST["fakeTimeOffset"]) ? floatval($_POST["fakeTimeOffset"]) : 0;
+	$is_replay = (isset($_POST['is_replay']) && $_POST['is_replay'] == '1');
 
 	// Se for corrida oficial de campeonato e ainda NÃO ACONTECEU (está no futuro), bloqueia fakeTimeOffset para não vazar o resultado antecipadamente
 	if (!$is_test_file && time() < $base_timestamp) {
 		$current_timestamp = time();
+	} else if ($is_replay) {
+		$fake_offset = isset($_POST["fakeTimeOffset"]) ? floatval($_POST["fakeTimeOffset"]) : 0;
+		$current_timestamp = (isset($_POST["baseTimestamp"]) && floatval($_POST["baseTimestamp"]) > 0 ? floatval($_POST["baseTimestamp"]) : $base_timestamp) + $fake_offset;
 	} else {
-		if($fake_offset == 0){
-			$current_timestamp = time();
-		} else {
-			$current_timestamp = (isset($_POST["baseTimestamp"]) && floatval($_POST["baseTimestamp"]) > 0 ? floatval($_POST["baseTimestamp"]) : $base_timestamp) + $fake_offset;
-		}
+		$current_timestamp = time();
 	}
 
 	$reverse_laps = array_reverse($lap_results);
@@ -264,9 +261,9 @@ if($stage_number == "R"){
 
 		});
 	}
-
 }
 
+$total_data = array_values($total_data);
 
 die(json_encode([ 'total_data'=> $total_data, 'current_step' => $current_step, 'race_info' => $race_info, 'rain_status' => $rain_status, 'safety_car_status' => $safety_car_status, 'air_temp' => $air_temp, 'track_temp' => $track_temp, 'timestamp' => $timestamp, 'track_svg' => $track_svg]));
 
