@@ -67,17 +67,23 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         die("Banco de dados da competição não disponível.");
     }
     
+    $competicao->sincronizarSlotsJogos($idCompeticao);
+    
     // 1. Carregar Clubes do SQLite
     $stmtClubes = $cdb->query("SELECT ID, Nome, TresLetras, Escudo FROM clube");
     $clubes = [];
     while ($row = $stmtClubes->fetch(PDO::FETCH_ASSOC)) {
+        $cId = (int)($row['ID'] ?? 0);
         if (!empty($row['Escudo'])) {
             $row['Escudo'] = basename($row['Escudo']);
+        } else {
+            $row['Escudo'] = '0.png';
         }
         if (!empty($row['Nome'])) {
             $row['Nome'] = trim(html_entity_decode(html_entity_decode(stripslashes($row['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         }
-        $clubes[$row['ID']] = $row;
+        $row['TresLetras'] = !empty($row['TresLetras']) ? $row['TresLetras'] : substr($row['Nome'] ?? 'EXT', 0, 3);
+        $clubes[$cId] = $row;
     }
 
     // Carregar clubes cadastrados no portal (MariaDB) para garantir nomes/escudos atualizados
@@ -85,75 +91,38 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $stmtPortalTimes = $db->query("SELECT ID, Nome, TresLetras, Escudo FROM clube");
         if ($stmtPortalTimes) {
             while ($pTime = $stmtPortalTimes->fetch(PDO::FETCH_ASSOC)) {
+                $pId = (int)($pTime['ID'] ?? 0);
                 if (!empty($pTime['Escudo'])) {
                     $pTime['Escudo'] = basename($pTime['Escudo']);
                 }
                 if (!empty($pTime['Nome'])) {
                     $pTime['Nome'] = trim(html_entity_decode(html_entity_decode(stripslashes($pTime['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
                 }
-                $clubes[(int)$pTime['ID']] = $pTime;
+                if ($pId > 0) {
+                    $clubes[$pId] = $pTime;
+                }
             }
         }
     } catch (\Throwable $e) {}
 
     // Carregar vagas / slots atribuídos do MariaDB
     $assignedSlotTeams = [];
+    $timesParticipantesIds = [];
     $stmtTimesSlots = $competicao->carregarListaTimes($idCompeticao);
     while ($rSlot = $stmtTimesSlots->fetch(PDO::FETCH_ASSOC)) {
         $sName = !empty($rSlot['slot']) ? $rSlot['slot'] : ("Slot " . $rSlot['codigo_time']);
         if (!empty($rSlot['id_time_portal']) && intval($rSlot['id_time_portal']) > 0) {
-            $assignedSlotTeams[$sName] = intval($rSlot['id_time_portal']);
+            $cId = intval($rSlot['id_time_portal']);
+            $assignedSlotTeams[$sName] = $cId;
+            $timesParticipantesIds[$cId] = true;
         } else if ($rSlot['has_team'] == 1 || $rSlot['has_team'] == '1') {
-            $assignedSlotTeams[$sName] = -1 * abs(intval($rSlot['codigo_time']));
+            $cId = -1 * abs(intval($rSlot['codigo_time']));
+            $assignedSlotTeams[$sName] = $cId;
+            $timesParticipantesIds[$cId] = true;
         }
     }
     
-    // 2. Carregar Jogadores do SQLite
-    $stmtJogadores = $cdb->query("SELECT ID, Nome, Nivel FROM jogador");
-    $jogadoresMap = [];
-    while ($row = $stmtJogadores->fetch(PDO::FETCH_ASSOC)) {
-        if (!empty($row['Nome'])) {
-            $row['Nome'] = trim(html_entity_decode(html_entity_decode(stripslashes($row['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-        }
-        $jogadoresMap[$row['ID']] = $row;
-    }
-
-    // Carregar / enriquecer nomes de jogadores cadastrados no MariaDB
-    try {
-        $stmtPortalJogadores = $db->query("SELECT id, Nome, Nivel FROM jogador");
-        if ($stmtPortalJogadores) {
-            while ($pJog = $stmtPortalJogadores->fetch(PDO::FETCH_ASSOC)) {
-                $pId = (int)$pJog['id'];
-                $cleanNome = trim(html_entity_decode(html_entity_decode(stripslashes($pJog['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-                if (!empty($cleanNome)) {
-                    if (!isset($jogadoresMap[$pId])) {
-                        $jogadoresMap[$pId] = [
-                            'ID' => $pId,
-                            'Nome' => $cleanNome,
-                            'Nivel' => $pJog['Nivel'] ?? 0
-                        ];
-                    } else {
-                        $jogadoresMap[$pId]['Nome'] = $cleanNome;
-                    }
-                }
-            }
-        }
-    } catch (\Throwable $e) {}
-    
-    // 3. Mapear Jogador -> Clube pelo Elenco no SQLite
-    $stmtElenco = $cdb->query("SELECT * FROM elenco");
-    $jogadorClubeMap = [];
-    while ($row = $stmtElenco->fetch(PDO::FETCH_ASSOC)) {
-        $clubeId = $row['Clube'];
-        for ($i = 1; $i <= 23; $i++) {
-            $pId = $row['Jogador' . $i];
-            if ($pId) {
-                $jogadorClubeMap[$pId] = $clubeId;
-            }
-        }
-    }
-    
-    // 4. Carregar Jogos da Competição
+    // 2. Carregar Jogos da Competição
     $stmtJogos = $db->prepare("SELECT id, timeA_id, timeA_nome, timeA_gols, timeB_id, timeB_nome, timeB_gols, timeA_penaltis, timeB_penaltis, data, status, fase, grupo, path 
                                FROM jogos_clube 
                                WHERE competicao_id = :idComp 
@@ -162,6 +131,96 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $stmtJogos->bindParam(':idComp', $idCompeticao, PDO::PARAM_INT);
     $stmtJogos->execute();
     $jogos = $stmtJogos->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($jogos as $j) {
+        if (!empty($j['timeA_id']) && (int)$j['timeA_id'] != 0) $timesParticipantesIds[(int)$j['timeA_id']] = true;
+        if (!empty($j['timeB_id']) && (int)$j['timeB_id'] != 0) $timesParticipantesIds[(int)$j['timeB_id']] = true;
+    }
+
+    // 3. Mapear Jogador -> Clube e Jogadores que pertencem aos times da competição
+    $stmtElenco = $cdb->query("SELECT * FROM elenco");
+    $jogadorClubeMap = [];
+    $jogadoresCompeticaoIds = [];
+    if ($stmtElenco) {
+        while ($row = $stmtElenco->fetch(PDO::FETCH_ASSOC)) {
+            $clubeId = (int)$row['Clube'];
+            if (!empty($timesParticipantesIds) && !isset($timesParticipantesIds[$clubeId])) {
+                continue;
+            }
+            for ($i = 1; $i <= 23; $i++) {
+                $pId = (int)($row['Jogador' . $i] ?? 0);
+                if ($pId != 0) {
+                    $jogadorClubeMap[$pId] = $clubeId;
+                    $jogadoresCompeticaoIds[$pId] = true;
+                }
+            }
+        }
+    }
+
+    // Complementar mapeamento Jogador -> Clube com contratos ativos no MariaDB para os clubes participantes
+    if (!empty($timesParticipantesIds)) {
+        $validClubIds = [];
+        foreach (array_keys($timesParticipantesIds) as $tId) {
+            if ($tId > 0) $validClubIds[] = (int)$tId;
+        }
+        if (!empty($validClubIds)) {
+            $inTimes = implode(',', $validClubIds);
+            try {
+                $stmtContratos = $db->query("SELECT jogador, clube FROM contratos_jogador WHERE clube IN ($inTimes) AND tipoContrato = 0");
+                if ($stmtContratos) {
+                    while ($cRow = $stmtContratos->fetch(PDO::FETCH_ASSOC)) {
+                        $pId = (int)$cRow['jogador'];
+                        $cId = (int)$cRow['clube'];
+                        if (!isset($jogadorClubeMap[$pId])) {
+                            $jogadorClubeMap[$pId] = $cId;
+                        }
+                        $jogadoresCompeticaoIds[$pId] = true;
+                    }
+                }
+            } catch (\Throwable $e) {}
+        }
+    }
+
+    // 4. Carregar Jogadores do SQLite (filtrando apenas os que pertencem à competição)
+    $stmtJogadores = $cdb->query("SELECT ID, Nome, Nivel FROM jogador");
+    $jogadoresMap = [];
+    if ($stmtJogadores) {
+        while ($row = $stmtJogadores->fetch(PDO::FETCH_ASSOC)) {
+            $pId = (int)$row['ID'];
+            if (!empty($jogadoresCompeticaoIds) && !isset($jogadoresCompeticaoIds[$pId])) {
+                continue;
+            }
+            if (!empty($row['Nome'])) {
+                $row['Nome'] = trim(html_entity_decode(html_entity_decode(stripslashes($row['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            }
+            $jogadoresMap[$pId] = $row;
+        }
+    }
+
+    // Carregar / enriquecer nomes de jogadores cadastrados no MariaDB APENAS para os jogadores da competição
+    if (!empty($jogadoresCompeticaoIds)) {
+        $jIdsIn = implode(',', array_keys($jogadoresCompeticaoIds));
+        try {
+            $stmtPortalJogadores = $db->query("SELECT id, Nome, Nivel FROM jogador WHERE id IN ($jIdsIn)");
+            if ($stmtPortalJogadores) {
+                while ($pJog = $stmtPortalJogadores->fetch(PDO::FETCH_ASSOC)) {
+                    $pId = (int)$pJog['id'];
+                    $cleanNome = trim(html_entity_decode(html_entity_decode(stripslashes($pJog['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                    if (!empty($cleanNome)) {
+                        if (!isset($jogadoresMap[$pId])) {
+                            $jogadoresMap[$pId] = [
+                                'ID' => $pId,
+                                'Nome' => $cleanNome,
+                                'Nivel' => $pJog['Nivel'] ?? 0
+                            ];
+                        } else {
+                            $jogadoresMap[$pId]['Nome'] = $cleanNome;
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
+    }
     
     // 4. Carregar todos os jogos da Fase 2 para mapear a estrutura de Grupos e Clubes
     $stmtFase2Jogos = $db->prepare("SELECT timeA_id, timeB_id, grupo 
@@ -182,8 +241,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             if (!in_array($g, $gruposDetectados)) {
                 $gruposDetectados[] = $g;
             }
-            if (!empty($j['timeA_id']) && !isset($clubeGrupoMap[$j['timeA_id']])) $clubeGrupoMap[$j['timeA_id']] = $g;
-            if (!empty($j['timeB_id']) && !isset($clubeGrupoMap[$j['timeB_id']])) $clubeGrupoMap[$j['timeB_id']] = $g;
+            if (!empty($j['timeA_id']) && (int)$j['timeA_id'] != 0 && !isset($clubeGrupoMap[(int)$j['timeA_id']])) $clubeGrupoMap[(int)$j['timeA_id']] = $g;
+            if (!empty($j['timeB_id']) && (int)$j['timeB_id'] != 0 && !isset($clubeGrupoMap[(int)$j['timeB_id']])) $clubeGrupoMap[(int)$j['timeB_id']] = $g;
         }
     }
     sort($gruposDetectados);
@@ -196,13 +255,14 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             $tabelaPorGrupo[$g] = [];
         }
         foreach ($clubeGrupoMap as $idC => $g) {
-            if ($g !== '' && isset($clubes[$idC])) {
-                $c = $clubes[$idC];
-                $tabelaPorGrupo[$g][$idC] = [
-                    'id' => $idC,
-                    'nome' => $c['Nome'],
-                    'escudo' => $c['Escudo'],
-                    'sigla' => $c['TresLetras'],
+            $idCInt = (int)$idC;
+            if ($g !== '' && isset($clubes[$idCInt])) {
+                $c = $clubes[$idCInt];
+                $tabelaPorGrupo[$g][$idCInt] = [
+                    'id' => $idCInt,
+                    'nome' => $c['Nome'] ?? ('Time ' . $idCInt),
+                    'escudo' => !empty($c['Escudo']) ? $c['Escudo'] : '0.png',
+                    'sigla' => $c['TresLetras'] ?? '',
                     'jogos' => 0,
                     'pontos' => 0,
                     'vitorias' => 0,
@@ -220,15 +280,16 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         // Coletar apenas os IDs dos times que efetivamente participam desta competição
         $timesParticipantesIds = [];
         foreach ($assignedSlotTeams as $sName => $cIdPortal) {
-            if ($cIdPortal > 0) {
-                $timesParticipantesIds[$cIdPortal] = true;
+            $cIdInt = (int)$cIdPortal;
+            if ($cIdInt != 0) {
+                $timesParticipantesIds[$cIdInt] = true;
             }
         }
 
         // Adicionar também times presentes nos jogos da fase 2 (pontos corridos)
         foreach ($allFase2 as $j) {
-            if (!empty($j['timeA_id']) && (int)$j['timeA_id'] > 0) $timesParticipantesIds[(int)$j['timeA_id']] = true;
-            if (!empty($j['timeB_id']) && (int)$j['timeB_id'] > 0) $timesParticipantesIds[(int)$j['timeB_id']] = true;
+            if (!empty($j['timeA_id']) && (int)$j['timeA_id'] != 0) $timesParticipantesIds[(int)$j['timeA_id']] = true;
+            if (!empty($j['timeB_id']) && (int)$j['timeB_id'] != 0) $timesParticipantesIds[(int)$j['timeB_id']] = true;
         }
 
         // Se encontrou times participantes específicos, popula apenas eles
@@ -397,7 +458,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                         if (isset($json->time1->jogadores)) {
                             foreach ($json->time1->jogadores as $pj) {
                                 $pid = (int)$pj->idJogador;
-                                if ($pid > 0) {
+                                if ($pid != 0) {
                                     if (!isset($playerStats[$pid])) {
                                         $playerStats[$pid] = ['gols' => 0, 'assistencias' => 0, 'amarelos' => 0, 'vermelhos' => 0, 'partidas' => 0];
                                     }
@@ -415,7 +476,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                         if (isset($json->time2->jogadores)) {
                             foreach ($json->time2->jogadores as $pj) {
                                 $pid = (int)$pj->idJogador;
-                                if ($pid > 0) {
+                                if ($pid != 0) {
                                     if (!isset($playerStats[$pid])) {
                                         $playerStats[$pid] = ['gols' => 0, 'assistencias' => 0, 'amarelos' => 0, 'vermelhos' => 0, 'partidas' => 0];
                                     }
@@ -436,11 +497,12 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     }
     
     // 6. Consultar Departamento Médico (Lesionados) no MySQL
-    // Obter todos os jogadores com lesão ativa (na tabela jogador ou competicao_suspensos)
+    // 6. Consultar Departamento Médico (Lesionados) no MySQL
+    // Obter apenas os jogadores desta competição com lesão ativa
     $lesionados = [];
-    if (!empty($jogadoresMap)) {
-        $pIds = array_keys($jogadoresMap);
-        $inClause = implode(',', $pIds);
+    $pIdsParaConsultar = !empty($jogadoresCompeticaoIds) ? array_keys($jogadoresCompeticaoIds) : array_keys($jogadoresMap);
+    if (!empty($pIdsParaConsultar)) {
+        $inClause = implode(',', $pIdsParaConsultar);
         try {
             $stmtLes = $db->prepare("SELECT val.id, GREATEST(COALESCE(j.lesionado_ate, '1970-01-01'), COALESCE(cs.lesionado_ate, '1970-01-01')) AS lesionado_ate
                                      FROM (
@@ -456,8 +518,14 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             $lesRows = $stmtLes->fetchAll(PDO::FETCH_ASSOC);
             foreach ($lesRows as $l) {
                 $pid = (int)$l['id'];
+                $clubeId = $jogadorClubeMap[$pid] ?? 0;
+                
+                // Validação estrita: o clube deve ser um dos participantes desta competição
+                if (!empty($timesParticipantesIds) && !isset($timesParticipantesIds[$clubeId])) {
+                    continue;
+                }
+                
                 if (isset($jogadoresMap[$pid])) {
-                    $clubeId = $jogadorClubeMap[$pid] ?? 0;
                     $lesionados[] = [
                         'id' => $pid,
                         'nome' => $jogadoresMap[$pid]['Nome'],
@@ -470,6 +538,41 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         } catch (Exception $e) {}
     }
     
+    // Consultar também lesionados no SQLite da competição (para atletas de times temporários YMT ou marcados no SQLite)
+    try {
+        $stmtSqliteLes = $cdb->query("SELECT ID, Nome, Lesionado FROM jogador WHERE Lesionado = 1");
+        if ($stmtSqliteLes) {
+            while ($sRow = $stmtSqliteLes->fetch(PDO::FETCH_ASSOC)) {
+                $pid = (int)$sRow['ID'];
+                $clubeId = $jogadorClubeMap[$pid] ?? 0;
+                
+                // Validação estrita: o clube deve pertencer à competição
+                if (!empty($timesParticipantesIds) && !isset($timesParticipantesIds[$clubeId])) {
+                    continue;
+                }
+                
+                $jaExiste = false;
+                foreach ($lesionados as $existente) {
+                    if ($existente['id'] === $pid) {
+                        $jaExiste = true;
+                        break;
+                    }
+                }
+                
+                if (!$jaExiste) {
+                    $nomeAtleta = !empty($sRow['Nome']) ? trim(html_entity_decode(html_entity_decode(stripslashes($sRow['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8')) : ($jogadoresMap[$pid]['Nome'] ?? 'Jogador ' . $pid);
+                    $lesionados[] = [
+                        'id' => $pid,
+                        'nome' => $nomeAtleta,
+                        'clube' => $clubes[$clubeId]['Nome'] ?? 'Sem clube',
+                        'escudo' => $clubes[$clubeId]['Escudo'] ?? '',
+                        'retorno' => 'Em recuperação'
+                    ];
+                }
+            }
+        }
+    } catch (\Throwable $e) {}
+    
     // 7. Consultar Suspensos da Competição no MySQL
     $stmtSus = $db->prepare("SELECT cs.id_jogador, cs.suspenso 
                              FROM competicao_suspensos cs 
@@ -480,8 +583,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $suspensos = [];
     foreach ($suspRows as $s) {
         $pid = (int)$s['id_jogador'];
+        $clubeId = $jogadorClubeMap[$pid] ?? 0;
+        if (!empty($timesParticipantesIds) && !isset($timesParticipantesIds[$clubeId])) {
+            continue;
+        }
         if (isset($jogadoresMap[$pid])) {
-            $clubeId = $jogadorClubeMap[$pid] ?? 0;
             $suspensos[] = [
                 'id' => $pid,
                 'nome' => $jogadoresMap[$pid]['Nome'],
@@ -490,6 +596,39 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             ];
         }
     }
+
+    // Consultar também suspensos no SQLite da competição (para atletas de times temporários YMT)
+    try {
+        $stmtSqliteSus = $cdb->query("SELECT ID, Nome, Suspenso FROM jogador WHERE Suspenso = 1");
+        if ($stmtSqliteSus) {
+            while ($sRow = $stmtSqliteSus->fetch(PDO::FETCH_ASSOC)) {
+                $pid = (int)$sRow['ID'];
+                $clubeId = $jogadorClubeMap[$pid] ?? 0;
+                
+                if (!empty($timesParticipantesIds) && !isset($timesParticipantesIds[$clubeId])) {
+                    continue;
+                }
+                
+                $jaExiste = false;
+                foreach ($suspensos as $existente) {
+                    if ($existente['id'] === $pid) {
+                        $jaExiste = true;
+                        break;
+                    }
+                }
+                
+                if (!$jaExiste) {
+                    $nomeAtleta = !empty($sRow['Nome']) ? trim(html_entity_decode(html_entity_decode(stripslashes($sRow['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8')) : ($jogadoresMap[$pid]['Nome'] ?? 'Jogador ' . $pid);
+                    $suspensos[] = [
+                        'id' => $pid,
+                        'nome' => $nomeAtleta,
+                        'clube' => $clubes[$clubeId]['Nome'] ?? 'Sem clube',
+                        'escudo' => $clubes[$clubeId]['Escudo'] ?? ''
+                    ];
+                }
+            }
+        }
+    } catch (\Throwable $e) {}
     
     // 8. Consultar Cartões Amarelos Acumulados da Competição no MySQL
     $stmtAmarelos = $db->prepare("SELECT cs.id_jogador, cs.cartoes_amarelos 
@@ -502,8 +641,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $cartoesAmarelosAcumulados = [];
     foreach ($amarelosRows as $ar) {
         $pid = (int)$ar['id_jogador'];
+        $clubeId = $jogadorClubeMap[$pid] ?? 0;
+        if (!empty($timesParticipantesIds) && !isset($timesParticipantesIds[$clubeId])) {
+            continue;
+        }
         if (isset($jogadoresMap[$pid])) {
-            $clubeId = $jogadorClubeMap[$pid] ?? 0;
             $cartoesAmarelosAcumulados[] = [
                 'id' => $pid,
                 'nome' => $jogadoresMap[$pid]['Nome'],
@@ -512,6 +654,30 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                 'amarelos' => (int)$ar['cartoes_amarelos']
             ];
         }
+    }
+    
+    // Garantir nomes para jogadores com estatísticas nas partidas que possam não estar no mapa inicial
+    $missingStatsPids = [];
+    foreach (array_keys($playerStats) as $pid) {
+        if (!isset($jogadoresMap[$pid])) {
+            $missingStatsPids[] = $pid;
+        }
+    }
+    if (!empty($missingStatsPids)) {
+        $mIn = implode(',', $missingStatsPids);
+        try {
+            $stmtM = $db->query("SELECT id, Nome, Nivel FROM jogador WHERE id IN ($mIn)");
+            if ($stmtM) {
+                while ($pm = $stmtM->fetch(PDO::FETCH_ASSOC)) {
+                    $pid = (int)$pm['id'];
+                    $jogadoresMap[$pid] = [
+                        'ID' => $pid,
+                        'Nome' => trim(html_entity_decode(html_entity_decode(stripslashes($pm['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8')),
+                        'Nivel' => $pm['Nivel'] ?? 0
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {}
     }
     
     // Preparar listas para a aba de estatísticas
@@ -792,9 +958,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                         $jogandoPrimeiraFaseIds = [];
                         $jogandoPrimeiraFaseNomes = [];
                         foreach ($fasesKnockout[$primeiraFaseId] as $p) {
-                            if (!empty($p['timeA_id']) && (int)$p['timeA_id'] > 0) $jogandoPrimeiraFaseIds[(int)$p['timeA_id']] = true;
+                            if (!empty($p['timeA_id']) && (int)$p['timeA_id'] != 0) $jogandoPrimeiraFaseIds[(int)$p['timeA_id']] = true;
                             if (!empty($p['timeA_nome'])) $jogandoPrimeiraFaseNomes[trim($p['timeA_nome'])] = true;
-                            if (!empty($p['timeB_id']) && (int)$p['timeB_id'] > 0) $jogandoPrimeiraFaseIds[(int)$p['timeB_id']] = true;
+                            if (!empty($p['timeB_id']) && (int)$p['timeB_id'] != 0) $jogandoPrimeiraFaseIds[(int)$p['timeB_id']] = true;
                             if (!empty($p['timeB_nome'])) $jogandoPrimeiraFaseNomes[trim($p['timeB_nome'])] = true;
                         }
 
@@ -803,11 +969,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                             foreach ($assignedSlotTeams as $sName => $cId) {
                                 $cIdInt = (int)$cId;
                                 $isNoJogo = false;
-                                if ($cIdInt > 0 && isset($jogandoPrimeiraFaseIds[$cIdInt])) $isNoJogo = true;
+                                if ($cIdInt != 0 && isset($jogandoPrimeiraFaseIds[$cIdInt])) $isNoJogo = true;
                                 if (isset($jogandoPrimeiraFaseNomes[$sName])) $isNoJogo = true;
 
                                 if (!$isNoJogo) {
-                                    $clubeObj = ($cIdInt > 0 && isset($clubes[$cIdInt])) ? $clubes[$cIdInt] : null;
+                                    $clubeObj = ($cIdInt != 0 && isset($clubes[$cIdInt])) ? $clubes[$cIdInt] : null;
                                     $nomeBye = $clubeObj ? $clubeObj['Nome'] : $sName;
                                     $escudoBye = $clubeObj ? ($clubeObj['Escudo'] ?? '0.png') : '0.png';
 
@@ -841,9 +1007,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                 $tA_nome = trim($jgProx['timeA_nome'] ?? '');
                                 $tB_id = (int)$jgProx['timeB_id'];
                                 $tB_nome = trim($jgProx['timeB_nome'] ?? '');
-                                if ($tA_id > 0) $byeOrderMap['id_' . $tA_id] = $idxJg;
+                                if ($tA_id != 0) $byeOrderMap['id_' . $tA_id] = $idxJg;
                                 if ($tA_nome !== '') $byeOrderMap['name_' . $tA_nome] = $idxJg;
-                                if ($tB_id > 0) $byeOrderMap['id_' . $tB_id] = $idxJg;
+                                if ($tB_id != 0) $byeOrderMap['id_' . $tB_id] = $idxJg;
                                 if ($tB_nome !== '') $byeOrderMap['name_' . $tB_nome] = $idxJg;
                             }
                             usort($listaByesPrimeiraFase, function($a, $b) use ($byeOrderMap, $assignedSlotTeams) {
@@ -888,9 +1054,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                             $infoA = ['chave' => $chaveDest, 'adversario_id' => $tB_id, 'adversario_nome' => $tB_nome];
                             $infoB = ['chave' => $chaveDest, 'adversario_id' => $tA_id, 'adversario_nome' => $tA_nome];
                             
-                            if ($tA_id > 0) $mapDestinosFase1['id_' . $tA_id] = $infoA;
+                            if ($tA_id != 0) $mapDestinosFase1['id_' . $tA_id] = $infoA;
                             if ($tA_nome !== '') $mapDestinosFase1['name_' . $tA_nome] = $infoA;
-                            if ($tB_id > 0) $mapDestinosFase1['id_' . $tB_id] = $infoB;
+                            if ($tB_id != 0) $mapDestinosFase1['id_' . $tB_id] = $infoB;
                             if ($tB_nome !== '') $mapDestinosFase1['name_' . $tB_nome] = $infoB;
                         }
                     }
@@ -919,7 +1085,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                     $labelDestinoBye = "➔ Enfrenta Vencedor na Chave #{$destChaveBye}";
                                     $idBye = (int)($byeItem['id'] ?? 0);
                                     $destInfo = null;
-                                    if ($idBye > 0 && isset($mapDestinosFase1['id_' . $idBye])) {
+                                    if ($idBye != 0 && isset($mapDestinosFase1['id_' . $idBye])) {
                                         $destInfo = $mapDestinosFase1['id_' . $idBye];
                                     } elseif (!empty($byeItem['slot']) && isset($mapDestinosFase1['name_' . $byeItem['slot']])) {
                                         $destInfo = $mapDestinosFase1['name_' . $byeItem['slot']];
@@ -928,7 +1094,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                     }
                                     if ($destInfo) {
                                         $destChaveBye = $destInfo['chave'];
-                                        $advNome = !empty($destInfo['adversario_nome']) ? $destInfo['adversario_nome'] : ($destInfo['adversario_id'] > 0 && isset($clubes[$destInfo['adversario_id']]) ? $clubes[$destInfo['adversario_id']]['Nome'] : 'A definir');
+                                        $advNome = !empty($destInfo['adversario_nome']) ? $destInfo['adversario_nome'] : ($destInfo['adversario_id'] != 0 && isset($clubes[$destInfo['adversario_id']]) ? $clubes[$destInfo['adversario_id']]['Nome'] : 'A definir');
                                         $labelDestinoBye = "➔ Chave #{$destChaveBye} (vs {$advNome})";
                                     }
                             ?>
@@ -999,7 +1165,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                 $jogoNum = $idxMatch + 1;
                                 $destChaveMatch = null;
                                 if ($faseId == $primeiraFaseId && !empty($mapDestinosFase1)) {
-                                    if ($vencedorId > 0 && isset($mapDestinosFase1['id_' . $vencedorId])) {
+                                    if ($vencedorId != 0 && isset($mapDestinosFase1['id_' . $vencedorId])) {
                                         $destChaveMatch = $mapDestinosFase1['id_' . $vencedorId]['chave'];
                                     } elseif ($vencedorNome && isset($mapDestinosFase1['name_' . $vencedorNome])) {
                                         $destChaveMatch = $mapDestinosFase1['name_' . $vencedorNome]['chave'];

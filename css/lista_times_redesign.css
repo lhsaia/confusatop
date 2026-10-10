@@ -306,6 +306,41 @@ body {
   pointer-events: none !important;
 }
 
+.sync_team {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  font-family: 'Outfit', sans-serif !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
+  background-color: rgba(2, 132, 199, 0.08) !important;
+  color: #0284c7 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+  flex-shrink: 0 !important;
+}
+
+.sync_team:hover:not(:disabled) {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25) !important;
+}
+
+.sync_team:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
 /* Status pill */
 .status_competicao {
   font-family: 'Outfit', sans-serif !important;

@@ -9,6 +9,53 @@
   },
   "days": [
     {
+      "id": "day_10_10_2026",
+      "date": "10/10/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Filtro Estrito de Atletas no Departamento Médico de Competições",
+          "desc": "Corrigida a consulta de lesionados e suspensos na tela de estatísticas da competição (estatisticas.php) para restringir a exibição exclusivamente aos atletas dos times participantes da competição (incluindo elencos de times temporários importados via YMT com IDs negativos), consultando tanto o histórico do MySQL quanto o status de lesão direto no SQLite da competição."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Exibição e Sincronização de Times Temporários (YMT) em Jogos e Estatísticas",
+          "desc": "Corrigida a identificação e sincronização de times temporários importados via arquivo YMT (que possuem IDs negativos no banco da competição), garantindo a exibição correta dos nomes dos clubes, botões de escalação e simulação na tela de partidas, e a contabilização precisa de tabelas de classificação, artilharia, assistências e chaves de mata-mata na tela de estatísticas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Tratamento Seguro de Índices de Elenco e Escalação",
+          "desc": "Corrigido o tratamento de arrays na vinculação e sincronização de times em competições e exportações SQLite, garantindo o preenchimento de todos os 23 jogadores, técnico, 11 titulares, capitão e cobradores de pênaltis com valores padrão para evitar avisos de chave indefinida (Undefined array key) quando o clube tiver dados incompletos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Compatibilidade com PHP 8+ na Sanitização de Parâmetros de Partidas",
+          "desc": "Adicionada tipagem e conversão segura para string ao sanitizar identificadores de partidas em competicao_clube.php, evitando mensagens de depreciação ao passar valores nulos para strip_tags()."
+        }
+      ]
+    },
+    {
+      "id": "day_09_10_2026",
+      "date": "09/10/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Conferência Obrigatória de Times no Envio de Fichas",
+          "desc": "Adicionada validação completa e conferência prévia das regras de elenco (técnico, capitão, cobradores de pênaltis, titulares e limites de idade) ao submeter times pela tela de Envio de Fichas e no backend de vinculação à competição."
+        },
+        {
+          "badge": "new",
+          "title": "Opção de Ressincronização Individual de Times em Competições",
+          "desc": "Disponibilizado botão administrativo 'Sync' na lista de times da competição (inclusive para administradores impersonando) para permitir ressincronizar individualmente o elenco, comissão técnica, escalação e atributos diretamente do portal para o banco SQLite da competição."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Detecção e Alerta Visual de Duplicidade de Técnicos na Tela do Time",
+          "desc": "A tela do time (teamstatus.php) agora lista todos os técnicos associados à equipe e exibe um alerta em destaque quando houver mais de um técnico vinculado simultaneamente, permitindo desconvocar ou demitir os excedentes diretamente no painel. Além disso, as rotinas de conferência passam a detalhar a contagem exata de duplicidade."
+        }
+      ]
+    },
+    {
       "id": "day_04_10_2026",
       "date": "04/10/2026",
       "items": [

@@ -437,8 +437,7 @@ class Tecnico{
             FROM contratos_tecnico c
             LEFT JOIN tecnico t ON t.ID = c.tecnico
             LEFT JOIN paises p ON t.Pais = p.ID
-            WHERE c.clube = :clube
-            LIMIT 0,1";
+            WHERE c.clube = :clube";
             $stmt = $this->conn->prepare( $query );
             $stmt->bindParam(":clube", $idTime);
             $stmt->execute();

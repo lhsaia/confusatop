@@ -86,9 +86,15 @@ if(session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['loggedin']) && $_
     }
 
     if($tecnicosTimes = $time->verificarTecnicos(null,$listaTimes)){
-        $error_msg .= "Há times sem técnico. </br>";
         foreach($tecnicosTimes as $timeErro){
-            $error_msg .= $timeErro[0] . "</br>";
+            $qtd = intval($timeErro[1] ?? 0);
+            if($qtd === 0){
+                $error_msg .= "Time sem técnico cadastrado: " . $timeErro[0] . "</br>";
+            } else if($qtd > 1){
+                $error_msg .= "Time com mais de um técnico cadastrado (duplicidade - {$qtd} técnicos): " . $timeErro[0] . "</br>";
+            } else {
+                $error_msg .= "Problema no cadastro de técnico: " . $timeErro[0] . "</br>";
+            }
         }
     }
 
@@ -179,9 +185,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if($tecnicosTimes = $time->verificarTecnicos(null,$listaTimes)){
-        $error_msg .= "Há times sem técnico. </br>";
         foreach($tecnicosTimes as $timeErro){
-            $error_msg .= $timeErro[0] . "</br>";
+            $qtd = intval($timeErro[1] ?? 0);
+            if($qtd === 0){
+                $error_msg .= "Time sem técnico cadastrado: " . $timeErro[0] . "</br>";
+            } else if($qtd > 1){
+                $error_msg .= "Time com mais de um técnico cadastrado (duplicidade - {$qtd} técnicos): " . $timeErro[0] . "</br>";
+            } else {
+                $error_msg .= "Problema no cadastro de técnico: " . $timeErro[0] . "</br>";
+            }
         }
     }
 

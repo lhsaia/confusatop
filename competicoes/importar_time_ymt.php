@@ -212,8 +212,12 @@ if (!empty($_FILES['files'])) {
 		 }
 
 		//importar tecnico
+		$nomeTecnicoYmt = trim((string)($xml->tecnico->Nome ?? ''));
+		if(empty($nomeTecnicoYmt)){
+			die(json_encode(['success' => false, 'error' => 'O arquivo .ymt não possui um técnico válido cadastrado.']));
+		}
 		$tecnico->id = $codigo_time;
-		$tecnico->nome = (string)$xml->tecnico->Nome;
+		$tecnico->nome = $nomeTecnicoYmt;
 		$tecnico->nascimento = (int)$xml->tecnico->Idade;
 		$tecnico->nivel = (int)$xml->tecnico->Nivel;
 		$tecnico->mentalidade = (int)$xml->tecnico->Mentalidade;

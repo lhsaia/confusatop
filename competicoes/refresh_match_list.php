@@ -20,6 +20,7 @@
 
 	$usuario = new Usuario($db);
 	$competicao = new Competicao_clube($db);
+	$competicao->sincronizarSlotsJogos($idCompeticao);
 
     $stmt = $competicao->carregarListaJogos($idCompeticao);
     $return_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);

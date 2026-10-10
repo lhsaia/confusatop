@@ -48,6 +48,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	$tipoCompeticao = isset($options['tipocompeticao']) ? (int)$options['tipocompeticao'] : 0;
 	$numTeamsComp = isset($options['numero_times']) ? (int)$options['numero_times'] : 0;
 
+	$competicao->sincronizarSlotsJogos($idCompeticao);
+
 	// Carregar vagas / slots para identificação de BYEs
 	$assignedSlotTeams = [];
 	$stmtTimesSlots = $competicao->carregarListaTimes($idCompeticao);
@@ -83,9 +85,11 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	$listaTimes = array();
 	if($stmt){
 		while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-			extract($row);
-			$addArray = array($ID, $Nome);
-			$listaTimes[] = $addArray;
+			$cId = (int)($row['ID'] ?? ($row['id'] ?? 0));
+			$cNome = $row['Nome'] ?? ($row['nome'] ?? '');
+			if($cId != 0 && $cNome !== ''){
+				$listaTimes[] = array($cId, $cNome);
+			}
 		}
 	}
 	// Fallback para MariaDB se $listaTimes estiver vazio
@@ -477,9 +481,9 @@ $(document).ready(function($){
 
 				$.each(allItems, function(i, jg){
 					if (parseInt(jg['fase']) == primeiraFaseId) {
-						if (parseInt(jg['timeA_id']) > 0) jogandoPrimeiraFaseIds[parseInt(jg['timeA_id'])] = true;
+						if (parseInt(jg['timeA_id']) != 0) jogandoPrimeiraFaseIds[parseInt(jg['timeA_id'])] = true;
 						if (jg['timeA_nome']) jogandoPrimeiraFaseNomes[$.trim(jg['timeA_nome'])] = true;
-						if (parseInt(jg['timeB_id']) > 0) jogandoPrimeiraFaseIds[parseInt(jg['timeB_id'])] = true;
+						if (parseInt(jg['timeB_id']) != 0) jogandoPrimeiraFaseIds[parseInt(jg['timeB_id'])] = true;
 						if (jg['timeB_nome']) jogandoPrimeiraFaseNomes[$.trim(jg['timeB_nome'])] = true;
 					}
 				});
@@ -489,17 +493,17 @@ $(document).ready(function($){
 					$.each(assignedSlotTeams, function(slotName, cId){
 						let cIdInt = parseInt(cId);
 						let isNoJogo = false;
-						if (cIdInt > 0 && jogandoPrimeiraFaseIds[cIdInt]) isNoJogo = true;
+						if (cIdInt != 0 && jogandoPrimeiraFaseIds[cIdInt]) isNoJogo = true;
 						if (jogandoPrimeiraFaseNomes[$.trim(slotName)]) isNoJogo = true;
 
 						if (!isNoJogo) {
-							let tObj = (cIdInt > 0) ? listaTimes.find(t => t[0] == cIdInt) : null;
+							let tObj = (cIdInt != 0) ? listaTimes.find(t => t[0] == cIdInt) : null;
 							let tNome = tObj ? tObj[1] : slotName;
 
 							byeList.push({
 								is_bye: true,
 								id: 'bye_' + slotName,
-								timeA_id: (cIdInt > 0) ? cIdInt : 0,
+								timeA_id: (cIdInt != 0) ? cIdInt : 0,
 								timeA_nome: tNome,
 								fase: primeiraFaseId,
 								data: firstDate,
@@ -604,8 +608,8 @@ $(document).ready(function($){
 				// Criação das variáveis de exibição
 				let teamA = listaTimes.find(t => t[0] == val['timeA_id']);
 				let teamB = listaTimes.find(t => t[0] == val['timeB_id']);
-				let nomeTimeA = (teamA && parseInt(val['timeA_id']) > 0) ? teamA[1] : (val['timeA_nome'] ? val['timeA_nome'] : (parseInt(val['timeA_id']) > 0 ? "Time " + val['timeA_id'] : "A definir"));
-				let nomeTimeB = (teamB && parseInt(val['timeB_id']) > 0) ? teamB[1] : (val['timeB_nome'] ? val['timeB_nome'] : (parseInt(val['timeB_id']) > 0 ? "Time " + val['timeB_id'] : "A definir"));
+				let nomeTimeA = (teamA && parseInt(val['timeA_id']) != 0) ? teamA[1] : (val['timeA_nome'] ? val['timeA_nome'] : (parseInt(val['timeA_id']) != 0 ? "Time " + val['timeA_id'] : "A definir"));
+				let nomeTimeB = (teamB && parseInt(val['timeB_id']) != 0) ? teamB[1] : (val['timeB_nome'] ? val['timeB_nome'] : (parseInt(val['timeB_id']) != 0 ? "Time " + val['timeB_id'] : "A definir"));
 				
 				let faseObj = listaFases.find(f => f[0] == val['fase']);
 				let fase = faseObj ? faseObj[1] : "Fase " + val['fase'];
@@ -657,10 +661,10 @@ $(document).ready(function($){
 				let escLinkA = "";
 				let escLinkB = "";
 				if(logged == "true" && val['status'] == 0){
-					if (parseInt(val['timeA_id']) > 0) {
+					if (parseInt(val['timeA_id']) != 0) {
 						escLinkA = " <a href='/competicoes/escalacao_jogo.php?comp="+codigo_competicao+"&team="+val['timeA_id']+"&jogo="+val['id']+"' title='Escalação "+nomeTimeA+"' class='clickable lineup-btn'><span class='material-symbols-outlined'>assignment</span></a>";
 					}
-					if (parseInt(val['timeB_id']) > 0) {
+					if (parseInt(val['timeB_id']) != 0) {
 						escLinkB = " <a href='/competicoes/escalacao_jogo.php?comp="+codigo_competicao+"&team="+val['timeB_id']+"&jogo="+val['id']+"' title='Escalação "+nomeTimeB+"' class='clickable lineup-btn'><span class='material-symbols-outlined'>assignment</span></a>";
 					}
 				}
@@ -708,7 +712,7 @@ $(document).ready(function($){
 						tbl += "<td data-label='Hora'><span class='horaPartida' id='hor"+ val['id']+"'>"+ horaDisplay+" </span><input id='selHor"+val['id']+"' class='horaEditavel editavel' type='time' value='"+hora+"' style='display:none;'/></td>";
 						tbl += "<td data-label='Neutro'><input type='checkbox' class='neutro' id='alt"+ val['id']+"' "+ (val['neutro'] == 1? 'checked' : '')+" disabled></td>";
 						tbl += "<td data-label='Live'><input type='checkbox' class='subir_live_chk' id='live"+ val['id']+"' "+ (isLiveChecked ? 'checked' : '')+" disabled></td>";
-						let temEstadioValido = parseInt(val['estadio']) > 0 && estObj !== undefined;
+						let temEstadioValido = parseInt(val['estadio']) != 0 && estObj !== undefined;
 						let simularBtnHtml = "";
 						if (logged == "true" && is_admin_user == "true" && val['status'] == 0) {
 							if (temEstadioValido) {

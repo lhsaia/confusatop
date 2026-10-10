@@ -142,8 +142,8 @@ $teams = [];
 if($stmt){
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
         if(isset($row['has_team']) && ($row['has_team'] == '1' || $row['has_team'] === 1)){
-            $teamId = (isset($row['id_time_portal']) && intval($row['id_time_portal']) > 0) ? intval($row['id_time_portal']) : intval($row['codigo_time']);
-            if($teamId > 0 && !in_array($teamId, $teams)){
+            $teamId = (isset($row['id_time_portal']) && intval($row['id_time_portal']) > 0) ? intval($row['id_time_portal']) : -1 * abs(intval($row['codigo_time']));
+            if($teamId != 0 && !in_array($teamId, $teams)){
                 $teams[] = $teamId;
             }
         }
@@ -163,7 +163,7 @@ if(count($teams) < 2){
             if($stmtClube){
                 while($rC = $stmtClube->fetch(PDO::FETCH_ASSOC)){
                     $cId = intval($rC['ID']);
-                    if($cId > 0 && !in_array($cId, $teams)){
+                    if($cId != 0 && !in_array($cId, $teams)){
                         $teams[] = $cId;
                     }
                 }
@@ -221,7 +221,7 @@ function getStadiumForTeam($ldb, $teamId) {
 }
 
 function getStadiumForMatch($ldb, $teamId, $estadios_times, $estadios) {
-    if ($estadios_times == 1 && is_numeric($teamId) && intval($teamId) > 0) {
+    if ($estadios_times == 1 && is_numeric($teamId) && intval($teamId) != 0) {
         return getStadiumForTeam($ldb, $teamId);
     } else {
         return count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0;
@@ -463,7 +463,7 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
                     $tA_nome = ($tA_id == 0) ? $home : null;
                     $tB_id = isset($assignedSlotTeams[$away]) ? $assignedSlotTeams[$away] : 0;
                     $tB_nome = ($tB_id == 0) ? $away : null;
-                    $estId = ($tA_id > 0) ? getStadiumForMatch($ldb, $tA_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
+                    $estId = ($tA_id != 0) ? getStadiumForMatch($ldb, $tA_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
                     $competicao->inserirJogo($idCompeticao, $tA_id, $tB_id, 2, $arbId, $estId, $dateMatch, "false", null, null, $tA_nome, $tB_nome);
                 } else {
                     $estId = getStadiumForMatch($ldb, $home, $estadios_times, $estadios);
@@ -602,13 +602,13 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
                 $tA_nome = ($tA_id == 0) ? $pHome : null;
                 $tB_id = isset($assignedSlotTeams[$pAway]) ? $assignedSlotTeams[$pAway] : 0;
                 $tB_nome = ($tB_id == 0) ? $pAway : null;
-                $estId1 = ($tA_id > 0) ? getStadiumForMatch($ldb, $tA_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
+                $estId1 = ($tA_id != 0) ? getStadiumForMatch($ldb, $tA_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
                 
                 $competicao->inserirJogo($idCompeticao, $tA_id, $tB_id, 1, $arbId, $estId1, $dateMatch1, "false", "P", null, $tA_nome, $tB_nome);
                 
                 if ($tipoPreliminar == 1) {
                     $scheduler->advanceRound();
-                    $estIdVolta = ($tB_id > 0) ? getStadiumForMatch($ldb, $tB_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
+                    $estIdVolta = ($tB_id != 0) ? getStadiumForMatch($ldb, $tB_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
                     $dateMatch2 = $scheduler->getNextMatchDateTime();
                     $competicao->inserirJogo($idCompeticao, $tB_id, $tA_id, 1, $arbId, $estIdVolta, $dateMatch2, "false", "P", null, $tB_nome, $tA_nome);
                 }
@@ -694,7 +694,7 @@ if($tipo == 2) { // Round-robin (Pontos Corridos)
                             $tA_nome = ($tA_id == 0) ? $home : null;
                             $tB_id = isset($assignedSlotTeams[$away]) ? $assignedSlotTeams[$away] : 0;
                             $tB_nome = ($tB_id == 0) ? $away : null;
-                            $estId = ($tA_id > 0) ? getStadiumForMatch($ldb, $tA_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
+                            $estId = ($tA_id != 0) ? getStadiumForMatch($ldb, $tA_id, $estadios_times, $estadios) : (count($estadios) > 0 ? $estadios[array_rand($estadios)]['ID'] : 0);
                             
                             $competicao->inserirJogo($idCompeticao, $tA_id, $tB_id, 2, $arbId, $estId, $dateMatch, "false", $groupName, null, $tA_nome, $tB_nome);
                         }

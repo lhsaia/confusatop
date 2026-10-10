@@ -175,31 +175,60 @@ $(document).ready(function() {
         formData.append('codigo_time', slotId);
         formData.append('pais_time', paisId);
         formData.append('time_portal', timePortal);
+        formData.append('num_equipes', 0);
+        formData.append('array_times', timePortal);
 
+        // Executar conferência antes de submeter
         $.ajax({
             type: 'POST',
-            url: '/competicoes/alterar_times_competicao.php',
+            url: '/export/verificar_exportacao.php',
             data: formData,
             dataType: 'json',
             processData: false,
             contentType: false,
             cache: false
-        }).done(function(response) {
-            if (response.success) {
-                btn.text('Enviado!');
-                item.fadeOut(300, function() {
-                    $(this).remove();
-                    checkEmptyList();
+        }).done(function(verifResponse) {
+            if (verifResponse.success) {
+                $.ajax({
+                    type: 'POST',
+                    url: '/competicoes/alterar_times_competicao.php',
+                    data: formData,
+                    dataType: 'json',
+                    processData: false,
+                    contentType: false,
+                    cache: false
+                }).done(function(response) {
+                    if (response.success) {
+                        btn.text('Enviado!');
+                        item.fadeOut(300, function() {
+                            $(this).remove();
+                            checkEmptyList();
+                        });
+                    } else {
+                        var err = response.errors || response.error || "Erro desconhecido";
+                        alert("Erro ao salvar: " + err.replace(/<br\s*[\/]?>/gi, "\n"));
+                        btn.prop('disabled', false).text('Enviar');
+                        select.prop('disabled', false);
+                        item.removeClass('is-submitting');
+                        item.find('.btn-upload-ymt').css('pointer-events', 'auto').css('opacity', '1');
+                    }
+                }).fail(function() {
+                    alert("Erro não esperado ao salvar.");
+                    btn.prop('disabled', false).text('Enviar');
+                    select.prop('disabled', false);
+                    item.removeClass('is-submitting');
+                    item.find('.btn-upload-ymt').css('pointer-events', 'auto').css('opacity', '1');
                 });
             } else {
-                alert("Erro ao salvar: " + (response.errors || response.error || "Erro desconhecido"));
+                var err = verifResponse.errors || verifResponse.error || "O time selecionado possui pendências de conferência.";
+                alert("Não foi possível enviar a ficha. Problemas encontrados na conferência:\n\n" + err.replace(/<br\s*[\/]?>/gi, "\n").replace(/<\/?[^>]+(>|$)/g, ""));
                 btn.prop('disabled', false).text('Enviar');
                 select.prop('disabled', false);
                 item.removeClass('is-submitting');
                 item.find('.btn-upload-ymt').css('pointer-events', 'auto').css('opacity', '1');
             }
         }).fail(function() {
-            alert("Erro não esperado ao salvar.");
+            alert("Erro ao realizar a conferência do time.");
             btn.prop('disabled', false).text('Enviar');
             select.prop('disabled', false);
             item.removeClass('is-submitting');

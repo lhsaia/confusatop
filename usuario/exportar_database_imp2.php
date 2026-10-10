@@ -241,40 +241,53 @@ foreach ($dir as $fileinfo) {
         $megaQueryPais .= "INSERT INTO clube VALUES ('{$row['ID']}', '{$nomeExportado}', '{$row['TresLetras']}', '{$row['Estadio']}', '{$escudoTratado}', '{$row['Uni1Cor1']}', '{$row['Uni1Cor2']}', '{$row['Uni1Cor3']}', '{$uni1Tratado}', '{$row['Uni2Cor1']}', '{$row['Uni2Cor2']}', '{$row['Uni2Cor3']}', '{$uni2Tratado}', '{$row['MaxTorcedores']}', '{$row['Fidelidade']}'); ";
 
         $elenco = array();
-        $newStmt = $time->getElenco($row['ID']);
         $elenco[] = $row['ID'];
+        $newStmt = $time->getElenco($row['ID']);
+        $jogadoresElenco = array();
         while($newRow = $newStmt->fetch(PDO::FETCH_ASSOC)){
-            $elenco[] = $newRow['ID'];
+            $jogadoresElenco[] = $newRow['ID'];
         }
-        $total_jogadores = $time->getSizeElenco($row['ID']);
-        while ($total_jogadores < 23){
-            $elenco[] = '0';
-            $total_jogadores++;
+        for ($i = 0; $i < 23; $i++) {
+            $elenco[] = isset($jogadoresElenco[$i]) ? $jogadoresElenco[$i] : '0';
         }
         $tecStmt = $time->getTecnico($row['ID']);
-        while($tecRow  = $tecStmt->fetch(PDO::FETCH_ASSOC)){
-            $elenco[] = $tecRow['tecnico'];
+        $idTecnico = '0';
+        if($tecRow = $tecStmt->fetch(PDO::FETCH_ASSOC)){
+            $idTecnico = !empty($tecRow['tecnico']) ? $tecRow['tecnico'] : '0';
         }
-        while (count($elenco) < 25) {
-            $elenco[] = '0';
-        }
+        $elenco[] = $idTecnico;
 
         $megaQueryPais .= "INSERT INTO elenco VALUES ('{$elenco[0]}', '{$elenco[1]}', '{$elenco[2]}', '{$elenco[3]}', '{$elenco[4]}', '{$elenco[5]}', '{$elenco[6]}', '{$elenco[7]}', '{$elenco[8]}', '{$elenco[9]}', '{$elenco[10]}', '{$elenco[11]}', '{$elenco[12]}', '{$elenco[13]}', '{$elenco[14]}', '{$elenco[15]}', '{$elenco[16]}', '{$elenco[17]}', '{$elenco[18]}', '{$elenco[19]}', '{$elenco[20]}', '{$elenco[21]}', '{$elenco[22]}', '{$elenco[23]}', '{$elenco[24]}'); ";
 
         $escalacao = array();
         $escalacao[] = $row['ID'];
         $escStmt = $time->getEscalacao($row['ID']);
+        $titulares = array();
         while($escRow = $escStmt->fetch(PDO::FETCH_ASSOC)){
-            $escalacao[] = $escRow['posicaoBase'];
-            $escalacao[] = $escRow['jogador'];
+            $titulares[] = [
+                'posicao' => $escRow['posicaoBase'] ?? '',
+                'jogador' => $escRow['jogador'] ?? '0'
+            ];
         }
+        for ($i = 0; $i < 11; $i++) {
+            $escalacao[] = isset($titulares[$i]['posicao']) ? $titulares[$i]['posicao'] : '';
+            $escalacao[] = isset($titulares[$i]['jogador']) ? $titulares[$i]['jogador'] : '0';
+        }
+
         $capStmt = $time->getCapitao($row['ID']);
-        while($capRow = $capStmt->fetch(PDO::FETCH_ASSOC)){
-            $escalacao[] = $capRow['jogador'];
+        $idCapitao = '0';
+        if($capRow = $capStmt->fetch(PDO::FETCH_ASSOC)){
+            $idCapitao = !empty($capRow['jogador']) ? $capRow['jogador'] : '0';
         }
+        $escalacao[] = $idCapitao;
+
         $penStmt = $time->getPenaltis($row['ID']);
+        $batedoresPenalti = array();
         while($penRow = $penStmt->fetch(PDO::FETCH_ASSOC)){
-            $escalacao[] = $penRow['jogador'];
+            $batedoresPenalti[] = !empty($penRow['jogador']) ? $penRow['jogador'] : '0';
+        }
+        for ($i = 0; $i < 3; $i++) {
+            $escalacao[] = isset($batedoresPenalti[$i]) ? $batedoresPenalti[$i] : '0';
         }
 
         $megaQueryPais .= "INSERT INTO escalacao VALUES ('{$escalacao[0]}', '{$escalacao[1]}', '{$escalacao[2]}', '{$escalacao[3]}', '{$escalacao[4]}', '{$escalacao[5]}', '{$escalacao[6]}', '{$escalacao[7]}', '{$escalacao[8]}', '{$escalacao[9]}', '{$escalacao[10]}', '{$escalacao[11]}', '{$escalacao[12]}', '{$escalacao[13]}', '{$escalacao[14]}', '{$escalacao[15]}', '{$escalacao[16]}', '{$escalacao[17]}', '{$escalacao[18]}', '{$escalacao[19]}', '{$escalacao[20]}', '{$escalacao[21]}', '{$escalacao[22]}', '{$escalacao[23]}', '{$escalacao[24]}', '{$escalacao[25]}', '{$escalacao[26]}'); ";

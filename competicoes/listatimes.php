@@ -112,7 +112,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
                 </div>
             </div>
         <?php else: ?>
-            <?php $can_bulk_edit = ((isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) || (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $dono_competicao)); ?>
+            <?php $can_bulk_edit = ((isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) || (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $dono_competicao) || !empty($_SESSION['impersonated'])); ?>
             <div class="bulk-country-bar">
                 <div class="bulk-country-left">
                     <span class="material-symbols-outlined icon-bulk">public</span>
@@ -243,7 +243,7 @@ $( document ).ready(function(){
 		echo "false";
 	 };?>';
 	 
-  var admin ='<?php if((isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) || (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $dono_competicao)){
+  var admin ='<?php if((isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) || (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $dono_competicao) || !empty($_SESSION['impersonated'])){
 	echo "true";
  } else {
 	echo "false";
@@ -426,6 +426,9 @@ $( document ).ready(function(){
 				tbl += "<span class='fileUploader ui-button ui-widget'>Importar .ymt temporário</span><input id='import_team"+i+"' type='file' accept='.ymt' value='Importar .ymt temporário' hidden class='hiddenInput import_team' />";
 			}
 			tbl += "<input id='update_team"+i+"' type='submit' value='Salvar' class='ui-button ui-widget update_team' disabled/>";
+			if((admin === "true" || parseInt(dono_competicao) === parseInt(user_id)) && matchData && matchData.id_time_portal && parseInt(matchData.id_time_portal) > 0){
+				tbl += "<button type='button' id='sync_team"+i+"' class='sync_team' data-vaga='"+i+"' data-time-portal='"+matchData.id_time_portal+"' data-pais-id='"+selectedCountry+"' title='Ressincronizar dados deste time com o portal'><span class='material-symbols-outlined' style='font-size:1.15rem; line-height:1;'>sync</span></button>";
+			}
 			tbl += "<span class='status_competicao' style='background-color:"+cor_status+" !important; color:"+font_status+" !important; border: 1px solid "+font_status+"20 !important;'>" +status_time + "</span>";
 			
 		tbl += "</div>";
@@ -795,6 +798,83 @@ $(document).on("click", ".update_team", function(e){
 		showToast("Houve um erro não esperado, por favor contacte o admin.", 'error');
 	});
 
+	});
+
+	$(document).on("click", ".sync_team", function(e){
+		e.preventDefault();
+		var btn = $(this);
+		var vaga = btn.data('vaga');
+		var time_portal = btn.data('time-portal');
+		var pais_id = btn.data('pais-id');
+		
+		if(!time_portal || time_portal == 0){
+			showToast("Nenhum time do portal vinculado a esta vaga.", 'error');
+			return;
+		}
+		
+		if(!confirm("Deseja ressincronizar a Vaga #" + vaga + " com os dados atuais do portal?\nIsso atualizará elenco, comissão técnica, escalação e atributos no banco da competição.")){
+			return;
+		}
+		
+		$('#loading').show();
+		btn.prop('disabled', true);
+		
+		var formData = new FormData();
+		formData.append('tipo_alteracao', 1);
+		formData.append('codigo_time', vaga);
+		formData.append('codigo_competicao', codigo_competicao);
+		formData.append('pais_time', pais_id);
+		formData.append('time_portal', time_portal);
+		formData.append('num_equipes', 0);
+		formData.append('codigo_genero', '<?php echo $genero_competicao ?>');
+		formData.append('codigo_sede', pais_id);
+		formData.append('codigo_federacao', '<?php echo $federacao_id ?>');
+		formData.append('array_times', time_portal);
+		
+		// Executar conferência antes da ressincronização
+		$.ajax({
+			type: 'POST',
+			url: '/export/verificar_exportacao.php',
+			data: formData,
+			dataType: 'json',
+			processData: false,
+			contentType: false,
+			cache: false
+		}).done(function(verifResponse) {
+			if(verifResponse.success){
+				$.ajax({
+					type: 'POST',
+					url: 'alterar_times_competicao.php',
+					data: formData,
+					dataType: 'json',
+					processData: false,
+					contentType: false,
+					cache: false
+				}).done(function(saveResponse) {
+					$('#loading').hide();
+					btn.prop('disabled', false);
+					if(saveResponse.success){
+						showToast("Time da Vaga #" + vaga + " ressincronizado com sucesso!", "success");
+						load_data();
+					} else {
+						showToast("Não foi possível ressincronizar o time:<br>" + (saveResponse.errors || saveResponse.error || "Erro desconhecido"), 'error');
+					}
+				}).fail(function() {
+					$('#loading').hide();
+					btn.prop('disabled', false);
+					showToast("Houve um erro não esperado ao salvar a sincronização.", 'error');
+				});
+			} else {
+				$('#loading').hide();
+				btn.prop('disabled', false);
+				var err = verifResponse.errors || verifResponse.error || "O time selecionado possui pendências de conferência.";
+				showToast("Não foi possível ressincronizar. Problemas na conferência:<br>" + err, 'error');
+			}
+		}).fail(function() {
+			$('#loading').hide();
+			btn.prop('disabled', false);
+			showToast("Erro de conexão ao realizar a conferência do time.", 'error');
+		});
 	});
 
 });

@@ -4,7 +4,7 @@ ini_set( 'display_errors', true );
 error_reporting( E_ALL );
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
-$idMatch = $_GET['id'];
+$idMatch = $_GET['id'] ?? null;
 
 // Redirecionamento para a súmula em imagem (Executado antes de enviar qualquer cabeçalho/HTML)
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -14,7 +14,49 @@ $database = new Database();
 $db = $database->getConnection();
 $competicao = new Competicao_clube($db);
 
-$matchInfo = $competicao->getMatchInfo($idMatch);
+$matchInfo = !empty($idMatch) ? $competicao->getMatchInfo($idMatch) : false;
+
+if(!$matchInfo){
+	include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
+
+	$page_title = "Partida Não Encontrada - CONFUSA.top";
+	$css_filename = "home_redesign";
+	$aux_css = "home_redesign";
+	$css_login = 'login';
+	$css_versao = date('h:i:s');
+	include_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
+?>
+<div class="bg"></div><div class="bg bg2"></div><div class="bg bg3"></div>
+
+<main class="propostas-container" style="max-width: 720px; margin: 40px auto; padding: 0 15px; font-family: 'Montserrat', sans-serif;">
+    <div class="propostas-card" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 18px; border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06); padding: 40px 30px; text-align: center;">
+        
+        <div style="width: 76px; height: 76px; margin: 0 auto 22px; border-radius: 50%; background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(248, 113, 113, 0.25)); display: flex; align-items: center; justify-content: center; color: #ef4444; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.18);">
+            <span class="material-symbols-outlined" style="font-size: 40px;">error</span>
+        </div>
+
+        <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 700; color: #0f172a; margin: 0 0 10px 0;">
+            Partida Não Encontrada
+        </h2>
+
+        <p style="color: #475569; font-size: 1rem; line-height: 1.65; margin: 0 auto 30px; max-width: 520px;">
+            A partida informada não foi localizada ou não existe no sistema.
+        </p>
+
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <a href="/competicoes/minhascompeticoes.php" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; background: #0284c7; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 600; font-family: 'Outfit', sans-serif; font-size: 0.95rem; box-shadow: 0 3px 10px rgba(2, 132, 199, 0.25); transition: all 0.2s ease;">
+                <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+                <span>Voltar para Minhas Competições</span>
+            </a>
+        </div>
+    </div>
+</main>
+
+<?php
+	include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
+	exit;
+}
+
 if($matchInfo){
 	$idCompeticao = $matchInfo['competicao'];
 	$competitionInfo = $competicao->readInfo($idCompeticao);
