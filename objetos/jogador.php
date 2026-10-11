@@ -513,7 +513,18 @@ return $stmt;
             $stmt->bindParam(":valor", $preco);
             $stmt->bindParam(":clubeOrigem", $origemJogador);
             if($stmt->execute()){
-
+                $idNovaTransferencia = (int)$this->conn->lastInsertId();
+                if ($idNovaTransferencia > 0 && (int)$origemJogador > 0 && (int)$idClubeDestino > 0) {
+                    try {
+                        require_once __DIR__ . '/transfer.php';
+                        $transObj = new Transfer($this->conn);
+                        if ($transObj->carregarPorId($idNovaTransferencia)) {
+                            $transObj->notificarDiscord();
+                        }
+                    } catch (\Throwable $e) {
+                        error_log("[Discord Webhook] Erro ao notificar no transferir: " . $e->getMessage());
+                    }
+                }
             } else {
                 $error_count++;
             }
@@ -1576,6 +1587,17 @@ return $stmt;
             }
 
             if($stmt->execute()){
+                if ($acao == 'aceitar') {
+                    try {
+                        require_once __DIR__ . '/transfer.php';
+                        $transObj = new Transfer($this->conn);
+                        if ($transObj->carregarPorId((int)$idTransferencia)) {
+                            $transObj->notificarDiscord();
+                        }
+                    } catch (\Throwable $e) {
+                        error_log("[Discord Webhook] Erro ao notificar no avaliarProposta: " . $e->getMessage());
+                    }
+                }
                 return true;
             } else {
                 return false;

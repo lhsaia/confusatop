@@ -193,8 +193,8 @@ if($pageType == 'maiores' || $pageType == 'ultimas' || $pageType == 'usuario'){
             }
 
             //acerto escudo
-            //$escudosOrigem = explode(".",$escudoOrigem);
-            //$escudosDestino = explode(".",$escudoDestino);
+            $escudoOrigemTratado = htmlspecialchars(html_entity_decode((string)($escudoOrigem ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+            $escudoDestinoTratado = htmlspecialchars(html_entity_decode((string)($escudoDestino ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES, 'UTF-8');
 
             //tratamento valor
             if($valor == 0){
@@ -217,7 +217,7 @@ if($pageType == 'maiores' || $pageType == 'ultimas' || $pageType == 'usuario'){
             } else {
                 echo "<span>";
             }
-            echo "<img src='/images/escudos/".$escudoOrigem."' class='minithumb' loading='lazy' decoding='async'/>{$clubeOrigem}";
+            echo "<img src=\"/images/escudos/".$escudoOrigemTratado."\" class='minithumb' loading='lazy' decoding='async'/>{$clubeOrigem}";
             if($idClubeOrigem != 0){
             echo "</a>";
             echo "<br/><a class='posicao' href='/ligas/leaguestatus.php?league=".$idLigaOrigem."'><img src='/images/bandeiras/{$bandeiraClubeOrigem}' class='minithumb' id='ban".$paisClubeOrigem."' loading='lazy' decoding='async'/>{$ligaOrigem}</a>";
@@ -231,7 +231,7 @@ if($pageType == 'maiores' || $pageType == 'ultimas' || $pageType == 'usuario'){
             } else {
                 echo "<span>";
             }
-            echo "<img src='/images/escudos/".$escudoDestino."' class='minithumb' loading='lazy' decoding='async'/>{$clubeDestino}";
+            echo "<img src=\"/images/escudos/".$escudoDestinoTratado."\" class='minithumb' loading='lazy' decoding='async'/>{$clubeDestino}";
             if($idClubeDestino != 0){
             echo "</a>";
             echo "<br/><a class='posicao' href='/ligas/leaguestatus.php?league=".$idLigaDestino."'><img src='/images/bandeiras/{$bandeiraClubeDestino}' class='minithumb' id='ban".$paisClubeDestino."' loading='lazy' decoding='async'/>{$ligaDestino}</a>";
@@ -325,8 +325,9 @@ if($pageType == 'maiores' || $pageType == 'ultimas' || $pageType == 'usuario'){
                 echo "</td>";
                 echo "<td class='nopadding'>";
                 if(!empty($clube) && !empty($escudo) && $clube != 0){
+                    $escudoTratado = htmlspecialchars(html_entity_decode((string)($escudo ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES, 'UTF-8');
                     echo "<a href='/ligas/teamstatus.php?team=".$clube."'>";
-                    echo "<img src='/images/escudos/".$escudo."' class='smallthumb' loading='lazy' decoding='async'/>";
+                    echo "<img src=\"/images/escudos/".$escudoTratado."\" class='smallthumb' loading='lazy' decoding='async'/>";
                     echo "</a>";
                 } else {
                     echo "<span style='color: #94a3b8; font-size: 0.85rem;'>Sem clube</span>";
@@ -1299,7 +1300,8 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                     // Club & League
                     tbl += "<br><span class='sub-info' style='font-size: 0.72rem; color: #64748b; font-weight: 500;'>";
                     if(val['idClube'] != 0){
-                        tbl += "<a href='/ligas/teamstatus.php?team="+val['idClube']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/escudos/"+val['escudoClube']+"' class='minithumb' loading='lazy' decoding='async'/>"+val['nomeClube']+"</a>";
+                        var escudoClubeTratado = (val['escudoClube'] || '').replace(/"/g, '&quot;');
+                        tbl += "<a href='/ligas/teamstatus.php?team="+val['idClube']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src=\"/images/escudos/"+escudoClubeTratado+"\" class='minithumb' loading='lazy' decoding='async'/>"+val['nomeClube']+"</a>";
                         if(isEmprestado && val['nomeClubeOrigem'] && val['nomeClubeOrigem'] !== val['nomeClube']){
                             tbl += " <span style='font-size: 0.7rem; color: #d97706; font-weight: 600;'>(Empréstimo de "+val['nomeClubeOrigem']+")</span>";
                         }
@@ -1324,7 +1326,8 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                     // Club & League
                     tbl += "<br><span class='sub-info' style='font-size: 0.72rem; color: #64748b; font-weight: 500;'>";
                     if(val['idClube'] != 0){
-                        tbl += "<a href='/ligas/teamstatus.php?team="+val['idClube']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/escudos/"+val['escudoClube']+"' class='minithumb' loading='lazy' decoding='async'/>"+val['nomeClube']+"</a>";
+                        var escudoTecClubeTratado = (val['escudoClube'] || '').replace(/"/g, '&quot;');
+                        tbl += "<a href='/ligas/teamstatus.php?team="+val['idClube']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src=\"/images/escudos/"+escudoTecClubeTratado+"\" class='minithumb' loading='lazy' decoding='async'/>"+val['nomeClube']+"</a>";
                         tbl += " | <a href='/ligas/leaguestatus.php?league="+val['idLiga']+"' style='color: #64748b !important; font-weight: 500 !important;'><img src='/images/bandeiras/"+val['bandeiraClube']+"' class='minithumb' id='ban"+val['paisClube']+"' loading='lazy' decoding='async'/>"+val['ligaClube']+"</a>";
                     } else {
                         tbl += "Sem Clube";

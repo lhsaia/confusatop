@@ -63,12 +63,22 @@ class TransferNotifier {
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
             CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 8,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => false
         ]);
 
-        curl_exec($ch);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
+
+        if ($curlError || ($httpCode < 200 || $httpCode >= 300)) {
+            error_log("[Discord Webhook] Falha ao enviar notificação de transferência ({$data['nome']}): HTTP {$httpCode}. Erro cURL: {$curlError}. Resposta: {$response}");
+            return false;
+        }
+
+        return true;
     }
 
     private function escapeUrl($url) {

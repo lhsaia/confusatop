@@ -14,6 +14,21 @@
       "items": [
         {
           "badge": "bugfix",
+          "title": "Notificações de Transferências Reais no Discord",
+          "desc": "Centralizado o disparo de notificações de transferências no Discord para acionar tanto em propostas aceitas quanto em transferências diretas entre clubes. Adicionado filtro para ignorar agentes livres e movimentações entre equipes de um mesmo usuário, além de proteção com timeout e logs de diagnósticos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Exibição de Escudos com Apóstrofo em Transferências",
+          "desc": "Corrigida a renderização do atributo src das imagens de escudos na página de transferências, evitando o truncamento do link causado por aspas simples quando o arquivo do escudo possui apóstrofo (')."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Exibição de Jogadores de Times YMT na Escalação Pré-Jogo",
+          "desc": "Corrigida a tela de escalação pré-jogo (escalacao_jogo.php) para carregar os atletas e posições táticas prioritariamente do banco SQLite da competição, viabilizando a exibição e seleção de atletas de equipes temporárias importadas via .ymt (com IDs negativos) e mantendo o fallback no MariaDB para clubes do portal."
+        },
+        {
+          "badge": "bugfix",
           "title": "Tratamento Seguro de Parâmetros na Verificação de Exportação",
           "desc": "Adicionado operador de coalescência nula nos parâmetros POST de verificar_exportacao.php (como codigo_sede, codigo_federacao e codigo_genero), evitando avisos de chave indefinida (Undefined array key) no PHP 8+."
         },

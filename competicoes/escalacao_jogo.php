@@ -81,6 +81,18 @@ if ($mariaClube) {
     if ($clubeRow) {
         $nomeTime = $clubeRow['Nome'];
     }
+
+    // Obter o dono do país vinculado à vaga/importação na tabela competicao_times para times externos ou YMT
+    $absCod = abs($idTime);
+    $stmtCompTime = $db->prepare("SELECT p.dono as idDonoPais FROM competicao_times ct LEFT JOIN paises p ON ct.pais_time = p.id WHERE ct.id_competicao = :idComp AND (ct.codigo_time = :cod OR ct.id_time_portal = :idTime) LIMIT 1");
+    $stmtCompTime->bindParam(':idComp', $idCompeticao);
+    $stmtCompTime->bindParam(':cod', $absCod);
+    $stmtCompTime->bindParam(':idTime', $idTime);
+    $stmtCompTime->execute();
+    $compTimeRow = $stmtCompTime->fetch(PDO::FETCH_ASSOC);
+    if ($compTimeRow && !empty($compTimeRow['idDonoPais'])) {
+        $donoTime = intval($compTimeRow['idDonoPais']);
+    }
 }
 
 // Simulamos a variável clube antiga contendo apenas o Nome
@@ -389,7 +401,7 @@ if ($escalacaoRow) {
 // 3. Obter status de lesão (global na tabela jogador) e suspensão (tabela competicao_suspensos) do MariaDB
 $statusMaria = [];
 if (!empty($playerIds)) {
-    $validPlayerIds = array_filter(array_map('intval', $playerIds), function($id) { return $id > 0; });
+    $validPlayerIds = array_filter(array_map('intval', $playerIds), function($id) { return $id != 0; });
     if (!empty($validPlayerIds)) {
         $inClause = implode(',', array_unique($validPlayerIds));
         // Garantir que a coluna lesionado_ate exista no MariaDB competicao_suspensos
@@ -424,31 +436,70 @@ if (!empty($playerIds)) {
     }
 }
 
-// 4. Buscar os dados dos jogadores do elenco no SQLite
+// 4. Buscar os dados dos jogadores do elenco no SQLite (e MariaDB como fallback)
 $elenco = [];
 if (!empty($playerIds)) {
-    $inClause = implode(',', $playerIds);
-    // Busca Nome, Nivel e StringPosicoes do MariaDB (posicaojogador não existe; posições ficam em StringPosicoes)
-    $queryElenco = "SELECT ID, Nome, Nivel, StringPosicoes FROM jogador WHERE ID IN ({$inClause})";
-    $stmtElenco = $db->prepare($queryElenco);
-    $stmtElenco->execute();
-    $elencoRaw = $stmtElenco->fetchAll(PDO::FETCH_ASSOC);
+    $inClause = implode(',', array_map('intval', $playerIds));
+    $elencoMap = [];
 
-    // Mapeamento de índice (1-based) de StringPosicoes → sigla
-    $posMapIdx = [1=>'G',2=>'LD',3=>'LE',4=>'Z',5=>'AD',6=>'AE',7=>'V',8=>'MD',9=>'ME',10=>'MC',11=>'PD',12=>'PE',13=>'MA',14=>'Am',15=>'Aa'];
-    foreach ($elencoRaw as &$row) {
-        $sp = $row['StringPosicoes'] ?? '';
-        $posicoesDisponiveis = [];
-        for ($pi = 1; $pi <= 15; $pi++) {
-            if (isset($sp[$pi-1]) && $sp[$pi-1] === '1') {
-                $posicoesDisponiveis[] = $posMapIdx[$pi];
+    // Buscar dados dos jogadores (inclusive times YMT e externos) no SQLite da competição
+    try {
+        $querySqlite = "SELECT j.ID, j.Nome, j.Nivel, 
+                               pj.G, pj.LD, pj.LE, pj.Z, pj.AD, pj.AE, pj.V, pj.MD, pj.ME, pj.MC, pj.PD, pj.PE, pj.MA, pj.Am, pj.Aa 
+                        FROM jogador j 
+                        LEFT JOIN posicaojogador pj ON j.ID = pj.Jogador 
+                        WHERE j.ID IN ({$inClause})";
+        $stmtSqlite = $sdb->query($querySqlite);
+        if ($stmtSqlite) {
+            $posCols = ['G', 'LD', 'LE', 'Z', 'AD', 'AE', 'V', 'MD', 'ME', 'MC', 'PD', 'PE', 'MA', 'Am', 'Aa'];
+            while ($row = $stmtSqlite->fetch(PDO::FETCH_ASSOC)) {
+                $pId = (int)$row['ID'];
+                $posicoesDisponiveis = [];
+                foreach ($posCols as $col) {
+                    if (!empty($row[$col]) && ($row[$col] == 1 || $row[$col] === '1' || $row[$col] === true)) {
+                        $posicoesDisponiveis[] = $col;
+                    }
+                }
+                if (empty($posicoesDisponiveis)) {
+                    $posicoesDisponiveis = ['A'];
+                }
+                $row['PosicaoBase'] = $posicoesDisponiveis[0];
+                $row['PosicoesDisponiveis'] = $posicoesDisponiveis;
+                $elencoMap[$pId] = $row;
             }
         }
-        if (empty($posicoesDisponiveis)) $posicoesDisponiveis = ['A'];
-        $row['PosicaoBase'] = $posicoesDisponiveis[0];
-        $row['PosicoesDisponiveis'] = $posicoesDisponiveis;
+    } catch (Exception $e) {
+        error_log("Erro ao buscar jogadores no SQLite: " . $e->getMessage());
     }
-    unset($row);
+
+    // Fallback no MariaDB caso algum jogador do portal não tenha sido encontrado no SQLite
+    $missingIds = array_diff($playerIds, array_keys($elencoMap));
+    if (!empty($missingIds)) {
+        $inClauseMissing = implode(',', array_map('intval', $missingIds));
+        try {
+            $queryMaria = "SELECT ID, Nome, Nivel, StringPosicoes FROM jogador WHERE ID IN ({$inClauseMissing})";
+            $stmtMaria = $db->query($queryMaria);
+            if ($stmtMaria) {
+                $posMapIdx = [1=>'G',2=>'LD',3=>'LE',4=>'Z',5=>'AD',6=>'AE',7=>'V',8=>'MD',9=>'ME',10=>'MC',11=>'PD',12=>'PE',13=>'MA',14=>'Am',15=>'Aa'];
+                while ($row = $stmtMaria->fetch(PDO::FETCH_ASSOC)) {
+                    $pId = (int)$row['ID'];
+                    $sp = $row['StringPosicoes'] ?? '';
+                    $posicoesDisponiveis = [];
+                    for ($pi = 1; $pi <= 15; $pi++) {
+                        if (isset($sp[$pi-1]) && $sp[$pi-1] === '1') {
+                            $posicoesDisponiveis[] = $posMapIdx[$pi];
+                        }
+                    }
+                    if (empty($posicoesDisponiveis)) $posicoesDisponiveis = ['A'];
+                    $row['PosicaoBase'] = $posicoesDisponiveis[0];
+                    $row['PosicoesDisponiveis'] = $posicoesDisponiveis;
+                    $elencoMap[$pId] = $row;
+                }
+            }
+        } catch (Exception $e) {
+            error_log("Erro ao buscar jogadores no MariaDB: " . $e->getMessage());
+        }
+    }
 
     // Indisponíveis manuais: vêm do POST ou de cookie de sessão por time
     if (!isset($indisponiveisManual) || empty($indisponiveisManual)) {
@@ -461,8 +512,7 @@ if (!empty($playerIds)) {
         $posicoesEscolhidas = isset($_SESSION[$posicoesEscolhidasKey]) ? $_SESSION[$posicoesEscolhidasKey] : [];
     }
 
-    foreach ($elencoRaw as $row) {
-        $pId = (int)$row['ID'];
+    foreach ($elencoMap as $pId => $row) {
         $row['Titular'] = in_array($pId, $titularesIds) ? 1 : 0;
         $row['Capitao'] = ($pId === $capitaoId) ? 1 : 0;
         $row['Lesionado'] = isset($statusMaria[$pId]) ? $statusMaria[$pId]['lesionado'] : 0;
