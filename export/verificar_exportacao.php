@@ -9,16 +9,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 if(session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
-  $listaTimes = $_POST['array_times'];
+  $listaTimes = $_POST['array_times'] ?? [];
   // Garante que $listaTimes é sempre um array
   if (!is_array($listaTimes)) {
       $listaTimes = array_filter(array_map('trim', explode(',', $listaTimes)));
   }
-  $num_equipes = $_POST['num_equipes'];
-  $codigo_genero = $_POST['codigo_genero'];
-  $codigo_competicao = $_POST['codigo_competicao'];
-  $codigo_federacao = $_POST['codigo_federacao'];
-  $codigo_sede = $_POST['codigo_sede'];
+  $num_equipes = $_POST['num_equipes'] ?? 0;
+  $codigo_genero = $_POST['codigo_genero'] ?? 0;
+  $codigo_competicao = $_POST['codigo_competicao'] ?? 0;
+  $codigo_federacao = $_POST['codigo_federacao'] ?? 0;
+  $codigo_sede = $_POST['codigo_sede'] ?? 0;
 
    //print_r($_POST);
 

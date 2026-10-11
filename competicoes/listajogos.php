@@ -50,15 +50,43 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
 	$competicao->sincronizarSlotsJogos($idCompeticao);
 
-	// Carregar vagas / slots para identificação de BYEs
+	// Carregar vagas / slots para identificação de BYEs e resolução de nomes
 	$assignedSlotTeams = [];
 	$stmtTimesSlots = $competicao->carregarListaTimes($idCompeticao);
 	while ($rSlot = $stmtTimesSlots->fetch(PDO::FETCH_ASSOC)) {
-		$sName = !empty($rSlot['slot']) ? $rSlot['slot'] : ("Slot " . $rSlot['codigo_time']);
+		$cod = intval($rSlot['codigo_time']);
+		$sRaw = trim($rSlot['slot'] ?? '');
+		$cIdTeam = 0;
 		if (!empty($rSlot['id_time_portal']) && intval($rSlot['id_time_portal']) > 0) {
-			$assignedSlotTeams[$sName] = intval($rSlot['id_time_portal']);
+			$cIdTeam = intval($rSlot['id_time_portal']);
 		} else if ($rSlot['has_team'] == 1 || $rSlot['has_team'] == '1') {
-			$assignedSlotTeams[$sName] = -1 * abs(intval($rSlot['codigo_time']));
+			$cIdTeam = -1 * abs($cod);
+		} else if ($cdb) {
+			$stC = $cdb->prepare("SELECT ID FROM clube WHERE ID = :negId OR ID = :posId LIMIT 1");
+			$negId = -1 * abs($cod);
+			$posId = abs($cod);
+			$stC->execute([':negId' => $negId, ':posId' => $posId]);
+			if ($stC->fetch()) {
+				$cIdTeam = -1 * abs($cod);
+			}
+		}
+		if ($cIdTeam != 0 && $sRaw !== '') {
+			$assignedSlotTeams[$sRaw] = $cIdTeam;
+			$sWithout = preg_replace('/^Slot\s+/i', '', $sRaw);
+			$assignedSlotTeams[$sWithout] = $cIdTeam;
+			$assignedSlotTeams['Slot ' . $sWithout] = $cIdTeam;
+			$assignedSlotTeams['Slot ' . $cod] = $cIdTeam;
+			$assignedSlotTeams['Vaga ' . $cod] = $cIdTeam;
+			$assignedSlotTeams['Vaga #' . $cod] = $cIdTeam;
+			$assignedSlotTeams['#' . $cod] = $cIdTeam;
+			$assignedSlotTeams[(string)$cod] = $cIdTeam;
+			if (preg_match('/^([A-Z])\s*(\d+)$/i', $sWithout, $mG)) {
+				$gL = strtoupper($mG[1]);
+				$sN = intval($mG[2]);
+				$assignedSlotTeams[$gL . $sN] = $cIdTeam;
+				$assignedSlotTeams['Slot ' . $sN] = $cIdTeam;
+				$assignedSlotTeams['Vaga ' . $sN] = $cIdTeam;
+			}
 		}
 	}
 	
@@ -80,29 +108,69 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 		$listaFases[] = $addArray;
 	}
 	
-	//query lista times do SQLite da competição
-	$stmt = $time->carregarListaTimesSqlite();
+	// 1. Carregar lista de times do SQLite da competição (inclui times temporários YMT com ID negativo)
 	$listaTimes = array();
-	if($stmt){
-		while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-			$cId = (int)($row['ID'] ?? ($row['id'] ?? 0));
-			$cNome = $row['Nome'] ?? ($row['nome'] ?? '');
-			if($cId != 0 && $cNome !== ''){
-				$listaTimes[] = array($cId, $cNome);
+	$timesJaAdicionados = array();
+	if($cdb){
+		try {
+			$stmtSqlite = $cdb->query("SELECT ID, Nome FROM clube");
+			if($stmtSqlite){
+				while ($row = $stmtSqlite->fetch(PDO::FETCH_ASSOC)){
+					$cId = (int)($row['ID'] ?? ($row['id'] ?? 0));
+					$cNome = trim(html_entity_decode(html_entity_decode(stripslashes($row['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+					if($cId != 0 && $cNome !== ''){
+						$listaTimes[] = array($cId, $cNome);
+						$timesJaAdicionados[$cId] = $cNome;
+						$negId = -1 * abs($cId);
+						$posId = abs($cId);
+						if(!isset($timesJaAdicionados[$negId])){
+							$listaTimes[] = array($negId, $cNome);
+							$timesJaAdicionados[$negId] = $cNome;
+						}
+						if(!isset($timesJaAdicionados[$posId])){
+							$listaTimes[] = array($posId, $cNome);
+							$timesJaAdicionados[$posId] = $cNome;
+						}
+					}
+				}
 			}
-		}
+		} catch (\Throwable $e) {}
 	}
-	// Fallback para MariaDB se $listaTimes estiver vazio
-	if(empty($listaTimes)){
-		include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
-		$timeMaria = new Time($db);
-		$stmtMaria = $timeMaria->read(null, false);
+	// 2. Carregar também clubes do MariaDB (portal)
+	try {
+		$stmtMaria = $db->query("SELECT id, nome FROM clube");
 		if($stmtMaria){
 			while ($rowM = $stmtMaria->fetch(PDO::FETCH_ASSOC)){
-				$listaTimes[] = array($rowM['id'], $rowM['nome']);
+				$mId = (int)($rowM['id'] ?? 0);
+				$mNome = trim(html_entity_decode(html_entity_decode(stripslashes($rowM['nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+				if($mId > 0 && !isset($timesJaAdicionados[$mId]) && $mNome !== ''){
+					$listaTimes[] = array($mId, $mNome);
+					$timesJaAdicionados[$mId] = $mNome;
+				}
 			}
 		}
-	}
+	} catch (\Throwable $e) {}
+
+	// 3. Fallback para times temporários registrados em competicao_times que estejam em SQLite
+	try {
+		$stExt = $db->prepare("SELECT codigo_time FROM competicao_times WHERE id_competicao = :idComp AND has_team = 1 AND (id_time_portal IS NULL OR id_time_portal = 0)");
+		$stExt->execute([':idComp' => $idCompeticao]);
+		while ($rExt = $stExt->fetch(PDO::FETCH_ASSOC)) {
+			$codExt = intval($rExt['codigo_time']);
+			$extId = -1 * abs($codExt);
+			if (!isset($timesJaAdicionados[$extId]) && $cdb) {
+				$stC = $cdb->prepare("SELECT Nome FROM clube WHERE ID = :id OR ID = :idPos LIMIT 1");
+				$posId = abs($codExt);
+				$stC->execute([':id' => $extId, ':idPos' => $posId]);
+				$rC = $stC->fetch(PDO::FETCH_ASSOC);
+				if ($rC && !empty($rC['Nome'])) {
+					$eNome = trim(html_entity_decode(html_entity_decode(stripslashes($rC['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+					$listaTimes[] = array($extId, $eNome);
+					$timesJaAdicionados[$extId] = $eNome;
+				}
+			}
+		}
+	} catch (\Throwable $e) {}
 	
 	//query lista árbitros
 	$stmt = $arbitro->carregarListaArbitrosSqlite();
@@ -606,10 +674,43 @@ $(document).ready(function($){
 				}
 				
 				// Criação das variáveis de exibição
-				let teamA = listaTimes.find(t => t[0] == val['timeA_id']);
-				let teamB = listaTimes.find(t => t[0] == val['timeB_id']);
-				let nomeTimeA = (teamA && parseInt(val['timeA_id']) != 0) ? teamA[1] : (val['timeA_nome'] ? val['timeA_nome'] : (parseInt(val['timeA_id']) != 0 ? "Time " + val['timeA_id'] : "A definir"));
-				let nomeTimeB = (teamB && parseInt(val['timeB_id']) != 0) ? teamB[1] : (val['timeB_nome'] ? val['timeB_nome'] : (parseInt(val['timeB_id']) != 0 ? "Time " + val['timeB_id'] : "A definir"));
+				let tA_id = parseInt(val['timeA_id']) || 0;
+				let tA_nome_raw = $.trim(val['timeA_nome'] || '');
+
+				if (tA_id === 0 && tA_nome_raw !== '' && typeof assignedSlotTeams !== 'undefined' && assignedSlotTeams) {
+					if (assignedSlotTeams[tA_nome_raw] !== undefined) {
+						tA_id = parseInt(assignedSlotTeams[tA_nome_raw]);
+					} else if (assignedSlotTeams['Slot ' + tA_nome_raw] !== undefined) {
+						tA_id = parseInt(assignedSlotTeams['Slot ' + tA_nome_raw]);
+					} else {
+						let cleanSlot = tA_nome_raw.replace(/^Slot\s+/i, '');
+						if (assignedSlotTeams[cleanSlot] !== undefined) {
+							tA_id = parseInt(assignedSlotTeams[cleanSlot]);
+						}
+					}
+				}
+
+				let teamA = (tA_id !== 0) ? listaTimes.find(t => t[0] == tA_id || Math.abs(t[0]) === Math.abs(tA_id)) : null;
+				let nomeTimeA = teamA ? teamA[1] : (tA_nome_raw !== '' ? tA_nome_raw : (tA_id !== 0 ? "Time " + tA_id : "A definir"));
+
+				let tB_id = parseInt(val['timeB_id']) || 0;
+				let tB_nome_raw = $.trim(val['timeB_nome'] || '');
+
+				if (tB_id === 0 && tB_nome_raw !== '' && typeof assignedSlotTeams !== 'undefined' && assignedSlotTeams) {
+					if (assignedSlotTeams[tB_nome_raw] !== undefined) {
+						tB_id = parseInt(assignedSlotTeams[tB_nome_raw]);
+					} else if (assignedSlotTeams['Slot ' + tB_nome_raw] !== undefined) {
+						tB_id = parseInt(assignedSlotTeams['Slot ' + tB_nome_raw]);
+					} else {
+						let cleanSlot = tB_nome_raw.replace(/^Slot\s+/i, '');
+						if (assignedSlotTeams[cleanSlot] !== undefined) {
+							tB_id = parseInt(assignedSlotTeams[cleanSlot]);
+						}
+					}
+				}
+
+				let teamB = (tB_id !== 0) ? listaTimes.find(t => t[0] == tB_id || Math.abs(t[0]) === Math.abs(tB_id)) : null;
+				let nomeTimeB = teamB ? teamB[1] : (tB_nome_raw !== '' ? tB_nome_raw : (tB_id !== 0 ? "Time " + tB_id : "A definir"));
 				
 				let faseObj = listaFases.find(f => f[0] == val['fase']);
 				let fase = faseObj ? faseObj[1] : "Fase " + val['fase'];
@@ -660,23 +761,25 @@ $(document).ready(function($){
 				// Geração dos links de escalação (apenas se o jogo não foi simulado/encerrado e se o time estiver definido)
 				let escLinkA = "";
 				let escLinkB = "";
+				let effectiveIdA = teamA ? teamA[0] : tA_id;
+				let effectiveIdB = teamB ? teamB[0] : tB_id;
 				if(logged == "true" && val['status'] == 0){
-					if (parseInt(val['timeA_id']) != 0) {
-						escLinkA = " <a href='/competicoes/escalacao_jogo.php?comp="+codigo_competicao+"&team="+val['timeA_id']+"&jogo="+val['id']+"' title='Escalação "+nomeTimeA+"' class='clickable lineup-btn'><span class='material-symbols-outlined'>assignment</span></a>";
+					if (effectiveIdA != 0) {
+						escLinkA = " <a href='/competicoes/escalacao_jogo.php?comp="+codigo_competicao+"&team="+effectiveIdA+"&jogo="+val['id']+"' title='Escalação "+nomeTimeA+"' class='clickable lineup-btn'><span class='material-symbols-outlined'>assignment</span></a>";
 					}
-					if (parseInt(val['timeB_id']) != 0) {
-						escLinkB = " <a href='/competicoes/escalacao_jogo.php?comp="+codigo_competicao+"&team="+val['timeB_id']+"&jogo="+val['id']+"' title='Escalação "+nomeTimeB+"' class='clickable lineup-btn'><span class='material-symbols-outlined'>assignment</span></a>";
+					if (effectiveIdB != 0) {
+						escLinkB = " <a href='/competicoes/escalacao_jogo.php?comp="+codigo_competicao+"&team="+effectiveIdB+"&jogo="+val['id']+"' title='Escalação "+nomeTimeB+"' class='clickable lineup-btn'><span class='material-symbols-outlined'>assignment</span></a>";
 					}
 				}
 
-				let timeAOptions = "<option value='0' "+ (parseInt(val['timeA_id']) == 0 || !val['timeA_id'] ? 'selected' : '') +">A definir / Manter Slot</option>";
+				let timeAOptions = "<option value='0' "+ (effectiveIdA == 0 ? 'selected' : '') +">A definir / Manter Slot</option>";
 				$.each(listaTimes, function(i, t){
-					timeAOptions += "<option value='"+t[0]+"' "+ (t[0] == val['timeA_id'] ? 'selected' : '') +">"+t[1]+"</option>";
+					timeAOptions += "<option value='"+t[0]+"' "+ (t[0] == effectiveIdA ? 'selected' : '') +">"+t[1]+"</option>";
 				});
 
-				let timeBOptions = "<option value='0' "+ (parseInt(val['timeB_id']) == 0 || !val['timeB_id'] ? 'selected' : '') +">A definir / Manter Slot</option>";
+				let timeBOptions = "<option value='0' "+ (effectiveIdB == 0 ? 'selected' : '') +">A definir / Manter Slot</option>";
 				$.each(listaTimes, function(i, t){
-					timeBOptions += "<option value='"+t[0]+"' "+ (t[0] == val['timeB_id'] ? 'selected' : '') +">"+t[1]+"</option>";
+					timeBOptions += "<option value='"+t[0]+"' "+ (t[0] == effectiveIdB ? 'selected' : '') +">"+t[1]+"</option>";
 				});
 
 				// Geração da tabela

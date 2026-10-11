@@ -14,6 +14,16 @@
       "items": [
         {
           "badge": "bugfix",
+          "title": "Tratamento Seguro de Parâmetros na Verificação de Exportação",
+          "desc": "Adicionado operador de coalescência nula nos parâmetros POST de verificar_exportacao.php (como codigo_sede, codigo_federacao e codigo_genero), evitando avisos de chave indefinida (Undefined array key) no PHP 8+."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Preservação e Sincronização Cirúrgica de Slots em Partidas",
+          "desc": "Removida a geração artificial de templates que causava placeholders espúrios e garantida a preservação e associação estrita dos slots reais (como time externo em A3 e placeholders originais como B1) em jogos de competições."
+        },
+        {
+          "badge": "bugfix",
           "title": "Filtro Estrito de Atletas no Departamento Médico de Competições",
           "desc": "Corrigida a consulta de lesionados e suspensos na tela de estatísticas da competição (estatisticas.php) para restringir a exibição exclusivamente aos atletas dos times participantes da competição (incluindo elencos de times temporários importados via YMT com IDs negativos), consultando tanto o histórico do MySQL quanto o status de lesão direto no SQLite da competição."
         },

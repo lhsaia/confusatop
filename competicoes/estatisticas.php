@@ -245,6 +245,28 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             if (!empty($j['timeB_id']) && (int)$j['timeB_id'] != 0 && !isset($clubeGrupoMap[(int)$j['timeB_id']])) $clubeGrupoMap[(int)$j['timeB_id']] = $g;
         }
     }
+
+    // Mapear também diretamente pelos slots atribuídos em competicao_times (ex: Slot A3 -> Grupo A)
+    $stmtTimesSlots = $competicao->carregarListaTimes($idCompeticao);
+    if ($stmtTimesSlots) {
+        while ($rSlot = $stmtTimesSlots->fetch(PDO::FETCH_ASSOC)) {
+            $cod = intval($rSlot['codigo_time']);
+            $sRaw = trim($rSlot['slot'] ?? '');
+            $cIdTeam = 0;
+            if (!empty($rSlot['id_time_portal']) && intval($rSlot['id_time_portal']) > 0) {
+                $cIdTeam = intval($rSlot['id_time_portal']);
+            } else if ($rSlot['has_team'] == 1 || $rSlot['has_team'] == '1') {
+                $cIdTeam = -1 * abs($cod);
+            }
+            if ($cIdTeam != 0 && preg_match('/^([A-Z])\d+$/i', $sRaw, $mG)) {
+                $gL = strtoupper($mG[1]);
+                $clubeGrupoMap[$cIdTeam] = $gL;
+                if (!in_array($gL, $gruposDetectados)) {
+                    $gruposDetectados[] = $gL;
+                }
+            }
+        }
+    }
     sort($gruposDetectados);
     $temGrupos = !empty($gruposDetectados);
     

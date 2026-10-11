@@ -996,16 +996,27 @@ class Competicao_clube{
 	}
 
 	function atualizarJogosPorSlot($idCompeticao, $vagaIndex, $idTimeReal, $prevTimeId = 0){
+		$idCompeticao = intval($idCompeticao);
+		$vagaIndex = intval($vagaIndex);
+		$idTimeReal = intval($idTimeReal);
+		$prevTimeId = intval($prevTimeId);
+
+		// Se a vaga já possui um slot explicitamente definido (ex: A3), usa definirSlotTime
+		$stSlot = $this->conn->prepare("SELECT slot FROM competicao_times WHERE id_competicao = :idComp AND codigo_time = :cod LIMIT 1");
+		$stSlot->bindParam(':idComp', $idCompeticao);
+		$stSlot->bindParam(':cod', $vagaIndex);
+		$stSlot->execute();
+		$rSlot = $stSlot->fetch(PDO::FETCH_ASSOC);
+		if ($rSlot && !empty($rSlot['slot'])) {
+			return $this->definirSlotTime($idCompeticao, $vagaIndex, $rSlot['slot']);
+		}
+
 		$info = $this->getSlotInfoForVaga($idCompeticao, $vagaIndex);
 		if (!$info) return false;
 		
 		$slotName = $info['slot'];
 		$fase = $info['fase'];
 		$grupo = $info['grupo'];
-		
-		$idCompeticao = intval($idCompeticao);
-		$idTimeReal = intval($idTimeReal);
-		$prevTimeId = intval($prevTimeId);
 		
 		$whereExtraA = "";
 		$whereExtraB = "";
@@ -1016,22 +1027,41 @@ class Competicao_clube{
 		
 		if ($idTimeReal != 0) {
 			$vagaAbs = abs($vagaIndex);
-			$slotDefault = "Slot " . $vagaAbs;
-			$legacyCondA = ($idTimeReal < 0) ? " OR timeA_id = $vagaAbs" : "";
-			$legacyCondB = ($idTimeReal < 0) ? " OR timeB_id = $vagaAbs" : "";
+			$slotDefaultQuote = $this->conn->quote("Slot " . $vagaAbs);
+			$vagaLabelQuote = $this->conn->quote("Vaga " . $vagaAbs);
+			$vagaHashQuote = $this->conn->quote("Vaga #" . $vagaAbs);
+
+			$slotClean = $slotName ? trim($slotName) : '';
+			$slotCondA = "TRIM(timeA_nome) = $slotDefaultQuote OR TRIM(timeA_nome) = $vagaLabelQuote OR TRIM(timeA_nome) = $vagaHashQuote OR timeA_id = $vagaAbs OR timeA_id = -$vagaAbs";
+			if ($slotClean !== '') {
+				$slotCleanQuote = $this->conn->quote($slotClean);
+				$slotWithout = preg_replace('/^Slot\s+/i', '', $slotClean);
+				$slotWithoutQuote = $this->conn->quote($slotWithout);
+				$slotWithQuote = $this->conn->quote('Slot ' . $slotWithout);
+				$slotCondA .= " OR TRIM(timeA_nome) = $slotCleanQuote OR TRIM(timeA_nome) = $slotWithoutQuote OR TRIM(timeA_nome) = $slotWithQuote";
+			}
+
+			$slotCondB = "TRIM(timeB_nome) = $slotDefaultQuote OR TRIM(timeB_nome) = $vagaLabelQuote OR TRIM(timeB_nome) = $vagaHashQuote OR timeB_id = $vagaAbs OR timeB_id = -$vagaAbs";
+			if ($slotClean !== '') {
+				$slotCleanQuote = $this->conn->quote($slotClean);
+				$slotWithout = preg_replace('/^Slot\s+/i', '', $slotClean);
+				$slotWithoutQuote = $this->conn->quote($slotWithout);
+				$slotWithQuote = $this->conn->quote('Slot ' . $slotWithout);
+				$slotCondB .= " OR TRIM(timeB_nome) = $slotCleanQuote OR TRIM(timeB_nome) = $slotWithoutQuote OR TRIM(timeB_nome) = $slotWithQuote";
+			}
 
 			// 1. Atualizar por nome do slot (placeholder) ou vaga legado
 			$this->conn->exec("UPDATE jogos_clube 
 			                   SET timeA_id = $idTimeReal, timeA_nome = NULL 
 			                   WHERE competicao_id = $idCompeticao 
 			                     AND simulador_interno = 1 
-			                     AND (timeA_nome = '$slotName' OR timeA_nome = '$slotDefault' $legacyCondA) $whereExtraA");
+			                     AND ($slotCondA) $whereExtraA");
 			                     
 			$this->conn->exec("UPDATE jogos_clube 
 			                   SET timeB_id = $idTimeReal, timeB_nome = NULL 
 			                   WHERE competicao_id = $idCompeticao 
 			                     AND simulador_interno = 1 
-			                     AND (timeB_nome = '$slotName' OR timeB_nome = '$slotDefault' $legacyCondB) $whereExtraB");
+			                     AND ($slotCondB) $whereExtraB");
 
 			// 2. Se estava substituindo um time anterior
 			if ($prevTimeId != 0 && $prevTimeId != $idTimeReal) {
@@ -1116,6 +1146,30 @@ class Competicao_clube{
 			$teamId = intval($row['id_time_portal']);
 		} else if(isset($row['has_team']) && ($row['has_team'] == 1 || $row['has_team'] == '1')){
 			$teamId = -1 * abs($codigoTime);
+		} else {
+			// Fallback: verificar se existe clube no SQLite da competição
+			$db3File = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') 
+				? $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $idCompeticao . "-database.db3"
+				: dirname(__DIR__) . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+			if (file_exists($db3File)) {
+				try {
+					$liteDb = new SQLiteDatabase();
+					$liteDb->fileName = $db3File;
+					$sdb = $liteDb->getConnection();
+					if ($sdb) {
+						$stC = $sdb->prepare("SELECT ID FROM clube WHERE ID = :negId OR ID = :posId LIMIT 1");
+						$negId = -1 * abs($codigoTime);
+						$posId = abs($codigoTime);
+						$stC->bindParam(':negId', $negId);
+						$stC->bindParam(':posId', $posId);
+						$stC->execute();
+						if ($stC->fetch()) {
+							$teamId = -1 * abs($codigoTime);
+							$this->conn->exec("UPDATE competicao_times SET has_team = '1' WHERE id_competicao = $idCompeticao AND codigo_time = $codigoTime");
+						}
+					}
+				} catch (\Throwable $e) {}
+			}
 		}
 		
 		// 2. Se outro time já tinha esse mesmo $slotName, desvincular o outro time desse slot
@@ -1143,13 +1197,106 @@ class Competicao_clube{
 		
 		// 5. Se o novo slot foi definido e temos um time, preencher os jogos com este time
 		if($slotName !== '' && $teamId != 0){
-			$codAbs = abs($codigoTime);
-			$legacyCondA = ($teamId < 0) ? " OR timeA_id = $codAbs" : "";
-			$legacyCondB = ($teamId < 0) ? " OR timeB_id = $codAbs" : "";
-			$this->conn->exec("UPDATE jogos_clube SET timeA_id = $teamId, timeA_nome = NULL WHERE competicao_id = $idCompeticao AND simulador_interno = 1 AND (timeA_nome = '$slotName' $legacyCondA)");
-			$this->conn->exec("UPDATE jogos_clube SET timeB_id = $teamId, timeB_nome = NULL WHERE competicao_id = $idCompeticao AND simulador_interno = 1 AND (timeB_nome = '$slotName' $legacyCondB)");
+			$slotWithout = trim(preg_replace('/^Slot\s+/i', '', $slotName));
+			$grpLetra = null;
+			$slotNumInGroup = null;
+
+			if (preg_match('/^([A-Z])\s*(\d+)$/i', $slotWithout, $mG)) {
+				$grpLetra = strtoupper($mG[1]);
+				$slotNumInGroup = intval($mG[2]);
+			}
+
+			// A. Se o slot pertence a um grupo específico (ex: A3 -> Grupo A),
+			// limpa esse time de qualquer jogo pertencente a outros grupos (ex: Grupo B, C, etc.)
+			// para corrigir dados corrompidos por cálculos antigos.
+			if ($grpLetra !== null) {
+				$this->conn->exec("UPDATE jogos_clube 
+				                   SET timeA_id = 0 
+				                   WHERE competicao_id = $idCompeticao 
+				                     AND simulador_interno = 1 
+				                     AND timeA_id = $teamId 
+				                     AND grupo IS NOT NULL 
+				                     AND grupo != '' 
+				                     AND UPPER(grupo) != '$grpLetra'");
+
+				$this->conn->exec("UPDATE jogos_clube 
+				                   SET timeB_id = 0 
+				                   WHERE competicao_id = $idCompeticao 
+				                     AND simulador_interno = 1 
+				                     AND timeB_id = $teamId 
+				                     AND grupo IS NOT NULL 
+				                     AND grupo != '' 
+				                     AND UPPER(grupo) != '$grpLetra'");
+			}
+
+			// B. Construir todas as variações possíveis de nome de slot/placeholder
+			$candidates = [
+				$slotName,
+				$slotWithout,
+				'Slot ' . $slotWithout,
+				'Slot ' . $codigoTime,
+				'Vaga ' . $codigoTime,
+				'Vaga #' . $codigoTime,
+				(string)$codigoTime,
+				'#' . $codigoTime,
+				'Time ' . $codigoTime,
+				'Equipe ' . $codigoTime
+			];
+			if ($slotNumInGroup !== null) {
+				$candidates[] = 'Slot ' . $slotNumInGroup;
+				$candidates[] = 'Vaga ' . $slotNumInGroup;
+				$candidates[] = 'Vaga #' . $slotNumInGroup;
+				$candidates[] = (string)$slotNumInGroup;
+				$candidates[] = '#' . $slotNumInGroup;
+				$candidates[] = $grpLetra . ' ' . $slotNumInGroup;
+				$candidates[] = $grpLetra . '-' . $slotNumInGroup;
+				$candidates[] = $grpLetra . '.' . $slotNumInGroup;
+			}
+
+			$condsA = [];
+			$condsB = [];
+			foreach (array_unique($candidates) as $cand) {
+				$candTrim = trim($cand);
+				if ($candTrim === '') continue;
+				$qCand = $this->conn->quote($candTrim);
+				$condsA[] = "LOWER(TRIM(timeA_nome)) = LOWER($qCand)";
+				$condsB[] = "LOWER(TRIM(timeB_nome)) = LOWER($qCand)";
+			}
+
+			// Incluir matching por ID temporário ou vaga legado
+			$vAbs = abs($codigoTime);
+			$condsA[] = "timeA_id = $vAbs";
+			$condsA[] = "timeA_id = -$vAbs";
+			$condsB[] = "timeB_id = $vAbs";
+			$condsB[] = "timeB_id = -$vAbs";
+			if ($slotNumInGroup !== null) {
+				$condsA[] = "timeA_id = $slotNumInGroup";
+				$condsA[] = "timeA_id = -$slotNumInGroup";
+				$condsB[] = "timeB_id = $slotNumInGroup";
+				$condsB[] = "timeB_id = -$slotNumInGroup";
+			}
+
+			$whereA = implode(' OR ', $condsA);
+			$whereB = implode(' OR ', $condsB);
+
+			$extraGrupo = "";
+			if ($grpLetra !== null) {
+				$extraGrupo = " AND (UPPER(grupo) = '$grpLetra' OR grupo IS NULL OR grupo = '')";
+			}
+
+			$this->conn->exec("UPDATE jogos_clube 
+			                   SET timeA_id = $teamId 
+			                   WHERE competicao_id = $idCompeticao 
+			                     AND simulador_interno = 1 
+			                     AND ($whereA) $extraGrupo");
+
+			$this->conn->exec("UPDATE jogos_clube 
+			                   SET timeB_id = $teamId 
+			                   WHERE competicao_id = $idCompeticao 
+			                     AND simulador_interno = 1 
+			                     AND ($whereB) $extraGrupo");
 			
-			// Atualizar estádio mandante se estadios_times == 1
+			// C. Atualizar estádio mandante se estadios_times == 1
 			$options = $this->getOptions($idCompeticao);
 			$estadios_times = isset($options['estadios_times']) ? intval($options['estadios_times']) : 1;
 			if ($estadios_times == 1 && $teamId != 0) {
@@ -1188,7 +1335,29 @@ class Competicao_clube{
 		if($idCompeticao <= 0) return false;
 		
 		try {
-			$stTimes = $this->conn->prepare("SELECT codigo_time, has_team, id_time_portal, slot FROM competicao_times WHERE id_competicao = :idComp");
+
+			// Conectar ao SQLite da competição se existir para validar times temporários
+			$db3File = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') 
+				? $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $idCompeticao . "-database.db3"
+				: dirname(__DIR__) . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+			$sqliteClubeIds = [];
+			if (file_exists($db3File)) {
+				try {
+					$liteDb = new SQLiteDatabase();
+					$liteDb->fileName = $db3File;
+					$sdb = $liteDb->getConnection();
+					if ($sdb) {
+						$stC = $sdb->query("SELECT ID FROM clube");
+						if ($stC) {
+							while ($rC = $stC->fetch(PDO::FETCH_ASSOC)) {
+								$sqliteClubeIds[intval($rC['ID'])] = true;
+							}
+						}
+					}
+				} catch (\Throwable $e) {}
+			}
+
+			$stTimes = $this->conn->prepare("SELECT codigo_time, has_team, id_time_portal, slot FROM competicao_times WHERE id_competicao = :idComp ORDER BY codigo_time ASC");
 			$stTimes->bindParam(':idComp', $idCompeticao);
 			$stTimes->execute();
 			while($r = $stTimes->fetch(PDO::FETCH_ASSOC)){
@@ -1199,13 +1368,13 @@ class Competicao_clube{
 					$teamId = intval($r['id_time_portal']);
 				} else if($r['has_team'] == 1 || $r['has_team'] == '1'){
 					$teamId = -1 * abs($cod);
+				} else if (isset($sqliteClubeIds[-1 * abs($cod)]) || isset($sqliteClubeIds[abs($cod)])) {
+					$teamId = -1 * abs($cod);
+					$this->conn->exec("UPDATE competicao_times SET has_team = '1' WHERE id_competicao = $idCompeticao AND codigo_time = $cod");
 				}
-				if($teamId != 0){
-					if($slot !== ''){
-						$this->definirSlotTime($idCompeticao, $cod, $slot);
-					} else {
-						$this->atualizarJogosPorSlot($idCompeticao, $cod, $teamId);
-					}
+
+				if($teamId != 0 && $slot !== ''){
+					$this->definirSlotTime($idCompeticao, $cod, $slot);
 				}
 			}
 			return true;
