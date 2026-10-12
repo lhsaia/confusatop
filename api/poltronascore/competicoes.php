@@ -69,6 +69,38 @@ try {
                     'logo_url' => $logo
                 ];
             }
+
+            if (count($sampleTeams) < 6) {
+                $db3File = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') 
+                    ? $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $compId . "-database.db3"
+                    : dirname(__DIR__, 2) . "/competicoes/databases/" . $compId . "-database.db3";
+                if (file_exists($db3File)) {
+                    $sdb = new PDO("sqlite:" . $db3File);
+                    $limitLeft = 6 - count($sampleTeams);
+                    $stSqlite = $sdb->query("SELECT ID, Nome, Escudo FROM clube LIMIT $limitLeft");
+                    if ($stSqlite) {
+                        while ($sRow = $stSqlite->fetch(PDO::FETCH_ASSOC)) {
+                            $logo = '';
+                            $rawEsc = trim($sRow['Escudo'] ?? '');
+                            if (!empty($rawEsc) && $rawEsc !== '0.png' && $rawEsc !== 'Imagens/EscudoPadrao.png') {
+                                if (strpos($rawEsc, 'http') === 0) {
+                                    $logo = $rawEsc;
+                                } elseif (strpos($rawEsc, 'cache_images/') === 0) {
+                                    $logo = '/competicoes/hexacolor/' . $rawEsc;
+                                } else {
+                                    $escClean = str_replace(['../../images/escudos/', '../images/escudos/'], '', $rawEsc);
+                                    $logo = '/images/escudos/' . basename($escClean);
+                                }
+                            }
+                            $sampleTeams[] = [
+                                'team_id' => -1 * abs((int)$sRow['ID']),
+                                'team_name' => $sRow['Nome'],
+                                'logo_url' => $logo
+                            ];
+                        }
+                    }
+                }
+            }
         } catch (\Throwable $e) {}
         
         $competitions[] = [

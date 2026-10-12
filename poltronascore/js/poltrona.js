@@ -8,8 +8,25 @@ document.addEventListener('DOMContentLoaded', () => {
     let cachedStandingsData = null;
     let cachedCompetitions = [];
 
+    window.handleLogoError = function(img) {
+        if (!img) return;
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (isLocal && !img.dataset.triedRemote && img.src && !img.src.includes('confusa.top')) {
+            img.dataset.triedRemote = '1';
+            try {
+                const u = new URL(img.src);
+                if (u.pathname.startsWith('/images/')) {
+                    img.src = 'https://confusa.top' + u.pathname;
+                    return;
+                }
+            } catch (e) {}
+        }
+        img.onerror = null;
+        img.src = DEFAULT_LOGO;
+    };
+
     const getLogo = (logoUrl) => {
-        if (!logoUrl || logoUrl.includes('id=-1') || logoUrl.includes('id=null')) {
+        if (!logoUrl || logoUrl.includes('id=-1') || logoUrl.includes('id=null') || logoUrl.endsWith('/0.png') || logoUrl === '0.png' || logoUrl.includes('EscudoPadrao')) {
             return DEFAULT_LOGO;
         }
         let absoluteUrl = logoUrl;
@@ -464,11 +481,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="match-teams-score">
                             <div class="team-info home">
                                 <span class="team-name">${match.home_team}</span>
-                                <img class="team-logo" src="${getLogo(match.home_logo)}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                                <img class="team-logo" src="${getLogo(match.home_logo)}" alt="" onerror="handleLogoError(this)">
                             </div>
                             ${scoreHtml}
                             <div class="team-info away">
-                                <img class="team-logo" src="${getLogo(match.away_logo)}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                                <img class="team-logo" src="${getLogo(match.away_logo)}" alt="" onerror="handleLogoError(this)">
                                 <span class="team-name">${match.away_team}</span>
                             </div>
                         </div>
@@ -542,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let html = '';
         competitions.forEach(c => {
             const sampleLogos = (c.sample_teams || []).map(t => 
-                `<img class="comp-team-avatar" src="${getLogo(t.logo_url)}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">`
+                `<img class="comp-team-avatar" src="${getLogo(t.logo_url)}" alt="" onerror="handleLogoError(this)">`
             ).join('');
             const isFav = FavoritesManager.has('competitions', c.id);
 
@@ -728,7 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td class="col-team">
                         <div class="team-cell">
-                            <img class="team-cell-logo" src="${getLogo(t.logo)}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                            <img class="team-cell-logo" src="${getLogo(t.logo)}" alt="" onerror="handleLogoError(this)">
                             <span>${t.team}</span>
                         </div>
                     </td>
@@ -814,7 +831,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="bracket-match match-card" data-id="${m.id}">
                         <div class="bracket-team-line ${homeWinnerClass}">
                             <div class="bracket-team-info">
-                                <img class="team-logo" src="${getLogo(m.home_logo)}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                                <img class="team-logo" src="${getLogo(m.home_logo)}" alt="" onerror="handleLogoError(this)">
                                 <span class="bracket-team-name">${m.home_team}</span>
                             </div>
                             <div class="bracket-score-badge">
@@ -823,7 +840,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="bracket-team-line ${awayWinnerClass}">
                             <div class="bracket-team-info">
-                                <img class="team-logo" src="${getLogo(m.away_logo)}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                                <img class="team-logo" src="${getLogo(m.away_logo)}" alt="" onerror="handleLogoError(this)">
                                 <span class="bracket-team-name">${m.away_team}</span>
                             </div>
                             <div class="bracket-score-badge">
@@ -885,11 +902,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="match-teams-score">
                             <div class="team-info home">
                                 <span class="team-name">${match.home_team}</span>
-                                <img class="team-logo" src="${getLogo(match.home_logo)}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                                <img class="team-logo" src="${getLogo(match.home_logo)}" alt="" onerror="handleLogoError(this)">
                             </div>
                             ${scoreHtml}
                             <div class="team-info away">
-                                <img class="team-logo" src="${getLogo(match.away_logo)}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                                <img class="team-logo" src="${getLogo(match.away_logo)}" alt="" onerror="handleLogoError(this)">
                                 <span class="team-name">${match.away_team}</span>
                             </div>
                         </div>
@@ -989,11 +1006,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Teams
                 mHomeName.textContent = match.home_team;
-                mHomeLogo.onerror = () => { mHomeLogo.onerror = null; mHomeLogo.src = DEFAULT_LOGO; };
+                mHomeLogo.onerror = () => handleLogoError(mHomeLogo);
                 mHomeLogo.src = getLogo(match.home_logo);
 
                 mAwayName.textContent = match.away_team;
-                mAwayLogo.onerror = () => { mAwayLogo.onerror = null; mAwayLogo.src = DEFAULT_LOGO; };
+                mAwayLogo.onerror = () => handleLogoError(mAwayLogo);
                 mAwayLogo.src = getLogo(match.away_logo);
 
                 // Make team boards clickable to open Club Profile
@@ -1359,7 +1376,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const clubLogo = getLogo(p.club.logo);
             clubChipHtml = `
                 <div class="player-club-chip" onclick="window.poltronaOpenClubModal(${p.club.id}, '${p.club.name.replace(/'/g, "\\'")}')">
-                    <img class="player-club-logo" src="${clubLogo}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                    <img class="player-club-logo" src="${clubLogo}" alt="" onerror="handleLogoError(this)">
                     <span class="player-club-name">${p.club.name}</span>
                     ${p.club.jersey_number ? `<span style="font-size: 10px; color: var(--accent-cyan); font-weight: 700;">#${p.club.jersey_number}</span>` : ''}
                 </div>
@@ -1554,7 +1571,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <!-- Player Hero Card -->
             <div class="player-hero-card">
                 <div class="player-hero-photo-box">
-                    <img class="player-hero-photo" src="${photoSrc}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                    <img class="player-hero-photo" src="${photoSrc}" alt="" onerror="handleLogoError(this)">
                     ${p.level > 0 ? `<div class="player-hero-level-badge">${p.level}</div>` : ''}
                 </div>
                 <div class="player-hero-info">
@@ -1692,7 +1709,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const pPhoto = p.photo ? p.photo : DEFAULT_LOGO;
                     return `
                         <div class="squad-player-card" onclick="window.poltronaOpenPlayerModal(${p.id}, '${p.name.replace(/'/g, "\\'")}')">
-                            <img class="squad-p-avatar" src="${pPhoto}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                            <img class="squad-p-avatar" src="${pPhoto}" alt="" onerror="handleLogoError(this)">
                             <div class="squad-p-info">
                                 <span class="squad-p-name">${p.jersey_number ? '#' + p.jersey_number + ' ' : ''}${p.name}</span>
                                 <div class="squad-p-meta">
@@ -1736,7 +1753,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
                                 <div style="display: flex; align-items: center; gap: 6px;">
                                     <span class="form-badge ${badgeClass}">${m.result}</span>
-                                    <img src="${getLogo(m.opponent_logo)}" style="width: 16px; height: 16px; object-fit: contain;" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                                    <img src="${getLogo(m.opponent_logo)}" style="width: 16px; height: 16px; object-fit: contain;" onerror="handleLogoError(this)">
                                     <span style="font-weight: 700; color: var(--text-primary);">${m.home ? 'vs' : '@'} ${m.opponent}</span>
                                 </div>
                                 <div style="font-family: var(--font-title); font-weight: 800; color: var(--accent-cyan); font-size: 13px;">
@@ -1758,7 +1775,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="bracket-match" style="padding: 8px 10px; margin-bottom: 6px;" onclick="openMatchDetails(${m.id})">
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
                             <div style="display: flex; align-items: center; gap: 6px;">
-                                <img src="${getLogo(m.opponent_logo)}" style="width: 16px; height: 16px; object-fit: contain;" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                                <img src="${getLogo(m.opponent_logo)}" style="width: 16px; height: 16px; object-fit: contain;" onerror="handleLogoError(this)">
                                 <span style="font-weight: 700; color: var(--text-primary);">${m.home ? 'vs' : '@'} ${m.opponent}</span>
                             </div>
                             <div style="font-family: var(--font-title); font-weight: 700; color: var(--accent-amber); font-size: 11px;">
@@ -1788,7 +1805,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clubModalBody.innerHTML = `
             <!-- Club Hero Card -->
             <div class="club-hero-card">
-                <img class="club-hero-logo" src="${logoSrc}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                <img class="club-hero-logo" src="${logoSrc}" alt="" onerror="handleLogoError(this)">
                 <div class="club-hero-info">
                     <div class="club-hero-name">${c.name}</div>
                     <div class="club-hero-meta">
@@ -1968,11 +1985,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="match-teams-score">
                         <div class="team-info home clickable-entity" onclick="event.stopPropagation(); window.poltronaOpenClubModal(${match.home_id}, '${match.home_team.replace(/'/g, "\\'")}')">
                             <span class="team-name">${match.home_team}</span>
-                            <img class="team-logo" src="${getLogo(match.home_logo)}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                            <img class="team-logo" src="${getLogo(match.home_logo)}" alt="" onerror="handleLogoError(this)">
                         </div>
                         ${scoreHtml}
                         <div class="team-info away clickable-entity" onclick="event.stopPropagation(); window.poltronaOpenClubModal(${match.away_id}, '${match.away_team.replace(/'/g, "\\'")}')">
-                            <img class="team-logo" src="${getLogo(match.away_logo)}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                            <img class="team-logo" src="${getLogo(match.away_logo)}" alt="" onerror="handleLogoError(this)">
                             <span class="team-name">${match.away_team}</span>
                         </div>
                     </div>
@@ -2002,7 +2019,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="comp-card" style="cursor: pointer;" onclick="window.poltronaOpenClubModal(${c.id}, '${c.name.replace(/'/g, "\\'")}')">
                     <div class="comp-card-top">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <img src="${logoSrc}" style="width: 28px; height: 28px; object-fit: contain;" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                            <img src="${logoSrc}" style="width: 28px; height: 28px; object-fit: contain;" onerror="handleLogoError(this)">
                             <div class="comp-card-title" style="margin: 0; font-size: 14px;">${c.name}</div>
                         </div>
                         <div class="comp-card-badges">
@@ -2046,7 +2063,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="comp-card" data-comp-id="${c.id}">
                     <div class="comp-card-top">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <img src="${logoSrc}" style="width: 28px; height: 28px; object-fit: contain;" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                            <img src="${logoSrc}" style="width: 28px; height: 28px; object-fit: contain;" onerror="handleLogoError(this)">
                             <div class="comp-card-title" style="margin: 0; font-size: 14px;">${c.name}</div>
                         </div>
                         <div class="comp-card-badges">
@@ -2106,7 +2123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="comp-card-top">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <div class="player-hero-photo-box" style="width: 44px; height: 44px; min-width: 44px; border-width: 2px;">
-                                <img class="player-hero-photo" src="${photoSrc}" alt="" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                                <img class="player-hero-photo" src="${photoSrc}" alt="" onerror="handleLogoError(this)">
                                 ${p.level > 0 ? `<div class="player-hero-level-badge" style="font-size: 9px; padding: 1px 4px; bottom: -3px; right: -3px;">${p.level}</div>` : ''}
                             </div>
                             <div>
@@ -2125,7 +2142,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     ${p.club_name ? `
                     <div class="comp-card-stats" style="margin-top: 8px; display: flex; align-items: center; gap: 6px;">
-                        <img src="${clubLogo}" style="width: 14px; height: 14px; object-fit: contain;" onerror="this.onerror=null; this.src='${DEFAULT_LOGO}'">
+                        <img src="${clubLogo}" style="width: 14px; height: 14px; object-fit: contain;" onerror="handleLogoError(this)">
                         <span style="font-weight: 600; color: var(--text-primary);">${p.club_name}</span>
                     </div>
                     ` : ''}

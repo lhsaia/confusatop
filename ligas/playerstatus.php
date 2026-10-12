@@ -75,6 +75,7 @@ if(isset($_SESSION['user_id']) && $donoPais == $_SESSION["user_id"]){
 } else {
     $donoLogado = false;
 }
+$isAdmin = (!empty($_SESSION['admin_status']) && (int)$_SESSION['admin_status'] === 1 && empty($_SESSION['impersonated']));
 
 $estatisticas_clube = $jogador->obterEstatisticasPorClube($id_jogador);
 $personalidade = $jogador->avaliarPersonalidade($id_jogador);
@@ -785,7 +786,7 @@ $transferencias_stmt = $jogador->readTransferencias($from_record_num,$records_pe
 echo "<div style='clear:both; float:center'></div>";
 echo "<hr>";
 echo "<p align='center'>Transferências</p>";
-if ($donoLogado && !$isFalecido) {
+if (($donoLogado || $isAdmin) && !$isFalecido) {
     echo "<div align='center' style='margin-bottom: 15px;'>";
     echo "<button type='button' onclick='abrirModalNovo()' class='btn-historico'>+ Adicionar Transferência Histórica</button>";
     echo "</div>";
@@ -807,7 +808,7 @@ echo "<th>Data</th>";
 echo "<th>Saiu de</th>";
 echo "<th>Foi para</th>";
 echo "<th>Valor</th>";
-if ($donoLogado) {
+if ($donoLogado || $isAdmin) {
     echo "<th>Ações</th>";
 }
 echo "</tr>";
@@ -886,11 +887,24 @@ echo "<tbody>";
                 }
                 echo "</td>";
                 echo "<td class='nopadding'>F$ {$valor} k</td>";
-                if ($donoLogado) {
-                    $data_input = explode(" ", $row['data'])[0];
-                    echo "<td class='nopadding' style='white-space: nowrap;'>";
-                    echo "  <button type='button' class='btn-tabela-editar btn-tabela-acao' data-id='{$id}' data-origem='{$idOrigem}' data-destino='{$idDestino}' data-valor='{$valor_raw}' data-data='{$data_input}' data-tipo='{$emprestimo}' title='Editar'><span class='material-symbols-outlined' style='font-size:1.1rem; vertical-align:middle;'>edit</span></button>";
-                    echo "  <button type='button' class='btn-tabela-excluir btn-tabela-acao' data-id='{$id}' title='Excluir'><span class='material-symbols-outlined' style='font-size:1.1rem; vertical-align:middle;'>delete</span></button>";
+                if ($donoLogado || $isAdmin) {
+                    $userIdLogado = $_SESSION['user_id'] ?? 0;
+                    $donoOrigemRow = (int)($donoOrigem ?? 0);
+                    $donoDestinoRow = (int)($donoDestino ?? 0);
+
+                    $envolveOutraPessoa = (($idOrigem > 0 && $donoOrigemRow > 0 && $donoOrigemRow !== (int)$userIdLogado) ||
+                                           ($idDestino > 0 && $donoDestinoRow > 0 && $donoDestinoRow !== (int)$userIdLogado));
+
+                    $podeAlterar = $isAdmin || (!$envolveOutraPessoa && $donoLogado);
+
+                    echo "<td class='nopadding' style='white-space: nowrap; text-align: center;'>";
+                    if ($podeAlterar) {
+                        $data_input = explode(" ", $row['data'])[0];
+                        echo "  <button type='button' class='btn-tabela-editar btn-tabela-acao' data-id='{$id}' data-origem='{$idOrigem}' data-destino='{$idDestino}' data-valor='{$valor_raw}' data-data='{$data_input}' data-tipo='{$emprestimo}' title='Editar'><span class='material-symbols-outlined' style='font-size:1.1rem; vertical-align:middle;'>edit</span></button>";
+                        echo "  <button type='button' class='btn-tabela-excluir btn-tabela-acao' data-id='{$id}' title='Excluir'><span class='material-symbols-outlined' style='font-size:1.1rem; vertical-align:middle;'>delete</span></button>";
+                    } else {
+                        echo "  <span title='Envolve clube de outro usuário (apenas administradores podem alterar)' class='material-symbols-outlined' style='font-size:1.2rem; color:#94a3b8; vertical-align:middle; cursor:help;'>lock</span>";
+                    }
                     echo "</td>";
                 }
 
@@ -911,7 +925,7 @@ echo "</div>";
 echo "</div>";
 echo "</main>";
 
-if ($donoLogado) {
+if ($donoLogado || $isAdmin) {
     ?>
     <div id="modalHistorico" class="modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); overflow-y:auto; padding-top:60px;">
       <form id="formHistorico" method="POST" class="modal-content animate larger" style="background-color:#ffffff; border: 1px solid rgba(0, 0, 0, 0.1); color:#0f172a; border-radius:12px; padding:20px; max-width:500px; margin:0 auto;">
@@ -925,7 +939,7 @@ if ($donoLogado) {
               <select id="clubeOrigemHist" name="clubeOrigem" class="form-control" required style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; width:100%; padding:8px; border-radius:4px;">
                   <option value="0">Sem clube / Livre</option>
                   <?php
-                  $times_origem = $time->read();
+                  $times_origem = $isAdmin ? $time->read() : $time->read($_SESSION['user_id']);
                   while ($row_t = $times_origem->fetch(PDO::FETCH_ASSOC)) {
                       echo "<option value='{$row_t['id']}'>{$row_t['nome']}</option>";
                   }
@@ -938,7 +952,7 @@ if ($donoLogado) {
               <select id="clubeDestinoHist" name="clubeDestino" class="form-control" required style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; width:100%; padding:8px; border-radius:4px;">
                   <option value="0">Sem clube / Livre</option>
                   <?php
-                  $times_destino = $time->read();
+                  $times_destino = $isAdmin ? $time->read() : $time->read($_SESSION['user_id']);
                   while ($row_t = $times_destino->fetch(PDO::FETCH_ASSOC)) {
                       echo "<option value='{$row_t['id']}'>{$row_t['nome']}</option>";
                   }

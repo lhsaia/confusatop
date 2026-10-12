@@ -18,6 +18,7 @@ if(isset($_POST['file_name']) && $_POST['file_name'] != ""){
 			$file_name =  "test.json";
 	}
 }
+session_write_close();
 
 $auxiliary_table = array();
 

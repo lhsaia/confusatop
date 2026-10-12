@@ -169,13 +169,26 @@ if (session_status() === PHP_SESSION_NONE) {
         ini_set('session.gc_maxlifetime', (string)$session_lifetime);
         ini_set('session.cookie_lifetime', (string)$session_lifetime);
 
-        // Custom Garbage Collection: 1% de chance de limpar arquivos de sessão com mais de 30 dias
+        // Custom Garbage Collection: 1% de chance de limpar arquivos de forma iterativa sem estourar memória
         if ($use_custom_path && mt_rand(1, 100) === 1) {
             $now = time();
-            foreach (glob($session_dir . '/sess_*') as $file) {
-                if (is_file($file) && ($now - filemtime($file) > $session_lifetime)) {
-                    @unlink($file);
+            if ($handle = @opendir($session_dir)) {
+                $cleaned = 0;
+                while (($file = readdir($handle)) !== false && $cleaned < 500) {
+                    if (strpos($file, 'sess_') === 0) {
+                        $fullPath = $session_dir . '/' . $file;
+                        if (is_file($fullPath)) {
+                            $size = @filesize($fullPath);
+                            $mtime = @filemtime($fullPath);
+                            // Limpa sessões vazias (0 bytes) órfãs com mais de 10 minutos ou sessões expiradas
+                            if (($size === 0 && ($now - $mtime > 600)) || ($now - $mtime > $session_lifetime)) {
+                                @unlink($fullPath);
+                                $cleaned++;
+                            }
+                        }
+                    }
                 }
+                closedir($handle);
             }
         }
 
@@ -222,15 +235,32 @@ if (session_status() === PHP_SESSION_NONE) {
             session_name('confusatop');
         }
 
-        // Suppress warning if session data is corrupted (PHP auto-destroys corrupt session object)
-        if (!@session_start()) {
-            if (session_status() !== PHP_SESSION_ACTIVE) {
-                session_id(bin2hex(random_bytes(16)));
-                @session_start();
+        // Inicia a sessão normalmente sem forçar novo ID em caso de concorrência temporária
+        @session_start();
+    }
+}
+
+// Auto-descarte de sessões vazias (Zero Lixo no Disco):
+// Se for um bot, crawler ou visitante anônimo que não gravou nada em $_SESSION,
+// descarta a sessão e remove o arquivo de 0 bytes do disco ao término da requisição.
+if (!function_exists('confusatop_session_cleanup_shutdown')) {
+    function confusatop_session_cleanup_shutdown(): void {
+        global $session_dir;
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $sessId = session_id();
+            if (empty($_SESSION)) {
+                @session_abort();
+                if (!empty($sessId) && !empty($session_dir)) {
+                    $sessFile = $session_dir . '/sess_' . $sessId;
+                    if (is_file($sessFile) && @filesize($sessFile) === 0) {
+                        @unlink($sessFile);
+                    }
+                }
             }
         }
     }
 }
+register_shutdown_function('confusatop_session_cleanup_shutdown');
 
 /*
 // Temporary debug logging to understand exactly what is happening for the failing user

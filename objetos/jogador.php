@@ -2691,7 +2691,8 @@ return $stmt;
         function readTransferencias($from_record_num,$records_per_page,$idJogador){
             $idJogador = htmlspecialchars(strip_tags($idJogador));
 
-        $query = "SELECT t.ID as id, o.Nome as nomeOrigem, o.Escudo as escudoOrigem, o.Pais as paisOrigem, o.ID as idOrigem, d.Nome as nomeDestino, d.Escudo as escudoDestino, d.Pais as paisDestino, d.ID as idDestino, t.data, t.valor, l.Nome as nomeLigaOrigem, l.ID as idLigaOrigem, m.Nome as nomeLigaDestino, m.ID as idLigaDestino, p.bandeira as bandeiraOrigem, q.bandeira as bandeiraDestino, t.emprestimo
+        $query = "SELECT t.ID as id, o.Nome as nomeOrigem, o.Escudo as escudoOrigem, o.Pais as paisOrigem, o.ID as idOrigem, d.Nome as nomeDestino, d.Escudo as escudoDestino, d.Pais as paisDestino, d.ID as idDestino, t.data, t.valor, l.Nome as nomeLigaOrigem, l.ID as idLigaOrigem, m.Nome as nomeLigaDestino, m.ID as idLigaDestino, p.bandeira as bandeiraOrigem, q.bandeira as bandeiraDestino, t.emprestimo,
+        p.dono as donoOrigem, q.dono as donoDestino
         FROM transferencias t
         LEFT JOIN clube o ON t.clubeOrigem = o.ID
         LEFT JOIN liga l ON o.liga = l.ID

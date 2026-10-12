@@ -9,6 +9,32 @@
   },
   "days": [
     {
+      "id": "day_11_10_2026",
+      "date": "11/10/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção dos Escudos de Clubes no PoltronaScore",
+          "desc": "Corrigida a prioridade de resolução dos escudos na tabela de classificação, lista de rodadas e detalhes de partidas do PoltronaScore, garantindo que o banco de dados principal do portal (MariaDB) prevaleça sobre caches temporários de simulação da engine Java, restaurando os escudos WebP e oficiais de equipes como da Superliga Orionesa."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Suporte a Equipes YMT e Placeholders no PoltronaScore",
+          "desc": "Corrigida a exibição de equipes externas importadas via .ymt (IDs negativos) e placeholders de partidas pendentes no PoltronaScore, integrando a classificação, detalhes de partidas e elencos ao banco de dados SQLite da competição."
+        },
+        {
+          "badge": "security",
+          "title": "Restrição de Transferências de Clubes de Terceiros",
+          "desc": "Restrita a alteração e exclusão de transferências históricas na tela do jogador a clubes pertencentes ao próprio usuário ou agentes livres, reservando a administradores qualquer operação que envolva clubes de outros participantes."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Otimização de Sessões e Prevenção de Arquivos Órfãos",
+          "desc": "Corrigido o mecanismo de persistência de sessão para descartar automaticamente sessões de 0 bytes de visitantes e robôs, remover a recriação forçada de session_id sob concorrência e padronizar o nome de cookie nas APIs, eliminando o acúmulo desnecessário de arquivos no servidor."
+        }
+      ]
+    },
+    {
       "id": "day_10_10_2026",
       "date": "10/10/2026",
       "items": [

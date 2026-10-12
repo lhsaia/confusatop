@@ -121,24 +121,91 @@ try {
     // 3. Escudos e nomes de clubes
     $teamIds = [];
     foreach ($matches as $m) {
-        if ($m['timeA_id'] > 0) $teamIds[(int)$m['timeA_id']] = true;
-        if ($m['timeB_id'] > 0) $teamIds[(int)$m['timeB_id']] = true;
+        if (!empty($m['timeA_id']) && (int)$m['timeA_id'] != 0) $teamIds[(int)$m['timeA_id']] = true;
+        if (!empty($m['timeB_id']) && (int)$m['timeB_id'] != 0) $teamIds[(int)$m['timeB_id']] = true;
     }
     
     $teamLogos = [];
     $teamNames = [];
-    if (!empty($teamIds)) {
-        $placeholders = implode(',', array_fill(0, count($teamIds), '?'));
+
+    // 3.1. Carregar PRIMEIRO os clubes do MariaDB (portal principal)
+    // No MariaDB estão os escudos e nomes oficiais mais atualizados dos clubes cadastrados no portal.
+    $posTeamIds = [];
+    foreach (array_keys($teamIds) as $tId) {
+        if ($tId > 0) $posTeamIds[$tId] = true;
+    }
+    try {
+        $stSlotsPre = $conn->prepare("SELECT id_time_portal FROM competicao_times WHERE id_competicao = ? AND id_time_portal > 0");
+        $stSlotsPre->execute([$compId]);
+        while ($rSlot = $stSlotsPre->fetch(PDO::FETCH_ASSOC)) {
+            $posTeamIds[(int)$rSlot['id_time_portal']] = true;
+        }
+    } catch (\Throwable $e) {}
+
+    if (!empty($posTeamIds)) {
+        $posKeys = array_keys($posTeamIds);
+        $placeholders = implode(',', array_fill(0, count($posKeys), '?'));
         try {
             $stmtTeams = $conn->prepare("SELECT ID as id, Nome as nome, TresLetras as sigla, Escudo as escudo FROM clube WHERE ID IN ($placeholders)");
-            $stmtTeams->execute(array_keys($teamIds));
+            $stmtTeams->execute($posKeys);
             while ($t = $stmtTeams->fetch(PDO::FETCH_ASSOC)) {
+                $tId = (int)$t['id'];
                 $logoUrl = '';
-                if (!empty($t['escudo']) && $t['escudo'] !== '0.png') {
-                    $logoUrl = (strpos($t['escudo'], 'http') === 0) ? $t['escudo'] : '/images/escudos/' . basename($t['escudo']);
+                if (!empty($t['escudo']) && $t['escudo'] !== '0.png' && $t['escudo'] !== 'Imagens/EscudoPadrao.png') {
+                    $escClean = str_replace(['../../images/escudos/', '../images/escudos/'], '', $t['escudo']);
+                    $logoUrl = (strpos($escClean, 'http') === 0) ? $escClean : '/images/escudos/' . basename($escClean);
                 }
-                $teamLogos[(int)$t['id']] = $logoUrl;
-                $teamNames[(int)$t['id']] = $t['nome'];
+                $teamLogos[$tId] = $logoUrl;
+                $teamNames[$tId] = $t['nome'];
+                $negId = -1 * abs($tId);
+                $teamNames[$negId] = $t['nome'];
+                $teamLogos[$negId] = $logoUrl;
+            }
+        } catch (\Throwable $e) {}
+    }
+
+    // 3.2. Carregar do SQLite da competição apenas clubes que NÃO existem no MariaDB (ex: times externos / YMT)
+    // ou cujo escudo esteja vazio, evitando sobrescrever escudos reais com caches temporários (ex: cache_images/<md5>.png da engine Java)
+    $db3File = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') 
+        ? $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $compId . "-database.db3"
+        : dirname(__DIR__, 2) . "/competicoes/databases/" . $compId . "-database.db3";
+    if (file_exists($db3File)) {
+        try {
+            $sqliteConn = new PDO("sqlite:" . $db3File);
+            $stSqlite = $sqliteConn->query("SELECT ID, Nome, TresLetras, Escudo FROM clube");
+            if ($stSqlite) {
+                while ($c = $stSqlite->fetch(PDO::FETCH_ASSOC)) {
+                    $cId = (int)$c['ID'];
+                    $posId = abs($cId);
+                    $negId = -1 * $posId;
+                    
+                    // Se já temos esse clube do MariaDB com nome e escudo válido, manter a fonte canônica
+                    if (!empty($teamNames[$posId]) && !empty($teamLogos[$posId])) {
+                        continue;
+                    }
+
+                    $cNome = trim(html_entity_decode(html_entity_decode(stripslashes($c['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                    $logoUrl = '';
+                    $rawEsc = trim($c['Escudo'] ?? '');
+                    if (!empty($rawEsc) && $rawEsc !== '0.png' && $rawEsc !== 'Imagens/EscudoPadrao.png') {
+                        if (strpos($rawEsc, 'http') === 0) {
+                            $logoUrl = $rawEsc;
+                        } elseif (strpos($rawEsc, 'cache_images/') === 0) {
+                            $logoUrl = '/competicoes/hexacolor/' . $rawEsc;
+                        } else {
+                            $escClean = str_replace(['../../images/escudos/', '../images/escudos/'], '', $rawEsc);
+                            $logoUrl = '/images/escudos/' . basename($escClean);
+                        }
+                    }
+                    if ($cNome !== '') {
+                        if (empty($teamNames[$cId])) $teamNames[$cId] = $cNome;
+                        if (empty($teamLogos[$cId]) && $logoUrl !== '') $teamLogos[$cId] = $logoUrl;
+                        if (empty($teamNames[$negId])) $teamNames[$negId] = $cNome;
+                        if (empty($teamLogos[$negId]) && $logoUrl !== '') $teamLogos[$negId] = $logoUrl;
+                        if (empty($teamNames[$posId])) $teamNames[$posId] = $cNome;
+                        if (empty($teamLogos[$posId]) && $logoUrl !== '') $teamLogos[$posId] = $logoUrl;
+                    }
+                }
             }
         } catch (\Throwable $e) {}
     }
@@ -160,12 +227,57 @@ try {
     $teamForms = [];
     $bracketPhases = [];
     $rounds = [];
+
+    // Inicializar grupos e times mapeados de competicao_times
+    try {
+        $stSlots = $conn->prepare("SELECT codigo_time, has_team, id_time_portal, slot FROM competicao_times WHERE id_competicao = ? ORDER BY codigo_time ASC");
+        $stSlots->execute([$compId]);
+        while ($rSlot = $stSlots->fetch(PDO::FETCH_ASSOC)) {
+            $sName = trim($rSlot['slot'] ?? '');
+            if ($sName === '') continue;
+            $grpLetra = '';
+            if (preg_match('/^([A-Za-z])/i', $sName, $mGrp)) {
+                $grpLetra = strtoupper($mGrp[1]);
+            }
+            if ($grpLetra !== '') {
+                $grpKey = 'Grupo ' . $grpLetra;
+                if (!isset($groups[$grpKey])) {
+                    $groups[$grpKey] = [];
+                }
+                $cId = 0;
+                if (!empty($rSlot['id_time_portal']) && (int)$rSlot['id_time_portal'] > 0) {
+                    $cId = (int)$rSlot['id_time_portal'];
+                } elseif ($rSlot['has_team'] == 1 || $rSlot['has_team'] == '1') {
+                    $cId = -1 * abs((int)$rSlot['codigo_time']);
+                }
+                if ($cId != 0 && !isset($groups[$grpKey][$cId])) {
+                    $tName = $teamNames[$cId] ?? ("Time " . abs($cId));
+                    $tLogo = $teamLogos[$cId] ?? '';
+                    $groups[$grpKey][$cId] = [
+                        'id' => $cId,
+                        'team' => $tName,
+                        'logo' => $tLogo,
+                        'played' => 0,
+                        'won' => 0,
+                        'drawn' => 0,
+                        'lost' => 0,
+                        'goals_for' => 0,
+                        'goals_against' => 0,
+                        'goal_diff' => 0,
+                        'points' => 0,
+                        'percentage' => 0,
+                        'form' => []
+                    ];
+                }
+            }
+        }
+    } catch (\Throwable $e) {}
     
     foreach ($matches as $m) {
         $idA = (int)$m['timeA_id'];
         $idB = (int)$m['timeB_id'];
-        $nameA = !empty($teamNames[$idA]) ? $teamNames[$idA] : ($m['timeA_nome'] ?: ($idA > 0 ? "Time $idA" : "A definir"));
-        $nameB = !empty($teamNames[$idB]) ? $teamNames[$idB] : ($m['timeB_nome'] ?: ($idB > 0 ? "Time $idB" : "A definir"));
+        $nameA = !empty($teamNames[$idA]) ? $teamNames[$idA] : ($m['timeA_nome'] ?: ($idA != 0 ? "Time $idA" : "A definir"));
+        $nameB = !empty($teamNames[$idB]) ? $teamNames[$idB] : ($m['timeB_nome'] ?: ($idB != 0 ? "Time $idB" : "A definir"));
         $logoA = $teamLogos[$idA] ?? '';
         $logoB = $teamLogos[$idB] ?? '';
         $faseInt = (int)$m['fase'];
@@ -222,7 +334,7 @@ try {
             if (!isset($groups[$grpKey])) {
                 $groups[$grpKey] = [];
             }
-            if ($idA > 0 && !isset($groups[$grpKey][$idA])) {
+            if ($idA != 0 && !isset($groups[$grpKey][$idA])) {
                 $groups[$grpKey][$idA] = [
                     'id' => $idA,
                     'team' => $nameA,
@@ -239,7 +351,7 @@ try {
                     'form' => []
                 ];
             }
-            if ($idB > 0 && !isset($groups[$grpKey][$idB])) {
+            if ($idB != 0 && !isset($groups[$grpKey][$idB])) {
                 $groups[$grpKey][$idB] = [
                     'id' => $idB,
                     'team' => $nameB,
@@ -257,7 +369,7 @@ try {
                 ];
             }
             
-            if ($isFinished && $idA > 0 && $idB > 0) {
+            if ($isFinished && $idA != 0 && $idB != 0) {
                 $groups[$grpKey][$idA]['played']++;
                 $groups[$grpKey][$idB]['played']++;
                 $groups[$grpKey][$idA]['goals_for'] += $golsA;
@@ -329,6 +441,7 @@ try {
         
         $sortedGroups[$grpName] = $tableArr;
     }
+    ksort($sortedGroups);
     
     $flatStandings = isset($sortedGroups['Geral']) ? $sortedGroups['Geral'] : (count($sortedGroups) === 1 ? reset($sortedGroups) : []);
     

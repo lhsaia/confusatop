@@ -10,7 +10,7 @@ $clubId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $clubNameParam = trim($_GET['nome'] ?? '');
 $genderParam = isset($_GET['sexo']) ? (int)$_GET['sexo'] : (isset($_GET['genero']) ? (int)$_GET['genero'] : null);
 
-if ($clubId <= 0 && empty($clubNameParam)) {
+if ($clubId == 0 && empty($clubNameParam)) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'ID ou nome do clube não informado']);
     exit;
@@ -41,7 +41,53 @@ try {
         14 => ['sigla' => 'AE', 'nome' => 'Ala Esquerdo', 'cat' => 'defensores'],
     ];
 
-    if ($clubId > 0) {
+    $club = null;
+    $sqliteDbFound = null;
+
+    if ($clubId < 0) {
+        $dbDir = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') 
+            ? $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" 
+            : dirname(__DIR__, 2) . "/competicoes/databases/";
+        if (is_dir($dbDir)) {
+            $files = glob($dbDir . "*-database.db3");
+            foreach ($files as $f) {
+                try {
+                    $sdb = new PDO("sqlite:" . $f);
+                    $cAbs = abs($clubId);
+                    $cNeg = -1 * $cAbs;
+                    $st = $sdb->prepare("SELECT * FROM clube WHERE ID = ? OR ID = ? LIMIT 1");
+                    $st->execute([$cNeg, $cAbs]);
+                    $sRow = $st->fetch(PDO::FETCH_ASSOC);
+                    if ($sRow) {
+                        $club = [
+                            'ID' => -1 * abs((int)$sRow['ID']),
+                            'Nome' => $sRow['Nome'],
+                            'TresLetras' => $sRow['TresLetras'] ?? '',
+                            'Escudo' => $sRow['Escudo'] ?? '',
+                            'Estadio' => $sRow['Estadio'] ?? '',
+                            'estadio_nome' => '',
+                            'estadio_capacidade' => 0,
+                            'estadio_foto' => '',
+                            'pais_nome' => '',
+                            'pais_bandeira' => '',
+                            'Uniforme1' => $sRow['Uniforme1'] ?? '',
+                            'Uniforme2' => $sRow['Uniforme2'] ?? '',
+                            'Uni1Cor1' => $sRow['Uni1Cor1'] ?? '',
+                            'Uni1Cor2' => $sRow['Uni1Cor2'] ?? '',
+                            'Uni1Cor3' => $sRow['Uni1Cor3'] ?? '',
+                            'Uni2Cor1' => $sRow['Uni2Cor1'] ?? '',
+                            'Uni2Cor2' => $sRow['Uni2Cor2'] ?? '',
+                            'Uni2Cor3' => $sRow['Uni2Cor3'] ?? ''
+                        ];
+                        $sqliteDbFound = $sdb;
+                        break;
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+    }
+
+    if (!$club && $clubId > 0) {
         $stmtC = $conn->prepare("
             SELECT c.*, e.Nome as estadio_nome, e.Capacidade as estadio_capacidade, e.foto as estadio_foto,
                    p.nome as pais_nome, p.bandeira as pais_bandeira
@@ -52,7 +98,8 @@ try {
             LIMIT 1
         ");
         $stmtC->execute([$clubId]);
-    } else {
+        $club = $stmtC->fetch(PDO::FETCH_ASSOC);
+    } elseif (!$club && !empty($clubNameParam)) {
         if ($genderParam !== null) {
             $stmtC = $conn->prepare("
                 SELECT c.*, e.Nome as estadio_nome, e.Capacidade as estadio_capacidade, e.foto as estadio_foto,
@@ -106,9 +153,49 @@ try {
                 "$clubNameParam%"
             ]);
         }
+        $club = $stmtC ? $stmtC->fetch(PDO::FETCH_ASSOC) : null;
     }
 
-    $club = $stmtC->fetch(PDO::FETCH_ASSOC);
+    if (!$club && !empty($clubNameParam)) {
+        $dbDir = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') 
+            ? $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" 
+            : dirname(__DIR__, 2) . "/competicoes/databases/";
+        if (is_dir($dbDir)) {
+            $files = glob($dbDir . "*-database.db3");
+            foreach ($files as $f) {
+                try {
+                    $sdb = new PDO("sqlite:" . $f);
+                    $st = $sdb->prepare("SELECT * FROM clube WHERE Nome = ? OR Nome LIKE ? LIMIT 1");
+                    $st->execute([$clubNameParam, "%$clubNameParam%"]);
+                    $sRow = $st->fetch(PDO::FETCH_ASSOC);
+                    if ($sRow) {
+                        $club = [
+                            'ID' => -1 * abs((int)$sRow['ID']),
+                            'Nome' => $sRow['Nome'],
+                            'TresLetras' => $sRow['TresLetras'] ?? '',
+                            'Escudo' => $sRow['Escudo'] ?? '',
+                            'Estadio' => $sRow['Estadio'] ?? '',
+                            'estadio_nome' => '',
+                            'estadio_capacidade' => 0,
+                            'estadio_foto' => '',
+                            'pais_nome' => '',
+                            'pais_bandeira' => '',
+                            'Uniforme1' => $sRow['Uniforme1'] ?? '',
+                            'Uniforme2' => $sRow['Uniforme2'] ?? '',
+                            'Uni1Cor1' => $sRow['Uni1Cor1'] ?? '',
+                            'Uni1Cor2' => $sRow['Uni1Cor2'] ?? '',
+                            'Uni1Cor3' => $sRow['Uni1Cor3'] ?? '',
+                            'Uni2Cor1' => $sRow['Uni2Cor1'] ?? '',
+                            'Uni2Cor2' => $sRow['Uni2Cor2'] ?? '',
+                            'Uni2Cor3' => $sRow['Uni2Cor3'] ?? ''
+                        ];
+                        $sqliteDbFound = $sdb;
+                        break;
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+    }
 
     if (!$club) {
         http_response_code(404);
@@ -143,18 +230,81 @@ try {
     ];
 
     // 3. Elenco Completo
-    $stmtR = $conn->prepare("
-        SELECT j.ID, j.Nome, j.foto, j.Nivel, j.valor, j.StringPosicoes, j.Nascimento,
-               cj.posicaoBase, cj.numeroCamisa, cj.titularidade, cj.salario,
-               p.nome as pais_nome, p.bandeira as pais_bandeira
-        FROM contratos_jogador cj
-        INNER JOIN jogador j ON j.ID = cj.jogador
-        LEFT JOIN paises p ON p.id = j.Pais
-        WHERE cj.clube = ?
-        ORDER BY j.Nivel DESC, j.ID ASC
-    ");
-    $stmtR->execute([$clubId]);
-    $rawSquad = $stmtR->fetchAll(PDO::FETCH_ASSOC);
+    $rawSquad = [];
+    if ($sqliteDbFound) {
+        try {
+            $stEl = $sqliteDbFound->prepare("SELECT * FROM elenco WHERE Clube = :c1 OR Clube = :c2 LIMIT 1");
+            $stEl->execute([':c1' => $clubId, ':c2' => abs($clubId)]);
+            $el = $stEl->fetch(PDO::FETCH_ASSOC);
+            if ($el) {
+                $pIds = [];
+                for ($i = 1; $i <= 23; $i++) {
+                    if (!empty($el['Jogador' . $i])) $pIds[] = (int)$el['Jogador' . $i];
+                }
+                if (!empty($pIds)) {
+                    $inP = implode(',', $pIds);
+                    $stJ = $sqliteDbFound->query("SELECT ID, Nome, Idade, Nivel FROM jogador WHERE ID IN ($inP)");
+                    if ($stJ) {
+                        $stPos = $sqliteDbFound->query("SELECT * FROM posicaojogador WHERE Jogador IN ($inP)");
+                        $posMap = [];
+                        if ($stPos) {
+                            while ($pr = $stPos->fetch(PDO::FETCH_ASSOC)) {
+                                $posMap[(int)$pr['Jogador']] = $pr;
+                            }
+                        }
+                        while ($jRow = $stJ->fetch(PDO::FETCH_ASSOC)) {
+                            $jId = (int)$jRow['ID'];
+                            $pInfo = $posMap[$jId] ?? null;
+                            $strPos = ($pInfo && !empty($pInfo['G'])) ? '1' : '0';
+                            $strPos .= ($pInfo && !empty($pInfo['LD'])) ? '1' : '0';
+                            $strPos .= ($pInfo && !empty($pInfo['Z'])) ? '1' : '0';
+                            $strPos .= ($pInfo && !empty($pInfo['LE'])) ? '1' : '0';
+                            $strPos .= ($pInfo && !empty($pInfo['V'])) ? '1' : '0';
+                            $strPos .= ($pInfo && !empty($pInfo['MD'])) ? '1' : '0';
+                            $strPos .= ($pInfo && !empty($pInfo['MC'])) ? '1' : '0';
+                            $strPos .= ($pInfo && !empty($pInfo['ME'])) ? '1' : '0';
+                            $strPos .= ($pInfo && !empty($pInfo['MA'])) ? '1' : '0';
+                            $strPos .= ($pInfo && !empty($pInfo['PD'])) ? '1' : '0';
+                            $strPos .= ($pInfo && !empty($pInfo['CA'])) ? '1' : '0';
+                            $strPos .= ($pInfo && !empty($pInfo['PE'])) ? '1' : '0';
+                            $strPos .= ($pInfo && !empty($pInfo['Am'])) ? '1' : '0';
+                            $strPos .= ($pInfo && !empty($pInfo['AD'])) ? '1' : '0';
+                            $strPos .= ($pInfo && !empty($pInfo['AE'])) ? '1' : '0';
+                            
+                            $rawSquad[] = [
+                                'ID' => $jId,
+                                'Nome' => $jRow['Nome'],
+                                'foto' => '',
+                                'Nivel' => (int)($jRow['Nivel'] ?? 50),
+                                'valor' => 0,
+                                'StringPosicoes' => $strPos,
+                                'Nascimento' => null,
+                                'posicaoBase' => '',
+                                'numeroCamisa' => null,
+                                'titularidade' => 1,
+                                'salario' => 0,
+                                'pais_nome' => '',
+                                'pais_bandeira' => ''
+                            ];
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
+    } else {
+        $stmtR = $conn->prepare("
+            SELECT j.ID, j.Nome, j.foto, j.Nivel, j.valor, j.StringPosicoes, j.Nascimento,
+                   cj.posicaoBase, cj.numeroCamisa, cj.titularidade, cj.salario,
+                   p.nome as pais_nome, p.bandeira as pais_bandeira
+            FROM contratos_jogador cj
+            INNER JOIN jogador j ON j.ID = cj.jogador
+            LEFT JOIN paises p ON p.id = j.Pais
+            WHERE cj.clube = ?
+            ORDER BY j.Nivel DESC, j.ID ASC
+        ");
+        $stmtR->execute([$clubId]);
+        $rawSquad = $stmtR->fetchAll(PDO::FETCH_ASSOC);
+    }
 
     $squadGrouped = [
         'goleiros' => [],
@@ -341,10 +491,10 @@ try {
             'name' => $club['Nome'],
             'code' => $club['TresLetras'] ?: '',
             'logo' => $logoUrl,
-            'city' => ($club['cidade'] && $club['cidade'] !== 'Cidade') ? $club['cidade'] : '',
-            'foundation' => ($club['fundacao'] && $club['fundacao'] !== 'Fundação') ? $club['fundacao'] : '',
-            'nickname' => ($club['apelido'] && $club['apelido'] !== 'Apelido') ? $club['apelido'] : '',
-            'country' => $club['pais_nome'] ?: '',
+            'city' => (!empty($club['cidade']) && $club['cidade'] !== 'Cidade') ? $club['cidade'] : '',
+            'foundation' => (!empty($club['fundacao']) && $club['fundacao'] !== 'Fundação') ? $club['fundacao'] : '',
+            'nickname' => (!empty($club['apelido']) && $club['apelido'] !== 'Apelido') ? $club['apelido'] : '',
+            'country' => !empty($club['pais_nome']) ? $club['pais_nome'] : '',
             'flag' => $flagUrl,
             'stadium' => $stadiumData,
             'stats' => [

@@ -122,7 +122,101 @@ function psInferMatchGender($conn, $championshipName, $playerNamesList = []) {
 }
 
 // Helper: Montar escalações táticas completas a partir do elenco do clube
-function psBuildLineupFromClubSquad($conn, $clubId, $clubName, $matchId, $isHome, $teamScore, $oppScore, $playerEvents = [], $status = 'previous', $gender = null) {
+function psBuildLineupFromClubSquad($conn, $clubId, $clubName, $matchId, $isHome, $teamScore, $oppScore, $playerEvents = [], $status = 'previous', $gender = null, $compId = 0) {
+    if ($clubId < 0 && $compId > 0) {
+        $db3File = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') 
+            ? $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $compId . "-database.db3"
+            : dirname(__DIR__, 2) . "/competicoes/databases/" . $compId . "-database.db3";
+        if (file_exists($db3File)) {
+            try {
+                $sdb = new PDO("sqlite:" . $db3File);
+                $stEsc = $sdb->prepare("SELECT * FROM escalacao WHERE Clube = :cid1 OR Clube = :cid2 LIMIT 1");
+                $cidAbs = abs($clubId);
+                $stEsc->execute([':cid1' => $clubId, ':cid2' => $cidAbs]);
+                $esc = $stEsc->fetch(PDO::FETCH_ASSOC);
+
+                $stEl = $sdb->prepare("SELECT * FROM elenco WHERE Clube = :cid1 OR Clube = :cid2 LIMIT 1");
+                $stEl->execute([':cid1' => $clubId, ':cid2' => $cidAbs]);
+                $el = $stEl->fetch(PDO::FETCH_ASSOC);
+
+                if ($esc || $el) {
+                    $stJog = $sdb->query("SELECT ID, Nome, Nivel FROM jogador");
+                    $jogMap = [];
+                    if ($stJog) {
+                        while ($jR = $stJog->fetch(PDO::FETCH_ASSOC)) {
+                            $jogMap[(int)$jR['ID']] = $jR;
+                        }
+                    }
+
+                    $starters = [];
+                    $bench = [];
+                    $usedPlayerIds = [];
+
+                    if ($esc) {
+                        for ($i = 1; $i <= 11; $i++) {
+                            $pId = (int)($esc['Jogador' . $i] ?? 0);
+                            $pos = $esc['Pos' . $i] ?? 'LIN';
+                            if ($pId != 0 && isset($jogMap[$pId])) {
+                                $pJ = $jogMap[$pId];
+                                $rating = psCalculatePlayerRating($pId, (int)($pJ['Nivel'] ?? 50), $pos, true, 0, 0, 0, $teamScore, $oppScore, $matchId);
+                                $starters[] = [
+                                    'id' => $pId,
+                                    'name' => $pJ['Nome'],
+                                    'number' => $i,
+                                    'position' => $pos,
+                                    'level' => (int)($pJ['Nivel'] ?? 0),
+                                    'photo' => '',
+                                    'is_gk' => ($pos === 'G'),
+                                    'rating' => ($status !== 'next') ? $rating : null
+                                ];
+                                $usedPlayerIds[$pId] = true;
+                            }
+                        }
+                    }
+
+                    if ($el) {
+                        $benchNum = 12;
+                        for ($i = 1; $i <= 23; $i++) {
+                            $pId = (int)($el['Jogador' . $i] ?? 0);
+                            if ($pId != 0 && !isset($usedPlayerIds[$pId]) && isset($jogMap[$pId])) {
+                                $pJ = $jogMap[$pId];
+                                $bench[] = [
+                                    'id' => $pId,
+                                    'name' => $pJ['Nome'],
+                                    'number' => $benchNum++,
+                                    'position' => 'LIN',
+                                    'level' => (int)($pJ['Nivel'] ?? 0),
+                                    'photo' => '',
+                                    'is_gk' => false,
+                                    'rating' => null
+                                ];
+                                $usedPlayerIds[$pId] = true;
+                            }
+                        }
+                    }
+
+                    $calcFormation = function($stList) {
+                        $def = 0; $mid = 0; $fwd = 0;
+                        foreach ($stList as $s) {
+                            $pos = strtoupper(trim($s['position'] ?? ''));
+                            if (in_array($pos, ['Z', 'LD', 'LE', 'AD', 'AE', 'DF', 'CB', 'RB', 'LB'])) $def++;
+                            elseif (in_array($pos, ['V', 'MC', 'MD', 'ME', 'MA', 'M', 'MF', 'DM', 'AM', 'CM', 'RM', 'LM'])) $mid++;
+                            elseif (in_array($pos, ['CA', 'SA', 'PD', 'PE', 'A', 'FW', 'ST', 'CF', 'RW', 'LW', 'AA', 'AM'])) $fwd++;
+                        }
+                        if ($def + $mid + $fwd > 0) return "$def-$mid-$fwd";
+                        return '4-4-2';
+                    };
+
+                    return [
+                        'formation' => $calcFormation($starters),
+                        'starters' => $starters,
+                        'bench' => $bench
+                    ];
+                }
+            } catch (\Throwable $e) {}
+        }
+    }
+
     if ($clubId <= 0 && !empty($clubName)) {
         if ($gender !== null) {
             $stC = $conn->prepare("
@@ -294,11 +388,17 @@ try {
         SELECT 
             j.id,
             j.timeA_id,
+            j.timeA_nome,
+            cA.Nome as cA_Nome,
+            cA.Escudo as cA_Escudo,
             COALESCE(cA.Nome, j.timeA_nome, CONCAT('Time ', j.timeA_id)) as home_team,
             cA.Escudo as home_logo,
             j.timeA_gols as home_score,
             j.timeA_penaltis as home_penalties,
             j.timeB_id,
+            j.timeB_nome,
+            cB.Nome as cB_Nome,
+            cB.Escudo as cB_Escudo,
             COALESCE(cB.Nome, j.timeB_nome, CONCAT('Time ', j.timeB_id)) as away_team,
             cB.Escudo as away_logo,
             j.timeB_gols as away_score,
@@ -309,6 +409,7 @@ try {
             j.fase,
             j.grupo,
             j.path,
+            j.competicao_id,
             COALESCE(cl.nome, li.nome, cc.nome, '') as championship_name,
             cl.ano as championship_year,
             COALESCE(cl.genero, li.Sexo, cc.genero, 0) as championship_gender
@@ -326,6 +427,56 @@ try {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($row) {
+        $compId = (int)($row['competicao_id'] ?? 0);
+        $db3File = $compId > 0 
+            ? ((isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') 
+                ? $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $compId . "-database.db3"
+                : dirname(__DIR__, 2) . "/competicoes/databases/" . $compId . "-database.db3")
+            : null;
+        $sqliteClubs = [];
+        if ($db3File && file_exists($db3File)) {
+            try {
+                $sdb = new PDO("sqlite:" . $db3File);
+                $stC = $sdb->query("SELECT ID, Nome, Escudo FROM clube");
+                if ($stC) {
+                    while ($cRow = $stC->fetch(PDO::FETCH_ASSOC)) {
+                        $cId = (int)$cRow['ID'];
+                        $sqliteClubs[$cId] = $cRow;
+                        $sqliteClubs[-1 * abs($cId)] = $cRow;
+                        $sqliteClubs[abs($cId)] = $cRow;
+                    }
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        $idA = (int)$row['timeA_id'];
+        $idB = (int)$row['timeB_id'];
+
+        if (isset($sqliteClubs[$idA])) {
+            if (empty($row['cA_Nome'])) {
+                $row['home_team'] = $sqliteClubs[$idA]['Nome'];
+            }
+            if (empty($row['home_logo']) || $idA < 0) {
+                $row['home_logo'] = $sqliteClubs[$idA]['Escudo'] ?? '';
+            }
+        } elseif ($idA === 0 && !empty($row['timeA_nome'])) {
+            $row['home_team'] = $row['timeA_nome'];
+        } elseif ($idA === 0 && empty($row['timeA_nome'])) {
+            $row['home_team'] = 'A definir';
+        }
+
+        if (isset($sqliteClubs[$idB])) {
+            if (empty($row['cB_Nome'])) {
+                $row['away_team'] = $sqliteClubs[$idB]['Nome'];
+            }
+            if (empty($row['away_logo']) || $idB < 0) {
+                $row['away_logo'] = $sqliteClubs[$idB]['Escudo'] ?? '';
+            }
+        } elseif ($idB === 0 && !empty($row['timeB_nome'])) {
+            $row['away_team'] = $row['timeB_nome'];
+        } elseif ($idB === 0 && empty($row['timeB_nome'])) {
+            $row['away_team'] = 'A definir';
+        }
         $faseMap = [
             1 => 'Fase Preliminar',
             2 => 'Pontos Corridos / Grupos',
@@ -345,13 +496,27 @@ try {
         }
         
         $homeLogo = '';
-        if (!empty($row['home_logo']) && $row['home_logo'] !== '0.png') {
-            $homeLogo = (strpos($row['home_logo'], 'http') === 0) ? $row['home_logo'] : '/images/escudos/' . basename($row['home_logo']);
+        if (!empty($row['home_logo']) && $row['home_logo'] !== '0.png' && $row['home_logo'] !== 'Imagens/EscudoPadrao.png') {
+            if (strpos($row['home_logo'], 'http') === 0) {
+                $homeLogo = $row['home_logo'];
+            } elseif (strpos($row['home_logo'], 'cache_images/') === 0) {
+                $homeLogo = '/competicoes/hexacolor/' . $row['home_logo'];
+            } else {
+                $escClean = str_replace(['../../images/escudos/', '../images/escudos/'], '', $row['home_logo']);
+                $homeLogo = '/images/escudos/' . basename($escClean);
+            }
         }
         
         $awayLogo = '';
-        if (!empty($row['away_logo']) && $row['away_logo'] !== '0.png') {
-            $awayLogo = (strpos($row['away_logo'], 'http') === 0) ? $row['away_logo'] : '/images/escudos/' . basename($row['away_logo']);
+        if (!empty($row['away_logo']) && $row['away_logo'] !== '0.png' && $row['away_logo'] !== 'Imagens/EscudoPadrao.png') {
+            if (strpos($row['away_logo'], 'http') === 0) {
+                $awayLogo = $row['away_logo'];
+            } elseif (strpos($row['away_logo'], 'cache_images/') === 0) {
+                $awayLogo = '/competicoes/hexacolor/' . $row['away_logo'];
+            } else {
+                $escClean = str_replace(['../../images/escudos/', '../images/escudos/'], '', $row['away_logo']);
+                $awayLogo = '/images/escudos/' . basename($escClean);
+            }
         }
         
         $matchDateFormatted = !empty($row['match_date']) ? date('d/m/Y', strtotime($row['match_date'])) : '';
@@ -626,8 +791,9 @@ try {
                 $lineups['away']['formation'] = $calcFormation($lineups['away']['starters']);
             } else {
                 // Fallback: Gerar escalações pelo elenco dos clubes
-                $homeLineup = psBuildLineupFromClubSquad($conn, (int)$row['timeA_id'], $row['home_team'], $matchId, true, (int)$row['home_score'], (int)$row['away_score'], $playerEvents, $statusStr);
-                $awayLineup = psBuildLineupFromClubSquad($conn, (int)$row['timeB_id'], $row['away_team'], $matchId, false, (int)$row['away_score'], (int)$row['home_score'], $playerEvents, $statusStr);
+                $compId = (int)($row['competicao_id'] ?? 0);
+                $homeLineup = psBuildLineupFromClubSquad($conn, (int)$row['timeA_id'], $row['home_team'], $matchId, true, (int)$row['home_score'], (int)$row['away_score'], $playerEvents, $statusStr, null, $compId);
+                $awayLineup = psBuildLineupFromClubSquad($conn, (int)$row['timeB_id'], $row['away_team'], $matchId, false, (int)$row['away_score'], (int)$row['home_score'], $playerEvents, $statusStr, null, $compId);
 
                 if (!empty($homeLineup['starters']) || !empty($awayLineup['starters'])) {
                     $lineups['has_lineups'] = true;

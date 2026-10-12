@@ -17,16 +17,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
     //conferir informações sobre o dono do time e do jogador vs o usuário logado!
 
-    //estabelecer conexão com banco de dados
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/lib/image_helper.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
     
     $database = new Database();
     $db = $database->getConnection();
     $jogador = new Jogador($db);
     $usuario = new Usuario($db);
+    $time = new Time($db);
+    $isAdmin = (!empty($_SESSION['admin_status']) && (int)$_SESSION['admin_status'] === 1 && empty($_SESSION['impersonated']));
 
 
     if($tipo == 1){
@@ -329,13 +331,25 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $emprestimo = isset($_POST['emprestimo']) ? (int)$_POST['emprestimo'] : 0;
 
         $idDonoJogador = $jogador->verificarDono($idJogador);
-        if ($idDonoJogador == $_SESSION['user_id'] || $idDonoJogador == 0) {
-            if ($jogador->adicionarTransferenciaHistorica($idJogador, $clubeOrigem, $clubeDestino, $valor, $data, $emprestimo)) {
-                $is_success = true;
-                $error_msg = "";
-            } else {
+        if ($idDonoJogador == $_SESSION['user_id'] || $idDonoJogador == 0 || $isAdmin) {
+            $donoOrigem = $clubeOrigem > 0 ? $time->verificarDono($clubeOrigem) : 0;
+            $donoDestino = $clubeDestino > 0 ? $time->verificarDono($clubeDestino) : 0;
+            $userId = (int)$_SESSION['user_id'];
+
+            $envolveOutraPessoa = (($clubeOrigem > 0 && $donoOrigem > 0 && $donoOrigem !== $userId) ||
+                                   ($clubeDestino > 0 && $donoDestino > 0 && $donoDestino !== $userId));
+
+            if ($envolveOutraPessoa && !$isAdmin) {
                 $is_success = false;
-                $error_msg = "Falha ao registrar transferência histórica no banco de dados.";
+                $error_msg = "Apenas administradores podem registrar transferências envolvendo clubes de outros usuários.";
+            } else {
+                if ($jogador->adicionarTransferenciaHistorica($idJogador, $clubeOrigem, $clubeDestino, $valor, $data, $emprestimo)) {
+                    $is_success = true;
+                    $error_msg = "";
+                } else {
+                    $is_success = false;
+                    $error_msg = "Falha ao registrar transferência histórica no banco de dados.";
+                }
             }
         } else {
             $is_success = false;
@@ -346,13 +360,36 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $idTransferencia = isset($_POST['idTransferencia']) ? (int)$_POST['idTransferencia'] : 0;
 
         $idDonoJogador = $jogador->verificarDono($idJogador);
-        if ($idDonoJogador == $_SESSION['user_id'] || $idDonoJogador == 0) {
-            if ($jogador->deletarTransferenciaHistorica($idTransferencia, $idJogador)) {
-                $is_success = true;
-                $error_msg = "";
-            } else {
+        if ($idDonoJogador == $_SESSION['user_id'] || $idDonoJogador == 0 || $isAdmin) {
+            $stmtCheck = $db->prepare("SELECT clubeOrigem, clubeDestino FROM transferencias WHERE ID = ? AND jogador = ? LIMIT 1");
+            $stmtCheck->execute([$idTransferencia, $idJogador]);
+            $transf = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+            if (!$transf) {
                 $is_success = false;
-                $error_msg = "Falha ao apagar transferência histórica do banco de dados.";
+                $error_msg = "Transferência não encontrada.";
+            } else {
+                $origem = (int)$transf['clubeOrigem'];
+                $destino = (int)$transf['clubeDestino'];
+                $donoOrigem = $origem > 0 ? $time->verificarDono($origem) : 0;
+                $donoDestino = $destino > 0 ? $time->verificarDono($destino) : 0;
+                $userId = (int)$_SESSION['user_id'];
+
+                $envolveOutraPessoa = (($origem > 0 && $donoOrigem > 0 && $donoOrigem !== $userId) ||
+                                       ($destino > 0 && $donoDestino > 0 && $donoDestino !== $userId));
+
+                if ($envolveOutraPessoa && !$isAdmin) {
+                    $is_success = false;
+                    $error_msg = "Apenas administradores podem apagar transferências que envolvem clubes de outros usuários.";
+                } else {
+                    if ($jogador->deletarTransferenciaHistorica($idTransferencia, $idJogador)) {
+                        $is_success = true;
+                        $error_msg = "";
+                    } else {
+                        $is_success = false;
+                        $error_msg = "Falha ao apagar transferência histórica do banco de dados.";
+                    }
+                }
             }
         } else {
             $is_success = false;
@@ -368,13 +405,43 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $emprestimo = isset($_POST['emprestimo']) ? (int)$_POST['emprestimo'] : 0;
 
         $idDonoJogador = $jogador->verificarDono($idJogador);
-        if ($idDonoJogador == $_SESSION['user_id'] || $idDonoJogador == 0) {
-            if ($jogador->atualizarTransferenciaHistorica($idTransferencia, $idJogador, $clubeOrigem, $clubeDestino, $valor, $data, $emprestimo)) {
-                $is_success = true;
-                $error_msg = "";
-            } else {
+        if ($idDonoJogador == $_SESSION['user_id'] || $idDonoJogador == 0 || $isAdmin) {
+            $stmtCheck = $db->prepare("SELECT clubeOrigem, clubeDestino FROM transferencias WHERE ID = ? AND jogador = ? LIMIT 1");
+            $stmtCheck->execute([$idTransferencia, $idJogador]);
+            $transf = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+            if (!$transf) {
                 $is_success = false;
-                $error_msg = "Falha ao atualizar transferência histórica no banco de dados.";
+                $error_msg = "Transferência não encontrada.";
+            } else {
+                $origemAntiga = (int)$transf['clubeOrigem'];
+                $destinoAntigo = (int)$transf['clubeDestino'];
+                $donoOrigemAntiga = $origemAntiga > 0 ? $time->verificarDono($origemAntiga) : 0;
+                $donoDestinoAntigo = $destinoAntigo > 0 ? $time->verificarDono($destinoAntigo) : 0;
+
+                $donoOrigemNova = $clubeOrigem > 0 ? $time->verificarDono($clubeOrigem) : 0;
+                $donoDestinoNovo = $clubeDestino > 0 ? $time->verificarDono($clubeDestino) : 0;
+
+                $userId = (int)$_SESSION['user_id'];
+
+                $envolveOutraPessoaAntiga = (($origemAntiga > 0 && $donoOrigemAntiga > 0 && $donoOrigemAntiga !== $userId) ||
+                                             ($destinoAntigo > 0 && $donoDestinoAntigo > 0 && $donoDestinoAntigo !== $userId));
+
+                $envolveOutraPessoaNova = (($clubeOrigem > 0 && $donoOrigemNova > 0 && $donoOrigemNova !== $userId) ||
+                                           ($clubeDestino > 0 && $donoDestinoNovo > 0 && $donoDestinoNovo !== $userId));
+
+                if (($envolveOutraPessoaAntiga || $envolveOutraPessoaNova) && !$isAdmin) {
+                    $is_success = false;
+                    $error_msg = "Apenas administradores podem editar transferências que envolvem clubes de outros usuários.";
+                } else {
+                    if ($jogador->atualizarTransferenciaHistorica($idTransferencia, $idJogador, $clubeOrigem, $clubeDestino, $valor, $data, $emprestimo)) {
+                        $is_success = true;
+                        $error_msg = "";
+                    } else {
+                        $is_success = false;
+                        $error_msg = "Falha ao atualizar transferência histórica no banco de dados.";
+                    }
+                }
             }
         } else {
             $is_success = false;

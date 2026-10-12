@@ -1,10 +1,10 @@
 <?php
+require_once isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' 
+    ? $_SERVER['DOCUMENT_ROOT'] . '/config/session.php' 
+    : dirname(__DIR__, 2) . '/config/session.php';
+
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 require_once isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' 
     ? $_SERVER['DOCUMENT_ROOT'] . '/config/database.php' 
