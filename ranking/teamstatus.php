@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
@@ -21,9 +21,15 @@ include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogos.php");
 include_once($_SERVER['DOCUMENT_ROOT']."/objetos/federacoes.php");
+include_once($_SERVER['DOCUMENT_ROOT']."/objetos/competicao_clube.php");
 
 $database = new Database();
 $db = $database->getConnection();
+
+try {
+    $compSync = new Competicao_clube($db);
+    $compSync->sincronizarJogosRankingEncerrados();
+} catch (\Throwable $e) {}
 
 $pais = new Pais($db);
 $jogo = new Jogo($db);

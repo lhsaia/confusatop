@@ -86,7 +86,9 @@ class Competicao_clube{
                         'max_jogos_dia' => "INTEGER DEFAULT 0",
                         'dias_semana' => "TEXT DEFAULT ''",
                         'intervalo_rodadas' => "INTEGER DEFAULT 1",
-                        'horarios_jogos' => "TEXT DEFAULT '16:00'"
+                        'horarios_jogos' => "TEXT DEFAULT '16:00'",
+                        'tipo_times' => "INTEGER DEFAULT 0",
+                        'campeonato_ranking' => "INTEGER DEFAULT 10"
                     ];
                     foreach ($columnsToAdd as $col => $def) {
                         if (!isset($cols[$col])) {
@@ -123,7 +125,9 @@ class Competicao_clube{
                     'dias_semana' => "VARCHAR(50) DEFAULT ''",
                     'intervalo_rodadas' => "INT DEFAULT 1",
                     'horarios_jogos' => "VARCHAR(255) DEFAULT '16:00'",
-                    'zonas_tabela' => "TEXT NULL"
+                    'zonas_tabela' => "TEXT NULL",
+                    'tipo_times' => "TINYINT(1) DEFAULT 0",
+                    'campeonato_ranking' => "INT DEFAULT 10"
                 ];
 
                 foreach ($columnsToAdd as $col => $def) {
@@ -131,6 +135,12 @@ class Competicao_clube{
                     if ($res && $res->rowCount() == 0) {
                         $this->conn->exec("ALTER TABLE competicao_opcoes ADD COLUMN {$col} {$def}");
                     }
+                }
+
+                // Garantir coluna tipo_times em jogos_clube no MySQL
+                $resJc = $this->conn->query("SHOW COLUMNS FROM jogos_clube LIKE 'tipo_times'");
+                if ($resJc && $resJc->rowCount() == 0) {
+                    $this->conn->exec("ALTER TABLE jogos_clube ADD COLUMN tipo_times TINYINT(1) DEFAULT 0");
                 }
 
                 // 3. Garantir tabela competicoes_agrupadas (Visões agregadas salvas)
@@ -449,7 +459,7 @@ class Competicao_clube{
 
 		$id = htmlspecialchars(strip_tags($id));
 		$query = "SELECT
-                numero_times, limite_fichas, subir_live, sorteio, golfora, finalunica, tipocompeticao, criteriodesempate, criteriodesempatefinal, suspensao, zeraramarelos, expulso_dois_amarelos, alteracoeselenco, inicioalteracoes, fimalteracoes, jogadoresadicionais, estadios_times, desempate_grupos, num_grupos, times_por_grupo, tipo_preliminar, turnos_pontos_corridos, data_inicial, max_jogos_dia, dias_semana, intervalo_rodadas, horarios_jogos, zonas_tabela  
+                numero_times, limite_fichas, subir_live, sorteio, golfora, finalunica, tipocompeticao, criteriodesempate, criteriodesempatefinal, suspensao, zeraramarelos, expulso_dois_amarelos, alteracoeselenco, inicioalteracoes, fimalteracoes, jogadoresadicionais, estadios_times, desempate_grupos, num_grupos, times_por_grupo, tipo_preliminar, turnos_pontos_corridos, data_inicial, max_jogos_dia, dias_semana, intervalo_rodadas, horarios_jogos, zonas_tabela, tipo_times, campeonato_ranking  
             FROM
                 competicao_opcoes 
             WHERE
@@ -462,7 +472,7 @@ class Competicao_clube{
 		return $options;
     }
 	
-	function alterarOpcoes($idUsuario, $numero_times, $data_limite, $subir_live, $sorteio, $gol_fora, $final_unica, $tipo_competicao, $criterio_desempate, $criterio_desempate_final, $criterio_suspensao, $zerar_amarelos, $permitir_alteracoes, $inicio_alteracoes, $fim_alteracoes, $numero_alteracoes, $id_competicao, $estadios_times = 1, $desempate_grupos = 'SG,GP,VI,CD', $num_grupos = 4, $times_por_grupo = 4, $tipo_preliminar = 1, $turnos_pontos_corridos = 2, $data_inicial = null, $max_jogos_dia = 0, $dias_semana = '', $intervalo_rodadas = 1, $horarios_jogos = '16:00', $expulso_dois_amarelos = 0, $zonas_tabela = null){
+	function alterarOpcoes($idUsuario, $numero_times, $data_limite, $subir_live, $sorteio, $gol_fora, $final_unica, $tipo_competicao, $criterio_desempate, $criterio_desempate_final, $criterio_suspensao, $zerar_amarelos, $permitir_alteracoes, $inicio_alteracoes, $fim_alteracoes, $numero_alteracoes, $id_competicao, $estadios_times = 1, $desempate_grupos = 'SG,GP,VI,CD', $num_grupos = 4, $times_por_grupo = 4, $tipo_preliminar = 1, $turnos_pontos_corridos = 2, $data_inicial = null, $max_jogos_dia = 0, $dias_semana = '', $intervalo_rodadas = 1, $horarios_jogos = '16:00', $expulso_dois_amarelos = 0, $zonas_tabela = null, $tipo_times = 0, $campeonato_ranking = 10){
 	
 			$idUsuario = htmlspecialchars(strip_tags($idUsuario));
 			$numero_times = htmlspecialchars(strip_tags($numero_times));
@@ -493,6 +503,8 @@ class Competicao_clube{
 			$intervalo_rodadas = intval($intervalo_rodadas) > 0 ? intval($intervalo_rodadas) : 1;
 			$horarios_jogos = !empty($horarios_jogos) ? htmlspecialchars(strip_tags($horarios_jogos)) : '16:00';
 			$zonas_tabela = !empty($zonas_tabela) ? $zonas_tabela : null;
+			$tipo_times = intval($tipo_times) === 1 ? 1 : 0;
+			$campeonato_ranking = intval($campeonato_ranking) > 0 ? intval($campeonato_ranking) : 10;
 
 			if($numero_alteracoes == "") $numero_alteracoes = 0;
 			if($inicio_alteracoes == "") $inicio_alteracoes = null;
@@ -502,7 +514,7 @@ class Competicao_clube{
 			
 			$query = "UPDATE competicao_opcoes 
             SET
-                 numero_times =:numero_times, limite_fichas=:limite_fichas, subir_live=:subir_live, sorteio=:sorteio, golfora=:golfora, finalunica=:finalunica, tipocompeticao=:tipocompeticao, criteriodesempate=:criteriodesempate, criteriodesempatefinal=:criteriodesempatefinal, suspensao=:suspensao, zeraramarelos=:zeraramarelos, expulso_dois_amarelos=:expulso_dois_amarelos, alteracoeselenco=:alteracoeselenco, inicioalteracoes=:inicioalteracoes, fimalteracoes=:fimalteracoes, jogadoresadicionais=:numeroalteracoes, estadios_times=:estadios_times, desempate_grupos=:desempate_grupos, num_grupos=:num_grupos, times_por_grupo=:times_por_grupo, tipo_preliminar=:tipo_preliminar, turnos_pontos_corridos=:turnos_pontos_corridos, data_inicial=:data_inicial, max_jogos_dia=:max_jogos_dia, dias_semana=:dias_semana, intervalo_rodadas=:intervalo_rodadas, horarios_jogos=:horarios_jogos, zonas_tabela=:zonas_tabela   
+                 numero_times =:numero_times, limite_fichas=:limite_fichas, subir_live=:subir_live, sorteio=:sorteio, golfora=:golfora, finalunica=:finalunica, tipocompeticao=:tipocompeticao, criteriodesempate=:criteriodesempate, criteriodesempatefinal=:criteriodesempatefinal, suspensao=:suspensao, zeraramarelos=:zeraramarelos, expulso_dois_amarelos=:expulso_dois_amarelos, alteracoeselenco=:alteracoeselenco, inicioalteracoes=:inicioalteracoes, fimalteracoes=:fimalteracoes, jogadoresadicionais=:numeroalteracoes, estadios_times=:estadios_times, desempate_grupos=:desempate_grupos, num_grupos=:num_grupos, times_por_grupo=:times_por_grupo, tipo_preliminar=:tipo_preliminar, turnos_pontos_corridos=:turnos_pontos_corridos, data_inicial=:data_inicial, max_jogos_dia=:max_jogos_dia, dias_semana=:dias_semana, intervalo_rodadas=:intervalo_rodadas, horarios_jogos=:horarios_jogos, zonas_tabela=:zonas_tabela, tipo_times=:tipo_times, campeonato_ranking=:campeonato_ranking   
              WHERE
                 id_competicao = :idComp";
 
@@ -536,8 +548,16 @@ class Competicao_clube{
 		$stmt->bindParam(":intervalo_rodadas", $intervalo_rodadas);
 		$stmt->bindParam(":horarios_jogos", $horarios_jogos);
 		$stmt->bindParam(":zonas_tabela", $zonas_tabela);
+		$stmt->bindParam(":tipo_times", $tipo_times);
+		$stmt->bindParam(":campeonato_ranking", $campeonato_ranking);
 		
 		if($stmt->execute()){
+			try {
+				$stmtUpdJc = $this->conn->prepare("UPDATE jogos_clube SET tipo_times = :tipo_times WHERE competicao_id = :idComp");
+				$stmtUpdJc->bindValue(':tipo_times', $tipo_times, PDO::PARAM_INT);
+				$stmtUpdJc->bindValue(':idComp', $id_competicao, PDO::PARAM_INT);
+				$stmtUpdJc->execute();
+			} catch (\Throwable $e) {}
 			return true;
 		} else {
 			return false;
@@ -714,8 +734,8 @@ class Competicao_clube{
 		$timeA_nome = $nomeA ? htmlspecialchars(strip_tags($nomeA)) : (!is_numeric($timeA) && !empty($timeA) ? htmlspecialchars(strip_tags($timeA)) : null);
 		$timeB_nome = $nomeB ? htmlspecialchars(strip_tags($nomeB)) : (!is_numeric($timeB) && !empty($timeB) ? htmlspecialchars(strip_tags($timeB)) : null);
 		
-		$query = "INSERT INTO jogos_clube (timeA_id, timeA_nome, timeB_id, timeB_nome, data, competicao_id, estadio_id, neutro, arbitro_id, fase, grupo, competicao_tipo, simulador_interno, status, subir_live, dono) 
-		          VALUES (:timeA, :nomeA, :timeB, :nomeB, :data, :competicao, :estadio, :neutro, :arbitro, :fase, :grupo, 1, 1, 0, COALESCE(:subir_live, (SELECT subir_live FROM competicao_opcoes WHERE id_competicao = :id_comp_opt LIMIT 1), 0), COALESCE(:dono, (SELECT dono FROM " . $this->table_name . " WHERE id = :competicao_dono LIMIT 1), 0))";
+		$query = "INSERT INTO jogos_clube (timeA_id, timeA_nome, timeB_id, timeB_nome, data, competicao_id, estadio_id, neutro, arbitro_id, fase, grupo, competicao_tipo, simulador_interno, status, subir_live, dono, tipo_times) 
+		          VALUES (:timeA, :nomeA, :timeB, :nomeB, :data, :competicao, :estadio, :neutro, :arbitro, :fase, :grupo, 1, 1, 0, COALESCE(:subir_live, (SELECT subir_live FROM competicao_opcoes WHERE id_competicao = :id_comp_opt LIMIT 1), 0), COALESCE(:dono, (SELECT dono FROM " . $this->table_name . " WHERE id = :competicao_dono LIMIT 1), 0), COALESCE((SELECT tipo_times FROM competicao_opcoes WHERE id_competicao = :id_comp_opt2 LIMIT 1), 0))";
         $stmt = $this->conn->prepare( $query );
 
         $stmt->bindParam(":timeA", $timeA_id);
@@ -725,6 +745,7 @@ class Competicao_clube{
 		$stmt->bindParam(":data", $datetime);
 		$stmt->bindParam(":competicao", $id_competicao);
 		$stmt->bindParam(":id_comp_opt", $id_competicao);
+		$stmt->bindParam(":id_comp_opt2", $id_competicao);
 		$stmt->bindParam(":competicao_dono", $id_competicao);
 		$stmt->bindParam(":estadio", $estadio);
 		$stmt->bindParam(":neutro", $neutro);
@@ -798,6 +819,396 @@ class Competicao_clube{
         } else {
             return false;
         }
+	}
+
+	/**
+	 * Registra uma partida de competição de seleções na tabela oficial do Ranking (tabela jogos).
+	 * Também preenche jogos_eventos e jogos_escalacao caso os arquivos da súmula estejam disponíveis.
+	 */
+	public function registrarJogoNoRanking($idPartida, $hylFile = null, $hyjFile = null, $forcarAtualizacao = false){
+		$idPartida = intval($idPartida);
+		if ($idPartida <= 0) return false;
+
+		$stmt = $this->conn->prepare("
+			SELECT j.*, co.tipo_times, co.campeonato_ranking, cl.nome as competicao_nome
+			FROM jogos_clube j
+			LEFT JOIN competicao_opcoes co ON j.competicao_id = co.id_competicao
+			LEFT JOIN competicao_lista cl ON j.competicao_id = cl.id
+			WHERE j.id = :id LIMIT 1
+		");
+		$stmt->execute([':id' => $idPartida]);
+		$partida = $stmt->fetch(PDO::FETCH_ASSOC);
+		if (!$partida) return false;
+
+		// Apenas para competições de seleções (tipo_times = 1) e partidas simuladas (status = 1)
+		if (intval($partida['tipo_times'] ?? 0) !== 1 || intval($partida['status'] ?? 0) !== 1) {
+			return false;
+		}
+
+		$idCompeticao = intval($partida['competicao_id']);
+		$timeA_id = intval($partida['timeA_id']);
+		$timeB_id = intval($partida['timeB_id']);
+		$timeA_nome = $partida['timeA_nome'] ?? '';
+		$timeB_nome = $partida['timeB_nome'] ?? '';
+
+		$xml = null;
+		$jsonHyj = null;
+		$filesLoaded = false;
+
+		$loadMatchFiles = function() use (&$hylFile, &$hyjFile, &$xml, &$jsonHyj, &$filesLoaded, $partida, $idCompeticao) {
+			if ($filesLoaded) return;
+			$filesLoaded = true;
+
+			if (!$hylFile && !empty($partida['path'])) {
+				$docRoot = isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__);
+				$candidateHyl = $docRoot . '/' . ltrim($partida['path'], '/\\');
+				if (file_exists($candidateHyl)) {
+					$hylFile = $candidateHyl;
+				} else {
+					$stCompInfo = $this->conn->prepare("SELECT ano, nome FROM competicao_lista WHERE id = ? LIMIT 1");
+					$stCompInfo->execute([$idCompeticao]);
+					if ($rComp = $stCompInfo->fetch(PDO::FETCH_ASSOC)) {
+						$nomeComposto = $rComp['ano'] . " - " . $rComp['nome'];
+						$baseDirPartidas = $docRoot . "/competicoes/hexacolor/Partidas/" . $nomeComposto;
+						$foundHyls = @glob($baseDirPartidas . "/*/" . $partida['path'] . ".hyl");
+						if (!empty($foundHyls)) {
+							$hylFile = $foundHyls[0];
+						}
+					}
+					if (!$hylFile) {
+						$foundHyls = @glob($docRoot . "/competicoes/hexacolor/Partidas/*/*/" . $partida['path'] . ".hyl");
+						if (!empty($foundHyls)) {
+							$hylFile = $foundHyls[0];
+						}
+					}
+				}
+			}
+			if ($hylFile && !$hyjFile) {
+				$candidateHyj = str_replace('.hyl', '.hyj', $hylFile);
+				if (file_exists($candidateHyj)) {
+					$hyjFile = $candidateHyj;
+				}
+			}
+			if ($hylFile && file_exists($hylFile)) {
+				$xml = json_decode(file_get_contents($hylFile));
+			}
+			if ($hyjFile && file_exists($hyjFile)) {
+				$jsonHyj = json_decode(file_get_contents($hyjFile));
+			}
+		};
+
+		require_once __DIR__ . '/paises.php';
+		$paisObj = new Pais($this->conn);
+
+		$resolvePaisId = function($tId, $tNome, $side) use ($idCompeticao, $paisObj, $loadMatchFiles, &$xml) {
+			// 1. Se tem id de clube positivo, buscar Pais do clube
+			if ($tId > 0) {
+				$stClube = $this->conn->prepare("SELECT Pais FROM clube WHERE ID = ? LIMIT 1");
+				$stClube->execute([$tId]);
+				$pId = intval($stClube->fetchColumn());
+				if ($pId > 0) return $pId;
+			}
+			// 2. Buscar em competicao_times
+			if ($tId != 0) {
+				$absCod = abs($tId);
+				$stCt = $this->conn->prepare("SELECT pais_time FROM competicao_times WHERE id_competicao = ? AND (id_time_portal = ? OR codigo_time = ?) LIMIT 1");
+				$stCt->execute([$idCompeticao, $tId, $absCod]);
+				$pId = intval($stCt->fetchColumn());
+				if ($pId > 0) return $pId;
+			}
+			// 3. Buscar pelo nome da partida
+			if (!empty($tNome)) {
+				$pId = $paisObj->idPorNomeTratado($tNome);
+				if ($pId) return intval($pId);
+			}
+			// 4. Se tId já for ID na tabela paises
+			if ($tId > 0) {
+				$stP = $this->conn->prepare("SELECT id FROM paises WHERE id = ? LIMIT 1");
+				$stP->execute([$tId]);
+				$pId = intval($stP->fetchColumn());
+				if ($pId > 0) return $pId;
+			}
+			// 5. Buscar pelo nome no .hyl
+			$loadMatchFiles();
+			$hylTeamName = ($side === 1) ? (isset($xml->time1) ? (string)$xml->time1 : '') : (isset($xml->time2) ? (string)$xml->time2 : '');
+			if (!empty($hylTeamName)) {
+				$pId = $paisObj->idPorNomeTratado($hylTeamName);
+				if ($pId) return intval($pId);
+			}
+			return 0;
+		};
+
+		$paisA_id = $resolvePaisId($timeA_id, $timeA_nome, 1);
+		$paisB_id = $resolvePaisId($timeB_id, $timeB_nome, 2);
+
+		if ($paisA_id <= 0 || $paisB_id <= 0) {
+			error_log("CONFUSA Ranking: Não foi possível resolver países da partida #{$idPartida} (País A: {$paisA_id}, País B: {$paisB_id})");
+			return false;
+		}
+
+		// Coluna data na tabela jogos é do tipo DATE (Y-m-d)
+		$dataPartida = !empty($partida['data']) ? date('Y-m-d', strtotime($partida['data'])) : date('Y-m-d');
+
+		// Sigilo Temporal: O jogo só pode aparecer no Ranking após seu término no tempo real
+		// Regulamentar: 120min (2h) | Pênaltis: 150min (2h30)
+		$now = time();
+		$dtMatch = !empty($partida['data']) ? strtotime($partida['data']) : $now;
+		$temPenaltis = ($partida['timeA_penaltis'] !== null && $partida['timeA_penaltis'] !== '' && $partida['timeB_penaltis'] !== null && $partida['timeB_penaltis'] !== '');
+		$durMatchSec = $temPenaltis ? (150 * 60) : (120 * 60);
+		if ($now < ($dtMatch + $durMatchSec)) {
+			// A partida foi simulada antecipadamente, mas ainda não aconteceu / não encerrou no horário real.
+			// Caso tenha sido inserida prematuramente na tabela jogos (calculado = 0), removê-la até o término real.
+			$stPrem = $this->conn->prepare("SELECT id FROM jogos WHERE timeA_id = ? AND timeB_id = ? AND data = ? AND calculado = 0 LIMIT 1");
+			$stPrem->execute([$paisA_id, $paisB_id, $dataPartida]);
+			$idPrem = intval($stPrem->fetchColumn());
+			if ($idPrem > 0) {
+				$this->conn->prepare("DELETE FROM jogos_eventos WHERE id_jogo = ?")->execute([$idPrem]);
+				$this->conn->prepare("DELETE FROM jogos_escalacao WHERE id_jogo = ?")->execute([$idPrem]);
+				$this->conn->prepare("DELETE FROM jogos WHERE id = ?")->execute([$idPrem]);
+			}
+			return false;
+		}
+
+		// Verificar se jogo já existe na tabela jogos do ranking
+		$stCheck = $this->conn->prepare("SELECT id, calculado FROM jogos WHERE timeA_id = ? AND timeB_id = ? AND data = ? LIMIT 1");
+		$stCheck->execute([$paisA_id, $paisB_id, $dataPartida]);
+		$existingRow = $stCheck->fetch(PDO::FETCH_ASSOC);
+		$idJogoRanking = $existingRow ? intval($existingRow['id']) : 0;
+
+		if ($idJogoRanking > 0 && !$forcarAtualizacao) {
+			// Jogo já sincronizado anteriormente no ranking; evita resetar calculado = 0 ou reler arquivos
+			return $idJogoRanking;
+		}
+
+		// Carregar arquivos .hyl e .hyj para gravar ou atualizar súmula
+		$loadMatchFiles();
+
+		// Placar
+		$golsA = isset($partida['timeA_gols']) && $partida['timeA_gols'] !== null ? intval($partida['timeA_gols']) : (isset($xml->placarTime1) ? intval($xml->placarTime1) : 0);
+		$golsB = isset($partida['timeB_gols']) && $partida['timeB_gols'] !== null ? intval($partida['timeB_gols']) : (isset($xml->placarTime2) ? intval($xml->placarTime2) : 0);
+		$penA = isset($partida['timeA_penaltis']) && $partida['timeA_penaltis'] !== null ? intval($partida['timeA_penaltis']) : (isset($xml->placarPenaltisTime1) ? intval($xml->placarPenaltisTime1) : null);
+		$penB = isset($partida['timeB_penaltis']) && $partida['timeB_penaltis'] !== null ? intval($partida['timeB_penaltis']) : (isset($xml->placarPenaltisTime2) ? intval($xml->placarPenaltisTime2) : null);
+
+		// Campeonato do Ranking
+		$campeonatoId = intval($partida['campeonato_ranking'] ?? 0);
+		if ($campeonatoId <= 0) {
+			$cNome = mb_strtolower($partida['competicao_nome'] ?? '');
+			if (mb_strpos($cNome, 'mundial sub-20') !== false || mb_strpos($cNome, 'sub-20') !== false) {
+				$campeonatoId = 13;
+			} elseif (mb_strpos($cNome, 'mundial sub-18') !== false || mb_strpos($cNome, 'sub-18') !== false) {
+				$campeonatoId = 12;
+			} elseif (mb_strpos($cNome, 'copa do mundo') !== false) {
+				$campeonatoId = 1;
+			} elseif (mb_strpos($cNome, 'olimp') !== false) {
+				$campeonatoId = 2;
+			} elseif (mb_strpos($cNome, 'feascopa') !== false) {
+				$campeonatoId = 6;
+			} elseif (mb_strpos($cNome, 'três mares') !== false || mb_strpos($cNome, 'tres mares') !== false) {
+				$campeonatoId = 7;
+			} elseif (mb_strpos($cNome, 'távola') !== false || mb_strpos($cNome, 'tavola') !== false) {
+				$campeonatoId = 8;
+			} elseif (mb_strpos($cNome, 'angehait') !== false) {
+				$campeonatoId = 9;
+			} elseif (mb_strpos($cNome, 'confederaç') !== false || mb_strpos($cNome, 'confederac') !== false) {
+				$campeonatoId = 14;
+			} elseif (mb_strpos($cNome, 'eliminat') !== false) {
+				$campeonatoId = 3;
+			} elseif (mb_strpos($cNome, 'amistoso de base') !== false) {
+				$campeonatoId = 11;
+			} else {
+				$campeonatoId = 10; // Amistoso
+			}
+		}
+
+		$estadioNome = !empty($partida['estadio_nome']) ? $partida['estadio_nome'] : (isset($xml->estadio) ? (string)$xml->estadio : '');
+		if (empty($estadioNome) && !empty($partida['estadio_id'])) {
+			$stEst = $this->conn->prepare("SELECT Nome FROM estadio WHERE ID = ? LIMIT 1");
+			$stEst->execute([intval($partida['estadio_id'])]);
+			$estadioNome = $stEst->fetchColumn() ?: '';
+		}
+
+		$arbitroId = !empty($partida['arbitro_id']) ? intval($partida['arbitro_id']) : null;
+		$fase = isset($partida['fase']) ? intval($partida['fase']) : 0;
+
+		if ($idJogoRanking > 0) {
+			$stUpd = $this->conn->prepare("
+				UPDATE jogos SET
+					timeA_gols = ?, timeB_gols = ?, timeA_penaltis = ?, timeB_penaltis = ?,
+					campeonato = ?, estadio = ?, cod_arbitro = ?, fase = ?
+				WHERE id = ?
+			");
+			$stUpd->execute([$golsA, $golsB, $penA, $penB, $campeonatoId, $estadioNome, $arbitroId, $fase, $idJogoRanking]);
+		} else {
+			$stIns = $this->conn->prepare("
+				INSERT INTO jogos (timeA_id, timeA_gols, timeB_id, timeB_gols, timeA_penaltis, timeB_penaltis, data, campeonato, calculado, estadio, cod_arbitro, fase)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
+			");
+			$stIns->execute([$paisA_id, $golsA, $paisB_id, $golsB, $penA, $penB, $dataPartida, $campeonatoId, $estadioNome, $arbitroId, $fase]);
+			$idJogoRanking = intval($this->conn->lastInsertId());
+		}
+
+		if ($idJogoRanking <= 0) {
+			return false;
+		}
+
+		// -------------------------------------------------------------
+		// Gravar eventos detalhados na tabela jogos_eventos
+		// -------------------------------------------------------------
+		$this->conn->prepare("DELETE FROM jogos_eventos WHERE id_jogo = ?")->execute([$idJogoRanking]);
+
+		$stInsEv = $this->conn->prepare("
+			INSERT INTO jogos_eventos (id_jogo, tempo, minutos, tipo, id_jogador, nome_jogador, id_time)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
+		");
+
+		$playerMap1 = [];
+		$playerMap2 = [];
+		if ($xml) {
+			if (isset($xml->escalacaoTime1) && is_array($xml->escalacaoTime1)) {
+				foreach ($xml->escalacaoTime1 as $p) {
+					$playerMap1[(int)$p->id] = ['nome' => (string)$p->nome, 'posicao' => (string)$p->posicao];
+				}
+			}
+			if (isset($xml->escalacaoTime2) && is_array($xml->escalacaoTime2)) {
+				foreach ($xml->escalacaoTime2 as $p) {
+					$playerMap2[(int)$p->id] = ['nome' => (string)$p->nome, 'posicao' => (string)$p->posicao];
+				}
+			}
+
+			if (isset($xml->eventos) && is_array($xml->eventos)) {
+				foreach ($xml->eventos as $ev) {
+					$evArray = (array)$ev;
+					$tipoEvStr = $evArray['tipoEvento'] ?? '';
+					$tipoEvento = 0;
+					switch ($tipoEvStr) {
+						case 'gol':       $tipoEvento = 1; break;
+						case 'amarelo':   $tipoEvento = 2; break;
+						case 'vermelho':  $tipoEvento = 3; break;
+						case 'golContra': $tipoEvento = 4; break;
+					}
+					$tempoRaw = isset($evArray['tempo']) ? (int)$evArray['tempo'] : 1;
+					if ($tempoRaw > 4) continue; // ignora pênaltis pós-jogo
+
+					if ($tipoEvento > 0) {
+						$minuto = isset($evArray['minutos']) ? (int)$evArray['minutos'] : null;
+						$tempo = $tempoRaw;
+						if ($minuto !== null && $minuto > 45 && $tempo == 1) $tempo = 2;
+
+						$tempId = (int)($evArray['idJogador'] ?? 0);
+						$nomeJog = '';
+						$idTm = 0;
+
+						if (isset($playerMap1[$tempId])) {
+							$nomeJog = $playerMap1[$tempId]['nome'] ?? '';
+							$idTm = $paisA_id;
+						} elseif (isset($playerMap2[$tempId])) {
+							$nomeJog = $playerMap2[$tempId]['nome'] ?? '';
+							$idTm = $paisB_id;
+						} else {
+							$teamNum = (int)($evArray['time'] ?? 1);
+							$idTm = ($teamNum === 2) ? $paisB_id : $paisA_id;
+						}
+
+						$stInsEv->execute([
+							$idJogoRanking,
+							$tempo,
+							$minuto,
+							$tipoEvento,
+							$tempId,
+							mb_substr($nomeJog, 0, 40),
+							$idTm
+						]);
+					}
+				}
+			}
+		}
+
+		// -------------------------------------------------------------
+		// Gravar escalações na tabela jogos_escalacao
+		// -------------------------------------------------------------
+		$this->conn->prepare("DELETE FROM jogos_escalacao WHERE id_jogo = ?")->execute([$idJogoRanking]);
+
+		$stPaisNomeA = $this->conn->prepare("SELECT nome FROM paises WHERE id = ?");
+		$stPaisNomeA->execute([$paisA_id]);
+		$nomePaisA = $stPaisNomeA->fetchColumn() ?: 'Seleção A';
+
+		$stPaisNomeB = $this->conn->prepare("SELECT nome FROM paises WHERE id = ?");
+		$stPaisNomeB->execute([$paisB_id]);
+		$nomePaisB = $stPaisNomeB->fetchColumn() ?: 'Seleção B';
+
+		$stInsEsc = $this->conn->prepare("
+			INSERT INTO jogos_escalacao (id_jogo, id_time, nome_time, posicao, numero, id_jogador, nome_jogador, titular, entrada_minuto, saida_minuto)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		");
+
+		if ($jsonHyj) {
+			$timesEsc = [];
+			if (isset($jsonHyj->time1)) $timesEsc[] = ['obj' => $jsonHyj->time1, 'id' => $paisA_id, 'nome' => $nomePaisA, 'hMap' => $playerMap1];
+			if (isset($jsonHyj->time2)) $timesEsc[] = ['obj' => $jsonHyj->time2, 'id' => $paisB_id, 'nome' => $nomePaisB, 'hMap' => $playerMap2];
+
+			foreach ($timesEsc as $tmGroup) {
+				$tmObj = $tmGroup['obj'];
+				$tmId = $tmGroup['id'];
+				$tmNome = $tmGroup['nome'];
+				$hMap = $tmGroup['hMap'];
+
+				if (isset($tmObj->jogadores) && is_array($tmObj->jogadores)) {
+					foreach ($tmObj->jogadores as $idx => $jg) {
+						$jgId = isset($jg->idJogador) ? (int)$jg->idJogador : 0;
+						$jgNome = isset($jg->nome) && !empty($jg->nome) ? $jg->nome : ($hMap[$jgId]['nome'] ?? '');
+						$pos = isset($jg->posicao) && !empty($jg->posicao) ? $jg->posicao : ($hMap[$jgId]['posicao'] ?? '');
+						$num = isset($jg->numero) ? (int)$jg->numero : ($idx + 1);
+						$titular = ($idx < 11) ? 1 : 0;
+						$entMin = isset($jg->entradaMinuto) ? (int)$jg->entradaMinuto : null;
+						$saiMin = isset($jg->saidaMinuto) ? (int)$jg->saidaMinuto : null;
+
+						$stInsEsc->execute([
+							$idJogoRanking,
+							$tmId,
+							$tmNome,
+							$pos,
+							$num,
+							$jgId,
+							$jgNome,
+							$titular,
+							$entMin,
+							$saiMin
+						]);
+					}
+				}
+			}
+		}
+
+		return $idJogoRanking;
+	}
+
+	/**
+	 * Sincroniza partidas de competições de seleções que já foram simuladas e já encerraram no tempo real,
+	 * e remove da tabela jogos qualquer partida simulada que ainda esteja sob sigilo temporal.
+	 */
+	public function sincronizarJogosRankingEncerrados() {
+		$sincronizados = 0;
+		try {
+			$stmt = $this->conn->query("
+				SELECT j.id
+				FROM jogos_clube j
+				INNER JOIN competicao_opcoes co ON j.competicao_id = co.id_competicao
+				WHERE co.tipo_times = 1
+				  AND j.status = 1
+			");
+			if ($stmt) {
+				$partidas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+				foreach ($partidas as $p) {
+					$res = $this->registrarJogoNoRanking((int)$p['id']);
+					if ($res) {
+						$sincronizados++;
+					}
+				}
+			}
+		} catch (\Throwable $e) {
+			error_log("CONFUSA Ranking Sync Error: " . $e->getMessage());
+		}
+		return $sincronizados;
 	}
 	
 	function getTeamColors($uniforme, $idTime){
@@ -1082,7 +1493,8 @@ class Competicao_clube{
 			$options = $this->getOptions($idCompeticao);
 			$estadios_times = isset($options['estadios_times']) ? intval($options['estadios_times']) : 1;
 			if ($estadios_times == 1) {
-				$db3File = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+				$docRoot = !empty($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__);
+				$db3File = $docRoot . "/competicoes/databases/" . $idCompeticao . "-database.db3";
 				if (file_exists($db3File)) {
 					$liteDb = new SQLiteDatabase();
 					$liteDb->fileName = $db3File;
@@ -1300,7 +1712,8 @@ class Competicao_clube{
 			$options = $this->getOptions($idCompeticao);
 			$estadios_times = isset($options['estadios_times']) ? intval($options['estadios_times']) : 1;
 			if ($estadios_times == 1 && $teamId != 0) {
-				$db3File = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+				$docRoot = !empty($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__);
+				$db3File = $docRoot . "/competicoes/databases/" . $idCompeticao . "-database.db3";
 				if (file_exists($db3File)) {
 					$liteDb = new SQLiteDatabase();
 					$liteDb->fileName = $db3File;

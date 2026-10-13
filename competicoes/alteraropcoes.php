@@ -41,8 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     $horarios_jogos = !empty($_POST['horarios_jogos']) ? $_POST['horarios_jogos'] : '16:00';
     $expulso_dois_amarelos = isset($_POST['expulso_dois_amarelos']) ? intval($_POST['expulso_dois_amarelos']) : 0;
     $zonas_tabela = isset($_POST['zonas_tabela']) ? $_POST['zonas_tabela'] : null;
+    $tipo_times = isset($_POST['tipo_times']) ? intval($_POST['tipo_times']) : 0;
+    $campeonato_ranking = isset($_POST['campeonato_ranking']) ? intval($_POST['campeonato_ranking']) : 10;
 	
-	if($competicao->alterarOpcoes($idUsuario, $_POST['numero_times'], $_POST['data_limite'], $_POST['subir_live'], $_POST['sorteio'], $_POST['gol_fora'], $_POST['final_unica'], $_POST['tipo_competicao'], $_POST['criterio_desempate'], $_POST['criterio_desempate_final'], $_POST['criterio_suspensao'], $_POST['zerar_amarelos'], $_POST['permitir_alteracoes'], $_POST['inicio_alteracoes'], $_POST['fim_alteracoes'], $_POST['numero_alteracoes'], $idCompeticao, $estadios_times, $desempate_grupos, $num_grupos, $times_por_grupo, $tipo_preliminar, $turnos_pontos_corridos, $data_inicial, $max_jogos_dia, $dias_semana, $intervalo_rodadas, $horarios_jogos, $expulso_dois_amarelos, $zonas_tabela)){
+	if($competicao->alterarOpcoes($idUsuario, $_POST['numero_times'], $_POST['data_limite'], $_POST['subir_live'], $_POST['sorteio'], $_POST['gol_fora'], $_POST['final_unica'], $_POST['tipo_competicao'], $_POST['criterio_desempate'], $_POST['criterio_desempate_final'], $_POST['criterio_suspensao'], $_POST['zerar_amarelos'], $_POST['permitir_alteracoes'], $_POST['inicio_alteracoes'], $_POST['fim_alteracoes'], $_POST['numero_alteracoes'], $idCompeticao, $estadios_times, $desempate_grupos, $num_grupos, $times_por_grupo, $tipo_preliminar, $turnos_pontos_corridos, $data_inicial, $max_jogos_dia, $dias_semana, $intervalo_rodadas, $horarios_jogos, $expulso_dois_amarelos, $zonas_tabela, $tipo_times, $campeonato_ranking)){
 		$is_success = true;
 	} else {
 		$is_success = false;
@@ -195,6 +197,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
 
             } catch (Exception $e) {
                 error_log("Erro no SQLite Sync em alteraropcoes: " . $e->getMessage());
+            }
+        }
+
+        // Se configurado como Seleções (tipo_times = 1), sincronizar jogos finalizados existentes para a tabela de ranking
+        if ($tipo_times == 1) {
+            try {
+                $stmtJogosFinalizados = $db->prepare("SELECT id FROM jogos_clube WHERE competicao_id = :idComp AND status = 1");
+                $stmtJogosFinalizados->execute([':idComp' => $idCompeticao]);
+                $jogosFin = $stmtJogosFinalizados->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($jogosFin as $jFin) {
+                    $competicao->registrarJogoNoRanking($jFin['id'], null, null, true);
+                }
+            } catch (Exception $e) {
+                error_log("Erro ao sincronizar ranking em alteraropcoes: " . $e->getMessage());
             }
         }
     }

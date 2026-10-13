@@ -99,6 +99,16 @@ function checarAvancoMataMataAtivos($db, $competicaoObj) {
         error_log("PHP Simulador: [ERRO AVANÇO MATA-MATA CRON GERAL] " . $e->getMessage());
         cron_log("[ERRO MATA-MATA CRON] " . $e->getMessage());
     }
+
+    // Sincronizar no Ranking de Seleções as partidas de seleções que já encerraram no horário real
+    try {
+        $sinc = $competicaoObj->sincronizarJogosRankingEncerrados();
+        if ($sinc > 0) {
+            cron_log("[RANKING CRON] {$sinc} partida(s) de seleções encerrada(s) verificada(s)/sincronizada(s) com o Ranking.");
+        }
+    } catch (\Throwable $e) {
+        error_log("PHP Simulador: [ERRO SYNC RANKING CRON GERAL] " . $e->getMessage());
+    }
 }
 
 if (empty($partidas)) {
@@ -371,25 +381,89 @@ foreach ($partidas as $matchInfo) {
     // 1. Copiar SQLite da competição para data/database.db3
     copy($sourceDbPath, $targetDbPath);
     
-    $idEstadio = isset($matchInfo['estadio']) ? (int)$matchInfo['estadio'] : 0;
-    if ($idEstadio <= 0) {
-        cron_log("   [ERRO] A Partida #{$idPartida} não possui estádio definido. Pulando...");
-        continue;
-    }
-
     $liteDatabase = new SQLiteDatabase();
     $liteDatabase->fileName = $targetDbPath;
     $ldb = $liteDatabase->getConnection();
+    if (!$ldb) {
+        cron_log("   [ERRO] Falha ao abrir conexão SQLite para a Partida #{$idPartida}. Pulando...");
+        continue;
+    }
     $liteCompeticao = new Competicao_clube($ldb);
     $timeObj = new Time($ldb);
 
-    // Validar se o estádio existe na tabela estadio do SQLite
-    $stmtEstCheck = $ldb->prepare("SELECT 1 FROM estadio WHERE ID = :idEst LIMIT 1");
-    $stmtEstCheck->bindValue(':idEst', $idEstadio, PDO::PARAM_INT);
-    $stmtEstCheck->execute();
-    if (!$stmtEstCheck->fetch()) {
+    // Validar e resolver estádio da partida (inclusive para times YMT que usam IDs negativos)
+    $idEstadio = isset($matchInfo['estadio']) ? (int)$matchInfo['estadio'] : 0;
+    $estadioValido = false;
+
+    if ($idEstadio !== 0) {
+        $stmtEstCheck = $ldb->prepare("SELECT 1 FROM estadio WHERE ID = :idEst LIMIT 1");
+        $stmtEstCheck->bindValue(':idEst', $idEstadio, PDO::PARAM_INT);
+        $stmtEstCheck->execute();
+        if ($stmtEstCheck->fetch()) {
+            $estadioValido = true;
+        }
+    }
+
+    // Se o estádio não está definido ou não existe no SQLite, resolver automaticamente
+    if (!$estadioValido) {
+        // 1. Tentar obter o estádio do time mandante (timeA) no SQLite
+        $stmtHomeEst = $ldb->prepare("SELECT Estadio FROM clube WHERE ID = :timeA LIMIT 1");
+        $stmtHomeEst->bindValue(':timeA', $matchInfo['timeA'], PDO::PARAM_INT);
+        $stmtHomeEst->execute();
+        $homeEstRow = $stmtHomeEst->fetch(PDO::FETCH_ASSOC);
+        if ($homeEstRow && !empty($homeEstRow['Estadio'])) {
+            $candidatoEst = (int)$homeEstRow['Estadio'];
+            $stmtEstCheck = $ldb->prepare("SELECT 1 FROM estadio WHERE ID = :idEst LIMIT 1");
+            $stmtEstCheck->bindValue(':idEst', $candidatoEst, PDO::PARAM_INT);
+            $stmtEstCheck->execute();
+            if ($stmtEstCheck->fetch()) {
+                $idEstadio = $candidatoEst;
+                $estadioValido = true;
+            }
+        }
+
+        // 2. Fallback: pegar o primeiro estádio cadastrado na competição
+        if (!$estadioValido) {
+            $stmtFirstEst = $ldb->query("SELECT ID FROM estadio LIMIT 1");
+            if ($stmtFirstEst) {
+                $firstEstId = $stmtFirstEst->fetchColumn();
+                if ($firstEstId !== false && $firstEstId !== null) {
+                    $idEstadio = (int)$firstEstId;
+                    $estadioValido = true;
+                }
+            }
+        }
+
+        // 3. Fallback extremo: se não houver estádio nenhum no SQLite, criar estádio e clima padrão
+        if (!$estadioValido) {
+            try {
+                $stmtClimaCheck = $ldb->query("SELECT ID FROM clima LIMIT 1");
+                $climaId = $stmtClimaCheck ? $stmtClimaCheck->fetchColumn() : false;
+                if ($climaId === false || $climaId === null) {
+                    $climaId = 1;
+                    $ldb->exec("INSERT OR IGNORE INTO clima (ID, Nome, TempVerao, EstiloVerao, TempOutono, EstiloOutono, TempInverno, EstiloInverno, TempPrimavera, EstiloPrimavera, Hemisferio) VALUES (1, 'Clima Padrão', '25', 'Bom', '20', 'Bom', '15', 'Bom', '22', 'Bom', 'S')");
+                }
+                $idEstadio = 1;
+                $ldb->exec("INSERT OR IGNORE INTO estadio (ID, Nome, Capacidade, Altitude, Caldeirao, Clima) VALUES (1, 'Estádio Padrão', 35000, '0', '0', $climaId)");
+                $estadioValido = true;
+            } catch (\Throwable $e) {}
+        }
+
+        // Persistir estádio auto-resolvido no MariaDB para sincronização permanente
+        if ($estadioValido && $idEstadio !== 0) {
+            try {
+                $stmtUpdEst = $db->prepare("UPDATE jogos_clube SET estadio_id = :idEst WHERE id = :idPartida");
+                $stmtUpdEst->bindValue(':idEst', $idEstadio, PDO::PARAM_INT);
+                $stmtUpdEst->bindValue(':idPartida', $idPartida, PDO::PARAM_INT);
+                $stmtUpdEst->execute();
+                cron_log("   [AUTO-ESTÁDIO] Partida #{$idPartida} vinculada automaticamente ao estádio #{$idEstadio}.");
+            } catch (\Throwable $e) {}
+        }
+    }
+
+    if (!$estadioValido || $idEstadio === 0) {
         $ldb = null;
-        cron_log("   [ERRO] O estádio #{$idEstadio} da Partida #{$idPartida} não existe no banco SQLite. Pulando...");
+        cron_log("   [ERRO] A Partida #{$idPartida} não possui estádio definido no SQLite. Pulando...");
         continue;
     }
 
@@ -509,7 +583,7 @@ foreach ($partidas as $matchInfo) {
     $suspensos = [];
 
     if (!empty($allMatchPlayers)) {
-        $validPlayerIds = array_filter(array_map('intval', $allMatchPlayers), function($id) { return $id > 0; });
+        $validPlayerIds = array_filter(array_map('intval', $allMatchPlayers), function($id) { return $id != 0; });
         if (!empty($validPlayerIds)) {
             $inClause = implode(',', array_unique($validPlayerIds));
             // Garantir que a coluna lesionado_ate exista no MariaDB competicao_suspensos
@@ -674,7 +748,7 @@ foreach ($partidas as $matchInfo) {
             'idTeam2' => $matchInfo['timeB'],
             'kitTeam1' => 0,
             'kitTeam2' => 0,
-            'idChosenGround' => $matchInfo['estadio'],
+            'idChosenGround' => $idEstadio,
             'neutralGround' => boolval($matchInfo['neutro']),
             'outTeam1' => $outTeam1,
             'outTeam2' => $outTeam2,
@@ -874,6 +948,13 @@ foreach ($partidas as $matchInfo) {
 
     // Atualizar resultado no MariaDB
     $competicaoObj->uploadMatchResults($idPartida, $golsTimeA, $golsTimeB, $path, $penA, $penB);
+
+    // Se a competição for de seleções, registrar o jogo no ranking de seleções
+    try {
+        $competicaoObj->registrarJogoNoRanking($idPartida, $hylFile, $hyjFile);
+    } catch (\Throwable $e) {
+        error_log("PHP Simulador: [ERRO REGISTRO RANKING CRON] " . $e->getMessage());
+    }
 
     // Processar desfalques pós jogo (cartões, lesões, suspensões) no MariaDB
     require_once __DIR__ . '/hexacolor/processar_desfalques.php';

@@ -152,7 +152,7 @@ class Jogo{
              ON
              j.competicao_id = cc.id AND j.competicao_tipo = 1
             WHERE
-                timeA_id= ? OR timeB_id= ?
+                (timeA_id= ? OR timeB_id= ?) AND (j.tipo_times = 0 OR j.tipo_times IS NULL)
             ORDER BY
                 data DESC
             LIMIT
@@ -223,7 +223,7 @@ class Jogo{
     function ganhoPontos($id,$maior){
         $id = htmlspecialchars(strip_tags($id));
 
-        $individual_query = "WHERE j.timeA_id = ?
+        $individual_query = "WHERE j.timeA_id = ? AND (j.tipo_times = 0 OR j.tipo_times IS NULL)
         UNION
         SELECT
             timeB_id as time,
@@ -234,9 +234,9 @@ class Jogo{
             competicao_id,
             competicao_tipo
         FROM jogos_clube j
-        WHERE timeB_id = ? ";
+        WHERE timeB_id = ? AND (j.tipo_times = 0 OR j.tipo_times IS NULL) ";
 
-        $multiple_query = " UNION
+        $multiple_query = " WHERE (j.tipo_times = 0 OR j.tipo_times IS NULL) UNION
         SELECT
             timeB_id as time,
             timeB_gols as timeGols,
@@ -245,7 +245,7 @@ class Jogo{
             data,
             competicao_id,
             competicao_tipo
-        FROM jogos_clube j ";
+        FROM jogos_clube j WHERE (j.tipo_times = 0 OR j.tipo_times IS NULL) ";
 
         if($maior == '1'){
             $ord = 'DESC';
@@ -310,13 +310,13 @@ class Jogo{
 
         if($id == 0){
             $append_a = "SELECT least(timeB_id, timeA_id) as time, greatest(timeA_id, timeB_id) as adversario, id
-            FROM jogos_clube ";
+            FROM jogos_clube WHERE (tipo_times = 0 OR tipo_times IS NULL) ";
         } else {
         $append_a ="SELECT timeB_id as time, timeA_id as adversario, id
-        FROM jogos_clube WHERE timeA_id = ?
+        FROM jogos_clube WHERE timeA_id = ? AND (tipo_times = 0 OR tipo_times IS NULL)
          UNION
         SELECT timeA_id as time, timeB_id as adversario, id
-        FROM jogos_clube WHERE timeB_id = ?";
+        FROM jogos_clube WHERE timeB_id = ? AND (tipo_times = 0 OR tipo_times IS NULL)";
         }
 
         $query = "SELECT p.nome as nomeTime, c.nome as nomeAdversario, t1.contagem FROM
@@ -347,11 +347,11 @@ class Jogo{
         $id = htmlspecialchars(strip_tags($id));
 
         if($id == 0){
-            $append_a = "";
-            $append_b = "";
+            $append_a = "WHERE (tipo_times = 0 OR tipo_times IS NULL) ";
+            $append_b = "WHERE (tipo_times = 0 OR tipo_times IS NULL) ";
         } else {
-            $append_a = "WHERE timeA_id = ? ";
-            $append_b = "WHERE timeB_id = ? ";
+            $append_a = "WHERE timeA_id = ? AND (tipo_times = 0 OR tipo_times IS NULL) ";
+            $append_b = "WHERE timeB_id = ? AND (tipo_times = 0 OR tipo_times IS NULL) ";
         }
 
         $query = "SELECT p.nome as nomeTime, t1.golsPro as timeGols, t1.golsContra as adversarioGols, c.nome as nomeAdversario, t1.data, COALESCE(li.nome, cc.nome) as nomeCampeonato FROM
@@ -391,11 +391,11 @@ class Jogo{
         $id = htmlspecialchars(strip_tags($id));
 
         if($id == 0){
-            $append_a = "";
-            $append_b = "";
+            $append_a = "WHERE (tipo_times = 0 OR tipo_times IS NULL) ";
+            $append_b = "WHERE (tipo_times = 0 OR tipo_times IS NULL) ";
         } else {
-            $append_a = "WHERE timeA_id = ? ";
-            $append_b = "WHERE timeB_id = ? ";
+            $append_a = "WHERE timeA_id = ? AND (tipo_times = 0 OR tipo_times IS NULL) ";
+            $append_b = "WHERE timeB_id = ? AND (tipo_times = 0 OR tipo_times IS NULL) ";
         }
 
         $query = "SELECT p.nome as nomeTime, t1.golsPro as timeGols, t1.golsContra as adversarioGols, c.nome as nomeAdversario, t1.data, COALESCE(li.nome, cc.nome) as nomeCampeonato FROM
@@ -902,6 +902,7 @@ public function getMatchId(){
             LEFT JOIN liga li ON j.competicao_id = li.id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 0
             LEFT JOIN campeonatos_clube cc ON j.competicao_id = cc.id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 1
             WHERE (j.timeA_id = :id1 OR j.timeB_id = :id2)
+              AND (j.tipo_times = 0 OR j.tipo_times IS NULL)
               AND j.status = 1
               AND (
                   -- Partidas normais / manuais que já passaram
@@ -957,6 +958,7 @@ public function getMatchId(){
             LEFT JOIN liga li ON j.competicao_id = li.id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 0
             LEFT JOIN campeonatos_clube cc ON j.competicao_id = cc.id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 1
             WHERE (j.timeA_id = :id1 OR j.timeB_id = :id2)
+              AND (j.tipo_times = 0 OR j.tipo_times IS NULL)
               AND (
                   j.status = 0
                   OR (j.timeA_penaltis IS NULL AND DATE_ADD(j.data, INTERVAL 120 MINUTE) > NOW())

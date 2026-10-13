@@ -57,11 +57,10 @@
 	
 	$idCompeticao = $matchInfo['competicao'];
 	$idEstadio = isset($matchInfo['estadio']) ? (int)$matchInfo['estadio'] : 0;
-	if ($idEstadio <= 0) {
-		die(json_encode(['success' => false, 'error' => 'A partida não possui um estádio definido. Edite a partida e selecione um estádio válido antes de simular.']));
-	}
 
-	$sourceDbPath = $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$idCompeticao."-database.db3";
+	$sourceDbPath = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') 
+		? $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$idCompeticao."-database.db3"
+		: dirname(__DIR__, 2) . "/competicoes/databases/".$idCompeticao."-database.db3";
 	
 	$targetDbPath = __DIR__ . "/data/database.db3";
 	
@@ -78,16 +77,82 @@
 	$liteDatabase = new SQLiteDatabase();
 	$liteDatabase->fileName = $targetDbPath;
 	$ldb = $liteDatabase->getConnection();
+	if (!$ldb) {
+		die(json_encode(['success' => false, 'error' => 'Falha ao conectar ao banco SQLite da competição.']));
+	}
 	$liteCompeticao = new Competicao_clube($ldb);
 	$time = new Time($ldb);
 
-	// Validar se o estádio realmente existe na tabela estadio do SQLite da competição
-	$stmtEstCheck = $ldb->prepare("SELECT 1 FROM estadio WHERE ID = :idEst LIMIT 1");
-	$stmtEstCheck->bindValue(':idEst', $idEstadio, PDO::PARAM_INT);
-	$stmtEstCheck->execute();
-	if (!$stmtEstCheck->fetch()) {
+	// Validar e resolver estádio da partida (inclusive para times YMT que usam IDs negativos)
+	$estadioValido = false;
+	if ($idEstadio !== 0) {
+		$stmtEstCheck = $ldb->prepare("SELECT 1 FROM estadio WHERE ID = :idEst LIMIT 1");
+		$stmtEstCheck->bindValue(':idEst', $idEstadio, PDO::PARAM_INT);
+		$stmtEstCheck->execute();
+		if ($stmtEstCheck->fetch()) {
+			$estadioValido = true;
+		}
+	}
+
+	// Se o estádio não está definido ou não existe no SQLite, resolver automaticamente
+	if (!$estadioValido) {
+		// 1. Tentar obter o estádio do time mandante (timeA) no SQLite
+		$stmtHomeEst = $ldb->prepare("SELECT Estadio FROM clube WHERE ID = :timeA LIMIT 1");
+		$stmtHomeEst->bindValue(':timeA', $matchInfo['timeA_id'], PDO::PARAM_INT);
+		$stmtHomeEst->execute();
+		$homeEstRow = $stmtHomeEst->fetch(PDO::FETCH_ASSOC);
+		if ($homeEstRow && !empty($homeEstRow['Estadio'])) {
+			$candidatoEst = (int)$homeEstRow['Estadio'];
+			$stmtEstCheck = $ldb->prepare("SELECT 1 FROM estadio WHERE ID = :idEst LIMIT 1");
+			$stmtEstCheck->bindValue(':idEst', $candidatoEst, PDO::PARAM_INT);
+			$stmtEstCheck->execute();
+			if ($stmtEstCheck->fetch()) {
+				$idEstadio = $candidatoEst;
+				$estadioValido = true;
+			}
+		}
+
+		// 2. Fallback: pegar o primeiro estádio cadastrado na competição
+		if (!$estadioValido) {
+			$stmtFirstEst = $ldb->query("SELECT ID FROM estadio LIMIT 1");
+			if ($stmtFirstEst) {
+				$firstEstId = $stmtFirstEst->fetchColumn();
+				if ($firstEstId !== false && $firstEstId !== null) {
+					$idEstadio = (int)$firstEstId;
+					$estadioValido = true;
+				}
+			}
+		}
+
+		// 3. Fallback extremo: se não houver estádio nenhum no SQLite, criar estádio e clima padrão
+		if (!$estadioValido) {
+			try {
+				$stmtClimaCheck = $ldb->query("SELECT ID FROM clima LIMIT 1");
+				$climaId = $stmtClimaCheck ? $stmtClimaCheck->fetchColumn() : false;
+				if ($climaId === false || $climaId === null) {
+					$climaId = 1;
+					$ldb->exec("INSERT OR IGNORE INTO clima (ID, Nome, TempVerao, EstiloVerao, TempOutono, EstiloOutono, TempInverno, EstiloInverno, TempPrimavera, EstiloPrimavera, Hemisferio) VALUES (1, 'Clima Padrão', '25', 'Bom', '20', 'Bom', '15', 'Bom', '22', 'Bom', 'S')");
+				}
+				$idEstadio = 1;
+				$ldb->exec("INSERT OR IGNORE INTO estadio (ID, Nome, Capacidade, Altitude, Caldeirao, Clima) VALUES (1, 'Estádio Padrão', 35000, '0', '0', $climaId)");
+				$estadioValido = true;
+			} catch (\Throwable $e) {}
+		}
+
+		// Persistir estádio auto-resolvido no MariaDB
+		if ($estadioValido && $idEstadio !== 0) {
+			try {
+				$stmtUpdEst = $db->prepare("UPDATE jogos_clube SET estadio_id = :idEst WHERE id = :idPartida");
+				$stmtUpdEst->bindValue(':idEst', $idEstadio, PDO::PARAM_INT);
+				$stmtUpdEst->bindValue(':idPartida', $idPartida, PDO::PARAM_INT);
+				$stmtUpdEst->execute();
+			} catch (\Throwable $e) {}
+		}
+	}
+
+	if (!$estadioValido || $idEstadio === 0) {
 		$ldb = null;
-		die(json_encode(['success' => false, 'error' => 'O estádio selecionado (#'.$idEstadio.') não foi encontrado no banco de dados da competição. Por favor, edite a partida e selecione um estádio válido.']));
+		die(json_encode(['success' => false, 'error' => 'Não foi possível encontrar ou definir um estádio válido no banco de dados da competição.']));
 	}
 	
 	// Garantir tabela de compatibilidade com as versões necessárias e limpeza de pendências
@@ -217,7 +282,7 @@
 	$lesionados = [];
 
 	if (!empty($allMatchPlayers)) {
-		$validPlayerIds = array_filter(array_map('intval', $allMatchPlayers), function($id) { return $id > 0; });
+		$validPlayerIds = array_filter(array_map('intval', $allMatchPlayers), function($id) { return $id != 0; });
 		if (!empty($validPlayerIds)) {
 			$inClause = implode(',', array_unique($validPlayerIds));
 			// Garantir que a coluna lesionado_ate exista no MariaDB competicao_suspensos
@@ -447,7 +512,7 @@
 							'idTeam2' => $matchInfo['timeB_id'],
 							'kitTeam1' => 0,
 							'kitTeam2' => 0,
-							'idChosenGround' => $matchInfo['estadio'],
+							'idChosenGround' => $idEstadio,
 							'neutralGround' => boolval($matchInfo['neutro']),
 							'outTeam1' => $outTeam1,
 							'outTeam2' => $outTeam2,
@@ -608,6 +673,13 @@
 
 		// Atualizar o resultado no banco principal MariaDB
 		$competicao->uploadMatchResults($idPartida, $golsTimeA, $golsTimeB, $path, $penA, $penB);
+
+		// Se a competição for de seleções, registrar o jogo no ranking de seleções
+		try {
+			$competicao->registrarJogoNoRanking($idPartida, $hylFile, $hyjFile);
+		} catch (\Throwable $e) {
+			error_log("PHP Simulador: [ERRO REGISTRO RANKING] " . $e->getMessage());
+		}
 
 		// Processar desfalques pós jogo (cartões, lesões, suspensões) no MariaDB
 		require_once __DIR__ . '/processar_desfalques.php';

@@ -562,6 +562,90 @@ html body .opcoes-secao select:not(.select2-multiple):focus {
   color: #ffffff !important;
 }
 
+/* Seletor Tipo de Participantes (Clubes vs Seleções) */
+.tipo-times-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.radio-card-tipo {
+  position: relative;
+  display: block;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.radio-card-tipo input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.radio-card-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.radio-card-content .material-symbols-outlined {
+  font-size: 2rem;
+  color: #64748b;
+  transition: color 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.radio-card-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.radio-card-texts strong {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  color: #1e293b;
+  transition: color 0.2s ease;
+}
+
+.radio-card-texts small {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.2;
+}
+
+.radio-card-tipo:hover {
+  background: #ffffff;
+  border-color: rgba(2, 132, 199, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);
+}
+
+.radio-card-tipo.active {
+  background: rgba(2, 132, 199, 0.06);
+  border-color: #0284c7;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+}
+
+.radio-card-tipo.active .material-symbols-outlined {
+  color: #0284c7;
+  transform: scale(1.1);
+}
+
+.radio-card-tipo.active .radio-card-texts strong {
+  color: #0284c7;
+}
+
 /* Responsividade Mobile */
 @media (max-width: 768px) {
   .propostas-container {
@@ -577,3 +661,4 @@ html body .opcoes-secao select:not(.select2-multiple):focus {
     padding: 1.25rem !important;
   }
 }
+

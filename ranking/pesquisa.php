@@ -4,10 +4,16 @@
 
     include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
     include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogos.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/competicao_clube.php");
     
     $database = new Database();
     $db = $database->getConnection();
     
+    try {
+        $compSync = new Competicao_clube($db);
+        $compSync->sincronizarJogosRankingEncerrados();
+    } catch (\Throwable $e) {}
+
     $jogo = new Jogo($db);  
 
     $stmt = $jogo->pesquisaGeral($item_pesquisado);

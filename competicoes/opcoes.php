@@ -41,6 +41,10 @@ $stmtTodasFeds = $db->prepare("SELECT id, nome FROM federacoes ORDER BY nome");
 $stmtTodasFeds->execute();
 $todasFederacoes = $stmtTodasFeds->fetchAll(PDO::FETCH_ASSOC);
 
+$stmtTodosCampeonatos = $db->prepare("SELECT id, nome, coeficiente FROM campeonatos ORDER BY nome");
+$stmtTodosCampeonatos->execute();
+$todosCampeonatos = $stmtTodosCampeonatos->fetchAll(PDO::FETCH_ASSOC);
+
 // Determinar o ID da sede física se houver
 $sede_id = 0;
 if ($sede_competicao != "flag.png" && !empty($sede_competicao)) {
@@ -204,7 +208,52 @@ require_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 			<option value='1' <?php echo ($options['sorteio']==1?"selected":"")?>>Totalmente Manual (Criar jogos um a um)</option>
 		</select>
 		
-		<label for='input_tipocompeticao'>Tipo de competição</label>
+		<label style="margin-top: 15px;">Tipo de Participantes</label>
+		<div class="tipo-times-container">
+			<label class="radio-card-tipo <?php echo ($options['tipo_times'] == 0 ? 'active' : ''); ?>" for="tipo_times_clubes">
+				<input type="radio" name="input_tipotimes" id="tipo_times_clubes" value="0" <?php echo ($options['tipo_times'] == 0 ? 'checked' : ''); ?>>
+				<div class="radio-card-content">
+					<span class="material-symbols-outlined">shield</span>
+					<div class="radio-card-texts">
+						<strong>Clubes</strong>
+						<small>Competição entre clubes padrão</small>
+					</div>
+				</div>
+			</label>
+			<label class="radio-card-tipo <?php echo ($options['tipo_times'] == 1 ? 'active' : ''); ?>" for="tipo_times_selecoes">
+				<input type="radio" name="input_tipotimes" id="tipo_times_selecoes" value="1" <?php echo ($options['tipo_times'] == 1 ? 'checked' : ''); ?>>
+				<div class="radio-card-content">
+					<span class="material-symbols-outlined">public</span>
+					<div class="radio-card-texts">
+						<strong>Seleções Nacionais</strong>
+						<small>Jogos pontuam no Ranking Oficial</small>
+					</div>
+				</div>
+			</label>
+		</div>
+
+		<!-- Opção de Campeonato Ranking (visível se Seleções) -->
+		<div id="secao_ranking_selecoes" style="<?php echo ($options['tipo_times'] == 1 ? '' : 'display:none;'); ?> background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 14px; margin-top: 14px;">
+			<label for="input_campeonato_ranking" style="margin-top: 0; color: #0284c7;">
+				<span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1rem; margin-right: 4px;">leaderboard</span>
+				Campeonato do Ranking (Cálculo de Pontos)
+			</label>
+			<select name="input_campeonato_ranking" id="input_campeonato_ranking">
+				<?php 
+				$selectedCamp = isset($options['campeonato_ranking']) ? intval($options['campeonato_ranking']) : 10;
+				foreach ($todosCampeonatos as $camp): 
+				?>
+					<option value="<?php echo $camp['id']; ?>" <?php echo ($camp['id'] == $selectedCamp ? 'selected' : ''); ?>>
+						<?php echo htmlspecialchars($camp['nome']) . " (Peso: " . $camp['coeficiente'] . ")"; ?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+			<small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 6px;">
+				Os jogos finalizados desta competição serão inseridos no Ranking de Seleções usando o coeficiente deste campeonato.
+			</small>
+		</div>
+
+		<label for='input_tipocompeticao' style="margin-top: 15px;">Tipo de competição</label>
 		<select name='input_tipocompeticao' id='input_tipocompeticao'>
 			<option value='0' <?php echo ($options['tipocompeticao']==0?"selected":"")?>>Misto (Grupos + Mata-mata)</option>
 			<option value='1' <?php echo ($options['tipocompeticao']==1?"selected":"")?>>Mata-mata</option>
@@ -791,6 +840,18 @@ $(document).ready(function($){
 		atualizarCapacidadeGrupos();
 	});
 
+	// Alternar tipo de participantes (Clubes vs Seleções)
+	$('input[name="input_tipotimes"]').on("change", function(){
+		let val = $(this).val();
+		$('.radio-card-tipo').removeClass('active');
+		$(this).closest('.radio-card-tipo').addClass('active');
+		if(val == "1"){
+			$("#secao_ranking_selecoes").slideDown(200);
+		} else {
+			$("#secao_ranking_selecoes").slideUp(200);
+		}
+	});
+
 	$("#input_hexa_balizamento").on("change", function(){
 		let bVal = $(this).val();
 		if(bVal == "1"){
@@ -1103,7 +1164,12 @@ $(document).ready(function($){
 		let hexa_estilo = $("#input_hexa_estilo").val();
 		let hexa_bandeiras = $("#input_hexa_bandeiras").prop("checked") * 1;
 	
+		let tipo_times = $('input[name="input_tipotimes"]:checked').val() || 0;
+		let campeonato_ranking = $("#input_campeonato_ranking").val() || 10;
+
 		formData.append('numero_times',numero_times);
+		formData.append('tipo_times',tipo_times);
+		formData.append('campeonato_ranking',campeonato_ranking);
 		formData.append('data_limite',data_limite);
 		formData.append('subir_live',subir_live);
 		formData.append('sorteio',sorteio);

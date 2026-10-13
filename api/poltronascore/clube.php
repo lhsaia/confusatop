@@ -413,7 +413,8 @@ try {
         LEFT JOIN clube cB ON cB.ID = j.timeB_id
         LEFT JOIN estadio eDirect ON eDirect.ID = j.estadio_id
         LEFT JOIN estadio eHome ON eHome.ID = cA.Estadio
-        WHERE j.timeA_id = ? OR j.timeB_id = ?
+        WHERE (j.timeA_id = ? OR j.timeB_id = ?)
+          AND (j.tipo_times = 0 OR j.tipo_times IS NULL)
         ORDER BY j.data DESC, j.id DESC
     ");
     $stmtMatches->execute([$clubId, $clubId]);

@@ -207,7 +207,7 @@ try {
 }
 
 function getStadiumForTeam($ldb, $teamId) {
-    if(!$ldb || !is_numeric($teamId) || intval($teamId) <= 0) return 0;
+    if(!$ldb || !is_numeric($teamId) || intval($teamId) == 0) return 0;
     try {
         $query = "SELECT Estadio FROM clube WHERE ID = :id";
         $stmt = $ldb->prepare($query);

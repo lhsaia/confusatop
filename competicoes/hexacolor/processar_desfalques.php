@@ -1,13 +1,14 @@
 <?php
 // Function to process player cards, injuries, and suspensions after a match simulation
 function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $suspensosAntesPartida) {
-    // 1. Obter opções de suspensão da competição
-    $stmtOpt = $db->prepare("SELECT suspensao, expulso_dois_amarelos FROM competicao_opcoes WHERE id_competicao = :idComp LIMIT 1");
+    // 1. Obter opções de suspensão e tipo de participantes da competição
+    $stmtOpt = $db->prepare("SELECT suspensao, expulso_dois_amarelos, tipo_times FROM competicao_opcoes WHERE id_competicao = :idComp LIMIT 1");
     $stmtOpt->bindValue(':idComp', $idCompeticao, PDO::PARAM_INT);
     $stmtOpt->execute();
     $options = $stmtOpt->fetch(PDO::FETCH_ASSOC);
     $criterioSuspensao = isset($options['suspensao']) ? (int)$options['suspensao'] : 0; // 0=apenas vermelho, 1=2 amarelos, 2=3 amarelos
     $expulsoDoisAmarelos = isset($options['expulso_dois_amarelos']) ? (int)$options['expulso_dois_amarelos'] : 0; // 0=não contabilizar (descarta ambos), 1=contabilizar 1 amarelo, 2=contabilizar ambos (2 amarelos)
+    $tipoTimes = isset($options['tipo_times']) ? (int)$options['tipo_times'] : 0;
 
     // Definir limite de cartões amarelos para suspensão
     $limiteAmarelos = 0;
@@ -188,8 +189,8 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
         }
     }
 
-    // 6. Gravar eventos detalhados (gols e cartões) na tabela unificada jogos_clube_eventos
-    if ($hylData && !empty($hylData['eventos']) && is_array($hylData['eventos'])) {
+    // 6. Gravar eventos detalhados (gols e cartões) na tabela unificada jogos_clube_eventos (apenas competições de clubes)
+    if ($tipoTimes == 0 && $hylData && !empty($hylData['eventos']) && is_array($hylData['eventos'])) {
         // Limpa eventos anteriores desta partida para evitar duplicações
         $stmtDelEv = $db->prepare("DELETE FROM jogos_clube_eventos WHERE id_jogo = :idJogo");
         $stmtDelEv->bindValue(':idJogo', $idPartida, PDO::PARAM_INT);
@@ -252,8 +253,8 @@ function processarPosJogo($db, $idCompeticao, $idPartida, $hylFile, $hyjFile, $s
         }
     }
 
-    // 7. Gravar escalações na tabela unificada jogos_clube_escalacao
-    if (file_exists($hyjFile)) {
+    // 7. Gravar escalações na tabela unificada jogos_clube_escalacao (apenas competições de clubes)
+    if ($tipoTimes == 0 && file_exists($hyjFile)) {
         $json = json_decode(file_get_contents($hyjFile));
         if ($json) {
             $stmtDelEsc = $db->prepare("DELETE FROM jogos_clube_escalacao WHERE id_partida = :idPartida");

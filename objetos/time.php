@@ -2000,11 +2000,10 @@ function readExtraInfo($id){
 	
 	function inserirElencosSqlite($codigo_time, $arrayJogadores){
 		//escrever query
-        $query = "INSERT INTO
+        $query = "INSERT OR REPLACE INTO
                     elenco(Clube, Jogador1, Jogador2, Jogador3, Jogador4, Jogador5, Jogador6, Jogador7, Jogador8, Jogador9, Jogador10, Jogador11, Jogador12, Jogador13, Jogador14, Jogador15, Jogador16, Jogador17, Jogador18, Jogador19, Jogador20, Jogador21, Jogador22, Jogador23, Tecnico) 
                 VALUES 
-                    (:id,:jogador1,:jogador2,:jogador3,:jogador4,:jogador5,:jogador6,:jogador7,:jogador8,:jogador9,:jogador10,:jogador11,:jogador12,:jogador13,:jogador14,:jogador15,:jogador16,:jogador17,:jogador18,:jogador19,:jogador20,:jogador21,:jogador22,:jogador23, :tecnico)
-				ON CONFLICT DO NOTHING";
+                    (:id,:jogador1,:jogador2,:jogador3,:jogador4,:jogador5,:jogador6,:jogador7,:jogador8,:jogador9,:jogador10,:jogador11,:jogador12,:jogador13,:jogador14,:jogador15,:jogador16,:jogador17,:jogador18,:jogador19,:jogador20,:jogador21,:jogador22,:jogador23, :tecnico)";
         $stmt = $this->conn->prepare($query);
 
         // posted values
@@ -2051,11 +2050,10 @@ function readExtraInfo($id){
 	
 	function inserirEscalacaoSqlite($codigo_time, $capitaoNewId, $penaltisNewArray, $titularesNewArray){
 		//escrever query
-        $query = "INSERT INTO
+        $query = "INSERT OR REPLACE INTO
                     escalacao(Clube, Pos1, Jogador1, Pos2, Jogador2, Pos3, Jogador3, Pos4, Jogador4, Pos5, Jogador5, Pos6, Jogador6, Pos7, Jogador7, Pos8, Jogador8, Pos9, Jogador9, Pos10, Jogador10, Pos11, Jogador11, Capitao, Penalti1, Penalti2, Penalti3)
                 VALUES 
-                    (:id,:pos1,:jogador1,:pos2,:jogador2, :pos3, :jogador3,:pos4,:jogador4, :pos5, :jogador5,:pos6, :jogador6, :pos7, :jogador7, :pos8,:jogador8, :pos9, :jogador9, :pos10, :jogador10, :pos11, :jogador11, :capitao, :penalti1,:penalti2, :penalti3) 
-				ON CONFLICT DO NOTHING";
+                    (:id,:pos1,:jogador1,:pos2,:jogador2, :pos3, :jogador3,:pos4,:jogador4, :pos5, :jogador5,:pos6, :jogador6, :pos7, :jogador7, :pos8,:jogador8, :pos9, :jogador9, :pos10, :jogador10, :pos11, :jogador11, :capitao, :penalti1,:penalti2, :penalti3)";
 
         $stmt = $this->conn->prepare($query);
 

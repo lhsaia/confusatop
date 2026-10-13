@@ -1,5 +1,12 @@
 <?php
 $current_ranking_page = basename($_SERVER['PHP_SELF']);
+try {
+    include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/competicao_clube.php");
+    $dbRankingSync = (new Database())->getConnection();
+    $compRankingSync = new Competicao_clube($dbRankingSync);
+    $compRankingSync->sincronizarJogosRankingEncerrados();
+} catch (\Throwable $e) {}
 ?>
 <div class="ranking-nav-wrapper">
   <div class="ranking-nav-container">

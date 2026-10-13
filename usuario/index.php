@@ -113,6 +113,7 @@ $query_count_jogos_ativos = "
     INNER JOIN clube cB ON j.timeB_id = cB.ID
     INNER JOIN paises pB ON cB.Pais = pB.id
     WHERE j.simulador_interno = 1
+      AND (j.tipo_times = 0 OR j.tipo_times IS NULL)
       AND (
           j.status = 0
           OR (j.timeA_penaltis IS NULL AND DATE_ADD(j.data, INTERVAL 120 MINUTE) > NOW())
