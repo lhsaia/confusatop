@@ -1423,21 +1423,29 @@ class Tecnico{
 		    function createSqlite(){
 
         //escrever query
-        $query = "INSERT INTO
+        $query = "INSERT OR REPLACE INTO
                     " . $this->table_name . "(ID, Nome, Idade, Nivel, Mentalidade, Estilo) 
                 VALUES 
-                    (:id,:nome,:nascimento,:nivel,:mentalidade,:estilo) 
-				ON CONFLICT DO NOTHING";
+                    (:id,:nome,:nascimento,:nivel,:mentalidade,:estilo)";
 
         $stmt = $this->conn->prepare($query);
 
         // posted values
-		$this->id=htmlspecialchars(strip_tags($this->id));
-        $this->nome=htmlspecialchars(strip_tags($this->nome));
-        $this->nascimento=htmlspecialchars(strip_tags($this->nascimento));
-        $this->nivel=htmlspecialchars(strip_tags($this->nivel));
-        $this->mentalidade=htmlspecialchars(strip_tags($this->mentalidade));
-        $this->estilo=htmlspecialchars(strip_tags($this->estilo));
+		$this->id=htmlspecialchars(strip_tags((string)$this->id));
+        $this->nome=trim(html_entity_decode(strip_tags((string)$this->nome), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $this->nascimento=htmlspecialchars(strip_tags((string)$this->nascimento));
+        $this->nivel = (int)strip_tags((string)$this->nivel);
+        if ($this->nivel < 1 || $this->nivel > 10) {
+            $this->nivel = 5;
+        }
+        $this->mentalidade = (int)strip_tags((string)$this->mentalidade);
+        if ($this->mentalidade < 1 || $this->mentalidade > 5) {
+            $this->mentalidade = 3;
+        }
+        $this->estilo = (int)strip_tags((string)$this->estilo);
+        if ($this->estilo < 1 || $this->estilo > 5) {
+            $this->estilo = 3;
+        }
 
         // bind values
 		$stmt->bindParam(":id", $this->id);
@@ -1446,6 +1454,15 @@ class Tecnico{
         $stmt->bindParam(":nivel", $this->nivel);
         $stmt->bindParam(":mentalidade", $this->mentalidade);
         $stmt->bindParam(":estilo", $this->estilo);
+
+        try {
+            if ($stmt->execute()) {
+                return true;
+            }
+            return false;
+        } catch (\PDOException $e) {
+            return false;
+        }
 
     }
 

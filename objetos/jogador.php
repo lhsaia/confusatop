@@ -4366,20 +4366,22 @@ public function resolverEmprestimos(){
 				$error_count = 0;
 
 				//query principal
-				$query = "INSERT INTO
+				$query = "INSERT OR REPLACE INTO
 							" . $this->table_name . "(ID, Nome, Idade, Mentalidade, Potencial, CrescBase, CobradorFalta, Nivel) 
 						VALUES
-							(:id,:nomeJogador,:nascimento,:mentalidade,'0','0',:cobradorFalta,:nivel) 
-						ON CONFLICT DO NOTHING";
+							(:id,:nomeJogador,:nascimento,:mentalidade,'0','0',:cobradorFalta,:nivel)";
 
 				$stmt = $this->conn->prepare($query);
 
 				$this->id=htmlspecialchars(strip_tags((string)$this->id));
 				$this->nomeJogador=trim(html_entity_decode(strip_tags((string)$this->nomeJogador), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 				$this->nascimento=htmlspecialchars(strip_tags((string)$this->nascimento));
-				$this->mentalidade=htmlspecialchars(strip_tags($this->mentalidade));
-				$this->cobradorFalta=htmlspecialchars(strip_tags($this->cobradorFalta));
-				$this->nivel=htmlspecialchars(strip_tags($this->nivel));
+				$this->mentalidade = (int)strip_tags((string)$this->mentalidade);
+				if ($this->mentalidade < 1 || $this->mentalidade > 8) {
+					$this->mentalidade = 4;
+				}
+				$this->cobradorFalta=htmlspecialchars(strip_tags((string)$this->cobradorFalta));
+				$this->nivel=htmlspecialchars(strip_tags((string)$this->nivel));
 				
 				$stmt->bindParam(":id", $this->id);
 				$stmt->bindParam(":nomeJogador", $this->nomeJogador);

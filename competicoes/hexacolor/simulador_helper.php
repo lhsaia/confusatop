@@ -148,6 +148,133 @@ if (!function_exists('obterJogadoresClubeSQLite')) {
     }
 }
 
+if (!function_exists('garantirTecnicoValidoSQLite')) {
+    function garantirTecnicoValidoSQLite($ldb, $clubeId, $tecnicoPreferidoId = 0) {
+        $clubeId = (int)$clubeId;
+        $tecnicoPreferidoId = (int)$tecnicoPreferidoId;
+        if (!$ldb || $clubeId === 0) return $clubeId;
+
+        try {
+            $candidatos = [];
+            if ($tecnicoPreferidoId !== 0) {
+                $candidatos[] = $tecnicoPreferidoId;
+            }
+            if (!in_array($clubeId, $candidatos)) {
+                $candidatos[] = $clubeId;
+            }
+
+            $tecRow = null;
+            $stmtTec = $ldb->prepare("SELECT ID, Nome, Idade, Nivel, Mentalidade, Estilo FROM tecnico WHERE ID = :id LIMIT 1");
+            foreach ($candidatos as $cid) {
+                $stmtTec->bindValue(':id', $cid, PDO::PARAM_INT);
+                $stmtTec->execute();
+                $row = $stmtTec->fetch(PDO::FETCH_ASSOC);
+                if ($row && !empty($row['ID'])) {
+                    $tecRow = $row;
+                    break;
+                }
+            }
+
+            if ($tecRow) {
+                $tid = (int)$tecRow['ID'];
+                $ment = (int)($tecRow['Mentalidade'] ?? 0);
+                $est = (int)($tecRow['Estilo'] ?? 0);
+                $niv = (int)($tecRow['Nivel'] ?? 0);
+                $idade = (int)($tecRow['Idade'] ?? 0);
+                $nome = trim((string)($tecRow['Nome'] ?? ''));
+
+                $precisaUpdate = false;
+                if ($ment < 1 || $ment > 5) { $ment = 3; $precisaUpdate = true; }
+                if ($est < 1 || $est > 5) { $est = 3; $precisaUpdate = true; }
+                if ($niv < 1 || $niv > 10) { $niv = 5; $precisaUpdate = true; }
+                if ($idade <= 0) { $idade = 45; $precisaUpdate = true; }
+                if ($nome === '') { $nome = "Técnico #{$tid}"; $precisaUpdate = true; }
+
+                if ($precisaUpdate) {
+                    $stmtUp = $ldb->prepare("UPDATE tecnico SET Nome = :nome, Idade = :idade, Nivel = :nivel, Mentalidade = :ment, Estilo = :est WHERE ID = :id");
+                    $stmtUp->execute([
+                        ':nome' => $nome,
+                        ':idade' => $idade,
+                        ':nivel' => $niv,
+                        ':ment' => $ment,
+                        ':est' => $est,
+                        ':id' => $tid
+                    ]);
+                }
+                return $tid;
+            }
+
+            // Se não existe registro na tabela tecnico (ex: times .ymt importados anteriormente), criar técnico padrão válido
+            $tid = ($tecnicoPreferidoId !== 0) ? $tecnicoPreferidoId : $clubeId;
+            $nomeClube = "Clube {$clubeId}";
+            try {
+                $stmtClube = $ldb->prepare("SELECT Nome FROM clube WHERE ID = :id LIMIT 1");
+                $stmtClube->bindValue(':id', $clubeId, PDO::PARAM_INT);
+                $stmtClube->execute();
+                $cNome = $stmtClube->fetchColumn();
+                if ($cNome) $nomeClube = trim((string)$cNome);
+            } catch (\Throwable $e) {}
+
+            $stmtIns = $ldb->prepare("INSERT OR REPLACE INTO tecnico (ID, Nome, Idade, Nivel, Mentalidade, Estilo) VALUES (:id, :nome, 45, 5, 3, 3)");
+            $stmtIns->execute([
+                ':id' => $tid,
+                ':nome' => "Técnico (" . $nomeClube . ")"
+            ]);
+            return $tid;
+        } catch (\Throwable $e) {
+            error_log("Erro em garantirTecnicoValidoSQLite para o clube #{$clubeId}: " . $e->getMessage());
+            return $clubeId;
+        }
+    }
+}
+
+if (!function_exists('garantirIntegridadeJogadorSQLite')) {
+    function garantirIntegridadeJogadorSQLite($ldb, $jogadorId) {
+        $jogadorId = (int)$jogadorId;
+        if (!$ldb || $jogadorId === 0) return false;
+
+        try {
+            $stmtJ = $ldb->prepare("SELECT ID, Mentalidade, Nivel FROM jogador WHERE ID = :id LIMIT 1");
+            $stmtJ->bindValue(':id', $jogadorId, PDO::PARAM_INT);
+            $stmtJ->execute();
+            $jRow = $stmtJ->fetch(PDO::FETCH_ASSOC);
+            if (!$jRow) {
+                return false;
+            }
+
+            $ment = (int)($jRow['Mentalidade'] ?? 0);
+            if ($ment < 1 || $ment > 8) {
+                $stmtUpM = $ldb->prepare("UPDATE jogador SET Mentalidade = 4 WHERE ID = :id");
+                $stmtUpM->bindValue(':id', $jogadorId, PDO::PARAM_INT);
+                $stmtUpM->execute();
+            }
+
+            $stmtPos = $ldb->prepare("SELECT G FROM posicaojogador WHERE Jogador = :id LIMIT 1");
+            $stmtPos->bindValue(':id', $jogadorId, PDO::PARAM_INT);
+            $stmtPos->execute();
+            $posRow = $stmtPos->fetch(PDO::FETCH_ASSOC);
+            if (!$posRow) {
+                $stmtInsPos = $ldb->prepare("INSERT OR IGNORE INTO posicaojogador (Jogador, G, LD, LE, Z, AD, AE, V, MD, ME, MC, PD, PE, MA, Am, Aa) VALUES (:id, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0)");
+                $stmtInsPos->bindValue(':id', $jogadorId, PDO::PARAM_INT);
+                $stmtInsPos->execute();
+            }
+
+            // Garantir que haja linha tanto em atributosjogador quanto em atributosgoleiro para evitar NPE se atuar improvisado
+            $stmtInsAj = $ldb->prepare("INSERT OR IGNORE INTO atributosjogador (Jogador, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Determinacao, determinacaoOriginal) VALUES (:id, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 1, 1)");
+            $stmtInsAj->bindValue(':id', $jogadorId, PDO::PARAM_INT);
+            $stmtInsAj->execute();
+
+            $stmtInsAg = $ldb->prepare("INSERT OR IGNORE INTO atributosgoleiro (Goleiro, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao, determinacaoOriginal) VALUES (:id, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 1, 1)");
+            $stmtInsAg->bindValue(':id', $jogadorId, PDO::PARAM_INT);
+            $stmtInsAg->execute();
+
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+}
+
 if (!function_exists('garantirTitularesNoElencoSQLite')) {
     function garantirTitularesNoElencoSQLite($ldb, $clubeId, array $titulares) {
         $clubeId = (int)$clubeId;
@@ -159,12 +286,17 @@ if (!function_exists('garantirTitularesNoElencoSQLite')) {
             $stmtEl->execute();
             $elRow = $stmtEl->fetch(PDO::FETCH_ASSOC);
 
+            $tecnicoPreferido = $elRow ? (int)($elRow['Tecnico'] ?? 0) : 0;
+            $tecnicoValidoId = garantirTecnicoValidoSQLite($ldb, $clubeId, $tecnicoPreferido);
+
             $elPlayers = [];
             if ($elRow) {
                 for ($i = 1; $i <= 23; $i++) {
                     $pid = (int)($elRow['Jogador' . $i] ?? 0);
                     if ($pid !== 0 && !in_array($pid, $elPlayers)) {
-                        $elPlayers[] = $pid;
+                        if (garantirIntegridadeJogadorSQLite($ldb, $pid)) {
+                            $elPlayers[] = $pid;
+                        }
                     }
                 }
             }
@@ -172,8 +304,11 @@ if (!function_exists('garantirTitularesNoElencoSQLite')) {
             // Inserir os titulares no topo do elenco se faltar algum
             $titularesValues = array_values($titulares);
             foreach ($titularesValues as $tId) {
-                if (!in_array($tId, $elPlayers)) {
-                    array_unshift($elPlayers, $tId);
+                $tId = (int)$tId;
+                if ($tId !== 0 && !in_array($tId, $elPlayers)) {
+                    if (garantirIntegridadeJogadorSQLite($ldb, $tId)) {
+                        array_unshift($elPlayers, $tId);
+                    }
                 }
             }
 
@@ -197,7 +332,7 @@ if (!function_exists('garantirTitularesNoElencoSQLite')) {
             for ($k = 1; $k <= 23; $k++) {
                 $stmtInsEl->bindValue(':j' . $k, $elPlayers[$k - 1], PDO::PARAM_INT);
             }
-            $stmtInsEl->bindValue(':tecnico', $clubeId, PDO::PARAM_INT);
+            $stmtInsEl->bindValue(':tecnico', $tecnicoValidoId, PDO::PARAM_INT);
             $stmtInsEl->execute();
         } catch (\Throwable $e) {
             error_log("Erro em garantirTitularesNoElencoSQLite para o clube #{$clubeId}: " . $e->getMessage());
@@ -232,47 +367,48 @@ if (!function_exists('sanitizarEscalacaoPreSimulacao')) {
                 }
             }
 
-            // Se o time tem menos de 11 jogadores disponíveis, cria temporariamente reservas no SQLite
-            $totalDisp = count($disponiveis);
-            if ($totalDisp < 11) {
-                $faltam = 11 - $totalDisp;
-                for ($k = 1; $k <= $faltam; $k++) {
-                    $genPos = ($k === 1 && empty($goleiros)) ? 'G' : 'MC';
-                    $stmtMaxId = $ldb->query("SELECT MAX(ID) FROM jogador");
-                    $maxId = (int)$stmtMaxId->fetchColumn();
-                    $newId = max(90000, $maxId + 1);
+            // Função auxiliar para criar jogador reserva genérico quando faltar goleiro ou jogador de linha
+            $criarJogadorGenerico = function($genPos, $indice) use ($ldb, &$disponiveis, &$goleiros, &$jogadoresLinha) {
+                $stmtMaxId = $ldb->query("SELECT MAX(ID) FROM jogador");
+                $maxId = (int)$stmtMaxId->fetchColumn();
+                $newId = max(90000, $maxId + 1);
 
-                    $stmtInsGen = $ldb->prepare("INSERT OR IGNORE INTO jogador (ID, Nome, Idade, Nivel, Potencial, CrescBase, Mentalidade, CobradorFalta) 
-                        VALUES (:id, :nome, 22, 50, 0, 0, 1, 0)");
-                    $stmtInsGen->execute([
-                        ':id' => $newId,
-                        ':nome' => "Reserva Genérico {$k}"
-                    ]);
+                $stmtInsGen = $ldb->prepare("INSERT OR IGNORE INTO jogador (ID, Nome, Idade, Nivel, Potencial, CrescBase, Mentalidade, CobradorFalta) 
+                    VALUES (:id, :nome, 22, 50, 0, 0, 4, 0)");
+                $stmtInsGen->execute([
+                    ':id' => $newId,
+                    ':nome' => "Reserva Genérico {$indice}"
+                ]);
 
-                    $isGk = ($genPos === 'G') ? 1 : 0;
-                    $isMc = ($genPos === 'MC') ? 1 : 0;
-                    $stmtInsPos = $ldb->prepare("INSERT OR IGNORE INTO posicaojogador (Jogador, G, LD, LE, Z, AD, AE, V, MD, ME, MC, PD, PE, MA, Am, Aa) 
-                        VALUES (:id, :g, 0, 0, 0, 0, 0, 0, 0, 0, :mc, 0, 0, 0, 0, 0)");
-                    $stmtInsPos->execute([':id' => $newId, ':g' => $isGk, ':mc' => $isMc]);
+                $isGk = ($genPos === 'G') ? 1 : 0;
+                $isMc = ($genPos === 'MC') ? 1 : 0;
+                $stmtInsPos = $ldb->prepare("INSERT OR IGNORE INTO posicaojogador (Jogador, G, LD, LE, Z, AD, AE, V, MD, ME, MC, PD, PE, MA, Am, Aa) 
+                    VALUES (:id, :g, 0, 0, 0, 0, 0, 0, 0, 0, :mc, 0, 0, 0, 0, 0)");
+                $stmtInsPos->execute([':id' => $newId, ':g' => $isGk, ':mc' => $isMc]);
 
-                    if ($isGk) {
-                        $stmtInsAt = $ldb->prepare("INSERT OR IGNORE INTO atributosgoleiro (Goleiro, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao, determinacaoOriginal) 
-                            VALUES (:id, 50, 50, 50, 50, 50, 50, 1, 1)");
-                        $stmtInsAt->execute([':id' => $newId]);
-                    } else {
-                        $stmtInsAt = $ldb->prepare("INSERT OR IGNORE INTO atributosjogador (Jogador, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Determinacao, determinacaoOriginal) 
-                            VALUES (:id, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 1, 1)");
-                        $stmtInsAt->execute([':id' => $newId]);
-                    }
+                $stmtInsAtG = $ldb->prepare("INSERT OR IGNORE INTO atributosgoleiro (Goleiro, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao, determinacaoOriginal) 
+                    VALUES (:id, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 1, 1)");
+                $stmtInsAtG->execute([':id' => $newId]);
 
-                    $genPlayer = ['ID' => $newId, 'Nome' => "Reserva Genérico {$k}", 'Pos' => $genPos, 'Nivel' => 50];
-                    $disponiveis[$newId] = $genPlayer;
-                    if ($genPos === 'G') {
-                        $goleiros[$newId] = $genPlayer;
-                    } else {
-                        $jogadoresLinha[$newId] = $genPlayer;
-                    }
+                $stmtInsAtJ = $ldb->prepare("INSERT OR IGNORE INTO atributosjogador (Jogador, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Determinacao, determinacaoOriginal) 
+                    VALUES (:id, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 1, 1)");
+                $stmtInsAtJ->execute([':id' => $newId]);
+
+                $genPlayer = ['ID' => $newId, 'Nome' => "Reserva Genérico {$indice}", 'Pos' => $genPos, 'Nivel' => 50];
+                $disponiveis[$newId] = $genPlayer;
+                if ($genPos === 'G') {
+                    $goleiros[$newId] = $genPlayer;
+                } else {
+                    $jogadoresLinha[$newId] = $genPlayer;
                 }
+            };
+
+            $genIdx = 1;
+            if (empty($goleiros)) {
+                $criarJogadorGenerico('G', $genIdx++);
+            }
+            while (count($jogadoresLinha) < 10) {
+                $criarJogadorGenerico('MC', $genIdx++);
             }
 
             // 2. Ler escalação atual
@@ -301,29 +437,29 @@ if (!function_exists('sanitizarEscalacaoPreSimulacao')) {
                 10 => 'Am', 11 => 'Aa'
             ];
 
-            // Slot 1: Goleiro
+            // Slot 1: Goleiro (estritamente escolhido entre os goleiros disponíveis)
             $jog1 = (int)($esc['Jogador1'] ?? 0);
-            if (!isset($disponiveis[$jog1]) || in_array($jog1, $titularesEscolhidos)) {
+            if (!isset($goleiros[$jog1]) || in_array($jog1, $titularesEscolhidos)) {
                 $jog1 = !empty($goleiros) ? array_key_first($goleiros) : array_key_first($disponiveis);
             }
             $titularesEscolhidos[1] = $jog1;
             $posicoesFinais[1] = 'G';
-            unset($disponiveis[$jog1]);
+            unset($goleiros[$jog1], $disponiveis[$jog1]);
 
-            // Slots 2 a 11: Jogadores de linha
+            // Slots 2 a 11: Jogadores de linha (estritamente escolhidos entre jogadores de linha disponíveis)
             for ($i = 2; $i <= 11; $i++) {
                 $posRaw = $esc['Pos' . $i] ?? ($defaultPositions[$i] ?? 'MC');
                 $posNorm = normalizarPosicaoHexacolor($posRaw, $i);
                 if ($posNorm === 'G') $posNorm = 'Z';
 
                 $jogId = (int)($esc['Jogador' . $i] ?? 0);
-                if (!isset($disponiveis[$jogId]) || in_array($jogId, $titularesEscolhidos)) {
-                    $jogId = array_key_first($disponiveis);
+                if (!isset($jogadoresLinha[$jogId]) || in_array($jogId, $titularesEscolhidos)) {
+                    $jogId = !empty($jogadoresLinha) ? array_key_first($jogadoresLinha) : array_key_first($disponiveis);
                 }
 
                 $titularesEscolhidos[$i] = $jogId;
                 $posicoesFinais[$i] = $posNorm;
-                unset($disponiveis[$jogId]);
+                unset($jogadoresLinha[$jogId], $disponiveis[$jogId]);
             }
 
             // 4. Validação e Equilíbrio Tático Mínimo (Prevenção de somaProb == 0)
@@ -389,7 +525,7 @@ if (!function_exists('sanitizarEscalacaoPreSimulacao')) {
             $stmtUp->bindValue(':pen3', $penaltis[3], PDO::PARAM_INT);
             $stmtUp->execute();
 
-            // 7. Garantir que o elenco do clube no SQLite contenha todos os 11 titulares
+            // 7. Garantir que o elenco do clube no SQLite contenha todos os 11 titulares, atributos e técnico válido
             garantirTitularesNoElencoSQLite($ldb, $clubeId, $titularesEscolhidos);
 
         } catch (\Throwable $e) {

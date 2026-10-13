@@ -9,6 +9,22 @@
   },
   "days": [
     {
+      "id": "day_12_10_2026",
+      "date": "12/10/2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Competições de Seleções e Integração com o Ranking",
+          "desc": "Adicionado seletor nas opções de competições para definir se o torneio é disputado por Clubes ou Seleções Nacionais, com escolha do campeonato correspondente no Ranking Oficial. Partidas de competições de seleções passam a ser registradas automaticamente no ranking apenas após o término do horário real da partida (respeitando o sigilo temporal) e deixam de constar nas estatísticas e listagens de jogos de clubes."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Simulação de Partidas de Equipes YMT",
+          "desc": "Corrigidas falhas na simulação automática e manual de partidas de times importados via .ymt. Resolvido o erro de estádio não definido com auto-resolução do estádio no SQLite da competição e suporte a IDs negativos, o erro de ArrayIndexOutOfBoundsException em Escalacao e o NullPointerException em ModeloPartida.criacaoJogada causado pela ausência de execução no cadastro SQLite do técnico (Tecnico::createSqlite), garantindo a criação e validação automática de técnicos, mentalidades, estilos e atributos no SQLite antes da simulação."
+        }
+      ]
+    },
+    {
       "id": "day_11_10_2026",
       "date": "11/10/2026",
       "items": [
