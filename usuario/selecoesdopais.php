@@ -17,12 +17,15 @@ $time = new Time($db);
 $pais = new Pais($db);
 $estadio = new Estadio($db);
 
-$codigoPais = $_GET['idPais'];
-$stmtPais = $pais->readInfo($codigoPais);
-$resultPais = $stmtPais->fetch(PDO::FETCH_ASSOC);
-$nomePais = $resultPais['nome'];
+$codigoPais = isset($_GET['idPais']) ? intval($_GET['idPais']) : 0;
+$nomePais = '';
+if ($codigoPais > 0) {
+    $stmtPais = $pais->readInfo($codigoPais);
+    $resultPais = $stmtPais ? $stmtPais->fetch(PDO::FETCH_ASSOC) : false;
+    $nomePais = !empty($resultPais['nome']) ? $resultPais['nome'] : '';
+}
 
-$page_title = "Tela de seleções - " . $nomePais;
+$page_title = !empty($nomePais) ? "Tela de seleções - " . $nomePais : "Tela de seleções";
 $css_filename = "home_redesign";
 $aux_css = "meustimes_redesign";
 $css_login = 'login';
@@ -57,7 +60,7 @@ while ($row_estadio = $stmtEstadio->fetch(PDO::FETCH_ASSOC)){
 <div class="propostas-container">
 <div class="propostas-card">
     <div class="header-actions-container">
-        <h2 class="propostas-title">Tela de seleções - <?php echo $nomePais ?></h2>
+        <h2 class="propostas-title">Tela de seleções<?php echo !empty($nomePais) ? ' - ' . htmlspecialchars($nomePais) : ''; ?></h2>
         <div class="header-buttons-wrapper">
             <button class='btn-action-primary' onclick="window.location='/times/criar_selecao.php?idPais=<?php echo $codigoPais?>';">Criar seleção</button>
         </div>
@@ -445,24 +448,27 @@ $(document).ready(function() {
 
          if(response[5] != ""){
            formatoEsc = (response[0][0].Escudo).slice(((response[0][0].Escudo).lastIndexOf(".") - 1 >>> 0) + 2);
+           if(formatoEsc === "webp") { formatoEsc = "png"; }
          } else {
            formatoEsc = "null";
          }
 
          if(response[6] != ""){
            formatoUni1 = (response[0][0].Uniforme1).slice(((response[0][0].Uniforme1).lastIndexOf(".") - 1 >>> 0) + 2);
+           if(formatoUni1 === "webp") { formatoUni1 = "png"; }
          } else {
           formatoUni1 = "null";
          }
 
          if(response[7] != ""){
            formatoUni2 = (response[0][0].Uniforme2).slice(((response[0][0].Uniforme2).lastIndexOf(".") - 1 >>> 0) + 2);
+           if(formatoUni2 === "webp") { formatoUni2 = "png"; }
          } else {
            formatoUni2 = "null";
          }
 
-      xmlData += "</posicoesJogador>\n <escudoBase64>\n"+
-      response[5]+"</escudoBase64>\n <uniforme1Base64>\n"+
+      xmlData += "</posicoesJogador>\n <escudoBase64>"+
+      response[5]+"</escudoBase64>\n <uniforme1Base64>"+
       response[6]+"</uniforme1Base64>\n <uniforme2Base64>"+
       response[7]+"</uniforme2Base64>\n <formatoEscudoBase64>"+
       formatoEsc+"</formatoEscudoBase64>\n <formatoUniforme1Base64>"+

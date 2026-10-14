@@ -39,6 +39,10 @@ try {
         <span>Regras</span>
       </a>
       <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
+      <a href="/ranking/amistosos.php" class="ranking-nav-link <?php echo ($current_ranking_page == 'amistosos.php') ? 'active' : ''; ?>">
+        <span class="material-symbols-outlined nav-icon">sports_soccer</span>
+        <span>Simular Amistoso</span>
+      </a>
       <a href="/ranking/importar_jogo.php" class="ranking-nav-link <?php echo ($current_ranking_page == 'importar_jogo.php') ? 'active' : ''; ?>">
         <span class="material-symbols-outlined nav-icon">upload_file</span>
         <span>Importar</span>

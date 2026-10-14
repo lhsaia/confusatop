@@ -411,27 +411,27 @@ $proxima_partida = $jogoObj->buscarProximoJogoTime($idTime);
                 </div>
                 <div class="next-match-content">
                     <div class="next-match-meta">
-                        <span class="next-match-comp"><?php echo htmlspecialchars($proxima_partida['competicao_nome']); ?></span>
+                        <span class="next-match-comp"><?php echo htmlspecialchars($proxima_partida['competicao_nome'] ?? ''); ?></span>
                         <span class="next-match-date">📅 <?php echo $dataFormatadaProx; ?></span>
                         <?php if(!empty($proxima_partida['fase_nome'])): ?>
-                            <span class="next-match-phase">🏆 <?php echo htmlspecialchars($proxima_partida['fase_nome']); ?><?php echo !empty($proxima_partida['grupo']) ? " (Grupo " . $proxima_partida['grupo'] . ")" : ""; ?></span>
+                            <span class="next-match-phase">🏆 <?php echo htmlspecialchars($proxima_partida['fase_nome'] ?? ''); ?><?php echo !empty($proxima_partida['grupo']) ? " (Grupo " . $proxima_partida['grupo'] . ")" : ""; ?></span>
                         <?php endif; ?>
                     </div>
                     <div class="next-match-duel">
                         <div class="next-team <?php echo $isHomeProx ? 'is-current' : ''; ?>">
-                            <img src="/images/escudos/<?php echo $proxima_partida['timeA_escudo']; ?>" alt="<?php echo htmlspecialchars($proxima_partida['timeA_nome']); ?>">
-                            <span><?php echo htmlspecialchars(abreviarNomeClube($proxima_partida['timeA_nome'])); ?></span>
+                            <img src="/images/escudos/<?php echo $proxima_partida['timeA_escudo'] ?? '0.png'; ?>" alt="<?php echo htmlspecialchars($proxima_partida['timeA_nome'] ?? ''); ?>">
+                            <span><?php echo htmlspecialchars(abreviarNomeClube($proxima_partida['timeA_nome'] ?? '')); ?></span>
                         </div>
                         <div class="next-versus-tag">VS</div>
                         <div class="next-team <?php echo !$isHomeProx ? 'is-current' : ''; ?>">
-                            <img src="/images/escudos/<?php echo $proxima_partida['timeB_escudo']; ?>" alt="<?php echo htmlspecialchars($proxima_partida['timeB_nome']); ?>">
-                            <span><?php echo htmlspecialchars(abreviarNomeClube($proxima_partida['timeB_nome'])); ?></span>
+                            <img src="/images/escudos/<?php echo $proxima_partida['timeB_escudo'] ?? '0.png'; ?>" alt="<?php echo htmlspecialchars($proxima_partida['timeB_nome'] ?? ''); ?>">
+                            <span><?php echo htmlspecialchars(abreviarNomeClube($proxima_partida['timeB_nome'] ?? '')); ?></span>
                         </div>
                     </div>
                     <?php if(!empty($proxima_partida['estadio_nome'])): ?>
                         <div class="next-match-stadium">
                             <span class="material-symbols-outlined">stadium</span>
-                            <span><?php echo htmlspecialchars($proxima_partida['estadio_nome']); ?></span>
+                            <span><?php echo htmlspecialchars($proxima_partida['estadio_nome'] ?? ''); ?></span>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -467,8 +467,8 @@ $proxima_partida = $jogoObj->buscarProximoJogoTime($idTime);
                 ?>
                     <div class="recent-match-card result-<?php echo $resultado_classe; ?>">
                         <div class="match-meta-header">
-                            <span class="match-comp-name" title="<?php echo htmlspecialchars($partida['competicao_nome']); ?>">
-                                <?php echo htmlspecialchars($partida['competicao_nome']); ?>
+                            <span class="match-comp-name" title="<?php echo htmlspecialchars($partida['competicao_nome'] ?? ''); ?>">
+                                <?php echo htmlspecialchars($partida['competicao_nome'] ?? ''); ?>
                             </span>
                             <span class="match-badge-outcome badge-<?php echo $resultado_classe; ?>">
                                 <?php echo $resultado_rotulo; ?>
@@ -477,8 +477,8 @@ $proxima_partida = $jogoObj->buscarProximoJogoTime($idTime);
                         <div class="match-card-body">
                             <!-- Time A (Mandante) -->
                             <div class="match-team <?php echo $isHome ? 'is-current-team' : ''; ?>">
-                                <img src="/images/escudos/<?php echo $partida['timeA_escudo']; ?>" alt="<?php echo htmlspecialchars($partida['timeA_nome']); ?>" class="match-team-crest">
-                                <span class="match-team-name"><?php echo htmlspecialchars(abreviarNomeClube($partida['timeA_nome'])); ?></span>
+                                <img src="/images/escudos/<?php echo $partida['timeA_escudo'] ?? '0.png'; ?>" alt="<?php echo htmlspecialchars($partida['timeA_nome'] ?? ''); ?>" class="match-team-crest">
+                                <span class="match-team-name"><?php echo htmlspecialchars(abreviarNomeClube($partida['timeA_nome'] ?? '')); ?></span>
                             </div>
                             
                             <!-- Placar Central -->
@@ -495,8 +495,8 @@ $proxima_partida = $jogoObj->buscarProximoJogoTime($idTime);
 
                             <!-- Time B (Visitante) -->
                             <div class="match-team <?php echo !$isHome ? 'is-current-team' : ''; ?>">
-                                <img src="/images/escudos/<?php echo $partida['timeB_escudo']; ?>" alt="<?php echo htmlspecialchars($partida['timeB_nome']); ?>" class="match-team-crest">
-                                <span class="match-team-name"><?php echo htmlspecialchars(abreviarNomeClube($partida['timeB_nome'])); ?></span>
+                                <img src="/images/escudos/<?php echo $partida['timeB_escudo'] ?? '0.png'; ?>" alt="<?php echo htmlspecialchars($partida['timeB_nome'] ?? ''); ?>" class="match-team-crest">
+                                <span class="match-team-name"><?php echo htmlspecialchars(abreviarNomeClube($partida['timeB_nome'] ?? '')); ?></span>
                             </div>
                         </div>
                         <div class="match-card-footer">

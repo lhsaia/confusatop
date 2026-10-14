@@ -1691,7 +1691,7 @@ function readInfo($id){
     }
 
     function readSelecoes($idPais){
-        $idPais = htmlspecialchars(strip_tags($idPais));
+        $idPais = htmlspecialchars(strip_tags((string)($idPais ?? '')));
 
         $query = "SELECT
                         a.ID, a.Nome, a.TresLetras, a.Escudo, a.Uni1Cor1, a.Uni1Cor2, a.Uni1Cor3, a.Uni2Cor1, a.Uni2Cor2, a.Uni2Cor3, a.Uniforme1, a.Uniforme2, a.MaxTorcedores, a.Fidelidade, p.id as idPais, p.dono as idDonoPais, e.Nome as nomeEstadio, l.nome as nomeLiga, p.sigla as siglaPais, p.bandeira as bandeiraPais, a.liga, l.logo, e.Capacidade as capacidade, a.estadio as estadioId, a.Sexo as sexo
@@ -1747,7 +1747,7 @@ function readInfo($id){
     public function coletarInformacoesTime($idTime){
       $idTime = htmlspecialchars(strip_tags($idTime));
 
-      $query = "SELECT c.ID, c.Nome, c.TresLetras, c.Estadio, c.Escudo, c.Uni1Cor1, c.Uni1Cor2, c.Uni1Cor3, c.Uni2Cor1, c.Uni2Cor2, c.Uni2Cor3, c.Uniforme1, c.Uniforme2, c.MaxTorcedores, c.Fidelidade FROM clube c WHERE id = ?";
+      $query = "SELECT c.ID, c.Nome, c.TresLetras, c.Estadio, c.Escudo, c.Uni1Cor1, c.Uni1Cor2, c.Uni1Cor3, c.Uni2Cor1, c.Uni2Cor2, c.Uni2Cor3, c.Uniforme1, c.Uniforme2, c.MaxTorcedores, c.Fidelidade, c.Pais, c.status, p.bandeira as bandeiraPais FROM clube c LEFT JOIN paises p ON c.Pais = p.id WHERE c.id = ?";
       $stmt = $this->conn->prepare( $query );
       $stmt->bindParam(1, $idTime);
       $stmt->execute();

@@ -82,26 +82,91 @@ $infos[] = $jogadoresInfo;
 $infos[] = $tecnicoInfo;
 $infos[] = $estadioInfo;
 $infos[] = $climaInfo;
-$escudoPath = __DIR__ . "/../images/escudos/" . $infos[0][0]["Escudo"];
-if (!empty($infos[0][0]["Escudo"]) && $infos[0][0]["Escudo"] != "0.png" && file_exists($escudoPath) && is_file($escudoPath)) {
-    $escudoContent = @file_get_contents($escudoPath);
-    $infos[] = ($escudoContent !== false) ? base64_encode($escudoContent) : "";
+if (!function_exists('converteImagemYmtBase64')) {
+    function converteImagemYmtBase64($filePath) {
+        if (empty($filePath) || !file_exists($filePath) || !is_file($filePath)) {
+            return "";
+        }
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+
+        // Se for WebP, converter para PNG pois o simulador Hexacolor (Java) não suporta WebP nativamente
+        if ($ext === 'webp' && function_exists('imagecreatefromwebp')) {
+            $img = @imagecreatefromwebp($filePath);
+            if ($img) {
+                imagealphablending($img, false);
+                imagesavealpha($img, true);
+                ob_start();
+                imagepng($img);
+                $pngData = ob_get_clean();
+                imagedestroy($img);
+                if ($pngData !== false && strlen($pngData) > 0) {
+                    return base64_encode($pngData);
+                }
+            }
+        }
+
+        // Se for JPG/JPEG, converter para PNG para manter compatibilidade com o formato esperado pelo Hexacolor
+        if (($ext === 'jpg' || $ext === 'jpeg') && function_exists('imagecreatefromjpeg')) {
+            $img = @imagecreatefromjpeg($filePath);
+            if ($img) {
+                ob_start();
+                imagepng($img);
+                $pngData = ob_get_clean();
+                imagedestroy($img);
+                if ($pngData !== false && strlen($pngData) > 0) {
+                    return base64_encode($pngData);
+                }
+            }
+        }
+
+        $content = @file_get_contents($filePath);
+        return ($content !== false) ? base64_encode($content) : "";
+    }
+}
+
+$rawEscudo = $infos[0][0]["Escudo"] ?? '';
+$escudoPath = !empty($rawEscudo) ? (__DIR__ . "/../images/escudos/" . $rawEscudo) : '';
+
+// Se for seleção (status > 0) e não tiver escudo personalizado ou estiver com 0.png, usa a bandeira do país como escudo
+$isSelecao = isset($infos[0][0]["status"]) && (int)$infos[0][0]["status"] > 0;
+if (($rawEscudo === '0.png' || empty($rawEscudo) || !file_exists($escudoPath)) && $isSelecao && !empty($infos[0][0]["bandeiraPais"])) {
+    $bandeiraPath = __DIR__ . "/../images/bandeiras/" . $infos[0][0]["bandeiraPais"];
+    if (file_exists($bandeiraPath) && is_file($bandeiraPath)) {
+        $escudoPath = $bandeiraPath;
+        $rawEscudo = $infos[0][0]["bandeiraPais"];
+    }
+}
+
+if (!empty($rawEscudo) && $rawEscudo !== "0.png" && file_exists($escudoPath) && is_file($escudoPath)) {
+    $escudoBase64 = converteImagemYmtBase64($escudoPath);
+    $infos[] = $escudoBase64;
+    if (!empty($escudoBase64)) {
+        $infos[0][0]["Escudo"] = "team" . $idTime . ".png";
+    }
 } else {
     $infos[] = "";
 }
 
-$uni1Path = __DIR__ . "/../images/uniformes/" . $infos[0][0]["Uniforme1"];
-if (!empty($infos[0][0]["Uniforme1"]) && $infos[0][0]["Uniforme1"] != "semclube1.png" && file_exists($uni1Path) && is_file($uni1Path)) {
-    $uni1Content = @file_get_contents($uni1Path);
-    $infos[] = ($uni1Content !== false) ? base64_encode($uni1Content) : "";
+$rawUni1 = $infos[0][0]["Uniforme1"] ?? '';
+$uni1Path = (!empty($rawUni1) && $rawUni1 !== "semclube1.png") ? (__DIR__ . "/../images/uniformes/" . $rawUni1) : '';
+if (!empty($rawUni1) && $rawUni1 !== "semclube1.png" && file_exists($uni1Path) && is_file($uni1Path)) {
+    $uni1Base64 = converteImagemYmtBase64($uni1Path);
+    $infos[] = $uni1Base64;
+    if (!empty($uni1Base64)) {
+        $infos[0][0]["Uniforme1"] = "1-team" . $idTime . ".png";
+    }
 } else {
     $infos[] = "";
 }
 
-$uni2Path = __DIR__ . "/../images/uniformes/" . $infos[0][0]["Uniforme2"];
-if (!empty($infos[0][0]["Uniforme2"]) && $infos[0][0]["Uniforme2"] != "semclube2.png" && file_exists($uni2Path) && is_file($uni2Path)) {
-    $uni2Content = @file_get_contents($uni2Path);
-    $infos[] = ($uni2Content !== false) ? base64_encode($uni2Content) : "";
+$rawUni2 = $infos[0][0]["Uniforme2"] ?? '';
+$uni2Path = (!empty($rawUni2) && $rawUni2 !== "semclube2.png") ? (__DIR__ . "/../images/uniformes/" . $rawUni2) : '';
+if (!empty($rawUni2) && $rawUni2 !== "semclube2.png" && file_exists($uni2Path) && is_file($uni2Path)) {
+    $uni2Base64 = converteImagemYmtBase64($uni2Path);
+    $infos[] = $uni2Base64;
+    if (!empty($uni2Base64)) {
+        $infos[0][0]["Uniforme2"] = "2-team" . $idTime . ".png";
+    }
 } else {
     $infos[] = "";
 }

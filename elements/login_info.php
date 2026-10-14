@@ -65,6 +65,21 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
 				}
 			}
 
+            $params = session_get_cookie_params();
+            $cookieLifetime = 60 * 60 * 24 * 30; // 30 days
+            if (PHP_VERSION_ID >= 70300) {
+                setcookie(session_name(), session_id(), [
+                    'expires' => time() + $cookieLifetime,
+                    'path' => $params['path'] ?? '/',
+                    'domain' => $params['domain'] ?? '',
+                    'secure' => !empty($params['secure']),
+                    'httponly' => true,
+                    'samesite' => $params['samesite'] ?? 'Lax'
+                ]);
+            } else {
+                setcookie(session_name(), session_id(), time() + $cookieLifetime, ($params['path'] ?? '/'), ($params['domain'] ?? ''), !empty($params['secure']), true);
+            }
+
             if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {
                 header("Location: " . $_POST['redirect']);
                 exit;
@@ -111,11 +126,19 @@ if ( isset($_POST['loginsubmit']) && isset( $_POST['username'] ) && isset( $_POS
 				}
 			}
 
-            if(isset($_POST['remember'])){
-
-                $params = session_get_cookie_params();
-                setcookie(session_name(), session_id(), time() + 60*60*24*30, $params["path"], $params["domain"], $params["secure"], $params["httponly"]);
-
+            $params = session_get_cookie_params();
+            $cookieLifetime = 60 * 60 * 24 * 30; // 30 days
+            if (PHP_VERSION_ID >= 70300) {
+                setcookie(session_name(), session_id(), [
+                    'expires' => time() + $cookieLifetime,
+                    'path' => $params['path'] ?? '/',
+                    'domain' => $params['domain'] ?? '',
+                    'secure' => !empty($params['secure']),
+                    'httponly' => true,
+                    'samesite' => $params['samesite'] ?? 'Lax'
+                ]);
+            } else {
+                setcookie(session_name(), session_id(), time() + $cookieLifetime, ($params['path'] ?? '/'), ($params['domain'] ?? ''), !empty($params['secure']), true);
             }
 
             if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {

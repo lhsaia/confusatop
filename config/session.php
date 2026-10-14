@@ -206,13 +206,16 @@ if (session_status() === PHP_SESSION_NONE) {
         }
 
         // Configure session cookie params for security and longevity
-        $is_secure = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+        $is_secure = (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off')
+            || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
+            || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
+            || (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && strtolower($_SERVER['HTTP_X_FORWARDED_SSL']) === 'on');
 
         if (PHP_VERSION_ID >= 70300) {
             session_set_cookie_params([
                 'lifetime' => $session_lifetime,
                 'path' => '/',
-                'domain' => $cookie_domain,
+                'domain' => $cookie_domain ?: '',
                 'secure' => $is_secure,
                 'httponly' => true,
                 'samesite' => 'Lax'
@@ -235,32 +238,32 @@ if (session_status() === PHP_SESSION_NONE) {
             session_name('confusatop');
         }
 
-        // Inicia a sessão normalmente sem forçar novo ID em caso de concorrência temporária
-        @session_start();
-    }
-}
+        // Inicia a sessão com fallback seguro caso o arquivo de sessão esteja corrompido
+        if (!@session_start()) {
+            if (session_status() !== PHP_SESSION_ACTIVE) {
+                session_id(bin2hex(random_bytes(16)));
+                @session_start();
+            }
+        }
 
-// Auto-descarte de sessões vazias (Zero Lixo no Disco):
-// Se for um bot, crawler ou visitante anônimo que não gravou nada em $_SESSION,
-// descarta a sessão e remove o arquivo de 0 bytes do disco ao término da requisição.
-if (!function_exists('confusatop_session_cleanup_shutdown')) {
-    function confusatop_session_cleanup_shutdown(): void {
-        global $session_dir;
-        if (session_status() === PHP_SESSION_ACTIVE) {
-            $sessId = session_id();
-            if (empty($_SESSION)) {
-                @session_abort();
-                if (!empty($sessId) && !empty($session_dir)) {
-                    $sessFile = $session_dir . '/sess_' . $sessId;
-                    if (is_file($sessFile) && @filesize($sessFile) === 0) {
-                        @unlink($sessFile);
-                    }
-                }
+        // Garante que o cookie de sessão permaneça persistente no navegador (30 dias)
+        // para usuários autenticados, evitando a expiração do cookie ao fechar o navegador
+        if (session_status() === PHP_SESSION_ACTIVE && !empty($_SESSION['loggedin']) && !headers_sent()) {
+            if (PHP_VERSION_ID >= 70300) {
+                setcookie(session_name(), session_id(), [
+                    'expires' => time() + $session_lifetime,
+                    'path' => '/',
+                    'domain' => $cookie_domain ?: '',
+                    'secure' => $is_secure,
+                    'httponly' => true,
+                    'samesite' => 'Lax'
+                ]);
+            } else {
+                setcookie(session_name(), session_id(), time() + $session_lifetime, '/; SameSite=Lax', $cookie_domain ?: '', $is_secure, true);
             }
         }
     }
 }
-register_shutdown_function('confusatop_session_cleanup_shutdown');
 
 /*
 // Temporary debug logging to understand exactly what is happening for the failing user

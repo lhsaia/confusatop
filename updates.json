@@ -9,6 +9,52 @@
   },
   "days": [
     {
+      "id": "day_13_10_2026",
+      "date": "13/10/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Persistência de Sessão e Correção de Expiração ao Fechar Navegador",
+          "desc": "Corrigida a perda de sessão que ocorria ao fechar o navegador. Removido o descarte prematuro e indevido de sessões por abort durante o encerramento da requisição, garantida a emissão e renovação contínua do cookie de sessão com expiração persistente de 30 dias (SameSite Lax e detecção aprimorada de HTTPS/proxies) tanto no login padrão quanto na impersonação, mantendo o usuário conectado continuamente."
+        },
+        {
+          "badge": "new",
+          "title": "Simulador de Amistosos de Seleções",
+          "desc": "Adicionada nova tela dedicada para geração e simulação de amistosos avulsos entre seleções nacionais com suporte a categorias (Principal, Sub-20, Sub-18 e Olímpica), histórico de confrontos (head-to-head), opção de envio direto para o CONFUSA Live e respeito estrito ao Sigilo Temporal, revelando o placar, súmula e cômputo no ranking apenas após o término da partida no tempo real."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Coluna tipo_times e Avisos de Parâmetros Nulos",
+          "desc": "Adicionada autocriação e fallback seguro para a coluna tipo_times em jogos_clube caso a tabela ainda não a possua no banco de produção. Corrigidos também avisos de chave indefinida idPais em selecoesdopais.php e tratamento de valores nulos passados para strip_tags em time.php."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Depreciação no Perfil Magazine do Time",
+          "desc": "Tratamento de valores nulos passados para htmlspecialchars nos blocos de próximo confronto e partidas recentes na página de apresentação magazine do clube, evitando avisos de depreciação do PHP 8.1+."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Escudo e Uniformes na Exportação .YMT",
+          "desc": "Corrigido erro na exportação de seleções e clubes (.ymt) que deixava as equipes sem escudo no simulador Hexacolor. Foi adicionada a conversão automática de imagens WebP para PNG em base64 garantindo compatibilidade com o leitor Java do simulador, bem como fallback automático para a bandeira do país caso a seleção não possua escudo próprio cadastrado."
+        },
+        {
+          "badge": "new",
+          "title": "Verificação de Integridade de Times em Competições",
+          "desc": "Adicionado botão individual em cada vaga e botão no topo da página de seleção de times de competições para verificar a integridade técnica das equipes (quantidade no elenco, capitão, cobradores de faltas/pênaltis, goleiros, 11 titulares, limite de idade, técnico único e estádio/clima), exibindo relatório detalhado com checklist de aprovação ou listagem de pendências a corrigir."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Avanço Automático de Fases em Competições Mata-Mata",
+          "desc": "Corrigido o avanço automático de fases em competições de mata-mata, filtrando estritamente pelo identificador do simulador interno (simulador_interno = 1) para que confrontos históricos ou de edições anteriores não bloqueiem indevidamente a criação das fases seguintes. Corrigida também a consulta de árbitros e a auto-resolução de nomes das equipes classificadas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de BYEs e Paginação na Lista de Jogos",
+          "desc": "Corrigido o cálculo de equipes com avanço direto (BYE) na tela de lista de jogos de mata-mata, restringindo a verificação estritamente aos times inscritos na competição. Eliminada a iteração global sobre o cadastro geral de clubes que gerava centenas de páginas e partidas fictícias com equipes de fora do torneio."
+        }
+      ]
+    },
+    {
       "id": "day_12_10_2026",
       "date": "12/10/2026",
       "items": [

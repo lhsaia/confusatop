@@ -1920,14 +1920,14 @@ class Competicao_clube{
 		$proximaFase = $nextFaseMap[$faseAtual];
 
 		// 1. Verificar se já existem jogos criados para a próxima fase
-		$stmtJaExiste = $this->conn->prepare("SELECT 1 FROM jogos_clube WHERE competicao_id = :idComp AND fase = :proxFase LIMIT 1");
+		$stmtJaExiste = $this->conn->prepare("SELECT 1 FROM jogos_clube WHERE competicao_id = :idComp AND fase = :proxFase AND simulador_interno = 1 LIMIT 1");
 		$stmtJaExiste->execute([':idComp' => $idCompeticao, ':proxFase' => $proximaFase]);
 		if ($stmtJaExiste->fetch()) {
 			return false; // Próxima fase já foi criada
 		}
 
 		// 2. Carregar todos os jogos da fase atual
-		$stmtJogosFase = $this->conn->prepare("SELECT * FROM jogos_clube WHERE competicao_id = :idComp AND fase = :fase ORDER BY id ASC");
+		$stmtJogosFase = $this->conn->prepare("SELECT * FROM jogos_clube WHERE competicao_id = :idComp AND fase = :fase AND simulador_interno = 1 ORDER BY id ASC");
 		$stmtJogosFase->execute([':idComp' => $idCompeticao, ':fase' => $faseAtual]);
 		$jogosFase = $stmtJogosFase->fetchAll(PDO::FETCH_ASSOC);
 		if (empty($jogosFase)) return false;
@@ -1977,6 +1977,13 @@ class Competicao_clube{
 				$vencNome = $jg['timeA_nome'];
 			}
 
+			// Preencher nome caso esteja vazio
+			if (empty($vencNome) && $vencId > 0) {
+				$stC = $this->conn->prepare("SELECT nome FROM clube WHERE id = ?");
+				$stC->execute([$vencId]);
+				$vencNome = $stC->fetchColumn() ?: null;
+			}
+
 			$vencedoresJogos[] = [
 				'id' => $vencId,
 				'nome' => $vencNome
@@ -1989,7 +1996,7 @@ class Competicao_clube{
 		$stmtMinFase = $this->conn->prepare("
 			SELECT fase 
 			FROM jogos_clube 
-			WHERE competicao_id = :idComp AND fase IN (11, 10, 9, 3, 4, 5, 8) 
+			WHERE competicao_id = :idComp AND simulador_interno = 1 AND fase IN (11, 10, 9, 3, 4, 5, 8) 
 			ORDER BY FIELD(fase, 11, 10, 9, 3, 4, 5, 8) ASC 
 			LIMIT 1
 		");
@@ -2108,14 +2115,21 @@ class Competicao_clube{
 				$ldb->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 				$stmtEst = $ldb->query("SELECT ID FROM estadio");
 				if ($stmtEst) $estadios = $stmtEst->fetchAll(PDO::FETCH_ASSOC);
-				$stmtArb = $ldb->query("SELECT ID FROM arbitro");
+				$stmtArb = $ldb->query("SELECT ID FROM trioarbitragem");
+				if (!$stmtArb) {
+					$stmtArb = $ldb->query("SELECT ID FROM arbitro");
+				}
 				if ($stmtArb) $arbitros = $stmtArb->fetchAll(PDO::FETCH_ASSOC);
 			} catch (\Throwable $e) {}
 		}
 
-		// Data inicial para a próxima fase: 7 dias após a data do último jogo da fase atual
+		// Data inicial para a próxima fase: 7 dias após a data do último jogo da fase atual, ou a partir de amanhã se já tiver passado
 		$lastDate = !empty($jogosFase[count($jogosFase)-1]['data']) ? $jogosFase[count($jogosFase)-1]['data'] : date('Y-m-d H:i:s');
-		$baseDate = date('Y-m-d 16:00:00', strtotime($lastDate . ' +7 days'));
+		$baseTimestamp = strtotime($lastDate . ' +7 days');
+		if ($baseTimestamp < time()) {
+			$baseTimestamp = strtotime('+1 day 16:00:00');
+		}
+		$baseDate = date('Y-m-d 16:00:00', $baseTimestamp);
 
 		$usedStadiumsInPhase = [];
 

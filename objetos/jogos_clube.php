@@ -33,6 +33,20 @@ class Jogo{
 
     public function __construct($db){
         $this->conn = $db;
+        $this->ensureTipoTimesColumn();
+    }
+
+    private function ensureTipoTimesColumn() {
+        try {
+            $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN IF NOT EXISTS tipo_times TINYINT(1) DEFAULT 0");
+        } catch (Exception $e) {
+            try {
+                $check = $this->conn->query("SHOW COLUMNS FROM " . $this->table_name . " LIKE 'tipo_times'");
+                if ($check && $check->rowCount() == 0) {
+                    $this->conn->exec("ALTER TABLE " . $this->table_name . " ADD COLUMN tipo_times TINYINT(1) DEFAULT 0");
+                }
+            } catch (Exception $ex) {}
+        }
     }
 
      // inserir jogo
@@ -915,12 +929,25 @@ public function getMatchId(){
             LIMIT :limite
         ";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id1', $id_time, PDO::PARAM_INT);
-        $stmt->bindParam(':id2', $id_time, PDO::PARAM_INT);
-        $stmt->bindParam(':limite', $limite, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id1', $id_time, PDO::PARAM_INT);
+            $stmt->bindParam(':id2', $id_time, PDO::PARAM_INT);
+            $stmt->bindParam(':limite', $limite, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            if (strpos($e->getMessage(), 'tipo_times') !== false) {
+                $queryFallback = str_replace("AND (j.tipo_times = 0 OR j.tipo_times IS NULL)", "", $query);
+                $stmt = $this->conn->prepare($queryFallback);
+                $stmt->bindParam(':id1', $id_time, PDO::PARAM_INT);
+                $stmt->bindParam(':id2', $id_time, PDO::PARAM_INT);
+                $stmt->bindParam(':limite', $limite, PDO::PARAM_INT);
+                $stmt->execute();
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+            throw $e;
+        }
     }
 
     /**
@@ -968,11 +995,23 @@ public function getMatchId(){
             LIMIT 1
         ";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id1', $id_time, PDO::PARAM_INT);
-        $stmt->bindParam(':id2', $id_time, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id1', $id_time, PDO::PARAM_INT);
+            $stmt->bindParam(':id2', $id_time, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            if (strpos($e->getMessage(), 'tipo_times') !== false) {
+                $queryFallback = str_replace("AND (j.tipo_times = 0 OR j.tipo_times IS NULL)", "", $query);
+                $stmt = $this->conn->prepare($queryFallback);
+                $stmt->bindParam(':id1', $id_time, PDO::PARAM_INT);
+                $stmt->bindParam(':id2', $id_time, PDO::PARAM_INT);
+                $stmt->execute();
+                return $stmt->fetch(PDO::FETCH_ASSOC);
+            }
+            throw $e;
+        }
     }
 }
 ?>

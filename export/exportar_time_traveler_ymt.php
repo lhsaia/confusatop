@@ -329,15 +329,52 @@ $climaRow = !empty($climaInfo) ? $climaInfo[0] : [
     'Hemisferio' => '1'
 ];
 
+if (!function_exists('ttConvertImageToPngBase64')) {
+    function ttConvertImageToPngBase64($filePath) {
+        if (empty($filePath) || !file_exists($filePath) || !is_file($filePath)) {
+            return false;
+        }
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        if ($ext === 'webp' && function_exists('imagecreatefromwebp')) {
+            $img = @imagecreatefromwebp($filePath);
+            if ($img) {
+                imagealphablending($img, false);
+                imagesavealpha($img, true);
+                ob_start();
+                imagepng($img);
+                $data = ob_get_clean();
+                imagedestroy($img);
+                if ($data !== false && strlen($data) > 0) {
+                    return base64_encode($data);
+                }
+            }
+        }
+        if (($ext === 'jpg' || $ext === 'jpeg') && function_exists('imagecreatefromjpeg')) {
+            $img = @imagecreatefromjpeg($filePath);
+            if ($img) {
+                ob_start();
+                imagepng($img);
+                $data = ob_get_clean();
+                imagedestroy($img);
+                if ($data !== false && strlen($data) > 0) {
+                    return base64_encode($data);
+                }
+            }
+        }
+        $content = @file_get_contents($filePath);
+        return ($content !== false) ? base64_encode($content) : false;
+    }
+}
+
 // 4. Imagens em Base64
 $escudoPath = $_SERVER['DOCUMENT_ROOT'] . "/images/escudos/" . $infoClube["Escudo"];
 $escudoBase64 = "";
 $formatoEscudo = "null";
 if (!empty($infoClube["Escudo"]) && $infoClube["Escudo"] != "0.png" && file_exists($escudoPath) && is_file($escudoPath)) {
-    $escContent = @file_get_contents($escudoPath);
-    if ($escContent !== false) {
-        $escudoBase64 = base64_encode($escContent);
-        $formatoEscudo = pathinfo($infoClube["Escudo"], PATHINFO_EXTENSION) ?: "png";
+    $escB64 = ttConvertImageToPngBase64($escudoPath);
+    if ($escB64 !== false) {
+        $escudoBase64 = $escB64;
+        $formatoEscudo = "png";
     }
 }
 
@@ -345,10 +382,10 @@ $uni1Path = $_SERVER['DOCUMENT_ROOT'] . "/images/uniformes/" . $infoClube["Unifo
 $uni1Base64 = "";
 $formatoUni1 = "null";
 if (!empty($infoClube["Uniforme1"]) && $infoClube["Uniforme1"] != "semclube1.png" && file_exists($uni1Path) && is_file($uni1Path)) {
-    $u1Content = @file_get_contents($uni1Path);
-    if ($u1Content !== false) {
-        $uni1Base64 = base64_encode($u1Content);
-        $formatoUni1 = pathinfo($infoClube["Uniforme1"], PATHINFO_EXTENSION) ?: "png";
+    $u1B64 = ttConvertImageToPngBase64($uni1Path);
+    if ($u1B64 !== false) {
+        $uni1Base64 = $u1B64;
+        $formatoUni1 = "png";
     }
 }
 
@@ -356,10 +393,10 @@ $uni2Path = $_SERVER['DOCUMENT_ROOT'] . "/images/uniformes/" . $infoClube["Unifo
 $uni2Base64 = "";
 $formatoUni2 = "null";
 if (!empty($infoClube["Uniforme2"]) && $infoClube["Uniforme2"] != "semclube2.png" && file_exists($uni2Path) && is_file($uni2Path)) {
-    $u2Content = @file_get_contents($uni2Path);
-    if ($u2Content !== false) {
-        $uni2Base64 = base64_encode($u2Content);
-        $formatoUni2 = pathinfo($infoClube["Uniforme2"], PATHINFO_EXTENSION) ?: "png";
+    $u2B64 = ttConvertImageToPngBase64($uni2Path);
+    if ($u2B64 !== false) {
+        $uni2Base64 = $u2B64;
+        $formatoUni2 = "png";
     }
 }
 

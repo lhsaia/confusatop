@@ -52,6 +52,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 
 	// Carregar vagas / slots para identificação de BYEs e resolução de nomes
 	$assignedSlotTeams = [];
+	$timesInscritos = [];
 	$stmtTimesSlots = $competicao->carregarListaTimes($idCompeticao);
 	while ($rSlot = $stmtTimesSlots->fetch(PDO::FETCH_ASSOC)) {
 		$cod = intval($rSlot['codigo_time']);
@@ -69,6 +70,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 			if ($stC->fetch()) {
 				$cIdTeam = -1 * abs($cod);
 			}
+		}
+		if ($cIdTeam != 0) {
+			$timesInscritos[] = [
+				'id' => $cIdTeam,
+				'codigo' => $cod,
+				'slot' => $sRaw
+			];
 		}
 		if ($cIdTeam != 0 && $sRaw !== '') {
 			$assignedSlotTeams[$sRaw] = $cIdTeam;
@@ -353,6 +361,7 @@ $(document).ready(function($){
 	 var listaArbitros =  <?php echo json_encode($listaArbitros); ?>;
 	 var listaEstadios =  <?php echo json_encode($listaEstadios); ?>;
 	 var assignedSlotTeams = <?php echo json_encode($assignedSlotTeams); ?>;
+	 var timesInscritos = <?php echo json_encode($timesInscritos); ?>;
 	 var tipoCompeticao = <?php echo (int)$tipoCompeticao; ?>;
 	 var numTeamsComp = <?php echo (int)$numTeamsComp; ?>;
 
@@ -557,21 +566,26 @@ $(document).ready(function($){
 				});
 
 				let byeList = [];
-				if (assignedSlotTeams && Object.keys(assignedSlotTeams).length > 0) {
-					$.each(assignedSlotTeams, function(slotName, cId){
-						let cIdInt = parseInt(cId);
-						let isNoJogo = false;
-						if (cIdInt != 0 && jogandoPrimeiraFaseIds[cIdInt]) isNoJogo = true;
-						if (jogandoPrimeiraFaseNomes[$.trim(slotName)]) isNoJogo = true;
+				let seenByeKeys = {};
 
-						if (!isNoJogo) {
-							let tObj = (cIdInt != 0) ? listaTimes.find(t => t[0] == cIdInt) : null;
-							let tNome = tObj ? tObj[1] : slotName;
+				if (timesInscritos && timesInscritos.length > 0) {
+					$.each(timesInscritos, function(i, tInfo){
+						let cId = parseInt(tInfo.id);
+						let sName = tInfo.slot ? $.trim(tInfo.slot) : '';
+						let isNoJogo = false;
+						if (cId != 0 && jogandoPrimeiraFaseIds[cId]) isNoJogo = true;
+						if (sName !== '' && jogandoPrimeiraFaseNomes[sName]) isNoJogo = true;
+
+						let dedupKey = (cId != 0) ? ('id_' + cId) : ('slot_' + sName);
+						if (!isNoJogo && !seenByeKeys[dedupKey]) {
+							seenByeKeys[dedupKey] = true;
+							let tObj = (cId != 0) ? listaTimes.find(t => t[0] == cId) : null;
+							let tNome = tObj ? tObj[1] : (sName !== '' ? sName : ('Time ' + tInfo.codigo));
 
 							byeList.push({
 								is_bye: true,
-								id: 'bye_' + slotName,
-								timeA_id: (cIdInt != 0) ? cIdInt : 0,
+								id: 'bye_' + (cId != 0 ? cId : sName),
+								timeA_id: cId,
 								timeA_nome: tNome,
 								fase: primeiraFaseId,
 								data: firstDate,
@@ -579,15 +593,24 @@ $(document).ready(function($){
 							});
 						}
 					});
-				} else if (listaTimes && listaTimes.length > 0) {
-					$.each(listaTimes, function(i, tObj){
-						let cId = parseInt(tObj[0]);
-						if (!jogandoPrimeiraFaseIds[cId]) {
+				} else if (assignedSlotTeams && Object.keys(assignedSlotTeams).length > 0) {
+					$.each(assignedSlotTeams, function(slotName, cId){
+						let cIdInt = parseInt(cId);
+						let isNoJogo = false;
+						if (cIdInt != 0 && jogandoPrimeiraFaseIds[cIdInt]) isNoJogo = true;
+						if (jogandoPrimeiraFaseNomes[$.trim(slotName)]) isNoJogo = true;
+
+						let dedupKey = (cIdInt != 0) ? ('id_' + cIdInt) : ('slot_' + slotName);
+						if (!isNoJogo && !seenByeKeys[dedupKey]) {
+							seenByeKeys[dedupKey] = true;
+							let tObj = (cIdInt != 0) ? listaTimes.find(t => t[0] == cIdInt) : null;
+							let tNome = tObj ? tObj[1] : slotName;
+
 							byeList.push({
 								is_bye: true,
-								id: 'bye_' + cId,
-								timeA_id: cId,
-								timeA_nome: tObj[1],
+								id: 'bye_' + (cIdInt != 0 ? cIdInt : slotName),
+								timeA_id: (cIdInt != 0) ? cIdInt : 0,
+								timeA_nome: tNome,
 								fase: primeiraFaseId,
 								data: firstDate,
 								status: 1

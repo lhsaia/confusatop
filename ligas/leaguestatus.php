@@ -736,18 +736,21 @@ $('.salvar').click(function(){
 
          if(response[5] != ""){
            formatoEsc = (response[0][0].Escudo).slice(((response[0][0].Escudo).lastIndexOf(".") - 1 >>> 0) + 2);
+           if(formatoEsc === "webp") { formatoEsc = "png"; }
          } else {
            formatoEsc = "null";
          }
 
          if(response[6] != ""){
            formatoUni1 = (response[0][0].Uniforme1).slice(((response[0][0].Uniforme1).lastIndexOf(".") - 1 >>> 0) + 2);
+           if(formatoUni1 === "webp") { formatoUni1 = "png"; }
          } else {
           formatoUni1 = "null";
          }
 
          if(response[7] != ""){
            formatoUni2 = (response[0][0].Uniforme2).slice(((response[0][0].Uniforme2).lastIndexOf(".") - 1 >>> 0) + 2);
+           if(formatoUni2 === "webp") { formatoUni2 = "png"; }
          } else {
            formatoUni2 = "null";
          }

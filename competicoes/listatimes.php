@@ -144,6 +144,25 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
         </div>
     </div>
 </main>
+
+<!-- Modal de Verificação de Integridade -->
+<div id="modalVerificacaoTime" class="modal-verificacao-overlay">
+    <div class="modal-verificacao-card">
+        <div class="modal-verificacao-header">
+            <h3 id="modalVerificacaoTitulo">
+                <span class="material-symbols-outlined">fact_check</span>
+                <span>Verificação de Integridade</span>
+            </h3>
+            <button type="button" class="modal-verificacao-close" id="btnFecharModalVerificacao">&times;</button>
+        </div>
+        <div class="modal-verificacao-body" id="modalVerificacaoConteudo">
+            <!-- Conteúdo dinâmico via JS -->
+        </div>
+        <div class="modal-verificacao-footer">
+            <button type="button" class="modal-verificacao-btn-fechar" id="btnOkModalVerificacao">Fechar</button>
+        </div>
+    </div>
+</div>
 <?php
  
  ?>
@@ -196,7 +215,10 @@ function showToast(msg, type = 'error') {
 
 $( document ).ready(function(){
 
-	 $("#toolbar").html('<div id="gerar_tabela"><span class="material-symbols-outlined">grid_view</span><span>Gerar Tabela</span></div>');
+	 $("#toolbar").html(
+		'<div id="verificar_todos_times" title="Verificar integridade de todos os times da competição"><span class="material-symbols-outlined">fact_check</span><span>Verificar Todos os Times</span></div>' +
+		'<div id="gerar_tabela"><span class="material-symbols-outlined">grid_view</span><span>Gerar Tabela</span></div>'
+	 );
 	 
 	 $(document).on('click', '#gerar_tabela', function(){
 		if(confirm("Deseja gerar a tabela de jogos? Isso apagará os jogos atuais desta competição!")){
@@ -429,6 +451,7 @@ $( document ).ready(function(){
 			if((admin === "true" || parseInt(dono_competicao) === parseInt(user_id)) && matchData && matchData.id_time_portal && parseInt(matchData.id_time_portal) > 0){
 				tbl += "<button type='button' id='sync_team"+i+"' class='sync_team' data-vaga='"+i+"' data-time-portal='"+matchData.id_time_portal+"' data-pais-id='"+selectedCountry+"' title='Ressincronizar dados deste time com o portal'><span class='material-symbols-outlined' style='font-size:1.15rem; line-height:1;'>sync</span></button>";
 			}
+			tbl += "<button type='button' id='verificar_time"+i+"' class='verificar_team' data-vaga='"+i+"' title='Verificar integridade deste time (elenco, técnico, escalação, estádio)'><span class='material-symbols-outlined' style='font-size:1.15rem; line-height:1;'>fact_check</span></button>";
 			tbl += "<span class='status_competicao' style='background-color:"+cor_status+" !important; color:"+font_status+" !important; border: 1px solid "+font_status+"20 !important;'>" +status_time + "</span>";
 			
 		tbl += "</div>";
@@ -873,7 +896,189 @@ $(document).on("click", ".update_team", function(e){
 		}).fail(function() {
 			$('#loading').hide();
 			btn.prop('disabled', false);
-			showToast("Erro de conexão ao realizar a conferência do time.", 'error');
+	function abrirModalVerificacao(titulo, htmlConteudo) {
+		$('#modalVerificacaoTitulo span:last').text(titulo);
+		$('#modalVerificacaoConteudo').html(htmlConteudo);
+		$('#modalVerificacaoTime').css('display', 'flex');
+	}
+
+	function fecharModalVerificacao() {
+		$('#modalVerificacaoTime').hide();
+	}
+
+	$(document).on('click', '#btnFecharModalVerificacao, #btnOkModalVerificacao', function() {
+		fecharModalVerificacao();
+	});
+
+	$(document).on('click', '#modalVerificacaoTime', function(e) {
+		if ($(e.target).is('#modalVerificacaoTime')) {
+			fecharModalVerificacao();
+		}
+	});
+
+	// Verificar integridade do time da vaga
+	$(document).on("click", ".verificar_team", function(e){
+		e.preventDefault();
+		var btn = $(this);
+		var vaga = btn.data('vaga');
+		var tbl_row = btn.closest('.par_pais_equipe');
+		var selectVal = tbl_row.find('.selecaoTime').val();
+		var matchData = (Array.isArray(localData)) ? localData.find(element => parseInt(element.codigo_time) === parseInt(vaga)) : null;
+
+		var timeId = 0;
+		var timeNome = '';
+
+		if (selectVal && parseInt(selectVal) > 0 && selectVal != '99999999') {
+			timeId = parseInt(selectVal);
+			timeNome = tbl_row.find('.selecaoTime option:selected').text();
+		} else if (matchData && matchData.id_time_portal && parseInt(matchData.id_time_portal) > 0) {
+			timeId = parseInt(matchData.id_time_portal);
+			let fTime = lista_times.find(t => parseInt(t[0]) === timeId);
+			timeNome = fTime ? fTime[1] : ("Time #" + timeId);
+		}
+
+		if (timeId === 0) {
+			if (matchData && matchData.has_team == 1 && !matchData.id_time_portal) {
+				showToast("Times importados via arquivo .ymt externo são validados na importação e não possuem registro no banco do portal.", "info");
+			} else {
+				showToast("Selecione ou salve um time nesta vaga para verificar sua integridade.", "info");
+			}
+			return;
+		}
+
+		$('#loading').show();
+		btn.prop('disabled', true);
+
+		var formData = new FormData();
+		formData.append('array_times', timeId);
+
+		$.ajax({
+			type: 'POST',
+			url: '/export/verificar_exportacao.php',
+			data: formData,
+			dataType: 'json',
+			processData: false,
+			contentType: false,
+			cache: false
+		}).done(function(res) {
+			$('#loading').hide();
+			btn.prop('disabled', false);
+
+			var safeNome = $('<div>').text(timeNome).html();
+
+			if (res.success) {
+				var html = '<div class="verif-box-success">' +
+					'<span class="material-symbols-outlined" style="font-size: 2.2rem; color: #059669; flex-shrink: 0;">check_circle</span>' +
+					'<div>' +
+						'<h4 style="margin: 0 0 6px 0; font-family: \'Outfit\', sans-serif; font-size: 1.15rem; color: #065f46;">Time 100% Íntegro e Aprovado!</h4>' +
+						'<p style="margin: 0 0 8px 0; font-size: 0.9rem; color: #047857;">O time <strong>' + safeNome + '</strong> atende a todos os critérios e está pronto para disputar partidas:</p>' +
+						'<ul class="verif-checklist">' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> Elenco regular (entre 11 e 23 jogadores)</li>' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> 1 Capitão definido entre os titulares</li>' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> 11 Titulares escalados</li>' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> Cobradores de pênaltis definidos</li>' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> Goleiros escalados corretamente</li>' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> Jogadores dentro da idade permitida</li>' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> Exatamente 1 técnico cadastrado</li>' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> Estádio associado com clima cadastrado</li>' +
+						'</ul>' +
+					'</div>' +
+				'</div>';
+				abrirModalVerificacao("Verificação: " + timeNome, html);
+				showToast("✓ " + timeNome + " está íntegro!", "success");
+			} else {
+				var rawErros = res.errors || "Pendências encontradas.";
+				var html = '<div class="verif-box-error">' +
+					'<div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px;">' +
+						'<span class="material-symbols-outlined" style="font-size: 2.2rem; color: #dc2626; flex-shrink: 0;">error</span>' +
+						'<div>' +
+							'<h4 style="margin: 0 0 6px 0; font-family: \'Outfit\', sans-serif; font-size: 1.15rem; color: #991b1b;">Pendências de Integridade</h4>' +
+							'<p style="margin: 0; font-size: 0.9rem; color: #7f1d1d;">O time <strong>' + safeNome + '</strong> possui itens a regularizar antes de jogar:</p>' +
+						'</div>' +
+					'</div>' +
+					'<div style="background: #ffffff; border-radius: 8px; padding: 14px 18px; border: 1px solid rgba(239, 68, 68, 0.2); font-size: 0.88rem; line-height: 1.6; color: #991b1b;">' +
+						rawErros +
+					'</div>' +
+					'<p style="margin: 14px 0 0 0; font-size: 0.82rem; color: #64748b;">Acesse o painel do clube no portal para ajustar o elenco ou comissão técnica e refaça a verificação.</p>' +
+				'</div>';
+				abrirModalVerificacao("Verificação: " + timeNome, html);
+				showToast("O time possui pendências. Veja os detalhes na tela.", "error");
+			}
+		}).fail(function() {
+			$('#loading').hide();
+			btn.prop('disabled', false);
+			showToast("Erro de conexão ao verificar o time.", "error");
+		});
+	});
+
+	// Verificar todos os times vinculados à competição
+	$(document).on("click", "#verificar_todos_times", function(e){
+		e.preventDefault();
+		var timesParaVerificar = [];
+
+		if (Array.isArray(localData)) {
+			localData.forEach(function(d){
+				if (d.id_time_portal && parseInt(d.id_time_portal) > 0) {
+					var tid = parseInt(d.id_time_portal);
+					if (timesParaVerificar.indexOf(tid) === -1) {
+						timesParaVerificar.push(tid);
+					}
+				}
+			});
+		}
+
+		if (timesParaVerificar.length === 0) {
+			showToast("Nenhum time do portal vinculado às vagas até o momento.", "info");
+			return;
+		}
+
+		$('#loading').show();
+
+		var formData = new FormData();
+		formData.append('array_times', timesParaVerificar.join(','));
+
+		$.ajax({
+			type: 'POST',
+			url: '/export/verificar_exportacao.php',
+			data: formData,
+			dataType: 'json',
+			processData: false,
+			contentType: false,
+			cache: false
+		}).done(function(res) {
+			$('#loading').hide();
+
+			if (res.success) {
+				var html = '<div class="verif-box-success">' +
+					'<span class="material-symbols-outlined" style="font-size: 2.2rem; color: #059669; flex-shrink: 0;">verified</span>' +
+					'<div>' +
+						'<h4 style="margin: 0 0 6px 0; font-family: \'Outfit\', sans-serif; font-size: 1.15rem; color: #065f46;">Todos os ' + timesParaVerificar.length + ' times estão íntegros!</h4>' +
+						'<p style="margin: 0; font-size: 0.9rem; color: #047857;">Todos os times vinculados a esta competição cumprem as regras oficiais (elencos, comissão técnica, capitães, batedores, goleiros e estádios).</p>' +
+					'</div>' +
+				'</div>';
+				abrirModalVerificacao("Integridade Geral da Competição", html);
+				showToast("✓ Todos os " + timesParaVerificar.length + " times estão íntegros!", "success");
+			} else {
+				var rawErros = res.errors || "Pendências encontradas.";
+				var html = '<div class="verif-box-error">' +
+					'<div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px;">' +
+						'<span class="material-symbols-outlined" style="font-size: 2.2rem; color: #dc2626; flex-shrink: 0;">error</span>' +
+						'<div>' +
+							'<h4 style="margin: 0 0 6px 0; font-family: \'Outfit\', sans-serif; font-size: 1.15rem; color: #991b1b;">Pendências Detectadas nos Times</h4>' +
+							'<p style="margin: 0; font-size: 0.9rem; color: #7f1d1d;">Foram encontradas inconsistências em times participantes desta competição:</p>' +
+						'</div>' +
+					'</div>' +
+					'<div style="background: #ffffff; border-radius: 8px; padding: 14px 18px; border: 1px solid rgba(239, 68, 68, 0.2); font-size: 0.88rem; line-height: 1.6; color: #991b1b;">' +
+						rawErros +
+					'</div>' +
+					'<p style="margin: 14px 0 0 0; font-size: 0.82rem; color: #64748b;">Regularize os times pendentes no portal antes de prosseguir com os jogos.</p>' +
+				'</div>';
+				abrirModalVerificacao("Integridade Geral da Competição", html);
+				showToast("Existem pendências em times da competição.", "error");
+			}
+		}).fail(function() {
+			$('#loading').hide();
+			showToast("Erro ao verificar os times da competição.", "error");
 		});
 	});
 
