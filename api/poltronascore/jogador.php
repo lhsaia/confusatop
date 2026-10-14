@@ -306,6 +306,14 @@ try {
         $stmtRecent->execute([$playerId, $player['Nome']]);
         $matchIndex = 0;
         while ($rm = $stmtRecent->fetch(PDO::FETCH_ASSOC)) {
+            // Ignorar partidas que ainda não concluíram no tempo real
+            $matchTs = !empty($rm['data']) ? strtotime($rm['data']) : 0;
+            $durMatchSec = 120 * 60;
+            $hasPassed = ($matchTs > 0) ? (time() >= ($matchTs + $durMatchSec)) : true;
+            if (!$hasPassed) {
+                continue;
+            }
+
             $matchRating = null;
             if (!empty($rm['path'])) {
                 $hyjPath = psFindHyjFile($rm['path']);

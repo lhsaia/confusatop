@@ -283,7 +283,13 @@ try {
         $faseInt = (int)$m['fase'];
         
         $grpKey = !empty($m['grupo']) ? 'Grupo ' . strtoupper(trim($m['grupo'])) : 'Geral';
-        $isFinished = ($m['status'] == 1);
+        
+        // Uma partida só é considerada encerrada se foi simulada (status=1) E seu horário real já passou/concluiu
+        $matchTs = !empty($m['data']) ? strtotime($m['data']) : 0;
+        $temPenaltis = ($m['timeA_penaltis'] !== null && $m['timeB_penaltis'] !== null);
+        $durMatchSec = $temPenaltis ? (150 * 60) : (120 * 60);
+        $hasPassed = ($matchTs > 0) ? (time() >= ($matchTs + $durMatchSec)) : ((int)$m['status'] === 1);
+        $isFinished = ((int)$m['status'] === 1 && $hasPassed);
         $statusLabel = $isFinished ? 'previous' : 'next';
         
         $matchDateFormatted = !empty($m['data']) ? date('d/m/Y', strtotime($m['data'])) : '';

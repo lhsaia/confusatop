@@ -522,7 +522,14 @@ try {
         $matchDateFormatted = !empty($row['match_date']) ? date('d/m/Y', strtotime($row['match_date'])) : '';
         $matchTimeFormatted = !empty($row['match_date']) ? date('H:i', strtotime($row['match_date'])) : '';
         
-        $statusStr = ($row['status'] == 1) ? 'previous' : 'next';
+        // Uma partida só é considerada encerrada se seu horário real já passou/concluiu
+        $matchTs = !empty($row['match_date']) ? strtotime($row['match_date']) : 0;
+        $temPenaltis = ($row['home_penalties'] !== null && $row['away_penalties'] !== null);
+        $durMatchSec = $temPenaltis ? (150 * 60) : (120 * 60);
+        $hasPassed = ($matchTs > 0) ? (time() >= ($matchTs + $durMatchSec)) : ((int)$row['status'] === 1);
+        $isFinished = ((int)$row['status'] === 1 && $hasPassed);
+
+        $statusStr = $isFinished ? 'previous' : 'next';
         
         // Buscar eventos e montar lista de artilheiros
         $events = [];
@@ -812,16 +819,15 @@ try {
             'stadium' => $row['stadium'] ?: 'Estádio não informado',
             'home_id' => (int)$row['timeA_id'],
             'home_team' => $row['home_team'],
-            'home_logo' => $homeLogo,
-            'home_score' => ($row['status'] == 1) ? (int)$row['home_score'] : 0,
-            'home_penalties' => ($row['home_penalties'] !== null) ? (int)$row['home_penalties'] : null,
-            'home_scorers' => implode(', ', $homeGoalsList),
+            'home_score' => $isFinished ? (int)$row['home_score'] : null,
+            'home_penalties' => $isFinished ? (($row['home_penalties'] !== null) ? (int)$row['home_penalties'] : null) : null,
+            'home_scorers' => $isFinished ? implode(', ', $homeGoalsList) : '',
             'away_id' => (int)$row['timeB_id'],
             'away_team' => $row['away_team'],
             'away_logo' => $awayLogo,
-            'away_score' => ($row['status'] == 1) ? (int)$row['away_score'] : 0,
-            'away_penalties' => ($row['away_penalties'] !== null) ? (int)$row['away_penalties'] : null,
-            'away_scorers' => implode(', ', $awayGoalsList),
+            'away_score' => $isFinished ? (int)$row['away_score'] : null,
+            'away_penalties' => $isFinished ? (($row['away_penalties'] !== null) ? (int)$row['away_penalties'] : null) : null,
+            'away_scorers' => $isFinished ? implode(', ', $awayGoalsList) : '',
             'status' => $statusStr,
             'gender' => (int)($row['championship_gender'] ?? 0)
         ];
@@ -829,7 +835,7 @@ try {
         echo json_encode([
             'success' => true,
             'match' => $matchData,
-            'events' => $events,
+            'events' => $isFinished ? $events : [],
             'lineups' => $lineups
         ], JSON_UNESCAPED_UNICODE);
         exit;
@@ -983,6 +989,17 @@ try {
                 'side' => $isHome ? 'home' : 'away',
                 'is_home' => $isHome
             ];
+        }
+
+        $isNextMatch = ($pMatch['status'] === 'next');
+        if ($isNextMatch) {
+            $pMatch['home_score'] = null;
+            $pMatch['away_score'] = null;
+            $pMatch['home_penalties'] = null;
+            $pMatch['away_penalties'] = null;
+            $pMatch['home_scorers'] = '';
+            $pMatch['away_scorers'] = '';
+            $events = [];
         }
 
         echo json_encode([

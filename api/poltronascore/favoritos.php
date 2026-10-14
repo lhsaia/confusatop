@@ -165,8 +165,14 @@ try {
                 if (isset($seenMatchKeys[$key])) continue;
                 $seenMatchKeys[$key] = true;
 
+                // Uma partida só é considerada encerrada se foi simulada (status=1) E seu horário real já passou/concluiu
+                $matchTs = !empty($m['data']) ? strtotime($m['data']) : 0;
+                $durMatchSec = 120 * 60;
+                $hasPassed = ($matchTs > 0) ? (time() >= ($matchTs + $durMatchSec)) : ((int)$m['status'] === 1);
+                $isFinished = ((int)$m['status'] === 1 && $hasPassed);
+
                 $statusStr = 'previous';
-                if ((int)$m['status'] === 0) {
+                if (!$isFinished) {
                     $statusStr = 'next';
                 } elseif ((int)$m['status'] === 2) {
                     $statusStr = 'live';
@@ -199,11 +205,11 @@ try {
                     'home_id' => (int)$m['timeA_id'],
                     'home_team' => $m['timeA_nome'],
                     'home_logo' => $logoA,
-                    'home_score' => ($statusStr !== 'next') ? (int)$m['timeA_gols'] : null,
+                    'home_score' => ($statusStr !== 'next' && $isFinished) ? (int)$m['timeA_gols'] : null,
                     'away_id' => (int)$m['timeB_id'],
                     'away_team' => $m['timeB_nome'],
                     'away_logo' => $logoB,
-                    'away_score' => ($statusStr !== 'next') ? (int)$m['timeB_gols'] : null,
+                    'away_score' => ($statusStr !== 'next' && $isFinished) ? (int)$m['timeB_gols'] : null,
                     'stadium' => $m['estadio'] ?: ''
                 ];
             }

@@ -440,7 +440,13 @@ try {
         $matchDateFmt = !empty($m['data']) ? date('d/m/Y', strtotime($m['data'])) : '';
         $matchTimeFmt = !empty($m['data']) ? date('H:i', strtotime($m['data'])) : '';
 
-        if ($m['status'] == 1 && count($previousMatches) < 6) {
+        // Uma partida só entra no retrospecto de resultados anteriores se já passou e encerrou no tempo real
+        $matchTs = !empty($m['data']) ? strtotime($m['data']) : 0;
+        $durMatchSec = 120 * 60; // 2 horas de duração estimada no tempo real
+        $hasPassed = ($matchTs > 0) ? (time() >= ($matchTs + $durMatchSec)) : ((int)$m['status'] === 1);
+        $isFinished = ((int)$m['status'] === 1 && $hasPassed);
+
+        if ($isFinished && count($previousMatches) < 6) {
             $res = 'E';
             if ($myScore > $oppScore) $res = 'V';
             elseif ($myScore < $oppScore) $res = 'D';
@@ -458,7 +464,7 @@ try {
                 'result' => $res,
                 'stadium' => $m['estadio'] ?: 'Estádio'
             ];
-        } elseif ($m['status'] == 0 && count($nextMatches) < 6) {
+        } elseif (!$isFinished && count($nextMatches) < 6) {
             $nextMatches[] = [
                 'id' => (int)$m['id'],
                 'date' => $matchDateFmt,
