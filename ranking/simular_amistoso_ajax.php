@@ -274,29 +274,42 @@ $estiloArb = (int)($rowArb['estilo'] ?? 1);
 $ldb->exec("INSERT OR REPLACE INTO trioarbitragem VALUES (1, '{$nomeArb}', '{$nomeAux1}', '{$nomeAux2}', {$estiloArb})");
 
 // Inserir Clima & Estádio
+$validTemps = ['Muito Frio', 'Frio', 'Normal', 'Quente', 'Muito Quente'];
+$validEstilos = ['Neve Forte', 'Neve', 'Neve Ocasional', 'Neblina', 'Chuvoso', 'Ventos Fortes', 'Equilibrado', 'Seco', 'Árido'];
+
+// Garantir sempre clima padrão com ID 1 no SQLite para prevenir falhas de referência
+$ldb->exec("INSERT OR IGNORE INTO clima (ID, Nome, TempVerao, EstiloVerao, TempOutono, EstiloOutono, TempInverno, EstiloInverno, TempPrimavera, EstiloPrimavera, Hemisferio) 
+    VALUES (1, 'Clima Padrão', 'Quente', 'Equilibrado', 'Normal', 'Equilibrado', 'Frio', 'Neblina', 'Normal', 'Equilibrado', 1)");
+
 if ($rowEst) {
     $climaId = (int)($rowEst['Clima'] ?? 1);
+    if ($climaId <= 0) $climaId = 1;
+
     $nomeClima = str_replace("'", "''", (string)($rowEst['nomeClima'] ?? 'Clima Padrão'));
-    $tempV = $rowEst['TempVerao'] ?? '25';
-    $estV = $rowEst['EstiloVerao'] ?? 'Bom';
-    $tempO = $rowEst['TempOutono'] ?? '20';
-    $estO = $rowEst['EstiloOutono'] ?? 'Bom';
-    $tempI = $rowEst['TempInverno'] ?? '15';
-    $estI = $rowEst['EstiloInverno'] ?? 'Bom';
-    $tempP = $rowEst['TempPrimavera'] ?? '22';
-    $estP = $rowEst['EstiloPrimavera'] ?? 'Bom';
-    $hem = (int)($rowEst['Hemisferio'] ?? 1);
-    $ldb->exec("INSERT OR REPLACE INTO clima VALUES ({$climaId}, '{$nomeClima}', '{$tempV}', '{$estV}', '{$tempO}', '{$estO}', '{$tempI}', '{$estI}', '{$tempP}', '{$estP}', {$hem})");
+    $tempV = in_array($rowEst['TempVerao'] ?? '', $validTemps) ? $rowEst['TempVerao'] : 'Quente';
+    $estV = in_array($rowEst['EstiloVerao'] ?? '', $validEstilos) ? $rowEst['EstiloVerao'] : 'Equilibrado';
+    $tempO = in_array($rowEst['TempOutono'] ?? '', $validTemps) ? $rowEst['TempOutono'] : 'Normal';
+    $estO = in_array($rowEst['EstiloOutono'] ?? '', $validEstilos) ? $rowEst['EstiloOutono'] : 'Equilibrado';
+    $tempI = in_array($rowEst['TempInverno'] ?? '', $validTemps) ? $rowEst['TempInverno'] : 'Frio';
+    $estI = in_array($rowEst['EstiloInverno'] ?? '', $validEstilos) ? $rowEst['EstiloInverno'] : 'Neblina';
+    $tempP = in_array($rowEst['TempPrimavera'] ?? '', $validTemps) ? $rowEst['TempPrimavera'] : 'Normal';
+    $estP = in_array($rowEst['EstiloPrimavera'] ?? '', $validEstilos) ? $rowEst['EstiloPrimavera'] : 'Equilibrado';
+    $hem = isset($rowEst['Hemisferio']) ? (int)$rowEst['Hemisferio'] : 1;
+
+    $ldb->exec("INSERT OR REPLACE INTO clima (ID, Nome, TempVerao, EstiloVerao, TempOutono, EstiloOutono, TempInverno, EstiloInverno, TempPrimavera, EstiloPrimavera, Hemisferio) 
+        VALUES ({$climaId}, '{$nomeClima}', '{$tempV}', '{$estV}', '{$tempO}', '{$estO}', '{$tempI}', '{$estI}', '{$tempP}', '{$estP}', {$hem})");
 
     $nomeEst = str_replace("'", "''", (string)$rowEst['Nome']);
-    $capEst = (int)$rowEst['Capacidade'];
-    $altEst = (int)$rowEst['Altitude'];
-    $caldEst = (int)$rowEst['Caldeirao'];
-    $ldb->exec("INSERT OR REPLACE INTO estadio VALUES ({$idEstadio}, '{$nomeEst}', {$capEst}, {$altEst}, {$caldEst}, {$climaId})");
+    $capEst = max(1000, (int)($rowEst['Capacidade'] ?? 35000));
+    $altEst = (int)($rowEst['Altitude'] ?? 0);
+    $caldEst = (int)($rowEst['Caldeirao'] ?? 0);
+    // Ordem correta das colunas: ID, Nome, Capacidade, Clima, Altitude, Caldeirao
+    $ldb->exec("INSERT OR REPLACE INTO estadio (ID, Nome, Capacidade, Clima, Altitude, Caldeirao) 
+        VALUES ({$idEstadio}, '{$nomeEst}', {$capEst}, {$climaId}, {$altEst}, {$caldEst})");
 } else {
-    $ldb->exec("INSERT OR IGNORE INTO clima VALUES (1, 'Clima Padrão', '25', 'Bom', '20', 'Bom', '15', 'Bom', '22', 'Bom', 1)");
-    $ldb->exec("INSERT OR IGNORE INTO estadio VALUES (1, 'Estádio Padrão', 35000, 0, 0, 1)");
     $idEstadio = 1;
+    $ldb->exec("INSERT OR IGNORE INTO estadio (ID, Nome, Capacidade, Clima, Altitude, Caldeirao) 
+        VALUES (1, 'Estádio Padrão', 35000, 1, 0, 0)");
 }
 
 // Inserir Clubes, Técnicos, Elencos e Jogadores
@@ -327,7 +340,7 @@ foreach ([$clubA, $clubB] as $cIdx => $cData) {
     $escudo = "../../images/escudos/" . ($rowCl['Escudo'] ?? 'padrao.png');
     $uni1 = "../../images/uniformes/" . ($rowCl['Uniforme1'] ?? 'padrao.png');
     $uni2 = "../../images/uniformes/" . ($rowCl['Uniforme2'] ?? 'padrao.png');
-    $estCl = ($cIdx === 0) ? $idEstadio : ((int)($rowCl['Estadio'] ?? 0) ?: $idEstadio);
+    $estCl = $idEstadio;
     $maxTorc = (int)($rowCl['MaxTorcedores'] ?? 50000);
     $fidel = (int)($rowCl['Fidelidade'] ?? 5);
     $ldb->exec("INSERT OR REPLACE INTO clube VALUES ({$cId}, '{$nomeCl}', '{$siglaCl}', {$estCl}, '{$escudo}', '{$rowCl['Uni1Cor1']}', '{$rowCl['Uni1Cor2']}', '{$rowCl['Uni1Cor3']}', '{$uni1}', '{$rowCl['Uni2Cor1']}', '{$rowCl['Uni2Cor2']}', '{$rowCl['Uni2Cor3']}', '{$uni2}', {$maxTorc}, {$fidel})");
@@ -374,7 +387,7 @@ foreach ([$clubA, $clubB] as $cIdx => $cData) {
         $nivel = (int)($row['Nivel'] ?? 70);
         $ment = (int)($row['Mentalidade'] ?? 3);
         $cob = (int)($row['CobradorFalta'] ?? 0);
-        $ldb->exec("INSERT OR REPLACE INTO jogador VALUES ({$jId}, '{$nomeJog}', {$idade}, {$nivel}, 0, 0, {$ment}, {$cob})");
+        $ldb->exec("INSERT OR REPLACE INTO jogador (ID, Nome, Idade, Nivel, Potencial, CrescBase, Mentalidade, CobradorFalta) VALUES ({$jId}, '{$nomeJog}', {$idade}, {$nivel}, 0, 0, {$ment}, {$cob})");
 
         $nac = !empty($row['Nacionalidade']) ? $row['Nacionalidade'] : '-';
         $ldb->exec("INSERT OR REPLACE INTO nacionalidades VALUES ({$jId}, '{$nac}')");

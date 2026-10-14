@@ -98,9 +98,25 @@ if (!function_exists('obterJogadoresClubeSQLite')) {
             $inIds = implode(',', array_unique(array_filter($elIds)));
             if (empty($inIds)) return [];
 
+            $temSuspenso = false;
+            $temLesionado = false;
+            try {
+                $stmtCols = $ldb->query("PRAGMA table_info(jogador)");
+                if ($stmtCols) {
+                    while ($col = $stmtCols->fetch(PDO::FETCH_ASSOC)) {
+                        $colName = $col['name'] ?? '';
+                        if (strcasecmp($colName, 'Suspenso') === 0) $temSuspenso = true;
+                        if (strcasecmp($colName, 'Lesionado') === 0) $temLesionado = true;
+                    }
+                }
+            } catch (\Throwable $e) {}
+
+            $colSuspenso = $temSuspenso ? "COALESCE(j.Suspenso, 0) as Suspenso" : "0 as Suspenso";
+            $colLesionado = $temLesionado ? "COALESCE(j.Lesionado, 0) as Lesionado" : "0 as Lesionado";
+
             $query = "SELECT j.ID, j.Nome, j.Nivel, 
-                             COALESCE(j.Suspenso, 0) as Suspenso, 
-                             COALESCE(j.Lesionado, 0) as Lesionado,
+                             {$colSuspenso}, 
+                             {$colLesionado},
                              pj.G, pj.LD, pj.LE, pj.Z, pj.AD, pj.AE, pj.V, pj.MD, pj.ME, pj.MC, pj.PD, pj.PE, pj.MA, pj.Am, pj.Aa
                       FROM jogador j
                       LEFT JOIN posicaojogador pj ON j.ID = pj.Jogador

@@ -896,6 +896,10 @@ $(document).on("click", ".update_team", function(e){
 		}).fail(function() {
 			$('#loading').hide();
 			btn.prop('disabled', false);
+			showToast("Erro de conexão ao realizar a conferência do time.", 'error');
+		});
+	});
+
 	function abrirModalVerificacao(titulo, htmlConteudo) {
 		$('#modalVerificacaoTitulo span:last').text(titulo);
 		$('#modalVerificacaoConteudo').html(htmlConteudo);
@@ -916,169 +920,165 @@ $(document).on("click", ".update_team", function(e){
 		}
 	});
 
-	// Verificar integridade do time da vaga
+	// Verificar integridade do time da vaga diretamente no SQLite da competição
 	$(document).on("click", ".verificar_team", function(e){
 		e.preventDefault();
 		var btn = $(this);
 		var vaga = btn.data('vaga');
 		var tbl_row = btn.closest('.par_pais_equipe');
-		var selectVal = tbl_row.find('.selecaoTime').val();
 		var matchData = (Array.isArray(localData)) ? localData.find(element => parseInt(element.codigo_time) === parseInt(vaga)) : null;
 
-		var timeId = 0;
-		var timeNome = '';
-
-		if (selectVal && parseInt(selectVal) > 0 && selectVal != '99999999') {
-			timeId = parseInt(selectVal);
-			timeNome = tbl_row.find('.selecaoTime option:selected').text();
-		} else if (matchData && matchData.id_time_portal && parseInt(matchData.id_time_portal) > 0) {
-			timeId = parseInt(matchData.id_time_portal);
-			let fTime = lista_times.find(t => parseInt(t[0]) === timeId);
-			timeNome = fTime ? fTime[1] : ("Time #" + timeId);
-		}
-
-		if (timeId === 0) {
-			if (matchData && matchData.has_team == 1 && !matchData.id_time_portal) {
-				showToast("Times importados via arquivo .ymt externo são validados na importação e não possuem registro no banco do portal.", "info");
-			} else {
-				showToast("Selecione ou salve um time nesta vaga para verificar sua integridade.", "info");
-			}
+		if (!matchData || (matchData.has_team != 1 && (!matchData.id_time_portal || matchData.id_time_portal == 0))) {
+			showToast("Esta vaga ainda não possui nenhum time salvo ou importado no SQLite da competição.", "info");
 			return;
 		}
 
 		$('#loading').show();
 		btn.prop('disabled', true);
 
-		var formData = new FormData();
-		formData.append('array_times', timeId);
-
 		$.ajax({
 			type: 'POST',
-			url: '/export/verificar_exportacao.php',
-			data: formData,
-			dataType: 'json',
-			processData: false,
-			contentType: false,
-			cache: false
+			url: 'verificar_time_sqlite.php',
+			data: {
+				codigo_competicao: codigo_competicao,
+				vaga: vaga,
+				clube_id: (matchData && matchData.id_time_portal) ? parseInt(matchData.id_time_portal) : 0
+			},
+			dataType: 'json'
 		}).done(function(res) {
 			$('#loading').hide();
 			btn.prop('disabled', false);
 
+			if (!res.success && res.error) {
+				showToast(res.error, "error");
+				return;
+			}
+
+			var timeNome = res.nome || ("Vaga #" + vaga);
 			var safeNome = $('<div>').text(timeNome).html();
+			var det = res.detalhes || {};
 
 			if (res.success) {
 				var html = '<div class="verif-box-success">' +
 					'<span class="material-symbols-outlined" style="font-size: 2.2rem; color: #059669; flex-shrink: 0;">check_circle</span>' +
 					'<div>' +
-						'<h4 style="margin: 0 0 6px 0; font-family: \'Outfit\', sans-serif; font-size: 1.15rem; color: #065f46;">Time 100% Íntegro e Aprovado!</h4>' +
-						'<p style="margin: 0 0 8px 0; font-size: 0.9rem; color: #047857;">O time <strong>' + safeNome + '</strong> atende a todos os critérios e está pronto para disputar partidas:</p>' +
+						'<h4 style="margin: 0 0 6px 0; font-family: \'Outfit\', sans-serif; font-size: 1.15rem; color: #065f46;">Time 100% Íntegro no SQLite da Competição!</h4>' +
+						'<p style="margin: 0 0 10px 0; font-size: 0.9rem; color: #047857;">O time <strong>' + safeNome + '</strong> (Vaga #' + vaga + ') cumpre todos os requisitos no banco SQLite e está pronto para simulações:</p>' +
 						'<ul class="verif-checklist">' +
-							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> Elenco regular (entre 11 e 23 jogadores)</li>' +
-							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> 1 Capitão definido entre os titulares</li>' +
-							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> 11 Titulares escalados</li>' +
-							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> Cobradores de pênaltis definidos</li>' +
-							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> Goleiros escalados corretamente</li>' +
-							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> Jogadores dentro da idade permitida</li>' +
-							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> Exatamente 1 técnico cadastrado</li>' +
-							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> Estádio associado com clima cadastrado</li>' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> <strong>Elenco no SQLite:</strong> ' + (det.total_jogadores || 0) + ' jogadores aptos</li>' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> <strong>Técnico:</strong> ' + $('<div>').text(det.tecnico || '').html() + '</li>' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> <strong>Estádio e Clima:</strong> ' + $('<div>').text(det.estadio || '').html() + ' (' + $('<div>').text(det.clima || '').html() + ')</li>' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> <strong>Goleiro titular:</strong> ' + $('<div>').text(det.goleiro || '').html() + '</li>' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> <strong>Capitão:</strong> ' + $('<div>').text(det.capitao || '').html() + '</li>' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> <strong>Escalação e Pênaltis:</strong> 11 titulares e 3 batedores definidos</li>' +
+							'<li class="verif-checklist-item"><span class="material-symbols-outlined" style="color:#059669;">check</span> <strong>Atributos e Posições:</strong> validados no SQLite</li>' +
 						'</ul>' +
 					'</div>' +
 				'</div>';
-				abrirModalVerificacao("Verificação: " + timeNome, html);
-				showToast("✓ " + timeNome + " está íntegro!", "success");
+				abrirModalVerificacao("Integridade no SQLite: " + timeNome, html);
+				showToast("✓ " + timeNome + " está íntegro no SQLite!", "success");
 			} else {
-				var rawErros = res.errors || "Pendências encontradas.";
+				var listaErrosHtml = '';
+				if (Array.isArray(res.erros)) {
+					listaErrosHtml = '<ul style="margin: 0; padding-left: 18px;">';
+					res.erros.forEach(function(err){
+						listaErrosHtml += '<li style="margin-bottom: 6px;">' + $('<div>').text(err).html() + '</li>';
+					});
+					listaErrosHtml += '</ul>';
+				} else {
+					listaErrosHtml = res.erros || res.error || "Inconsistências encontradas.";
+				}
+
 				var html = '<div class="verif-box-error">' +
 					'<div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px;">' +
 						'<span class="material-symbols-outlined" style="font-size: 2.2rem; color: #dc2626; flex-shrink: 0;">error</span>' +
 						'<div>' +
-							'<h4 style="margin: 0 0 6px 0; font-family: \'Outfit\', sans-serif; font-size: 1.15rem; color: #991b1b;">Pendências de Integridade</h4>' +
-							'<p style="margin: 0; font-size: 0.9rem; color: #7f1d1d;">O time <strong>' + safeNome + '</strong> possui itens a regularizar antes de jogar:</p>' +
+							'<h4 style="margin: 0 0 6px 0; font-family: \'Outfit\', sans-serif; font-size: 1.15rem; color: #991b1b;">Inconsistências no SQLite da Competição</h4>' +
+							'<p style="margin: 0; font-size: 0.9rem; color: #7f1d1d;">O time <strong>' + safeNome + '</strong> (Vaga #' + vaga + ') possui as seguintes falhas registradas no SQLite:</p>' +
 						'</div>' +
 					'</div>' +
 					'<div style="background: #ffffff; border-radius: 8px; padding: 14px 18px; border: 1px solid rgba(239, 68, 68, 0.2); font-size: 0.88rem; line-height: 1.6; color: #991b1b;">' +
-						rawErros +
+						listaErrosHtml +
 					'</div>' +
-					'<p style="margin: 14px 0 0 0; font-size: 0.82rem; color: #64748b;">Acesse o painel do clube no portal para ajustar o elenco ou comissão técnica e refaça a verificação.</p>' +
+					'<p style="margin: 14px 0 0 0; font-size: 0.82rem; color: #64748b;">Se for um time do portal, utilize o botão <strong>Ressincronizar</strong> (ícone azul de recarregar) para atualizá-lo no SQLite. Se for um time importado (.ymt), revise o arquivo e faça o upload novamente.</p>' +
 				'</div>';
-				abrirModalVerificacao("Verificação: " + timeNome, html);
-				showToast("O time possui pendências. Veja os detalhes na tela.", "error");
+				abrirModalVerificacao("Integridade no SQLite: " + timeNome, html);
+				showToast("O time possui pendências no SQLite da competição.", "error");
 			}
 		}).fail(function() {
 			$('#loading').hide();
 			btn.prop('disabled', false);
-			showToast("Erro de conexão ao verificar o time.", "error");
+			showToast("Erro de conexão ao verificar o banco SQLite da competição.", "error");
 		});
 	});
 
-	// Verificar todos os times vinculados à competição
+	// Verificar todos os times vinculados à competição no SQLite
 	$(document).on("click", "#verificar_todos_times", function(e){
 		e.preventDefault();
-		var timesParaVerificar = [];
-
-		if (Array.isArray(localData)) {
-			localData.forEach(function(d){
-				if (d.id_time_portal && parseInt(d.id_time_portal) > 0) {
-					var tid = parseInt(d.id_time_portal);
-					if (timesParaVerificar.indexOf(tid) === -1) {
-						timesParaVerificar.push(tid);
-					}
-				}
-			});
-		}
-
-		if (timesParaVerificar.length === 0) {
-			showToast("Nenhum time do portal vinculado às vagas até o momento.", "info");
-			return;
-		}
-
 		$('#loading').show();
-
-		var formData = new FormData();
-		formData.append('array_times', timesParaVerificar.join(','));
 
 		$.ajax({
 			type: 'POST',
-			url: '/export/verificar_exportacao.php',
-			data: formData,
-			dataType: 'json',
-			processData: false,
-			contentType: false,
-			cache: false
+			url: 'verificar_time_sqlite.php',
+			data: {
+				codigo_competicao: codigo_competicao,
+				todos: 1
+			},
+			dataType: 'json'
 		}).done(function(res) {
 			$('#loading').hide();
+
+			if (!res.success && res.error && !res.resultados) {
+				showToast(res.error, "error");
+				return;
+			}
 
 			if (res.success) {
 				var html = '<div class="verif-box-success">' +
 					'<span class="material-symbols-outlined" style="font-size: 2.2rem; color: #059669; flex-shrink: 0;">verified</span>' +
 					'<div>' +
-						'<h4 style="margin: 0 0 6px 0; font-family: \'Outfit\', sans-serif; font-size: 1.15rem; color: #065f46;">Todos os ' + timesParaVerificar.length + ' times estão íntegros!</h4>' +
-						'<p style="margin: 0; font-size: 0.9rem; color: #047857;">Todos os times vinculados a esta competição cumprem as regras oficiais (elencos, comissão técnica, capitães, batedores, goleiros e estádios).</p>' +
+						'<h4 style="margin: 0 0 6px 0; font-family: \'Outfit\', sans-serif; font-size: 1.15rem; color: #065f46;">Todos os ' + res.total_verificados + ' times estão 100% íntegros no SQLite!</h4>' +
+						'<p style="margin: 0; font-size: 0.9rem; color: #047857;">Todos os times gravados no banco de dados SQLite desta competição (sejam importados via .ymt ou sincronizados do portal) cumprem as regras oficiais e estão aptos para simulações.</p>' +
 					'</div>' +
 				'</div>';
-				abrirModalVerificacao("Integridade Geral da Competição", html);
-				showToast("✓ Todos os " + timesParaVerificar.length + " times estão íntegros!", "success");
+				abrirModalVerificacao("Integridade Geral da Competição (SQLite)", html);
+				showToast("✓ Todos os " + res.total_verificados + " times estão íntegros no SQLite!", "success");
 			} else {
-				var rawErros = res.errors || "Pendências encontradas.";
+				var blocosHtml = '';
+				if (Array.isArray(res.resultados)) {
+					res.resultados.forEach(function(item){
+						if (!item.success) {
+							var safeNome = $('<div>').text(item.nome).html();
+							blocosHtml += '<div style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(239, 68, 68, 0.15);">';
+							blocosHtml += '<strong style="color: #991b1b; font-size: 0.92rem;">' + safeNome + ' (Vaga #' + item.vaga + '):</strong>';
+							blocosHtml += '<ul style="margin: 6px 0 0 0; padding-left: 20px; color: #7f1d1d; font-size: 0.85rem;">';
+							item.erros.forEach(function(err){
+								blocosHtml += '<li>' + $('<div>').text(err).html() + '</li>';
+							});
+							blocosHtml += '</ul></div>';
+						}
+					});
+				}
+
 				var html = '<div class="verif-box-error">' +
 					'<div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px;">' +
 						'<span class="material-symbols-outlined" style="font-size: 2.2rem; color: #dc2626; flex-shrink: 0;">error</span>' +
 						'<div>' +
-							'<h4 style="margin: 0 0 6px 0; font-family: \'Outfit\', sans-serif; font-size: 1.15rem; color: #991b1b;">Pendências Detectadas nos Times</h4>' +
-							'<p style="margin: 0; font-size: 0.9rem; color: #7f1d1d;">Foram encontradas inconsistências em times participantes desta competição:</p>' +
+							'<h4 style="margin: 0 0 6px 0; font-family: \'Outfit\', sans-serif; font-size: 1.15rem; color: #991b1b;">' + res.total_com_erros + ' de ' + res.total_verificados + ' times com inconsistências no SQLite</h4>' +
+							'<p style="margin: 0; font-size: 0.9rem; color: #7f1d1d;">Os seguintes times gravados no banco SQLite da competição possuem pendências:</p>' +
 						'</div>' +
 					'</div>' +
-					'<div style="background: #ffffff; border-radius: 8px; padding: 14px 18px; border: 1px solid rgba(239, 68, 68, 0.2); font-size: 0.88rem; line-height: 1.6; color: #991b1b;">' +
-						rawErros +
+					'<div style="background: #ffffff; border-radius: 8px; padding: 14px 18px; border: 1px solid rgba(239, 68, 68, 0.2); max-height: 320px; overflow-y: auto;">' +
+						blocosHtml +
 					'</div>' +
-					'<p style="margin: 14px 0 0 0; font-size: 0.82rem; color: #64748b;">Regularize os times pendentes no portal antes de prosseguir com os jogos.</p>' +
+					'<p style="margin: 14px 0 0 0; font-size: 0.82rem; color: #64748b;">Corrija as inconsistências antes de iniciar ou simular partidas para evitar falhas no motor de simulação.</p>' +
 				'</div>';
-				abrirModalVerificacao("Integridade Geral da Competição", html);
-				showToast("Existem pendências em times da competição.", "error");
+				abrirModalVerificacao("Integridade Geral da Competição (SQLite)", html);
+				showToast("Foram encontradas inconsistências em times no SQLite.", "error");
 			}
 		}).fail(function() {
 			$('#loading').hide();
-			showToast("Erro ao verificar os times da competição.", "error");
+			showToast("Erro ao verificar os times no banco SQLite da competição.", "error");
 		});
 	});
 

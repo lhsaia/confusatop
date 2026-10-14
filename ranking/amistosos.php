@@ -90,23 +90,23 @@ $dataHoraDefault = date('Y-m-d\TH:i');
         </div>
 
         <!-- Seletor de Categoria -->
-        <div class="amistosos-categories">
-            <button type="button" class="category-pill active" data-cat="1">
+        <div class="amistosos-categories" style="display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 0.6rem !important; margin-bottom: 2rem !important; align-items: center !important;">
+            <a href="javascript:void(0)" class="category-pill active" data-cat="1" style="display: inline-flex !important; width: auto !important; max-width: fit-content !important; margin: 0 !important;">
                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">military_tech</span>
-                Seleção Principal
-            </button>
-            <button type="button" class="category-pill" data-cat="2">
+                <span>Seleção Principal</span>
+            </a>
+            <a href="javascript:void(0)" class="category-pill" data-cat="2" style="display: inline-flex !important; width: auto !important; max-width: fit-content !important; margin: 0 !important;">
                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">workspace_premium</span>
-                Olímpica (Sub-23/21)
-            </button>
-            <button type="button" class="category-pill" data-cat="3">
+                <span>Olímpica (Sub-23/21)</span>
+            </a>
+            <a href="javascript:void(0)" class="category-pill" data-cat="3" style="display: inline-flex !important; width: auto !important; max-width: fit-content !important; margin: 0 !important;">
                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">sports_handball</span>
-                Sub-20
-            </button>
-            <button type="button" class="category-pill" data-cat="4">
+                <span>Sub-20</span>
+            </a>
+            <a href="javascript:void(0)" class="category-pill" data-cat="4" style="display: inline-flex !important; width: auto !important; max-width: fit-content !important; margin: 0 !important;">
                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">school</span>
-                Sub-18
-            </button>
+                <span>Sub-18</span>
+            </a>
         </div>
 
         <form id="formSimularAmistoso" onsubmit="return false;">
@@ -216,7 +216,7 @@ $dataHoraDefault = date('Y-m-d\TH:i');
                         </label>
                     </div>
 
-                    <button type="button" id="btnDispararSimulacao" class="btn-simular-amistoso">
+                    <button type="button" id="btnDispararSimulacao" class="btn-simular-amistoso" style="width: auto !important; max-width: fit-content !important; margin: 0 auto !important;">
                         <span class="material-symbols-outlined">play_arrow</span>
                         <span>Simular Amistoso</span>
                     </button>
@@ -491,7 +491,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span class="material-symbols-outlined">description</span>
                             <span>Acompanhar Súmula Temporizada</span>
                         </a>
-                        <button type="button" onclick="document.getElementById('resultadoContainer').style.display='none';" class="btn-simular-amistoso">
+                        <button type="button" onclick="document.getElementById('resultadoContainer').style.display='none';" class="btn-simular-amistoso" style="width: auto !important; max-width: fit-content !important; margin: 0 !important;">
                             <span class="material-symbols-outlined">restart_alt</span>
                             <span>Novo Amistoso</span>
                         </button>
@@ -578,7 +578,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span class="material-symbols-outlined">description</span>
                             <span>Ver Súmula Completa</span>
                         </a>
-                        <button type="button" onclick="document.getElementById('resultadoContainer').style.display='none';" class="btn-simular-amistoso">
+                        <button type="button" onclick="document.getElementById('resultadoContainer').style.display='none';" class="btn-simular-amistoso" style="width: auto !important; max-width: fit-content !important; margin: 0 !important;">
                             <span class="material-symbols-outlined">restart_alt</span>
                             <span>Simular Outro Amistoso</span>
                         </button>
