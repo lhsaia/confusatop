@@ -168,79 +168,26 @@ if (!function_exists('garantirTecnicoValidoSQLite')) {
     function garantirTecnicoValidoSQLite($ldb, $clubeId, $tecnicoPreferidoId = 0) {
         $clubeId = (int)$clubeId;
         $tecnicoPreferidoId = (int)$tecnicoPreferidoId;
-        if (!$ldb || $clubeId === 0) return $clubeId;
+        if (!$ldb || $clubeId === 0) return $tecnicoPreferidoId;
 
         try {
-            $candidatos = [];
             if ($tecnicoPreferidoId !== 0) {
-                $candidatos[] = $tecnicoPreferidoId;
-            }
-            if (!in_array($clubeId, $candidatos)) {
-                $candidatos[] = $clubeId;
-            }
-
-            $tecRow = null;
-            $stmtTec = $ldb->prepare("SELECT ID, Nome, Idade, Nivel, Mentalidade, Estilo FROM tecnico WHERE ID = :id LIMIT 1");
-            foreach ($candidatos as $cid) {
-                $stmtTec->bindValue(':id', $cid, PDO::PARAM_INT);
+                $stmtTec = $ldb->prepare("SELECT ID FROM tecnico WHERE ID = :id LIMIT 1");
+                $stmtTec->bindValue(':id', $tecnicoPreferidoId, PDO::PARAM_INT);
                 $stmtTec->execute();
-                $row = $stmtTec->fetch(PDO::FETCH_ASSOC);
-                if ($row && !empty($row['ID'])) {
-                    $tecRow = $row;
-                    break;
+                if ($stmtTec->fetch()) {
+                    return $tecnicoPreferidoId;
                 }
             }
-
-            if ($tecRow) {
-                $tid = (int)$tecRow['ID'];
-                $ment = (int)($tecRow['Mentalidade'] ?? 0);
-                $est = (int)($tecRow['Estilo'] ?? 0);
-                $niv = (int)($tecRow['Nivel'] ?? 0);
-                $idade = (int)($tecRow['Idade'] ?? 0);
-                $nome = trim((string)($tecRow['Nome'] ?? ''));
-
-                $precisaUpdate = false;
-                if ($ment < 1 || $ment > 5) { $ment = 3; $precisaUpdate = true; }
-                if ($est < 1 || $est > 5) { $est = 3; $precisaUpdate = true; }
-                if ($niv < 1 || $niv > 10) { $niv = 5; $precisaUpdate = true; }
-                if ($idade <= 0) { $idade = 45; $precisaUpdate = true; }
-                if ($nome === '') { $nome = "Técnico #{$tid}"; $precisaUpdate = true; }
-
-                if ($precisaUpdate) {
-                    $stmtUp = $ldb->prepare("UPDATE tecnico SET Nome = :nome, Idade = :idade, Nivel = :nivel, Mentalidade = :ment, Estilo = :est WHERE ID = :id");
-                    $stmtUp->execute([
-                        ':nome' => $nome,
-                        ':idade' => $idade,
-                        ':nivel' => $niv,
-                        ':ment' => $ment,
-                        ':est' => $est,
-                        ':id' => $tid
-                    ]);
-                }
-                return $tid;
+            $stmtTecC = $ldb->prepare("SELECT ID FROM tecnico WHERE ID = :id LIMIT 1");
+            $stmtTecC->bindValue(':id', $clubeId, PDO::PARAM_INT);
+            $stmtTecC->execute();
+            if ($stmtTecC->fetch()) {
+                return $clubeId;
             }
+        } catch (\Throwable $e) {}
 
-            // Se não existe registro na tabela tecnico (ex: times .ymt importados anteriormente), criar técnico padrão válido
-            $tid = ($tecnicoPreferidoId !== 0) ? $tecnicoPreferidoId : $clubeId;
-            $nomeClube = "Clube {$clubeId}";
-            try {
-                $stmtClube = $ldb->prepare("SELECT Nome FROM clube WHERE ID = :id LIMIT 1");
-                $stmtClube->bindValue(':id', $clubeId, PDO::PARAM_INT);
-                $stmtClube->execute();
-                $cNome = $stmtClube->fetchColumn();
-                if ($cNome) $nomeClube = trim((string)$cNome);
-            } catch (\Throwable $e) {}
-
-            $stmtIns = $ldb->prepare("INSERT OR REPLACE INTO tecnico (ID, Nome, Idade, Nivel, Mentalidade, Estilo) VALUES (:id, :nome, 45, 5, 3, 3)");
-            $stmtIns->execute([
-                ':id' => $tid,
-                ':nome' => "Técnico (" . $nomeClube . ")"
-            ]);
-            return $tid;
-        } catch (\Throwable $e) {
-            error_log("Erro em garantirTecnicoValidoSQLite para o clube #{$clubeId}: " . $e->getMessage());
-            return $clubeId;
-        }
+        return ($tecnicoPreferidoId !== 0) ? $tecnicoPreferidoId : $clubeId;
     }
 }
 
@@ -250,41 +197,10 @@ if (!function_exists('garantirIntegridadeJogadorSQLite')) {
         if (!$ldb || $jogadorId === 0) return false;
 
         try {
-            $stmtJ = $ldb->prepare("SELECT ID, Mentalidade, Nivel FROM jogador WHERE ID = :id LIMIT 1");
+            $stmtJ = $ldb->prepare("SELECT ID FROM jogador WHERE ID = :id LIMIT 1");
             $stmtJ->bindValue(':id', $jogadorId, PDO::PARAM_INT);
             $stmtJ->execute();
-            $jRow = $stmtJ->fetch(PDO::FETCH_ASSOC);
-            if (!$jRow) {
-                return false;
-            }
-
-            $ment = (int)($jRow['Mentalidade'] ?? 0);
-            if ($ment < 1 || $ment > 8) {
-                $stmtUpM = $ldb->prepare("UPDATE jogador SET Mentalidade = 4 WHERE ID = :id");
-                $stmtUpM->bindValue(':id', $jogadorId, PDO::PARAM_INT);
-                $stmtUpM->execute();
-            }
-
-            $stmtPos = $ldb->prepare("SELECT G FROM posicaojogador WHERE Jogador = :id LIMIT 1");
-            $stmtPos->bindValue(':id', $jogadorId, PDO::PARAM_INT);
-            $stmtPos->execute();
-            $posRow = $stmtPos->fetch(PDO::FETCH_ASSOC);
-            if (!$posRow) {
-                $stmtInsPos = $ldb->prepare("INSERT OR IGNORE INTO posicaojogador (Jogador, G, LD, LE, Z, AD, AE, V, MD, ME, MC, PD, PE, MA, Am, Aa) VALUES (:id, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0)");
-                $stmtInsPos->bindValue(':id', $jogadorId, PDO::PARAM_INT);
-                $stmtInsPos->execute();
-            }
-
-            // Garantir que haja linha tanto em atributosjogador quanto em atributosgoleiro para evitar NPE se atuar improvisado
-            $stmtInsAj = $ldb->prepare("INSERT OR IGNORE INTO atributosjogador (Jogador, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Determinacao, determinacaoOriginal) VALUES (:id, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 1, 1)");
-            $stmtInsAj->bindValue(':id', $jogadorId, PDO::PARAM_INT);
-            $stmtInsAj->execute();
-
-            $stmtInsAg = $ldb->prepare("INSERT OR IGNORE INTO atributosgoleiro (Goleiro, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao, determinacaoOriginal) VALUES (:id, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 1, 1)");
-            $stmtInsAg->bindValue(':id', $jogadorId, PDO::PARAM_INT);
-            $stmtInsAg->execute();
-
-            return true;
+            return (bool)$stmtJ->fetch();
         } catch (\Throwable $e) {
             return false;
         }
@@ -383,126 +299,87 @@ if (!function_exists('sanitizarEscalacaoPreSimulacao')) {
                 }
             }
 
-            // Função auxiliar para criar jogador reserva genérico quando faltar goleiro ou jogador de linha
-            $criarJogadorGenerico = function($genPos, $indice) use ($ldb, &$disponiveis, &$goleiros, &$jogadoresLinha) {
-                $stmtMaxId = $ldb->query("SELECT MAX(ID) FROM jogador");
-                $maxId = (int)$stmtMaxId->fetchColumn();
-                $newId = max(90000, $maxId + 1);
-
-                $stmtInsGen = $ldb->prepare("INSERT OR IGNORE INTO jogador (ID, Nome, Idade, Nivel, Potencial, CrescBase, Mentalidade, CobradorFalta) 
-                    VALUES (:id, :nome, 22, 50, 0, 0, 4, 0)");
-                $stmtInsGen->execute([
-                    ':id' => $newId,
-                    ':nome' => "Reserva Genérico {$indice}"
-                ]);
-
-                $isGk = ($genPos === 'G') ? 1 : 0;
-                $isMc = ($genPos === 'MC') ? 1 : 0;
-                $stmtInsPos = $ldb->prepare("INSERT OR IGNORE INTO posicaojogador (Jogador, G, LD, LE, Z, AD, AE, V, MD, ME, MC, PD, PE, MA, Am, Aa) 
-                    VALUES (:id, :g, 0, 0, 0, 0, 0, 0, 0, 0, :mc, 0, 0, 0, 0, 0)");
-                $stmtInsPos->execute([':id' => $newId, ':g' => $isGk, ':mc' => $isMc]);
-
-                $stmtInsAtG = $ldb->prepare("INSERT OR IGNORE INTO atributosgoleiro (Goleiro, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao, determinacaoOriginal) 
-                    VALUES (:id, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 1, 1)");
-                $stmtInsAtG->execute([':id' => $newId]);
-
-                $stmtInsAtJ = $ldb->prepare("INSERT OR IGNORE INTO atributosjogador (Jogador, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Determinacao, determinacaoOriginal) 
-                    VALUES (:id, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 1, 1)");
-                $stmtInsAtJ->execute([':id' => $newId]);
-
-                $genPlayer = ['ID' => $newId, 'Nome' => "Reserva Genérico {$indice}", 'Pos' => $genPos, 'Nivel' => 50];
-                $disponiveis[$newId] = $genPlayer;
-                if ($genPos === 'G') {
-                    $goleiros[$newId] = $genPlayer;
-                } else {
-                    $jogadoresLinha[$newId] = $genPlayer;
-                }
-            };
-
-            $genIdx = 1;
-            if (empty($goleiros)) {
-                $criarJogadorGenerico('G', $genIdx++);
-            }
-            while (count($jogadoresLinha) < 10) {
-                $criarJogadorGenerico('MC', $genIdx++);
-            }
-
             // 2. Ler escalação atual
             $stmtEsc = $ldb->prepare("SELECT * FROM escalacao WHERE Clube = :clube LIMIT 1");
             $stmtEsc->bindValue(':clube', $clubeId, PDO::PARAM_INT);
             $stmtEsc->execute();
             $esc = $stmtEsc->fetch(PDO::FETCH_ASSOC);
 
-            if (!$esc) {
-                // Cria escalação 4-4-2 padrão se não existir
-                $esc = ['Clube' => $clubeId];
-                for ($i = 1; $i <= 11; $i++) {
-                    $esc['Jogador' . $i] = 0;
+            if (!$esc || empty($esc['Jogador1'])) {
+                return;
+            }
+
+            // Se nenhum dos 11 titulares está em desfalquesIds e nenhum está inválido, manter escalação 100% intacta
+            $precisaAjuste = false;
+            for ($i = 1; $i <= 11; $i++) {
+                $jId = (int)($esc['Jogador' . $i] ?? 0);
+                if ($jId === 0 || in_array($jId, $desfalquesIds)) {
+                    $precisaAjuste = true;
+                    break;
                 }
             }
 
-            // 3. Montar os 11 titulares válidos e não repetidos
+            if (!$precisaAjuste) {
+                $titularesExistentes = [];
+                for ($i = 1; $i <= 11; $i++) {
+                    $titularesExistentes[$i] = (int)$esc['Jogador' . $i];
+                }
+                garantirTitularesNoElencoSQLite($ldb, $clubeId, $titularesExistentes);
+                return;
+            }
+
+            // 3. Montar os 11 titulares mantendo estritamente as posições táticas cadastradas na escalação
             $titularesEscolhidos = [];
             $posicoesFinais = [];
 
-            // Posições táticas padrão para 4-4-2 se necessário
-            $defaultPositions = [
-                1 => 'G',
-                2 => 'LD', 3 => 'Z', 4 => 'Z', 5 => 'LE',
-                6 => 'V', 7 => 'MC', 8 => 'MD', 9 => 'ME',
-                10 => 'Am', 11 => 'Aa'
-            ];
-
-            // Slot 1: Goleiro (estritamente escolhido entre os goleiros disponíveis)
+            // Slot 1: Goleiro
             $jog1 = (int)($esc['Jogador1'] ?? 0);
             if (!isset($goleiros[$jog1]) || in_array($jog1, $titularesEscolhidos)) {
                 $jog1 = !empty($goleiros) ? array_key_first($goleiros) : array_key_first($disponiveis);
             }
             $titularesEscolhidos[1] = $jog1;
-            $posicoesFinais[1] = 'G';
+            $posicoesFinais[1] = !empty($esc['Pos1']) ? $esc['Pos1'] : 'G';
             unset($goleiros[$jog1], $disponiveis[$jog1]);
 
-            // Slots 2 a 11: Jogadores de linha (estritamente escolhidos entre jogadores de linha disponíveis)
+            // Slots 2 a 11: Preserva a posição original cadastrada no banco e substitui apenas jogador desfalcado
             for ($i = 2; $i <= 11; $i++) {
-                $posRaw = $esc['Pos' . $i] ?? ($defaultPositions[$i] ?? 'MC');
+                $posRaw = $esc['Pos' . $i] ?? 'MC';
                 $posNorm = normalizarPosicaoHexacolor($posRaw, $i);
                 if ($posNorm === 'G') $posNorm = 'Z';
 
                 $jogId = (int)($esc['Jogador' . $i] ?? 0);
                 if (!isset($jogadoresLinha[$jogId]) || in_array($jogId, $titularesEscolhidos)) {
-                    $jogId = !empty($jogadoresLinha) ? array_key_first($jogadoresLinha) : array_key_first($disponiveis);
+                    // Buscar melhor substituto por afinidade de setor caso o titular esteja suspenso/desfalcado
+                    $candidatoSub = null;
+                    foreach ($jogadoresLinha as $candId => $candJ) {
+                        if (normalizarPosicaoHexacolor($candJ['Pos'] ?? '', $i) === $posNorm) {
+                            $candidatoSub = $candId;
+                            break;
+                        }
+                    }
+                    if (!$candidatoSub) {
+                        $isDef = in_array($posNorm, ['Z', 'LD', 'LE', 'AD', 'AE', 'V']);
+                        $isAta = in_array($posNorm, ['MA', 'PD', 'PE', 'Am', 'Aa']);
+                        foreach ($jogadoresLinha as $candId => $candJ) {
+                            $pCand = normalizarPosicaoHexacolor($candJ['Pos'] ?? '', 2);
+                            if ($isDef && in_array($pCand, ['Z', 'LD', 'LE', 'AD', 'AE', 'V'])) {
+                                $candidatoSub = $candId;
+                                break;
+                            } elseif ($isAta && in_array($pCand, ['MA', 'PD', 'PE', 'Am', 'Aa'])) {
+                                $candidatoSub = $candId;
+                                break;
+                            }
+                        }
+                    }
+                    $jogId = $candidatoSub ? $candidatoSub : (!empty($jogadoresLinha) ? array_key_first($jogadoresLinha) : array_key_first($disponiveis));
                 }
 
                 $titularesEscolhidos[$i] = $jogId;
-                $posicoesFinais[$i] = $posNorm;
+                $posicoesFinais[$i] = $posRaw;
                 unset($jogadoresLinha[$jogId], $disponiveis[$jogId]);
             }
 
-            // 4. Validação e Equilíbrio Tático Mínimo (Prevenção de somaProb == 0)
-            $defensores = 0;
-            $meias = 0;
-            $atacantes = 0;
-
-            for ($i = 2; $i <= 11; $i++) {
-                $p = $posicoesFinais[$i];
-                if (in_array($p, ['Z', 'LD', 'LE', 'AD', 'AE', 'V'])) $defensores++;
-                if (in_array($p, ['V', 'MC', 'MD', 'ME', 'MA'])) $meias++;
-                if (in_array($p, ['MA', 'PD', 'PE', 'Am', 'Aa'])) $atacantes++;
-            }
-
-            if ($defensores < 2) {
-                $posicoesFinais[2] = 'Z';
-                $posicoesFinais[3] = 'Z';
-            }
-            if ($meias < 2) {
-                $posicoesFinais[6] = 'V';
-                $posicoesFinais[7] = 'MC';
-            }
-            if ($atacantes < 1) {
-                $posicoesFinais[11] = 'Am';
-            }
-
-            // 5. Garantir capitão e batedores de pênalti válidos
+            // 4. Garantir capitão e batedores de pênalti válidos
             $capitao = (int)($esc['Capitao'] ?? 0);
             if (!in_array($capitao, $titularesEscolhidos)) {
                 $capitao = $titularesEscolhidos[1];
@@ -517,7 +394,7 @@ if (!function_exists('sanitizarEscalacaoPreSimulacao')) {
                 $penaltis[$p] = $pen;
             }
 
-            // 6. Gravar com INSERT OR REPLACE INTO escalacao garantindo que o registro exista para a engine
+            // 5. Gravar com INSERT OR REPLACE INTO escalacao
             $sqlEsc = "INSERT OR REPLACE INTO escalacao (
                 Clube, 
                 Pos1, Jogador1, Pos2, Jogador2, Pos3, Jogador3, Pos4, Jogador4, Pos5, Jogador5, 
@@ -541,7 +418,7 @@ if (!function_exists('sanitizarEscalacaoPreSimulacao')) {
             $stmtUp->bindValue(':pen3', $penaltis[3], PDO::PARAM_INT);
             $stmtUp->execute();
 
-            // 7. Garantir que o elenco do clube no SQLite contenha todos os 11 titulares, atributos e técnico válido
+            // 6. Garantir que o elenco do clube no SQLite contenha todos os 11 titulares
             garantirTitularesNoElencoSQLite($ldb, $clubeId, $titularesEscolhidos);
 
         } catch (\Throwable $e) {
@@ -552,81 +429,238 @@ if (!function_exists('sanitizarEscalacaoPreSimulacao')) {
 
 if (!function_exists('aplicarEscalacaoEmergenciaSQLite')) {
     /**
-     * Aplica uma formação tática 4-4-2 limpa e infalível com os 11 melhores jogadores aptos
-     * caso o JAR tenha falhado na primeira tentativa.
+     * Desabilitado: não deve alterar nem inventar formações arbitrárias.
      */
     function aplicarEscalacaoEmergenciaSQLite($ldb, $clubeId) {
-        $clubeId = (int)$clubeId;
-        if (!$ldb || $clubeId === 0) return;
-        try {
-            $jogadores = obterJogadoresClubeSQLite($ldb, $clubeId);
+        return;
+    }
+}
 
-            $goleiro = 0;
-            $linha = [];
-            foreach ($jogadores as $j) {
-                $jId = (int)$j['ID'];
-                $pNorm = normalizarPosicaoHexacolor($j['Pos'] ?? '', 2);
-                if ($pNorm === 'G' && $goleiro === 0) {
-                    $goleiro = $jId;
-                } else {
-                    if (count($linha) < 10 && !in_array($jId, $linha) && $jId !== $goleiro) {
-                        $linha[] = $jId;
+if (!function_exists('imagemValida')) {
+    function imagemValida($absPath) {
+        if (!file_exists($absPath) || !is_file($absPath) || @filesize($absPath) <= 0) {
+            return false;
+        }
+        $handle = @fopen($absPath, 'rb');
+        if (!$handle) return false;
+        $header = fread($handle, 12);
+        fclose($handle);
+        if (strlen($header) < 4) return false;
+        $b = unpack('C*', $header);
+        // PNG
+        if ($b[1] === 0x89 && $b[2] === 0x50 && $b[3] === 0x4E && $b[4] === 0x47) return true;
+        // JPEG
+        if ($b[1] === 0xFF && $b[2] === 0xD8 && $b[3] === 0xFF) return true;
+        // GIF
+        if ($b[1] === 0x47 && $b[2] === 0x49 && $b[3] === 0x46) return true;
+        // WEBP
+        if (substr($header, 0, 4) === 'RIFF' && substr($header, 8, 4) === 'WEBP') return true;
+        return false;
+    }
+}
+
+if (!function_exists('resolverCaminhoImagem')) {
+    function resolverCaminhoImagem($relPath, $hexacolorDir, $docRoot, $fallbackRel) {
+        if (empty($relPath)) {
+            return $fallbackRel;
+        }
+        
+        // Caminho absoluto no disco
+        if (strpos($relPath, '../../') === 0) {
+            $sub = substr($relPath, 6);
+            $abs = $docRoot . '/' . ltrim($sub, '/\\');
+        } else {
+            $abs = $hexacolorDir . '/' . ltrim($relPath, '/\\');
+        }
+        
+        $resolvedAbs = null;
+        $resolvedRel = null;
+        
+        if (file_exists($abs) && is_file($abs) && @filesize($abs) > 0) {
+            $resolvedAbs = $abs;
+            $resolvedRel = $relPath;
+        } else {
+            // Tenta encontrar ignorando maiúsculas/minúsculas no mesmo diretório
+            $dir = dirname($abs);
+            $filename = basename($abs);
+            if (is_dir($dir)) {
+                $files = @scandir($dir);
+                if ($files) {
+                    foreach ($files as $f) {
+                        if ($f !== '.' && $f !== '..' && strcasecmp($f, $filename) === 0 && is_file($dir . '/' . $f)) {
+                            $resolvedAbs = $dir . '/' . $f;
+                            if (strpos($relPath, '../../') === 0) {
+                                $resolvedRel = '../../' . ltrim(substr(dirname($relPath), 6), '/\\') . '/' . $f;
+                            } else {
+                                $resolvedRel = (dirname($relPath) !== '.' ? dirname($relPath) . '/' : '') . $f;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Tenta procurar em images/escudos, images/uniformes ou images/bandeiras pelo nome do arquivo
+            if (!$resolvedAbs) {
+                $filenameBase = basename($relPath);
+                if (!empty($filenameBase)) {
+                    $altDirs = [
+                        $docRoot . '/images/escudos',
+                        $docRoot . '/images/uniformes',
+                        $docRoot . '/images/bandeiras',
+                        $hexacolorDir . '/Imagens',
+                        $hexacolorDir . '/Escudos',
+                        $hexacolorDir . '/Uniformes',
+                        $hexacolorDir . '/imagens',
+                        $hexacolorDir . '/escudos',
+                        $hexacolorDir . '/uniformes'
+                    ];
+                    foreach ($altDirs as $altDir) {
+                        if (is_dir($altDir)) {
+                            $altFiles = @scandir($altDir);
+                            if ($altFiles) {
+                                foreach ($altFiles as $af) {
+                                    if ($af !== '.' && $af !== '..' && strcasecmp($af, $filenameBase) === 0 && is_file($altDir . '/' . $af)) {
+                                        $resolvedAbs = $altDir . '/' . $af;
+                                        if (strpos($altDir, $docRoot) === 0) {
+                                            $relFromDoc = substr($altDir, strlen($docRoot));
+                                            $resolvedRel = '../../' . ltrim($relFromDoc, '/\\') . '/' . $af;
+                                        } elseif (strpos($altDir, $hexacolorDir) === 0) {
+                                            $relFromHexa = substr($altDir, strlen($hexacolorDir));
+                                            $resolvedRel = ltrim($relFromHexa, '/\\') . '/' . $af;
+                                        }
+                                        break 2;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Se não encontrou o arquivo em lugar nenhum, usar fallback
+        if (!$resolvedAbs || !file_exists($resolvedAbs) || @filesize($resolvedAbs) <= 0) {
+            return $fallbackRel;
+        }
+        
+        $ext = strtolower(pathinfo($resolvedAbs, PATHINFO_EXTENSION));
+        $isWebp = ($ext === 'webp');
+        if (!$isWebp) {
+            $h = @fopen($resolvedAbs, 'rb');
+            if ($h) {
+                $sig = fread($h, 12);
+                fclose($h);
+                if (strlen($sig) >= 12 && substr($sig, 0, 4) === 'RIFF' && substr($sig, 8, 4) === 'WEBP') {
+                    $isWebp = true;
+                }
+            }
+        }
+        
+        // Tratamento especial para WEBP: Java 8 (ImageIO) não suporta .webp nativamente e dá erro "image == null"
+        if ($isWebp) {
+            $cacheDir = $hexacolorDir . '/cache_images';
+            if (!is_dir($cacheDir)) {
+                @mkdir($cacheDir, 0777, true);
+            }
+            $pngFilename = md5($resolvedAbs) . '.png';
+            $pngAbs = $cacheDir . '/' . $pngFilename;
+            $pngRel = 'cache_images/' . $pngFilename;
+            
+            if (file_exists($pngAbs) && @filesize($pngAbs) > 0) {
+                return $pngRel;
+            }
+            
+            if (function_exists('imagecreatefromwebp')) {
+                $img = @imagecreatefromwebp($resolvedAbs);
+                if ($img) {
+                    imagealphablending($img, false);
+                    imagesavealpha($img, true);
+                    if (@imagepng($img, $pngAbs, 6)) {
+                        @imagedestroy($img);
+                        return $pngRel;
+                    }
+                    @imagedestroy($img);
+                }
+            }
+            
+            // Se a conversão webp falhou, usar o placeholder PNG padrão
+            return $fallbackRel;
+        }
+        
+        return $resolvedRel;
+    }
+}
+
+if (!function_exists('normalizarImagensClubesSQLite')) {
+    function normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot) {
+        if (!$ldb) return;
+        try {
+            // Garantir compatibilidade de pastas no Linux
+            $imageFolders = ['Imagens' => 'imagens', 'Escudos' => 'escudos', 'Uniformes' => 'uniformes'];
+            foreach ($imageFolders as $orig => $lower) {
+                $origDir = $hexacolorDir . '/' . $orig;
+                $lowerDir = $hexacolorDir . '/' . $lower;
+                if (is_dir($origDir) && !is_dir($lowerDir)) {
+                    if (!@symlink($origDir, $lowerDir)) {
+                        @mkdir($lowerDir, 0777, true);
+                        $files = glob($origDir . '/*');
+                        if ($files) {
+                            foreach ($files as $f) {
+                                if (is_file($f)) {
+                                    @copy($f, $lowerDir . '/' . basename($f));
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            if ($goleiro === 0 && !empty($linha)) {
-                $goleiro = array_shift($linha);
+            $stmtClubs = $ldb->query("SELECT ID, Nome, Escudo, Uniforme1, Uniforme2 FROM clube");
+            if (!$stmtClubs) return;
+            $clubs = $stmtClubs->fetchAll(PDO::FETCH_ASSOC);
+            $stmtClubs = null;
+            
+            $fallbackEscudo = 'Imagens/EscudoPadrao.png';
+            $fallbackUniforme = 'Imagens/UniformePadrao.PNG';
+            
+            $stmtUpClube = $ldb->prepare("UPDATE clube SET Escudo = :esc, Uniforme1 = :uni1, Uniforme2 = :uni2 WHERE ID = :id");
+            
+            foreach ($clubs as $c) {
+                $changed = false;
+                $escudo = trim($c['Escudo'] ?? '');
+                $uni1 = trim($c['Uniforme1'] ?? '');
+                $uni2 = trim($c['Uniforme2'] ?? '');
+                
+                $escudoResolvido = resolverCaminhoImagem($escudo, $hexacolorDir, $docRoot, $fallbackEscudo);
+                if ($escudoResolvido !== $escudo) {
+                    $escudo = $escudoResolvido;
+                    $changed = true;
+                }
+                
+                $uni1Resolvido = resolverCaminhoImagem($uni1, $hexacolorDir, $docRoot, $fallbackUniforme);
+                if ($uni1Resolvido !== $uni1) {
+                    $uni1 = $uni1Resolvido;
+                    $changed = true;
+                }
+                
+                $uni2Resolvido = resolverCaminhoImagem($uni2, $hexacolorDir, $docRoot, $fallbackUniforme);
+                if ($uni2Resolvido !== $uni2) {
+                    $uni2 = $uni2Resolvido;
+                    $changed = true;
+                }
+                
+                if ($changed) {
+                    $stmtUpClube->bindValue(':esc', $escudo);
+                    $stmtUpClube->bindValue(':uni1', $uni1);
+                    $stmtUpClube->bindValue(':uni2', $uni2);
+                    $stmtUpClube->bindValue(':id', $c['ID'], PDO::PARAM_INT);
+                    $stmtUpClube->execute();
+                }
             }
-
-            if ($goleiro === 0) {
-                $goleiro = max(90000, abs($clubeId) * 1000);
-            }
-
-            while (count($linha) < 10) {
-                $linha[] = $goleiro;
-            }
-
-            $emergenciaPositions = [
-                1 => 'G',
-                2 => 'LD', 3 => 'Z', 4 => 'Z', 5 => 'LE',
-                6 => 'V', 7 => 'MC', 8 => 'MD', 9 => 'ME',
-                10 => 'Am', 11 => 'Aa'
-            ];
-
-            $sqlEsc = "INSERT OR REPLACE INTO escalacao (
-                Clube, 
-                Pos1, Jogador1, Pos2, Jogador2, Pos3, Jogador3, Pos4, Jogador4, Pos5, Jogador5, 
-                Pos6, Jogador6, Pos7, Jogador7, Pos8, Jogador8, Pos9, Jogador9, Pos10, Jogador10, 
-                Pos11, Jogador11, Capitao, Penalti1, Penalti2, Penalti3
-            ) VALUES (
-                :clube,
-                :pos1, :jog1, :pos2, :jog2, :pos3, :jog3, :pos4, :jog4, :pos5, :jog5,
-                :pos6, :jog6, :pos7, :jog7, :pos8, :jog8, :pos9, :jog9, :pos10, :jog10,
-                :pos11, :jog11, :capitao, :pen1, :pen2, :pen3
-            )";
-            $stmt = $ldb->prepare($sqlEsc);
-            $stmt->bindValue(':clube', $clubeId, PDO::PARAM_INT);
-            $stmt->bindValue(':pos1', 'G');
-            $stmt->bindValue(':jog1', $goleiro, PDO::PARAM_INT);
-
-            $titulares = [1 => $goleiro];
-            for ($i = 2; $i <= 11; $i++) {
-                $jogId = $linha[$i - 2];
-                $titulares[$i] = $jogId;
-                $stmt->bindValue(':pos' . $i, $emergenciaPositions[$i]);
-                $stmt->bindValue(':jog' . $i, $jogId, PDO::PARAM_INT);
-            }
-
-            $stmt->bindValue(':capitao', $goleiro, PDO::PARAM_INT);
-            $stmt->bindValue(':pen1', $linha[8] ?? $goleiro, PDO::PARAM_INT);
-            $stmt->bindValue(':pen2', $linha[9] ?? $goleiro, PDO::PARAM_INT);
-            $stmt->bindValue(':pen3', $linha[7] ?? $goleiro, PDO::PARAM_INT);
-            $stmt->execute();
-
-            garantirTitularesNoElencoSQLite($ldb, $clubeId, $titulares);
+            $stmtUpClube = null;
         } catch (\Throwable $e) {
-            error_log("Erro em aplicarEscalacaoEmergenciaSQLite: " . $e->getMessage());
+            error_log("Erro ao normalizar imagens dos clubes: " . $e->getMessage());
         }
     }
 }

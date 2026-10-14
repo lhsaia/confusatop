@@ -9,9 +9,66 @@
   },
   "days": [
     {
+      "id": "day_14_10_2026",
+      "date": "14/10/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Desativação de Fallback Arbitrário e Preservação Fiel da Escalação do Banco",
+          "desc": "Desabilitados todos os fallbacks de emergência e rotinas que inventavam formações 4-4-2 ou sintetizavam dados arbitrários para as equipes. Removidos auto-convocação de atletas, criação automática de seleções não cadastradas, geração de técnicos padrão, criação de reservas genéricos e injeção de atributos sintéticos. O sistema agora opera estritamente com os dados reais do banco de dados, em total conformidade com a exportação .ymt e competições oficiais."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Ocultação de Placares Prematuros no PoltronaScore",
+          "desc": "Corrigido vazamento de placares, marcadores e eventos em partidas antecipadamente simuladas no PoltronaScore. Agora o sistema valida a conclusão da partida no tempo real antes de exibir resultados na tela de Rodadas & Jogos, Chaveamento de Mata-Mata, Retrospecto de Clubes, Perfil de Atletas e Detalhes da Partida."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Conversão Automática de WebP e Normalização de Escudos/Uniformes na Simulação",
+          "desc": "Integrada a rotina de normalização e conversão dinâmica de imagens WebP para PNG no banco SQLite de simulação, garantindo que escudos e uniformes cadastrados no banco principal sejam carregados perfeitamente pelo motor Hexacolor sem exceções de imagem nula."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Inclusão de Uniformes (kitTeam1 e kitTeam2) na Agenda de Simulação",
+          "desc": "Adicionadas as propriedades obrigatórias kitTeam1 e kitTeam2 no payload JSON enviado ao motor HexacolorYMTv2.jar, prevenindo falhas de leitura (JSONException) na definição de uniformes da partida."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Mapeamento de Colunas de Estádio e Clima na Simulação",
+          "desc": "Corrigida a ordem das colunas no registro do estádio no SQLite temporário da simulação (ID, Nome, Capacidade, Clima, Altitude, Caldeirao) e adicionada validação para strings de temperatura e estilo suportadas pelo Hexacolor, impedindo NullPointerException ao sortear fenômenos climáticos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Compatibilidade de Colunas Suspenso e Lesionado no SQLite",
+          "desc": "Preservada a estrutura canônica de 8 colunas da tabela jogador no SQLite para total compatibilidade com inserções sem especificação de campos, implementando projeção dinâmica via PRAGMA em obterJogadoresClubeSQLite com fallback seguro para Suspenso e Lesionado."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Suporte a IDs Negativos e Auto-Recuperação na Verificação SQLite",
+          "desc": "Corrigido o filtro de cobradores de pênaltis para aceitar IDs negativos de times importados via .ymt, removida a restrição desnecessária de goleiro obrigatoriamente na posição 1 da escalação e adicionada auto-recuperação/fallback de estádio e técnico no banco SQLite da competição, eliminando falsos positivos na auditoria de integridade."
+        }
+      ]
+    },
+
+    {
       "id": "day_13_10_2026",
       "date": "13/10/2026",
       "items": [
+        {
+          "badge": "new",
+          "title": "Verificação de Integridade de Times no SQLite da Competição",
+          "desc": "Adicionado verificador direto no banco de dados SQLite da competição (.db3) na tela de escolha de times. Permite verificar tanto equipes importadas via arquivo .ymt quanto sincronizadas do portal, validando elenco mínimo/máximo, 11 titulares, técnico, capitão, batedores de pênalti, goleiros, idade limite e estádio com clima cadastrado, prevenindo falhas na simulação de partidas."
+        },
+        {
+          "badge": "design",
+          "title": "Ajuste de Dimensionamento dos Botões de Categoria de Amistosos",
+          "desc": "Corrigido o dimensionamento dos seletores de categoria de amistosos, impedindo a sobreposição de estilos globais legados de botões e garantindo o alinhamento inline horizontal e tamanho compacto automático de cada pill."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção no Carregamento da Lista de Times",
+          "desc": "Corrigida uma falha de sintaxe JavaScript no fechamento do handler assíncrono de sincronização que impedia a execução do carregamento inicial da tabela de vagas e times da competição."
+        },
         {
           "badge": "bugfix",
           "title": "Persistência de Sessão e Correção de Expiração ao Fechar Navegador",

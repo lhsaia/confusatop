@@ -818,14 +818,15 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             phase.matches.forEach(m => {
-                const homeScoreStr = m.home_score !== null ? m.home_score : '-';
-                const awayScoreStr = m.away_score !== null ? m.away_score : '-';
+                const isPendingMatch = (m.status === 'next' || m.home_score === null || m.away_score === null);
+                const homeScoreStr = (!isPendingMatch && m.home_score !== null) ? m.home_score : '-';
+                const awayScoreStr = (!isPendingMatch && m.away_score !== null) ? m.away_score : '-';
 
-                const homePenStr = (m.home_penalties !== null && (m.home_penalties > 0 || m.away_penalties > 0)) ? `<span class="bracket-penalties">(${m.home_penalties})</span>` : '';
-                const awayPenStr = (m.away_penalties !== null && (m.home_penalties > 0 || m.away_penalties > 0)) ? `<span class="bracket-penalties">(${m.away_penalties})</span>` : '';
+                const homePenStr = (!isPendingMatch && m.home_penalties !== null && (m.home_penalties > 0 || m.away_penalties > 0)) ? `<span class="bracket-penalties">(${m.home_penalties})</span>` : '';
+                const awayPenStr = (!isPendingMatch && m.away_penalties !== null && (m.home_penalties > 0 || m.away_penalties > 0)) ? `<span class="bracket-penalties">(${m.away_penalties})</span>` : '';
 
-                const homeWinnerClass = (m.winner === 'home') ? 'winner' : (m.winner === 'away' ? 'loser' : '');
-                const awayWinnerClass = (m.winner === 'away') ? 'winner' : (m.winner === 'home' ? 'loser' : '');
+                const homeWinnerClass = (!isPendingMatch && m.winner === 'home') ? 'winner' : ((!isPendingMatch && m.winner === 'away') ? 'loser' : '');
+                const awayWinnerClass = (!isPendingMatch && m.winner === 'away') ? 'winner' : ((!isPendingMatch && m.winner === 'home') ? 'loser' : '');
 
                 html += `
                     <div class="bracket-match match-card" data-id="${m.id}">
@@ -880,10 +881,11 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             matches.forEach(match => {
+                const isPendingMatch = (match.status === 'next' || match.home_score === null || match.away_score === null);
                 const homeScore = match.home_score !== null ? match.home_score : 0;
                 const awayScore = match.away_score !== null ? match.away_score : 0;
 
-                const scoreHtml = match.status === 'next' 
+                const scoreHtml = isPendingMatch 
                     ? `<span class="score-display"><span class="score-divider">vs</span></span>`
                     : `<span class="score-display"><span>${homeScore}</span><span class="score-divider">-</span><span>${awayScore}</span></span>`;
 
@@ -1026,14 +1028,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Score
-                if (match.status === 'next') {
+                const isPendingMatch = (match.status === 'next' || match.home_score === null || match.away_score === null);
+                if (isPendingMatch) {
                     mScore.textContent = 'vs';
                 } else {
                     mScore.textContent = `${match.home_score} - ${match.away_score}`;
                 }
 
                 // Penalties
-                if (match.home_penalties !== null && match.away_penalties !== null && (match.home_penalties > 0 || match.away_penalties > 0)) {
+                if (!isPendingMatch && match.home_penalties !== null && match.away_penalties !== null && (match.home_penalties > 0 || match.away_penalties > 0)) {
                     mPenalties.textContent = `Pênaltis: (${match.home_penalties}) - (${match.away_penalties})`;
                     mPenalties.style.display = 'block';
                 } else {
@@ -1041,8 +1044,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Scorers
-                mHomeScorers.textContent = match.home_scorers || '';
-                mAwayScorers.textContent = match.away_scorers || '';
+                mHomeScorers.textContent = !isPendingMatch ? (match.home_scorers || '') : '';
+                mAwayScorers.textContent = !isPendingMatch ? (match.away_scorers || '') : '';
 
                 // Favorite Button
                 if (modalFavBtn) {
@@ -1059,7 +1062,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Events
-                renderEvents(res.events || [], match.home_team, match.away_team);
+                if (isPendingMatch) {
+                    mEventsList.innerHTML = '<div class="no-data">Partida ainda não iniciada.</div>';
+                } else {
+                    renderEvents(res.events || [], match.home_team, match.away_team);
+                }
 
                 // Lineups
                 renderLineups(res.lineups, match.home_team, match.away_team, match.home_logo, match.away_logo, match.home_id, match.away_id, match.gender);

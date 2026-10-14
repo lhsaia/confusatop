@@ -115,39 +115,22 @@ if (!$infoPaisA || !$infoPaisB) {
     exit;
 }
 
-$findOrCreateClubSelecao = function($paisId, $paisNome, $cat) use ($db) {
-    $st = $db->prepare("SELECT * FROM clube WHERE Pais = :pais AND status = :cat AND (Sexo = 0 OR Sexo IS NULL) LIMIT 1");
-    $st->execute([':pais' => $paisId, ':cat' => $cat]);
-    $club = $st->fetch(PDO::FETCH_ASSOC);
-    if ($club) return $club;
+$stClubA = $db->prepare("SELECT * FROM clube WHERE Pais = :pais AND status = :cat AND (Sexo = 0 OR Sexo IS NULL) LIMIT 1");
+$stClubA->execute([':pais' => $paisA_id, ':cat' => $categoria]);
+$clubA = $stClubA->fetch(PDO::FETCH_ASSOC);
 
-    // Se não existir clube para essa categoria, criar registro
-    $sufixo = '';
-    if ($cat == 2) $sufixo = ' [U21]';
-    elseif ($cat == 3) $sufixo = ' [U20]';
-    elseif ($cat == 4) $sufixo = ' [U18]';
-    $nomeTime = $paisNome . $sufixo;
-    $tresLetras = substr(strtoupper(preg_replace('/[^A-Za-z]/', '', $paisNome)), 0, 3);
-    if (strlen($tresLetras) < 3) $tresLetras = str_pad($tresLetras, 3, 'X');
+$stClubB = $db->prepare("SELECT * FROM clube WHERE Pais = :pais AND status = :cat AND (Sexo = 0 OR Sexo IS NULL) LIMIT 1");
+$stClubB->execute([':pais' => $paisB_id, ':cat' => $categoria]);
+$clubB = $stClubB->fetch(PDO::FETCH_ASSOC);
 
-    $stIns = $db->prepare("
-        INSERT INTO clube (Nome, TresLetras, Estadio, Escudo, Uni1Cor1, Uni1Cor2, Uni1Cor3, Uniforme1, Uni2Cor1, Uni2Cor2, Uni2Cor3, Uniforme2, MaxTorcedores, Fidelidade, Pais, status, Sexo)
-        VALUES (:nome, :tl, 1, 'padrao.png', '#ffffff', '#0284c7', '#0f172a', 'padrao.png', '#0284c7', '#ffffff', '#0f172a', 'padrao.png', 50000, 5, :pais, :cat, 0)
-    ");
-    $stIns->execute([
-        ':nome' => $nomeTime,
-        ':tl' => $tresLetras,
-        ':pais' => $paisId,
-        ':cat' => $cat
-    ]);
-    $newId = (int)$db->lastInsertId();
-    $stNew = $db->prepare("SELECT * FROM clube WHERE ID = ? LIMIT 1");
-    $stNew->execute([$newId]);
-    return $stNew->fetch(PDO::FETCH_ASSOC);
-};
-
-$clubA = $findOrCreateClubSelecao($paisA_id, $infoPaisA['nome'], $categoria);
-$clubB = $findOrCreateClubSelecao($paisB_id, $infoPaisB['nome'], $categoria);
+if (!$clubA) {
+    echo json_encode(['success' => false, 'error' => "A seleção {$infoPaisA['nome']} não possui equipe cadastrada para esta categoria no banco de dados."]);
+    exit;
+}
+if (!$clubB) {
+    echo json_encode(['success' => false, 'error' => "A seleção {$infoPaisB['nome']} não possui equipe cadastrada para esta categoria no banco de dados."]);
+    exit;
+}
 
 $idClubA = (int)$clubA['ID'];
 $idClubB = (int)$clubB['ID'];
@@ -345,35 +328,9 @@ foreach ([$clubA, $clubB] as $cIdx => $cData) {
     $fidel = (int)($rowCl['Fidelidade'] ?? 5);
     $ldb->exec("INSERT OR REPLACE INTO clube VALUES ({$cId}, '{$nomeCl}', '{$siglaCl}', {$estCl}, '{$escudo}', '{$rowCl['Uni1Cor1']}', '{$rowCl['Uni1Cor2']}', '{$rowCl['Uni1Cor3']}', '{$uni1}', '{$rowCl['Uni2Cor1']}', '{$rowCl['Uni2Cor2']}', '{$rowCl['Uni2Cor3']}', '{$uni2}', {$maxTorc}, {$fidel})");
 
-    // 3. Jogadores (Convocados)
-    $stJog = $jogadorObj->exportacao(null, $cId);
+    // 3. Jogadores (Convocados da Seleção com contrato ativo)
+    $stJog = $jogadorObj->exportacao(null, $cId, true);
     $jogList = $stJog->fetchAll(PDO::FETCH_ASSOC);
-
-    // Se houver menos de 18 convocados, complementar automaticamente com os melhores jogadores disponíveis do país
-    if (count($jogList) < 18) {
-        $existingIds = array_map(function($j) { return (int)$j['idJogador']; }, $jogList);
-        $stExtra = $db->prepare("
-            SELECT j.*, p.bandeira as Nacionalidade,
-                   (Marcacao + Desarme + VisaoJogo + Movimentacao + Cruzamentos + Cabeceamento + Tecnica + ControleBola + Finalizacao + FaroGol + Velocidade + Forca + Reflexos + Seguranca + Saidas + JogoAereo + Lancamentos + DefesaPenaltis + Determinacao) as somaAtributos
-            FROM jogador j 
-            LEFT JOIN paises p ON j.Pais = p.id 
-            WHERE j.Pais = :pais AND (j.Sexo = 0 OR j.Sexo IS NULL) AND j.disponibilidade >= 0 
-            ORDER BY j.Nivel DESC LIMIT 30
-        ");
-        $stExtra->execute([':pais' => $pId]);
-        while ($extra = $stExtra->fetch(PDO::FETCH_ASSOC)) {
-            $eId = (int)$extra['ID'];
-            if (!in_array($eId, $existingIds)) {
-                $extra['idJogador'] = $eId;
-                $extra['nomeJogador'] = $extra['Nome'];
-                $extra['Idade'] = 25;
-                $extra['titularidade'] = 0;
-                $jogList[] = $extra;
-                $existingIds[] = $eId;
-            }
-            if (count($jogList) >= 23) break;
-        }
-    }
 
     $playerIds = [];
     foreach ($jogList as $row) {
@@ -385,36 +342,80 @@ foreach ([$clubA, $clubB] as $cIdx => $cData) {
         $nomeJog = str_replace("'", "''", (string)$row['nomeJogador']);
         $idade = (int)($row['Idade'] ?? 25);
         $nivel = (int)($row['Nivel'] ?? 70);
-        $ment = (int)($row['Mentalidade'] ?? 3);
+        $ment = (int)($row['Mentalidade'] ?? 4);
         $cob = (int)($row['CobradorFalta'] ?? 0);
-        $ldb->exec("INSERT OR REPLACE INTO jogador (ID, Nome, Idade, Nivel, Potencial, CrescBase, Mentalidade, CobradorFalta) VALUES ({$jId}, '{$nomeJog}', {$idade}, {$nivel}, 0, 0, {$ment}, {$cob})");
+        $ldb->exec("INSERT OR REPLACE INTO jogador VALUES ({$jId}, '{$nomeJog}', {$idade}, {$nivel}, 0, 0, {$ment}, {$cob})");
 
         $nac = !empty($row['Nacionalidade']) ? $row['Nacionalidade'] : '-';
         $ldb->exec("INSERT OR REPLACE INTO nacionalidades VALUES ({$jId}, '{$nac}')");
 
         if ($sp[0] == '1') {
-            $ldb->exec("INSERT OR REPLACE INTO atributosgoleiro VALUES ({$jId}, '{$row['Reflexos']}', '{$row['Seguranca']}', '{$row['Saidas']}', '{$row['JogoAereo']}', '{$row['Lancamentos']}', '{$row['DefesaPenaltis']}', '{$row['Determinacao']}', '{$row['DeterminacaoOriginal']}')");
+            $ldb->exec("INSERT OR REPLACE INTO atributosgoleiro VALUES ({$jId}, '{$row['Reflexos']}', '{$row['Seguranca']}', '{$row['Saidas']}', '{$row['JogoAereo']}', '{$row['Lancamentos']}', '{$row['DefesaPenaltis']}', 1, 1)");
         } else {
-            $ldb->exec("INSERT OR REPLACE INTO atributosjogador VALUES ({$jId}, '{$row['Marcacao']}', '{$row['Desarme']}', '{$row['VisaoJogo']}', '{$row['Movimentacao']}', '{$row['Cruzamentos']}', '{$row['Cabeceamento']}', '{$row['Tecnica']}', '{$row['ControleBola']}', '{$row['Finalizacao']}', '{$row['FaroGol']}', '{$row['Velocidade']}', '{$row['Forca']}', '{$row['Determinacao']}', '{$row['DeterminacaoOriginal']}')");
+            $ldb->exec("INSERT OR REPLACE INTO atributosjogador VALUES ({$jId}, '{$row['Marcacao']}', '{$row['Desarme']}', '{$row['VisaoJogo']}', '{$row['Movimentacao']}', '{$row['Cruzamentos']}', '{$row['Cabeceamento']}', '{$row['Tecnica']}', '{$row['ControleBola']}', '{$row['Finalizacao']}', '{$row['FaroGol']}', '{$row['Velocidade']}', '{$row['Forca']}', 1, 1)");
         }
     }
 
-    // 4. Elenco (23 jogadores + Tecnico)
-    $elencoSlots = [];
-    for ($i = 0; $i < 23; $i++) {
-        $elencoSlots[] = isset($playerIds[$i]) ? $playerIds[$i] : 0;
+    // 4. Elenco (23 jogadores + Tecnico exatamente como em alterar_times_competicao.php)
+    $elenco = array();
+    $elenco[] = $cId;
+    $newStmt = $timeObj->getElenco($cId);
+    $jogadoresElenco = array();
+    while($newRow = $newStmt->fetch(PDO::FETCH_ASSOC)){
+        $jogadoresElenco[] = (int)$newRow['ID'];
     }
-    $elencoSlots[] = $tecnicoId;
-    $elencoStr = implode(', ', $elencoSlots);
-    $ldb->exec("INSERT OR REPLACE INTO elenco VALUES ({$cId}, {$elencoStr})");
+    foreach ($playerIds as $pid) {
+        if (!in_array($pid, $jogadoresElenco)) {
+            $jogadoresElenco[] = $pid;
+        }
+        if (count($jogadoresElenco) >= 23) break;
+    }
+    for ($i = 0; $i < 23; $i++) {
+        $elenco[] = isset($jogadoresElenco[$i]) ? $jogadoresElenco[$i] : '0';
+    }
+    $elenco[] = $tecnicoId;
+    $ldb->exec("INSERT OR REPLACE INTO elenco VALUES ('" . implode("', '", $elenco) . "')");
 
-    // 5. Escalação sanitizada com todas as posições
-    sanitizarEscalacaoPreSimulacao($ldb, $cId, []);
+    // 5. Escalação dos titulares e posições exatamente como em alterar_times_competicao.php e exportação .ymt
+    $escalacao = array();
+    $escalacao[] = $cId;
+    $escStmt = $timeObj->getEscalacao($cId);
+    $titulares = array();
+    while($escRow = $escStmt->fetch(PDO::FETCH_ASSOC)){
+        $titulares[] = [
+            'posicao' => $escRow['posicaoBase'] ?? '',
+            'jogador' => (int)($escRow['jogador'] ?? 0)
+        ];
+    }
+
+    for ($i = 0; $i < 11; $i++) {
+        $escalacao[] = isset($titulares[$i]['posicao']) ? $titulares[$i]['posicao'] : '';
+        $escalacao[] = isset($titulares[$i]['jogador']) ? $titulares[$i]['jogador'] : '0';
+    }
+
+    $capStmt = $timeObj->getCapitao($cId);
+    $idCapitao = '0';
+    if($capRow = $capStmt->fetch(PDO::FETCH_ASSOC)){
+        $idCapitao = !empty($capRow['jogador']) ? $capRow['jogador'] : '0';
+    }
+    $escalacao[] = $idCapitao;
+
+    $penStmt = $timeObj->getPenaltis($cId);
+    $batedoresPenalti = array();
+    while($penRow = $penStmt->fetch(PDO::FETCH_ASSOC)){
+        $batedoresPenalti[] = !empty($penRow['jogador']) ? $penRow['jogador'] : '0';
+    }
+    for ($i = 0; $i < 3; $i++) {
+        $escalacao[] = isset($batedoresPenalti[$i]) ? $batedoresPenalti[$i] : '0';
+    }
+
+    $ldb->exec("INSERT OR REPLACE INTO escalacao VALUES ('" . implode("', '", $escalacao) . "')");
 }
 
-// Normalizar imagens dos clubes
+// Normalizar imagens dos clubes (converte webp para png e valida arquivos para a engine Java)
+$docRoot = !empty($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__);
 if (function_exists('normalizarImagensClubesSQLite')) {
-    normalizarImagensClubesSQLite($ldb, $hexacolorDir, $_SERVER['DOCUMENT_ROOT']);
+    normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot);
 }
 
 // Finalizar gravações no SQLite e fechar conexão para o Java acessar
@@ -445,6 +446,8 @@ $json_array = [
             'idTeam2' => $idClubB,
             'idChosenGround' => $idEstadio,
             'neutralGround' => boolval($neutro),
+            'kitTeam1' => 0,
+            'kitTeam2' => 0,
             'outTeam1' => [],
             'outTeam2' => [],
             'knockoutTiebraker' => 0,
@@ -498,9 +501,15 @@ $completePath = "/Partidas/" . $calendarName . "/" . $matchdayIndex . "º Rodada
 $hylFile = $hexacolorDir . $completePath;
 
 if (!file_exists($hylFile)) {
-    // Busca flexível caso o nome do arquivo tenha variações
+    // Busca flexível caso haja variação de caracteres na rodada (º vs °) ou formatação de sigla
     $foundFiles = glob($hexacolorDir . "/Partidas/" . $calendarName . "/*/" . $siglaA . "x" . $siglaB . "*.hyl");
+    if (empty($foundFiles)) {
+        $foundFiles = glob($hexacolorDir . "/Partidas/" . $calendarName . "/*/*.hyl");
+    }
     if (!empty($foundFiles)) {
+        usort($foundFiles, function($a, $b) {
+            return filemtime($b) - filemtime($a);
+        });
         $hylFile = $foundFiles[0];
         $pathRelativo = basename($hylFile, '.hyl');
     }
