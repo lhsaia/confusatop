@@ -13,6 +13,21 @@
       "date": "14/10/2026",
       "items": [
         {
+          "badge": "bugfix",
+          "title": "Isolamento de Homônimos e Correção do Histórico de Partidas no PoltronaScore (v4.2)",
+          "desc": "Corrigida a consulta de estatísticas e histórico de partidas do atleta no PoltronaScore. O sistema agora restringe a busca de partidas anteriores aos clubes aos quais o jogador realmente pertenceu (contrato atual, histórico de transferências e partidas com ID explícito), impedindo que homônimos com o mesmo nome (como o Salazar do Miflason/Orion versus Salazar do EC Atlântico/Gavil) herdem jogos, gols e notas de equipes e países diferentes."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Collation MariaDB para Jogadores com Caracteres Especiais no PoltronaScore",
+          "desc": "Resolvido o erro fatal 1267 (Illegal mix of collations latin1_swedish_ci e utf8mb4) no MariaDB que impedia a abertura do modal de perfil de atletas com caracteres turcos, azeris ou sinais diacríticos (como Elmir Şahmarli, Kərəm Orhanlı, Tōrāj Zarābādi). Corrigidos também nomes de colunas de substituição e guards de funções no backend."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Escalação Real e Formação Tática Fiel no Campinho do PoltronaScore (v4.1)",
+          "desc": "Implementada a leitura da titularidade (titularidade = 1) e da posição única do atleta na escalação (posicaoBase) a partir de contratos_jogador no MariaDB e da tabela escalacao dos bancos SQLite (.db3), espelhando com fidelidade a tática exibida no teamstatus. O campinho e o badge agora refletem o esquema real da equipe (ex: 4-3-3 no Veyran [U20] com 1 PD, 1 PE e 1 Aa), sem forçar 4-4-2 nem duplicar posições. Atualizado o Service Worker e badges visuais para v4.1."
+        },
+        {
           "badge": "new",
           "title": "Indicador Visual de Versão do PoltronaScore no Frontend",
           "desc": "Adicionado badge visual de versão (v4.0) no cabeçalho superior e no rodapé do PoltronaScore, permitindo ao usuário verificar imediatamente se o seu navegador ou aplicativo PWA está executando a versão mais recente dos scripts ou se ainda está preso a uma versão antiga em cache."

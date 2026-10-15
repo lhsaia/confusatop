@@ -761,6 +761,8 @@ try {
                                 'type' => $tipoStr,
                                 'team_name' => $nomeTm,
                                 'player_name' => $pName,
+                                'player_id' => $pId,
+                                'team_id' => $isHome ? (int)($row['home_id'] ?? 0) : (int)($row['away_id'] ?? 0),
                                 'description' => $desc,
                                 'side' => $side,
                                 'is_home' => $isHome
@@ -1145,6 +1147,8 @@ try {
                 'type' => $evType,
                 'team_name' => $finalTeamName,
                 'player_name' => $ev['player_name'] ?: '',
+                'player_id' => (int)($ev['player_id'] ?? 0),
+                'team_id' => (int)($ev['team_id'] ?? ($isHome ? ($pMatch['home_id'] ?? 0) : ($pMatch['away_id'] ?? 0))),
                 'description' => $evDesc,
                 'side' => $isHome ? 'home' : 'away',
                 'is_home' => $isHome

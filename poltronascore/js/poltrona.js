@@ -1,7 +1,7 @@
 // PoltronaScore JS - Core Application (Unified Match & Standings Experience)
 const DEFAULT_LOGO = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzk0YTNiOCI+PHBhdGggZD0iTTEyIDJMNCA1djYuMDljMCA1LjA1IDMuNDEgOS43NiA4IDEwLjkxIDQuNTktMS4xNSA4LTUuODYgOC0xMC45MVY1bC04LTN6bTAgMi4ybDYgMi4yNXY0LjY0YzAgMy43OS0yLjU2IDcuMzMtNiA4LjM1LTMuNDQtMS4wMi02LTQuNTYtNi04LjM1VjYuNDVsNi0yLjI1eiIvPjwvc3ZnPg==";
 
-const APP_VERSION = 'v4.0';
+const APP_VERSION = 'v4.2';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Sincronizar versão no DOM
@@ -1131,7 +1131,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const contentBlock = `
                 <div class="tl-text">
-                    <span class="tl-player clickable-entity" data-player-id="0" data-player-name="${encodeURIComponent(playerName)}" onclick="window.poltronaOpenPlayerModal(this)">${playerName}</span>
+                    <span class="tl-player clickable-entity" data-player-id="${ev.player_id || 0}" data-player-name="${encodeURIComponent(playerName)}" data-club-id="${ev.team_id || 0}" onclick="window.poltronaOpenPlayerModal(this)">${playerName}</span>
                     ${desc ? `<span class="tl-desc">${desc}</span>` : ''}
                 </div>
             `;
@@ -1296,8 +1296,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const renderPitchRow = (players, sideClass) => {
             if (!players || players.length === 0) return '';
             const sortedPlayers = sortPitchRow(players, sideClass);
+            const teamClubId = (sideClass === 'home') ? (homeId || 0) : (awayId || 0);
             const nodesHtml = sortedPlayers.map(p => `
-                <div class="pitch-player-node ${sideClass}" data-player-id="${p.id}" data-player-name="${encodeURIComponent(p.name || '')}" onclick="window.poltronaOpenPlayerModal(this)">
+                <div class="pitch-player-node ${sideClass}" data-player-id="${p.id}" data-player-name="${encodeURIComponent(p.name || '')}" data-club-id="${teamClubId}" onclick="window.poltronaOpenPlayerModal(this)">
                     <div class="pitch-player-circle">
                         <span>${p.number ? p.number : (p.position === 'G' ? '1' : '')}</span>
                         ${p.level > 0 ? `<span class="pitch-player-level">${p.level}</span>` : ''}
@@ -1347,8 +1348,8 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         // Starters Roster (Titulares)
-        const renderPlayerRow = (p) => `
-            <div class="lineup-player-row" data-player-id="${p.id}" data-player-name="${encodeURIComponent(p.name || '')}" onclick="window.poltronaOpenPlayerModal(this)">
+        const renderPlayerRow = (p, clubId) => `
+            <div class="lineup-player-row" data-player-id="${p.id}" data-player-name="${encodeURIComponent(p.name || '')}" data-club-id="${clubId || 0}" onclick="window.poltronaOpenPlayerModal(this)">
                 <span class="lineup-p-num">${p.number || '-'}</span>
                 <span class="lineup-p-pos">${p.position || ''}</span>
                 <span class="lineup-p-name">${p.name || ''}</span>
@@ -1366,11 +1367,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="lineup-grid-cols">
                     <div class="lineup-team-col">
                         <div class="lineup-team-title">${homeTeam}</div>
-                        ${homeStarters.map(renderPlayerRow).join('')}
+                        ${homeStarters.map(p => renderPlayerRow(p, homeId)).join('')}
                     </div>
                     <div class="lineup-team-col">
                         <div class="lineup-team-title">${awayTeam}</div>
-                        ${awayStarters.map(renderPlayerRow).join('')}
+                        ${awayStarters.map(p => renderPlayerRow(p, awayId)).join('')}
                     </div>
                 </div>
             </div>
@@ -1387,11 +1388,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="lineup-grid-cols">
                         <div class="lineup-team-col">
                             <div class="lineup-team-title">${homeTeam}</div>
-                            ${homeBench.length > 0 ? homeBench.map(renderPlayerRow).join('') : '<span style="font-size: 11px; color: var(--text-secondary);">-</span>'}
+                            ${homeBench.length > 0 ? homeBench.map(p => renderPlayerRow(p, homeId)).join('') : '<span style="font-size: 11px; color: var(--text-secondary);">-</span>'}
                         </div>
                         <div class="lineup-team-col">
                             <div class="lineup-team-title">${awayTeam}</div>
-                            ${awayBench.length > 0 ? awayBench.map(renderPlayerRow).join('') : '<span style="font-size: 11px; color: var(--text-secondary);">-</span>'}
+                            ${awayBench.length > 0 ? awayBench.map(p => renderPlayerRow(p, awayId)).join('') : '<span style="font-size: 11px; color: var(--text-secondary);">-</span>'}
                         </div>
                     </div>
                 </div>
@@ -1439,26 +1440,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // 6. PLAYER PROFILE MODAL (FASE 2)
     // =========================================================================
 
-    window.poltronaOpenPlayerModal = function(arg1, arg2) {
+    window.poltronaOpenPlayerModal = function(arg1, arg2, arg3) {
         if (arg1 && typeof arg1 === 'object' && arg1.nodeType === 1) {
             const pId = parseInt(arg1.getAttribute('data-player-id') || '0', 10);
             const rawName = arg1.getAttribute('data-player-name') || '';
+            const cId = parseInt(arg1.getAttribute('data-club-id') || '0', 10);
             let pName = rawName;
             try { pName = decodeURIComponent(rawName); } catch (e) {}
-            openPlayerModal(pId, pName);
+            openPlayerModal(pId, pName, cId);
             return;
         }
-        openPlayerModal(arg1, arg2);
+        openPlayerModal(arg1, arg2, arg3);
     };
 
-    function openPlayerModal(playerId, playerName) {
+    function openPlayerModal(playerId, playerName, clubId) {
         if (!playerModal || !playerModalBody) return;
 
         bringModalToFront(playerModal);
         playerModal.classList.add('active');
         playerModalBody.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
 
-        const url = `/api/poltronascore/jogador.php?id=${playerId || 0}&nome=${encodeURIComponent(playerName || '')}`;
+        const url = `/api/poltronascore/jogador.php?id=${playerId || 0}&nome=${encodeURIComponent(playerName || '')}&clube=${clubId || 0}`;
 
         fetch(url)
             .then(res => res.json())
@@ -1842,7 +1844,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const playerGrid = players.map(p => {
                     const pPhoto = p.photo ? p.photo : DEFAULT_LOGO;
                     return `
-                        <div class="squad-player-card" data-player-id="${p.id}" data-player-name="${encodeURIComponent(p.name || '')}" onclick="window.poltronaOpenPlayerModal(this)">
+                        <div class="squad-player-card" data-player-id="${p.id}" data-player-name="${encodeURIComponent(p.name || '')}" data-club-id="${c.id || 0}" onclick="window.poltronaOpenPlayerModal(this)">
                             <img class="squad-p-avatar" src="${pPhoto}" alt="" onerror="handleLogoError(this)">
                             <div class="squad-p-info">
                                 <span class="squad-p-name">${p.jersey_number ? '#' + p.jersey_number + ' ' : ''}${p.name}</span>
