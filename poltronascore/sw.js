@@ -1,4 +1,4 @@
-const CACHE_NAME = 'poltrona-score-v4';
+const CACHE_NAME = 'poltrona-score-v4.1';
 const ASSETS = [
   '/poltronascore/',
   '/poltronascore/index.php',

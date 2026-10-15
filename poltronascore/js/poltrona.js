@@ -1182,11 +1182,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (['G', 'GK', 'GL', 'GOLEIRO'].includes(pos) || (idx === 0 && starters.length === 11 && !pos)) {
                 gk.push(p);
-            } else if (['Z', 'LD', 'LE', 'AD', 'AE', 'DF', 'CB', 'RB', 'LB', 'DEF', 'ZAG', 'ZAGUEIRO', 'LATERAL', 'LATERAL DIREITO', 'LATERAL ESQUERDO', 'ALA', 'ALA DIREITO', 'ALA ESQUERDO'].includes(pos)) {
+            } else if (['Z', 'LD', 'LE', 'AD', 'AE', 'DF', 'CB', 'RB', 'LB', 'DEF', 'ZAG', 'ZAGUEIRO', 'LATERAL', 'LATERAL DIREITO', 'LATERAL-DIREITO', 'LATERAL ESQUERDO', 'LATERAL-ESQUERDO', 'ALA', 'ALA DIREITO', 'ALA-DIREITO', 'ALA ESQUERDO', 'ALA-ESQUERDO'].includes(pos)) {
                 def.push(p);
-            } else if (['V', 'MC', 'MD', 'ME', 'MA', 'M', 'MF', 'DM', 'CM', 'RM', 'LM', 'MEI', 'VOL', 'VOLANTE', 'MEIO-CAMPO', 'MEIO CAMPO', 'MEIA', 'MEIO', 'MEIO-CAMPISTA', 'MEIA DIREITA', 'MEIA ESQUERDA', 'MEIA ATACANTE'].includes(pos)) {
+            } else if (['V', 'MC', 'MD', 'ME', 'MA', 'M', 'MF', 'DM', 'CM', 'RM', 'LM', 'MEI', 'VOL', 'VOLANTE', 'MEIO-CAMPO', 'MEIO CAMPO', 'MEIA', 'MEIO', 'MEIO-CAMPISTA', 'MEIA DIREITA', 'MEIA-DIREITA', 'MEIA DIREITO', 'MEIA-DIREITO', 'MEIA ESQUERDA', 'MEIA-ESQUERDA', 'MEIA ESQUERDO', 'MEIA-ESQUERDO', 'MEIA CENTRAL', 'MEIA-CENTRAL', 'MEIA ATACANTE', 'MEIA-ATACANTE'].includes(pos)) {
                 mid.push(p);
-            } else if (['CA', 'SA', 'PD', 'PE', 'A', 'FW', 'ST', 'CF', 'RW', 'LW', 'AA', 'AM', 'ATA', 'ATACANTE', 'CENTROAVANTE', 'PONTA', 'PONTA DIREITA', 'PONTA ESQUERDA', 'SEGUNDO ATACANTE'].includes(pos)) {
+            } else if (['CA', 'SA', 'PD', 'PE', 'A', 'FW', 'ST', 'CF', 'RW', 'LW', 'AA', 'AM', 'ATA', 'ATACANTE', 'CENTROAVANTE', 'PONTA', 'PONTA DIREITA', 'PONTA-DIREITA', 'PONTA ESQUERDA', 'PONTA-ESQUERDA', 'SEGUNDO ATACANTE', 'ATACANTE DE ÁREA', 'ATACANTE DE AREA', 'ATACANTE DE MOVIMENTAÇÃO', 'ATACANTE DE MOVIMENTACAO'].includes(pos)) {
                 fwd.push(p);
             } else {
                 // Fallback: se não tiver posição definida, distribuir equilibrado
@@ -1203,11 +1203,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function getLateralWeight(pos) {
         const p = strtoupper(trim(pos || ''));
         // Flanco esquerdo do time (-2)
-        if (['LE', 'AE', 'LB', 'ME', 'LM', 'PE', 'LW'].includes(p)) {
+        if (['LE', 'AE', 'LB', 'ME', 'LM', 'PE', 'LW', 'LATERAL-ESQUERDO', 'LATERAL ESQUERDO', 'ALA-ESQUERDO', 'ALA ESQUERDO', 'MEIA-ESQUERDO', 'MEIA ESQUERDO', 'PONTA-ESQUERDA', 'PONTA ESQUERDA'].includes(p)) {
             return -2;
         }
         // Flanco direito do time (+2)
-        if (['LD', 'AD', 'RB', 'MD', 'RM', 'PD', 'RW'].includes(p)) {
+        if (['LD', 'AD', 'RB', 'MD', 'RM', 'PD', 'RW', 'LATERAL-DIREITO', 'LATERAL DIREITO', 'ALA-DIREITO', 'ALA DIREITO', 'MEIA-DIREITO', 'MEIA DIREITO', 'PONTA-DIREITA', 'PONTA DIREITA'].includes(p)) {
             return 2;
         }
         return 0;

@@ -8,6 +8,7 @@ require_once isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '
 
 $playerId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $playerNameParam = trim($_GET['nome'] ?? '');
+$clubIdParam = isset($_GET['clube']) ? (int)$_GET['clube'] : (isset($_GET['time']) ? (int)$_GET['time'] : (isset($_GET['club_id']) ? (int)$_GET['club_id'] : 0));
 
 if ($playerId <= 0 && empty($playerNameParam)) {
     http_response_code(400);
@@ -66,6 +67,34 @@ try {
         $player = $stmtP->fetch(PDO::FETCH_ASSOC);
     }
 
+    if (!$player && !empty($playerNameParam) && $clubIdParam > 0) {
+        $cleanName = stripslashes(trim($playerNameParam));
+        $stmtP = $conn->prepare("
+            SELECT j.*, p.nome as nome_pais, p.bandeira as bandeira_pais, m.Nome as nome_mentalidade
+            FROM jogador j
+            INNER JOIN contratos_jogador cj ON cj.jogador = j.ID AND cj.clube = ?
+            LEFT JOIN paises p ON p.id = j.Pais
+            LEFT JOIN mentalidade m ON m.ID = j.Mentalidade
+            WHERE CONVERT(j.Nome USING utf8mb4) = ? OR CONVERT(j.Nome USING utf8mb4) LIKE ?
+            ORDER BY 
+                CASE 
+                    WHEN CONVERT(j.Nome USING utf8mb4) = ? THEN 0
+                    WHEN CONVERT(j.Nome USING utf8mb4) LIKE ? THEN 1
+                    ELSE 2
+                END,
+                j.ID ASC
+            LIMIT 1
+        ");
+        $stmtP->execute([
+            $clubIdParam,
+            $cleanName, 
+            "%$cleanName%",
+            $cleanName, 
+            "$cleanName%"
+        ]);
+        $player = $stmtP->fetch(PDO::FETCH_ASSOC);
+    }
+
     if (!$player && !empty($playerNameParam)) {
         $cleanName = stripslashes(trim($playerNameParam));
         $stmtP = $conn->prepare("
@@ -73,11 +102,11 @@ try {
             FROM jogador j
             LEFT JOIN paises p ON p.id = j.Pais
             LEFT JOIN mentalidade m ON m.ID = j.Mentalidade
-            WHERE j.Nome = ? OR j.Nome LIKE ?
+            WHERE CONVERT(j.Nome USING utf8mb4) = ? OR CONVERT(j.Nome USING utf8mb4) LIKE ?
             ORDER BY 
                 CASE 
-                    WHEN j.Nome = ? THEN 0
-                    WHEN j.Nome LIKE ? THEN 1
+                    WHEN CONVERT(j.Nome USING utf8mb4) = ? THEN 0
+                    WHEN CONVERT(j.Nome USING utf8mb4) LIKE ? THEN 1
                     ELSE 2
                 END,
                 j.ID ASC
@@ -270,15 +299,6 @@ try {
 
     $isGoleiro = ($posicoes[0] === 'G');
 
-    if (empty($player['foto']) && $conn && !empty($player['Nome'])) {
-        try {
-            $stPh = $conn->prepare("SELECT foto FROM jogador WHERE Nome = ? AND foto != '' AND foto != '0.png' AND foto != 'default.webp' LIMIT 1");
-            $stPh->execute([$player['Nome']]);
-            $foundPhoto = $stPh->fetchColumn();
-            if ($foundPhoto) $player['foto'] = $foundPhoto;
-        } catch (\Throwable $e) {}
-    }
-
     // 2. Foto do atleta
     $photoUrl = '';
     if (!empty($player['foto']) && $player['foto'] !== 'default.webp' && $player['foto'] !== '0.png') {
@@ -370,6 +390,51 @@ try {
         ]
     ];
 
+    // Coletar clubes associados ao atleta (clube atual, transferências, partidas com ID explícito ou SQLite)
+    $playerClubs = [];
+    if (!empty($clubData['id'])) {
+        $playerClubs[] = (int)$clubData['id'];
+    }
+    if (!empty($player['sqlite_clube_id'])) {
+        $playerClubs[] = (int)$player['sqlite_clube_id'];
+    }
+    if ($playerId > 0 && $conn) {
+        try {
+            $stTrans = $conn->prepare("SELECT DISTINCT clubeOrigem, clubeDestino FROM transferencias WHERE jogador = ?");
+            $stTrans->execute([$playerId]);
+            while ($tr = $stTrans->fetch(PDO::FETCH_ASSOC)) {
+                if (!empty($tr['clubeOrigem']) && (int)$tr['clubeOrigem'] > 0) $playerClubs[] = (int)$tr['clubeOrigem'];
+                if (!empty($tr['clubeDestino']) && (int)$tr['clubeDestino'] > 0) $playerClubs[] = (int)$tr['clubeDestino'];
+            }
+        } catch (\Throwable $e) {}
+
+        try {
+            $stEscClubs = $conn->prepare("SELECT DISTINCT id_time FROM jogos_clube_escalacao WHERE id_jogador = ? AND id_time > 0");
+            $stEscClubs->execute([$playerId]);
+            while ($cid = $stEscClubs->fetchColumn()) {
+                if ($cid > 0) $playerClubs[] = (int)$cid;
+            }
+        } catch (\Throwable $e) {}
+    }
+    $playerClubs = array_values(array_unique(array_filter($playerClubs)));
+
+    // Montar filtros de segurança para evitar que homônimos de outros clubes/países apareçam no perfil
+    $whereEvents = "id_jogador = :pId";
+    $whereEsc = "esc.id_jogador = :pId";
+    $whereTotalMatches = "id_jogador = :pId";
+
+    if (!empty($playerClubs)) {
+        $inClubs = implode(',', $playerClubs);
+        $whereEvents = "(id_jogador = :pId OR (id_jogador = 0 AND CONVERT(nome_jogador USING utf8mb4) = :pName AND id_time IN ($inClubs)))";
+        $whereEsc = "(esc.id_jogador = :pId OR (esc.id_jogador = 0 AND CONVERT(esc.nome_jogador USING utf8mb4) = :pName AND esc.id_time IN ($inClubs)))";
+        $whereTotalMatches = "(id_jogador = :pId OR (id_jogador = 0 AND CONVERT(nome_jogador USING utf8mb4) = :pName AND id_time IN ($inClubs)))";
+    } elseif ($playerId <= 0) {
+        // Atleta sem ID no MariaDB e sem clubes conhecidos: nunca vincular partidas arbitrárias de terceiros
+        $whereEvents = "1 = 0";
+        $whereEsc = "1 = 0";
+        $whereTotalMatches = "1 = 0";
+    }
+
     // 7. Estatísticas da Carreira & Partidas Recentes
     $stmtStats = $conn->prepare("
         SELECT 
@@ -378,18 +443,22 @@ try {
             SUM(CASE WHEN tipo = 2 THEN 1 ELSE 0 END) as total_amarelos,
             SUM(CASE WHEN tipo = 3 THEN 1 ELSE 0 END) as total_vermelhos
         FROM jogos_clube_eventos
-        WHERE id_jogador = ? OR (id_jogador = 0 AND nome_jogador = ?)
+        WHERE $whereEvents
     ");
-    $stmtStats->execute([$playerId, $player['Nome']]);
+    $paramsStats = [':pId' => $playerId];
+    if (!empty($playerClubs)) $paramsStats[':pName'] = $player['Nome'];
+    $stmtStats->execute($paramsStats);
     $statsRow = $stmtStats->fetch(PDO::FETCH_ASSOC);
 
     $stmtTotalMatches = $conn->prepare("
         SELECT COUNT(DISTINCT id_partida) 
         FROM jogos_clube_escalacao 
-        WHERE (id_jogador = ? OR (id_jogador = 0 AND nome_jogador = ?))
+        WHERE $whereTotalMatches
           AND (titular = 1 OR entrada_tempo > 0 OR entrada_minuto > 0)
     ");
-    $stmtTotalMatches->execute([$playerId, $player['Nome']]);
+    $paramsTotal = [':pId' => $playerId];
+    if (!empty($playerClubs)) $paramsTotal[':pName'] = $player['Nome'];
+    $stmtTotalMatches->execute($paramsTotal);
     $totalEscalacoes = (int)$stmtTotalMatches->fetchColumn();
 
     $careerStats = [
@@ -400,42 +469,45 @@ try {
     ];
 
     // Helpers para busca de .hyj e notas
-    function psFindHyjFile($cleanName) {
-        static $fileCache = null;
-        if ($fileCache === null) {
-            $fileCache = [];
-            $baseRoot = isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' 
-                ? rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') 
-                : dirname(__DIR__, 2);
-            
-            $searchDirs = [
-                $baseRoot . '/competicoes/hexacolor/Partidas',
-                $baseRoot . '/full hexa suite/Hexacolor YMT/Partidas'
-            ];
+    if (!function_exists('psFindHyjFile')) {
+        function psFindHyjFile($cleanName) {
+            static $fileCache = null;
+            if ($fileCache === null) {
+                $fileCache = [];
+                $baseRoot = isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '' 
+                    ? rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') 
+                    : dirname(__DIR__, 2);
+                
+                $searchDirs = [
+                    $baseRoot . '/competicoes/hexacolor/Partidas',
+                    $baseRoot . '/full hexa suite/Hexacolor YMT/Partidas'
+                ];
 
-            foreach ($searchDirs as $dir) {
-                if (!is_dir($dir)) continue;
-                try {
-                    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
-                    foreach ($it as $file) {
-                        if ($file->isDir()) continue;
-                        $fn = strtolower($file->getFilename());
-                        if (substr($fn, -4) === '.hyj') {
-                            $baseKey = strtolower(basename($fn, '.hyj'));
-                            if (!isset($fileCache[$baseKey])) {
-                                $fileCache[$baseKey] = $file->getPathname();
+                foreach ($searchDirs as $dir) {
+                    if (!is_dir($dir)) continue;
+                    try {
+                        $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+                        foreach ($it as $file) {
+                            if ($file->isDir()) continue;
+                            $fn = strtolower($file->getFilename());
+                            if (substr($fn, -4) === '.hyj') {
+                                $baseKey = strtolower(basename($fn, '.hyj'));
+                                if (!isset($fileCache[$baseKey])) {
+                                    $fileCache[$baseKey] = $file->getPathname();
+                                }
                             }
                         }
-                    }
-                } catch (\Throwable $e) {}
+                    } catch (\Throwable $e) {}
+                }
             }
-        }
 
-        $key = strtolower(basename(basename($cleanName, '.hyj'), '.hyl'));
-        return $fileCache[$key] ?? null;
+            $key = strtolower(basename(basename($cleanName, '.hyj'), '.hyl'));
+            return $fileCache[$key] ?? null;
+        }
     }
 
-    function psCalculatePlayerRating($pId, $pLevel, $pPos, $isStarter, $goalsScored, $yellowCards, $redCards, $teamGoals, $oppGoals, $matchId) {
+    if (!function_exists('psCalculatePlayerRating')) {
+        function psCalculatePlayerRating($pId, $pLevel, $pPos, $isStarter, $goalsScored, $yellowCards, $redCards, $teamGoals, $oppGoals, $matchId) {
         $base = 6.2 + ($pLevel - 50) * 0.02;
         if ($isStarter) $base += 0.3;
 
@@ -457,6 +529,7 @@ try {
 
         return max(4.5, min(9.9, round($base, 1)));
     }
+}
 
     // 8. Últimas Partidas e Média de Notas
     $recentMatches = [];
@@ -477,11 +550,13 @@ try {
             LEFT JOIN competicao_lista cl ON cl.id = j.competicao_id AND j.simulador_interno = 1
             LEFT JOIN liga li ON li.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 0
             LEFT JOIN campeonatos_clube cc ON cc.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 1
-            WHERE esc.id_jogador = ? OR (esc.id_jogador = 0 AND esc.nome_jogador = ?)
+            WHERE $whereEsc
             ORDER BY j.data DESC, j.id DESC
             LIMIT 15
         ");
-        $stmtRecent->execute([$playerId, $player['Nome']]);
+        $paramsRecent = [':pId' => $playerId];
+        if (!empty($playerClubs)) $paramsRecent[':pName'] = $player['Nome'];
+        $stmtRecent->execute($paramsRecent);
         $matchIndex = 0;
         while ($rm = $stmtRecent->fetch(PDO::FETCH_ASSOC)) {
             // Ignorar partidas que ainda não concluíram no tempo real
@@ -563,8 +638,11 @@ try {
                     $hyjJson = @file_get_contents($hyjPath);
                     if ($hyjJson) {
                         $hyjData = json_decode($hyjJson, true);
-                        $allJog = array_merge($hyjData['time1']['jogadores'] ?? [], $hyjData['time2']['jogadores'] ?? []);
-                        foreach ($allJog as $jObj) {
+                        $targetTeamJogadores = $isTeamA ? ($hyjData['time1']['jogadores'] ?? []) : ($hyjData['time2']['jogadores'] ?? []);
+                        if (empty($targetTeamJogadores)) {
+                            $targetTeamJogadores = array_merge($hyjData['time1']['jogadores'] ?? [], $hyjData['time2']['jogadores'] ?? []);
+                        }
+                        foreach ($targetTeamJogadores as $jObj) {
                             $jId = (int)($jObj['idJogador'] ?? 0);
                             if (($jId > 0 && $jId === $playerId) || (!empty($jObj['nome']) && $jObj['nome'] === $player['Nome'])) {
                                 $foundInHyj = true;
