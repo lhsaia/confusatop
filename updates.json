@@ -13,6 +13,36 @@
       "date": "14/10/2026",
       "items": [
         {
+          "badge": "new",
+          "title": "Indicador Visual de Versão do PoltronaScore no Frontend",
+          "desc": "Adicionado badge visual de versão (v4.0) no cabeçalho superior e no rodapé do PoltronaScore, permitindo ao usuário verificar imediatamente se o seu navegador ou aplicativo PWA está executando a versão mais recente dos scripts ou se ainda está preso a uma versão antiga em cache."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Remoção de Nota para Jogador Reserva Não Utilizado no Perfil do Atleta",
+          "desc": "Corrigida a lógica de avaliação das partidas recentes no perfil do atleta no PoltronaScore. Jogadores reservas que não entraram em campo não recebem mais nota sintética da partida, preservando a integridade da média de carreira e exibindo status de atuação detalhado (Titular, Entrou aos X' ou Reserva)."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção do Nome do Clube Adversário nas Últimas Partidas do PoltronaScore",
+          "desc": "Corrigida a resolução do adversário no histórico de partidas recentes do atleta e clubes no PoltronaScore, unificando a consulta com os nomes cadastrados nas tabelas de clubes e bancos SQLite locais, eliminando a exibição genérica de 'vs Adversário'."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Atualização Automática do PWA e Estratégia Network-First no PoltronaScore",
+          "desc": "Atualizada a versão do Service Worker (v4) com migração para a estratégia Network-First em páginas HTML, scripts e estilos do PoltronaScore, impedindo que o PWA fique preso a versões antigas em cache e forçando a busca direta da versão mais recente na rede."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Cálculo Dinâmico de Formações e Correção de Links de Jogadores no PoltronaScore",
+          "desc": "Corrigida a identificação de esquemas táticos para que reflitam a escalação real de cada equipe (ex: 4-3-3, 3-5-2, 4-5-1) tanto no backend quanto dinamicamente no campinho 2D, eliminando a exibição fixa de 4-4-2. Corrigida a abertura de modais e perfis de atletas cujos nomes contêm caracteres especiais, acentuação (ex: turco, escandinavo) ou apóstrofos através de atributos codificados por data-attributes e busca de fallback em bancos SQLite de competição (.db3)."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção das Posições e Alinhamento Tático no Campinho do PoltronaScore",
+          "desc": "Corrigido o mapa canônico de decodificação de posições (StringPosicoes) nos endpoints do PoltronaScore, eliminando a inversão de índices que convertia zagueiros (Z) em laterais esquerdos (LE) e meio-campistas (MC) em pontas direitos (PD). Implementada a leitura da tabela de escalação real dos bancos de competição SQLite (.db3), ordenação lateral tática espelhada por flanco, isolamento de técnicos no card de Comissão Técnica e distribuição tática equilibrada de atletas titulares."
+        },
+        {
           "badge": "bugfix",
           "title": "Desativação de Fallback Arbitrário e Preservação Fiel da Escalação do Banco",
           "desc": "Desabilitados todos os fallbacks de emergência e rotinas que inventavam formações 4-4-2 ou sintetizavam dados arbitrários para as equipes. Removidos auto-convocação de atletas, criação automática de seleções não cadastradas, geração de técnicos padrão, criação de reservas genéricos e injeção de atributos sintéticos. O sistema agora opera estritamente com os dados reais do banco de dados, em total conformidade com a exportação .ymt e competições oficiais."

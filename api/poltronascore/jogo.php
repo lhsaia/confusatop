@@ -50,6 +50,29 @@ function psFindHyjFile($cleanName) {
     return $fileCache[$key] ?? null;
 }
 
+// Helper: Classificar posição do jogador suportando siglas e nomes por extenso
+function psClassifyPosition($pos) {
+    $p = strtoupper(trim((string)$pos));
+    if (in_array($p, ['G', 'GK', 'GL', 'GOLEIRO'])) return 'gk';
+    if (in_array($p, ['Z', 'LD', 'LE', 'AD', 'AE', 'DF', 'CB', 'RB', 'LB', 'DEF', 'ZAG', 'ZAGUEIRO', 'LATERAL', 'LATERAL DIREITO', 'LATERAL ESQUERDO', 'ALA', 'ALA DIREITO', 'ALA ESQUERDO'])) return 'def';
+    if (in_array($p, ['V', 'MC', 'MD', 'ME', 'MA', 'M', 'MF', 'DM', 'CM', 'RM', 'LM', 'MEI', 'VOL', 'VOLANTE', 'MEIO-CAMPO', 'MEIO CAMPO', 'MEIA', 'MEIO', 'MEIO-CAMPISTA', 'MEIA DIREITA', 'MEIA ESQUERDA', 'MEIA ATACANTE'])) return 'mid';
+    if (in_array($p, ['CA', 'SA', 'PD', 'PE', 'A', 'FW', 'ST', 'CF', 'RW', 'LW', 'AA', 'AM', 'ATA', 'ATACANTE', 'CENTROAVANTE', 'PONTA', 'PONTA DIREITA', 'PONTA ESQUERDA', 'SEGUNDO ATACANTE'])) return 'fwd';
+    return 'other';
+}
+
+// Helper: Calcular formação tática a partir dos titulares
+function psCalcFormationFromStarters($starters) {
+    $def = 0; $mid = 0; $fwd = 0;
+    foreach ($starters as $s) {
+        $cls = psClassifyPosition($s['position'] ?? '');
+        if ($cls === 'def') $def++;
+        elseif ($cls === 'mid') $mid++;
+        elseif ($cls === 'fwd') $fwd++;
+    }
+    if ($def + $mid + $fwd > 0) return "$def-$mid-$fwd";
+    return '4-4-2';
+}
+
 // Helper: Calcular nota dinâmica do jogador caso não exista no arquivo .hyj
 function psCalculatePlayerRating($pId, $pLevel, $pPos, $isStarter, $goalsScored, $yellowCards, $redCards, $teamGoals, $oppGoals, $matchId) {
     $base = 6.2 + ($pLevel - 50) * 0.02;
@@ -123,101 +146,7 @@ function psInferMatchGender($conn, $championshipName, $playerNamesList = []) {
 
 // Helper: Montar escalações táticas completas a partir do elenco do clube
 function psBuildLineupFromClubSquad($conn, $clubId, $clubName, $matchId, $isHome, $teamScore, $oppScore, $playerEvents = [], $status = 'previous', $gender = null, $compId = 0) {
-    if ($clubId < 0 && $compId > 0) {
-        $db3File = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') 
-            ? $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $compId . "-database.db3"
-            : dirname(__DIR__, 2) . "/competicoes/databases/" . $compId . "-database.db3";
-        if (file_exists($db3File)) {
-            try {
-                $sdb = new PDO("sqlite:" . $db3File);
-                $stEsc = $sdb->prepare("SELECT * FROM escalacao WHERE Clube = :cid1 OR Clube = :cid2 LIMIT 1");
-                $cidAbs = abs($clubId);
-                $stEsc->execute([':cid1' => $clubId, ':cid2' => $cidAbs]);
-                $esc = $stEsc->fetch(PDO::FETCH_ASSOC);
-
-                $stEl = $sdb->prepare("SELECT * FROM elenco WHERE Clube = :cid1 OR Clube = :cid2 LIMIT 1");
-                $stEl->execute([':cid1' => $clubId, ':cid2' => $cidAbs]);
-                $el = $stEl->fetch(PDO::FETCH_ASSOC);
-
-                if ($esc || $el) {
-                    $stJog = $sdb->query("SELECT ID, Nome, Nivel FROM jogador");
-                    $jogMap = [];
-                    if ($stJog) {
-                        while ($jR = $stJog->fetch(PDO::FETCH_ASSOC)) {
-                            $jogMap[(int)$jR['ID']] = $jR;
-                        }
-                    }
-
-                    $starters = [];
-                    $bench = [];
-                    $usedPlayerIds = [];
-
-                    if ($esc) {
-                        for ($i = 1; $i <= 11; $i++) {
-                            $pId = (int)($esc['Jogador' . $i] ?? 0);
-                            $pos = $esc['Pos' . $i] ?? 'LIN';
-                            if ($pId != 0 && isset($jogMap[$pId])) {
-                                $pJ = $jogMap[$pId];
-                                $rating = psCalculatePlayerRating($pId, (int)($pJ['Nivel'] ?? 50), $pos, true, 0, 0, 0, $teamScore, $oppScore, $matchId);
-                                $starters[] = [
-                                    'id' => $pId,
-                                    'name' => $pJ['Nome'],
-                                    'number' => $i,
-                                    'position' => $pos,
-                                    'level' => (int)($pJ['Nivel'] ?? 0),
-                                    'photo' => '',
-                                    'is_gk' => ($pos === 'G'),
-                                    'rating' => ($status !== 'next') ? $rating : null
-                                ];
-                                $usedPlayerIds[$pId] = true;
-                            }
-                        }
-                    }
-
-                    if ($el) {
-                        $benchNum = 12;
-                        for ($i = 1; $i <= 23; $i++) {
-                            $pId = (int)($el['Jogador' . $i] ?? 0);
-                            if ($pId != 0 && !isset($usedPlayerIds[$pId]) && isset($jogMap[$pId])) {
-                                $pJ = $jogMap[$pId];
-                                $bench[] = [
-                                    'id' => $pId,
-                                    'name' => $pJ['Nome'],
-                                    'number' => $benchNum++,
-                                    'position' => 'LIN',
-                                    'level' => (int)($pJ['Nivel'] ?? 0),
-                                    'photo' => '',
-                                    'is_gk' => false,
-                                    'rating' => null
-                                ];
-                                $usedPlayerIds[$pId] = true;
-                            }
-                        }
-                    }
-
-                    $calcFormation = function($stList) {
-                        $def = 0; $mid = 0; $fwd = 0;
-                        foreach ($stList as $s) {
-                            $pos = strtoupper(trim($s['position'] ?? ''));
-                            if (in_array($pos, ['Z', 'LD', 'LE', 'AD', 'AE', 'DF', 'CB', 'RB', 'LB'])) $def++;
-                            elseif (in_array($pos, ['V', 'MC', 'MD', 'ME', 'MA', 'M', 'MF', 'DM', 'AM', 'CM', 'RM', 'LM'])) $mid++;
-                            elseif (in_array($pos, ['CA', 'SA', 'PD', 'PE', 'A', 'FW', 'ST', 'CF', 'RW', 'LW', 'AA', 'AM'])) $fwd++;
-                        }
-                        if ($def + $mid + $fwd > 0) return "$def-$mid-$fwd";
-                        return '4-4-2';
-                    };
-
-                    return [
-                        'formation' => $calcFormation($starters),
-                        'starters' => $starters,
-                        'bench' => $bench
-                    ];
-                }
-            } catch (\Throwable $e) {}
-        }
-    }
-
-    if ($clubId <= 0 && !empty($clubName)) {
+    if ($clubId <= 0 && !empty($clubName) && $conn) {
         if ($gender !== null) {
             $stC = $conn->prepare("
                 SELECT ID FROM clube 
@@ -261,12 +190,140 @@ function psBuildLineupFromClubSquad($conn, $clubId, $clubName, $matchId, $isHome
         $clubId = (int)$stC->fetchColumn();
     }
 
-    if ($clubId <= 0) {
+    if ($compId > 0 && $clubId != 0) {
+        $db3File = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') 
+            ? $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $compId . "-database.db3"
+            : dirname(__DIR__, 2) . "/competicoes/databases/" . $compId . "-database.db3";
+        if (file_exists($db3File)) {
+            try {
+                $sdb = new PDO("sqlite:" . $db3File);
+                $cidAbs = abs($clubId);
+                $stEsc = $sdb->prepare("SELECT * FROM escalacao WHERE Clube = :cid1 OR Clube = :cid2 LIMIT 1");
+                $stEsc->execute([':cid1' => $clubId, ':cid2' => ($clubId < 0 ? $cidAbs : -$cidAbs)]);
+                $esc = $stEsc->fetch(PDO::FETCH_ASSOC);
+
+                $stEl = $sdb->prepare("SELECT * FROM elenco WHERE Clube = :cid1 OR Clube = :cid2 LIMIT 1");
+                $stEl->execute([':cid1' => $clubId, ':cid2' => ($clubId < 0 ? $cidAbs : -$cidAbs)]);
+                $el = $stEl->fetch(PDO::FETCH_ASSOC);
+
+                if ($esc || $el) {
+                    $stJog = $sdb->query("SELECT ID, Nome, Nivel FROM jogador");
+                    $jogMap = [];
+                    if ($stJog) {
+                        while ($jR = $stJog->fetch(PDO::FETCH_ASSOC)) {
+                            $jogMap[(int)$jR['ID']] = $jR;
+                        }
+                    }
+
+                    $pPosMap = [];
+                    try {
+                        $stPos = $sdb->query("SELECT * FROM posicaojogador");
+                        if ($stPos) {
+                            $posOrder = ['G', 'LD', 'LE', 'Z', 'AD', 'AE', 'V', 'MD', 'ME', 'MC', 'PD', 'PE', 'MA', 'Am', 'Aa'];
+                            while ($pRow = $stPos->fetch(PDO::FETCH_ASSOC)) {
+                                $jId = (int)$pRow['Jogador'];
+                                foreach ($posOrder as $po) {
+                                    if (!empty($pRow[$po]) && (int)$pRow[$po] === 1) {
+                                        $pPosMap[$jId] = $po;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (\Throwable $e) {}
+
+                    $pIds = [];
+                    if ($esc) {
+                        for ($i = 1; $i <= 11; $i++) {
+                            $pId = (int)($esc['Jogador' . $i] ?? 0);
+                            if ($pId > 0) $pIds[] = $pId;
+                        }
+                    }
+                    if ($el) {
+                        for ($i = 1; $i <= 23; $i++) {
+                            $pId = (int)($el['Jogador' . $i] ?? 0);
+                            if ($pId > 0) $pIds[] = $pId;
+                        }
+                    }
+
+                    $photoMap = [];
+                    if (!empty($pIds) && $conn) {
+                        try {
+                            $inClause = implode(',', array_fill(0, count($pIds), '?'));
+                            $stPh = $conn->prepare("SELECT ID, Foto FROM jogador WHERE ID IN ($inClause)");
+                            $stPh->execute($pIds);
+                            while ($phRow = $stPh->fetch(PDO::FETCH_ASSOC)) {
+                                if (!empty($phRow['Foto']) && $phRow['Foto'] !== 'default.webp' && $phRow['Foto'] !== '0.png') {
+                                    $photoMap[(int)$phRow['ID']] = (strpos($phRow['Foto'], 'http') === 0) ? $phRow['Foto'] : '/images/jogadores/' . basename($phRow['Foto']);
+                                }
+                            }
+                        } catch (\Throwable $e) {}
+                    }
+
+                    $starters = [];
+                    $bench = [];
+                    $usedPlayerIds = [];
+
+                    if ($esc) {
+                        for ($i = 1; $i <= 11; $i++) {
+                            $pId = (int)($esc['Jogador' . $i] ?? 0);
+                            $pos = $esc['Pos' . $i] ?? ($pPosMap[$pId] ?? 'LIN');
+                            if ($pId != 0 && isset($jogMap[$pId])) {
+                                $pJ = $jogMap[$pId];
+                                $rating = psCalculatePlayerRating($pId, (int)($pJ['Nivel'] ?? 50), $pos, true, 0, 0, 0, $teamScore, $oppScore, $matchId);
+                                $starters[] = [
+                                    'id' => $pId,
+                                    'name' => $pJ['Nome'],
+                                    'number' => $i,
+                                    'position' => $pos,
+                                    'level' => (int)($pJ['Nivel'] ?? 0),
+                                    'photo' => $photoMap[$pId] ?? '',
+                                    'is_gk' => ($pos === 'G'),
+                                    'rating' => ($status !== 'next') ? $rating : null
+                                ];
+                                $usedPlayerIds[$pId] = true;
+                            }
+                        }
+                    }
+
+                    if ($el) {
+                        $benchNum = 12;
+                        for ($i = 1; $i <= 23; $i++) {
+                            $pId = (int)($el['Jogador' . $i] ?? 0);
+                            if ($pId != 0 && !isset($usedPlayerIds[$pId]) && isset($jogMap[$pId])) {
+                                $pJ = $jogMap[$pId];
+                                $pos = $pPosMap[$pId] ?? 'LIN';
+                                $bench[] = [
+                                    'id' => $pId,
+                                    'name' => $pJ['Nome'],
+                                    'number' => $benchNum++,
+                                    'position' => $pos,
+                                    'level' => (int)($pJ['Nivel'] ?? 0),
+                                    'photo' => $photoMap[$pId] ?? '',
+                                    'is_gk' => ($pos === 'G'),
+                                    'rating' => null
+                                ];
+                                $usedPlayerIds[$pId] = true;
+                            }
+                        }
+                    }
+
+                    return [
+                        'formation' => psCalcFormationFromStarters($starters),
+                        'starters' => $starters,
+                        'bench' => $bench
+                    ];
+                }
+            } catch (\Throwable $e) {}
+        }
+    }
+
+    if ($clubId <= 0 || !$conn) {
         return ['formation' => '4-4-2', 'starters' => [], 'bench' => []];
     }
 
     $stmtP = $conn->prepare("
-        SELECT j.ID, j.Nome, j.foto, j.Nivel, j.StringPosicoes
+        SELECT j.ID, j.Nome, j.Foto as foto, j.Nivel, j.StringPosicoes
         FROM contratos_jogador cj
         INNER JOIN jogador j ON j.ID = cj.jogador
         WHERE cj.clube = ?
@@ -280,9 +337,9 @@ function psBuildLineupFromClubSquad($conn, $clubId, $clubName, $matchId, $isHome
     }
 
     $posicoesMap = [
-        0 => 'G', 1 => 'LD', 2 => 'Z', 3 => 'LE', 4 => 'V',
-        5 => 'MD', 6 => 'MC', 7 => 'ME', 8 => 'MA', 9 => 'PD',
-        10 => 'CA', 11 => 'PE', 12 => 'SA', 13 => 'AD', 14 => 'AE'
+        0 => 'G', 1 => 'LD', 2 => 'LE', 3 => 'Z', 4 => 'AD',
+        5 => 'AE', 6 => 'V', 7 => 'MD', 8 => 'ME', 9 => 'MC',
+        10 => 'PD', 11 => 'PE', 12 => 'MA', 13 => 'Am', 14 => 'Aa'
     ];
 
     $parsed = [];
@@ -312,34 +369,118 @@ function psBuildLineupFromClubSquad($conn, $clubId, $clubName, $matchId, $isHome
         ];
     }
 
-    $gks = array_values(array_filter($parsed, function($p) { return $p['is_gk']; }));
-    $linePlayers = array_values(array_filter($parsed, function($p) { return !$p['is_gk']; }));
+    $gks = [];
+    $rb = [];
+    $cb = [];
+    $lb = [];
+    $otherDefs = [];
+    $dm = [];
+    $cm = [];
+    $am = [];
+    $otherMids = [];
+    $cf = [];
+    $wng = [];
+    $otherFwds = [];
 
-    $defs = [];
-    $mids = [];
-    $fwds = [];
-    foreach ($linePlayers as $lp) {
-        $pos = strtoupper(trim($lp['position'] ?? ''));
-        if (in_array($pos, ['Z', 'LD', 'LE', 'AD', 'AE', 'DF', 'CB', 'RB', 'LB'])) $defs[] = $lp;
-        elseif (in_array($pos, ['V', 'MC', 'MD', 'ME', 'MA', 'M', 'MF', 'DM', 'AM', 'CM', 'RM', 'LM'])) $mids[] = $lp;
-        else $fwds[] = $lp;
+    foreach ($parsed as $p) {
+        $pos = strtoupper(trim($p['position'] ?? ''));
+        if ($p['is_gk']) {
+            $gks[] = $p;
+        } elseif (in_array($pos, ['LD', 'AD'])) {
+            $rb[] = $p;
+        } elseif ($pos === 'Z') {
+            $cb[] = $p;
+        } elseif (in_array($pos, ['LE', 'AE'])) {
+            $lb[] = $p;
+        } elseif (in_array($pos, ['DF', 'CB', 'RB', 'LB', 'DEF'])) {
+            $otherDefs[] = $p;
+        } elseif ($pos === 'V') {
+            $dm[] = $p;
+        } elseif (in_array($pos, ['MC', 'MD', 'ME'])) {
+            $cm[] = $p;
+        } elseif ($pos === 'MA') {
+            $am[] = $p;
+        } elseif (in_array($pos, ['M', 'MF', 'DM', 'CM', 'RM', 'LM', 'MEI'])) {
+            $otherMids[] = $p;
+        } elseif (in_array($pos, ['AA', 'CA'])) {
+            $cf[] = $p;
+        } elseif (in_array($pos, ['AM', 'SA', 'PD', 'PE'])) {
+            $wng[] = $p;
+        } else {
+            $otherFwds[] = $p;
+        }
     }
 
+    $used = [];
     $starters = [];
-    if (!empty($gks)) $starters[] = array_shift($gks);
-    elseif (!empty($linePlayers)) $starters[] = array_shift($linePlayers);
+    $pick = function(&$list) use (&$used, &$starters) {
+        while (!empty($list)) {
+            $candidate = array_shift($list);
+            if (!isset($used[$candidate['id']])) {
+                $used[$candidate['id']] = true;
+                $starters[] = $candidate;
+                return $candidate;
+            }
+        }
+        return null;
+    };
 
-    for ($i = 0; $i < 4 && !empty($defs); $i++) $starters[] = array_shift($defs);
-    for ($i = 0; $i < 4 && !empty($mids); $i++) $starters[] = array_shift($mids);
-    for ($i = 0; $i < 2 && !empty($fwds); $i++) $starters[] = array_shift($fwds);
+    // 1 Goleiro
+    if (!empty($gks)) $pick($gks);
 
-    $remainingPool = array_merge($defs, $mids, $fwds);
-    usort($remainingPool, function($a, $b) { return $b['level'] <=> $a['level']; });
-    while (count($starters) < 11 && !empty($remainingPool)) {
-        $starters[] = array_shift($remainingPool);
+    // 4 Defensores: 1 Lateral Direito, 2 Zagueiros, 1 Lateral Esquerdo
+    $pRb = $pick($rb);
+    $pCb1 = $pick($cb);
+    $pCb2 = $pick($cb);
+    $pLb = $pick($lb);
+
+    $remDefs = array_merge($rb, $cb, $lb, $otherDefs);
+    usort($remDefs, function($a, $b) { return $b['level'] <=> $a['level']; });
+    $defCount = ($pRb ? 1 : 0) + ($pCb1 ? 1 : 0) + ($pCb2 ? 1 : 0) + ($pLb ? 1 : 0);
+    while ($defCount < 4 && !empty($remDefs)) {
+        if ($pick($remDefs)) $defCount++;
     }
 
-    $bench = array_merge($gks, $remainingPool);
+    // 4 Meio-campistas: 1 Volante, 2 Meias Centrais, 1 Meia Atacante
+    $pDm = $pick($dm);
+    $pCm1 = $pick($cm);
+    $pCm2 = $pick($cm);
+    $pAm = $pick($am);
+
+    $remMids = array_merge($dm, $cm, $am, $otherMids);
+    usort($remMids, function($a, $b) { return $b['level'] <=> $a['level']; });
+    $midCount = ($pDm ? 1 : 0) + ($pCm1 ? 1 : 0) + ($pCm2 ? 1 : 0) + ($pAm ? 1 : 0);
+    while ($midCount < 4 && !empty($remMids)) {
+        if ($pick($remMids)) $midCount++;
+    }
+
+    // 2 Atacantes: 1 de Área / Centroavante, 1 de Movimentação / Ponta
+    $pCf = $pick($cf);
+    $pWng = $pick($wng);
+
+    $remFwds = array_merge($cf, $wng, $otherFwds);
+    usort($remFwds, function($a, $b) { return $b['level'] <=> $a['level']; });
+    $fwdCount = ($pCf ? 1 : 0) + ($pWng ? 1 : 0);
+    while ($fwdCount < 2 && !empty($remFwds)) {
+        if ($pick($remFwds)) $fwdCount++;
+    }
+
+    // Preencher até 11 titulares se necessário
+    $allRem = [];
+    foreach ($parsed as $p) {
+        if (!isset($used[$p['id']])) $allRem[] = $p;
+    }
+    usort($allRem, function($a, $b) { return $b['level'] <=> $a['level']; });
+    while (count($starters) < 11 && !empty($allRem)) {
+        $pick($allRem);
+    }
+
+    // Banco de reservas
+    $bench = [];
+    foreach ($parsed as $p) {
+        if (!isset($used[$p['id']])) $bench[] = $p;
+    }
+    usort($bench, function($a, $b) { return $b['level'] <=> $a['level']; });
 
     foreach ($starters as $idx => &$s) {
         $s['number'] = $idx + 1;
@@ -363,9 +504,9 @@ function psBuildLineupFromClubSquad($conn, $clubId, $clubName, $matchId, $isHome
     $def = 0; $mid = 0; $fwd = 0;
     foreach ($starters as $s) {
         $pos = strtoupper(trim($s['position'] ?? ''));
-        if (in_array($pos, ['Z', 'LD', 'LE', 'AD', 'AE', 'DF', 'CB', 'RB', 'LB'])) $def++;
-        elseif (in_array($pos, ['V', 'MC', 'MD', 'ME', 'MA', 'M', 'MF', 'DM', 'AM', 'CM', 'RM', 'LM'])) $mid++;
-        elseif (in_array($pos, ['CA', 'SA', 'PD', 'PE', 'A', 'FW', 'ST', 'CF', 'RW', 'LW', 'AA'])) $fwd++;
+        if (in_array($pos, ['Z', 'LD', 'LE', 'AD', 'AE', 'DF', 'CB', 'RB', 'LB', 'DEF'])) $def++;
+        elseif (in_array($pos, ['V', 'MC', 'MD', 'ME', 'MA', 'M', 'MF', 'DM', 'CM', 'RM', 'LM', 'MEI'])) $mid++;
+        elseif (in_array($pos, ['CA', 'SA', 'PD', 'PE', 'A', 'FW', 'ST', 'CF', 'RW', 'LW', 'AA', 'AM', 'ATA'])) $fwd++;
     }
     $formation = ($def + $mid + $fwd > 0) ? "$def-$mid-$fwd" : '4-4-2';
 
@@ -692,12 +833,14 @@ try {
             'home' => [
                 'formation' => '4-4-2',
                 'starters' => [],
-                'bench' => []
+                'bench' => [],
+                'coach' => null
             ],
             'away' => [
                 'formation' => '4-4-2',
                 'starters' => [],
-                'bench' => []
+                'bench' => [],
+                'coach' => null
             ]
         ];
 
@@ -742,11 +885,48 @@ try {
                 foreach ($rawEsc as $p) {
                     $pId = (int)$p['id_jogador'];
                     $pTimeId = (int)$p['id_time'];
-                    $isHomeTeam = ($pTimeId === $homeId) || ($pTimeId > 0 && $pTimeId !== $awayId);
+                    $pTimeNome = trim((string)($p['nome_time'] ?? ''));
+
+                    $isHomeTeam = null;
+                    if ($pTimeId > 0 && $homeId > 0 && $pTimeId === $homeId) {
+                        $isHomeTeam = true;
+                    } elseif ($pTimeId > 0 && $awayId > 0 && $pTimeId === $awayId) {
+                        $isHomeTeam = false;
+                    } elseif (!empty($pTimeNome)) {
+                        if (strcasecmp($pTimeNome, $row['home_team']) === 0) {
+                            $isHomeTeam = true;
+                        } elseif (strcasecmp($pTimeNome, $row['away_team']) === 0) {
+                            $isHomeTeam = false;
+                        }
+                    }
+                    if ($isHomeTeam === null) {
+                        $isHomeTeam = (count($lineups['home']['starters']) < 11);
+                    }
+                    $targetKey = $isHomeTeam ? 'home' : 'away';
 
                     $pPhoto = '';
                     if (!empty($p['foto']) && $p['foto'] !== 'default.webp' && $p['foto'] !== '0.png') {
                         $pPhoto = (strpos($p['foto'], 'http') === 0) ? $p['foto'] : '/images/jogadores/' . basename($p['foto']);
+                    }
+
+                    $posClean = strtoupper(trim($p['posicao'] ?? ''));
+                    $isCoach = in_array($posClean, ['T', 'TEC', 'TECNICO', 'TREINADOR']);
+
+                    $playerEntry = [
+                        'id' => $pId,
+                        'name' => $p['nome_jogador'],
+                        'number' => $p['numero'] ? (int)$p['numero'] : null,
+                        'position' => $p['posicao'] ?: 'LIN',
+                        'level' => (int)($p['Nivel'] ?? 0),
+                        'photo' => $pPhoto,
+                        'rating' => null
+                    ];
+
+                    if ($isCoach) {
+                        if (empty($lineups[$targetKey]['coach'])) {
+                            $lineups[$targetKey]['coach'] = $playerEntry;
+                        }
+                        continue;
                     }
 
                     $isTitular = ((int)$p['titular'] === 1);
@@ -763,40 +943,67 @@ try {
                             $rating = psCalculatePlayerRating($pId, (int)($p['Nivel'] ?? 50), $p['posicao'] ?: 'LIN', true, $goals, $yellows, $reds, $tScore, $oScore, $matchId);
                         }
                     }
+                    $playerEntry['rating'] = $rating;
 
-                    $playerEntry = [
-                        'id' => $pId,
-                        'name' => $p['nome_jogador'],
-                        'number' => $p['numero'] ? (int)$p['numero'] : null,
-                        'position' => $p['posicao'] ?: 'LIN',
-                        'level' => (int)($p['Nivel'] ?? 0),
-                        'photo' => $pPhoto,
-                        'rating' => $rating
-                    ];
-
-                    $targetKey = $isHomeTeam ? 'home' : 'away';
-                    if ($isTitular) {
+                    if ($isTitular && count($lineups[$targetKey]['starters']) < 11) {
                         $lineups[$targetKey]['starters'][] = $playerEntry;
                     } else {
                         $lineups[$targetKey]['bench'][] = $playerEntry;
                     }
                 }
 
-                $calcFormation = function($starters) {
-                    $def = 0; $mid = 0; $fwd = 0;
-                    foreach ($starters as $s) {
-                        $pos = strtoupper(trim($s['position'] ?? ''));
-                        if (in_array($pos, ['Z', 'LD', 'LE', 'AD', 'AE', 'DF', 'CB', 'RB', 'LB'])) $def++;
-                        elseif (in_array($pos, ['V', 'MC', 'MD', 'ME', 'MA', 'M', 'MF', 'DM', 'AM', 'CM', 'RM', 'LM'])) $mid++;
-                        elseif (in_array($pos, ['CA', 'SA', 'PD', 'PE', 'A', 'FW', 'ST', 'CF', 'RW', 'LW', 'AA', 'AM'])) $fwd++;
-                    }
-                    if ($def + $mid + $fwd > 0) return "$def-$mid-$fwd";
-                    return '4-4-2';
-                };
+                $lineups['home']['formation'] = psCalcFormationFromStarters($lineups['home']['starters']);
+                $lineups['away']['formation'] = psCalcFormationFromStarters($lineups['away']['starters']);
+            } elseif (!empty($row['path'])) {
+                // Tentar carregar do arquivo .hyl se disponível
+                $hylPath = psFindHyjFile($row['path']);
+                if ($hylPath) {
+                    $hylPath = str_ireplace('.hyj', '.hyl', $hylPath);
+                }
+                if ($hylPath && file_exists($hylPath)) {
+                    $hylData = json_decode(file_get_contents($hylPath), true);
+                    if ($hylData && (!empty($hylData['escalacaoTime1']) || !empty($hylData['escalacaoTime2']))) {
+                        $lineups['has_lineups'] = true;
 
-                $lineups['home']['formation'] = $calcFormation($lineups['home']['starters']);
-                $lineups['away']['formation'] = $calcFormation($lineups['away']['starters']);
-            } else {
+                        foreach ([['team' => 'home', 'list' => $hylData['escalacaoTime1'] ?? []], ['team' => 'away', 'list' => $hylData['escalacaoTime2'] ?? []]] as $sideData) {
+                            $tKey = $sideData['team'];
+                            foreach ($sideData['list'] as $idx => $hp) {
+                                $hpPos = trim($hp['posicao'] ?? '');
+                                $posClean = strtoupper($hpPos);
+                                $pId = (int)($hp['id'] ?? 0);
+                                $isCoach = in_array($posClean, ['T', 'TEC', 'TECNICO', 'TREINADOR']);
+                                $isTitular = isset($hp['titular']) ? (bool)$hp['titular'] : ($idx < 11);
+                                
+                                $rating = null;
+                                if ($statusStr !== 'next' && isset($playerRatings[$pId])) {
+                                    $rating = $playerRatings[$pId];
+                                }
+                                $entry = [
+                                    'id' => $pId,
+                                    'name' => $hp['nome'] ?? 'Jogador',
+                                    'number' => ($idx + 1),
+                                    'position' => $hpPos ?: 'LIN',
+                                    'level' => 0,
+                                    'photo' => '',
+                                    'rating' => $rating
+                                ];
+                                if ($isCoach) {
+                                    if (empty($lineups[$tKey]['coach'])) {
+                                        $lineups[$tKey]['coach'] = $entry;
+                                    }
+                                } elseif ($isTitular && count($lineups[$tKey]['starters']) < 11) {
+                                    $lineups[$tKey]['starters'][] = $entry;
+                                } else {
+                                    $lineups[$tKey]['bench'][] = $entry;
+                                }
+                            }
+                            $lineups[$tKey]['formation'] = psCalcFormationFromStarters($lineups[$tKey]['starters']);
+                        }
+                    }
+                }
+            }
+            
+            if (!$lineups['has_lineups']) {
                 // Fallback: Gerar escalações pelo elenco dos clubes
                 $compId = (int)($row['competicao_id'] ?? 0);
                 $homeLineup = psBuildLineupFromClubSquad($conn, (int)$row['timeA_id'], $row['home_team'], $matchId, true, (int)$row['home_score'], (int)$row['away_score'], $playerEvents, $statusStr, null, $compId);

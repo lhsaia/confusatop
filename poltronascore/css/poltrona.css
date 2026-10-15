@@ -79,6 +79,23 @@ header {
     -webkit-text-fill-color: transparent;
 }
 
+.app-version-badge {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 700;
+    color: #090d16;
+    background: var(--accent-cyan);
+    padding: 2px 7px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.2;
+    margin-left: 4px;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+}
+
 .status-indicator {
     display: flex;
     align-items: center;

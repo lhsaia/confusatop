@@ -25,19 +25,19 @@ try {
     $posicoesMap = [
         0 => ['sigla' => 'G', 'nome' => 'Goleiro', 'cat' => 'Goleiro'],
         1 => ['sigla' => 'LD', 'nome' => 'Lateral Direito', 'cat' => 'Defensor'],
-        2 => ['sigla' => 'Z', 'nome' => 'Zagueiro', 'cat' => 'Defensor'],
-        3 => ['sigla' => 'LE', 'nome' => 'Lateral Esquerdo', 'cat' => 'Defensor'],
-        4 => ['sigla' => 'V', 'nome' => 'Volante', 'cat' => 'Meio-Campista'],
-        5 => ['sigla' => 'MD', 'nome' => 'Meia Direita', 'cat' => 'Meio-Campista'],
-        6 => ['sigla' => 'MC', 'nome' => 'Meio-Campo', 'cat' => 'Meio-Campista'],
-        7 => ['sigla' => 'ME', 'nome' => 'Meia Esquerda', 'cat' => 'Meio-Campista'],
-        8 => ['sigla' => 'MA', 'nome' => 'Meia Atacante', 'cat' => 'Meio-Campista'],
-        9 => ['sigla' => 'PD', 'nome' => 'Ponta Direita', 'cat' => 'Atacante'],
-        10 => ['sigla' => 'CA', 'nome' => 'Centroavante', 'cat' => 'Atacante'],
+        2 => ['sigla' => 'LE', 'nome' => 'Lateral Esquerdo', 'cat' => 'Defensor'],
+        3 => ['sigla' => 'Z', 'nome' => 'Zagueiro', 'cat' => 'Defensor'],
+        4 => ['sigla' => 'AD', 'nome' => 'Ala Direito', 'cat' => 'Defensor'],
+        5 => ['sigla' => 'AE', 'nome' => 'Ala Esquerdo', 'cat' => 'Defensor'],
+        6 => ['sigla' => 'V', 'nome' => 'Volante', 'cat' => 'Meio-Campista'],
+        7 => ['sigla' => 'MD', 'nome' => 'Meia Direita', 'cat' => 'Meio-Campista'],
+        8 => ['sigla' => 'ME', 'nome' => 'Meia Esquerda', 'cat' => 'Meio-Campista'],
+        9 => ['sigla' => 'MC', 'nome' => 'Meio-Campo', 'cat' => 'Meio-Campista'],
+        10 => ['sigla' => 'PD', 'nome' => 'Ponta Direita', 'cat' => 'Atacante'],
         11 => ['sigla' => 'PE', 'nome' => 'Ponta Esquerda', 'cat' => 'Atacante'],
-        12 => ['sigla' => 'SA', 'nome' => 'Segundo Atacante', 'cat' => 'Atacante'],
-        13 => ['sigla' => 'AD', 'nome' => 'Ala Direito', 'cat' => 'Defensor'],
-        14 => ['sigla' => 'AE', 'nome' => 'Ala Esquerdo', 'cat' => 'Defensor'],
+        12 => ['sigla' => 'MA', 'nome' => 'Meia Atacante', 'cat' => 'Meio-Campista'],
+        13 => ['sigla' => 'Am', 'nome' => 'Atacante de Movimentação', 'cat' => 'Atacante'],
+        14 => ['sigla' => 'Aa', 'nome' => 'Atacante de Área', 'cat' => 'Atacante'],
     ];
 
     $mentalidadesMap = [
@@ -51,6 +51,8 @@ try {
         8 => 'Raçudo'
     ];
 
+    $player = null;
+
     if ($playerId > 0) {
         $stmtP = $conn->prepare("
             SELECT j.*, p.nome as nome_pais, p.bandeira as bandeira_pais, m.Nome as nome_mentalidade
@@ -61,7 +63,11 @@ try {
             LIMIT 1
         ");
         $stmtP->execute([$playerId]);
-    } else {
+        $player = $stmtP->fetch(PDO::FETCH_ASSOC);
+    }
+
+    if (!$player && !empty($playerNameParam)) {
+        $cleanName = stripslashes(trim($playerNameParam));
         $stmtP = $conn->prepare("
             SELECT j.*, p.nome as nome_pais, p.bandeira as bandeira_pais, m.Nome as nome_mentalidade
             FROM jogador j
@@ -78,14 +84,158 @@ try {
             LIMIT 1
         ");
         $stmtP->execute([
-            $playerNameParam, 
-            "%$playerNameParam%",
-            $playerNameParam,
-            "$playerNameParam%"
+            $cleanName, 
+            "%$cleanName%",
+            $cleanName, 
+            "$cleanName%"
         ]);
+        $player = $stmtP->fetch(PDO::FETCH_ASSOC);
     }
 
-    $player = $stmtP->fetch(PDO::FETCH_ASSOC);
+    // Fallback: buscar nos bancos SQLite das competições se não encontrado no MariaDB
+    if (!$player) {
+        $dbDir = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') 
+            ? $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" 
+            : dirname(__DIR__, 2) . "/competicoes/databases/";
+        if (is_dir($dbDir)) {
+            $files = glob($dbDir . "*-database.db3");
+            foreach ($files as $f) {
+                try {
+                    $sdb = new PDO("sqlite:" . $f);
+                    $sdb->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    $sRow = null;
+                    if ($playerId != 0) {
+                        try {
+                            $pIdAbs = abs($playerId);
+                            $st = $sdb->prepare("SELECT * FROM jogador WHERE ID = :id1 OR ID = :id2 LIMIT 1");
+                            if ($st) {
+                                $st->execute([':id1' => $playerId, ':id2' => ($playerId < 0 ? $pIdAbs : -$pIdAbs)]);
+                                $sRow = $st->fetch(PDO::FETCH_ASSOC);
+                            }
+                        } catch (\Throwable $e) {}
+                    }
+                    if (!$sRow && !empty($playerNameParam)) {
+                        try {
+                            $cleanName = stripslashes(trim($playerNameParam));
+                            $st = $sdb->prepare("SELECT * FROM jogador WHERE Nome = ? OR Nome LIKE ? LIMIT 1");
+                            if ($st) {
+                                $st->execute([$cleanName, "%$cleanName%"]);
+                                $sRow = $st->fetch(PDO::FETCH_ASSOC);
+                            }
+                        } catch (\Throwable $e) {}
+                    }
+                    if ($sRow) {
+                        $jId = (int)$sRow['ID'];
+                        // Obter mapa de posições
+                        $strPos = '000000000000000';
+                        try {
+                            $stPos = $sdb->prepare("SELECT * FROM posicaojogador WHERE Jogador = ? LIMIT 1");
+                            if ($stPos) {
+                                $stPos->execute([$jId]);
+                                $posRow = $stPos->fetch(PDO::FETCH_ASSOC);
+                                if ($posRow) {
+                                    $posOrder = ['G', 'LD', 'LE', 'Z', 'AD', 'AE', 'V', 'MD', 'ME', 'MC', 'PD', 'PE', 'MA', 'Am', 'Aa'];
+                                    $strPos = '';
+                                    foreach ($posOrder as $po) {
+                                        $strPos .= (!empty($posRow[$po]) && (int)$posRow[$po] === 1) ? '1' : '0';
+                                    }
+                                }
+                            }
+                        } catch (\Throwable $e) {}
+
+                        // Atributos de jogador de linha
+                        $attRow = [];
+                        try {
+                            $stAtt = $sdb->prepare("SELECT * FROM atributosjogador WHERE Jogador = ? LIMIT 1");
+                            if ($stAtt) {
+                                $stAtt->execute([$jId]);
+                                $attRow = $stAtt->fetch(PDO::FETCH_ASSOC) ?: [];
+                            }
+                        } catch (\Throwable $e) {}
+
+                        // Atributos de goleiro
+                        $gkRow = [];
+                        try {
+                            $stGk = $sdb->prepare("SELECT * FROM atributosgoleiro WHERE Goleiro = ? OR Jogador = ? LIMIT 1");
+                            if ($stGk) {
+                                $stGk->execute([$jId, $jId]);
+                                $gkRow = $stGk->fetch(PDO::FETCH_ASSOC) ?: [];
+                            }
+                        } catch (\Throwable $e) {}
+
+                        // País e Bandeira
+                        $sqlitePais = '';
+                        $sqliteBandeira = '';
+                        try {
+                            $stNac = $sdb->prepare("SELECT Nacionalidade FROM nacionalidades WHERE ID_Jogador = ? LIMIT 1");
+                            if ($stNac) {
+                                $stNac->execute([$jId]);
+                                $nacStr = $stNac->fetchColumn();
+                                if ($nacStr) {
+                                    $sqlitePais = $nacStr;
+                                    if ($conn) {
+                                        $stBp = $conn->prepare("SELECT bandeira FROM paises WHERE nome = ? OR sigla = ? LIMIT 1");
+                                        $stBp->execute([$nacStr, $nacStr]);
+                                        $flagB = $stBp->fetchColumn();
+                                        if ($flagB) $sqliteBandeira = $flagB;
+                                    }
+                                }
+                            }
+                        } catch (\Throwable $e) {}
+
+                        // Clube a partir do elenco no SQLite
+                        $sqliteClubeId = 0;
+                        $sqliteClubeNome = '';
+                        $sqliteClubeEscudo = '';
+                        try {
+                            $stElenco = $sdb->query("SELECT * FROM elenco");
+                            if ($stElenco) {
+                                while ($elR = $stElenco->fetch(PDO::FETCH_ASSOC)) {
+                                    for ($k = 1; $k <= 23; $k++) {
+                                        if (isset($elR["Jogador$k"]) && (int)$elR["Jogador$k"] === $jId) {
+                                            $sqliteClubeId = (int)$elR['Clube'];
+                                            break 2;
+                                        }
+                                    }
+                                }
+                            }
+                            if ($sqliteClubeId > 0) {
+                                $stCl = $sdb->prepare("SELECT Nome, Escudo FROM clube WHERE ID = ? LIMIT 1");
+                                if ($stCl) {
+                                    $stCl->execute([$sqliteClubeId]);
+                                    $clRow = $stCl->fetch(PDO::FETCH_ASSOC);
+                                    if ($clRow) {
+                                        $sqliteClubeNome = $clRow['Nome'];
+                                        $sqliteClubeEscudo = $clRow['Escudo'];
+                                    }
+                                }
+                            }
+                        } catch (\Throwable $e) {}
+
+                        $player = array_merge($attRow, $gkRow, [
+                            'ID' => $jId,
+                            'Nome' => $sRow['Nome'],
+                            'Idade' => (int)($sRow['Idade'] ?? 24),
+                            'Nivel' => (int)($sRow['Nivel'] ?? 50),
+                            'Potencial' => (int)($sRow['Potencial'] ?? $sRow['Nivel'] ?? 50),
+                            'Mentalidade' => (int)($sRow['Mentalidade'] ?? 4),
+                            'StringPosicoes' => $strPos,
+                            'foto' => '',
+                            'pais_nome' => $sqlitePais,
+                            'sqlite_pais' => $sqlitePais,
+                            'bandeira_pais' => $sqliteBandeira,
+                            'sqlite_bandeira' => $sqliteBandeira,
+                            'sqlite_clube_id' => $sqliteClubeId,
+                            'sqlite_clube_nome' => $sqliteClubeNome,
+                            'sqlite_clube_escudo' => $sqliteClubeEscudo,
+                            'nome_mentalidade' => ''
+                        ]);
+                        break;
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+    }
 
     if (!$player) {
         http_response_code(404);
@@ -119,6 +269,15 @@ try {
     }
 
     $isGoleiro = ($posicoes[0] === 'G');
+
+    if (empty($player['foto']) && $conn && !empty($player['Nome'])) {
+        try {
+            $stPh = $conn->prepare("SELECT foto FROM jogador WHERE Nome = ? AND foto != '' AND foto != '0.png' AND foto != 'default.webp' LIMIT 1");
+            $stPh->execute([$player['Nome']]);
+            $foundPhoto = $stPh->fetchColumn();
+            if ($foundPhoto) $player['foto'] = $foundPhoto;
+        } catch (\Throwable $e) {}
+    }
 
     // 2. Foto do atleta
     $photoUrl = '';
@@ -169,6 +328,21 @@ try {
         ];
     }
 
+    if (!$clubData && !empty($player['sqlite_clube_id']) && !empty($player['sqlite_clube_nome'])) {
+        $clEsc = '';
+        if (!empty($player['sqlite_clube_escudo']) && $player['sqlite_clube_escudo'] !== '0.png') {
+            $clEsc = (strpos($player['sqlite_clube_escudo'], 'http') === 0) ? $player['sqlite_clube_escudo'] : '/images/escudos/' . basename($player['sqlite_clube_escudo']);
+        }
+        $clubData = [
+            'id' => (int)$player['sqlite_clube_id'],
+            'name' => $player['sqlite_clube_nome'],
+            'logo' => $clEsc,
+            'jersey_number' => null,
+            'wage' => 0,
+            'contract_end' => 'Indeterminado'
+        ];
+    }
+
     // 6. Atributos Normalizados
     $attributes = [
         'technical' => [
@@ -212,7 +386,8 @@ try {
     $stmtTotalMatches = $conn->prepare("
         SELECT COUNT(DISTINCT id_partida) 
         FROM jogos_clube_escalacao 
-        WHERE id_jogador = ? OR (id_jogador = 0 AND nome_jogador = ?)
+        WHERE (id_jogador = ? OR (id_jogador = 0 AND nome_jogador = ?))
+          AND (titular = 1 OR entrada_tempo > 0 OR entrada_minuto > 0)
     ");
     $stmtTotalMatches->execute([$playerId, $player['Nome']]);
     $totalEscalacoes = (int)$stmtTotalMatches->fetchColumn();
@@ -290,12 +465,15 @@ try {
     try {
         $stmtRecent = $conn->prepare("
             SELECT 
-                j.id, j.data, j.timeA_id, j.timeA_nome, j.timeA_gols,
-                j.timeB_id, j.timeB_nome, j.timeB_gols, j.competicao_id, j.path,
+                j.id, j.data, j.timeA_id, COALESCE(cA.Nome, j.timeA_nome) as timeA_nome, j.timeA_gols,
+                j.timeB_id, COALESCE(cB.Nome, j.timeB_nome) as timeB_nome, j.timeB_gols, j.competicao_id, j.path,
                 COALESCE(cl.nome, li.nome, cc.nome, 'Competição') as competicao_nome,
-                esc.titular, esc.posicao as posicao_jogo
+                esc.id_time as jogador_time_id, esc.titular, esc.posicao as posicao_jogo,
+                esc.entrada_tempo as jogador_entrada_tempo, esc.entrada_minuto as jogador_entrada_minuto
             FROM jogos_clube_escalacao esc
             INNER JOIN jogos_clube j ON j.id = esc.id_partida
+            LEFT JOIN clube cA ON cA.ID = j.timeA_id
+            LEFT JOIN clube cB ON cB.ID = j.timeB_id
             LEFT JOIN competicao_lista cl ON cl.id = j.competicao_id AND j.simulador_interno = 1
             LEFT JOIN liga li ON li.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 0
             LEFT JOIN campeonatos_clube cc ON cc.id = j.competicao_id AND (j.simulador_interno = 0 OR j.simulador_interno IS NULL) AND j.competicao_tipo = 1
@@ -314,7 +492,71 @@ try {
                 continue;
             }
 
-            $matchRating = null;
+            $timeAId = (int)$rm['timeA_id'];
+            $timeBId = (int)$rm['timeB_id'];
+            $jogTimeId = (int)($rm['jogador_time_id'] ?? 0);
+
+            $teamAName = $rm['timeA_nome'] ?? '';
+            $teamBName = $rm['timeB_nome'] ?? '';
+
+            // Se algum nome de time estiver vazio e for competição interna, checar SQLite
+            if ((empty($teamAName) || empty($teamBName)) && !empty($rm['competicao_id'])) {
+                $compId = (int)$rm['competicao_id'];
+                $db3File = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') 
+                    ? $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $compId . "-database.db3"
+                    : dirname(__DIR__, 2) . "/competicoes/databases/" . $compId . "-database.db3";
+                if (file_exists($db3File)) {
+                    try {
+                        $sdb = new PDO("sqlite:" . $db3File);
+                        if (empty($teamAName)) {
+                            $st = $sdb->prepare("SELECT Nome FROM clube WHERE ID = ? OR ID = ?");
+                            $st->execute([$timeAId, abs($timeAId)]);
+                            $tName = $st->fetchColumn();
+                            if ($tName) $teamAName = $tName;
+                        }
+                        if (empty($teamBName)) {
+                            $st = $sdb->prepare("SELECT Nome FROM clube WHERE ID = ? OR ID = ?");
+                            $st->execute([$timeBId, abs($timeBId)]);
+                            $tName = $st->fetchColumn();
+                            if ($tName) $teamBName = $tName;
+                        }
+                    } catch (\Throwable $e) {}
+                }
+            }
+
+            if (empty($teamAName)) $teamAName = $timeAId ? 'Time ' . abs($timeAId) : 'Time A';
+            if (empty($teamBName)) $teamBName = $timeBId ? 'Time ' . abs($timeBId) : 'Time B';
+
+            $isTeamA = false;
+            if ($jogTimeId !== 0) {
+                if ($jogTimeId === $timeAId) {
+                    $isTeamA = true;
+                } elseif ($jogTimeId === $timeBId) {
+                    $isTeamA = false;
+                } else {
+                    $isTeamA = ($clubData && $clubData['id'] === $timeAId);
+                }
+            } else {
+                $isTeamA = ($clubData && $clubData['id'] === $timeAId);
+            }
+
+            $opponent = $isTeamA ? $teamBName : $teamAName;
+            $myScore = $isTeamA ? (int)$rm['timeA_gols'] : (int)$rm['timeB_gols'];
+            $oppScore = $isTeamA ? (int)$rm['timeB_gols'] : (int)$rm['timeA_gols'];
+
+            $isStarter = !empty($rm['titular']);
+            $subInMin = (isset($rm['jogador_entrada_minuto']) && is_numeric($rm['jogador_entrada_minuto']) && (int)$rm['jogador_entrada_minuto'] > 0) 
+                ? (int)$rm['jogador_entrada_minuto'] 
+                : null;
+            $subInTempo = (isset($rm['jogador_entrada_tempo']) && is_numeric($rm['jogador_entrada_tempo']) && (int)$rm['jogador_entrada_tempo'] > 0) 
+                ? (int)$rm['jogador_entrada_tempo'] 
+                : null;
+            $hasEnteredFromDb = ($subInMin !== null) || ($subInTempo !== null);
+
+            $foundInHyj = false;
+            $hyjMinutes = 0;
+            $hyjRating = null;
+
             if (!empty($rm['path'])) {
                 $hyjPath = psFindHyjFile($rm['path']);
                 if ($hyjPath && file_exists($hyjPath)) {
@@ -325,9 +567,10 @@ try {
                         foreach ($allJog as $jObj) {
                             $jId = (int)($jObj['idJogador'] ?? 0);
                             if (($jId > 0 && $jId === $playerId) || (!empty($jObj['nome']) && $jObj['nome'] === $player['Nome'])) {
+                                $foundInHyj = true;
+                                $hyjMinutes = (int)($jObj['minutos'] ?? 0);
                                 if (isset($jObj['nota']) && (float)$jObj['nota'] > 0) {
-                                    $matchRating = round((float)$jObj['nota'], 1);
-                                    $allRatings[] = (float)$jObj['nota'];
+                                    $hyjRating = round((float)$jObj['nota'], 1);
                                 }
                                 break;
                             }
@@ -336,14 +579,27 @@ try {
                 }
             }
 
-            $isTeamA = ($clubData && $clubData['id'] === (int)$rm['timeA_id']);
-            $opponent = $isTeamA ? $rm['timeB_nome'] : $rm['timeA_nome'];
-            $myScore = $isTeamA ? (int)$rm['timeA_gols'] : (int)$rm['timeB_gols'];
-            $oppScore = $isTeamA ? (int)$rm['timeB_gols'] : (int)$rm['timeA_gols'];
+            // O jogador só atuou se foi titular, se entrou em campo ou se o simulador registrou minutos jogados
+            $hasPlayed = false;
+            if ($isStarter) {
+                $hasPlayed = true;
+            } elseif ($foundInHyj) {
+                $hasPlayed = ($hyjMinutes > 0 || $hasEnteredFromDb);
+            } else {
+                $hasPlayed = $hasEnteredFromDb;
+            }
 
-            if ($matchRating === null) {
-                $matchRating = psCalculatePlayerRating($playerId, (int)$player['Nivel'], $rm['posicao_jogo'] ?: $posicaoPrincipal, (bool)$rm['titular'], 0, 0, 0, $myScore, $oppScore, (int)$rm['id']);
+            $matchRating = null;
+            if ($hasPlayed) {
+                if ($hyjRating !== null) {
+                    $matchRating = $hyjRating;
+                } else {
+                    $matchRating = psCalculatePlayerRating($playerId, (int)$player['Nivel'], $rm['posicao_jogo'] ?: $posicaoPrincipal, $isStarter, 0, 0, 0, $myScore, $oppScore, (int)$rm['id']);
+                }
                 $allRatings[] = $matchRating;
+            } else {
+                // Jogador foi reserva e NÃO entrou em campo: NUNCA deve ter nota
+                $matchRating = null;
             }
 
             if ($matchIndex < 5) {
@@ -355,10 +611,12 @@ try {
                     'match_id' => (int)$rm['id'],
                     'date' => !empty($rm['data']) ? date('d/m/Y', strtotime($rm['data'])) : '',
                     'competition' => $rm['competicao_nome'] ?: 'Competição',
-                    'opponent' => $opponent ?: 'Adversário',
+                    'opponent' => $opponent,
                     'score' => "$myScore - $oppScore",
                     'result' => $res,
-                    'starter' => (bool)$rm['titular'],
+                    'starter' => $isStarter,
+                    'sub_in' => $subInMin,
+                    'has_played' => $hasPlayed,
                     'position' => $rm['posicao_jogo'] ?: $posicaoPrincipal,
                     'rating' => $matchRating
                 ];

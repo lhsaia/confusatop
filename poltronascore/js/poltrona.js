@@ -1,7 +1,16 @@
 // PoltronaScore JS - Core Application (Unified Match & Standings Experience)
 const DEFAULT_LOGO = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzk0YTNiOCI+PHBhdGggZD0iTTEyIDJMNCA1djYuMDljMCA1LjA1IDMuNDEgOS43NiA4IDEwLjkxIDQuNTktMS4xNSA4LTUuODYgOC0xMC45MVY1bC04LTN6bTAgMi4ybDYgMi4yNXY0LjY0YzAgMy43OS0yLjU2IDcuMzMtNiA4LjM1LTMuNDQtMS4wMi02LTQuNTYtNi04LjM1VjYuNDVsNi0yLjI1eiIvPjwvc3ZnPg==";
 
+const APP_VERSION = 'v4.0';
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Sincronizar versão no DOM
+    const vBadge = document.getElementById('app-version-badge');
+    if (vBadge) vBadge.textContent = APP_VERSION;
+    const vFooter = document.getElementById('app-version-footer');
+    if (vFooter) vFooter.textContent = APP_VERSION;
+    console.log('%c[PoltronaScore] Versão ' + APP_VERSION + ' carregada com sucesso', 'background: #0284c7; color: #fff; padding: 3px 8px; border-radius: 4px; font-weight: bold;');
+
     let pollInterval = null;
     let currentCompId = 0;
     let currentSubTab = 'table';
@@ -1122,7 +1131,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const contentBlock = `
                 <div class="tl-text">
-                    <span class="tl-player clickable-entity" onclick="window.poltronaOpenPlayerModal(0, '${playerName.replace(/'/g, "\\'")}')">${playerName}</span>
+                    <span class="tl-player clickable-entity" data-player-id="0" data-player-name="${encodeURIComponent(playerName)}" onclick="window.poltronaOpenPlayerModal(this)">${playerName}</span>
                     ${desc ? `<span class="tl-desc">${desc}</span>` : ''}
                 </div>
             `;
@@ -1168,13 +1177,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         starters.forEach((p, idx) => {
             const pos = strtoupper(trim(p.position || ''));
-            if (pos === 'G' || pos === 'GK' || pos === 'GOLEIRO' || idx === 0 && starters.length === 11) {
+            if (['T', 'TEC', 'TECNICO', 'TREINADOR'].includes(pos)) {
+                return; // Ignora comissão técnica das linhas de jogadores
+            }
+            if (['G', 'GK', 'GL', 'GOLEIRO'].includes(pos) || (idx === 0 && starters.length === 11 && !pos)) {
                 gk.push(p);
-            } else if (['Z', 'LD', 'LE', 'AD', 'AE', 'DF', 'CB', 'RB', 'LB', 'DEF'].includes(pos)) {
+            } else if (['Z', 'LD', 'LE', 'AD', 'AE', 'DF', 'CB', 'RB', 'LB', 'DEF', 'ZAG', 'ZAGUEIRO', 'LATERAL', 'LATERAL DIREITO', 'LATERAL ESQUERDO', 'ALA', 'ALA DIREITO', 'ALA ESQUERDO'].includes(pos)) {
                 def.push(p);
-            } else if (['V', 'MC', 'MD', 'ME', 'MA', 'M', 'MF', 'DM', 'AM', 'CM', 'RM', 'LM', 'MEI'].includes(pos)) {
+            } else if (['V', 'MC', 'MD', 'ME', 'MA', 'M', 'MF', 'DM', 'CM', 'RM', 'LM', 'MEI', 'VOL', 'VOLANTE', 'MEIO-CAMPO', 'MEIO CAMPO', 'MEIA', 'MEIO', 'MEIO-CAMPISTA', 'MEIA DIREITA', 'MEIA ESQUERDA', 'MEIA ATACANTE'].includes(pos)) {
                 mid.push(p);
-            } else if (['CA', 'SA', 'PD', 'PE', 'A', 'FW', 'ST', 'CF', 'RW', 'LW', 'ATA'].includes(pos)) {
+            } else if (['CA', 'SA', 'PD', 'PE', 'A', 'FW', 'ST', 'CF', 'RW', 'LW', 'AA', 'AM', 'ATA', 'ATACANTE', 'CENTROAVANTE', 'PONTA', 'PONTA DIREITA', 'PONTA ESQUERDA', 'SEGUNDO ATACANTE'].includes(pos)) {
                 fwd.push(p);
             } else {
                 // Fallback: se não tiver posição definida, distribuir equilibrado
@@ -1186,6 +1198,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         return { gk, def, mid, fwd };
+    }
+
+    function getLateralWeight(pos) {
+        const p = strtoupper(trim(pos || ''));
+        // Flanco esquerdo do time (-2)
+        if (['LE', 'AE', 'LB', 'ME', 'LM', 'PE', 'LW'].includes(p)) {
+            return -2;
+        }
+        // Flanco direito do time (+2)
+        if (['LD', 'AD', 'RB', 'MD', 'RM', 'PD', 'RW'].includes(p)) {
+            return 2;
+        }
+        return 0;
+    }
+
+    function sortPitchRow(players, sideClass) {
+        if (!players || players.length <= 1) return players || [];
+        const copy = [...players];
+        if (sideClass === 'home') {
+            // Mandante (topo, atacando para baixo):
+            // O flanco direito do time (+2) fica à esquerda da tela;
+            // O flanco esquerdo do time (-2) fica à direita da tela.
+            copy.sort((a, b) => getLateralWeight(b.position) - getLateralWeight(a.position));
+        } else {
+            // Visitante (base, atacando para cima):
+            // O flanco esquerdo do time (-2) fica à esquerda da tela;
+            // O flanco direito do time (+2) fica à direita da tela.
+            copy.sort((a, b) => getLateralWeight(a.position) - getLateralWeight(b.position));
+        }
+        return copy;
     }
 
     function strtoupper(str) {
@@ -1212,24 +1254,56 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const homeStarters = lineups.home.starters || [];
-        const awayStarters = lineups.away.starters || [];
+        const rawHomeStarters = lineups.home.starters || [];
+        const rawAwayStarters = lineups.away.starters || [];
         const homeBench = lineups.home.bench || [];
         const awayBench = lineups.away.bench || [];
+
+        const isCoachPos = (pos) => ['T', 'TEC', 'TECNICO', 'TREINADOR'].includes(strtoupper(trim(pos || '')));
+
+        let homeCoach = lineups.home.coach || null;
+        let awayCoach = lineups.away.coach || null;
+
+        const homeStarters = [];
+        rawHomeStarters.forEach(p => {
+            if (isCoachPos(p.position)) {
+                if (!homeCoach) homeCoach = p;
+            } else {
+                homeStarters.push(p);
+            }
+        });
+
+        const awayStarters = [];
+        rawAwayStarters.forEach(p => {
+            if (isCoachPos(p.position)) {
+                if (!awayCoach) awayCoach = p;
+            } else {
+                awayStarters.push(p);
+            }
+        });
 
         const homeGroup = groupPlayersByLine(homeStarters);
         const awayGroup = groupPlayersByLine(awayStarters);
 
+        const homeFormation = (homeGroup.def.length > 0 && homeGroup.mid.length > 0)
+            ? `${homeGroup.def.length}-${homeGroup.mid.length}-${homeGroup.fwd.length}`
+            : (lineups.home.formation || '4-4-2');
+
+        const awayFormation = (awayGroup.def.length > 0 && awayGroup.mid.length > 0)
+            ? `${awayGroup.def.length}-${awayGroup.mid.length}-${awayGroup.fwd.length}`
+            : (lineups.away.formation || '4-4-2');
+
         const renderPitchRow = (players, sideClass) => {
             if (!players || players.length === 0) return '';
-            const nodesHtml = players.map(p => `
-                <div class="pitch-player-node ${sideClass}" data-player-id="${p.id}" data-player-name="${p.name}" onclick="window.poltronaOpenPlayerModal(${p.id}, '${p.name.replace(/'/g, "\\'")}')">
+            const sortedPlayers = sortPitchRow(players, sideClass);
+            const nodesHtml = sortedPlayers.map(p => `
+                <div class="pitch-player-node ${sideClass}" data-player-id="${p.id}" data-player-name="${encodeURIComponent(p.name || '')}" onclick="window.poltronaOpenPlayerModal(this)">
                     <div class="pitch-player-circle">
                         <span>${p.number ? p.number : (p.position === 'G' ? '1' : '')}</span>
                         ${p.level > 0 ? `<span class="pitch-player-level">${p.level}</span>` : ''}
                     </div>
-                    <span class="pitch-player-name" title="${p.name}">${p.name}</span>
-                    <span class="pitch-player-pos">${p.position}</span>
+                    <span class="pitch-player-name" title="${p.name || ''}">${p.name || ''}</span>
+                    <span class="pitch-player-pos">${p.position || ''}</span>
                     ${p.rating !== null && p.rating !== undefined ? `<span class="pitch-player-rating ${getRatingClass(p.rating)}">${Number(p.rating).toFixed(1)}</span>` : ''}
                 </div>
             `).join('');
@@ -1250,7 +1324,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="pitch-team-half">
                     <div class="pitch-team-header">
                         <span class="clickable-entity" onclick="window.poltronaOpenClubModal(${homeId || 0}, '${homeTeam.replace(/'/g, "\\'")}', ${gArg})">${homeTeam}</span>
-                        <span class="pitch-formation-badge">${lineups.home.formation || '4-4-2'}</span>
+                        <span class="pitch-formation-badge">${homeFormation}</span>
                     </div>
                     ${renderPitchRow(homeGroup.gk, 'home')}
                     ${renderPitchRow(homeGroup.def, 'home')}
@@ -1266,7 +1340,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${renderPitchRow(awayGroup.gk, 'away')}
                     <div class="pitch-team-header" style="margin-top: 4px;">
                         <span class="clickable-entity" onclick="window.poltronaOpenClubModal(${awayId || 0}, '${awayTeam.replace(/'/g, "\\'")}', ${gArg})">${awayTeam}</span>
-                        <span class="pitch-formation-badge">${lineups.away.formation || '4-4-2'}</span>
+                        <span class="pitch-formation-badge">${awayFormation}</span>
                     </div>
                 </div>
             </div>
@@ -1274,10 +1348,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Starters Roster (Titulares)
         const renderPlayerRow = (p) => `
-            <div class="lineup-player-row" onclick="window.poltronaOpenPlayerModal(${p.id}, '${p.name.replace(/'/g, "\\'")}')">
+            <div class="lineup-player-row" data-player-id="${p.id}" data-player-name="${encodeURIComponent(p.name || '')}" onclick="window.poltronaOpenPlayerModal(this)">
                 <span class="lineup-p-num">${p.number || '-'}</span>
-                <span class="lineup-p-pos">${p.position}</span>
-                <span class="lineup-p-name">${p.name}</span>
+                <span class="lineup-p-pos">${p.position || ''}</span>
+                <span class="lineup-p-name">${p.name || ''}</span>
                 ${p.rating !== null && p.rating !== undefined ? `<span class="lineup-p-rating ${getRatingClass(p.rating)}">${Number(p.rating).toFixed(1)}</span>` : ''}
                 ${p.level > 0 ? `<span class="lineup-p-lvl">${p.level}</span>` : ''}
             </div>
@@ -1324,6 +1398,40 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
+        // Coaching Staff (Comissão Técnica / Treinador)
+        if (homeCoach || awayCoach) {
+            html += `
+                <div class="lineup-section-card">
+                    <div class="lineup-section-title">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">sports</span>
+                        Comissão Técnica
+                    </div>
+                    <div class="lineup-grid-cols">
+                        <div class="lineup-team-col">
+                            <div class="lineup-team-title">${homeTeam}</div>
+                            ${homeCoach ? `
+                                <div class="lineup-player-row" style="cursor: default;">
+                                    <span class="lineup-p-num">-</span>
+                                    <span class="lineup-p-pos">TEC</span>
+                                    <span class="lineup-p-name">${homeCoach.name}</span>
+                                </div>
+                            ` : '<span style="font-size: 11px; color: var(--text-secondary);">-</span>'}
+                        </div>
+                        <div class="lineup-team-col">
+                            <div class="lineup-team-title">${awayTeam}</div>
+                            ${awayCoach ? `
+                                <div class="lineup-player-row" style="cursor: default;">
+                                    <span class="lineup-p-num">-</span>
+                                    <span class="lineup-p-pos">TEC</span>
+                                    <span class="lineup-p-name">${awayCoach.name}</span>
+                                </div>
+                            ` : '<span style="font-size: 11px; color: var(--text-secondary);">-</span>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         mLineupsContent.innerHTML = html;
     }
 
@@ -1331,8 +1439,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // 6. PLAYER PROFILE MODAL (FASE 2)
     // =========================================================================
 
-    window.poltronaOpenPlayerModal = function(playerId, playerName) {
-        openPlayerModal(playerId, playerName);
+    window.poltronaOpenPlayerModal = function(arg1, arg2) {
+        if (arg1 && typeof arg1 === 'object' && arg1.nodeType === 1) {
+            const pId = parseInt(arg1.getAttribute('data-player-id') || '0', 10);
+            const rawName = arg1.getAttribute('data-player-name') || '';
+            let pName = rawName;
+            try { pName = decodeURIComponent(rawName); } catch (e) {}
+            openPlayerModal(pId, pName);
+            return;
+        }
+        openPlayerModal(arg1, arg2);
     };
 
     function openPlayerModal(playerId, playerName) {
@@ -1539,6 +1655,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? `<span class="match-rating-badge ${getRatingClass(rm.rating)}">${Number(rm.rating).toFixed(1)}</span>`
                     : '';
 
+                let statusText = 'Reserva';
+                if (rm.starter) {
+                    statusText = `Titular (${rm.position || 'LIN'})`;
+                } else if (rm.sub_in) {
+                    statusText = `Entrou aos ${rm.sub_in}'`;
+                } else if (rm.has_played) {
+                    statusText = 'Substituto';
+                } else {
+                    statusText = 'Reserva';
+                }
+
                 return `
                     <div class="bracket-match" style="padding: 8px 10px; margin-bottom: 6px;" onclick="openMatchDetails(${rm.match_id})">
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
@@ -1555,7 +1682,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-secondary); margin-top: 4px;">
                             <span>${rm.competition} • ${rm.date}</span>
-                            <span>${rm.starter ? 'Titular (' + rm.position + ')' : 'Reserva'}</span>
+                            <span>${statusText}</span>
                         </div>
                     </div>
                 `;
@@ -1715,7 +1842,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const playerGrid = players.map(p => {
                     const pPhoto = p.photo ? p.photo : DEFAULT_LOGO;
                     return `
-                        <div class="squad-player-card" onclick="window.poltronaOpenPlayerModal(${p.id}, '${p.name.replace(/'/g, "\\'")}')">
+                        <div class="squad-player-card" data-player-id="${p.id}" data-player-name="${encodeURIComponent(p.name || '')}" onclick="window.poltronaOpenPlayerModal(this)">
                             <img class="squad-p-avatar" src="${pPhoto}" alt="" onerror="handleLogoError(this)">
                             <div class="squad-p-info">
                                 <span class="squad-p-name">${p.jersey_number ? '#' + p.jersey_number + ' ' : ''}${p.name}</span>
@@ -2126,7 +2253,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const flagHtml = p.flag ? `<img src="${p.flag}" style="width: 14px; height: 10px; border-radius: 2px; object-fit: cover; vertical-align: middle;" alt="">` : '';
 
             html += `
-                <div class="comp-card" style="cursor: pointer;" onclick="window.poltronaOpenPlayerModal(${p.id}, '${p.name.replace(/'/g, "\\'")}')">
+                <div class="comp-card" style="cursor: pointer;" data-player-id="${p.id}" data-player-name="${encodeURIComponent(p.name || '')}" onclick="window.poltronaOpenPlayerModal(this)">
                     <div class="comp-card-top">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <div class="player-hero-photo-box" style="width: 44px; height: 44px; min-width: 44px; border-width: 2px;">
@@ -2189,7 +2316,19 @@ document.addEventListener('DOMContentLoaded', () => {
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/poltronascore/sw.js')
+            .then((reg) => {
+                // Checa periodicamente/imediatamente por nova versão do Service Worker
+                if (reg) reg.update();
+            })
             .catch(() => {});
+    });
+
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+        }
     });
 }
 

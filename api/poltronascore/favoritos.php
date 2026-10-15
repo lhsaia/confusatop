@@ -138,8 +138,8 @@ try {
             $sqlJC = "
                 SELECT 
                     j.id, j.competicao_id, j.data, j.status, j.fase, j.grupo,
-                    j.timeA_id, j.timeA_nome, j.timeA_gols, j.timeA_penaltis,
-                    j.timeB_id, j.timeB_nome, j.timeB_gols, j.timeB_penaltis,
+                    j.timeA_id, COALESCE(cA.Nome, j.timeA_nome) as timeA_nome, j.timeA_gols, j.timeA_penaltis,
+                    j.timeB_id, COALESCE(cB.Nome, j.timeB_nome) as timeB_nome, j.timeB_gols, j.timeB_penaltis,
                     COALESCE(NULLIF(j.estadio_nome, ''), eDirect.Nome, eHome.Nome, '') as estadio,
                     COALESCE(cl.nome, li.nome, cc.nome, 'Competição') as competicao_nome,
                     cA.Escudo as timeA_escudo,
@@ -299,9 +299,9 @@ try {
         $stmtP->execute($playersIds);
 
         $posicoesMap = [
-            0 => 'G', 1 => 'LD', 2 => 'Z', 3 => 'LE', 4 => 'V',
-            5 => 'MD', 6 => 'MC', 7 => 'ME', 8 => 'MA', 9 => 'PD',
-            10 => 'CA', 11 => 'PE', 12 => 'SA', 13 => 'AD', 14 => 'AE'
+            0 => 'G', 1 => 'LD', 2 => 'LE', 3 => 'Z', 4 => 'AD',
+            5 => 'AE', 6 => 'V', 7 => 'MD', 8 => 'ME', 9 => 'MC',
+            10 => 'PD', 11 => 'PE', 12 => 'MA', 13 => 'Am', 14 => 'Aa'
         ];
 
         while ($p = $stmtP->fetch(PDO::FETCH_ASSOC)) {

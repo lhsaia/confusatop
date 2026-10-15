@@ -30,6 +30,7 @@
             <a href="/poltronascore/" class="logo-link">
                 <img src="/poltronascore/icons/icon-192.png" alt="Poltrona Score Logo" class="logo-img">
                 <span class="logo-text">Poltrona Score</span>
+                <span class="app-version-badge" id="app-version-badge">v4.0</span>
             </a>
             
             <div class="status-indicator">
@@ -301,7 +302,7 @@
 
     <!-- Sticky footer -->
     <footer id="bottom-bar">
-        <div style="font-weight: 600; margin-bottom: 3px;">🛋️ Poltrona Score © 2026</div>
+        <div style="font-weight: 600; margin-bottom: 3px;">🛋️ Poltrona Score © 2026 · <span id="app-version-footer">v4.0</span></div>
         <div>O placar da comunidade direto do seu sofá</div>
     </footer>
 

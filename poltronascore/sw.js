@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'poltrona-score-v3';
+const CACHE_NAME = 'poltrona-score-v4';
 const ASSETS = [
   '/poltronascore/',
   '/poltronascore/index.php',
@@ -37,28 +37,37 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   
-  // If it is an API request, use Network-First strategy
-  if (url.pathname.includes('/api/poltronascore/')) {
+  // Network-First para páginas HTML, scripts/estilos da aplicação e requisições da API
+  const isCodeOrApi = e.request.mode === 'navigate' ||
+                      url.pathname.includes('/api/poltronascore/') ||
+                      url.pathname.endsWith('.js') ||
+                      url.pathname.endsWith('.css') ||
+                      url.pathname.endsWith('.php') ||
+                      url.pathname === '/poltronascore/';
+
+  if (isCodeOrApi) {
     e.respondWith(
       fetch(e.request)
         .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(e.request, clone);
-          });
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(e.request, clone);
+            });
+          }
           return response;
         })
         .catch(() => {
-          return caches.match(e.request);
+          return caches.match(e.request, { ignoreSearch: true });
         })
     );
   } else {
-    // For static assets, use Stale-While-Revalidate
+    // Para imagens e fontes estáticas, usa cache com revalidação
     e.respondWith(
       caches.match(e.request).then((cachedResponse) => {
         if (cachedResponse) {
           fetch(e.request).then((networkResponse) => {
-            if (networkResponse.status === 200) {
+            if (networkResponse && networkResponse.status === 200) {
               caches.open(CACHE_NAME).then((cache) => cache.put(e.request, networkResponse));
             }
           }).catch(() => {});

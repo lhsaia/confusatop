@@ -26,19 +26,19 @@ try {
     $posicoesMap = [
         0 => ['sigla' => 'G', 'nome' => 'Goleiro', 'cat' => 'goleiros'],
         1 => ['sigla' => 'LD', 'nome' => 'Lateral Direito', 'cat' => 'defensores'],
-        2 => ['sigla' => 'Z', 'nome' => 'Zagueiro', 'cat' => 'defensores'],
-        3 => ['sigla' => 'LE', 'nome' => 'Lateral Esquerdo', 'cat' => 'defensores'],
-        4 => ['sigla' => 'V', 'nome' => 'Volante', 'cat' => 'meio_campistas'],
-        5 => ['sigla' => 'MD', 'nome' => 'Meia Direita', 'cat' => 'meio_campistas'],
-        6 => ['sigla' => 'MC', 'nome' => 'Meio-Campo', 'cat' => 'meio_campistas'],
-        7 => ['sigla' => 'ME', 'nome' => 'Meia Esquerda', 'cat' => 'meio_campistas'],
-        8 => ['sigla' => 'MA', 'nome' => 'Meia Atacante', 'cat' => 'meio_campistas'],
-        9 => ['sigla' => 'PD', 'nome' => 'Ponta Direita', 'cat' => 'atacantes'],
-        10 => ['sigla' => 'CA', 'nome' => 'Centroavante', 'cat' => 'atacantes'],
+        2 => ['sigla' => 'LE', 'nome' => 'Lateral Esquerdo', 'cat' => 'defensores'],
+        3 => ['sigla' => 'Z', 'nome' => 'Zagueiro', 'cat' => 'defensores'],
+        4 => ['sigla' => 'AD', 'nome' => 'Ala Direito', 'cat' => 'defensores'],
+        5 => ['sigla' => 'AE', 'nome' => 'Ala Esquerdo', 'cat' => 'defensores'],
+        6 => ['sigla' => 'V', 'nome' => 'Volante', 'cat' => 'meio_campistas'],
+        7 => ['sigla' => 'MD', 'nome' => 'Meia Direita', 'cat' => 'meio_campistas'],
+        8 => ['sigla' => 'ME', 'nome' => 'Meia Esquerda', 'cat' => 'meio_campistas'],
+        9 => ['sigla' => 'MC', 'nome' => 'Meio-Campo', 'cat' => 'meio_campistas'],
+        10 => ['sigla' => 'PD', 'nome' => 'Ponta Direita', 'cat' => 'atacantes'],
         11 => ['sigla' => 'PE', 'nome' => 'Ponta Esquerda', 'cat' => 'atacantes'],
-        12 => ['sigla' => 'SA', 'nome' => 'Segundo Atacante', 'cat' => 'atacantes'],
-        13 => ['sigla' => 'AD', 'nome' => 'Ala Direito', 'cat' => 'defensores'],
-        14 => ['sigla' => 'AE', 'nome' => 'Ala Esquerdo', 'cat' => 'defensores'],
+        12 => ['sigla' => 'MA', 'nome' => 'Meia Atacante', 'cat' => 'meio_campistas'],
+        13 => ['sigla' => 'Am', 'nome' => 'Atacante de Movimentação', 'cat' => 'atacantes'],
+        14 => ['sigla' => 'Aa', 'nome' => 'Atacante de Área', 'cat' => 'atacantes'],
     ];
 
     $club = null;
@@ -399,8 +399,8 @@ try {
     // 4. Calendário de Jogos (Anteriores e Próximos)
     $stmtMatches = $conn->prepare("
         SELECT 
-            j.id, j.data, j.timeA_id, j.timeA_nome, j.timeA_gols,
-            j.timeB_id, j.timeB_nome, j.timeB_gols, j.competicao_id,
+            j.id, j.data, j.timeA_id, COALESCE(cA.Nome, j.timeA_nome) as timeA_nome, j.timeA_gols,
+            j.timeB_id, COALESCE(cB.Nome, j.timeB_nome) as timeB_nome, j.timeB_gols, j.competicao_id,
             j.status,
             COALESCE(NULLIF(j.estadio_nome, ''), eDirect.Nome, eHome.Nome, '') as estadio,
             COALESCE(cl.nome, li.nome, cc.nome, 'Competição') as competicao_nome,
@@ -425,9 +425,31 @@ try {
 
     foreach ($allMatches as $m) {
         $isHome = ((int)$m['timeA_id'] === $clubId);
-        $opponent = $isHome ? $m['timeB_nome'] : $m['timeA_nome'];
+        $opponent = $isHome ? ($m['timeB_nome'] ?? '') : ($m['timeA_nome'] ?? '');
         $opponentId = $isHome ? (int)$m['timeB_id'] : (int)$m['timeA_id'];
         $opponentLogoRaw = $isHome ? $m['escudoB'] : $m['escudoA'];
+
+        if (empty($opponent) && !empty($m['competicao_id'])) {
+            $compId = (int)$m['competicao_id'];
+            $db3File = (isset($_SERVER['DOCUMENT_ROOT']) && $_SERVER['DOCUMENT_ROOT'] !== '') 
+                ? $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $compId . "-database.db3"
+                : dirname(__DIR__, 2) . "/competicoes/databases/" . $compId . "-database.db3";
+            if (file_exists($db3File)) {
+                try {
+                    $sdb = new PDO("sqlite:" . $db3File);
+                    $st = $sdb->prepare("SELECT Nome, Escudo FROM clube WHERE ID = ? OR ID = ?");
+                    $st->execute([$opponentId, abs($opponentId)]);
+                    $cRow = $st->fetch(PDO::FETCH_ASSOC);
+                    if ($cRow) {
+                        if (!empty($cRow['Nome'])) $opponent = $cRow['Nome'];
+                        if (empty($opponentLogoRaw) && !empty($cRow['Escudo'])) $opponentLogoRaw = $cRow['Escudo'];
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+        if (empty($opponent)) {
+            $opponent = $opponentId ? 'Time ' . abs($opponentId) : 'Adversário';
+        }
         
         $oppLogo = '';
         if (!empty($opponentLogoRaw) && $opponentLogoRaw !== '0.png') {
