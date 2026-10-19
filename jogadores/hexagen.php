@@ -7,7 +7,9 @@ if(!isset($_POST['criar'])){
     require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 }
 
-
+$is_success = false;
+$error_msg = '';
+$jogador = null;
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
@@ -194,7 +196,7 @@ if($errorCounter >0 ){
 
 } else {
     $is_success = false;
-    $error_msg .= "Usuário não tem acesso para realizar essa ação";
+    $error_msg = "Usuário não tem acesso para realizar essa ação";
 }
 
 if(!isset($_POST['criar'])){
