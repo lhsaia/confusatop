@@ -71,7 +71,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true && !($_SESSION['e
             if($competicao->federacao != 0){
                 $nivelCompeticao = 1;
             } else {
-                $nivelCompeticao = 2;
+                $nivelCompeticao = 1; // CONFUSA inclui todos os arbitros
             }
             
             $stmt = $arbitro_read->read($nivelCompeticao, $competicao->federacao);
@@ -250,7 +250,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
                     <label for='federacao'>Federação</label>
                     <?php
                         echo "<select class='form-control' id='federacao' name='federacao'>";
-                        echo "<option selected value='0'>Sem federação</option>";
+                        echo "<option selected value='0'>CONFUSA (Geral - Todas as Federações)</option>";
                         echo "<option value='1'>FEASCO</option>";
                         echo "<option value='2'>FEMIFUS</option>";
                         echo "<option value='3'>COMPACTA</option>";

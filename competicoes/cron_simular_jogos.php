@@ -529,6 +529,27 @@ foreach ($partidas as $matchInfo) {
         error_log("Erro ao aplicar compatibilidade no SQLite: " . $e->getMessage());
     }
 
+    // Validar se a competição possui árbitros cadastrados no SQLite para evitar falha no motor Hexacolor
+    try {
+        $ldb->exec("CREATE TABLE IF NOT EXISTS `trioarbitragem` (
+            `ID` INTEGER NOT NULL,
+            `Arbitro` TEXT,
+            `Auxiliar1` TEXT,
+            `Auxiliar2` TEXT,
+            `Estilo` INTEGER DEFAULT 3,
+            PRIMARY KEY(`ID`)
+        )");
+        $stmtArbCount = $ldb->query("SELECT COUNT(*) FROM `trioarbitragem`");
+        $totalArb = $stmtArbCount ? (int)$stmtArbCount->fetchColumn() : 0;
+        if ($totalArb === 0) {
+            cron_log("   [ERRO DE ARBITRAGEM] A Partida #{$idPartida} não pôde ser simulada: a Competição #{$idCompeticao} não possui nenhum árbitro cadastrado.");
+            cron_log("   -> O responsável pela competição deve acessar as Opções da Competição e incluir pelo menos um árbitro.");
+            continue;
+        }
+    } catch (\Throwable $e) {
+        error_log("Erro ao validar trioarbitragem no SQLite: " . $e->getMessage());
+    }
+
     // 1. Guardar a escalação original (padrão) na memória para restaurar depois da simulação
     $originalEscalacoes = [];
     try {

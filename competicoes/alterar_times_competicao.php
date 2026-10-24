@@ -185,8 +185,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 					$stmt = $tecnico->exportacao(null, $timePortal);
 
 					while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-						$nomeTecnico = str_replace("'", "''", $row['Nome']);
-						$megaQuery .= "INSERT OR REPLACE INTO tecnico VALUES ('{$row['ID']}', '{$nomeTecnico}', '{$row['Idade']}', '{$row['Nivel']}', '{$row['Mentalidade']}', '{$row['Estilo']}'); ";
+						$nomeTecnico = html_entity_decode((string)($row['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+						$nomeTecnico = str_replace("'", "''", $nomeTecnico);
+						$megaQuery .= "INSERT OR REPLACE INTO tecnico (ID, Nome, Idade, Nivel, Mentalidade, Estilo) VALUES ('{$row['ID']}', '{$nomeTecnico}', '{$row['Idade']}', '{$row['Nivel']}', '{$row['Mentalidade']}', '{$row['Estilo']}'); ";
 					}
 
 					//buscar posicoes dos jogadores e adicionar na query
@@ -194,28 +195,29 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
 					while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
 						$sp = str_pad((string)($row['StringPosicoes'] ?? ''), 15, '0');
-						$megaQuery .= "INSERT OR REPLACE INTO posicaojogador VALUES ('{$row['idJogador']}', '{$sp[0]}', '{$sp[1]}', '{$sp[2]}', '{$sp[3]}', '{$sp[4]}', '{$sp[5]}', '{$sp[6]}', '{$sp[7]}', '{$sp[8]}', '{$sp[9]}', '{$sp[10]}', '{$sp[11]}', '{$sp[12]}', '{$sp[13]}', '{$sp[14]}'); ";
+						$megaQuery .= "INSERT OR REPLACE INTO posicaojogador (Jogador, G, LD, LE, Z, AD, AE, V, MD, ME, MC, PD, PE, MA, Am, Aa) VALUES ('{$row['idJogador']}', '{$sp[0]}', '{$sp[1]}', '{$sp[2]}', '{$sp[3]}', '{$sp[4]}', '{$sp[5]}', '{$sp[6]}', '{$sp[7]}', '{$sp[8]}', '{$sp[9]}', '{$sp[10]}', '{$sp[11]}', '{$sp[12]}', '{$sp[13]}', '{$sp[14]}'); ";
 
-						$nomeJogador = str_replace("'", "''", $row['nomeJogador']);
-						$megaQuery .= "INSERT OR REPLACE INTO jogador VALUES ('{$row['idJogador']}', '{$nomeJogador}', '{$row['Idade']}', '{$row['Nivel']}', '0' , '0', '{$row['Mentalidade']}', '{$row['CobradorFalta']}'); ";
+						$nomeJogador = html_entity_decode((string)($row['nomeJogador'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+						$nomeJogador = str_replace("'", "''", $nomeJogador);
+						$megaQuery .= "INSERT OR REPLACE INTO jogador (ID, Nome, Idade, Nivel, Potencial, CrescBase, Mentalidade, CobradorFalta) VALUES ('{$row['idJogador']}', '{$nomeJogador}', '{$row['Idade']}', '{$row['Nivel']}', '0' , '0', '{$row['Mentalidade']}', '{$row['CobradorFalta']}'); ";
 
 						$testeNacionalidade = ($row['Nacionalidade'] != null ? $row['Nacionalidade'] : '-');
-						$megaQuery .= "INSERT OR REPLACE INTO nacionalidades VALUES ('{$row['idJogador']}', '{$testeNacionalidade}'); ";
+						$megaQuery .= "INSERT OR REPLACE INTO nacionalidades (Jogador, Nacionalidade) VALUES ('{$row['idJogador']}', '{$testeNacionalidade}'); ";
 
 						if($sp[0] == 1){
-							$megaQuery .= "INSERT OR REPLACE INTO atributosgoleiro VALUES ('{$row['idJogador']}', '{$row['Reflexos']}', '{$row['Seguranca']}', '{$row['Saidas']}', '{$row['JogoAereo']}', '{$row['Lancamentos']}', '{$row['DefesaPenaltis']}', '1', '1'); ";
+							$megaQuery .= "INSERT OR REPLACE INTO atributosgoleiro (Goleiro, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Condicao, Moral) VALUES ('{$row['idJogador']}', '{$row['Reflexos']}', '{$row['Seguranca']}', '{$row['Saidas']}', '{$row['JogoAereo']}', '{$row['Lancamentos']}', '{$row['DefesaPenaltis']}', '1', '1'); ";
 
 							$somaZero = abs(($row['Nivel'] * 0.50) - ($row['somaAtributos']));
 							if($somaZero > 0.5){
-								$megaQuery .= "INSERT OR REPLACE INTO jogadorpendente VALUES ('{$row['idJogador']}'); ";
+								$megaQuery .= "INSERT OR REPLACE INTO jogadorpendente (Jogador) VALUES ('{$row['idJogador']}'); ";
 							}
 
 						} else {
-							$megaQuery .= "INSERT OR REPLACE INTO atributosjogador VALUES ('{$row['idJogador']}', '{$row['Marcacao']}', '{$row['Desarme']}', '{$row['VisaoJogo']}', '{$row['Movimentacao']}', '{$row['Cruzamentos']}', '{$row['Cabeceamento']}', '{$row['Tecnica']}', '{$row['ControleBola']}', '{$row['Finalizacao']}', '{$row['FaroGol']}', '{$row['Velocidade']}', '{$row['Forca']}', '1', '1'); ";
+							$megaQuery .= "INSERT OR REPLACE INTO atributosjogador (Jogador, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Condicao, Moral) VALUES ('{$row['idJogador']}', '{$row['Marcacao']}', '{$row['Desarme']}', '{$row['VisaoJogo']}', '{$row['Movimentacao']}', '{$row['Cruzamentos']}', '{$row['Cabeceamento']}', '{$row['Tecnica']}', '{$row['ControleBola']}', '{$row['Finalizacao']}', '{$row['FaroGol']}', '{$row['Velocidade']}', '{$row['Forca']}', '1', '1'); ";
 
 							$somaZero = abs(($row['Nivel'] * 0.65) - ($row['somaAtributos']));
 							if($somaZero > 0.5){
-								$megaQuery .= "INSERT OR REPLACE INTO jogadorpendente VALUES ('{$row['idJogador']}'); ";
+								$megaQuery .= "INSERT OR REPLACE INTO jogadorpendente (Jogador) VALUES ('{$row['idJogador']}'); ";
 							}
 						}
 
@@ -225,8 +227,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 					$stmt = $estadio->exportacao(null, $timePortal);
 
 					while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-						$nomeEstadio = str_replace("'", "''", $row['Nome']);
-						$megaQuery .= "INSERT OR REPLACE INTO estadio VALUES ('{$row['ID']}', '{$nomeEstadio}', '{$row['Capacidade']}', '{$row['Clima']}', '{$row['Altitude']}', '{$row['Caldeirao']}'); ";
+						$nomeEstadio = html_entity_decode((string)($row['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+						$nomeEstadio = str_replace("'", "''", $nomeEstadio);
+						$megaQuery .= "INSERT OR REPLACE INTO estadio (ID, Nome, Capacidade, Clima, Altitude, Caldeirao) VALUES ('{$row['ID']}', '{$nomeEstadio}', '{$row['Capacidade']}', '{$row['Clima']}', '{$row['Altitude']}', '{$row['Caldeirao']}'); ";
 
 					}
 
@@ -234,8 +237,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 					$stmt = $novoClima->exportacao(null, $timePortal);
 
 					while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-						$nomeClima = str_replace("'", "''", $row['nomeClima']);
-						$megaQuery .= "INSERT OR REPLACE INTO clima VALUES ('{$row['idClima']}', '{$nomeClima}', '{$row['TempVerao']}', '{$row['EstiloVerao']}', '{$row['TempOutono']}', '{$row['EstiloOutono']}', '{$row['TempInverno']}', '{$row['EstiloInverno']}', '{$row['TempPrimavera']}', '{$row['EstiloPrimavera']}', '{$row['Hemisferio']}'); ";
+						$nomeClima = html_entity_decode((string)($row['nomeClima'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+						$nomeClima = str_replace("'", "''", $nomeClima);
+						$megaQuery .= "INSERT OR REPLACE INTO clima (ID, Nome, TempVerao, EstiloVerao, TempOutono, EstiloOutono, TempInverno, EstiloInverno, TempPrimavera, EstiloPrimavera, Hemisferio) VALUES ('{$row['idClima']}', '{$nomeClima}', '{$row['TempVerao']}', '{$row['EstiloVerao']}', '{$row['TempOutono']}', '{$row['EstiloOutono']}', '{$row['TempInverno']}', '{$row['EstiloInverno']}', '{$row['TempPrimavera']}', '{$row['EstiloPrimavera']}', '{$row['Hemisferio']}'); ";
 
 					}
 
@@ -249,10 +253,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 						$uni1Tratado = "../../images/uniformes/" . $row['Uniforme1'];
 						$uni2Tratado = "../../images/uniformes/" . $row['Uniforme2'];
 
-						$nomeExportado = str_replace("'", "''", $row['Nome']);
-						$nomeExportado = html_entity_decode($nomeExportado);
+						$nomeExportado = html_entity_decode((string)($row['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+						$nomeExportado = str_replace("'", "''", $nomeExportado);
 
-						$megaQuery .= "INSERT OR REPLACE INTO clube VALUES ('{$row['ID']}', '{$nomeExportado}', '{$row['TresLetras']}', '{$row['Estadio']}', '{$escudoTratado}', '{$row['Uni1Cor1']}', '{$row['Uni1Cor2']}', '{$row['Uni1Cor3']}', '{$uni1Tratado}', '{$row['Uni2Cor1']}', '{$row['Uni2Cor2']}', '{$row['Uni2Cor3']}', '{$uni2Tratado}', '{$row['MaxTorcedores']}', '{$row['Fidelidade']}'); ";
+						$megaQuery .= "INSERT OR REPLACE INTO clube (ID, Nome, TresLetras, Estadio, Escudo, Uni1Cor1, Uni1Cor2, Uni1Cor3, Uniforme1, Uni2Cor1, Uni2Cor2, Uni2Cor3, Uniforme2, MaxTorcedores, Fidelidade) VALUES ('{$row['ID']}', '{$nomeExportado}', '{$row['TresLetras']}', '{$row['Estadio']}', '{$escudoTratado}', '{$row['Uni1Cor1']}', '{$row['Uni1Cor2']}', '{$row['Uni1Cor3']}', '{$uni1Tratado}', '{$row['Uni2Cor1']}', '{$row['Uni2Cor2']}', '{$row['Uni2Cor3']}', '{$uni2Tratado}', '{$row['MaxTorcedores']}', '{$row['Fidelidade']}'); ";
 
 						$elenco = array();
 						$elenco[] = $row['ID'];
@@ -271,7 +275,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 						}
 						$elenco[] = $idTecnico;
 
-						$megaQuery .= "INSERT OR REPLACE INTO elenco VALUES ('{$elenco[0]}', '{$elenco[1]}', '{$elenco[2]}', '{$elenco[3]}', '{$elenco[4]}', '{$elenco[5]}', '{$elenco[6]}', '{$elenco[7]}', '{$elenco[8]}', '{$elenco[9]}', '{$elenco[10]}', '{$elenco[11]}', '{$elenco[12]}', '{$elenco[13]}', '{$elenco[14]}', '{$elenco[15]}', '{$elenco[16]}', '{$elenco[17]}', '{$elenco[18]}', '{$elenco[19]}', '{$elenco[20]}', '{$elenco[21]}', '{$elenco[22]}', '{$elenco[23]}', '{$elenco[24]}'); ";
+						$megaQuery .= "INSERT OR REPLACE INTO elenco (Clube, Jogador1, Jogador2, Jogador3, Jogador4, Jogador5, Jogador6, Jogador7, Jogador8, Jogador9, Jogador10, Jogador11, Jogador12, Jogador13, Jogador14, Jogador15, Jogador16, Jogador17, Jogador18, Jogador19, Jogador20, Jogador21, Jogador22, Jogador23, Tecnico) VALUES ('{$elenco[0]}', '{$elenco[1]}', '{$elenco[2]}', '{$elenco[3]}', '{$elenco[4]}', '{$elenco[5]}', '{$elenco[6]}', '{$elenco[7]}', '{$elenco[8]}', '{$elenco[9]}', '{$elenco[10]}', '{$elenco[11]}', '{$elenco[12]}', '{$elenco[13]}', '{$elenco[14]}', '{$elenco[15]}', '{$elenco[16]}', '{$elenco[17]}', '{$elenco[18]}', '{$elenco[19]}', '{$elenco[20]}', '{$elenco[21]}', '{$elenco[22]}', '{$elenco[23]}', '{$elenco[24]}'); ";
 
 						$escalacao = array();
 						$escalacao[] = $row['ID'];
@@ -304,7 +308,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 							$escalacao[] = isset($batedoresPenalti[$i]) ? $batedoresPenalti[$i] : '0';
 						}
 
-						$megaQuery .= "INSERT OR REPLACE INTO escalacao VALUES ('{$escalacao[0]}', '{$escalacao[1]}', '{$escalacao[2]}', '{$escalacao[3]}', '{$escalacao[4]}', '{$escalacao[5]}', '{$escalacao[6]}', '{$escalacao[7]}', '{$escalacao[8]}', '{$escalacao[9]}', '{$escalacao[10]}', '{$escalacao[11]}', '{$escalacao[12]}', '{$escalacao[13]}', '{$escalacao[14]}', '{$escalacao[15]}', '{$escalacao[16]}', '{$escalacao[17]}', '{$escalacao[18]}', '{$escalacao[19]}', '{$escalacao[20]}', '{$escalacao[21]}', '{$escalacao[22]}', '{$escalacao[23]}', '{$escalacao[24]}', '{$escalacao[25]}', '{$escalacao[26]}'); ";
+						$megaQuery .= "INSERT OR REPLACE INTO escalacao (Clube, Pos1, Jogador1, Pos2, Jogador2, Pos3, Jogador3, Pos4, Jogador4, Pos5, Jogador5, Pos6, Jogador6, Pos7, Jogador7, Pos8, Jogador8, Pos9, Jogador9, Pos10, Jogador10, Pos11, Jogador11, Capitao, Penalti1, Penalti2, Penalti3) VALUES ('{$escalacao[0]}', '{$escalacao[1]}', '{$escalacao[2]}', '{$escalacao[3]}', '{$escalacao[4]}', '{$escalacao[5]}', '{$escalacao[6]}', '{$escalacao[7]}', '{$escalacao[8]}', '{$escalacao[9]}', '{$escalacao[10]}', '{$escalacao[11]}', '{$escalacao[12]}', '{$escalacao[13]}', '{$escalacao[14]}', '{$escalacao[15]}', '{$escalacao[16]}', '{$escalacao[17]}', '{$escalacao[18]}', '{$escalacao[19]}', '{$escalacao[20]}', '{$escalacao[21]}', '{$escalacao[22]}', '{$escalacao[23]}', '{$escalacao[24]}', '{$escalacao[25]}', '{$escalacao[26]}'); ";
 
 					}
 					//testes
@@ -315,8 +319,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 				try {
 					$lite_database->directRun($megaQuery);
 					file_put_contents($logFile, "SQLITE: Sucesso na exportação\n", FILE_APPEND);
-				} catch (Exception $e) {
+				} catch (\Throwable $e) {
 					file_put_contents($logFile, "SQLITE ERRO: " . $e->getMessage() . "\n", FILE_APPEND);
+					die(json_encode([
+						'success' => false,
+						'error' => "Erro ao gravar dados no banco SQLite da competição: " . $e->getMessage(),
+						'errors' => "Erro ao gravar dados no banco SQLite da competição: " . $e->getMessage()
+					]));
 				}
 
 			// fim do codigo para copiar time para o banco de dados

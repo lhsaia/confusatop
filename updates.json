@@ -9,6 +9,27 @@
   },
     "days": [
     {
+      "id": "day_24_10_2026",
+      "date": "24/10/2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Inclusão Geral de Árbitros da CONFUSA em Competições",
+          "desc": "Adicionada a opção CONFUSA no seletor de federações das opções da competição e na criação de competições, permitindo incluir em lote todos os trios de arbitragem da confederação de uma só vez no banco SQLite do torneio, com sincronização dinâmica no seletor visual e inserção em transação única otimizada."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Validação Obrigatória e Sinalização de Árbitros na Simulação Hexacolor",
+          "desc": "O simulador manual e o cron de partidas agora sinalizam explicitamente a ausência de árbitros cadastrados na competição, impedindo o erro fatal ArrayIndexOutOfBoundsException no motor Java. A interface de opções da competição agora exibe alertas visuais destacados quando nenhum árbitro está cadastrado e exige a seleção de ao menos um trio de arbitragem antes de salvar as configurações."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Sincronização de Times com Tabelas Expandidas no SQLite da Competição",
+          "desc": "Corrigida a inserção de jogadores e entidades no SQLite da competição que falhava quando as colunas de suspensão/lesão já haviam sido criadas por simulações anteriores, devido à falta de especificação explícita das colunas no INSERT. O tratamento de erros de gravação no SQLite também foi corrigido para não mascarar falhas com falsos sucessos."
+        }
+      ]
+    },
+    {
       "id": "day_23_10_2026",
       "date": "23/10/2026",
       "items": [

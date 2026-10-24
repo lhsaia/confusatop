@@ -215,6 +215,28 @@
 	} catch (Exception $e) {
 		error_log("Erro ao aplicar compatibilidade no SQLite: " . $e->getMessage());
 	}
+
+	// Validar se a competição possui árbitros cadastrados no SQLite para evitar falha no motor Hexacolor
+	try {
+		$ldb->exec("CREATE TABLE IF NOT EXISTS `trioarbitragem` (
+			`ID` INTEGER NOT NULL,
+			`Arbitro` TEXT,
+			`Auxiliar1` TEXT,
+			`Auxiliar2` TEXT,
+			`Estilo` INTEGER DEFAULT 3,
+			PRIMARY KEY(`ID`)
+		)");
+		$stmtArbCount = $ldb->query("SELECT COUNT(*) FROM `trioarbitragem`");
+		$totalArb = $stmtArbCount ? (int)$stmtArbCount->fetchColumn() : 0;
+		if ($totalArb === 0) {
+			die(json_encode([
+				'success' => false,
+				'error' => 'A competição não possui nenhum árbitro cadastrado. O responsável pela competição deve acessar as Opções da Competição e selecionar ao menos um árbitro antes de simular.'
+			]));
+		}
+	} catch (\Throwable $e) {
+		error_log("Erro ao validar trioarbitragem no SQLite: " . $e->getMessage());
+	}
 	
 	$competitionInfo = $competicao->readInfo($idCompeticao);
 	

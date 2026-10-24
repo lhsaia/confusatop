@@ -29,7 +29,7 @@ $logo_competicao = $info['logo'];
 $options = $competicao->getOptions($idCompeticao);
 
 // Obter dados adicionais do MariaDB
-$stmtTodosArb = $db->prepare("SELECT id, nomeArbitro FROM arbitros ORDER BY nomeArbitro");
+$stmtTodosArb = $db->prepare("SELECT a.id, a.nomeArbitro, a.pais, p.federacao FROM arbitros a LEFT JOIN paises p ON a.pais = p.id ORDER BY a.nomeArbitro");
 $stmtTodosArb->execute();
 $todosArbitros = $stmtTodosArb->fetchAll(PDO::FETCH_ASSOC);
 
@@ -186,6 +186,15 @@ require_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
     <div id='errorbox'></div>
     <div class="propostas-card">
         <h2 class="propostas-title"><?php echo $page_title; ?></h2>
+<?php if (empty($selectedArbitros)): ?>
+        <div class="alert alert-warning" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; color: #92400e; display: flex; align-items: center; gap: 12px;">
+            <span class="material-symbols-outlined" style="font-size: 1.8rem; color: #d97706; flex-shrink: 0;">warning</span>
+            <div>
+                <strong style="display: block; font-size: 0.95rem; margin-bottom: 2px;">Nenhum árbitro selecionado para a competição!</strong>
+                <span>É obrigatório cadastrar pelo menos um trio de arbitragem para que as partidas possam ser simuladas pelo motor Hexacolor. Role até a seção <strong>Arbitragem da Competição</strong> abaixo para selecionar os árbitros.</span>
+            </div>
+        </div>
+<?php endif; ?>
         <div id='inscricao'>
 	<!-- Configurações Gerais -->
 	<div class="opcoes-secao">
@@ -568,11 +577,19 @@ require_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 			<span class="material-symbols-outlined">sports</span>
 			Arbitragem da Competição
 		</h3>
+<?php if (empty($selectedArbitros)): ?>
+		<div class="alert alert-warning" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 8px; padding: 12px 16px; margin: 12px 0 16px 0; color: #92400e; display: flex; align-items: center; gap: 10px;">
+			<span class="material-symbols-outlined" style="font-size: 1.5rem; color: #d97706; flex-shrink: 0;">error</span>
+			<div>
+				<strong>Atenção:</strong> Esta competição não possui nenhum árbitro vinculado. Selecione árbitros específicos ou inclua por País/Federação para que as partidas possam ser simuladas pelo motor Hexacolor.
+			</div>
+		</div>
+<?php endif; ?>
 		
 		<label for='select_arbitros'>Selecionar Árbitros Específicos</label>
 		<select name='select_arbitros[]' id='select_arbitros' class='select2-multiple' multiple='multiple' style='width: 92%;'>
 			<?php foreach($todosArbitros as $arb): ?>
-				<option value='<?php echo $arb['id']; ?>' <?php echo in_array($arb['id'], $selectedArbitros) ? 'selected' : ''; ?>>
+				<option value='<?php echo $arb['id']; ?>' data-pais='<?php echo $arb['pais'] ?? 0; ?>' data-fed='<?php echo $arb['federacao'] ?? 0; ?>' <?php echo in_array($arb['id'], $selectedArbitros) ? 'selected' : ''; ?>>
 					<?php echo htmlspecialchars($arb['nomeArbitro']); ?>
 				</option>
 			<?php endforeach; ?>
@@ -589,6 +606,7 @@ require_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 		<label for='select_arbitros_fed' style='margin-top: 15px;'>Ou Adicionar todos de uma Federação</label>
 		<select name='select_arbitros_fed' id='select_arbitros_fed' style='width: 92%;'>
 			<option value='0'>Nenhuma federação selecionada</option>
+			<option value='CONFUSA'>CONFUSA (Todos)</option>
 			<?php foreach($todasFederacoes as $fed): ?>
 				<option value='<?php echo $fed['id']; ?>'><?php echo htmlspecialchars($fed['nome']); ?></option>
 			<?php endforeach; ?>
@@ -922,6 +940,26 @@ $(document).ready(function($){
 		placeholder: "Selecione..."
 	});
 
+	// Ações dinâmicas para adicionar árbitros ao Select2 por Federação ou País
+	$("#select_arbitros_fed").on("change", function(){
+		let val = $(this).val();
+		if(val === 'CONFUSA'){
+			$("#select_arbitros > option").prop("selected", true);
+			$("#select_arbitros").trigger("change");
+		} else if(val !== '0' && val !== ''){
+			$("#select_arbitros > option[data-fed='" + val + "']").prop("selected", true);
+			$("#select_arbitros").trigger("change");
+		}
+	});
+
+	$("#select_arbitros_pais").on("change", function(){
+		let val = $(this).val();
+		if(val !== '0' && val !== ''){
+			$("#select_arbitros > option[data-pais='" + val + "']").prop("selected", true);
+			$("#select_arbitros").trigger("change");
+		}
+	});
+
 	// Toggle da seção de alterações de elenco
 	$("#input_permitiralteracoes").on("change", function(){
 		if($(this).is(":checked")){
@@ -1137,6 +1175,15 @@ $(document).ready(function($){
 		let estadios_times = $("#input_estadiostimes").prop("checked") * 1;
 		let arbitros_pais = $("#select_arbitros_pais").val();
 		let arbitros_federacao = $("#select_arbitros_fed").val();
+		let selectedArbsCheck = $("#select_arbitros").val() || [];
+		if (selectedArbsCheck.length === 0 && (!arbitros_pais || arbitros_pais == "0") && (!arbitros_federacao || arbitros_federacao == "0")) {
+			alert("Atenção: É obrigatório incluir pelo menos um árbitro na competição (selecione árbitros específicos ou inclua por País ou Federação). Sem árbitros cadastrados, as partidas não podem ser simuladas.");
+			$('html, body').animate({
+				scrollTop: $("#select_arbitros").offset().top - 120
+			}, 300);
+			$("#select_arbitros").select2('open');
+			return false;
+		}
 		
 		let desempate_grupos = [
 			$("#desempate_grupo_1").val(),
@@ -1244,6 +1291,10 @@ $(document).ready(function($){
 			data: formData,
 			dataType: 'json',
 		}).done(function(data) {
+			if (data && (data.success === false || data.success === 'false')) {
+				alert('Não foi possível salvar as opções: ' + (data.error || 'Erro desconhecido.'));
+				return;
+			}
 			window.location.href = 'competitionstatus.php?id=' + idCompeticao;
 		}).fail(function(data) {
 			$('#errorbox').html(data.error_msg);
