@@ -83,21 +83,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 			$sWithout = preg_replace('/^Slot\s+/i', '', $sRaw);
 			$assignedSlotTeams[$sWithout] = $cIdTeam;
 			$assignedSlotTeams['Slot ' . $sWithout] = $cIdTeam;
-			$assignedSlotTeams['Slot ' . $cod] = $cIdTeam;
-			$assignedSlotTeams['Vaga ' . $cod] = $cIdTeam;
-			$assignedSlotTeams['Vaga #' . $cod] = $cIdTeam;
-			$assignedSlotTeams['#' . $cod] = $cIdTeam;
-			$assignedSlotTeams[(string)$cod] = $cIdTeam;
 			if (preg_match('/^([A-Z])\s*(\d+)$/i', $sWithout, $mG)) {
 				$gL = strtoupper($mG[1]);
 				$sN = intval($mG[2]);
 				$assignedSlotTeams[$gL . $sN] = $cIdTeam;
-				$assignedSlotTeams['Slot ' . $sN] = $cIdTeam;
-				$assignedSlotTeams['Vaga ' . $sN] = $cIdTeam;
+				$assignedSlotTeams[$gL . ' ' . $sN] = $cIdTeam;
+				$assignedSlotTeams[$gL . '-' . $sN] = $cIdTeam;
+			} else {
+				$assignedSlotTeams['Slot ' . $cod] = $cIdTeam;
 			}
 		}
 	}
-	
+
 	// query caixa de seleção países desse dono
 	$stmtPais = $pais->read();
 	$listaPaises = array();
@@ -127,17 +124,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 					$cId = (int)($row['ID'] ?? ($row['id'] ?? 0));
 					$cNome = trim(html_entity_decode(html_entity_decode(stripslashes($row['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 					if($cId != 0 && $cNome !== ''){
-						$listaTimes[] = array($cId, $cNome);
-						$timesJaAdicionados[$cId] = $cNome;
-						$negId = -1 * abs($cId);
-						$posId = abs($cId);
-						if(!isset($timesJaAdicionados[$negId])){
-							$listaTimes[] = array($negId, $cNome);
-							$timesJaAdicionados[$negId] = $cNome;
-						}
-						if(!isset($timesJaAdicionados[$posId])){
-							$listaTimes[] = array($posId, $cNome);
-							$timesJaAdicionados[$posId] = $cNome;
+						if(!isset($timesJaAdicionados[$cId])){
+							$listaTimes[] = array($cId, $cNome);
+							$timesJaAdicionados[$cId] = $cNome;
 						}
 					}
 				}
@@ -713,7 +702,7 @@ $(document).ready(function($){
 					}
 				}
 
-				let teamA = (tA_id !== 0) ? listaTimes.find(t => t[0] == tA_id || Math.abs(t[0]) === Math.abs(tA_id)) : null;
+				let teamA = (tA_id !== 0) ? listaTimes.find(t => t[0] == tA_id) : null;
 				let nomeTimeA = teamA ? teamA[1] : (tA_nome_raw !== '' ? tA_nome_raw : (tA_id !== 0 ? "Time " + tA_id : "A definir"));
 
 				let tB_id = parseInt(val['timeB_id']) || 0;
@@ -732,7 +721,7 @@ $(document).ready(function($){
 					}
 				}
 
-				let teamB = (tB_id !== 0) ? listaTimes.find(t => t[0] == tB_id || Math.abs(t[0]) === Math.abs(tB_id)) : null;
+				let teamB = (tB_id !== 0) ? listaTimes.find(t => t[0] == tB_id) : null;
 				let nomeTimeB = teamB ? teamB[1] : (tB_nome_raw !== '' ? tB_nome_raw : (tB_id !== 0 ? "Time " + tB_id : "A definir"));
 				
 				let faseObj = listaFases.find(f => f[0] == val['fase']);

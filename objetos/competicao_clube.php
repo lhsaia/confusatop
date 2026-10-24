@@ -1443,7 +1443,7 @@ class Competicao_clube{
 			$vagaHashQuote = $this->conn->quote("Vaga #" . $vagaAbs);
 
 			$slotClean = $slotName ? trim($slotName) : '';
-			$slotCondA = "TRIM(timeA_nome) = $slotDefaultQuote OR TRIM(timeA_nome) = $vagaLabelQuote OR TRIM(timeA_nome) = $vagaHashQuote OR timeA_id = $vagaAbs OR timeA_id = -$vagaAbs";
+			$slotCondA = "TRIM(timeA_nome) = $slotDefaultQuote OR TRIM(timeA_nome) = $vagaLabelQuote OR TRIM(timeA_nome) = $vagaHashQuote OR timeA_id = -$vagaAbs";
 			if ($slotClean !== '') {
 				$slotCleanQuote = $this->conn->quote($slotClean);
 				$slotWithout = preg_replace('/^Slot\s+/i', '', $slotClean);
@@ -1452,7 +1452,7 @@ class Competicao_clube{
 				$slotCondA .= " OR TRIM(timeA_nome) = $slotCleanQuote OR TRIM(timeA_nome) = $slotWithoutQuote OR TRIM(timeA_nome) = $slotWithQuote";
 			}
 
-			$slotCondB = "TRIM(timeB_nome) = $slotDefaultQuote OR TRIM(timeB_nome) = $vagaLabelQuote OR TRIM(timeB_nome) = $vagaHashQuote OR timeB_id = $vagaAbs OR timeB_id = -$vagaAbs";
+			$slotCondB = "TRIM(timeB_nome) = $slotDefaultQuote OR TRIM(timeB_nome) = $vagaLabelQuote OR TRIM(timeB_nome) = $vagaHashQuote OR timeB_id = -$vagaAbs";
 			if ($slotClean !== '') {
 				$slotCleanQuote = $this->conn->quote($slotClean);
 				$slotWithout = preg_replace('/^Slot\s+/i', '', $slotClean);
@@ -1474,19 +1474,28 @@ class Competicao_clube{
 			                     AND simulador_interno = 1 
 			                     AND ($slotCondB) $whereExtraB");
 
-			// 2. Se estava substituindo um time anterior
+			// 2. Se estava substituindo um time anterior específico desta vaga
 			if ($prevTimeId != 0 && $prevTimeId != $idTimeReal) {
+				$condsReplaceA = ["timeA_id = $prevTimeId"];
+				$condsReplaceB = ["timeB_id = $prevTimeId"];
+				// Se prevTimeId era negativo (ex: -2959 ou time temporário antigo), limpar também a versão de sinal oposto
+				$condsReplaceA[] = "timeA_id = -$prevTimeId";
+				$condsReplaceB[] = "timeB_id = -$prevTimeId";
+
+				$whereReplaceA = implode(' OR ', array_unique($condsReplaceA));
+				$whereReplaceB = implode(' OR ', array_unique($condsReplaceB));
+
 				$this->conn->exec("UPDATE jogos_clube 
 				                   SET timeA_id = $idTimeReal 
 				                   WHERE competicao_id = $idCompeticao 
 				                     AND simulador_interno = 1 
-				                     AND timeA_id = $prevTimeId $whereExtraA");
+				                     AND ($whereReplaceA) $whereExtraA");
 				                     
 				$this->conn->exec("UPDATE jogos_clube 
 				                   SET timeB_id = $idTimeReal 
 				                   WHERE competicao_id = $idCompeticao 
 				                     AND simulador_interno = 1 
-				                     AND timeB_id = $prevTimeId $whereExtraB");
+				                     AND ($whereReplaceB) $whereExtraB");
 			}
 			
 			// 3. Atualizar estádios dos jogos mandantes se estádio for por time
@@ -1603,8 +1612,8 @@ class Competicao_clube{
 		
 		// 4. Se o time tinha um slot anterior e ele mudou, restaurar o placeholder do slot anterior nos jogos
 		if($prevSlot !== '' && $prevSlot !== $slotName && $teamId != 0){
-			$this->conn->exec("UPDATE jogos_clube SET timeA_id = 0, timeA_nome = '$prevSlot' WHERE competicao_id = $idCompeticao AND simulador_interno = 1 AND timeA_id = $teamId");
-			$this->conn->exec("UPDATE jogos_clube SET timeB_id = 0, timeB_nome = '$prevSlot' WHERE competicao_id = $idCompeticao AND simulador_interno = 1 AND timeB_id = $teamId");
+			$this->conn->exec("UPDATE jogos_clube SET timeA_id = 0, timeA_nome = '$prevSlot' WHERE competicao_id = $idCompeticao AND simulador_interno = 1 AND (timeA_id = $teamId OR timeA_id = -$teamId)");
+			$this->conn->exec("UPDATE jogos_clube SET timeB_id = 0, timeB_nome = '$prevSlot' WHERE competicao_id = $idCompeticao AND simulador_interno = 1 AND (timeB_id = $teamId OR timeB_id = -$teamId)");
 		}
 		
 		// 5. Se o novo slot foi definido e temos um time, preencher os jogos com este time
@@ -1641,28 +1650,28 @@ class Competicao_clube{
 				                     AND UPPER(grupo) != '$grpLetra'");
 			}
 
-			// B. Construir todas as variações possíveis de nome de slot/placeholder
-			$candidates = [
-				$slotName,
-				$slotWithout,
-				'Slot ' . $slotWithout,
-				'Slot ' . $codigoTime,
-				'Vaga ' . $codigoTime,
-				'Vaga #' . $codigoTime,
-				(string)$codigoTime,
-				'#' . $codigoTime,
-				'Time ' . $codigoTime,
-				'Equipe ' . $codigoTime
-			];
-			if ($slotNumInGroup !== null) {
-				$candidates[] = 'Slot ' . $slotNumInGroup;
-				$candidates[] = 'Vaga ' . $slotNumInGroup;
-				$candidates[] = 'Vaga #' . $slotNumInGroup;
-				$candidates[] = (string)$slotNumInGroup;
-				$candidates[] = '#' . $slotNumInGroup;
-				$candidates[] = $grpLetra . ' ' . $slotNumInGroup;
-				$candidates[] = $grpLetra . '-' . $slotNumInGroup;
-				$candidates[] = $grpLetra . '.' . $slotNumInGroup;
+			// B. Construir variações estritas de nome de slot/placeholder
+			$candidates = [];
+			if ($grpLetra !== null) {
+				// Slots de grupos (ex: F4, A1) - Estrito ao identificador do grupo
+				// NUNCA incluir números soltos ou índices de vagas (como 4 ou -4) que colidem com times de outras vagas!
+				$candidates = [
+					$slotName,
+					$slotWithout,
+					'Slot ' . $slotWithout,
+					$grpLetra . $slotNumInGroup,
+					$grpLetra . ' ' . $slotNumInGroup,
+					$grpLetra . '-' . $slotNumInGroup,
+					$grpLetra . '.' . $slotNumInGroup
+				];
+			} else {
+				// Slots genéricos de mata-mata ou pontos corridos (ex: Slot 1, Slot 4)
+				$candidates = [
+					$slotName,
+					$slotWithout,
+					'Slot ' . $slotWithout,
+					'Slot ' . $codigoTime
+				];
 			}
 
 			$condsA = [];
@@ -1673,19 +1682,6 @@ class Competicao_clube{
 				$qCand = $this->conn->quote($candTrim);
 				$condsA[] = "LOWER(TRIM(timeA_nome)) = LOWER($qCand)";
 				$condsB[] = "LOWER(TRIM(timeB_nome)) = LOWER($qCand)";
-			}
-
-			// Incluir matching por ID temporário ou vaga legado
-			$vAbs = abs($codigoTime);
-			$condsA[] = "timeA_id = $vAbs";
-			$condsA[] = "timeA_id = -$vAbs";
-			$condsB[] = "timeB_id = $vAbs";
-			$condsB[] = "timeB_id = -$vAbs";
-			if ($slotNumInGroup !== null) {
-				$condsA[] = "timeA_id = $slotNumInGroup";
-				$condsA[] = "timeA_id = -$slotNumInGroup";
-				$condsB[] = "timeB_id = $slotNumInGroup";
-				$condsB[] = "timeB_id = -$slotNumInGroup";
 			}
 
 			$whereA = implode(' OR ', $condsA);
