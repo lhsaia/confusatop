@@ -35,8 +35,8 @@ if ($_POST) {
         $jogo->timeA_gols = isset($_POST['timeA_gols']) ? (int)$_POST['timeA_gols'] : 0;
         $jogo->timeB_id = (isset($_POST['timeB_id']) && $_POST['timeB_id'] !== "" && (int)$_POST['timeB_id'] > 0) ? (int)$_POST['timeB_id'] : 0;
         $jogo->timeB_gols = isset($_POST['timeB_gols']) ? (int)$_POST['timeB_gols'] : 0;
-        $jogo->timeA_penaltis = (isset($_POST['timeA_penaltis']) && trim((string)$_POST['timeA_penaltis']) !== "") ? (int)$_POST['timeA_penaltis'] : null;
-        $jogo->timeB_penaltis = (isset($_POST['timeB_penaltis']) && trim((string)$_POST['timeB_penaltis']) !== "") ? (int)$_POST['timeB_penaltis'] : null;
+        $jogo->timeA_penaltis = (isset($_POST['timeA_penaltis']) && trim((string)$_POST['timeA_penaltis']) !== "" && (int)$_POST['timeA_penaltis'] >= 0) ? (int)$_POST['timeA_penaltis'] : null;
+        $jogo->timeB_penaltis = (isset($_POST['timeB_penaltis']) && trim((string)$_POST['timeB_penaltis']) !== "" && (int)$_POST['timeB_penaltis'] >= 0) ? (int)$_POST['timeB_penaltis'] : null;
         $jogo->data = !empty($_POST['data']) ? $_POST['data'] : date('Y-m-d');
         $jogo->campeonato = (isset($_POST['campeonato']) && (int)$_POST['campeonato'] > 0) ? (int)$_POST['campeonato'] : 10;
         $jogo->estadio = trim((string)($_POST['estadio'] ?? ''));

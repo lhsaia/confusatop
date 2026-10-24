@@ -801,12 +801,12 @@ class Competicao_clube{
 
         $stmt->bindParam(":timeA_gols", $golsTimeA);
         $stmt->bindParam(":timeB_gols", $golsTimeB);
-        if($penA !== null && $penA !== '') {
+        if($penA !== null && $penA !== '' && (int)$penA >= 0) {
             $stmt->bindValue(":timeA_penaltis", (int)$penA, PDO::PARAM_INT);
         } else {
             $stmt->bindValue(":timeA_penaltis", null, PDO::PARAM_NULL);
         }
-        if($penB !== null && $penB !== '') {
+        if($penB !== null && $penB !== '' && (int)$penB >= 0) {
             $stmt->bindValue(":timeB_penaltis", (int)$penB, PDO::PARAM_INT);
         } else {
             $stmt->bindValue(":timeB_penaltis", null, PDO::PARAM_NULL);
@@ -953,7 +953,7 @@ class Competicao_clube{
 		// Regulamentar: 120min (2h) | Pênaltis: 150min (2h30)
 		$now = time();
 		$dtMatch = !empty($partida['data']) ? strtotime($partida['data']) : $now;
-		$temPenaltis = ($partida['timeA_penaltis'] !== null && $partida['timeA_penaltis'] !== '' && $partida['timeB_penaltis'] !== null && $partida['timeB_penaltis'] !== '');
+		$temPenaltis = ($partida['timeA_penaltis'] !== null && $partida['timeA_penaltis'] !== '' && (int)$partida['timeA_penaltis'] >= 0 && $partida['timeB_penaltis'] !== null && $partida['timeB_penaltis'] !== '' && (int)$partida['timeB_penaltis'] >= 0);
 		$durMatchSec = $temPenaltis ? (150 * 60) : (120 * 60);
 		if ($now < ($dtMatch + $durMatchSec)) {
 			// A partida foi simulada antecipadamente, mas ainda não aconteceu / não encerrou no horário real.
@@ -986,8 +986,24 @@ class Competicao_clube{
 		// Placar
 		$golsA = isset($partida['timeA_gols']) && $partida['timeA_gols'] !== null ? intval($partida['timeA_gols']) : (isset($xml->placarTime1) ? intval($xml->placarTime1) : 0);
 		$golsB = isset($partida['timeB_gols']) && $partida['timeB_gols'] !== null ? intval($partida['timeB_gols']) : (isset($xml->placarTime2) ? intval($xml->placarTime2) : 0);
-		$penA = isset($partida['timeA_penaltis']) && $partida['timeA_penaltis'] !== null ? intval($partida['timeA_penaltis']) : (isset($xml->placarPenaltisTime1) ? intval($xml->placarPenaltisTime1) : null);
-		$penB = isset($partida['timeB_penaltis']) && $partida['timeB_penaltis'] !== null ? intval($partida['timeB_penaltis']) : (isset($xml->placarPenaltisTime2) ? intval($xml->placarPenaltisTime2) : null);
+		$penA = null;
+		$penB = null;
+		if (isset($partida['timeA_penaltis']) && $partida['timeA_penaltis'] !== null && $partida['timeA_penaltis'] !== '' && (int)$partida['timeA_penaltis'] >= 0) {
+			$penA = (int)$partida['timeA_penaltis'];
+			$penB = (isset($partida['timeB_penaltis']) && $partida['timeB_penaltis'] !== null && $partida['timeB_penaltis'] !== '' && (int)$partida['timeB_penaltis'] >= 0) ? (int)$partida['timeB_penaltis'] : 0;
+		} elseif (!empty($xml->penaltis)) {
+			$penA = (isset($xml->placarPenaltisTime1) && (int)$xml->placarPenaltisTime1 >= 0) ? (int)$xml->placarPenaltisTime1 : null;
+			$penB = (isset($xml->placarPenaltisTime2) && (int)$xml->placarPenaltisTime2 >= 0) ? (int)$xml->placarPenaltisTime2 : null;
+		} elseif (!empty($jsonHyj->penaltis)) {
+			$penA = (isset($jsonHyj->time1->placarPenaltis) && (int)$jsonHyj->time1->placarPenaltis >= 0) ? (int)$jsonHyj->time1->placarPenaltis : null;
+			$penB = (isset($jsonHyj->time2->placarPenaltis) && (int)$jsonHyj->time2->placarPenaltis >= 0) ? (int)$jsonHyj->time2->placarPenaltis : null;
+		}
+		if ($penA !== null && (int)$penA < 0) $penA = null;
+		if ($penB !== null && (int)$penB < 0) $penB = null;
+		if ($penA === null || $penB === null) {
+			$penA = null;
+			$penB = null;
+		}
 
 		// Campeonato do Ranking
 		$campeonatoId = intval($partida['campeonato_ranking'] ?? 0);

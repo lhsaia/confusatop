@@ -533,19 +533,35 @@ $xml = json_decode(file_get_contents($hylFile));
 if ($xml) {
     $golsTimeA = (int)$xml->placarTime1;
     $golsTimeB = (int)$xml->placarTime2;
-    if (isset($xml->penaltis) && $xml->penaltis) {
-        $penA = isset($xml->placarPenaltisTime1) ? (int)$xml->placarPenaltisTime1 : 0;
-        $penB = isset($xml->placarPenaltisTime2) ? (int)$xml->placarPenaltisTime2 : 0;
+    if (!empty($xml->penaltis)) {
+        $pA = isset($xml->placarPenaltisTime1) ? (int)$xml->placarPenaltisTime1 : -1;
+        $pB = isset($xml->placarPenaltisTime2) ? (int)$xml->placarPenaltisTime2 : -1;
+        if ($pA >= 0 && $pB >= 0) {
+            $penA = $pA;
+            $penB = $pB;
+        }
     }
 }
 
 $hyjFile = str_replace('.hyl', '.hyj', $hylFile);
 if ($penA === null && file_exists($hyjFile)) {
     $jsonHyj = json_decode(file_get_contents($hyjFile));
-    if ($jsonHyj && isset($jsonHyj->penaltis) && $jsonHyj->penaltis) {
-        $penA = isset($jsonHyj->time1->placarPenaltis) ? (int)$jsonHyj->time1->placarPenaltis : 0;
-        $penB = isset($jsonHyj->time2->placarPenaltis) ? (int)$jsonHyj->time2->placarPenaltis : 0;
+    if ($jsonHyj && !empty($jsonHyj->penaltis)) {
+        $pA = isset($jsonHyj->time1->placarPenaltis) ? (int)$jsonHyj->time1->placarPenaltis : -1;
+        $pB = isset($jsonHyj->time2->placarPenaltis) ? (int)$jsonHyj->time2->placarPenaltis : -1;
+        if ($pA >= 0 && $pB >= 0) {
+            $penA = $pA;
+            $penB = $pB;
+        }
     }
+}
+
+// Quando não teve pênaltis, garantir explicitamente NULL (nunca -1)
+if ($penA !== null && $penA < 0) $penA = null;
+if ($penB !== null && $penB < 0) $penB = null;
+if ($penA === null || $penB === null) {
+    $penA = null;
+    $penB = null;
 }
 
 // 14. Gravar a Partida em jogos_clube

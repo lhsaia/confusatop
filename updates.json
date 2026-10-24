@@ -13,6 +13,11 @@
       "date": "24/10/2026",
       "items": [
         {
+          "badge": "bugfix",
+          "title": "Correção de Pênaltis Ausentes Gravados como -1 em Amistosos",
+          "desc": "Corrigida a gravação do placar de pênaltis em amistosos e jogos de seleções, garantindo que partidas encerradas sem disputa de pênaltis sejam registradas estritamente com valor NULL no banco de dados e súmulas, em vez de -1."
+        },
+        {
           "badge": "new",
           "title": "Inclusão Geral de Árbitros da CONFUSA em Competições",
           "desc": "Adicionada a opção CONFUSA no seletor de federações das opções da competição e na criação de competições, permitindo incluir em lote todos os trios de arbitragem da confederação de uma só vez no banco SQLite do torneio, com sincronização dinâmica no seletor visual e inserção em transação única otimizada."

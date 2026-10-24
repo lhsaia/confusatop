@@ -159,7 +159,7 @@ $golsContra = ($info_stats['golsContraVisitante'] ?? 0) + ($info_stats['golsCont
                         while ($row = $jogo_stmt->fetch(PDO::FETCH_ASSOC)){
                             extract($row);
 
-                            $pen = ($timeA_penaltis !== null && $timeB_penaltis !== null && $timeA_penaltis !== '' && $timeB_penaltis !== '') ? "({$timeA_penaltis}) pen. ({$timeB_penaltis})" : "-";
+                            $pen = ($timeA_penaltis !== null && $timeB_penaltis !== null && $timeA_penaltis !== '' && $timeB_penaltis !== '' && (int)$timeA_penaltis >= 0 && (int)$timeB_penaltis >= 0) ? "({$timeA_penaltis}) pen. ({$timeB_penaltis})" : "-";
                             $calcBadge = ($calculo == '1' || $calculo == 1 || $calculo == 'Sim') ? "<span class='ativo' style='font-size:0.75rem; padding:2px 6px;'>Sim</span>" : "<span class='inativo' style='font-size:0.75rem; padding:2px 6px;'>Não</span>";
 
                             echo "<tr data-href='match_info.php?match_id={$idJogo}'>";

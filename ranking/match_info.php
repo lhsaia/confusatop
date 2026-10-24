@@ -76,13 +76,13 @@ $results = $jogo->getSingleMatchInfo($match_id);
 
             <div class="match-score-center">
                 <span id="match-info-team-1-score"><?php echo $results['timeA_gols']; ?></span>
-                <?php if(isset($results['timeA_penaltis'], $results['timeB_penaltis']) && $results['timeA_penaltis'] !== null && $results['timeB_penaltis'] !== null && $results['timeA_penaltis'] !== '' && $results['timeB_penaltis'] !== ''): ?>
+                <?php if(isset($results['timeA_penaltis'], $results['timeB_penaltis']) && $results['timeA_penaltis'] !== null && $results['timeB_penaltis'] !== null && $results['timeA_penaltis'] !== '' && $results['timeB_penaltis'] !== '' && (int)$results['timeA_penaltis'] >= 0 && (int)$results['timeB_penaltis'] >= 0): ?>
                     <span class="penalty-indicator">(<?php echo $results['timeA_penaltis']; ?>)</span>
                 <?php endif; ?>
                 
                 <span id="match-info-x-mark">×</span>
                 
-                <?php if(isset($results['timeA_penaltis'], $results['timeB_penaltis']) && $results['timeA_penaltis'] !== null && $results['timeB_penaltis'] !== null && $results['timeA_penaltis'] !== '' && $results['timeB_penaltis'] !== ''): ?>
+                <?php if(isset($results['timeA_penaltis'], $results['timeB_penaltis']) && $results['timeA_penaltis'] !== null && $results['timeB_penaltis'] !== null && $results['timeA_penaltis'] !== '' && $results['timeB_penaltis'] !== '' && (int)$results['timeA_penaltis'] >= 0 && (int)$results['timeB_penaltis'] >= 0): ?>
                     <span class="penalty-indicator">(<?php echo $results['timeB_penaltis']; ?>)</span>
                 <?php endif; ?>
                 <span id="match-info-team-2-score"><?php echo $results['timeB_gols']; ?></span>

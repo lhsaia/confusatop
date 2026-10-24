@@ -43,8 +43,8 @@ class Jogo{
         $this->timeA_gols=htmlspecialchars(strip_tags($this->timeA_gols));
         $this->timeB_id=htmlspecialchars(strip_tags($this->timeB_id));
         $this->timeB_gols=htmlspecialchars(strip_tags($this->timeB_gols));
-        $this->timeA_penaltis=htmlspecialchars(strip_tags($this->timeA_penaltis));
-        $this->timeB_penaltis=htmlspecialchars(strip_tags($this->timeB_penaltis));
+        $this->timeA_penaltis = ($this->timeA_penaltis !== null && trim((string)$this->timeA_penaltis) !== "" && (int)$this->timeA_penaltis >= 0) ? (int)$this->timeA_penaltis : null;
+        $this->timeB_penaltis = ($this->timeB_penaltis !== null && trim((string)$this->timeB_penaltis) !== "" && (int)$this->timeB_penaltis >= 0) ? (int)$this->timeB_penaltis : null;
         $this->data=htmlspecialchars(strip_tags($this->data));
         $this->campeonato=htmlspecialchars(strip_tags($this->campeonato));
 
@@ -67,8 +67,16 @@ class Jogo{
         $stmt->bindParam(":timeA_gols", $this->timeA_gols);
         $stmt->bindParam(":timeB_id", $this->timeB_id);
         $stmt->bindParam(":timeB_gols", $this->timeB_gols);
-        $stmt->bindParam(":timeA_penaltis", $this->timeA_penaltis);
-        $stmt->bindParam(":timeB_penaltis", $this->timeB_penaltis);
+        if ($this->timeA_penaltis !== null) {
+            $stmt->bindValue(":timeA_penaltis", (int)$this->timeA_penaltis, PDO::PARAM_INT);
+        } else {
+            $stmt->bindValue(":timeA_penaltis", null, PDO::PARAM_NULL);
+        }
+        if ($this->timeB_penaltis !== null) {
+            $stmt->bindValue(":timeB_penaltis", (int)$this->timeB_penaltis, PDO::PARAM_INT);
+        } else {
+            $stmt->bindValue(":timeB_penaltis", null, PDO::PARAM_NULL);
+        }
         $stmt->bindParam(":data", $this->data);
         $stmt->bindParam(":campeonato", $this->campeonato);
 
@@ -559,14 +567,24 @@ public function getSingleMatchEvents($match_id){
 }
 
 public function importar(){
+  $this->timeA_penaltis = ($this->timeA_penaltis !== null && trim((string)$this->timeA_penaltis) !== "" && (int)$this->timeA_penaltis >= 0) ? (int)$this->timeA_penaltis : null;
+  $this->timeB_penaltis = ($this->timeB_penaltis !== null && trim((string)$this->timeB_penaltis) !== "" && (int)$this->timeB_penaltis >= 0) ? (int)$this->timeB_penaltis : null;
   $query = "INSERT IGNORE INTO jogos (timeA_id, timeA_gols, timeB_id, timeB_gols, timeA_penaltis, timeB_penaltis, data, campeonato, calculado, estadio, fase) VALUES (?,?,?,?,?,?,?,?,0,?,?)";
   $stmt = $this->conn->prepare( $query );
   $stmt->bindParam(1, $this->timeA_id);
   $stmt->bindParam(2, $this->timeA_gols);
   $stmt->bindParam(3, $this->timeB_id);
   $stmt->bindParam(4, $this->timeB_gols);
-  $stmt->bindParam(5, $this->timeA_penaltis);
-  $stmt->bindParam(6, $this->timeB_penaltis);
+  if ($this->timeA_penaltis !== null) {
+      $stmt->bindValue(5, (int)$this->timeA_penaltis, PDO::PARAM_INT);
+  } else {
+      $stmt->bindValue(5, null, PDO::PARAM_NULL);
+  }
+  if ($this->timeB_penaltis !== null) {
+      $stmt->bindValue(6, (int)$this->timeB_penaltis, PDO::PARAM_INT);
+  } else {
+      $stmt->bindValue(6, null, PDO::PARAM_NULL);
+  }
   $stmt->bindParam(7, $this->data);
   $stmt->bindParam(8, $this->campeonato);
   $stmt->bindParam(9, $this->estadio);
@@ -605,6 +623,8 @@ public function limparEventos($match_id){
 }
 
 public function atualizar(){
+  $this->timeA_penaltis = ($this->timeA_penaltis !== null && trim((string)$this->timeA_penaltis) !== "" && (int)$this->timeA_penaltis >= 0) ? (int)$this->timeA_penaltis : null;
+  $this->timeB_penaltis = ($this->timeB_penaltis !== null && trim((string)$this->timeB_penaltis) !== "" && (int)$this->timeB_penaltis >= 0) ? (int)$this->timeB_penaltis : null;
   $query = "UPDATE jogos SET 
               timeA_id = :timeA_id,
               timeA_gols = :timeA_gols,
@@ -622,8 +642,16 @@ public function atualizar(){
   $stmt->bindParam(":timeA_gols", $this->timeA_gols);
   $stmt->bindParam(":timeB_id", $this->timeB_id);
   $stmt->bindParam(":timeB_gols", $this->timeB_gols);
-  $stmt->bindParam(":timeA_penaltis", $this->timeA_penaltis);
-  $stmt->bindParam(":timeB_penaltis", $this->timeB_penaltis);
+  if ($this->timeA_penaltis !== null) {
+      $stmt->bindValue(":timeA_penaltis", (int)$this->timeA_penaltis, PDO::PARAM_INT);
+  } else {
+      $stmt->bindValue(":timeA_penaltis", null, PDO::PARAM_NULL);
+  }
+  if ($this->timeB_penaltis !== null) {
+      $stmt->bindValue(":timeB_penaltis", (int)$this->timeB_penaltis, PDO::PARAM_INT);
+  } else {
+      $stmt->bindValue(":timeB_penaltis", null, PDO::PARAM_NULL);
+  }
   $stmt->bindParam(":data", $this->data);
   $stmt->bindParam(":campeonato", $this->campeonato);
   $stmt->bindParam(":fase", $this->fase);
@@ -633,12 +661,22 @@ public function atualizar(){
 }
 
 public function atualizarPlacarJogo($id){
+  $this->timeA_penaltis = ($this->timeA_penaltis !== null && trim((string)$this->timeA_penaltis) !== "" && (int)$this->timeA_penaltis >= 0) ? (int)$this->timeA_penaltis : null;
+  $this->timeB_penaltis = ($this->timeB_penaltis !== null && trim((string)$this->timeB_penaltis) !== "" && (int)$this->timeB_penaltis >= 0) ? (int)$this->timeB_penaltis : null;
   $query = "UPDATE jogos SET timeA_gols=?, timeB_gols=?, timeA_penaltis=?, timeB_penaltis=?, campeonato=?, estadio=?, fase=? WHERE id=?";
   $stmt = $this->conn->prepare($query);
   $stmt->bindParam(1, $this->timeA_gols);
   $stmt->bindParam(2, $this->timeB_gols);
-  $stmt->bindParam(3, $this->timeA_penaltis);
-  $stmt->bindParam(4, $this->timeB_penaltis);
+  if ($this->timeA_penaltis !== null) {
+      $stmt->bindValue(3, (int)$this->timeA_penaltis, PDO::PARAM_INT);
+  } else {
+      $stmt->bindValue(3, null, PDO::PARAM_NULL);
+  }
+  if ($this->timeB_penaltis !== null) {
+      $stmt->bindValue(4, (int)$this->timeB_penaltis, PDO::PARAM_INT);
+  } else {
+      $stmt->bindValue(4, null, PDO::PARAM_NULL);
+  }
   $stmt->bindParam(5, $this->campeonato);
   $stmt->bindParam(6, $this->estadio);
   $stmt->bindParam(7, $this->fase);

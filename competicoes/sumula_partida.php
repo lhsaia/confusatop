@@ -65,7 +65,7 @@ if($matchInfo){
 		
 		// Sigilo Temporal: Se a partida ainda não tiver terminado no tempo real, bloquear a súmula
 		$horarioJogo = strtotime($matchInfo['data']);
-		$duracaoMinutos = (!empty($matchInfo['timeA_penaltis']) || !empty($matchInfo['timeB_penaltis'])) ? 150 : 120;
+		$duracaoMinutos = ((isset($matchInfo['timeA_penaltis']) && $matchInfo['timeA_penaltis'] !== null && $matchInfo['timeA_penaltis'] !== '' && (int)$matchInfo['timeA_penaltis'] >= 0) || (isset($matchInfo['timeB_penaltis']) && $matchInfo['timeB_penaltis'] !== null && $matchInfo['timeB_penaltis'] !== '' && (int)$matchInfo['timeB_penaltis'] >= 0)) ? 150 : 120;
 		$horarioTermino = $horarioJogo + ($duracaoMinutos * 60);
 
 		// Se já terminou no tempo real e possui arquivo gerado, envia a imagem
@@ -232,17 +232,23 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	
 	$penA = null;
 	$penB = null;
-	if (isset($xml_hyl->penaltis) && $xml_hyl->penaltis) {
-		$penA = isset($xml_hyl->placarPenaltisTime1) ? (int)$xml_hyl->placarPenaltisTime1 : null;
-		$penB = isset($xml_hyl->placarPenaltisTime2) ? (int)$xml_hyl->placarPenaltisTime2 : null;
+	if (!empty($xml_hyl->penaltis)) {
+		$penA = (isset($xml_hyl->placarPenaltisTime1) && (int)$xml_hyl->placarPenaltisTime1 >= 0) ? (int)$xml_hyl->placarPenaltisTime1 : null;
+		$penB = (isset($xml_hyl->placarPenaltisTime2) && (int)$xml_hyl->placarPenaltisTime2 >= 0) ? (int)$xml_hyl->placarPenaltisTime2 : null;
 	}
-	if ($penA === null && isset($xml_hyj->penaltis) && $xml_hyj->penaltis) {
-		$penA = isset($xml_hyj->time1->placarPenaltis) ? (int)$xml_hyj->time1->placarPenaltis : null;
-		$penB = isset($xml_hyj->time2->placarPenaltis) ? (int)$xml_hyj->time2->placarPenaltis : null;
+	if ($penA === null && !empty($xml_hyj->penaltis)) {
+		$penA = (isset($xml_hyj->time1->placarPenaltis) && (int)$xml_hyj->time1->placarPenaltis >= 0) ? (int)$xml_hyj->time1->placarPenaltis : null;
+		$penB = (isset($xml_hyj->time2->placarPenaltis) && (int)$xml_hyj->time2->placarPenaltis >= 0) ? (int)$xml_hyj->time2->placarPenaltis : null;
 	}
-	if ($penA === null && isset($matchInfo['timeA_penaltis']) && $matchInfo['timeA_penaltis'] !== null && $matchInfo['timeA_penaltis'] !== '') {
+	if ($penA === null && isset($matchInfo['timeA_penaltis']) && $matchInfo['timeA_penaltis'] !== null && $matchInfo['timeA_penaltis'] !== '' && (int)$matchInfo['timeA_penaltis'] >= 0) {
 		$penA = (int)$matchInfo['timeA_penaltis'];
-		$penB = (int)($matchInfo['timeB_penaltis'] ?? 0);
+		$penB = (isset($matchInfo['timeB_penaltis']) && $matchInfo['timeB_penaltis'] !== null && $matchInfo['timeB_penaltis'] !== '' && (int)$matchInfo['timeB_penaltis'] >= 0) ? (int)$matchInfo['timeB_penaltis'] : 0;
+	}
+	if ($penA !== null && (int)$penA < 0) $penA = null;
+	if ($penB !== null && (int)$penB < 0) $penB = null;
+	if ($penA === null || $penB === null) {
+		$penA = null;
+		$penB = null;
 	}
 	
 	$escudoTimeA = (string) ($xml_hyl->escudoTime1 ?? '');
