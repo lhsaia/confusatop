@@ -70,8 +70,38 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                 $nomeFinal = !empty($tNome) ? $tNome : "Time #" . abs($tId);
             }
         } else {
-            // tId == 0
-            if (!empty($tNome)) {
+            // tId == 0 (slot ou a definir)
+            $codTime = intval($j["time{$side}_codigo"] ?? 0);
+            if (!isset($sqliteCache[$compId])) {
+                $sqliteCache[$compId] = [];
+                $dbPath = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/{$compId}-database.db3";
+                if (file_exists($dbPath)) {
+                    try {
+                        $sdb = new PDO("sqlite:" . $dbPath);
+                        $st = $sdb->query("SELECT ID, Nome, Escudo FROM clube");
+                        if ($st) {
+                            while ($r = $st->fetch(PDO::FETCH_ASSOC)) {
+                                $escTratado = str_replace('../../images/escudos/', '', (string)($r['Escudo'] ?? ''));
+                                $sqliteCache[$compId][intval($r['ID'])] = [
+                                    'nome' => $r['Nome'] ?? '',
+                                    'escudo' => $escTratado ?: '0.png'
+                                ];
+                            }
+                        }
+                    } catch (\Throwable $e) {}
+                }
+            }
+
+            if ($codTime > 0 && isset($sqliteCache[$compId][-$codTime])) {
+                $nomeFinal = $sqliteCache[$compId][-$codTime]['nome'];
+                $escudoFinal = $sqliteCache[$compId][-$codTime]['escudo'];
+            } elseif ($codTime > 0 && isset($sqliteCache[$compId][$codTime])) {
+                $nomeFinal = $sqliteCache[$compId][$codTime]['nome'];
+                $escudoFinal = $sqliteCache[$compId][$codTime]['escudo'];
+            } elseif (!empty($paisNome)) {
+                $nomeFinal = !empty($tNome) ? "{$paisNome} ({$tNome})" : $paisNome;
+                $escudoFinal = $paisBandeira ? '../bandeiras/' . $paisBandeira : '0.png';
+            } elseif (!empty($tNome)) {
                 $nomeFinal = $tNome;
             } else {
                 $nomeFinal = "A definir";
@@ -92,9 +122,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     $query = "
         SELECT j.id as match_id, j.competicao_id as comp_id, cl.nome as comp_nome, cl.ano as comp_ano, cl.dono as comp_dono, cl.tipo as comp_tipo,
                u_dono.nome as comp_dono_nome,
-               j.timeA_id, j.timeA_nome,
-               j.timeB_id, j.timeB_nome,
-               j.data, j.fase, j.grupo, f.nome as fase_nome,
+               j.timeA_id, j.timeA_nome, ctA.codigo_time as timeA_codigo,
+               j.timeB_id, j.timeB_nome, ctB.codigo_time as timeB_codigo,
+               j.data, j.status, j.fase, j.grupo, f.nome as fase_nome,
 
                -- Dono e País Time A (resolvido por clube ou competicao_times)
                COALESCE(pctA.dono, pA.dono) as timeA_dono,
@@ -133,7 +163,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         LEFT JOIN paises pA ON cA.Pais = pA.id
         LEFT JOIN competicao_times ctA ON ctA.id_competicao = j.competicao_id 
              AND (
-                 (j.timeA_id > 0 AND ctA.id_time_portal = j.timeA_id) 
+                 (j.timeA_id > 0 AND (ctA.id_time_portal = j.timeA_id OR ctA.codigo_time = j.timeA_id)) 
                  OR (j.timeA_id < 0 AND ctA.codigo_time = ABS(j.timeA_id))
                  OR (j.timeA_id = 0 AND j.timeA_nome IS NOT NULL AND j.timeA_nome != '' AND (ctA.slot = j.timeA_nome OR ctA.slot = TRIM(REPLACE(j.timeA_nome, 'Slot ', ''))))
              )
@@ -144,7 +174,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         LEFT JOIN paises pB ON cB.Pais = pB.id
         LEFT JOIN competicao_times ctB ON ctB.id_competicao = j.competicao_id 
              AND (
-                 (j.timeB_id > 0 AND ctB.id_time_portal = j.timeB_id) 
+                 (j.timeB_id > 0 AND (ctB.id_time_portal = j.timeB_id OR ctB.codigo_time = j.timeB_id)) 
                  OR (j.timeB_id < 0 AND ctB.codigo_time = ABS(j.timeB_id))
                  OR (j.timeB_id = 0 AND j.timeB_nome IS NOT NULL AND j.timeB_nome != '' AND (ctB.slot = j.timeB_nome OR ctB.slot = TRIM(REPLACE(j.timeB_nome, 'Slot ', ''))))
              )
@@ -152,7 +182,6 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
         LEFT JOIN fase f ON j.fase = f.id
         WHERE j.simulador_interno = 1
-          AND (j.tipo_times = 0 OR j.tipo_times IS NULL)
           AND (
               j.status = 0
               OR (j.timeA_penaltis IS NULL AND DATE_ADD(j.data, INTERVAL 120 MINUTE) > NOW())
@@ -211,12 +240,33 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $j['resolved_teamB'] = resolveTeamInfo($j, 'B', $sqliteCache, $idUsuario);
         $j['is_comp_outro'] = $isCompOutro;
         $j['is_internacional'] = $isInternacional;
+        $j['dias_futuro'] = (int)round((strtotime(date('Y-m-d', strtotime($j['data']))) - strtotime(date('Y-m-d'))) / 86400);
 
         $jogos[] = $j;
     }
 ?>
 
 <main class="redesign-container" style="max-width: 1000px; padding-top: 40px; padding-bottom: 40px;">
+    <style>
+        html body .btn-filter-pill,
+        .btn-filter-pill {
+            width: auto !important;
+            max-width: fit-content !important;
+            flex: 0 0 auto !important;
+            margin: 0 !important;
+            white-space: nowrap !important;
+            display: inline-flex !important;
+            align-items: center !important;
+        }
+        #filter-pills-container {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+            align-items: center !important;
+            width: auto !important;
+            flex: 1 !important;
+        }
+    </style>
     <div class="propostas-card">
         <h2 class="propostas-title" style="margin-bottom: 10px !important;">Próximos Jogos & Escalações</h2>
         <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 25px;">Aqui estão os próximos jogos de times sob seu comando (em ligas próprias ou organizadas por terceiros). Jogos com desfalques ativos (jogadores suspensos ou lesionados) estão realçados em vermelho.</p>
@@ -231,30 +281,39 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid rgba(0,0,0,0.06);">
                 <!-- Filtros por tipo de competição (Pills) -->
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;" id="filter-pills-container">
-                    <button type="button" class="btn-filter-pill active" data-filter="all" style="background: #0284c7; color: #fff; border: 1px solid #0284c7; border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    <button type="button" class="btn-filter-pill active" data-filter="all" style="width: auto !important; max-width: fit-content !important; margin: 0 !important; background: #0284c7; color: #fff; border: 1px solid #0284c7; border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
                         Todos os Jogos (<?php echo count($jogos); ?>)
                     </button>
-                    <button type="button" class="btn-filter-pill" data-filter="internacionais" style="background: rgba(16, 185, 129, 0.08); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    <button type="button" class="btn-filter-pill" data-filter="internacionais" style="width: auto !important; max-width: fit-content !important; margin: 0 !important; background: rgba(16, 185, 129, 0.08); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
                         🌍 Apenas Internacionais (<?php echo $totalJogosInternacionais; ?>)
                     </button>
-                    <button type="button" class="btn-filter-pill" data-filter="outros" style="background: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    <button type="button" class="btn-filter-pill" data-filter="outros" style="width: auto !important; max-width: fit-content !important; margin: 0 !important; background: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
                         🌐 Competições de Outros (<?php echo $totalJogosOutros; ?>)
                     </button>
-                    <button type="button" class="btn-filter-pill" data-filter="proprias" style="background: rgba(0, 0, 0, 0.04); color: #475569; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    <button type="button" class="btn-filter-pill" data-filter="proprias" style="width: auto !important; max-width: fit-content !important; margin: 0 !important; background: rgba(0, 0, 0, 0.04); color: #475569; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
                         🏆 Minhas Competições (<?php echo $totalJogosProprios; ?>)
                     </button>
                 </div>
 
-                <!-- Filtro por competição específica -->
-                <div style="min-width: 240px; flex-shrink: 0;">
-                    <select id="select-filter-comp" style="width: 100%; padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.12); background: #ffffff; color: #1e293b; font-size: 0.85rem; font-weight: 500; outline: none; cursor: pointer;">
-                        <option value="all">Todas as competições (<?php echo count($competicoesUnicas); ?>)</option>
-                        <?php foreach ($competicoesUnicas as $c): ?>
-                            <option value="<?php echo $c['id']; ?>">
-                                <?php echo htmlspecialchars($c['nome']) . " (" . $c['qtd'] . ")" . ($c['is_outro'] ? " [Org: " . htmlspecialchars($c['dono_nome']) . "]" : ""); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                <!-- Controles da Direita: Janela de Dias, Busca rápida e Seleção de Competição -->
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: flex-end; flex: 1; min-width: 280px;">
+                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #475569; background: #ffffff; border: 1px solid rgba(0,0,0,0.12); padding: 7px 12px; border-radius: 8px; cursor: pointer; user-select: none; white-space: nowrap;" title="Limitar exibição aos jogos agendados para os próximos 10 dias">
+                        <input type="checkbox" id="check-filtro-10-dias" checked style="cursor: pointer; width: 16px; height: 16px; margin: 0; accent-color: #0284c7;">
+                        <span>Próximos 10 dias</span>
+                    </label>
+                    <div style="flex: 1; min-width: 150px; max-width: 200px;">
+                        <input type="text" id="search-matches-input" placeholder="🔍 Buscar time, grupo..." style="width: 100%; box-sizing: border-box; padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.12); background: #ffffff; color: #1e293b; font-size: 0.85rem; font-weight: 500; outline: none;">
+                    </div>
+                    <div style="flex: 1; min-width: 190px; max-width: 260px;">
+                        <select id="select-filter-comp" style="width: 100%; box-sizing: border-box; padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.12); background: #ffffff; color: #1e293b; font-size: 0.85rem; font-weight: 500; outline: none; cursor: pointer;">
+                            <option value="all">Todas as competições (<?php echo count($competicoesUnicas); ?>)</option>
+                            <?php foreach ($competicoesUnicas as $c): ?>
+                                <option value="<?php echo $c['id']; ?>">
+                                    <?php echo htmlspecialchars($c['nome']) . " (" . $c['qtd'] . ")" . ($c['is_outro'] ? " [Org: " . htmlspecialchars($c['dono_nome']) . "]" : ""); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -278,6 +337,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                          data-comp-id="<?php echo $j['comp_id']; ?>" 
                          data-is-outro="<?php echo $isCompOutro ? '1' : '0'; ?>"
                          data-is-internacional="<?php echo $isInternacional ? '1' : '0'; ?>"
+                         data-dias-futuro="<?php echo $j['dias_futuro']; ?>"
                          style="background: <?php echo $cardBg; ?>; border: <?php echo $cardBorder; ?>; border-radius: 12px; padding: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; transition: transform 0.2s ease, box-shadow 0.2s ease;"
                          onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.06)';"
                          onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
@@ -344,19 +404,40 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
                         <!-- Right Info: Ações de Escalação -->
                         <div style="display: flex; flex-direction: column; gap: 8px; justify-content: center; align-items: flex-end; min-width: 150px;">
+                            <?php 
+                            $isBloqueado = ((int)$j['status'] === 1 || (!empty($j['data']) && strtotime($j['data']) <= time()));
+                            $bloqueioMotivo = ((int)$j['status'] === 1) ? 'Encerrada' : 'Em andamento';
+                            $bloqueioTooltip = ((int)$j['status'] === 1) ? 'Esta partida já foi simulada/encerrada' : 'Partida em andamento ou horário de início atingido';
+                            ?>
                             <?php if ($isDonoA && $tA['id'] != 0): ?>
-                                <a href="/competicoes/escalacao_jogo.php?comp=<?php echo $j['comp_id']; ?>&team=<?php echo $tA['id']; ?>&jogo=<?php echo $j['match_id']; ?>" 
-                                   style="display: inline-flex; align-items: center; gap: 5px; background: #0284c7; color: #fff; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: background 0.2s;"
-                                   onmouseover="this.style.background='#0369a1'" onmouseout="this.style.background='#0284c7'">
-                                    📋 Escalar <?php echo htmlspecialchars($tA['nome']); ?>
-                                </a>
+                                <?php if ($isBloqueado): ?>
+                                    <button type="button" disabled 
+                                            style="display: inline-flex; align-items: center; gap: 5px; background: rgba(0, 0, 0, 0.05); color: #94a3b8; border: 1px solid rgba(0, 0, 0, 0.1); padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: not-allowed; width: auto !important; max-width: fit-content !important;"
+                                            title="<?php echo $bloqueioTooltip; ?>">
+                                        🔒 Escalar <?php echo htmlspecialchars($tA['nome']); ?> (<?php echo $bloqueioMotivo; ?>)
+                                    </button>
+                                <?php else: ?>
+                                    <a href="/competicoes/escalacao_jogo.php?comp=<?php echo $j['comp_id']; ?>&team=<?php echo $tA['id']; ?>&jogo=<?php echo $j['match_id']; ?>" 
+                                       style="display: inline-flex; align-items: center; gap: 5px; background: #0284c7; color: #fff; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; width: auto !important; max-width: fit-content !important; transition: background 0.2s;"
+                                       onmouseover="this.style.background='#0369a1'" onmouseout="this.style.background='#0284c7'">
+                                        📋 Escalar <?php echo htmlspecialchars($tA['nome']); ?>
+                                    </a>
+                                <?php endif; ?>
                             <?php endif; ?>
                             <?php if ($isDonoB && $tB['id'] != 0): ?>
-                                <a href="/competicoes/escalacao_jogo.php?comp=<?php echo $j['comp_id']; ?>&team=<?php echo $tB['id']; ?>&jogo=<?php echo $j['match_id']; ?>" 
-                                   style="display: inline-flex; align-items: center; gap: 5px; background: #0284c7; color: #fff; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: background 0.2s;"
-                                   onmouseover="this.style.background='#0369a1'" onmouseout="this.style.background='#0284c7'">
-                                    📋 Escalar <?php echo htmlspecialchars($tB['nome']); ?>
-                                </a>
+                                <?php if ($isBloqueado): ?>
+                                    <button type="button" disabled 
+                                            style="display: inline-flex; align-items: center; gap: 5px; background: rgba(0, 0, 0, 0.05); color: #94a3b8; border: 1px solid rgba(0, 0, 0, 0.1); padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: not-allowed; width: auto !important; max-width: fit-content !important;"
+                                            title="<?php echo $bloqueioTooltip; ?>">
+                                        🔒 Escalar <?php echo htmlspecialchars($tB['nome']); ?> (<?php echo $bloqueioMotivo; ?>)
+                                    </button>
+                                <?php else: ?>
+                                    <a href="/competicoes/escalacao_jogo.php?comp=<?php echo $j['comp_id']; ?>&team=<?php echo $tB['id']; ?>&jogo=<?php echo $j['match_id']; ?>" 
+                                       style="display: inline-flex; align-items: center; gap: 5px; background: #0284c7; color: #fff; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; width: auto !important; max-width: fit-content !important; transition: background 0.2s;"
+                                       onmouseover="this.style.background='#0369a1'" onmouseout="this.style.background='#0284c7'">
+                                        📋 Escalar <?php echo htmlspecialchars($tB['nome']); ?>
+                                    </a>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
 
@@ -376,26 +457,43 @@ $(document).ready(function() {
     var activePill = 'all';
 
     function applyFilters() {
-        var selectedComp = $('#select-filter-comp').val();
+        var selectedComp = String($('#select-filter-comp').val() || 'all');
+        var searchVal = $.trim($('#search-matches-input').val()).toLowerCase();
+        var only10Days = $('#check-filtro-10-dias').is(':checked');
         var visibleCount = 0;
 
         $('.match-item-card').each(function() {
             var card = $(this);
-            var compId = card.data('comp-id');
-            var isOutro = card.data('is-outro') == '1';
+            var compId = String(card.attr('data-comp-id') || '');
+            var isOutro = (card.attr('data-is-outro') === '1');
+            var isInternacional = (card.attr('data-is-internacional') === '1');
+            var diasFuturo = parseInt(card.attr('data-dias-futuro'), 10);
+            if (isNaN(diasFuturo)) diasFuturo = 0;
 
             var matchPill = true;
             if (activePill === 'internacionais') {
-                matchPill = (card.data('is-internacional') == '1');
+                matchPill = isInternacional;
             } else if (activePill === 'outros') {
                 matchPill = isOutro;
             } else if (activePill === 'proprias') {
                 matchPill = !isOutro;
             }
 
-            var matchComp = (selectedComp === 'all' || selectedComp == compId);
+            var matchComp = (selectedComp === 'all' || selectedComp === compId);
 
-            if (matchPill && matchComp) {
+            var matchSearch = true;
+            if (searchVal !== '') {
+                var cardText = card.text().toLowerCase();
+                matchSearch = (cardText.indexOf(searchVal) !== -1);
+            }
+
+            var matchDays = (!only10Days || (diasFuturo >= 0 && diasFuturo <= 10));
+            // Se o usuário selecionou uma competição específica, filtrou por outros/internacionais ou buscou por termo, não limitar aos 10 dias
+            if (selectedComp !== 'all' || searchVal !== '' || activePill === 'outros' || activePill === 'internacionais') {
+                matchDays = true;
+            }
+
+            if (matchPill && matchComp && matchSearch && matchDays) {
                 card.show();
                 visibleCount++;
             } else {
@@ -448,6 +546,18 @@ $(document).ready(function() {
     $('#select-filter-comp').on('change', function() {
         applyFilters();
     });
+
+    // Alternar janela de 10 dias
+    $('#check-filtro-10-dias').on('change', function() {
+        applyFilters();
+    });
+
+    // Busca rápida em tempo real
+    $('#search-matches-input').on('keyup search input', function() {
+        applyFilters();
+    });
+
+    applyFilters();
 });
 </script>
         

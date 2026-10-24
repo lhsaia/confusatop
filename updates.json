@@ -13,6 +13,31 @@
       "date": "24/10/2026",
       "items": [
         {
+          "badge": "bugfix",
+          "title": "Bloqueio de Escalação em Jogos Iniciados",
+          "desc": "Desabilitados botoes de escalacao para partidas ja simuladas ou com horario de inicio atingido na tela de Proximos Jogos e no backend."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Filtro Preciso de Próximos Jogos",
+          "desc": "Ajustado filtro de 10 dias para ignorar restrição ao filtrar por competição ou busca textual, e corrigido cálculo para não exibir partidas retroativas não simuladas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Sincronização do Ranking",
+          "desc": "Garante valor padrão numérico para o código do árbitro ao gravar ou atualizar partidas no ranking oficial, prevenindo erros de restrição de integridade (NOT NULL)."
+        },
+        {
+          "badge": "new",
+          "title": "Janela de 10 Dias em Próximos Jogos",
+          "desc": "Implementada limitação padrão de janela de no máximo 10 dias no futuro para a lista de jogos ativos e contador da home, reduzindo o excesso de partidas distantes de ligas com alternador rápido para ver todas as datas."
+        },
+        {
+          "badge": "design",
+          "title": "Ajuste de Largura dos Botões de Filtro",
+          "desc": "Corrigido estilo dos botões de filtro rápido em Próximos Jogos & Escalações para largura automática e inline, evitando esticamento para 100% causado por login.css."
+        },
+        {
           "badge": "new",
           "title": "Filtro de Competições Internacionais",
           "desc": "Adicionado filtro rápido para exibir apenas partidas de competições internacionais na tela de Próximos Jogos & Escalações, com identificador visual dedicado no card do confronto."

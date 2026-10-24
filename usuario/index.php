@@ -128,7 +128,6 @@ $query_count_jogos_ativos = "
          )
     LEFT JOIN paises pctB ON ctB.pais_time = pctB.id
     WHERE j.simulador_interno = 1
-      AND (j.tipo_times = 0 OR j.tipo_times IS NULL)
       AND (
           j.status = 0
           OR (j.timeA_penaltis IS NULL AND DATE_ADD(j.data, INTERVAL 120 MINUTE) > NOW())

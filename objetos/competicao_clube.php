@@ -1043,7 +1043,15 @@ class Competicao_clube{
 			$estadioNome = $stEst->fetchColumn() ?: '';
 		}
 
-		$arbitroId = !empty($partida['arbitro_id']) ? intval($partida['arbitro_id']) : null;
+		$arbitroId = !empty($partida['arbitro_id']) ? intval($partida['arbitro_id']) : 0;
+		if ($arbitroId <= 0 && !empty($jsonHyj->idArbitragem)) {
+			$arbitroId = intval($jsonHyj->idArbitragem);
+		} elseif ($arbitroId <= 0 && !empty($xml->idArbitragem)) {
+			$arbitroId = intval($xml->idArbitragem);
+		}
+		if ($arbitroId < 0) {
+			$arbitroId = 0;
+		}
 		$fase = isset($partida['fase']) ? intval($partida['fase']) : 0;
 
 		if ($idJogoRanking > 0) {

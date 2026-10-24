@@ -103,14 +103,19 @@ if (!$isAdmin && $userLogado != $donoCompeticao && $userLogado != $donoTime) {
     die("Acesso negado. Apenas o responsável pelo time ou o administrador podem alterar a escalação.");
 }
 
-// Se for edição de escalação para um jogo específico, validar se o jogo já foi simulado/encerrado
+// Se for edição de escalação para um jogo específico, validar se o jogo já foi simulado/encerrado ou está em andamento
 if ($idJogo > 0) {
-    $stmtStatusJogo = $db->prepare("SELECT status FROM jogos_clube WHERE id = :idJogo LIMIT 1");
+    $stmtStatusJogo = $db->prepare("SELECT status, data FROM jogos_clube WHERE id = :idJogo LIMIT 1");
     $stmtStatusJogo->bindParam(':idJogo', $idJogo, PDO::PARAM_INT);
     $stmtStatusJogo->execute();
     $jogoStatusRow = $stmtStatusJogo->fetch(PDO::FETCH_ASSOC);
-    if ($jogoStatusRow && $jogoStatusRow['status'] == 1) {
-        die("Esta partida já foi simulada/encerrada e sua escalação não pode mais ser alterada.");
+    if ($jogoStatusRow) {
+        if ($jogoStatusRow['status'] == 1) {
+            die("Esta partida já foi simulada/encerrada e sua escalação não pode mais ser alterada.");
+        }
+        if (!empty($jogoStatusRow['data']) && strtotime($jogoStatusRow['data']) <= time()) {
+            die("Esta partida já está em andamento ou seu horário de início foi atingido, e a escalação não pode mais ser alterada.");
+        }
     }
 }
 
