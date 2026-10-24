@@ -391,6 +391,47 @@ foreach ($partidas as $matchInfo) {
     $liteCompeticao = new Competicao_clube($ldb);
     $timeObj = new Time($ldb);
 
+    // Auto-correção robusta de IDs de clubes (garante que IDs positivos/negativos batam exatamente com o SQLite da competição)
+    $stmtClubesSQLite = $ldb->query("SELECT ID FROM clube");
+    $clubesSQLiteExistentes = [];
+    if ($stmtClubesSQLite) {
+        while ($rCl = $stmtClubesSQLite->fetch(PDO::FETCH_ASSOC)) {
+            $clubesSQLiteExistentes[(int)$rCl['ID']] = true;
+        }
+    }
+
+    $timeA_atualizado = false;
+    $timeB_atualizado = false;
+
+    // Checar timeA
+    $tA = (int)$matchInfo['timeA'];
+    if (!isset($clubesSQLiteExistentes[$tA])) {
+        if (isset($clubesSQLiteExistentes[-$tA])) {
+            $matchInfo['timeA'] = -$tA;
+            $timeA_atualizado = true;
+        }
+    }
+
+    // Checar timeB
+    $tB = (int)$matchInfo['timeB'];
+    if (!isset($clubesSQLiteExistentes[$tB])) {
+        if (isset($clubesSQLiteExistentes[-$tB])) {
+            $matchInfo['timeB'] = -$tB;
+            $timeB_atualizado = true;
+        }
+    }
+
+    if ($timeA_atualizado || $timeB_atualizado) {
+        try {
+            $stmtUpdTeams = $db->prepare("UPDATE jogos_clube SET timeA_id = :tA, timeB_id = :tB WHERE id = :idPartida");
+            $stmtUpdTeams->bindValue(':tA', $matchInfo['timeA'], PDO::PARAM_INT);
+            $stmtUpdTeams->bindValue(':tB', $matchInfo['timeB'], PDO::PARAM_INT);
+            $stmtUpdTeams->bindValue(':idPartida', $idPartida, PDO::PARAM_INT);
+            $stmtUpdTeams->execute();
+            cron_log("   [AUTO-FIX ID] Partida #{$idPartida}: IDs de clubes sincronizados com o SQLite (Time A: {$matchInfo['timeA']}, Time B: {$matchInfo['timeB']}).");
+        } catch (\Throwable $e) {}
+    }
+
     // Validar e resolver estádio da partida (inclusive para times YMT que usam IDs negativos)
     $idEstadio = isset($matchInfo['estadio']) ? (int)$matchInfo['estadio'] : 0;
     $estadioValido = false;

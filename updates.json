@@ -7,7 +7,18 @@
     "security": "Segurança",
     "bugfix": "Ajuste"
   },
-  "days": [
+    "days": [
+    {
+      "id": "day_23_10_2026",
+      "date": "23/10/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção de Colisão e Isolamento Estrito de Slots em Competições",
+          "desc": "Eliminadas as condições de matching frouxas e colisões por ID negativo no método definirSlotTime e na listagem de jogos. Slots de grupos agora são vinculados estritamente pelo identificador nominal e grupo correspondente, impedindo que times temporários ou índices de vagas sobrescrevam outros confrontos na tabela."
+        }
+      ]
+    },
     {
       "id": "day_14_10_2026",
       "date": "14/10/2026",

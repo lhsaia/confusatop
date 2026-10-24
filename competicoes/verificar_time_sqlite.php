@@ -416,15 +416,27 @@ if ($todos === 1) {
         die(json_encode(['success' => false, 'error' => 'Esta vaga ainda não possui nenhum time salvo ou importado no SQLite da competição.']));
     }
 
-    // Fallback: verificar se o time existe no SQLite pelo targetClubeId ou pelo ID negativo da vaga
+    // Fallback: verificar se o time existe no SQLite pelo targetClubeId ou pelo ID oposto/negativo
     $stCheck = $ldb->prepare("SELECT 1 FROM clube WHERE ID = :id LIMIT 1");
     $stCheck->execute([':id' => $targetClubeId]);
-    if (!$stCheck->fetch() && $vagaNum > 0) {
-        $altCid = -1 * abs($vagaNum);
+    if (!$stCheck->fetch()) {
+        $altCid = -$targetClubeId;
         $stCheckAlt = $ldb->prepare("SELECT 1 FROM clube WHERE ID = :id LIMIT 1");
         $stCheckAlt->execute([':id' => $altCid]);
         if ($stCheckAlt->fetch()) {
+            // Sincronizar jogos que estavam com sinal invertido
+            try {
+                $db->exec("UPDATE jogos_clube SET timeA_id = $altCid WHERE competicao_id = $idCompeticao AND timeA_id = $targetClubeId");
+                $db->exec("UPDATE jogos_clube SET timeB_id = $altCid WHERE competicao_id = $idCompeticao AND timeB_id = $targetClubeId");
+            } catch (\Throwable $e) {}
             $targetClubeId = $altCid;
+        } else if ($vagaNum > 0) {
+            $altVaga = -1 * abs($vagaNum);
+            $stCheckVaga = $ldb->prepare("SELECT 1 FROM clube WHERE ID = :id LIMIT 1");
+            $stCheckVaga->execute([':id' => $altVaga]);
+            if ($stCheckVaga->fetch()) {
+                $targetClubeId = $altVaga;
+            }
         }
     }
 

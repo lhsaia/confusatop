@@ -144,7 +144,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 			$prevTeamId = 0;
 			$prevSlot = null;
 			try {
-				$stPrev = $db->prepare("SELECT id_time_portal, slot FROM competicao_times WHERE id_competicao = :idComp AND codigo_time = :cod LIMIT 1");
+				$stPrev = $db->prepare("SELECT id_time_portal, has_team, slot FROM competicao_times WHERE id_competicao = :idComp AND codigo_time = :cod LIMIT 1");
 				$stPrev->bindParam(':idComp', $idCompeticao);
 				$stPrev->bindParam(':cod', $codigoTime);
 				$stPrev->execute();
@@ -152,6 +152,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 				if ($rPrev) {
 					if (!empty($rPrev['id_time_portal'])) {
 						$prevTeamId = intval($rPrev['id_time_portal']);
+					} else if ($rPrev['has_team'] == 1 || $rPrev['has_team'] == '1') {
+						$prevTeamId = -1 * abs(intval($codigoTime));
 					}
 					if (!empty($rPrev['slot'])) {
 						$prevSlot = $rPrev['slot'];
