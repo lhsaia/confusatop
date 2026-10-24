@@ -416,26 +416,31 @@
 
 	// 3. Aplicar as escalações temporárias na tabela escalacao do banco temporário
 	try {
-		$updateFields = [];
-		for ($i = 1; $i <= 11; $i++) {
-			$updateFields[] = "Jogador{$i} = :jog{$i}";
-		}
-		$updateFields[] = "Capitao = :capitao";
-		$updateFields[] = "Penalti1 = :pen1";
-		$updateFields[] = "Penalti2 = :pen2";
-		$updateFields[] = "Penalti3 = :pen3";
-		$stmtUp = $ldb->prepare("UPDATE escalacao SET " . implode(', ', $updateFields) . " WHERE Clube = :clube");
-
 		if ($customLineupA) {
-			$stmtUp->bindValue(':clube', $matchInfo['timeA_id'], PDO::PARAM_INT);
+			$posMapA = !empty($customLineupA['PosicoesEscolhidas']) ? json_decode($customLineupA['PosicoesEscolhidas'], true) : [];
+			$updateFieldsA = [];
 			for ($i = 1; $i <= 11; $i++) {
-				$stmtUp->bindValue(':jog' . $i, $customLineupA['Jogador' . $i], PDO::PARAM_INT);
+				$updateFieldsA[] = "Jogador{$i} = :jog{$i}";
+				if (!empty($posMapA)) {
+					$updateFieldsA[] = "Pos{$i} = :pos{$i}";
+				}
 			}
-			$stmtUp->bindValue(':capitao', $customLineupA['Capitao'], PDO::PARAM_INT);
-			$stmtUp->bindValue(':pen1', $customLineupA['Penalti1'], PDO::PARAM_INT);
-			$stmtUp->bindValue(':pen2', $customLineupA['Penalti2'], PDO::PARAM_INT);
-			$stmtUp->bindValue(':pen3', $customLineupA['Penalti3'], PDO::PARAM_INT);
-			$stmtUp->execute();
+			$updateFieldsA[] = "Capitao = :capitao, Penalti1 = :pen1, Penalti2 = :pen2, Penalti3 = :pen3";
+			$stmtUpA = $ldb->prepare("UPDATE escalacao SET " . implode(', ', $updateFieldsA) . " WHERE Clube = :clube");
+			$stmtUpA->bindValue(':clube', $matchInfo['timeA_id'], PDO::PARAM_INT);
+			for ($i = 1; $i <= 11; $i++) {
+				$jIdA = (int)$customLineupA['Jogador' . $i];
+				$stmtUpA->bindValue(':jog' . $i, $jIdA, PDO::PARAM_INT);
+				if (!empty($posMapA)) {
+					$posA = isset($posMapA[$jIdA]) ? $posMapA[$jIdA] : ($originalEscalacoes[(int)$matchInfo['timeA_id']]['Pos' . $i] ?? 'MC');
+					$stmtUpA->bindValue(':pos' . $i, $posA, PDO::PARAM_STR);
+				}
+			}
+			$stmtUpA->bindValue(':capitao', $customLineupA['Capitao'], PDO::PARAM_INT);
+			$stmtUpA->bindValue(':pen1', $customLineupA['Penalti1'], PDO::PARAM_INT);
+			$stmtUpA->bindValue(':pen2', $customLineupA['Penalti2'], PDO::PARAM_INT);
+			$stmtUpA->bindValue(':pen3', $customLineupA['Penalti3'], PDO::PARAM_INT);
+			$stmtUpA->execute();
 
 			if (!empty($customLineupA['Indisponiveis'])) {
 				$indispA = array_map('intval', explode(',', $customLineupA['Indisponiveis']));
@@ -444,15 +449,30 @@
 		}
 
 		if ($customLineupB) {
-			$stmtUp->bindValue(':clube', $matchInfo['timeB_id'], PDO::PARAM_INT);
+			$posMapB = !empty($customLineupB['PosicoesEscolhidas']) ? json_decode($customLineupB['PosicoesEscolhidas'], true) : [];
+			$updateFieldsB = [];
 			for ($i = 1; $i <= 11; $i++) {
-				$stmtUp->bindValue(':jog' . $i, $customLineupB['Jogador' . $i], PDO::PARAM_INT);
+				$updateFieldsB[] = "Jogador{$i} = :jog{$i}";
+				if (!empty($posMapB)) {
+					$updateFieldsB[] = "Pos{$i} = :pos{$i}";
+				}
 			}
-			$stmtUp->bindValue(':capitao', $customLineupB['Capitao'], PDO::PARAM_INT);
-			$stmtUp->bindValue(':pen1', $customLineupB['Penalti1'], PDO::PARAM_INT);
-			$stmtUp->bindValue(':pen2', $customLineupB['Penalti2'], PDO::PARAM_INT);
-			$stmtUp->bindValue(':pen3', $customLineupB['Penalti3'], PDO::PARAM_INT);
-			$stmtUp->execute();
+			$updateFieldsB[] = "Capitao = :capitao, Penalti1 = :pen1, Penalti2 = :pen2, Penalti3 = :pen3";
+			$stmtUpB = $ldb->prepare("UPDATE escalacao SET " . implode(', ', $updateFieldsB) . " WHERE Clube = :clube");
+			$stmtUpB->bindValue(':clube', $matchInfo['timeB_id'], PDO::PARAM_INT);
+			for ($i = 1; $i <= 11; $i++) {
+				$jIdB = (int)$customLineupB['Jogador' . $i];
+				$stmtUpB->bindValue(':jog' . $i, $jIdB, PDO::PARAM_INT);
+				if (!empty($posMapB)) {
+					$posB = isset($posMapB[$jIdB]) ? $posMapB[$jIdB] : ($originalEscalacoes[(int)$matchInfo['timeB_id']]['Pos' . $i] ?? 'MC');
+					$stmtUpB->bindValue(':pos' . $i, $posB, PDO::PARAM_STR);
+				}
+			}
+			$stmtUpB->bindValue(':capitao', $customLineupB['Capitao'], PDO::PARAM_INT);
+			$stmtUpB->bindValue(':pen1', $customLineupB['Penalti1'], PDO::PARAM_INT);
+			$stmtUpB->bindValue(':pen2', $customLineupB['Penalti2'], PDO::PARAM_INT);
+			$stmtUpB->bindValue(':pen3', $customLineupB['Penalti3'], PDO::PARAM_INT);
+			$stmtUpB->execute();
 
 			if (!empty($customLineupB['Indisponiveis'])) {
 				$indispB = array_map('intval', explode(',', $customLineupB['Indisponiveis']));
@@ -632,12 +652,15 @@
 				$stmtRestore = $ldb->prepare("UPDATE escalacao SET 
 					Jogador1 = :jog1, Jogador2 = :jog2, Jogador3 = :jog3, Jogador4 = :jog4, Jogador5 = :jog5, 
 					Jogador6 = :jog6, Jogador7 = :jog7, Jogador8 = :jog8, Jogador9 = :jog9, Jogador10 = :jog10, Jogador11 = :jog11, 
+					Pos1 = :pos1, Pos2 = :pos2, Pos3 = :pos3, Pos4 = :pos4, Pos5 = :pos5, 
+					Pos6 = :pos6, Pos7 = :pos7, Pos8 = :pos8, Pos9 = :pos9, Pos10 = :pos10, Pos11 = :pos11, 
 					Capitao = :capitao, Penalti1 = :pen1, Penalti2 = :pen2, Penalti3 = :pen3
 					WHERE Clube = :clube");
 				foreach ($originalEscalacoes as $clubeId => $rowOrig) {
 					$stmtRestore->bindValue(':clube', $clubeId, PDO::PARAM_INT);
 					for ($i = 1; $i <= 11; $i++) {
 						$stmtRestore->bindValue(':jog' . $i, $rowOrig['Jogador' . $i], PDO::PARAM_INT);
+						$stmtRestore->bindValue(':pos' . $i, $rowOrig['Pos' . $i], PDO::PARAM_STR);
 					}
 					$stmtRestore->bindValue(':capitao', $rowOrig['Capitao'], PDO::PARAM_INT);
 					$stmtRestore->bindValue(':pen1', $rowOrig['Penalti1'], PDO::PARAM_INT);

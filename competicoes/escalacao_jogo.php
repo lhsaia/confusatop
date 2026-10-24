@@ -145,97 +145,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_escalacao'])) 
                 throw new Exception("Escalação do clube não encontrada no banco de dados.");
             }
 
-            // Mapeamento de posições abreviadas para colunas na tabela posicaojogador
-            $posMap = [
-                'G' => 'Goleiro',
-                'Z' => 'Zagueiro',
-                'LD' => 'LateralDireito',
-                'LE' => 'LateralEsquerdo',
-                'V' => 'Volante',
-                'MC' => 'MeiaCentral',
-                'MD' => 'MeiaDireita',
-                'ME' => 'MeiaEsquerda',
-                'MA' => 'MeiaCentral',
-                'A' => 'Atacante',
-                'Aa' => 'Atacante',
-                'PE' => 'Atacante',
-                'PD' => 'Atacante',
-                'AD' => 'LateralDireito',
-                'AE' => 'LateralEsquerdo',
-            ];
+            $posPost = isset($_POST['posicao_jogador']) ? $_POST['posicao_jogador'] : [];
 
-            // Obter as posições preferidas dos titulares selecionados
+            // Obter as posições preferidas dos titulares selecionados da tabela posicaojogador
             $playersPositions = [];
+            $posCols = ['G', 'LD', 'LE', 'Z', 'AD', 'AE', 'V', 'MD', 'ME', 'MC', 'PD', 'PE', 'MA', 'Am', 'Aa'];
             $inClause = implode(',', array_map('intval', $titulares));
             $stmtPos = $sdb->query("SELECT * FROM posicaojogador WHERE Jogador IN ($inClause)");
             while ($row = $stmtPos->fetch(PDO::FETCH_ASSOC)) {
                 $pId = (int)$row['Jogador'];
                 $playersPositions[$pId] = [];
-                if (isset($row['G']) && $row['G'] == 1) $playersPositions[$pId][] = 'Goleiro';
-                if (isset($row['Z']) && $row['Z'] == 1) $playersPositions[$pId][] = 'Zagueiro';
-                if ((isset($row['LD']) && $row['LD'] == 1) || (isset($row['AD']) && $row['AD'] == 1)) $playersPositions[$pId][] = 'LateralDireito';
-                if ((isset($row['LE']) && $row['LE'] == 1) || (isset($row['AE']) && $row['AE'] == 1)) $playersPositions[$pId][] = 'LateralEsquerdo';
-                if (isset($row['V']) && $row['V'] == 1) $playersPositions[$pId][] = 'Volante';
-                if ((isset($row['MC']) && $row['MC'] == 1) || (isset($row['MA']) && $row['MA'] == 1)) $playersPositions[$pId][] = 'MeiaCentral';
-                if (isset($row['MD']) && $row['MD'] == 1) $playersPositions[$pId][] = 'MeiaDireita';
-                if (isset($row['ME']) && $row['ME'] == 1) $playersPositions[$pId][] = 'MeiaEsquerda';
-                if ((isset($row['PD']) && $row['PD'] == 1) || (isset($row['PE']) && $row['PE'] == 1) || (isset($row['Am']) && $row['Am'] == 1) || (isset($row['Aa']) && $row['Aa'] == 1)) $playersPositions[$pId][] = 'Atacante';
+                foreach ($posCols as $col) {
+                    if (!empty($row[$col]) && ($row[$col] == 1 || $row[$col] === '1' || $row[$col] === true)) {
+                        $playersPositions[$pId][] = $col;
+                    }
+                }
             }
 
-            // Garantir que todos tenham alguma entrada no array
+            // Posição desejada de cada titular (respeitando a escolha explícita do usuário no dropdown)
+            $playerTargetPos = [];
             foreach ($titulares as $tId) {
-                if (!isset($playersPositions[$tId])) {
-                    $playersPositions[$tId] = ['Atacante'];
+                $tId = (int)$tId;
+                if (!empty($posPost[$tId])) {
+                    $playerTargetPos[$tId] = $posPost[$tId];
+                } elseif (!empty($playersPositions[$tId])) {
+                    $playerTargetPos[$tId] = $playersPositions[$tId][0];
+                } else {
+                    $playerTargetPos[$tId] = 'MC';
                 }
             }
 
-            $tacticalPositions = [];
-            for ($i = 1; $i <= 11; $i++) {
-                $tacticalPositions[$i] = $currentEsc['Pos' . $i];
-            }
+            $assigned = array_fill(1, 11, null);
+            $assignedPos = array_fill(1, 11, null);
+            $usedPlayers = [];
+            $emptySlots = [];
 
-            $assigned = [];
-            $playerUsed = [];
-
-            // Função recursiva para fazer o matching dos jogadores com as posições táticas
-            function assignPositions($posIdx, $tacticalPositions, $posMap, $playersPositions, &$assigned, &$playerUsed) {
-                if ($posIdx > 11) {
-                    return true;
-                }
-                
-                $tacticalPos = $tacticalPositions[$posIdx];
-                $preferredCol = isset($posMap[$tacticalPos]) ? $posMap[$tacticalPos] : 'Atacante';
-                
-                // Tenta atribuir um jogador livre que tenha essa posição ativada
-                foreach ($playersPositions as $pId => $activeCols) {
-                    if (!isset($playerUsed[$pId]) && in_array($preferredCol, $activeCols)) {
-                        $playerUsed[$pId] = true;
-                        $assigned[$posIdx] = $pId;
-                        if (assignPositions($posIdx + 1, $tacticalPositions, $posMap, $playersPositions, $assigned, $playerUsed)) {
-                            return true;
-                        }
-                        unset($playerUsed[$pId]);
-                        unset($assigned[$posIdx]);
+            // Passo 1: Encaixar jogadores cuja posição escolhida coincide exatamente com a posição do slot tático
+            for ($slot = 1; $slot <= 11; $slot++) {
+                $slotPos = $currentEsc['Pos' . $slot] ?? '';
+                $matched = false;
+                foreach ($titulares as $tId) {
+                    $tId = (int)$tId;
+                    if (!isset($usedPlayers[$tId]) && $playerTargetPos[$tId] === $slotPos) {
+                        $assigned[$slot] = $tId;
+                        $assignedPos[$slot] = $slotPos;
+                        $usedPlayers[$tId] = true;
+                        $matched = true;
+                        break;
                     }
                 }
-                
-                // Fallback: atribui qualquer jogador livre para essa posição
-                foreach (array_keys($playersPositions) as $pId) {
-                    if (!isset($playerUsed[$pId])) {
-                        $playerUsed[$pId] = true;
-                        $assigned[$posIdx] = $pId;
-                        if (assignPositions($posIdx + 1, $tacticalPositions, $posMap, $playersPositions, $assigned, $playerUsed)) {
-                            return true;
-                        }
-                        unset($playerUsed[$pId]);
-                        unset($assigned[$posIdx]);
-                    }
+                if (!$matched) {
+                    $emptySlots[] = $slot;
                 }
-                
-                return false;
             }
 
-            assignPositions(1, $tacticalPositions, $posMap, $playersPositions, $assigned, $playerUsed);
+            // Passo 2: Se restaram jogadores que não encaixaram em slot com mesmo nome, preencher os slots vazios
+            foreach ($titulares as $tId) {
+                $tId = (int)$tId;
+                if (!isset($usedPlayers[$tId])) {
+                    if (!empty($emptySlots)) {
+                        $slot = array_shift($emptySlots);
+                        $assigned[$slot] = $tId;
+                        $assignedPos[$slot] = $playerTargetPos[$tId];
+                        $usedPlayers[$tId] = true;
+                    }
+                }
+            }
 
             if (!in_array($capitao, $titulares)) {
                 $capitao = $titulares[0];
@@ -279,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_escalacao'])) 
                 if (isset($_POST['salvar_definitivo']) && $_POST['salvar_definitivo'] == 1) {
                     $updateFields = [];
                     for ($i = 1; $i <= 11; $i++) {
-                        $updateFields[] = "Jogador{$i} = :jog{$i}";
+                        $updateFields[] = "Jogador{$i} = :jog{$i}, Pos{$i} = :pos{$i}";
                     }
                     $updateFields[] = "Capitao = :capitao";
                     $updateFields[] = "Penalti1 = :pen1";
@@ -289,6 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_escalacao'])) 
                     $stmtUpdate = $sdb->prepare("UPDATE escalacao SET " . implode(', ', $updateFields) . " WHERE Clube = :clube");
                     for ($i = 1; $i <= 11; $i++) {
                         $stmtUpdate->bindValue(':jog' . $i, $assigned[$i], PDO::PARAM_INT);
+                        $stmtUpdate->bindValue(':pos' . $i, $assignedPos[$i], PDO::PARAM_STR);
                     }
                     $stmtUpdate->bindValue(':capitao', $capitao, PDO::PARAM_INT);
                     $stmtUpdate->bindValue(':pen1', $pen1, PDO::PARAM_INT);
@@ -301,7 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_escalacao'])) 
                 // Construir e executar o UPDATE na tabela escalacao do SQLite
                 $updateFields = [];
                 for ($i = 1; $i <= 11; $i++) {
-                    $updateFields[] = "Jogador{$i} = :jog{$i}";
+                    $updateFields[] = "Jogador{$i} = :jog{$i}, Pos{$i} = :pos{$i}";
                 }
                 $updateFields[] = "Capitao = :capitao";
                 $updateFields[] = "Penalti1 = :pen1";
@@ -311,6 +287,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['salvar_escalacao'])) 
                 $stmtUpdate = $sdb->prepare("UPDATE escalacao SET " . implode(', ', $updateFields) . " WHERE Clube = :clube");
                 for ($i = 1; $i <= 11; $i++) {
                     $stmtUpdate->bindValue(':jog' . $i, $assigned[$i], PDO::PARAM_INT);
+                    $stmtUpdate->bindValue(':pos' . $i, $assignedPos[$i], PDO::PARAM_STR);
                 }
                 $stmtUpdate->bindValue(':capitao', $capitao, PDO::PARAM_INT);
                 $stmtUpdate->bindValue(':pen1', $pen1, PDO::PARAM_INT);
@@ -389,6 +366,24 @@ if ($idJogo > 0) {
 
 $titularesIds = [];
 $capitaoId = 0;
+$defaultPositionsByPlayer = [];
+
+// Obter também as posições da escalação padrão do clube para mapear a posição tática natural dos titulares
+try {
+    $stmtDefEsc = $sdb->prepare("SELECT * FROM escalacao WHERE Clube = :clube LIMIT 1");
+    $stmtDefEsc->bindParam(':clube', $idTime);
+    $stmtDefEsc->execute();
+    $defEscRow = $stmtDefEsc->fetch(PDO::FETCH_ASSOC);
+    if ($defEscRow) {
+        for ($i = 1; $i <= 11; $i++) {
+            $pId = (int)($defEscRow['Jogador' . $i] ?? 0);
+            if ($pId > 0 && !empty($defEscRow['Pos' . $i])) {
+                $defaultPositionsByPlayer[$pId] = $defEscRow['Pos' . $i];
+            }
+        }
+    }
+} catch (Exception $e) {}
+
 if ($escalacaoRow) {
     for ($i = 1; $i <= 11; $i++) {
         if (!empty($escalacaoRow['Jogador' . $i])) {
@@ -519,7 +514,13 @@ if (!empty($playerIds)) {
         $row['Suspenso'] = isset($statusMaria[$pId]) ? $statusMaria[$pId]['suspenso'] : 0;
         $row['IndisponiveisManual'] = in_array($pId, $indisponiveisManual) ? 1 : 0;
         // Posição escolhida pelo usuário para este jogador
-        $row['PosicaoEscolhida'] = isset($posicoesEscolhidas[$pId]) ? $posicoesEscolhidas[$pId] : $row['PosicaoBase'];
+        if (isset($posicoesEscolhidas[$pId])) {
+            $row['PosicaoEscolhida'] = $posicoesEscolhidas[$pId];
+        } elseif (isset($defaultPositionsByPlayer[$pId])) {
+            $row['PosicaoEscolhida'] = $defaultPositionsByPlayer[$pId];
+        } else {
+            $row['PosicaoEscolhida'] = $row['PosicaoBase'];
+        }
         $elenco[] = $row;
     }
 

@@ -26,6 +26,11 @@
           "badge": "bugfix",
           "title": "Correção na Sincronização de Times com Tabelas Expandidas no SQLite da Competição",
           "desc": "Corrigida a inserção de jogadores e entidades no SQLite da competição que falhava quando as colunas de suspensão/lesão já haviam sido criadas por simulações anteriores, devido à falta de especificação explícita das colunas no INSERT. O tratamento de erros de gravação no SQLite também foi corrigido para não mascarar falhas com falsos sucessos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Posições Táticas e Salvamento Fiel na Escalação Pré-Jogo",
+          "desc": "Corrigida a inicialização de posições na tela de escalação pré-jogo para refletir fielmente a posição tática que o titular já ocupa na equipe (evitando que jogadores versáteis, como o ponta-esquerda do Orion, apareçam com a ponta oposta). A rotina de salvamento agora aloca os titulares estritamente conforme a posição selecionada no dropdown e atualiza os slots táticos e posições na simulação, corrigindo a inversão de meio-campistas e atacantes que afetava o Chroma."
         }
       ]
     },
