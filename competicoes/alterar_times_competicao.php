@@ -202,22 +202,22 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 						$megaQuery .= "INSERT OR REPLACE INTO jogador (ID, Nome, Idade, Nivel, Potencial, CrescBase, Mentalidade, CobradorFalta) VALUES ('{$row['idJogador']}', '{$nomeJogador}', '{$row['Idade']}', '{$row['Nivel']}', '0' , '0', '{$row['Mentalidade']}', '{$row['CobradorFalta']}'); ";
 
 						$testeNacionalidade = ($row['Nacionalidade'] != null ? $row['Nacionalidade'] : '-');
-						$megaQuery .= "INSERT OR REPLACE INTO nacionalidades (Jogador, Nacionalidade) VALUES ('{$row['idJogador']}', '{$testeNacionalidade}'); ";
+						$megaQuery .= "INSERT OR REPLACE INTO nacionalidades (ID_Jogador, Nacionalidade) VALUES ('{$row['idJogador']}', '{$testeNacionalidade}'); ";
 
 						if($sp[0] == 1){
-							$megaQuery .= "INSERT OR REPLACE INTO atributosgoleiro (Goleiro, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Condicao, Moral) VALUES ('{$row['idJogador']}', '{$row['Reflexos']}', '{$row['Seguranca']}', '{$row['Saidas']}', '{$row['JogoAereo']}', '{$row['Lancamentos']}', '{$row['DefesaPenaltis']}', '1', '1'); ";
+							$megaQuery .= "INSERT OR REPLACE INTO atributosgoleiro (Goleiro, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao, determinacaoOriginal) VALUES ('{$row['idJogador']}', '{$row['Reflexos']}', '{$row['Seguranca']}', '{$row['Saidas']}', '{$row['JogoAereo']}', '{$row['Lancamentos']}', '{$row['DefesaPenaltis']}', '1', '1'); ";
 
 							$somaZero = abs(($row['Nivel'] * 0.50) - ($row['somaAtributos']));
 							if($somaZero > 0.5){
-								$megaQuery .= "INSERT OR REPLACE INTO jogadorpendente (Jogador) VALUES ('{$row['idJogador']}'); ";
+								$megaQuery .= "INSERT OR REPLACE INTO jogadorpendente (idJogador) VALUES ('{$row['idJogador']}'); ";
 							}
 
 						} else {
-							$megaQuery .= "INSERT OR REPLACE INTO atributosjogador (Jogador, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Condicao, Moral) VALUES ('{$row['idJogador']}', '{$row['Marcacao']}', '{$row['Desarme']}', '{$row['VisaoJogo']}', '{$row['Movimentacao']}', '{$row['Cruzamentos']}', '{$row['Cabeceamento']}', '{$row['Tecnica']}', '{$row['ControleBola']}', '{$row['Finalizacao']}', '{$row['FaroGol']}', '{$row['Velocidade']}', '{$row['Forca']}', '1', '1'); ";
+							$megaQuery .= "INSERT OR REPLACE INTO atributosjogador (Jogador, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Determinacao, determinacaoOriginal) VALUES ('{$row['idJogador']}', '{$row['Marcacao']}', '{$row['Desarme']}', '{$row['VisaoJogo']}', '{$row['Movimentacao']}', '{$row['Cruzamentos']}', '{$row['Cabeceamento']}', '{$row['Tecnica']}', '{$row['ControleBola']}', '{$row['Finalizacao']}', '{$row['FaroGol']}', '{$row['Velocidade']}', '{$row['Forca']}', '1', '1'); ";
 
 							$somaZero = abs(($row['Nivel'] * 0.65) - ($row['somaAtributos']));
 							if($somaZero > 0.5){
-								$megaQuery .= "INSERT OR REPLACE INTO jogadorpendente (Jogador) VALUES ('{$row['idJogador']}'); ";
+								$megaQuery .= "INSERT OR REPLACE INTO jogadorpendente (idJogador) VALUES ('{$row['idJogador']}'); ";
 							}
 						}
 

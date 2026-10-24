@@ -230,12 +230,12 @@ try {
 
         // nacionalidades
         $nac = !empty($jRow['Nacionalidade']) ? $jRow['Nacionalidade'] : '-';
-        $stmtNac = $sdb->prepare("INSERT OR REPLACE INTO nacionalidades (Jogador, Nacionalidade) VALUES (?, ?)");
+        $stmtNac = $sdb->prepare("INSERT OR REPLACE INTO nacionalidades (ID_Jogador, Nacionalidade) VALUES (?, ?)");
         $stmtNac->execute([$jRow['idJogador'], $nac]);
 
         // atributos
         if (isset($sp[0]) && $sp[0] == 1) { // Goleiro
-            $stmtAtrG = $sdb->prepare("INSERT OR REPLACE INTO atributosgoleiro (Goleiro, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Condicao, Moral) VALUES (?, ?, ?, ?, ?, ?, ?, '1', '1')");
+            $stmtAtrG = $sdb->prepare("INSERT OR REPLACE INTO atributosgoleiro (Goleiro, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao, determinacaoOriginal) VALUES (?, ?, ?, ?, ?, ?, ?, '1', '1')");
             $stmtAtrG->execute([
                 $jRow['idJogador'],
                 $jRow['Reflexos'],
@@ -246,7 +246,7 @@ try {
                 $jRow['DefesaPenaltis']
             ]);
         } else { // Jogador de linha
-            $stmtAtrJ = $sdb->prepare("INSERT OR REPLACE INTO atributosjogador (Jogador, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Condicao, Moral) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '1', '1')");
+            $stmtAtrJ = $sdb->prepare("INSERT OR REPLACE INTO atributosjogador (Jogador, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Determinacao, determinacaoOriginal) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '1', '1')");
             $stmtAtrJ->execute([
                 $jRow['idJogador'],
                 $jRow['Marcacao'],
