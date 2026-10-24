@@ -9,7 +9,9 @@ if(!isset($_POST['criar'])){
 
 $is_success = false;
 $error_msg = '';
-$jogador = null;
+if(!isset($jogador)){
+    $jogador = null;
+}
 
 if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 
@@ -17,32 +19,45 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         die(json_encode(['success' => false, 'error' => 'Usuários em período de testes não podem gerar jogadores via Hexagen.']));
     }
 
+    //estabelecer conexão com banco de dados
+    include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
+    include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
+
+    if(!isset($db) || $db === null){
+        $database = new Database();
+        $db = $database->getConnection();
+    }
+    if(!isset($jogador) || !($jogador instanceof Jogador)){
+        $jogador = new Jogador($db);
+    }
+    if(!isset($pais) || !($pais instanceof Pais)){
+        $pais = new Pais($db);
+    }
+    if(!isset($liga) || !($liga instanceof Liga)){
+        $liga = new Liga($db);
+    }
+    if(!isset($time) || !($time instanceof Time)){
+        $time = new Time($db);
+    }
+
     if(isset($_POST['criar'])){
         $nacionalidade = $_POST['pais'];
+        $sexo = $sexo ?? $_POST['sexo'] ?? 0;
     } else {
         $sexo = $_POST['sexo'];
         $nacionalidade = $_POST['nacionalidade'];
         $codigoPosicao = $_POST['codigoPosicao'];
-        $idadeMin = 0;
-        $idadeMax = 0;
-        $idadeMed = 0;
-        $nivelMin = 0;
-        $nivelMax = 0;
-        $nivelMed = 0;
-
-        //estabelecer conexão com banco de dados
-        include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
-        include_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
-        include_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
-        include_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
-        include_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
-        $database = new Database();
-        $db = $database->getConnection();
-        $jogador = new Jogador($db);
-        $pais = new Pais($db);
-        $liga = new Liga($db);
-        $time = new Time($db);
     }
+
+    $idadeMin = 0;
+    $idadeMax = 0;
+    $idadeMed = 0;
+    $nivelMin = 0;
+    $nivelMax = 0;
+    $nivelMed = 0;
 
     if(isset($_POST['base'])){
         $idadeMin = 17;

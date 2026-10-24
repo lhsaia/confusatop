@@ -695,8 +695,9 @@ echo "<div id='info_geral'>";
          echo "  <div class='player-match-card result-{$resultado_classe}'>";
          
          // Cabeçalho do Card (Competição + Desfecho)
+         $nomeCompeticao = (string)($partida['competicao_nome'] ?? 'Competição');
          echo "    <div class='match-card-top'>";
-         echo "      <span class='match-comp-title' title='".htmlspecialchars($partida['competicao_nome'])."'>".htmlspecialchars($partida['competicao_nome'])."</span>";
+         echo "      <span class='match-comp-title' title='".htmlspecialchars($nomeCompeticao)."'>".htmlspecialchars($nomeCompeticao)."</span>";
          echo "      <span class='match-outcome-badge badge-{$resultado_classe}'>{$resultado_rotulo}</span>";
          echo "    </div>";
 
@@ -705,10 +706,12 @@ echo "<div id='info_geral'>";
          
          // Time A
          $teamAClass = ($isHome) ? "is-player-team" : "";
-         $nomeTimeA = function_exists('abreviarNomeClube') ? abreviarNomeClube($partida['timeA_nome']) : $partida['timeA_nome'];
+         $nomeTimeAOriginal = (string)($partida['timeA_nome'] ?? (!empty($partida['timeA_id']) ? "Time #{$partida['timeA_id']}" : "Time A"));
+         $nomeTimeA = function_exists('abreviarNomeClube') ? abreviarNomeClube($nomeTimeAOriginal) : $nomeTimeAOriginal;
+         $escudoTimeA = !empty($partida['timeA_escudo']) ? $partida['timeA_escudo'] : '0.png';
          echo "      <div class='match-duel-team {$teamAClass}'>";
-         echo "        <img src='/images/escudos/{$partida['timeA_escudo']}' class='match-crest' alt='".htmlspecialchars($partida['timeA_nome'])."' />";
-         echo "        <span class='match-team-label'>".htmlspecialchars($nomeTimeA)."</span>";
+         echo "        <img src='/images/escudos/{$escudoTimeA}' class='match-crest' alt='".htmlspecialchars($nomeTimeAOriginal)."' />";
+         echo "        <span class='match-team-label'>".htmlspecialchars((string)$nomeTimeA)."</span>";
          echo "      </div>";
 
          // Placar
@@ -723,13 +726,14 @@ echo "<div id='info_geral'>";
 
          // Time B
          $teamBClass = ($isAway) ? "is-player-team" : "";
-         $nomeTimeB = function_exists('abreviarNomeClube') ? abreviarNomeClube($partida['timeB_nome']) : $partida['timeB_nome'];
+         $nomeTimeBOriginal = (string)($partida['timeB_nome'] ?? (!empty($partida['timeB_id']) ? "Time #{$partida['timeB_id']}" : "Time B"));
+         $nomeTimeB = function_exists('abreviarNomeClube') ? abreviarNomeClube($nomeTimeBOriginal) : $nomeTimeBOriginal;
+         $escudoTimeB = !empty($partida['timeB_escudo']) ? $partida['timeB_escudo'] : '0.png';
          echo "      <div class='match-duel-team {$teamBClass}'>";
-         echo "        <img src='/images/escudos/{$partida['timeB_escudo']}' class='match-crest' alt='".htmlspecialchars($partida['timeB_nome'])."' />";
-         echo "        <span class='match-team-label'>".htmlspecialchars($nomeTimeB)."</span>";
+         echo "        <img src='/images/escudos/{$escudoTimeB}' class='match-crest' alt='".htmlspecialchars($nomeTimeBOriginal)."' />";
+         echo "        <span class='match-team-label'>".htmlspecialchars((string)$nomeTimeB)."</span>";
          echo "      </div>";
          echo "    </div>";
-
          // Eventos e Atuação Individual do Jogador
          echo "    <div class='player-performance-box'>";
          echo "      <div class='player-status-line'>";

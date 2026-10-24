@@ -105,13 +105,28 @@ $query_count_jogos_ativos = "
               AND ((jog.lesionado_ate IS NOT NULL AND jog.lesionado_ate >= CURDATE()) OR cs.suspenso = 1)
            ) as desfalques_timeB,
            
-           pA.dono as donoA, pB.dono as donoB
+           COALESCE(pctA.dono, pA.dono) as donoA,
+           COALESCE(pctB.dono, pB.dono) as donoB
 
     FROM jogos_clube j
-    INNER JOIN clube cA ON j.timeA_id = cA.ID
-    INNER JOIN paises pA ON cA.Pais = pA.id
-    INNER JOIN clube cB ON j.timeB_id = cB.ID
-    INNER JOIN paises pB ON cB.Pais = pB.id
+    LEFT JOIN clube cA ON j.timeA_id = cA.ID AND j.timeA_id > 0
+    LEFT JOIN paises pA ON cA.Pais = pA.id
+    LEFT JOIN competicao_times ctA ON ctA.id_competicao = j.competicao_id 
+         AND (
+             (j.timeA_id > 0 AND ctA.id_time_portal = j.timeA_id) 
+             OR (j.timeA_id < 0 AND ctA.codigo_time = ABS(j.timeA_id))
+             OR (j.timeA_id = 0 AND j.timeA_nome IS NOT NULL AND j.timeA_nome != '' AND (ctA.slot = j.timeA_nome OR ctA.slot = TRIM(REPLACE(j.timeA_nome, 'Slot ', ''))))
+         )
+    LEFT JOIN paises pctA ON ctA.pais_time = pctA.id
+    LEFT JOIN clube cB ON j.timeB_id = cB.ID AND j.timeB_id > 0
+    LEFT JOIN paises pB ON cB.Pais = pB.id
+    LEFT JOIN competicao_times ctB ON ctB.id_competicao = j.competicao_id 
+         AND (
+             (j.timeB_id > 0 AND ctB.id_time_portal = j.timeB_id) 
+             OR (j.timeB_id < 0 AND ctB.codigo_time = ABS(j.timeB_id))
+             OR (j.timeB_id = 0 AND j.timeB_nome IS NOT NULL AND j.timeB_nome != '' AND (ctB.slot = j.timeB_nome OR ctB.slot = TRIM(REPLACE(j.timeB_nome, 'Slot ', ''))))
+         )
+    LEFT JOIN paises pctB ON ctB.pais_time = pctB.id
     WHERE j.simulador_interno = 1
       AND (j.tipo_times = 0 OR j.tipo_times IS NULL)
       AND (
@@ -119,7 +134,7 @@ $query_count_jogos_ativos = "
           OR (j.timeA_penaltis IS NULL AND DATE_ADD(j.data, INTERVAL 120 MINUTE) > NOW())
           OR (j.timeA_penaltis IS NOT NULL AND DATE_ADD(j.data, INTERVAL 150 MINUTE) > NOW())
       )
-      AND (pA.dono = ? OR pB.dono = ?)
+      AND (COALESCE(pctA.dono, pA.dono) = ? OR COALESCE(pctB.dono, pB.dono) = ?)
 ";
 $stmt_count_jogos_ativos = $db->prepare($query_count_jogos_ativos);
 $stmt_count_jogos_ativos->execute([$idUsuario, $idUsuario]);

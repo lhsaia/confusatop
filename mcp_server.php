@@ -197,6 +197,61 @@ function decodificarPosicoesAtleta($stringPosicoes) {
     return $posList;
 }
 
+/**
+ * Recalcula os atributos reais/efetivos segundo as fórmulas do ControladorAtributos do Hexacolor YMT v2.10.
+ * Os atributos cadastrados no banco são valores proporcionais que a engine redimensiona
+ * para uma soma teórica baseada no Nível do jogador:
+ *   - Jogadores de linha: soma alvo = Nivel * 0.65 (teto de 7.0, piso de 0.5 por atributo)
+ *   - Goleiros: soma alvo = Nivel * 0.50 (teto de 10.0, piso de 0.5 por atributo)
+ */
+function recalcularAtributosYMT($atleta, $isGoleiro = false) {
+    $nivel = floatval($atleta['NivelReal'] ?? $atleta['Nivel'] ?? 50);
+    if ($isGoleiro) {
+        $somaDesejada = ($nivel * 50.0) / 100.0;
+        $chaves = ['Reflexos', 'Seguranca', 'Saidas', 'JogoAereo', 'Lancamentos', 'DefesaPenaltis'];
+        $maximo = 10.0;
+    } else {
+        $somaDesejada = ($nivel * 65.0) / 100.0;
+        $chaves = ['Marcacao', 'Desarme', 'VisaoJogo', 'Movimentacao', 'Cruzamentos', 'Cabeceamento', 'Tecnica', 'ControleBola', 'Finalizacao', 'FaroGol', 'Velocidade', 'Forca'];
+        $maximo = 7.0;
+    }
+
+    $somaOriginal = 0.0;
+    foreach ($chaves as $k) {
+        $somaOriginal += floatval($atleta[$k] ?? 0);
+    }
+
+    $fator = ($somaOriginal > 0) ? ($somaDesejada / $somaOriginal) : 1.0;
+    $resultado = [];
+    $excesso = 0.0;
+    $aptos = 0;
+
+    foreach ($chaves as $k) {
+        $val = floatval($atleta[$k] ?? 0) * $fator;
+        if ($val > $maximo) {
+            $excesso += ($val - $maximo);
+            $val = $maximo;
+        } elseif ($val < 0.5) {
+            $excesso -= (0.5 - $val);
+            $val = 0.5;
+        } else {
+            $aptos++;
+        }
+        $resultado[$k] = $val;
+    }
+
+    if ($excesso > 0.001 && $aptos > 0) {
+        $parcela = $excesso / $aptos;
+        foreach ($chaves as $k) {
+            if ($resultado[$k] < $maximo && $resultado[$k] > 0.5) {
+                $resultado[$k] = min($maximo, $resultado[$k] + $parcela);
+            }
+        }
+    }
+
+    return $resultado;
+}
+
 $mapMentalidadesTecnico = [
     1 => "Retranca / Muito Defensiva (-0.10 Ataque, +0.10 Defesa)",
     2 => "Defensiva (-0.05 Ataque, +0.05 Defesa)",
@@ -624,11 +679,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Obter treinador atual do clube
                 $tecnicoInfo = obterIdOuInfoTecnico($db, null, $clube_id);
 
-                $query = "SELECT a.ID as idJogador, a.Nome as nomeJogador, FLOOR((DATEDIFF(CURDATE(), Nascimento))/365) as Idade, StringPosicoes, (Nivel + c.ModificadorNivel) as Nivel, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao
+                $query = "SELECT a.ID as idJogador, a.Nome as nomeJogador, FLOOR((DATEDIFF(CURDATE(), Nascimento))/365) as Idade, StringPosicoes, (Nivel + IFNULL(c.ModificadorNivel, 0)) as Nivel, a.Nivel as NivelBase, IFNULL(c.ModificadorNivel, 0) as ModificadorNivel, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao
                           FROM jogador a 
                           LEFT JOIN contratos_jogador c ON c.jogador = a.ID AND c.tipoContrato = 0
                           WHERE c.clube = ?
-                          ORDER BY c.titularidade DESC, c.posicaoBase ASC, a.Nivel DESC";
+                            AND a.disponibilidade NOT IN (-1, -2, -3)
+                            AND a.disponibilidade <> 'Aposentado'
+                            AND a.disponibilidade <> 'Expatriado'
+                            AND a.disponibilidade <> 'Falecido'
+                          ORDER BY c.titularidade DESC, c.posicaoBase ASC, (Nivel + IFNULL(c.ModificadorNivel, 0)) DESC";
                 $stmt = $db->prepare($query);
                 $stmt->execute([$clube_id]);
                 $jogadores = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -652,7 +711,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     $text .= "--- DIRETRIZES DA ENGINE HEXACOLOR YMT (FÍSICA DE SIMULAÇÃO) ---\n";
-                    $text .= "1. BÔNUS DE CRIAÇÃO E DEFESA POR POSIÇÃO (Engine):\n";
+                    $text .= "1. RECÁLCULO PROPORCIONAL DE ATRIBUTOS COM O NÍVEL (ControladorAtributos):\n";
+                    $text .= "   - Os atributos no banco de dados representam proporções do perfil do atleta. O simulador recalcula a soma total para atingir Nível * 0.65 (linha) ou Nível * 0.50 (goleiro).\n";
+                    $text .= "   - Nos duelos de jogadas e finalizações (ControladorDisputas), o valor de confronto confronta diretamente (Nível + AtributoRecalculado).\n";
+                    $text .= "   - Portanto, o Nível Geral é a âncora soberana: um atleta com Nível 85 e atributo 5.5 supera amplamente um atleta de Nível 72 com atributo 6.5.\n";
+                    $text .= "2. BÔNUS DE CRIAÇÃO E DEFESA POR POSIÇÃO (bonusposcriacao):\n";
                     $text .= "   - Goleiro (G): Defesa pura. Reflexos combate Finalização; Saídas combate Faro de Gol e infiltrações; Jogo Aéreo combate Cabeceamento; Segurança reduz rebotes.\n";
                     $text .= "   - Zagueiro (Z): Proteção geral máxima (DefInvasão: 0.40, DefFinalização: 0.35, DefCabeceio: 0.45). Atributos vitais: Marcação, Desarme, Força, Cabeceamento e Velocidade.\n";
                     $text .= "   - Laterais/Alas (LD/LE, AD/AE): Combatem jogadas aéreas do setor (DefCab: 0.60) e geram bolas na área (Cab: 0.45-0.55). Atributos vitais: Velocidade, Cruzamento e Desarme.\n";
@@ -661,20 +724,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $text .= "   - Pontas (PD/PE) e Meias Abertos (MD/ME): Líderes em cruzamentos no motor (CabD/CabE: 0.70). Atributos vitais: Velocidade, Cruzamento, Técnica e Finalização.\n";
                     $text .= "   - 2º Atacante / Movimentação (Am): Maior bônus de infiltração do simulador (Invasão: 0.65). Atributos vitais: Movimentação, Velocidade, Técnica e Faro de Gol.\n";
                     $text .= "   - Centroavante (Aa): Especialista de área e finalização aérea (Finalização: 0.40, Cabeceio: 0.50). Atributos vitais: Finalização, Faro de Gol, Cabeceamento e Força.\n";
-                    $text .= "2. REGRA DE IMPROVISAÇÃO ESTRITA: O simulador penaliza severamente atributos de qualquer atleta escalado fora de posições com bit '1' na sua lista de posições. NUNCA improvise jogadores em posições que eles não suportam.\n";
-                    $text .= "3. SINERGIA COM O TÉCNICO: A formação tática deve se alinhar ao Estilo e à Mentalidade do treinador para extrair os multiplicadores positivos do motor.\n\n";
+                    $text .= "3. REGRA DE IMPROVISAÇÃO ESTRITA: O simulador penaliza severamente atributos de qualquer atleta escalado fora de posições com bit '1' na sua lista de posições. NUNCA improvise jogadores em posições que eles não suportam.\n";
+                    $text .= "4. SINERGIA COM O TÉCNICO: A formação tática deve se alinhar ao Estilo e à Mentalidade do treinador para extrair os multiplicadores positivos do motor.\n\n";
 
                     $text .= "--- ELENCO DISPONÍVEL ---\n";
                     foreach ($jogadores as $j) {
                         $posicoes = decodificarPosicoesAtleta($j['StringPosicoes']);
                         $posListStr = !empty($posicoes) ? implode(', ', $posicoes) : 'Nenhuma';
                         $isGoleiro = in_array('G', $posicoes);
+                        $atrEf = recalcularAtributosYMT($j, $isGoleiro);
 
-                        $text .= "- {$j['nomeJogador']} (ID: {$j['idJogador']}) | Nível: {$j['Nivel']} | Idade: {$j['Idade']} anos | Posições suportadas: [{$posListStr}]\n";
+                        $modStr = ($j['ModificadorNivel'] != 0) ? " [Base:{$j['NivelBase']}, Mod:{$j['ModificadorNivel']}]" : "";
+                        $text .= "- {$j['nomeJogador']} (ID: {$j['idJogador']}) | NÍVEL GERAL: {$j['Nivel']}{$modStr} | Idade: {$j['Idade']} anos | Posições: [{$posListStr}]\n";
                         if ($isGoleiro) {
-                            $text .= "  Atributos GK: Reflexos={$j['Reflexos']}, Saídas={$j['Saidas']}, JogoAéreo={$j['JogoAereo']}, Segurança={$j['Seguranca']}, DefPenaltis={$j['DefesaPenaltis']}\n";
+                            $text .= sprintf(
+                                "  Atributos GK Efetivos (YMT): Ref=%.1f Sai=%.1f JoA=%.1f Seg=%.1f Pen=%.1f\n",
+                                $atrEf['Reflexos'] ?? 0, $atrEf['Saidas'] ?? 0, $atrEf['JogoAereo'] ?? 0, $atrEf['Seguranca'] ?? 0, $atrEf['DefesaPenaltis'] ?? 0
+                            );
                         } else {
-                            $text .= "  Atributos Linha: Vel={$j['Velocidade']}, For={$j['Forca']}, Marc={$j['Marcacao']}, Des={$j['Desarme']}, Vis={$j['VisaoJogo']}, Cruz={$j['Cruzamentos']}, Cab={$j['Cabeceamento']}, Tec={$j['Tecnica']}, Contr={$j['ControleBola']}, Fin={$j['Finalizacao']}, Faro={$j['FaroGol']}, Mov={$j['Movimentacao']}\n";
+                            $text .= sprintf(
+                                "  Atributos Linha Efetivos (YMT): Vel=%.1f For=%.1f Marc=%.1f Des=%.1f Vis=%.1f Cruz=%.1f Cab=%.1f Tec=%.1f Contr=%.1f Fin=%.1f Faro=%.1f Mov=%.1f\n",
+                                $atrEf['Velocidade'] ?? 0, $atrEf['Forca'] ?? 0, $atrEf['Marcacao'] ?? 0, $atrEf['Desarme'] ?? 0, $atrEf['VisaoJogo'] ?? 0, $atrEf['Cruzamentos'] ?? 0, $atrEf['Cabeceamento'] ?? 0, $atrEf['Tecnica'] ?? 0, $atrEf['ControleBola'] ?? 0, $atrEf['Finalizacao'] ?? 0, $atrEf['FaroGol'] ?? 0, $atrEf['Movimentacao'] ?? 0
+                            );
                         }
                     }
 
@@ -740,7 +811,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         j.ID as idJogador,
                         j.Nome as nomeJogador,
                         TIMESTAMPDIFF(YEAR, j.Nascimento, CURDATE()) as Idade,
-                        j.Nivel,
+                        (j.Nivel + IFNULL(c.ModificadorNivel, 0)) as NivelReal,
+                        j.Nivel as NivelBase,
+                        IFNULL(c.ModificadorNivel, 0) as ModificadorNivel,
                         j.StringPosicoes,
                         j.Marcacao, j.Desarme, j.VisaoJogo, j.Movimentacao, j.Cruzamentos, j.Cabeceamento,
                         j.Tecnica, j.ControleBola, j.Finalizacao, j.FaroGol, j.Velocidade, j.Forca,
@@ -751,9 +824,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     LEFT JOIN clube b ON c.clube = b.ID
                     WHERE j.Pais = :paisId
                       AND j.Sexo = :sexoSelecao
-                      AND j.disponibilidade >= 0
+                      AND j.disponibilidade NOT IN (-1, -2, -3)
+                      AND j.disponibilidade <> 'Aposentado'
+                      AND j.disponibilidade <> 'Expatriado'
+                      AND j.disponibilidade <> 'Falecido'
+                      AND (j.data_falecimento IS NULL OR j.data_falecimento = '0000-00-00')
                       AND (:temLimite = 0 OR j.Nascimento >= :dataMinima)
-                    ORDER BY j.Nivel DESC, j.Nome ASC
+                    GROUP BY j.ID
+                    ORDER BY NivelReal DESC, j.Nome ASC
                 ";
                 $stmtEleg = $db->prepare($queryElegiveis);
                 $stmtEleg->bindValue(':paisId', $idPais, PDO::PARAM_INT);
@@ -770,7 +848,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $text = "=== SUGESTÃO DE CONVOCAÇÃO & ESCALAÇÃO DE SELEÇÃO (HEXACOLOR YMT v2.10) ===\n";
                     $text .= "Seleção: {$nomeSelecao} (País: {$nomePais} | ID: {$idSelecao})\n";
-                    $text .= "Categoria: {$categoriaStr} | Vagas a convocar: {$tamanhoConvocacao} atletas (Total de elegíveis: {$totalElegiveis})\n";
+                    $text .= "Categoria: {$categoriaStr} | Vagas a convocar: {$tamanhoConvocacao} atletas (Total de elegíveis em atividade: {$totalElegiveis})\n";
 
                     if ($tecnicoInfo) {
                         $mentIdx = intval($tecnicoInfo['Mentalidade']);
@@ -784,19 +862,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $text .= "\nTREINADOR: Não especificado (análise considerando perfil balanceado / recomende o perfil ideal para esta geração de atletas).\n";
                     }
 
-                    $text .= "\n--- REGRAS DE OURO DO SIMULADOR HEXACOLOR YMT ---\n";
-                    $text .= "1. COBERTURA TOTAL DE POSIÇÕES: Uma convocação deve ter no mínimo 3 Goleiros e pelo menos 2 atletas naturais para cada posição tática planejada, evitando buracos por lesão/suspensão.\n";
-                    $text .= "2. TOLERÂNCIA ZERO À IMPROVISAÇÃO: O simulador penaliza brutalmente atletas escalados fora das posições marcadas com '1' no seu StringPosicoes. Todos os 11 titulares e reservas devem estar em suas posições naturais.\n";
-                    $text .= "3. BÔNUS POR SETOR DA ENGINE:\n";
-                    $text .= "   - Goleiros (G): Reflexos para chutes diretos, Saídas para infiltrações cara-a-cara, Jogo Aéreo para bolas altas.\n";
-                    $text .= "   - Zagueiros (Z): Maior proteção defensiva global (DefInvasão: 0.40, DefFinalização: 0.35, DefCabeceio: 0.45). Atributos: Marcação, Desarme, Cabeceamento, Força, Velocidade.\n";
-                    $text .= "   - Laterais/Alas (LD/LE, AD/AE): Protegem laterais (DefCab: 0.60) e geram bolas na área (CabD/CabE: 0.45-0.55). Atributos: Velocidade, Cruzamento, Desarme.\n";
-                    $text .= "   - Volantes (V): Bloqueiam finalizações centrais (DefFinalização: 0.50). Atributos: Desarme, Marcação, Força e Visão de Jogo.\n";
-                    $text .= "   - Meias (MC/MA): MA arremata de longe (Finalização: 0.55); MC dita passe e cadência. Atributos: Visão de Jogo (assistências), Técnica, Controle de Bola e Finalização.\n";
-                    $text .= "   - Pontas (PD/PE): Especialistas em jogada de linha de fundo (CabD/CabE: 0.70). Atributos: Velocidade, Cruzamento, Técnica.\n";
-                    $text .= "   - 2º Atacante (Am): Maior bônus de infiltração do jogo (Invasão: 0.65). Atributos: Movimentação, Velocidade, Técnica e Faro.\n";
-                    $text .= "   - Centroavante (Aa): Homem-gol no chão e no alto (Finalização: 0.40, Cabeceio: 0.50). Atributos: Finalização, Faro de Gol, Cabeceamento e Força.\n";
-                    $text .= "4. SINERGIA COM O TÉCNICO: Se o treinador for de Contra-Ataque, priorize atletas de alta Velocidade e Infiltração (Am, PD/PE); se for de Laterais Ofensivos, priorize alas com alto Cruzamento e atacante de área cabeceador; se for de Posse/Cadenciar, privilegie meias técnicos e finalizadores.\n\n";
+                    $text .= "\n--- REGRAS DE SIMULAÇÃO HEXACOLOR YMT: NÍVEL + ATRIBUTOS ---\n";
+                    $text .= "1. RECÁLCULO PROPORCIONAL DE ATRIBUTOS COM O NÍVEL (ControladorAtributos):\n";
+                    $text .= "   - No Hexacolor YMT, os atributos cadastrados são proporções da soma teórica (Nível * 0.65 para linha ou Nível * 0.50 para goleiro).\n";
+                    $text .= "   - A engine recalcula dinamicamente cada atributo do jogador multiplicando pelo fator (SomaDesejada / SomaInformada).\n";
+                    $text .= "   - Nos duelos de jogadas e finalizações (ControladorDisputas), o confronto é calculado com (Nível + AtributoRecalculado).\n";
+                    $text .= "   - Portanto, os 'Atributos Efetivos (YMT)' listados abaixo já foram recalculados proporcionalmente pelo motor. O NÍVEL GERAL continua sendo o balizador central primário de consistência e tempo de reação.\n";
+                    $text .= "   - CRITÉRIO MANDATÓRIO: Convocação e 11 titulares DEVEM priorizar os atletas de MAIOR NÍVEL GERAL em cada setor. Os atributos servem para desempatar atletas de mesmo patamar ou encaixar o perfil tático ideal.\n";
+                    $text .= "2. PROIBIÇÃO ABSOLUTA DE ATLETAS APOSENTADOS:\n";
+                    $text .= "   - Todos os atletas listados abaixo estão ativos e confirmados como NÃO-aposentados. É expressamente proibido sugerir, inventar ou convocar atletas que já estejam aposentados ou que não constem na lista ativa deste relatório.\n";
+                    $text .= "3. COBERTURA TOTAL DE POSIÇÕES: Uma convocação deve ter no mínimo 3 Goleiros e pelo menos 2 atletas naturais para cada posição tática planejada, evitando buracos por lesão/suspensão.\n";
+                    $text .= "4. TOLERÂNCIA ZERO À IMPROVISAÇÃO: O simulador penaliza brutalmente atletas escalados fora das posições marcadas com '1' no seu StringPosicoes. Todos os 11 titulares e reservas devem estar em suas posições naturais.\n";
+                    $text .= "5. BÔNUS POR SETOR DA ENGINE:\n";
+                    $text .= "   - Goleiros (G): Nível + Reflexos (chutes diretos), Saídas (infiltrações), Jogo Aéreo (bolas altas), Segurança (rebotes).\n";
+                    $text .= "   - Zagueiros (Z): Maior proteção defensiva global (DefInvasão: 0.40, DefFinalização: 0.35, DefCabeceio: 0.45). Nível + Marcação, Desarme, Cabeceamento, Força, Velocidade.\n";
+                    $text .= "   - Laterais/Alas (LD/LE, AD/AE): Protegem laterais (DefCab: 0.60) e geram bolas na área (CabD/CabE: 0.45-0.55). Nível + Velocidade, Cruzamento, Desarme.\n";
+                    $text .= "   - Volantes (V): Bloqueiam finalizações centrais (DefFinalização: 0.50). Nível + Desarme, Marcação, Força e Visão de Jogo.\n";
+                    $text .= "   - Meias (MC/MA): MA arremata de longe (Finalização: 0.55); MC dita passe e cadência. Nível + Visão de Jogo (assistências), Técnica, Controle de Bola e Finalização.\n";
+                    $text .= "   - Pontas (PD/PE): Especialistas em cruzamento (CabD/CabE: 0.70). Nível + Velocidade, Cruzamento, Técnica.\n";
+                    $text .= "   - 2º Atacante (Am): Maior bônus de infiltração do jogo (Invasão: 0.65). Nível + Movimentação, Velocidade, Técnica e Faro.\n";
+                    $text .= "   - Centroavante (Aa): Homem-gol no chão e no alto (Finalização: 0.40, Cabeceio: 0.50). Nível + Finalização, Faro de Gol, Cabeceamento e Força.\n";
+                    $text .= "6. SINERGIA COM O TÉCNICO: Se o treinador for de Contra-Ataque, priorize atletas de alta Velocidade e Infiltração (Am, PD/PE); se for de Laterais Ofensivos, priorize alas com alto Cruzamento e atacante de área cabeceador; se for de Posse/Cadenciar, privilegie meias técnicos e finalizadores.\n\n";
 
                     // Agrupar atletas elegíveis por setores para entregar ao LLM os mais relevantes
                     $goleiros = [];
@@ -826,7 +912,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
 
-                    // Função local para formatar lista resumida de atletas para o LLM
+                    // Função local para formatar lista resumida de atletas para o LLM com recálculo YMT
                     $formatarSetor = function($lista, $limite, $isGoleiro = false) {
                         $out = "";
                         $count = 0;
@@ -834,17 +920,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             if ($count++ >= $limite) break;
                             $posStr = implode('/', $j['posicoesLista']) ?: 'Sem Posição';
                             $clubeStr = $j['clubeAtual'] ? " ({$j['clubeAtual']})" : " (Sem clube)";
-                            $out .= "- [ID: {$j['idJogador']}] {$j['nomeJogador']}{$clubeStr} | Nível: {$j['Nivel']} | Idade: {$j['Idade']} | Posições: [{$posStr}]\n";
+                            $modStr = ($j['ModificadorNivel'] != 0) ? " [Base:{$j['NivelBase']}, Mod:{$j['ModificadorNivel']}]" : "";
+                            $atrEf = recalcularAtributosYMT($j, $isGoleiro);
+
+                            $out .= "- [ID: {$j['idJogador']}] {$j['nomeJogador']}{$clubeStr} | NÍVEL GERAL: {$j['NivelReal']}{$modStr} | Idade: {$j['Idade']} anos | Posições: [{$posStr}]\n";
                             if ($isGoleiro) {
-                                $out .= "  Atributos GK: Ref={$j['Reflexos']} Sai={$j['Saidas']} JoA={$j['JogoAereo']} Seg={$j['Seguranca']} Pen={$j['DefesaPenaltis']}\n";
+                                $out .= sprintf(
+                                    "  Atributos GK Efetivos (YMT): Ref=%.1f Sai=%.1f JoA=%.1f Seg=%.1f Pen=%.1f\n",
+                                    $atrEf['Reflexos'] ?? 0, $atrEf['Saidas'] ?? 0, $atrEf['JogoAereo'] ?? 0, $atrEf['Seguranca'] ?? 0, $atrEf['DefesaPenaltis'] ?? 0
+                                );
                             } else {
-                                $out .= "  Atributos: Vel={$j['Velocidade']} For={$j['Forca']} Marc={$j['Marcacao']} Des={$j['Desarme']} Vis={$j['VisaoJogo']} Cruz={$j['Cruzamentos']} Cab={$j['Cabeceamento']} Tec={$j['Tecnica']} Contr={$j['ControleBola']} Fin={$j['Finalizacao']} Faro={$j['FaroGol']} Mov={$j['Movimentacao']}\n";
+                                $out .= sprintf(
+                                    "  Atributos Linha Efetivos (YMT): Vel=%.1f For=%.1f Marc=%.1f Des=%.1f Vis=%.1f Cruz=%.1f Cab=%.1f Tec=%.1f Contr=%.1f Fin=%.1f Faro=%.1f Mov=%.1f\n",
+                                    $atrEf['Velocidade'] ?? 0, $atrEf['Forca'] ?? 0, $atrEf['Marcacao'] ?? 0, $atrEf['Desarme'] ?? 0, $atrEf['VisaoJogo'] ?? 0, $atrEf['Cruzamentos'] ?? 0, $atrEf['Cabeceamento'] ?? 0, $atrEf['Tecnica'] ?? 0, $atrEf['ControleBola'] ?? 0, $atrEf['Finalizacao'] ?? 0, $atrEf['FaroGol'] ?? 0, $atrEf['Movimentacao'] ?? 0
+                                );
                             }
                         }
                         return $out;
                     };
 
-                    $text .= "--- PRINCIPAIS CANDIDATOS POR SETOR ---\n";
+                    $text .= "--- PRINCIPAIS CANDIDATOS ATIVOS POR SETOR ---\n";
                     $text .= "### GOLEIROS DISPONÍVEIS:\n" . $formatarSetor($goleiros, 6, true) . "\n";
                     $text .= "### ZAGUEIROS DISPONÍVEIS:\n" . $formatarSetor($defensores, 10, false) . "\n";
                     $text .= "### LATERAIS E ALAS DISPONÍVEIS:\n" . $formatarSetor($laterais, 10, false) . "\n";
@@ -853,15 +948,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $text .= "--- MISSÃO DO ASSISTENTE ---\n";
                     $text .= "1. LISTA DE CONVOCAÇÃO FINAL ({$tamanhoConvocacao} Atletas):\n";
-                    $text .= "   - Selecione exatamente {$tamanhoConvocacao} atletas dentre os candidatos acima, distribuídos de forma equilibrada por setor (ex: 3 Goleiros, 4 Zagueiros, 4 Laterais, 6 a 7 Meias/Volantes, 5 a 6 Atacantes/Pontas).\n";
-                    $text .= "   - Garanta que todas as posições tenham titular e reserva competente.\n\n";
+                    $text .= "   - Selecione exatamente {$tamanhoConvocacao} atletas dentre os candidatos ativos acima.\n";
+                    $text .= "   - Lembre-se: O NÍVEL GERAL é a base primária da hierarquia de convocação e dos titulares. Use os atributos específicos para refinar o perfil e desempatar atletas de mesmo nível.\n";
+                    $text .= "   - Garanta cobertura com 3 Goleiros e pelo menos 2 atletas naturais para cada função.\n\n";
                     $text .= "2. ESQUEMA TÁTICO E ESCALAÇÃO DOS 11 TITULARES:\n";
-                    $text .= "   - Determine a melhor formação tática (ex: 4-3-3, 3-5-2, 4-2-3-1, 4-4-2) maximizando a sinergia com o Estilo e a Mentalidade do treinador.\n";
-                    $text .= "   - Escale os 11 titulares indicando cada jogador em uma posição que ele saiba atuar naturalmente (bit '1' da lista de posições dele, rigorosamente sem improvisação).\n";
-                    $text .= "   - Justifique a escolha dos titulares demonstrando como seus atributos superam os adversários nas jogadas do simulador.\n\n";
+                    $text .= "   - Determine a melhor formação tática (ex: 4-3-3, 3-5-2, 4-2-3-1, 4-4-2) alinhada ao Estilo e à Mentalidade do treinador.\n";
+                    $text .= "   - Escale os 11 titulares priorizando os atletas de MAIOR NÍVEL GERAL para cada posição suportada naturalmente no StringPosicoes (proibida qualquer improvisação).\n";
+                    $text .= "   - Justifique a escolha demonstrando como Nível Geral + Atributos superam os adversários no simulador.\n\n";
                     $text .= "3. BATEDORES E ESTRATÉGIA:\n";
                     $text .= "   - Aponte o Capitão, cobrador de pênaltis, faltas e escanteios.\n";
-                    $text .= "   - Resuma a estratégia de jogo no simulador (ex: explorar cruzamentos nas costas da zaga, infiltração em velocidade, arremates de longe, solidez defensiva).\n";
+                    $text .= "   - Resuma a estratégia de jogo no simulador (ex: explorar cruzamentos, infiltração em velocidade, arremates de longe, solidez defensiva).\n";
                 }
 
                 $responseResult = [

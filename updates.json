@@ -13,6 +13,16 @@
       "date": "24/10/2026",
       "items": [
         {
+          "badge": "new",
+          "title": "Filtro de Competições Internacionais",
+          "desc": "Adicionado filtro rápido para exibir apenas partidas de competições internacionais na tela de Próximos Jogos & Escalações, com identificador visual dedicado no card do confronto."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Exibição de Jogos em Competições de Terceiros",
+          "desc": "Corrigida a consulta de Próximos Jogos & Escalações para vincular o comando do clube ao país associado na vaga (competicao_times), permitindo visualizar partidas em competições de outros usuários mesmo contra equipes externas ou importadas via YMT. Adicionados filtros rápidos por competição e resolução dinâmica de nomes e escudos."
+        },
+        {
           "badge": "bugfix",
           "title": "Correção de Mapeamento de Mentalidade e Estilo do Técnico",
           "desc": "Corrigido o mapeamento de exibição da mentalidade e do estilo de jogo do treinador na página de perfil e nos módulos do sistema, alinhando os índices com a base oficial de 1 a 5 utilizada no motor de jogo e na criação do técnico."

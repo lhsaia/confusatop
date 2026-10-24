@@ -1082,12 +1082,18 @@ class Competicao_clube{
 		if ($xml) {
 			if (isset($xml->escalacaoTime1) && is_array($xml->escalacaoTime1)) {
 				foreach ($xml->escalacaoTime1 as $p) {
-					$playerMap1[(int)$p->id] = ['nome' => (string)$p->nome, 'posicao' => (string)$p->posicao];
+					$pId = (int)($p->id ?? 0);
+					$pNome = (string)($p->nome ?? '');
+					$pPos = (string)($p->posicao ?? '');
+					$playerMap1[$pId] = ['nome' => $pNome, 'posicao' => $pPos];
 				}
 			}
 			if (isset($xml->escalacaoTime2) && is_array($xml->escalacaoTime2)) {
 				foreach ($xml->escalacaoTime2 as $p) {
-					$playerMap2[(int)$p->id] = ['nome' => (string)$p->nome, 'posicao' => (string)$p->posicao];
+					$pId = (int)($p->id ?? 0);
+					$pNome = (string)($p->nome ?? '');
+					$pPos = (string)($p->posicao ?? '');
+					$playerMap2[$pId] = ['nome' => $pNome, 'posicao' => $pPos];
 				}
 			}
 
