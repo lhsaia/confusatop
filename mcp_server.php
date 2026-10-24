@@ -97,6 +97,122 @@ function obterIdClube($db, $clubeIdentificador, $usuarioLogado) {
     return $id ? intval($id) : 0;
 }
 
+// Helper function to resolve coach by ID, Name or Club Contract
+function obterIdOuInfoTecnico($db, $tecnicoIdentificador, $idClube = 0) {
+    if (empty($tecnicoIdentificador)) {
+        if ($idClube > 0) {
+            $query = "SELECT t.ID, t.Nome, t.Nivel, t.Mentalidade, t.Estilo, c.modificadorNivel 
+                      FROM contratos_tecnico c 
+                      JOIN tecnico t ON c.tecnico = t.ID 
+                      WHERE c.clube = ? LIMIT 1";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idClube]);
+            $res = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($res) return $res;
+        }
+        return null;
+    }
+
+    if (is_numeric($tecnicoIdentificador)) {
+        $query = "SELECT t.ID, t.Nome, t.Nivel, t.Mentalidade, t.Estilo, 0 as modificadorNivel 
+                  FROM tecnico t WHERE t.ID = ? LIMIT 1";
+        $stmt = $db->prepare($query);
+        $stmt->execute([intval($tecnicoIdentificador)]);
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $res ?: null;
+    }
+
+    $query = "SELECT t.ID, t.Nome, t.Nivel, t.Mentalidade, t.Estilo, 0 as modificadorNivel 
+              FROM tecnico t WHERE t.Nome LIKE ? LIMIT 1";
+    $stmt = $db->prepare($query);
+    $stmt->execute(['%' . $tecnicoIdentificador . '%']);
+    $res = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $res ?: null;
+}
+
+// Helper function to resolve national team (seleção)
+function obterInfoSelecao($db, $selecaoIdentificador) {
+    if (empty($selecaoIdentificador)) {
+        return null;
+    }
+
+    if (is_numeric($selecaoIdentificador)) {
+        $query = "SELECT c.ID, c.Nome, c.Pais as idPais, c.Sexo, c.status as statusSelecao, p.nome as nomePais 
+                  FROM clube c 
+                  LEFT JOIN paises p ON c.Pais = p.id 
+                  WHERE c.ID = ? AND c.status > 0 LIMIT 1";
+        $stmt = $db->prepare($query);
+        $stmt->execute([intval($selecaoIdentificador)]);
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($res) return $res;
+    }
+
+    $query = "SELECT c.ID, c.Nome, c.Pais as idPais, c.Sexo, c.status as statusSelecao, p.nome as nomePais 
+              FROM clube c 
+              LEFT JOIN paises p ON c.Pais = p.id 
+              WHERE c.Nome LIKE ? AND c.status > 0 LIMIT 1";
+    $stmt = $db->prepare($query);
+    $stmt->execute(['%' . $selecaoIdentificador . '%']);
+    $res = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($res) return $res;
+
+    // Search by country name/sigla
+    $queryPais = "SELECT id, nome FROM paises WHERE nome LIKE ? OR sigla LIKE ? LIMIT 1";
+    $stmtPais = $db->prepare($queryPais);
+    $stmtPais->execute(['%' . $selecaoIdentificador . '%', $selecaoIdentificador]);
+    $paisRow = $stmtPais->fetch(PDO::FETCH_ASSOC);
+    if ($paisRow) {
+        $querySel = "SELECT c.ID, c.Nome, c.Pais as idPais, c.Sexo, c.status as statusSelecao, p.nome as nomePais 
+                     FROM clube c 
+                     LEFT JOIN paises p ON c.Pais = p.id 
+                     WHERE c.Pais = ? AND c.status = 1 LIMIT 1";
+        $stmtSel = $db->prepare($querySel);
+        $stmtSel->execute([$paisRow['id']]);
+        $res = $stmtSel->fetch(PDO::FETCH_ASSOC);
+        if ($res) return $res;
+
+        $querySelQualquer = "SELECT c.ID, c.Nome, c.Pais as idPais, c.Sexo, c.status as statusSelecao, p.nome as nomePais 
+                             FROM clube c 
+                             LEFT JOIN paises p ON c.Pais = p.id 
+                             WHERE c.Pais = ? AND c.status > 0 LIMIT 1";
+        $stmtSelQualquer = $db->prepare($querySelQualquer);
+        $stmtSelQualquer->execute([$paisRow['id']]);
+        $resQualquer = $stmtSelQualquer->fetch(PDO::FETCH_ASSOC);
+        if ($resQualquer) return $resQualquer;
+    }
+
+    return null;
+}
+
+$mapeamentoPosicoesGlobais = ['G', 'LD', 'LE', 'Z', 'AD', 'AE', 'V', 'MD', 'ME', 'MC', 'PD', 'PE', 'MA', 'Am', 'Aa'];
+
+function decodificarPosicoesAtleta($stringPosicoes) {
+    global $mapeamentoPosicoesGlobais;
+    $posList = [];
+    for ($i = 0; $i < 15; $i++) {
+        if (isset($stringPosicoes[$i]) && $stringPosicoes[$i] === '1') {
+            $posList[] = $mapeamentoPosicoesGlobais[$i];
+        }
+    }
+    return $posList;
+}
+
+$mapMentalidadesTecnico = [
+    1 => "Retranca / Muito Defensiva (-0.10 Ataque, +0.10 Defesa)",
+    2 => "Defensiva (-0.05 Ataque, +0.05 Defesa)",
+    3 => "Balanceada / Equilibrada (0.0 Neutro)",
+    4 => "Ofensiva (+0.05 Ataque, -0.05 Defesa)",
+    5 => "Ataque Total / Muito Ofensiva (+0.10 Ataque, -0.10 Defesa)"
+];
+
+$mapEstilosTecnico = [
+    1 => "Explorar Contra-Ataques (+0.20 Invasão/Velocidade, -0.10 Finalização, +0.05 DefInvasão - valoriza Am e pontas velozes de transição rápida)",
+    2 => "Cadenciar o Jogo / Posse de Bola (+0.15 Finalização, -0.05 Invasão - valoriza meias técnicos de passe e arremates de longe)",
+    3 => "Neutro / Equilibrado (0.0)",
+    4 => "Atacar pelas Laterais (+0.10 CabD/CabE - valoriza pontas/alas com alto Cruzamento e centroavante cabeceador)",
+    5 => "Impôr Ritmo Ofensivo / Pressão Alta (+0.10 Finalização, +0.05 Aéreo, -0.10 DefInvasão - ataque agressivo e chutes constantes)"
+];
+
 // -------------------------------------------------------------
 // 1. SSE Connection Setup (GET)
 // -------------------------------------------------------------
@@ -257,7 +373,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ],
                 [
                     "name" => "analisar_taticas",
-                    "description" => "Analisa o elenco de um clube e sugere as escalações táticas ideais com base nos atributos dos jogadores.",
+                    "description" => "Analisa o elenco e o técnico de um clube, sugerindo esquemas táticos e a escalação dos 11 titulares ideais com base nas regras e bônus matemáticos do motor de simulação Hexacolor YMT v2.10 (pesos por setor, duelos de atributos e penalidade severa por improvisação).",
                     "inputSchema" => [
                         "type" => "object",
                         "properties" => [
@@ -266,6 +382,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 "description" => "Opcional. ID (número) ou Nome (texto) do clube. Se omitido, busca o clube do usuário autenticado."
                             ]
                         ]
+                    ]
+                ],
+                [
+                    "name" => "sugerir_convocacao_selecao",
+                    "description" => "Analisa todos os jogadores elegíveis de um país para a seleção nacional (principal ou de categorias de base), cruza com o perfil do treinador (estilo tático e mentalidade) e com as regras matemáticas do motor Hexacolor YMT v2.10, recomendando a lista de convocados ideal e os 11 titulares para maximizar o rendimento no simulador.",
+                    "inputSchema" => [
+                        "type" => "object",
+                        "properties" => [
+                            "selecao" => [
+                                "type" => ["integer", "string"],
+                                "description" => "ID (número) ou Nome da seleção nacional (ex: 'Brasil', 'Tarmaquestão', 'Itália Sub-20') ou nome/sigla do país."
+                            ],
+                            "tecnico" => [
+                                "type" => ["integer", "string"],
+                                "description" => "Opcional. ID ou Nome do técnico a ser considerado. Se omitido, busca o técnico atualmente vinculado à seleção."
+                            ],
+                            "tamanho_convocacao" => [
+                                "type" => "integer",
+                                "description" => "Opcional. Quantidade total de atletas a convocar (padrão: 23, máximo: 30)."
+                            ]
+                        ],
+                        "required" => ["selecao"]
                     ]
                 ],
                 [
@@ -478,34 +616,252 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception("Não foi possível identificar o clube informado.");
                 }
 
+                // Nome do clube
+                $stmtNomeClube = $db->prepare("SELECT Nome FROM clube WHERE ID = ? LIMIT 1");
+                $stmtNomeClube->execute([$clube_id]);
+                $nomeClube = $stmtNomeClube->fetchColumn() ?: "Clube #{$clube_id}";
+
+                // Obter treinador atual do clube
+                $tecnicoInfo = obterIdOuInfoTecnico($db, null, $clube_id);
+
                 $query = "SELECT a.ID as idJogador, a.Nome as nomeJogador, FLOOR((DATEDIFF(CURDATE(), Nascimento))/365) as Idade, StringPosicoes, (Nivel + c.ModificadorNivel) as Nivel, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao
                           FROM jogador a 
                           LEFT JOIN contratos_jogador c ON c.jogador = a.ID AND c.tipoContrato = 0
-                          WHERE c.clube = ?";
+                          WHERE c.clube = ?
+                          ORDER BY c.titularidade DESC, c.posicaoBase ASC, a.Nivel DESC";
                 $stmt = $db->prepare($query);
                 $stmt->execute([$clube_id]);
                 $jogadores = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 if (empty($jogadores)) {
-                    $text = "Nenhum jogador encontrado para o clube ID {$clube_id} para análise tática.";
+                    $text = "Nenhum jogador encontrado para o clube '{$nomeClube}' (ID {$clube_id}) para análise tática.";
                 } else {
-                    $text = "Elenco completo para análise tática (Clube ID {$clube_id}):\n\n";
+                    $text = "=== ANÁLISE TÁTICA AVANÇADA (ENGINE HEXACOLOR YMT v2.10) ===\n";
+                    $text .= "Clube: {$nomeClube} (ID: {$clube_id})\n";
+                    
+                    if ($tecnicoInfo) {
+                        $mentIdx = intval($tecnicoInfo['Mentalidade']);
+                        $estIdx = intval($tecnicoInfo['Estilo']);
+                        $mentDesc = $mapMentalidadesTecnico[$mentIdx] ?? "Balanceada (0.0)";
+                        $estDesc = $mapEstilosTecnico[$estIdx] ?? "Equilibrado";
+                        $text .= "Treinador: {$tecnicoInfo['Nome']} (Nível: {$tecnicoInfo['Nivel']})\n";
+                        $text .= "- Mentalidade do Técnico: {$mentDesc}\n";
+                        $text .= "- Estilo do Técnico: {$estDesc}\n\n";
+                    } else {
+                        $text .= "Treinador: Sem técnico vinculado cadastrado (considere estilo neutro ou recomende o perfil ideal de treinador).\n\n";
+                    }
+
+                    $text .= "--- DIRETRIZES DA ENGINE HEXACOLOR YMT (FÍSICA DE SIMULAÇÃO) ---\n";
+                    $text .= "1. BÔNUS DE CRIAÇÃO E DEFESA POR POSIÇÃO (Engine):\n";
+                    $text .= "   - Goleiro (G): Defesa pura. Reflexos combate Finalização; Saídas combate Faro de Gol e infiltrações; Jogo Aéreo combate Cabeceamento; Segurança reduz rebotes.\n";
+                    $text .= "   - Zagueiro (Z): Proteção geral máxima (DefInvasão: 0.40, DefFinalização: 0.35, DefCabeceio: 0.45). Atributos vitais: Marcação, Desarme, Força, Cabeceamento e Velocidade.\n";
+                    $text .= "   - Laterais/Alas (LD/LE, AD/AE): Combatem jogadas aéreas do setor (DefCab: 0.60) e geram bolas na área (Cab: 0.45-0.55). Atributos vitais: Velocidade, Cruzamento e Desarme.\n";
+                    $text .= "   - Volante (V): Barreira central contra chutes de média distância (DefFinalização: 0.50, maior do jogo!). Atributos vitais: Desarme, Marcação, Força e Visão de Jogo.\n";
+                    $text .= "   - Meias (MC / MA): MA tem o maior peso em arremates diretos (Finalização: 0.55); MC é articulador de passe. Atributos vitais: Visão de Jogo (confronta Marcação), Técnica, Controle de Bola e Finalização.\n";
+                    $text .= "   - Pontas (PD/PE) e Meias Abertos (MD/ME): Líderes em cruzamentos no motor (CabD/CabE: 0.70). Atributos vitais: Velocidade, Cruzamento, Técnica e Finalização.\n";
+                    $text .= "   - 2º Atacante / Movimentação (Am): Maior bônus de infiltração do simulador (Invasão: 0.65). Atributos vitais: Movimentação, Velocidade, Técnica e Faro de Gol.\n";
+                    $text .= "   - Centroavante (Aa): Especialista de área e finalização aérea (Finalização: 0.40, Cabeceio: 0.50). Atributos vitais: Finalização, Faro de Gol, Cabeceamento e Força.\n";
+                    $text .= "2. REGRA DE IMPROVISAÇÃO ESTRITA: O simulador penaliza severamente atributos de qualquer atleta escalado fora de posições com bit '1' na sua lista de posições. NUNCA improvise jogadores em posições que eles não suportam.\n";
+                    $text .= "3. SINERGIA COM O TÉCNICO: A formação tática deve se alinhar ao Estilo e à Mentalidade do treinador para extrair os multiplicadores positivos do motor.\n\n";
+
+                    $text .= "--- ELENCO DISPONÍVEL ---\n";
                     foreach ($jogadores as $j) {
-                        $posicoesLegiveis = [];
-                        $posStr = $j['StringPosicoes'];
-                        $mapeamento = ['G', 'LD', 'LE', 'Z', 'AD', 'AE', 'V', 'MD', 'ME', 'MC', 'PD', 'PE', 'MA', 'Am', 'Aa'];
-                        for ($i = 0; $i < 15; $i++) {
-                            if (isset($posStr[$i]) && $posStr[$i] === '1') {
-                                $posicoesLegiveis[] = $mapeamento[$i];
+                        $posicoes = decodificarPosicoesAtleta($j['StringPosicoes']);
+                        $posListStr = !empty($posicoes) ? implode(', ', $posicoes) : 'Nenhuma';
+                        $isGoleiro = in_array('G', $posicoes);
+
+                        $text .= "- {$j['nomeJogador']} (ID: {$j['idJogador']}) | Nível: {$j['Nivel']} | Idade: {$j['Idade']} anos | Posições suportadas: [{$posListStr}]\n";
+                        if ($isGoleiro) {
+                            $text .= "  Atributos GK: Reflexos={$j['Reflexos']}, Saídas={$j['Saidas']}, JogoAéreo={$j['JogoAereo']}, Segurança={$j['Seguranca']}, DefPenaltis={$j['DefesaPenaltis']}\n";
+                        } else {
+                            $text .= "  Atributos Linha: Vel={$j['Velocidade']}, For={$j['Forca']}, Marc={$j['Marcacao']}, Des={$j['Desarme']}, Vis={$j['VisaoJogo']}, Cruz={$j['Cruzamentos']}, Cab={$j['Cabeceamento']}, Tec={$j['Tecnica']}, Contr={$j['ControleBola']}, Fin={$j['Finalizacao']}, Faro={$j['FaroGol']}, Mov={$j['Movimentacao']}\n";
+                        }
+                    }
+
+                    $text .= "\n--- INSTRUÇÕES DE RESPOSTA ---\n";
+                    $text .= "Com base nas diretrizes do Hexacolor YMT v2.10 e nos atributos deste elenco:\n";
+                    $text .= "1. Sugira o Esquema Tático Ideal (ex: 4-3-3, 3-5-2, 4-2-3-1, 4-4-2, etc.) que maximize as forças do elenco e a sinergia com o treinador.\n";
+                    $text .= "2. Escale os 11 Titulares ideais indicando a posição exata de cada um (respeitando estritamente as posições suportadas por cada atleta, sem improvisação).\n";
+                    $text .= "3. Justifique a escolha de cada setor (Goleiro, Defesa, Meio-campo e Ataque) com base nos duelos e bônus do simulador.\n";
+                    $text .= "4. Indique cobradores ideais (Faltas, Pênaltis e Escanteios) e os principais reservas imediatos para mudanças táticas.\n";
+                }
+
+                $responseResult = [
+                    "content" => [["type" => "text", "text" => $text]]
+                ];
+            } elseif ($toolName === 'sugerir_convocacao_selecao') {
+                $selecaoArg = $arguments['selecao'] ?? null;
+                $tecnicoArg = $arguments['tecnico'] ?? null;
+                $tamanhoConvocacao = isset($arguments['tamanho_convocacao']) ? min(30, max(15, intval($arguments['tamanho_convocacao']))) : 23;
+
+                $selInfo = obterInfoSelecao($db, $selecaoArg);
+                if (!$selInfo) {
+                    throw new Exception("Não foi possível encontrar a seleção nacional informada ('" . htmlspecialchars($selecaoArg) . "'). Verifique o nome da seleção ou do país.");
+                }
+
+                $idSelecao = intval($selInfo['ID']);
+                $nomeSelecao = $selInfo['Nome'];
+                $idPais = intval($selInfo['idPais']);
+                $nomePais = $selInfo['nomePais'] ?: $nomeSelecao;
+                $sexoSelecao = intval($selInfo['Sexo'] ?? 0);
+                $statusSelecao = intval($selInfo['statusSelecao'] ?? 1);
+
+                // Categoria e limite de idade
+                $categoriaStr = "Principal (Sem limite de idade)";
+                $dataMinima = '1900-01-01';
+                $temLimiteIdade = 0;
+                if ($statusSelecao === 2) {
+                    $categoriaStr = "Olímpica / Sub-23 (<= 23 anos)";
+                    $temLimiteIdade = 1;
+                    $dataMinima = date('Y-m-d', strtotime("-23 years"));
+                } elseif ($statusSelecao === 3) {
+                    $categoriaStr = "Sub-20 (<= 20 anos)";
+                    $temLimiteIdade = 1;
+                    $dataMinima = date('Y-m-d', strtotime("-20 years"));
+                } elseif ($statusSelecao === 4) {
+                    $categoriaStr = "Sub-18 (<= 18 anos)";
+                    $temLimiteIdade = 1;
+                    $dataMinima = date('Y-m-d', strtotime("-18 years"));
+                }
+
+                // Identificar o técnico
+                $tecnicoInfo = null;
+                if (!empty($tecnicoArg)) {
+                    $tecnicoInfo = obterIdOuInfoTecnico($db, $tecnicoArg);
+                }
+                if (!$tecnicoInfo) {
+                    // Buscar técnico vinculado à seleção em contratos_tecnico
+                    $tecnicoInfo = obterIdOuInfoTecnico($db, null, $idSelecao);
+                }
+
+                // Consultar todos os jogadores elegíveis do país
+                $queryElegiveis = "
+                    SELECT 
+                        j.ID as idJogador,
+                        j.Nome as nomeJogador,
+                        TIMESTAMPDIFF(YEAR, j.Nascimento, CURDATE()) as Idade,
+                        j.Nivel,
+                        j.StringPosicoes,
+                        j.Marcacao, j.Desarme, j.VisaoJogo, j.Movimentacao, j.Cruzamentos, j.Cabeceamento,
+                        j.Tecnica, j.ControleBola, j.Finalizacao, j.FaroGol, j.Velocidade, j.Forca,
+                        j.Reflexos, j.Seguranca, j.Saidas, j.JogoAereo, j.Lancamentos, j.DefesaPenaltis, j.Determinacao,
+                        b.Nome as clubeAtual
+                    FROM jogador j
+                    LEFT JOIN contratos_jogador c ON j.ID = c.jogador AND c.tipoContrato = 0
+                    LEFT JOIN clube b ON c.clube = b.ID
+                    WHERE j.Pais = :paisId
+                      AND j.Sexo = :sexoSelecao
+                      AND j.disponibilidade >= 0
+                      AND (:temLimite = 0 OR j.Nascimento >= :dataMinima)
+                    ORDER BY j.Nivel DESC, j.Nome ASC
+                ";
+                $stmtEleg = $db->prepare($queryElegiveis);
+                $stmtEleg->bindValue(':paisId', $idPais, PDO::PARAM_INT);
+                $stmtEleg->bindValue(':sexoSelecao', $sexoSelecao, PDO::PARAM_INT);
+                $stmtEleg->bindValue(':temLimite', $temLimiteIdade, PDO::PARAM_INT);
+                $stmtEleg->bindValue(':dataMinima', $dataMinima);
+                $stmtEleg->execute();
+                $todosElegiveis = $stmtEleg->fetchAll(PDO::FETCH_ASSOC);
+
+                if (empty($todosElegiveis)) {
+                    $text = "Nenhum atleta elegível encontrado para a seleção '{$nomeSelecao}' ({$nomePais} - {$categoriaStr}).";
+                } else {
+                    $totalElegiveis = count($todosElegiveis);
+
+                    $text = "=== SUGESTÃO DE CONVOCAÇÃO & ESCALAÇÃO DE SELEÇÃO (HEXACOLOR YMT v2.10) ===\n";
+                    $text .= "Seleção: {$nomeSelecao} (País: {$nomePais} | ID: {$idSelecao})\n";
+                    $text .= "Categoria: {$categoriaStr} | Vagas a convocar: {$tamanhoConvocacao} atletas (Total de elegíveis: {$totalElegiveis})\n";
+
+                    if ($tecnicoInfo) {
+                        $mentIdx = intval($tecnicoInfo['Mentalidade']);
+                        $estIdx = intval($tecnicoInfo['Estilo']);
+                        $mentDesc = $mapMentalidadesTecnico[$mentIdx] ?? "Balanceada (0.0)";
+                        $estDesc = $mapEstilosTecnico[$estIdx] ?? "Equilibrado";
+                        $text .= "\nTREINADOR SELECIONADO: {$tecnicoInfo['Nome']} (ID: {$tecnicoInfo['ID']} | Nível: {$tecnicoInfo['Nivel']})\n";
+                        $text .= "- Mentalidade: {$mentDesc}\n";
+                        $text .= "- Estilo Tático: {$estDesc}\n";
+                    } else {
+                        $text .= "\nTREINADOR: Não especificado (análise considerando perfil balanceado / recomende o perfil ideal para esta geração de atletas).\n";
+                    }
+
+                    $text .= "\n--- REGRAS DE OURO DO SIMULADOR HEXACOLOR YMT ---\n";
+                    $text .= "1. COBERTURA TOTAL DE POSIÇÕES: Uma convocação deve ter no mínimo 3 Goleiros e pelo menos 2 atletas naturais para cada posição tática planejada, evitando buracos por lesão/suspensão.\n";
+                    $text .= "2. TOLERÂNCIA ZERO À IMPROVISAÇÃO: O simulador penaliza brutalmente atletas escalados fora das posições marcadas com '1' no seu StringPosicoes. Todos os 11 titulares e reservas devem estar em suas posições naturais.\n";
+                    $text .= "3. BÔNUS POR SETOR DA ENGINE:\n";
+                    $text .= "   - Goleiros (G): Reflexos para chutes diretos, Saídas para infiltrações cara-a-cara, Jogo Aéreo para bolas altas.\n";
+                    $text .= "   - Zagueiros (Z): Maior proteção defensiva global (DefInvasão: 0.40, DefFinalização: 0.35, DefCabeceio: 0.45). Atributos: Marcação, Desarme, Cabeceamento, Força, Velocidade.\n";
+                    $text .= "   - Laterais/Alas (LD/LE, AD/AE): Protegem laterais (DefCab: 0.60) e geram bolas na área (CabD/CabE: 0.45-0.55). Atributos: Velocidade, Cruzamento, Desarme.\n";
+                    $text .= "   - Volantes (V): Bloqueiam finalizações centrais (DefFinalização: 0.50). Atributos: Desarme, Marcação, Força e Visão de Jogo.\n";
+                    $text .= "   - Meias (MC/MA): MA arremata de longe (Finalização: 0.55); MC dita passe e cadência. Atributos: Visão de Jogo (assistências), Técnica, Controle de Bola e Finalização.\n";
+                    $text .= "   - Pontas (PD/PE): Especialistas em jogada de linha de fundo (CabD/CabE: 0.70). Atributos: Velocidade, Cruzamento, Técnica.\n";
+                    $text .= "   - 2º Atacante (Am): Maior bônus de infiltração do jogo (Invasão: 0.65). Atributos: Movimentação, Velocidade, Técnica e Faro.\n";
+                    $text .= "   - Centroavante (Aa): Homem-gol no chão e no alto (Finalização: 0.40, Cabeceio: 0.50). Atributos: Finalização, Faro de Gol, Cabeceamento e Força.\n";
+                    $text .= "4. SINERGIA COM O TÉCNICO: Se o treinador for de Contra-Ataque, priorize atletas de alta Velocidade e Infiltração (Am, PD/PE); se for de Laterais Ofensivos, priorize alas com alto Cruzamento e atacante de área cabeceador; se for de Posse/Cadenciar, privilegie meias técnicos e finalizadores.\n\n";
+
+                    // Agrupar atletas elegíveis por setores para entregar ao LLM os mais relevantes
+                    $goleiros = [];
+                    $defensores = [];
+                    $laterais = [];
+                    $meioCampistas = [];
+                    $atacantes = [];
+
+                    foreach ($todosElegiveis as $atleta) {
+                        $posicoes = decodificarPosicoesAtleta($atleta['StringPosicoes']);
+                        $atleta['posicoesLista'] = $posicoes;
+
+                        if (in_array('G', $posicoes)) {
+                            $goleiros[] = $atleta;
+                        }
+                        if (in_array('Z', $posicoes)) {
+                            $defensores[] = $atleta;
+                        }
+                        if (in_array('LD', $posicoes) || in_array('LE', $posicoes) || in_array('AD', $posicoes) || in_array('AE', $posicoes)) {
+                            $laterais[] = $atleta;
+                        }
+                        if (in_array('V', $posicoes) || in_array('MC', $posicoes) || in_array('MA', $posicoes) || in_array('MD', $posicoes) || in_array('ME', $posicoes)) {
+                            $meioCampistas[] = $atleta;
+                        }
+                        if (in_array('Aa', $posicoes) || in_array('Am', $posicoes) || in_array('PD', $posicoes) || in_array('PE', $posicoes)) {
+                            $atacantes[] = $atleta;
+                        }
+                    }
+
+                    // Função local para formatar lista resumida de atletas para o LLM
+                    $formatarSetor = function($lista, $limite, $isGoleiro = false) {
+                        $out = "";
+                        $count = 0;
+                        foreach ($lista as $j) {
+                            if ($count++ >= $limite) break;
+                            $posStr = implode('/', $j['posicoesLista']) ?: 'Sem Posição';
+                            $clubeStr = $j['clubeAtual'] ? " ({$j['clubeAtual']})" : " (Sem clube)";
+                            $out .= "- [ID: {$j['idJogador']}] {$j['nomeJogador']}{$clubeStr} | Nível: {$j['Nivel']} | Idade: {$j['Idade']} | Posições: [{$posStr}]\n";
+                            if ($isGoleiro) {
+                                $out .= "  Atributos GK: Ref={$j['Reflexos']} Sai={$j['Saidas']} JoA={$j['JogoAereo']} Seg={$j['Seguranca']} Pen={$j['DefesaPenaltis']}\n";
+                            } else {
+                                $out .= "  Atributos: Vel={$j['Velocidade']} For={$j['Forca']} Marc={$j['Marcacao']} Des={$j['Desarme']} Vis={$j['VisaoJogo']} Cruz={$j['Cruzamentos']} Cab={$j['Cabeceamento']} Tec={$j['Tecnica']} Contr={$j['ControleBola']} Fin={$j['Finalizacao']} Faro={$j['FaroGol']} Mov={$j['Movimentacao']}\n";
                             }
                         }
-                        $posList = implode(', ', $posicoesLegiveis) ?: 'Nenhuma';
+                        return $out;
+                    };
 
-                        $text .= "- {$j['nomeJogador']} (ID: {$j['idJogador']})\n";
-                        $text .= "  Nível: {$j['Nivel']} | Idade: {$j['Idade']} | Posições em que atua: {$posList}\n";
-                        $text .= "  Atributos-Chave: Velocidade={$j['Velocidade']}, Marcação={$j['Marcacao']}, Finalização={$j['Finalizacao']}, Passe/Visão={$j['VisaoJogo']}, Força={$j['Forca']}, Reflexo(Goleiro)={$j['Reflexos']}\n\n";
-                    }
-                    $text .= "Com base nessa lista, recomende um esquema tático principal (ex: 4-4-2, 4-3-3, 3-5-2) e justifique a escolha. Monte a escalação com os 11 titulares ideais para as posições.";
+                    $text .= "--- PRINCIPAIS CANDIDATOS POR SETOR ---\n";
+                    $text .= "### GOLEIROS DISPONÍVEIS:\n" . $formatarSetor($goleiros, 6, true) . "\n";
+                    $text .= "### ZAGUEIROS DISPONÍVEIS:\n" . $formatarSetor($defensores, 10, false) . "\n";
+                    $text .= "### LATERAIS E ALAS DISPONÍVEIS:\n" . $formatarSetor($laterais, 10, false) . "\n";
+                    $text .= "### MEIO-CAMPISTAS E VOLANTES DISPONÍVEIS:\n" . $formatarSetor($meioCampistas, 12, false) . "\n";
+                    $text .= "### ATACANTES E PONTAS DISPONÍVEIS:\n" . $formatarSetor($atacantes, 12, false) . "\n";
+
+                    $text .= "--- MISSÃO DO ASSISTENTE ---\n";
+                    $text .= "1. LISTA DE CONVOCAÇÃO FINAL ({$tamanhoConvocacao} Atletas):\n";
+                    $text .= "   - Selecione exatamente {$tamanhoConvocacao} atletas dentre os candidatos acima, distribuídos de forma equilibrada por setor (ex: 3 Goleiros, 4 Zagueiros, 4 Laterais, 6 a 7 Meias/Volantes, 5 a 6 Atacantes/Pontas).\n";
+                    $text .= "   - Garanta que todas as posições tenham titular e reserva competente.\n\n";
+                    $text .= "2. ESQUEMA TÁTICO E ESCALAÇÃO DOS 11 TITULARES:\n";
+                    $text .= "   - Determine a melhor formação tática (ex: 4-3-3, 3-5-2, 4-2-3-1, 4-4-2) maximizando a sinergia com o Estilo e a Mentalidade do treinador.\n";
+                    $text .= "   - Escale os 11 titulares indicando cada jogador em uma posição que ele saiba atuar naturalmente (bit '1' da lista de posições dele, rigorosamente sem improvisação).\n";
+                    $text .= "   - Justifique a escolha dos titulares demonstrando como seus atributos superam os adversários nas jogadas do simulador.\n\n";
+                    $text .= "3. BATEDORES E ESTRATÉGIA:\n";
+                    $text .= "   - Aponte o Capitão, cobrador de pênaltis, faltas e escanteios.\n";
+                    $text .= "   - Resuma a estratégia de jogo no simulador (ex: explorar cruzamentos nas costas da zaga, infiltração em velocidade, arremates de longe, solidez defensiva).\n";
                 }
 
                 $responseResult = [

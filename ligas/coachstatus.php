@@ -68,25 +68,23 @@ $mod_nivel = (int)$info['modificadorNivel'];
 
 // Mapeamentos de Mentalidade e Estilo
 $array_mentalidades = [
-    0 => "Muito Defensiva",
-    1 => "Defensiva",
-    2 => "Normal",
-    3 => "Ofensiva",
-    4 => "Muito Ofensiva"
+    1 => "Retranca",
+    2 => "Defensiva",
+    3 => "Balanceada",
+    4 => "Ofensiva",
+    5 => "Ataque Total"
 ];
 
 $array_estilos = [
-    0 => "Equilibrado",
-    1 => "Posse de Bola",
-    2 => "Contra-Ataque",
-    3 => "Pressão Alta",
-    4 => "Linha Defensiva",
-    5 => "Bolas Longas",
-    6 => "Laterais Ofensivos"
+    1 => "Explorar contra-ataques",
+    2 => "Cadenciar o jogo",
+    3 => "Neutro",
+    4 => "Atacar pelas laterais",
+    5 => "Impôr ritmo ofensivo"
 ];
 
-$mentalidade_texto = $array_mentalidades[$mentalidade_idx] ?? "Equilibrada";
-$estilo_texto = $array_estilos[$estilo_idx] ?? "Equilibrado";
+$mentalidade_texto = $array_mentalidades[$mentalidade_idx] ?? "Balanceada";
+$estilo_texto = $array_estilos[$estilo_idx] ?? "Neutro";
 
 $donoLogado = false;
 if (isset($_SESSION['user_id']) && ($_SESSION['user_id'] == $dono_pais || $_SESSION['user_id'] == $dono_clube)) {

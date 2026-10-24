@@ -15,7 +15,7 @@ $status = isset($_POST['status']) ? (int)$_POST['status'] : -1;
 $notifyEmail = isset($_POST['notify_email']) && ($_POST['notify_email'] === 'true' || $_POST['notify_email'] === '1' || $_POST['notify_email'] === 1 || $_POST['notify_email'] === true);
 $customMessage = isset($_POST['custom_message']) ? trim($_POST['custom_message']) : '';
 
-if ($id <= 0 || $status < 0 || $status > 3) {
+if ($id <= 0 || $status < 0 || $status > 4) {
     echo json_encode(['success' => false, 'message' => 'Parâmetros inválidos.']);
     exit;
 }
@@ -47,7 +47,8 @@ if ($suggestion->updateStatus($id, $status)) {
                 0 => '⏳ Pendente',
                 1 => '🔄 Em processo',
                 2 => '✅ Concluído / Resolvido',
-                3 => '❌ Cancelado'
+                3 => '❌ Cancelado',
+                4 => '🌓 Parcialmente implementado'
             ];
             $statusText = $statusLabels[$status] ?? 'Atualizado';
             $typeName = ((int)$sugData['type'] === 1) ? 'Sugestão' : 'Reporte de Bug';

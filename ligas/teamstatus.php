@@ -3118,7 +3118,7 @@ var selecaoStatusTipo = <?php echo (int)($status_time ?? 1); ?>;
 var drawerSearchTimer = null;
 
 function getDrawerCacheKey() {
-    return 'confusa_drawer_elegiveis_' + selecaoTeamId;
+    return 'confusa_drawer_elegiveis_v3_' + selecaoTeamId;
 }
 
 function abrirDrawerConvocacao() {
@@ -3140,6 +3140,7 @@ function abrirDrawerConvocacao() {
                 drawerElegiveisData = parsed.jogadores;
                 var selecaoInfo = parsed.selecao || {};
                 var metaText = 'Total: <strong>' + selecaoInfo.totalElegiveis + '</strong> atletas elegíveis | Convocados atuais: <strong style="color: #10b981;">' + selecaoInfo.totalConvocados + '</strong>';
+                if (parseInt(selecaoInfo.sexo, 10) === 1) { metaText += ' | Gênero: <strong>Feminino</strong>'; }
                 if (selecaoInfo.idadeMax < 90) {
                     metaText += ' | Limite: <strong>Sub-' + selecaoInfo.idadeMax + '</strong>';
                 }
@@ -3189,6 +3190,7 @@ function carregarElegiveisDrawer(isSilent) {
         var selecaoInfo = res.selecao || {};
         
         var metaText = 'Total: <strong>' + selecaoInfo.totalElegiveis + '</strong> atletas elegíveis | Convocados atuais: <strong style="color: #10b981;">' + selecaoInfo.totalConvocados + '</strong>';
+        if (parseInt(selecaoInfo.sexo, 10) === 1) { metaText += ' | Gênero: <strong>Feminino</strong>'; }
         if (selecaoInfo.idadeMax < 90) {
             metaText += ' | Limite: <strong>Sub-' + selecaoInfo.idadeMax + '</strong>';
         }

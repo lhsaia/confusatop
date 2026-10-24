@@ -14,6 +14,16 @@
       "items": [
         {
           "badge": "bugfix",
+          "title": "Correção de Mapeamento de Mentalidade e Estilo do Técnico",
+          "desc": "Corrigido o mapeamento de exibição da mentalidade e do estilo de jogo do treinador na página de perfil e nos módulos do sistema, alinhando os índices com a base oficial de 1 a 5 utilizada no motor de jogo e na criação do técnico."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Convocação de Atletas em Seleções Femininas",
+          "desc": "Corrigida a consulta de atletas elegíveis no painel rápido de convocação para seleções nacionais femininas, garantindo a identificação do gênero correto da equipe e disponibilizando apenas jogadoras femininas."
+        },
+        {
+          "badge": "bugfix",
           "title": "Correção de Pênaltis Ausentes Gravados como -1 em Amistosos",
           "desc": "Corrigida a gravação do placar de pênaltis em amistosos e jogos de seleções, garantindo que partidas encerradas sem disputa de pênaltis sejam registradas estritamente com valor NULL no banco de dados e súmulas, em vez de -1."
         },

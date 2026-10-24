@@ -158,6 +158,7 @@ $(document).ready(function($){
                 if(index >= (from_result_num) && index < (from_result_num + results_per_page)){
                     var options = { year: 'numeric', month: '2-digit', day: '2-digit' };
                     var estiloNome = estiloMap[val['Estilo']] || val['Estilo'];
+                    var mentalidadeNome = mentalidadeMap[val['Mentalidade']] || val['Mentalidade'];
                     var fotoSrc = val['foto'] ? '/images/tecnicos/' + val['foto'] : '/images/tecnicos/0.png';
 
                     var nomeDisponibilidade = "";
@@ -215,7 +216,7 @@ $(document).ready(function($){
                     });
                     tbl += "</select></td>";
 
-                    tbl += "<td><span class='nomeMentalidade' id='men" + val['ID'] + "'>" + (val['nomeMentalidade'] || '') + "</span>";
+                    tbl += "<td><span class='nomeMentalidade' id='men" + val['ID'] + "'>" + mentalidadeNome + "</span>";
                     tbl += "<select class='comboMentalidade editavel' id='selmen" + val['ID'] + "' hidden>";
                     listaMentalidades.forEach(function(m){
                         tbl += "<option value='" + m[0] + "' " + (val['Mentalidade'] == m[0] ? 'selected' : '') + ">" + m[1] + "</option>";

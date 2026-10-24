@@ -24,6 +24,12 @@ Sempre que você realizar alterações de novas funcionalidades, melhorias de la
    - `"bugfix"` → para correções de erros ou comportamentos incorretos.
    - `"security"` → para alterações de segurança, permissões ou autenticação.
 4. Certifique-se de que a sintaxe JSON permaneça perfeitamente válida.
+5. **Preservação Estrita de Indentação e Quebras de Linha (`\r\n` / CRLF):**
+   - O arquivo `updates.json` possui mais de 3.000 linhas, utiliza quebras de linha Windows (`CRLF`) e indentação de 2 espaços.
+   - **É terminantemente proibido reformatar ou re-serializar o arquivo inteiro** (ex: usando `json_encode` geral em PHP ou scripts que reescrevam a árvore JSON inteira), pois isso altera o espaçamento de milhares de linhas e queima tokens desnecessariamente.
+   - A adição deve ser sempre **cirúrgica e pontual**, inserindo apenas as linhas do novo item no início do array `"items"` do bloco do dia (ou criando o bloco do dia no início de `"days"`).
+   - Ao editar com ferramentas de busca e substituição ou scripts, garanta correspondência exata considerando quebras `\r\n`.
+   - **Verificação obrigatória antes de finalizar:** Sempre execute `git diff --stat updates.json`. O resultado **deve** apontar apenas as poucas linhas adicionadas (ex: `updates.json | 5 +++++`, com **0 linhas removidas**). Se acusar centenas ou milhares de alterações, execute `git checkout updates.json` imediatamente e refaça a inserção cirúrgica sem tocar no restante do documento.
 
 
 

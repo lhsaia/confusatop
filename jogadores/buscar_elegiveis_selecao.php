@@ -6,6 +6,7 @@ if (!ob_start("ob_gzhandler")) {
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config/session.php';
 
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-cache, no-store, must-revalidate');
 
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     echo json_encode(['success' => false, 'error' => 'Usuário não logado']);
@@ -39,7 +40,14 @@ if ($statusSelecao <= 0) {
 }
 
 $paisId = (int)($infoSelecao['pais_id'] ?? 0);
-$sexoSelecao = (int)($infoSelecao['Sexo'] ?? 0);
+$sexoSelecao = isset($infoSelecao['Sexo']) ? (int)$infoSelecao['Sexo'] : (isset($infoSelecao['sexo']) ? (int)$infoSelecao['sexo'] : 0);
+
+// Fallback caso a seleção não tenha sexo explícito no clube/liga mas seu nome indique seleção feminina (ex: "Brasil (F)")
+if ($sexoSelecao === 0 && !empty($infoSelecao['Nome'])) {
+    if (preg_match('/\b\(F\)\b/i', $infoSelecao['Nome']) || preg_match('/\bfeminina\b/i', $infoSelecao['Nome']) || preg_match('/\bfeminino\b/i', $infoSelecao['Nome'])) {
+        $sexoSelecao = 1;
+    }
+}
 $donoPais = (int)($infoSelecao['donoPais'] ?? 0);
 $userLogado = (int)($_SESSION['user_id'] ?? 0);
 $isImpersonated = !empty($_SESSION['impersonated']);

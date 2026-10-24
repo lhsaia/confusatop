@@ -245,7 +245,7 @@ function readInfo($id){
     }
 
     $query = "SELECT
-                a.id, a.Nome, a.TresLetras, e.Nome as Estadio, e.Capacidade as Capacidade, p.Nome as Pais, a.Escudo, a.Uniforme1, a.Uniforme2, l.nome as liga, l.id as liga_id, l.limite_idade as limite_idade_liga, p.id as pais_id, p.dono as donoPais, a.status, a.Uni1Cor1, a.Uni1Cor2, l.logo as logoLiga, e.foto as fotoEstadio   
+                a.id, a.Nome, a.TresLetras, e.Nome as Estadio, e.Capacidade as Capacidade, p.Nome as Pais, a.Escudo, a.Uniforme1, a.Uniforme2, l.nome as liga, l.id as liga_id, l.limite_idade as limite_idade_liga, p.id as pais_id, p.dono as donoPais, a.status, a.Uni1Cor1, a.Uni1Cor2, l.logo as logoLiga, e.foto as fotoEstadio, COALESCE(a.Sexo, l.Sexo, 0) as Sexo, COALESCE(a.Sexo, l.Sexo, 0) as sexo   
             FROM
                 " . $this->table_name . " a
             LEFT JOIN
