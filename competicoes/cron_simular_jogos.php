@@ -369,30 +369,112 @@ foreach ($partidas as $matchInfo) {
         continue;
     }
     
+    // 0. Pré-validar a integridade física do SQLite da competição antes de mexer na engine
+    try {
+        $sourceTest = new PDO('sqlite:' . $sourceDbPath);
+        $sourceTest->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $quickCheck = $sourceTest->query("PRAGMA quick_check")->fetchColumn();
+        $sourceTest = null;
+        if ($quickCheck !== 'ok') {
+            cron_log("   [ERRO SQLITE CORROMPIDO] O banco da Competição #{$idCompeticao} está corrompido no disco (quick_check: {$quickCheck}). Pulando Partida #{$idPartida} para não travar as demais...");
+            continue;
+        }
+    } catch (\Throwable $e) {
+        cron_log("   [ERRO SQLITE CORROMPIDO] Falha ao ler o banco da Competição #{$idCompeticao}: " . $e->getMessage() . ". Pulando Partida #{$idPartida} para não travar as demais...");
+        continue;
+    }
+
     if (!is_dir($hexacolorDir . "/data")) {
         mkdir($hexacolorDir . "/data", 0777, true);
     }
     
-    // Limpar arquivos residuais de WAL/lock de simulações anteriores para evitar disk I/O error
+    // Helper para fechar e limpar completamente conexões e arquivos SQLite da partida atual
+    $fecharConexoesSQLite = function() use (
+        &$ldb, &$liteDatabase, &$liteCompeticao, &$timeObj,
+        &$stmtClubesSQLite, &$stmtCheckTitulares, &$stmtEstCheck,
+        &$stmtHomeEst, &$stmtFirstEst, &$stmtClimaCheck, &$stmtCheck,
+        &$stmtInsert, &$stmtArbCount, &$stmtOrig, &$stmtCustomA,
+        &$stmtCustomB, &$stmtT1, &$stmtT2, &$stmtOut1, &$stmtOut2,
+        &$stmtUp, &$stmtRestore, &$targetDbPath
+    ) {
+        $stmtClubesSQLite = null;
+        $stmtCheckTitulares = null;
+        $stmtEstCheck = null;
+        $stmtHomeEst = null;
+        $stmtFirstEst = null;
+        $stmtClimaCheck = null;
+        $stmtCheck = null;
+        $stmtInsert = null;
+        $stmtArbCount = null;
+        $stmtOrig = null;
+        $stmtCustomA = null;
+        $stmtCustomB = null;
+        $stmtT1 = null;
+        $stmtT2 = null;
+        $stmtOut1 = null;
+        $stmtOut2 = null;
+        $stmtUp = null;
+        $stmtRestore = null;
+        $liteCompeticao = null;
+        $timeObj = null;
+        if ($ldb) {
+            try {
+                $ldb->exec("PRAGMA wal_checkpoint(TRUNCATE);");
+            } catch (\Throwable $e) {}
+            $ldb = null;
+        }
+        $liteDatabase = null;
+        gc_collect_cycles();
+        if (file_exists($targetDbPath)) {
+            @unlink($targetDbPath);
+        }
+        @unlink($targetDbPath . '-wal');
+        @unlink($targetDbPath . '-shm');
+        @unlink($targetDbPath . '-journal');
+    };
+
+    // Limpar arquivos residuais de simulações anteriores para garantir cópia atômica e limpa
+    if (file_exists($targetDbPath)) {
+        @unlink($targetDbPath);
+    }
     @unlink($targetDbPath . '-wal');
     @unlink($targetDbPath . '-shm');
     @unlink($targetDbPath . '-journal');
 
-    // 1. Copiar SQLite da competição para data/database.db3
-    copy($sourceDbPath, $targetDbPath);
+    // 1. Copiar SQLite da competição para data/database.db3 com validação
+    if (!@copy($sourceDbPath, $targetDbPath)) {
+        cron_log("   [ERRO] Falha ao copiar banco SQLite da Competição #{$idCompeticao} para a engine. Pulando Partida #{$idPartida}...");
+        continue;
+    }
     
     $liteDatabase = new SQLiteDatabase();
     $liteDatabase->fileName = $targetDbPath;
-    $ldb = $liteDatabase->getConnection();
-    if (!$ldb) {
-        cron_log("   [ERRO] Falha ao abrir conexão SQLite para a Partida #{$idPartida}. Pulando...");
+    $ldb = null;
+    try {
+        $ldb = $liteDatabase->getConnection();
+        if (!$ldb) {
+            cron_log("   [ERRO] Falha ao abrir conexão SQLite para a Partida #{$idPartida}. Pulando...");
+            $fecharConexoesSQLite();
+            continue;
+        }
+    } catch (\Throwable $e) {
+        cron_log("   [ERRO] Exceção ao abrir SQLite para a Partida #{$idPartida}: " . $e->getMessage() . ". Pulando...");
+        $fecharConexoesSQLite();
         continue;
     }
+    
     $liteCompeticao = new Competicao_clube($ldb);
     $timeObj = new Time($ldb);
 
     // Auto-correção robusta de IDs de clubes (garante que IDs positivos/negativos batam exatamente com o SQLite da competição)
-    $stmtClubesSQLite = $ldb->query("SELECT ID FROM clube");
+    $clubesSQLiteExistentes = [];
+    try {
+        $stmtClubesSQLite = $ldb->query("SELECT ID FROM clube");
+    } catch (\Throwable $e) {
+        cron_log("   [ERRO] Falha ao consultar clubes no SQLite: " . $e->getMessage() . ". Pulando...");
+        $fecharConexoesSQLite();
+        continue;
+    }
     $clubesSQLiteExistentes = [];
     if ($stmtClubesSQLite) {
         while ($rCl = $stmtClubesSQLite->fetch(PDO::FETCH_ASSOC)) {
@@ -503,8 +585,8 @@ foreach ($partidas as $matchInfo) {
     }
 
     if (!$estadioValido || $idEstadio === 0) {
-        $ldb = null;
         cron_log("   [ERRO] A Partida #{$idPartida} não possui estádio definido no SQLite. Pulando...");
+        $fecharConexoesSQLite();
         continue;
     }
 
@@ -544,10 +626,33 @@ foreach ($partidas as $matchInfo) {
         if ($totalArb === 0) {
             cron_log("   [ERRO DE ARBITRAGEM] A Partida #{$idPartida} não pôde ser simulada: a Competição #{$idCompeticao} não possui nenhum árbitro cadastrado.");
             cron_log("   -> O responsável pela competição deve acessar as Opções da Competição e incluir pelo menos um árbitro.");
+            $fecharConexoesSQLite();
             continue;
         }
     } catch (\Throwable $e) {
         error_log("Erro ao validar trioarbitragem no SQLite: " . $e->getMessage());
+    }
+
+    // 0. Pré-validação de escalação: impede ArrayIndexOutOfBoundsException na engine se time estiver sem titulares
+    try {
+        $stmtCheckTitulares = $ldb->prepare("SELECT Clube, Jogador1 FROM escalacao WHERE Clube IN (:timeA, :timeB)");
+        $stmtCheckTitulares->bindValue(':timeA', $matchInfo['timeA'], PDO::PARAM_INT);
+        $stmtCheckTitulares->bindValue(':timeB', $matchInfo['timeB'], PDO::PARAM_INT);
+        $stmtCheckTitulares->execute();
+        $escalacoesEncontradas = [];
+        while ($rTit = $stmtCheckTitulares->fetch(PDO::FETCH_ASSOC)) {
+            if (!empty($rTit['Jogador1'])) {
+                $escalacoesEncontradas[(int)$rTit['Clube']] = true;
+            }
+        }
+        $stmtCheckTitulares = null;
+        if (!isset($escalacoesEncontradas[(int)$matchInfo['timeA']]) || !isset($escalacoesEncontradas[(int)$matchInfo['timeB']])) {
+            cron_log("   [ERRO ESCALAÇÃO] A Partida #{$idPartida} (Competição #{$idCompeticao}) possui time sem escalação/titulares válidos no SQLite. Pulando para não travar a fila...");
+            $fecharConexoesSQLite();
+            continue;
+        }
+    } catch (\Throwable $e) {
+        cron_log("   [AVISO] Não foi possível verificar escalações prévias: " . $e->getMessage());
     }
 
     // 1. Guardar a escalação original (padrão) na memória para restaurar depois da simulação
@@ -950,7 +1055,8 @@ foreach ($partidas as $matchInfo) {
         @unlink($sourceDbPath . '-wal');
         @unlink($sourceDbPath . '-shm');
         @unlink($sourceDbPath . '-journal');
-        copy($targetDbPath, $sourceDbPath);
+        @copy($targetDbPath, $sourceDbPath);
+        @unlink($targetDbPath);
         @unlink($targetDbPath . '-wal');
         @unlink($targetDbPath . '-shm');
         @unlink($targetDbPath . '-journal');
@@ -965,6 +1071,7 @@ foreach ($partidas as $matchInfo) {
             cron_log("   [DETALHE ENGINE]: " . trim($output));
         }
         cron_log("   Pulando...");
+        $fecharConexoesSQLite();
         continue;
     }
     
@@ -983,6 +1090,7 @@ foreach ($partidas as $matchInfo) {
     } else {
         error_log("PHP Simulador: [ERRO] Cron gerou súmula vazia/corrompida na partida #{$idPartida}. Output: " . trim($output));
         cron_log("   [ERRO] O arquivo .hyl para a Partida #{$idPartida} foi gerado mas está corrompido ou vazio. Pulando...");
+        $fecharConexoesSQLite();
         continue;
     }
     
@@ -1055,6 +1163,7 @@ foreach ($partidas as $matchInfo) {
     $penMsg = ($penA !== null) ? " (Pên: {$penA}x{$penB})" : "";
     cron_log("   [SUCESSO] Partida #{$idPartida} simulada! Placar: {$siglaA} {$golsTimeA} x {$golsTimeB} {$siglaB}{$penMsg}");
 
+    $fecharConexoesSQLite();
     gc_collect_cycles();
 }
 

@@ -461,15 +461,19 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                     }
                 }
 
-                if ($jogoCorrespondente) {
-                    $dataJogo = !empty($jogoCorrespondente['data']) ? strtotime($jogoCorrespondente['data']) : time();
-                    $temPen = ($jogoCorrespondente['timeA_penaltis'] !== null && $jogoCorrespondente['timeA_penaltis'] !== '');
-                    $duracaoSegundos = $temPen ? (150 * 60) : (120 * 60);
-                    $jaTerminou = (time() >= ($dataJogo + $duracaoSegundos));
-                    
-                    if ((int)$jogoCorrespondente['status'] !== 1 || !$jaTerminou) {
-                        continue; // Jogo ainda não aconteceu ou não finalizou no tempo real
-                    }
+                // Se não há partida correspondente no banco, descarta
+                if (!$jogoCorrespondente) {
+                    continue;
+                }
+
+                $dataJogo = !empty($jogoCorrespondente['data']) ? strtotime($jogoCorrespondente['data']) : time();
+                $temPen = ($jogoCorrespondente['timeA_penaltis'] !== null && $jogoCorrespondente['timeA_penaltis'] !== '' && (int)$jogoCorrespondente['timeA_penaltis'] >= 0);
+                $duracaoSegundos = $temPen ? (150 * 60) : (120 * 60);
+                $jaTerminou = (time() >= ($dataJogo + $duracaoSegundos));
+                
+                // Sigilo Temporal: só revela estatísticas de jogos com status=1 e concluídos no tempo real
+                if ((int)$jogoCorrespondente['status'] !== 1 || !$jaTerminou) {
+                    continue;
                 }
 
                 $content = @file_get_contents($dirPartidas . "/" . $f);
@@ -652,31 +656,27 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         }
     } catch (\Throwable $e) {}
     
-    // 8. Consultar Cartões Amarelos Acumulados da Competição no MySQL
-    $stmtAmarelos = $db->prepare("SELECT cs.id_jogador, cs.cartoes_amarelos 
-                                 FROM competicao_suspensos cs 
-                                 WHERE cs.id_competicao = :idComp AND cs.cartoes_amarelos > 0 
-                                 ORDER BY cs.cartoes_amarelos DESC");
-    $stmtAmarelos->bindParam(':idComp', $idCompeticao, PDO::PARAM_INT);
-    $stmtAmarelos->execute();
-    $amarelosRows = $stmtAmarelos->fetchAll(PDO::FETCH_ASSOC);
+    // 8. Consolidar Cartões Amarelos Acumulados apenas de jogos já encerrados no tempo real
     $cartoesAmarelosAcumulados = [];
-    foreach ($amarelosRows as $ar) {
-        $pid = (int)$ar['id_jogador'];
+    foreach ($playerStats as $pid => $stats) {
+        if (!isset($jogadoresMap[$pid])) continue;
         $clubeId = $jogadorClubeMap[$pid] ?? 0;
         if (!empty($timesParticipantesIds) && !isset($timesParticipantesIds[$clubeId])) {
             continue;
         }
-        if (isset($jogadoresMap[$pid])) {
+        if (!empty($stats['amarelos']) && $stats['amarelos'] > 0) {
             $cartoesAmarelosAcumulados[] = [
                 'id' => $pid,
                 'nome' => $jogadoresMap[$pid]['Nome'],
                 'clube' => $clubes[$clubeId]['Nome'] ?? 'Sem clube',
                 'escudo' => $clubes[$clubeId]['Escudo'] ?? '',
-                'amarelos' => (int)$ar['cartoes_amarelos']
+                'amarelos' => (int)$stats['amarelos']
             ];
         }
     }
+    usort($cartoesAmarelosAcumulados, function($a, $b) {
+        return $b['amarelos'] - $a['amarelos'];
+    });
     
     // Garantir nomes para jogadores com estatísticas nas partidas que possam não estar no mapa inicial
     $missingStatsPids = [];
