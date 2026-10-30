@@ -16,6 +16,11 @@ $competicao = new Competicao_clube($db);
 
 $matchInfo = !empty($idMatch) ? $competicao->getMatchInfo($idMatch) : false;
 
+if (!empty($_GET['download']) && in_array(strtolower($_GET['download']), ['hyl', 'hyj'])) {
+	header("Location: /competicoes/baixar_sumula.php?jogo=" . intval($idMatch) . "&tipo=" . strtolower($_GET['download']));
+	exit;
+}
+
 if(!$matchInfo){
 	include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 

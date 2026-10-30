@@ -137,6 +137,32 @@ body {
   color: #ffffff !important;
 }
 
+.btn-hero-sumulas,
+a.btn-hero-sumulas {
+  background: #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25) !important;
+}
+
+.btn-hero-sumulas:hover,
+a.btn-hero-sumulas:hover {
+  background: #0369a1 !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
+  color: #ffffff !important;
+}
+
+.btn-hero-notas,
+a.btn-hero-notas {
+  background: #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25) !important;
+}
+
+.btn-hero-notas:hover,
+a.btn-hero-notas:hover {
+  background: #0369a1 !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
+  color: #ffffff !important;
+}
+
 .btn-hero-export span.material-symbols-outlined {
   font-size: 1.15rem !important;
 }

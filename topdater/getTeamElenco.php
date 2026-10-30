@@ -57,6 +57,13 @@ if(isset($_GET['apiKey']) && isset($_GET['team'])){
 				}
 			}
 		}
+		unset($item);
+
+		foreach($times as &$item){
+			if(count($item) < 25){
+				array_push($item, 0);
+			}
+		}
 		unset($item);		
 		
 		echo json_encode($times);

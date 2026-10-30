@@ -405,28 +405,42 @@ class Tecnico{
             $idTime = $idTime !== null ? htmlspecialchars(strip_tags((string)$idTime)) : null;
 			$idLiga = $idLiga !== null ? htmlspecialchars(strip_tags((string)$idLiga)) : null;
 
-            if($idPais != null){
-              $subquery = " b.Pais=:pais ";
-            } else if($idTime != null){
-              $subquery = " b.ID=:clube ";
-            } else if($idLiga != null) {
-			  $subquery = " b.liga=:liga ";
-			}
-
-            $query = "SELECT DISTINCT a.ID, CONCAT(a.Nome,' [',p.sigla,']' ) as Nome, IFNULL(FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365),0) as Idade, a.Nivel, a.Mentalidade, a.Estilo, a.externalID FROM contratos_tecnico c LEFT JOIN tecnico a ON c.tecnico = a.ID LEFT JOIN paises p ON a.Pais = p.id LEFT JOIN clube b ON c.clube = b.ID WHERE " . $subquery;
-            $stmt = $this->conn->prepare( $query );
-            if($idPais != null){
-              $stmt->bindParam(":pais", $idPais);
-            } else if($idTime != null){
-              $stmt->bindParam(":clube", $idTime);
+            if($idTime != null){
+                $query = "SELECT DISTINCT a.ID, CONCAT(a.Nome,' [',p.sigla,']' ) as Nome, IFNULL(FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365),0) as Idade, a.Nivel, a.Mentalidade, a.Estilo, a.externalID 
+                FROM contratos_tecnico c 
+                INNER JOIN tecnico a ON c.tecnico = a.ID 
+                INNER JOIN clube b ON c.clube = b.ID 
+                LEFT JOIN paises p ON a.Pais = p.id 
+                WHERE c.clube = :clube AND (c.tipoContrato = 0 OR c.tipoContrato IS NULL)";
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(":clube", $idTime);
+                $stmt->execute();
+                return $stmt;
+            } else if($idPais != null){
+                $query = "SELECT DISTINCT a.ID, CONCAT(a.Nome,' [',p.sigla,']' ) as Nome, IFNULL(FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365),0) as Idade, a.Nivel, a.Mentalidade, a.Estilo, a.externalID 
+                FROM clube b 
+                INNER JOIN contratos_tecnico c ON c.clube = b.ID AND (c.tipoContrato = 0 OR c.tipoContrato IS NULL) 
+                INNER JOIN tecnico a ON c.tecnico = a.ID 
+                LEFT JOIN paises p ON a.Pais = p.id 
+                WHERE b.Pais = :pais";
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(":pais", $idPais);
+                $stmt->execute();
+                return $stmt;
             } else if($idLiga != null){
-              $stmt->bindParam(":liga", $idLiga);
+                $query = "SELECT DISTINCT a.ID, CONCAT(a.Nome,' [',p.sigla,']' ) as Nome, IFNULL(FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365),0) as Idade, a.Nivel, a.Mentalidade, a.Estilo, a.externalID 
+                FROM clube b 
+                INNER JOIN contratos_tecnico c ON c.clube = b.ID AND (c.tipoContrato = 0 OR c.tipoContrato IS NULL) 
+                INNER JOIN tecnico a ON c.tecnico = a.ID 
+                LEFT JOIN paises p ON a.Pais = p.id 
+                WHERE b.liga = :liga";
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(":liga", $idLiga);
+                $stmt->execute();
+                return $stmt;
             }
 
-            $stmt->execute();
-
-            return $stmt;
-
+            return false;
         }
 
         function infoTecnico($idTime){

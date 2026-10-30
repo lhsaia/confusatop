@@ -1611,37 +1611,50 @@ return $stmt;
             $idTime = $idTime !== null ? htmlspecialchars(strip_tags((string)$idTime)) : null;
 			$idLiga = $idLiga !== null ? htmlspecialchars(strip_tags((string)$idLiga)) : null;
 
-            if($idPais != null){
-              $subquery = " b.Pais=:pais";
-            } else if($idTime != null){
-              $subquery = " b.ID=:clube ";
-            } else if($idLiga != null) {
-			  $subquery = " b.liga=:liga ";
-			}
-            
+            $orderClause = "";
             if($orderBy != null){
-                $subquery .= " ORDER BY c.titularidade DESC, c.posicaoBase ASC ";
+                $orderClause = " ORDER BY c.titularidade DESC, c.posicaoBase ASC ";
             }
 
-            $query = "SELECT DISTINCT a.ID as idJogador, a.Nome as nomeJogador, FLOOR((DATEDIFF(CURDATE(), Nascimento))/365) as Idade, o.Sigla as posicao, c.titularidade, c.posicaoBase as codigoPosicaoBase,  Mentalidade, CobradorFalta, StringPosicoes, (Nivel + c.ModificadorNivel) as Nivel, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao, DeterminacaoOriginal, p.bandeira as Nacionalidade, (Marcacao + Desarme + VisaoJogo + Movimentacao + Cruzamentos + Cabeceamento + Tecnica + ControleBola + Finalizacao + FaroGol + Velocidade + Forca + Reflexos + Seguranca + Saidas + JogoAereo + Lancamentos + DefesaPenaltis + Determinacao) as somaAtributos, Nascimento, b.Nome as Time, b.ID as idTime, CASE WHEN a.sexo = 1 THEN 'F' WHEN a.sexo = 0 THEN 'M' END as sexo, a.externalID
-            FROM jogador a
-            LEFT JOIN paises p ON a.Pais = p.id
-            LEFT JOIN contratos_jogador c ON c.jogador = a.ID
-            LEFT JOIN posicoes o ON c.posicaoBase = o.ID 
-            LEFT JOIN clube b ON b.ID = c.clube
-            WHERE " . $subquery;
-            $stmt = $this->conn->prepare( $query );
-            if($idPais != null){
-              $stmt->bindParam(":pais", $idPais);
-            } else if($idTime != null){
-              $stmt->bindParam(":clube", $idTime);
+            if($idTime != null){
+                $query = "SELECT DISTINCT a.ID as idJogador, a.Nome as nomeJogador, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, o.Sigla as posicao, c.titularidade, c.posicaoBase as codigoPosicaoBase, a.Mentalidade, a.CobradorFalta, a.StringPosicoes, (a.Nivel + c.ModificadorNivel) as Nivel, a.Marcacao, a.Desarme, a.VisaoJogo, a.Movimentacao, a.Cruzamentos, a.Cabeceamento, a.Tecnica, a.ControleBola, a.Finalizacao, a.FaroGol, a.Velocidade, a.Forca, a.Reflexos, a.Seguranca, a.Saidas, a.JogoAereo, a.Lancamentos, a.DefesaPenaltis, a.Determinacao, a.DeterminacaoOriginal, p.bandeira as Nacionalidade, (a.Marcacao + a.Desarme + a.VisaoJogo + a.Movimentacao + a.Cruzamentos + a.Cabeceamento + a.Tecnica + a.ControleBola + a.Finalizacao + a.FaroGol + a.Velocidade + a.Forca + a.Reflexos + a.Seguranca + a.Saidas + a.JogoAereo + a.Lancamentos + a.DefesaPenaltis + a.Determinacao) as somaAtributos, a.Nascimento, b.Nome as Time, b.ID as idTime, CASE WHEN a.sexo = 1 THEN 'F' WHEN a.sexo = 0 THEN 'M' END as sexo, a.externalID
+                FROM contratos_jogador c
+                INNER JOIN jogador a ON a.ID = c.jogador
+                INNER JOIN clube b ON b.ID = c.clube
+                LEFT JOIN paises p ON a.Pais = p.id
+                LEFT JOIN posicoes o ON c.posicaoBase = o.ID 
+                WHERE c.clube = :clube AND (c.tipoContrato = 0 OR c.tipoContrato IS NULL)" . $orderClause;
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(":clube", $idTime);
+                $stmt->execute();
+                return $stmt;
+            } else if($idPais != null){
+                $query = "SELECT DISTINCT a.ID as idJogador, a.Nome as nomeJogador, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, o.Sigla as posicao, c.titularidade, c.posicaoBase as codigoPosicaoBase, a.Mentalidade, a.CobradorFalta, a.StringPosicoes, (a.Nivel + c.ModificadorNivel) as Nivel, a.Marcacao, a.Desarme, a.VisaoJogo, a.Movimentacao, a.Cruzamentos, a.Cabeceamento, a.Tecnica, a.ControleBola, a.Finalizacao, a.FaroGol, a.Velocidade, a.Forca, a.Reflexos, a.Seguranca, a.Saidas, a.JogoAereo, a.Lancamentos, a.DefesaPenaltis, a.Determinacao, a.DeterminacaoOriginal, p.bandeira as Nacionalidade, (a.Marcacao + a.Desarme + a.VisaoJogo + a.Movimentacao + a.Cruzamentos + a.Cabeceamento + a.Tecnica + a.ControleBola + a.Finalizacao + a.FaroGol + a.Velocidade + a.Forca + a.Reflexos + a.Seguranca + a.Saidas + a.JogoAereo + a.Lancamentos + a.DefesaPenaltis + a.Determinacao) as somaAtributos, a.Nascimento, b.Nome as Time, b.ID as idTime, CASE WHEN a.sexo = 1 THEN 'F' WHEN a.sexo = 0 THEN 'M' END as sexo, a.externalID
+                FROM clube b
+                INNER JOIN contratos_jogador c ON c.clube = b.ID AND (c.tipoContrato = 0 OR c.tipoContrato IS NULL)
+                INNER JOIN jogador a ON a.ID = c.jogador
+                LEFT JOIN paises p ON a.Pais = p.id
+                LEFT JOIN posicoes o ON c.posicaoBase = o.ID 
+                WHERE b.Pais = :pais" . $orderClause;
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(":pais", $idPais);
+                $stmt->execute();
+                return $stmt;
             } else if($idLiga != null){
-              $stmt->bindParam(":liga", $idLiga);
+                $query = "SELECT DISTINCT a.ID as idJogador, a.Nome as nomeJogador, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, o.Sigla as posicao, c.titularidade, c.posicaoBase as codigoPosicaoBase, a.Mentalidade, a.CobradorFalta, a.StringPosicoes, (a.Nivel + c.ModificadorNivel) as Nivel, a.Marcacao, a.Desarme, a.VisaoJogo, a.Movimentacao, a.Cruzamentos, a.Cabeceamento, a.Tecnica, a.ControleBola, a.Finalizacao, a.FaroGol, a.Velocidade, a.Forca, a.Reflexos, a.Seguranca, a.Saidas, a.JogoAereo, a.Lancamentos, a.DefesaPenaltis, a.Determinacao, a.DeterminacaoOriginal, p.bandeira as Nacionalidade, (a.Marcacao + a.Desarme + a.VisaoJogo + a.Movimentacao + a.Cruzamentos + a.Cabeceamento + a.Tecnica + a.ControleBola + a.Finalizacao + a.FaroGol + a.Velocidade + a.Forca + a.Reflexos + a.Seguranca + a.Saidas + a.JogoAereo + a.Lancamentos + a.DefesaPenaltis + a.Determinacao) as somaAtributos, a.Nascimento, b.Nome as Time, b.ID as idTime, CASE WHEN a.sexo = 1 THEN 'F' WHEN a.sexo = 0 THEN 'M' END as sexo, a.externalID
+                FROM clube b
+                INNER JOIN contratos_jogador c ON c.clube = b.ID AND (c.tipoContrato = 0 OR c.tipoContrato IS NULL)
+                INNER JOIN jogador a ON a.ID = c.jogador
+                LEFT JOIN paises p ON a.Pais = p.id
+                LEFT JOIN posicoes o ON c.posicaoBase = o.ID 
+                WHERE b.liga = :liga" . $orderClause;
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(":liga", $idLiga);
+                $stmt->execute();
+                return $stmt;
             }
-            $stmt->execute();
 
-            return $stmt;
-
+            return false;
         }
 
         function maisValiosos($from_record_num, $records_per_page){

@@ -214,7 +214,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
   padding: 0 !important;
 }
 
-#gerar_tabela, #exportar_excel, #importar_excel {
+#gerar_tabela, #exportar_excel, #exportar_notas, #importar_excel, #baixar_sumulas_pack {
   border: none !important;
   color: #ffffff !important;
   border-radius: 8px !important;
@@ -269,6 +269,16 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
   box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35) !important;
 }
 
+#exportar_notas {
+  background: #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25) !important;
+}
+#exportar_notas:hover {
+  background: #0369a1 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
+}
+
 #importar_excel {
   background: #0d9488 !important;
   box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25) !important;
@@ -277,6 +287,59 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
   background: #0f766e !important;
   transform: translateY(-1px) !important;
   box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35) !important;
+}
+
+#baixar_sumulas_pack {
+  background: #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25) !important;
+}
+#baixar_sumulas_pack:hover {
+  background: #0369a1 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
+}
+
+.btn-file-dl {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 3px 6px !important;
+  font-size: 0.70rem !important;
+  font-weight: 700 !important;
+  font-family: 'Outfit', sans-serif !important;
+  text-decoration: none !important;
+  border-radius: 5px !important;
+  line-height: 1 !important;
+  transition: all 0.15s ease !important;
+  width: auto !important;
+  max-width: fit-content !important;
+  flex-shrink: 0 !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+}
+
+.btn-hyl-dl {
+  background: rgba(2, 132, 199, 0.12) !important;
+  color: #0284c7 !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
+}
+.btn-hyl-dl:hover {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25) !important;
+}
+
+.btn-hyj-dl {
+  background: rgba(13, 148, 136, 0.12) !important;
+  color: #0f766e !important;
+  border: 1px solid rgba(13, 148, 136, 0.35) !important;
+}
+.btn-hyj-dl:hover {
+  background: #0d9488 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25) !important;
 }
 
 /* Responsividade: oculta o texto dos botões em telas menores que 1500px para nunca sobrepor o login */
@@ -368,11 +431,23 @@ $(document).ready(function($){
 	 
 	let btnHtml = '<div id="gerar_tabela"><span class="material-symbols-outlined">grid_view</span><span class="btn-text">Gerar Tabela</span></div>';
 	btnHtml += '<div id="exportar_excel"><span class="material-symbols-outlined">download</span><span class="btn-text">Exportar Excel</span></div>';
+	btnHtml += '<div id="exportar_notas" title="Exportar notas (médias) dos jogadores para Excel"><span class="material-symbols-outlined">grade</span><span class="btn-text">Exportar Notas</span></div>';
 	btnHtml += '<div id="importar_excel"><span class="material-symbols-outlined">upload</span><span class="btn-text">Importar Excel</span></div>';
+	if (admin == "true") {
+		btnHtml += '<div id="baixar_sumulas_pack" title="Baixar pacote (.zip) com as súmulas (.hyl e .hyj)"><span class="material-symbols-outlined">folder_zip</span><span class="btn-text">Baixar Súmulas</span></div>';
+	}
 	$("#toolbar").html(btnHtml);
+
+	$(document).on('click', '#baixar_sumulas_pack', function(){
+		window.location.href = 'baixar_pacote_sumulas.php?id=' + codigo_competicao;
+	});
 
 	$(document).on('click', '#exportar_excel', function(){
 		window.location.href = 'exportar_excel.php?id=' + codigo_competicao;
+	});
+
+	$(document).on('click', '#exportar_notas', function(){
+		window.location.href = 'exportar_notas.php?id=' + codigo_competicao;
 	});
 
 	$(document).on('click', '#importar_excel', function(){
@@ -847,6 +922,11 @@ $(document).ready(function($){
 								optionsString += "<a id='sal"+val['id']+"' title='Salvar' class='clickable salvar' style='display:none;'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
 								optionsString += "<a id='can"+val['id']+"' title='Cancelar' class='clickable cancelar' style='display:none;'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
 							}
+						} else if (logged == "true" && val['status'] == 1 && admin == "true") {
+							optionsString += "<div style='display: inline-flex; align-items: center; justify-content: center; gap: 4px;'>";
+							optionsString += "<a href='baixar_sumula.php?jogo="+val['id']+"&tipo=hyl' title='Baixar arquivo .hyl da partida' class='btn-file-dl btn-hyl-dl' download>.hyl</a>";
+							optionsString += "<a href='baixar_sumula.php?jogo="+val['id']+"&tipo=hyj' title='Baixar arquivo .hyj da partida' class='btn-file-dl btn-hyj-dl' download>.hyj</a>";
+							optionsString += "</div>";
 						}
 						optionsString += "</td>";
 						tbl += optionsString;

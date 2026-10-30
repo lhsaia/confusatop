@@ -97,6 +97,41 @@ body {
   font-size: 1.2rem !important;
 }
 
+.btn-action-notas,
+a.btn-action-notas {
+  background: #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25) !important;
+}
+
+.btn-action-notas:hover,
+a.btn-action-notas:hover {
+  background: #0369a1 !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
+  color: #ffffff !important;
+}
+
+.btn-subcard-export {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 4px 10px !important;
+  background: rgba(2, 132, 199, 0.1) !important;
+  color: #0284c7 !important;
+  border: 1px solid rgba(2, 132, 199, 0.2) !important;
+  border-radius: 6px !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-subcard-export:hover {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+}
+
 /* Tabs de Navegação */
 .stats-tabs {
   display: flex;

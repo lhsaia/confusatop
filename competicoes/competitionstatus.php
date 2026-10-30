@@ -140,18 +140,32 @@ $percentual_times = ($total_times > 0) ? min(100, round(($times_inseridos / $tot
 				<span class="material-symbols-outlined">download</span>
 				<span>Exportar Excel</span>
 			</a>
+			<a href="exportar_notas.php?id=<?php echo $idCompeticao; ?>" class="btn-hero-export btn-hero-notas" title="Exportar notas (médias) dos jogadores para Excel">
+				<span class="material-symbols-outlined">grade</span>
+				<span>Exportar Notas</span>
+			</a>
 
 			<?php 
+			$isDonoOrAdmin = false;
 			$canDelete = false;
 			if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
 				$userId = (int)($_SESSION['user_id'] ?? 0);
-				$isAdmin = isset($_SESSION['admin_status']) && (int)$_SESSION['admin_status'] === 1;
+				$isAdmin = (isset($_SESSION['admin_status']) && (int)$_SESSION['admin_status'] === 1) || !empty($_SESSION['impersonated']);
 				if ($isAdmin || $userId === (int)($info['dono'] ?? 0)) {
-					$canDelete = true;
+					$isDonoOrAdmin = true;
+					if ($jogosSimulados === 0) {
+						$canDelete = true;
+					}
 				}
 			}
 			?>
-			<?php if ($canDelete && $jogosSimulados === 0): ?>
+			<?php if ($isDonoOrAdmin && $jogosSimulados > 0): ?>
+				<a href="baixar_pacote_sumulas.php?id=<?php echo $idCompeticao; ?>" class="btn-hero-export btn-hero-sumulas" title="Baixar pacote (.zip) com todos os arquivos .hyl e .hyj da competição">
+					<span class="material-symbols-outlined">folder_zip</span>
+					<span>Baixar Súmulas (.zip)</span>
+				</a>
+			<?php endif; ?>
+			<?php if ($canDelete): ?>
 				<a href="javascript:void(0)" id="btn-excluir-competicao" class="btn-hero-delete" title="Excluir Competição">
 					<span class="material-symbols-outlined">delete</span>
 					<span>Excluir Competição</span>

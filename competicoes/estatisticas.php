@@ -502,14 +502,21 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                 $pid = (int)$pj->idJogador;
                                 if ($pid != 0) {
                                     if (!isset($playerStats[$pid])) {
-                                        $playerStats[$pid] = ['gols' => 0, 'assistencias' => 0, 'amarelos' => 0, 'vermelhos' => 0, 'partidas' => 0];
+                                        $playerStats[$pid] = ['gols' => 0, 'assistencias' => 0, 'amarelos' => 0, 'vermelhos' => 0, 'partidas' => 0, 'soma_notas' => 0.0, 'jogos_com_nota' => 0, 'posicao' => ''];
                                     }
                                     $playerStats[$pid]['gols'] += (int)$pj->gols;
                                     $playerStats[$pid]['assistencias'] += (int)$pj->assistencias;
                                     $playerStats[$pid]['amarelos'] += (int)$pj->amarelos;
                                     $playerStats[$pid]['vermelhos'] += (int)$pj->vermelhos;
-                                    if ((int)$pj->minutos > 0) {
+                                    if ((int)$pj->minutos > 0 || (int)($pj->partida ?? 0) === 1) {
                                         $playerStats[$pid]['partidas']++;
+                                    }
+                                    if (isset($pj->nota) && is_numeric($pj->nota) && floatval($pj->nota) > 0) {
+                                        $playerStats[$pid]['soma_notas'] += floatval($pj->nota);
+                                        $playerStats[$pid]['jogos_com_nota']++;
+                                    }
+                                    if (!empty($pj->posicao) && empty($playerStats[$pid]['posicao'])) {
+                                        $playerStats[$pid]['posicao'] = (string)$pj->posicao;
                                     }
                                 }
                             }
@@ -520,14 +527,21 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                 $pid = (int)$pj->idJogador;
                                 if ($pid != 0) {
                                     if (!isset($playerStats[$pid])) {
-                                        $playerStats[$pid] = ['gols' => 0, 'assistencias' => 0, 'amarelos' => 0, 'vermelhos' => 0, 'partidas' => 0];
+                                        $playerStats[$pid] = ['gols' => 0, 'assistencias' => 0, 'amarelos' => 0, 'vermelhos' => 0, 'partidas' => 0, 'soma_notas' => 0.0, 'jogos_com_nota' => 0, 'posicao' => ''];
                                     }
                                     $playerStats[$pid]['gols'] += (int)$pj->gols;
                                     $playerStats[$pid]['assistencias'] += (int)$pj->assistencias;
                                     $playerStats[$pid]['amarelos'] += (int)$pj->amarelos;
                                     $playerStats[$pid]['vermelhos'] += (int)$pj->vermelhos;
-                                    if ((int)$pj->minutos > 0) {
+                                    if ((int)$pj->minutos > 0 || (int)($pj->partida ?? 0) === 1) {
                                         $playerStats[$pid]['partidas']++;
+                                    }
+                                    if (isset($pj->nota) && is_numeric($pj->nota) && floatval($pj->nota) > 0) {
+                                        $playerStats[$pid]['soma_notas'] += floatval($pj->nota);
+                                        $playerStats[$pid]['jogos_com_nota']++;
+                                    }
+                                    if (!empty($pj->posicao) && empty($playerStats[$pid]['posicao'])) {
+                                        $playerStats[$pid]['posicao'] = (string)$pj->posicao;
                                     }
                                 }
                             }
@@ -806,9 +820,38 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     });
     
     // Limitar tops a 15
-    $artilharia = array_slice($artilharia, 0, 15);
+    $totalArtilharia = count($artilharia);
     $assistencias = array_slice($assistencias, 0, 15);
     $cartoes = array_slice($cartoes, 0, 15);
+
+    // Notas Médias dos Jogadores
+    $rankingNotas = [];
+    foreach ($playerStats as $pid => $stats) {
+        if (($stats['jogos_com_nota'] ?? 0) > 0) {
+            $cId = $jogadorClubeMap[$pid] ?? 0;
+            $media = round($stats['soma_notas'] / $stats['jogos_com_nota'], 2);
+            $pInfo = [
+                'id' => $pid,
+                'nome' => $jogadoresMap[$pid]['Nome'] ?? ('Jogador ' . $pid),
+                'clube' => $clubes[$cId]['Nome'] ?? 'Sem Clube',
+                'escudo' => $clubes[$cId]['Escudo'] ?? '0.png',
+                'partidas' => $stats['partidas'],
+                'jogos_com_nota' => $stats['jogos_com_nota'],
+                'nota_media' => $media
+            ];
+            $rankingNotas[] = $pInfo;
+        }
+    }
+    usort($rankingNotas, function($a, $b) {
+        if ($b['nota_media'] != $a['nota_media']) {
+            return ($b['nota_media'] > $a['nota_media']) ? 1 : -1;
+        }
+        if ($b['partidas'] != $a['partidas']) {
+            return $b['partidas'] - $a['partidas'];
+        }
+        return strcasecmp($a['nome'], $b['nome']);
+    });
+    $topNotas = array_slice($rankingNotas, 0, 15);
 
     $page_title = "Estatísticas - " . $nome_competicao;
     $css_filename = "home_redesign";
@@ -826,6 +869,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                 <a href="exportar_excel.php?id=<?php echo $idCompeticao; ?>" class="btn-action-primary" id="btn-exportar-excel" title="Exportar todas as informações para planilha Excel">
                     <span class="material-symbols-outlined">download</span>
                     <span>Exportar Excel</span>
+                </a>
+                <a href="exportar_notas.php?id=<?php echo $idCompeticao; ?>" class="btn-action-primary btn-action-notas" id="btn-exportar-notas" title="Exportar notas (médias) dos jogadores para Excel">
+                    <span class="material-symbols-outlined">grade</span>
+                    <span>Exportar Notas</span>
                 </a>
             </div>
         </div>
@@ -1326,10 +1373,18 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
             <div class="grid-stats-cards">
                 <!-- Artilharia -->
                 <div class="stats-subcard">
-                    <h3 class="stats-subcard-title">
-                        <span class="material-symbols-outlined" style="color: #fbbf24;">workspace_premium</span>
-                        Artilharia
-                    </h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px;">
+                        <h3 class="stats-subcard-title" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
+                            <span class="material-symbols-outlined" style="color: #fbbf24;">workspace_premium</span>
+                            Artilharia
+                        </h3>
+                        <?php if ($totalArtilharia > 15): ?>
+                            <button type="button" class="btn-subcard-export" id="btnToggleArtilharia" onclick="toggleArtilhariaCompleta()" style="cursor: pointer; width: auto !important; max-width: fit-content; background: rgba(2, 132, 199, 0.08); border-color: rgba(2, 132, 199, 0.2);" title="Alternar entre Top 15 e lista completa">
+                                <span class="material-symbols-outlined" id="iconToggleArtilharia" style="font-size: 1rem;">unfold_more</span>
+                                <span id="txtBtnArtilharia">Ver Todos (<?php echo $totalArtilharia; ?>)</span>
+                            </button>
+                        <?php endif; ?>
+                    </div>
                     <div class="stats-table-wrapper">
                         <table class="stats-table">
                             <thead>
@@ -1342,8 +1397,10 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                             <tbody>
                                 <?php if (empty($artilharia)): ?>
                                     <tr><td colspan="3">Nenhum gol registrado.</td></tr>
-                                <?php else: foreach ($artilharia as $art): ?>
-                                    <tr>
+                                <?php else: foreach ($artilharia as $idx => $art): 
+                                    $isExtraArt = ($idx >= 15);
+                                ?>
+                                    <tr class="<?php echo $isExtraArt ? 'row-artilharia-extra' : ''; ?>" style="<?php echo $isExtraArt ? 'display: none;' : ''; ?>">
                                         <td class="player-col"><?php echo htmlspecialchars($art['nome']); ?></td>
                                         <td class="team-col">
                                             <div class="team-cell">
@@ -1387,6 +1444,49 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                                             </div>
                                         </td>
                                         <td><span class="stats-count-badge" style="background:#34d399;"><?php echo $ass['valor']; ?></span></td>
+                                    </tr>
+                                <?php endforeach; endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Melhores Médias / Notas -->
+                <div class="stats-subcard">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px;">
+                        <h3 class="stats-subcard-title" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
+                            <span class="material-symbols-outlined" style="color: #0284c7;">grade</span>
+                            Melhores Médias (Notas)
+                        </h3>
+                        <a href="exportar_notas.php?id=<?php echo $idCompeticao; ?>" class="btn-subcard-export" title="Exportar todas as notas para planilha Excel">
+                            <span class="material-symbols-outlined" style="font-size: 1rem;">download</span>
+                            <span>Exportar Todas as Notas</span>
+                        </a>
+                    </div>
+                    <div class="stats-table-wrapper">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">Jogador</th>
+                                    <th>Time</th>
+                                    <th>Partidas</th>
+                                    <th>Média</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($topNotas)): ?>
+                                    <tr><td colspan="4">Nenhuma nota registrada nesta competição.</td></tr>
+                                <?php else: foreach ($topNotas as $not): ?>
+                                    <tr>
+                                        <td class="player-col"><?php echo htmlspecialchars($not['nome']); ?></td>
+                                        <td class="team-col">
+                                            <div class="team-cell">
+                                                <img class="team-logo" src="/images/escudos/<?php echo $not['escudo'] ? $not['escudo'] : '0.png'; ?>" alt="" />
+                                                <span><?php echo htmlspecialchars($not['clube']); ?></span>
+                                            </div>
+                                        </td>
+                                        <td><?php echo $not['partidas']; ?></td>
+                                        <td><span class="stats-count-badge" style="background:#0284c7;"><?php echo number_format($not['nota_media'], 2, ',', '.'); ?></span></td>
                                     </tr>
                                 <?php endforeach; endif; ?>
                             </tbody>
@@ -1544,6 +1644,25 @@ $(document).ready(function($){
         $container.find('.group-content').removeClass('active');
         $container.find('#' + groupId).addClass('active');
     });
+
+    // Alternar visualização da artilharia completa vs top 15
+    window.toggleArtilhariaCompleta = function() {
+        var $extraRows = $('.row-artilharia-extra');
+        var $btnTxt = $('#txtBtnArtilharia');
+        var $btnIcon = $('#iconToggleArtilharia');
+        if (!$extraRows.length || !$btnTxt.length) return;
+
+        var isHidden = $extraRows.first().is(':hidden');
+        if (isHidden) {
+            $extraRows.show();
+            $btnTxt.text('Ver Top 15');
+            $btnIcon.text('unfold_less');
+        } else {
+            $extraRows.hide();
+            $btnTxt.text('Ver Todos (' + <?php echo (int)($totalArtilharia ?? 0); ?> + ')');
+            $btnIcon.text('unfold_more');
+        }
+    };
 });
 </script>
 

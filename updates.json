@@ -13,6 +13,31 @@
       "date": "30/10/2026",
       "items": [
         {
+          "badge": "new",
+          "title": "Visualizacao da Artilharia Completa",
+          "desc": "Adicionado botao inline no card de Artilharia da tela de estatisticas para alternar entre os 15 principais marcadores e a listagem completa com todos os atletas que marcaram gols no campeonato."
+        },
+        {
+          "badge": "new",
+          "title": "Exportação de Notas e Médias dos Jogadores",
+          "desc": "Disponibilizada opção para exportar notas e médias dos jogadores de uma competição em Excel (.xlsx) e CSV com ID, nome, clube, posição, partidas disputadas e notas médias, além de novo ranking na aba de estatísticas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Otimização de Desempenho e Estabilidade no Topdater",
+          "desc": "Otimiza consultas SQL de exportação de elencos e técnicos eliminando gargalos de varredura global e prevenindo travamentos e lentidão na importação de times."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de Jogadores Externos (.ymt) no Excel",
+          "desc": "Corrige a exibição de jogadores importados via YMT nas abas de Artilharia, Assistências, Cartões e DM/Suspensões com vínculo correto do clube na exportação da competição."
+        },
+        {
+          "badge": "new",
+          "title": "Download de Súmulas (.hyl e .hyj) nas Competições",
+          "desc": "Permite ao dono da competição e administradores baixar os arquivos .hyl e .hyj das partidas avulsas ou em pacote compactado (.zip) no painel da competição e na tabela de jogos."
+        },
+        {
           "badge": "bugfix",
           "title": "Sigilo Temporal em Suspensões nas Estatísticas da Competição",
           "desc": "Implementada trava de sigilo temporal na lista de jogadores suspensos e departamento médico em estatisticas.php, ocultando atletas suspensos ou lesionados em jogos do dia antes do término real das partidas simuladas."

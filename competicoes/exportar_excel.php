@@ -111,7 +111,7 @@ if ($cdb) {
                 $clubeId = (int)$row['Clube'];
                 for ($i = 1; $i <= 23; $i++) {
                     $pId = (int)($row['Jogador' . $i] ?? 0);
-                    if ($pId > 0) {
+                    if ($pId != 0) {
                         $jogadorClubeMap[$pId] = $clubeId;
                     }
                 }
@@ -119,6 +119,20 @@ if ($cdb) {
         }
     } catch (\Throwable $e) {}
 }
+
+// Complementar mapeamento Jogador -> Clube com contratos ativos no MariaDB
+try {
+    $stmtContratos = $db->query("SELECT jogador, clube FROM contratos_jogador WHERE tipoContrato = 0");
+    if ($stmtContratos) {
+        while ($cRow = $stmtContratos->fetch(PDO::FETCH_ASSOC)) {
+            $pId = (int)$cRow['jogador'];
+            $cId = (int)$cRow['clube'];
+            if (!isset($jogadorClubeMap[$pId])) {
+                $jogadorClubeMap[$pId] = $cId;
+            }
+        }
+    }
+} catch (\Throwable $e) {}
 
 // Carregar Estádios e Árbitros
 $estadiosMap = [];
@@ -193,7 +207,15 @@ while ($rSlot = $stmtTimesSlots->fetch(PDO::FETCH_ASSOC)) {
     if (!empty($rSlot['id_time_portal']) && intval($rSlot['id_time_portal']) > 0) {
         $assignedSlotTeams[$sName] = intval($rSlot['id_time_portal']);
     } else if ($rSlot['has_team'] == 1 || $rSlot['has_team'] == '1') {
-        $assignedSlotTeams[$sName] = -1 * abs(intval($rSlot['codigo_time']));
+        $cSlotId = -1 * abs(intval($rSlot['codigo_time']));
+        $assignedSlotTeams[$sName] = $cSlotId;
+        if (!isset($clubes[$cSlotId])) {
+            $clubes[$cSlotId] = [
+                'ID' => $cSlotId,
+                'Nome' => $sName,
+                'TresLetras' => ''
+            ];
+        }
     }
 }
 
@@ -396,30 +418,44 @@ if (is_dir($dirPartidas)) {
                     if (isset($json->time1->jogadores)) {
                         foreach ($json->time1->jogadores as $pj) {
                             $pid = (int)$pj->idJogador;
-                            if ($pid > 0) {
+                            if ($pid != 0) {
                                 if (!isset($playerStats[$pid])) {
-                                    $playerStats[$pid] = ['gols' => 0, 'assistencias' => 0, 'amarelos' => 0, 'vermelhos' => 0, 'partidas' => 0];
+                                    $playerStats[$pid] = ['gols' => 0, 'assistencias' => 0, 'amarelos' => 0, 'vermelhos' => 0, 'partidas' => 0, 'soma_notas' => 0.0, 'jogos_com_nota' => 0, 'posicao' => ''];
                                 }
                                 $playerStats[$pid]['gols'] += (int)$pj->gols;
                                 $playerStats[$pid]['assistencias'] += (int)$pj->assistencias;
                                 $playerStats[$pid]['amarelos'] += (int)$pj->amarelos;
                                 $playerStats[$pid]['vermelhos'] += (int)$pj->vermelhos;
-                                if ((int)$pj->minutos > 0) $playerStats[$pid]['partidas']++;
+                                if ((int)$pj->minutos > 0 || (int)($pj->partida ?? 0) === 1) $playerStats[$pid]['partidas']++;
+                                if (isset($pj->nota) && is_numeric($pj->nota) && floatval($pj->nota) > 0) {
+                                    $playerStats[$pid]['soma_notas'] += floatval($pj->nota);
+                                    $playerStats[$pid]['jogos_com_nota']++;
+                                }
+                                if (!empty($pj->posicao) && empty($playerStats[$pid]['posicao'])) {
+                                    $playerStats[$pid]['posicao'] = (string)$pj->posicao;
+                                }
                             }
                         }
                     }
                     if (isset($json->time2->jogadores)) {
                         foreach ($json->time2->jogadores as $pj) {
                             $pid = (int)$pj->idJogador;
-                            if ($pid > 0) {
+                            if ($pid != 0) {
                                 if (!isset($playerStats[$pid])) {
-                                    $playerStats[$pid] = ['gols' => 0, 'assistencias' => 0, 'amarelos' => 0, 'vermelhos' => 0, 'partidas' => 0];
+                                    $playerStats[$pid] = ['gols' => 0, 'assistencias' => 0, 'amarelos' => 0, 'vermelhos' => 0, 'partidas' => 0, 'soma_notas' => 0.0, 'jogos_com_nota' => 0, 'posicao' => ''];
                                 }
                                 $playerStats[$pid]['gols'] += (int)$pj->gols;
                                 $playerStats[$pid]['assistencias'] += (int)$pj->assistencias;
                                 $playerStats[$pid]['amarelos'] += (int)$pj->amarelos;
                                 $playerStats[$pid]['vermelhos'] += (int)$pj->vermelhos;
-                                if ((int)$pj->minutos > 0) $playerStats[$pid]['partidas']++;
+                                if ((int)$pj->minutos > 0 || (int)($pj->partida ?? 0) === 1) $playerStats[$pid]['partidas']++;
+                                if (isset($pj->nota) && is_numeric($pj->nota) && floatval($pj->nota) > 0) {
+                                    $playerStats[$pid]['soma_notas'] += floatval($pj->nota);
+                                    $playerStats[$pid]['jogos_com_nota']++;
+                                }
+                                if (!empty($pj->posicao) && empty($playerStats[$pid]['posicao'])) {
+                                    $playerStats[$pid]['posicao'] = (string)$pj->posicao;
+                                }
                             }
                         }
                     }
@@ -463,6 +499,36 @@ if (!empty($jogadoresMap)) {
     } catch (Exception $e) {}
 }
 
+// Consultar também lesionados no SQLite da competição (para atletas de times temporários YMT ou marcados no SQLite)
+if ($cdb) {
+    try {
+        $stmtSqliteLes = $cdb->query("SELECT ID, Nome, Lesionado FROM jogador WHERE Lesionado = 1");
+        if ($stmtSqliteLes) {
+            while ($sRow = $stmtSqliteLes->fetch(PDO::FETCH_ASSOC)) {
+                $pid = (int)$sRow['ID'];
+                $clubeId = $jogadorClubeMap[$pid] ?? 0;
+                $jaExiste = false;
+                foreach ($lesionados as $existente) {
+                    if ($existente['id'] === $pid) {
+                        $jaExiste = true;
+                        break;
+                    }
+                }
+                if (!$jaExiste) {
+                    $nomeAtleta = !empty($sRow['Nome']) ? trim(html_entity_decode(html_entity_decode(stripslashes($sRow['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8')) : ($jogadoresMap[$pid]['Nome'] ?? 'Jogador ' . $pid);
+                    $lesionados[] = [
+                        'id' => $pid,
+                        'nome' => $nomeAtleta,
+                        'clube' => $clubes[$clubeId]['Nome'] ?? 'Sem clube',
+                        'tipo' => 'Departamento Médico',
+                        'retorno' => 'Em recuperação'
+                    ];
+                }
+            }
+        }
+    } catch (\Throwable $e) {}
+}
+
 $stmtSus = $db->prepare("SELECT cs.id_jogador, cs.suspenso 
                          FROM competicao_suspensos cs 
                          WHERE cs.id_competicao = :idComp AND cs.suspenso = 1");
@@ -484,6 +550,36 @@ foreach ($suspRows as $s) {
     }
 }
 
+// Consultar também suspensos no SQLite da competição (para atletas de times temporários YMT)
+if ($cdb) {
+    try {
+        $stmtSqliteSus = $cdb->query("SELECT ID, Nome, Suspenso FROM jogador WHERE Suspenso = 1");
+        if ($stmtSqliteSus) {
+            while ($sRow = $stmtSqliteSus->fetch(PDO::FETCH_ASSOC)) {
+                $pid = (int)$sRow['ID'];
+                $clubeId = $jogadorClubeMap[$pid] ?? 0;
+                $jaExiste = false;
+                foreach ($suspensos as $existente) {
+                    if ($existente['id'] === $pid) {
+                        $jaExiste = true;
+                        break;
+                    }
+                }
+                if (!$jaExiste) {
+                    $nomeAtleta = !empty($sRow['Nome']) ? trim(html_entity_decode(html_entity_decode(stripslashes($sRow['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8')) : ($jogadoresMap[$pid]['Nome'] ?? 'Jogador ' . $pid);
+                    $suspensos[] = [
+                        'id' => $pid,
+                        'nome' => $nomeAtleta,
+                        'clube' => $clubes[$clubeId]['Nome'] ?? 'Sem clube',
+                        'tipo' => 'Suspenso',
+                        'retorno' => 'Próxima Partida'
+                    ];
+                }
+            }
+        }
+    } catch (\Throwable $e) {}
+}
+
 // Cartões Amarelos Acumulados
 $stmtAmarelos = $db->prepare("SELECT cs.id_jogador, cs.cartoes_amarelos 
                              FROM competicao_suspensos cs 
@@ -495,6 +591,54 @@ $amarelosRows = $stmtAmarelos->fetchAll(PDO::FETCH_ASSOC);
 $cartoesAmarelosAcumulados = [];
 foreach ($amarelosRows as $ar) {
     $cartoesAmarelosAcumulados[(int)$ar['id_jogador']] = (int)$ar['cartoes_amarelos'];
+}
+
+// Garantir nomes para jogadores com estatísticas nas partidas que possam não estar no mapa inicial
+$missingStatsPids = [];
+foreach (array_keys($playerStats) as $pid) {
+    if (!isset($jogadoresMap[$pid])) {
+        $missingStatsPids[] = $pid;
+    }
+}
+if (!empty($missingStatsPids)) {
+    if ($cdb) {
+        try {
+            $mInSqlite = implode(',', $missingStatsPids);
+            $stmtMSqlite = $cdb->query("SELECT ID, Nome, Nivel FROM jogador WHERE ID IN ($mInSqlite)");
+            if ($stmtMSqlite) {
+                while ($pm = $stmtMSqlite->fetch(PDO::FETCH_ASSOC)) {
+                    $pid = (int)$pm['ID'];
+                    $jogadoresMap[$pid] = [
+                        'ID' => $pid,
+                        'Nome' => trim(html_entity_decode(html_entity_decode(stripslashes($pm['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8')),
+                        'Nivel' => $pm['Nivel'] ?? 0
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {}
+    }
+    $stillMissing = [];
+    foreach ($missingStatsPids as $pid) {
+        if (!isset($jogadoresMap[$pid]) && $pid > 0) {
+            $stillMissing[] = $pid;
+        }
+    }
+    if (!empty($stillMissing)) {
+        try {
+            $mIn = implode(',', $stillMissing);
+            $stmtM = $db->query("SELECT id, Nome, Nivel FROM jogador WHERE id IN ($mIn)");
+            if ($stmtM) {
+                while ($pm = $stmtM->fetch(PDO::FETCH_ASSOC)) {
+                    $pid = (int)$pm['id'];
+                    $jogadoresMap[$pid] = [
+                        'ID' => $pid,
+                        'Nome' => trim(html_entity_decode(html_entity_decode(stripslashes($pm['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8')),
+                        'Nivel' => $pm['Nivel'] ?? 0
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {}
+    }
 }
 
 // Preparar Artilharia, Assistências e Cartões
@@ -765,6 +909,69 @@ foreach ($suspensos as $sus) {
     ];
 }
 $xlsx->addSheet($rowsDM, 'DM & Suspensões');
+
+// ==========================================
+// ABA 7: NOTAS DOS JOGADORES (MÉDIAS)
+// ==========================================
+$rowsNotas = [
+    [
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Posição</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>ID Jogador</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Nome do Jogador</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Clube</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Posição</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Partidas Disputadas</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Jogos Avaliados</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Nota Média</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Gols</b></style>',
+        '<style bgcolor="#1A1469" color="#FFFFFF" align="center"><b>Assistências</b></style>'
+    ]
+];
+
+$rankingNotasExport = [];
+foreach ($playerStats as $pid => $stats) {
+    if (($stats['partidas'] ?? 0) > 0 || ($stats['jogos_com_nota'] ?? 0) > 0) {
+        $clubeId = $jogadorClubeMap[$pid] ?? 0;
+        $media = ($stats['jogos_com_nota'] > 0) ? round($stats['soma_notas'] / $stats['jogos_com_nota'], 2) : 0.0;
+        $rankingNotasExport[] = [
+            'id' => $pid,
+            'nome' => $jogadoresMap[$pid]['Nome'] ?? ('Jogador ' . $pid),
+            'clube' => $clubes[$clubeId]['Nome'] ?? 'Sem Clube',
+            'posicao' => $stats['posicao'] ?? '',
+            'partidas' => $stats['partidas'],
+            'jogos_com_nota' => $stats['jogos_com_nota'],
+            'media' => $media,
+            'gols' => $stats['gols'],
+            'assistencias' => $stats['assistencias']
+        ];
+    }
+}
+usort($rankingNotasExport, function($a, $b) {
+    if ($b['media'] != $a['media']) {
+        return ($b['media'] > $a['media']) ? 1 : -1;
+    }
+    if ($b['partidas'] != $a['partidas']) {
+        return $b['partidas'] - $a['partidas'];
+    }
+    return strcasecmp($a['nome'], $b['nome']);
+});
+
+$posNota = 1;
+foreach ($rankingNotasExport as $notRow) {
+    $rowsNotas[] = [
+        $posNota++ . 'º',
+        $notRow['id'],
+        htmlspecialchars($notRow['nome'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($notRow['clube'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($notRow['posicao'], ENT_QUOTES, 'UTF-8'),
+        $notRow['partidas'],
+        $notRow['jogos_com_nota'],
+        $notRow['media'],
+        $notRow['gols'],
+        $notRow['assistencias']
+    ];
+}
+$xlsx->addSheet($rowsNotas, 'Notas dos Jogadores');
 
 $filenameSlug = preg_replace('/[^a-zA-Z0-9_-]/', '_', $nome_competicao . '_' . $ano_competicao);
 $xlsx->downloadAs('dados_competicao_' . $filenameSlug . '.xlsx');

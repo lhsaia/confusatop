@@ -29,7 +29,7 @@ if(isset($_GET['apiKey']) && isset($_GET['team'])){
 			
 			$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 			
-			$arrayCompleta[] = $result[0];
+			$arrayCompleta[] = !empty($result) ? $result[0] : null;
 			
 			//while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
 			//}
