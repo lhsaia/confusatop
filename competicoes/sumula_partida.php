@@ -414,6 +414,56 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 		//uniformes dos times
 		$uniformeTimeA = $lite_competicao->getTeamUniform($kitTime1 , $idTimeA) ?: ['uniforme' => ''];
 		$uniformeTimeB = $lite_competicao->getTeamUniform($kitTime2 , $idTimeB) ?: ['uniforme' => ''];
+
+		// Helper para resolver caminho web de exibição do uniforme na súmula (incluindo times YMT externos)
+		$resolverUniformeSumula = function($rawPath, $idTime, $kitNum, $idCompeticao) {
+			$docRoot = $_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__);
+			$path = trim($rawPath ?? '');
+			
+			// 1. Se tem caminho explícito e não é UniformePadrao.PNG, verificar no disco
+			if (!empty($path) && strpos($path, 'UniformePadrao') === false) {
+				$abs = '';
+				if (strpos($path, '../../') === 0) {
+					$abs = $docRoot . '/' . ltrim(substr($path, 6), '/\\');
+				} elseif (strpos($path, '/') === 0) {
+					$abs = $docRoot . '/' . ltrim($path, '/\\');
+				}
+				if ($abs && file_exists($abs) && @filesize($abs) > 0) {
+					return (strpos($path, '../../') === 0) ? $path : ('../../' . ltrim($path, '/\\'));
+				}
+			}
+			
+			// 2. Se for time temporário (ID < 0) ou se caiu em fallback, buscar arquivos externos salvos
+			$absId = abs((int)$idTime);
+			$candidatos = [
+				$docRoot . "/images/uniformes/externo-{$idCompeticao}-{$absId}-{$kitNum}.png",
+				$docRoot . "/images/uniformes/externo-{$idCompeticao}-{$absId}-{$kitNum}.jpeg",
+				$docRoot . "/images/uniformes/externo-{$idCompeticao}-{$absId}-{$kitNum}.jpg",
+				$docRoot . "/competicoes/temp_uniformes/externo-{$idCompeticao}-{$absId}-{$kitNum}.png",
+				$docRoot . "/competicoes/temp_uniformes/externo-{$idCompeticao}-{$absId}-{$kitNum}.jpeg",
+				$docRoot . "/competicoes/temp_uniformes/externo-{$idCompeticao}-{$absId}-{$kitNum}.jpg",
+			];
+			foreach ($candidatos as $cand) {
+				if (file_exists($cand) && @filesize($cand) > 0) {
+					$rel = substr($cand, strlen($docRoot));
+					return '../../' . ltrim($rel, '/\\');
+				}
+			}
+			
+			$globMatches = glob($docRoot . "/competicoes/temp_uniformes/*-{$absId}-{$kitNum}.*");
+			if ($globMatches && !empty($globMatches[0]) && file_exists($globMatches[0])) {
+				$rel = substr($globMatches[0], strlen($docRoot));
+				return '../../' . ltrim($rel, '/\\');
+			}
+			
+			if (empty($path) || strpos($path, 'UniformePadrao') !== false) {
+				return '../competicoes/hexacolor/Imagens/UniformePadrao.PNG';
+			}
+			return $path;
+		};
+
+		$uniformeTimeA['uniforme'] = $resolverUniformeSumula($uniformeTimeA['uniforme'] ?? '', $idTimeA, $kitTime1, $idCompeticao);
+		$uniformeTimeB['uniforme'] = $resolverUniformeSumula($uniformeTimeB['uniforme'] ?? '', $idTimeB, $kitTime2, $idCompeticao);
 		
 		//nome, nivel e idade (na data do jogo!) jogadores
 		$escalacaoTimeA = $lite_competicao->getTeamPlayers($idTimeA) ?: [];

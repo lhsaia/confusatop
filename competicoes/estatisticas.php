@@ -430,6 +430,19 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
     
     // 5. Escanear arquivos de partidas e consolidar estatísticas de jogadores (apenas de jogos encerrados no tempo real)
     $playerStats = [];
+    $jogadoresSpoilerSuspensao = [];
+    $jogadoresSpoilerLesao = [];
+    $arquivosNaoConcluidos = [];
+    $criterioSuspensao = 0;
+    $limiteAmarelos = 0;
+    try {
+        $stmtOpt = $db->prepare("SELECT suspensao FROM competicao_opcoes WHERE id_competicao = :idComp LIMIT 1");
+        $stmtOpt->bindValue(':idComp', $idCompeticao, PDO::PARAM_INT);
+        $stmtOpt->execute();
+        $compOptions = $stmtOpt->fetch(PDO::FETCH_ASSOC);
+        $criterioSuspensao = isset($compOptions['suspensao']) ? (int)$compOptions['suspensao'] : 0;
+        $limiteAmarelos = ($criterioSuspensao == 1) ? 2 : (($criterioSuspensao == 2) ? 3 : 0);
+    } catch (\Throwable $e) {}
     $nomeComposto = $ano_competicao . " - " . $nome_competicao;
     $dirPartidas = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/" . $nomeComposto . "/1º Rodada";
     
@@ -473,6 +486,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                 
                 // Sigilo Temporal: só revela estatísticas de jogos com status=1 e concluídos no tempo real
                 if ((int)$jogoCorrespondente['status'] !== 1 || !$jaTerminou) {
+                    if ((int)$jogoCorrespondente['status'] === 1 && !$jaTerminou) {
+                        $arquivosNaoConcluidos[] = $dirPartidas . "/" . $f;
+                    }
                     continue;
                 }
 
@@ -522,6 +538,40 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         }
     }
     
+    // Sigilo Temporal: Identificar jogadores suspensos ou lesionados em jogos do dia ainda não encerrados no tempo real
+    foreach ($arquivosNaoConcluidos as $fNaoConc) {
+        $contentNC = @file_get_contents($fNaoConc);
+        if ($contentNC !== false) {
+            $jsonNC = json_decode($contentNC);
+            if ($jsonNC) {
+                $jogadoresNC = [];
+                if (isset($jsonNC->time1->jogadores)) $jogadoresNC = array_merge($jogadoresNC, $jsonNC->time1->jogadores);
+                if (isset($jsonNC->time2->jogadores)) $jogadoresNC = array_merge($jogadoresNC, $jsonNC->time2->jogadores);
+                foreach ($jogadoresNC as $pj) {
+                    $pid = (int)($pj->idJogador ?? 0);
+                    if ($pid === 0) continue;
+                    $vermelhosPartida = (int)($pj->vermelhos ?? 0);
+                    $amarelosPartida = (int)($pj->amarelos ?? 0);
+                    $temLesao = (int)($pj->lesao ?? 0);
+                    $duracaoLesao = (int)($pj->duracaoLesao ?? 0);
+                    
+                    if ($vermelhosPartida > 0) {
+                        $jogadoresSpoilerSuspensao[$pid] = true;
+                    }
+                    if ($amarelosPartida > 0 && $limiteAmarelos > 0) {
+                        $amarelosConcluidos = $playerStats[$pid]['amarelos'] ?? 0;
+                        if (($amarelosConcluidos + $amarelosPartida) >= $limiteAmarelos) {
+                            $jogadoresSpoilerSuspensao[$pid] = true;
+                        }
+                    }
+                    if ($temLesao == 1 || $duracaoLesao > 0) {
+                        $jogadoresSpoilerLesao[$pid] = true;
+                    }
+                }
+            }
+        }
+    }
+
     // 6. Consultar Departamento Médico (Lesionados) no MySQL
     // 6. Consultar Departamento Médico (Lesionados) no MySQL
     // Obter apenas os jogadores desta competição com lesão ativa
@@ -551,6 +601,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                     continue;
                 }
                 
+                if (isset($jogadoresSpoilerLesao[$pid])) {
+                    continue;
+                }
                 if (isset($jogadoresMap[$pid])) {
                     $lesionados[] = [
                         'id' => $pid,
@@ -577,6 +630,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                     continue;
                 }
                 
+                if (isset($jogadoresSpoilerLesao[$pid])) {
+                    continue;
+                }
                 $jaExiste = false;
                 foreach ($lesionados as $existente) {
                     if ($existente['id'] === $pid) {
@@ -613,6 +669,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         if (!empty($timesParticipantesIds) && !isset($timesParticipantesIds[$clubeId])) {
             continue;
         }
+        if (isset($jogadoresSpoilerSuspensao[$pid])) {
+            continue;
+        }
         if (isset($jogadoresMap[$pid])) {
             $suspensos[] = [
                 'id' => $pid,
@@ -635,6 +694,9 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
                     continue;
                 }
                 
+                if (isset($jogadoresSpoilerSuspensao[$pid])) {
+                    continue;
+                }
                 $jaExiste = false;
                 foreach ($suspensos as $existente) {
                     if ($existente['id'] === $pid) {

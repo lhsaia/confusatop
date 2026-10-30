@@ -168,31 +168,45 @@ if (!empty($_FILES['files'])) {
 				$time->escudo = $time->escudoPadrao();
 			}
 			
-			$upload_dir = "/competicoes/temp_uniformes/";
-			$formato_arquivo = (string)$xml->formatoUniforme1Base64[0];
-			if($formato_arquivo !== "null"){
-				$output_file = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $time->nome . "-1." . $formato_arquivo;
-				$preUniforme1 = (string)$xml->uniforme1Base64[0];
-				$preUniforme1Decoded = base64_decode($preUniforme1);
-				$uniforme1_file = fopen($output_file, "wb");
-				fwrite($uniforme1_file, $preUniforme1Decoded);
-				fclose($uniforme1_file);
-				$time->uniforme1 = $upload_dir . $_SESSION['user_id']. "-". $time->nome. "-1." . $formato_arquivo;
+			// Garantir diretórios de uniformes
+			$dirImagesUni = $_SERVER['DOCUMENT_ROOT'] . "/images/uniformes/";
+			$dirTempUni = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/temp_uniformes/";
+			if (!is_dir($dirImagesUni)) @mkdir($dirImagesUni, 0777, true);
+			if (!is_dir($dirTempUni)) @mkdir($dirTempUni, 0777, true);
+
+			$absCodTime = abs($codigo_time);
+			$formato_arquivo1 = strtolower(trim((string)($xml->formatoUniforme1Base64[0] ?? '')));
+			$conferencia_uni1 = (string)($xml->uniforme1Base64[0] ?? '');
+
+			if (!empty($formato_arquivo1) && $formato_arquivo1 !== "null" && strlen($conferencia_uni1) > 0) {
+				$uni1_nome = "externo-" . $idCompeticao . "-" . $absCodTime . "-1." . $formato_arquivo1;
+				$output_file1 = $dirImagesUni . $uni1_nome;
+				$preUniforme1Decoded = base64_decode($conferencia_uni1);
+				$uniforme1_file = fopen($output_file1, "wb");
+				if ($uniforme1_file) {
+					fwrite($uniforme1_file, $preUniforme1Decoded);
+					fclose($uniforme1_file);
+				}
+				@file_put_contents($dirTempUni . $uni1_nome, $preUniforme1Decoded);
+				$time->uniforme1 = "../../images/uniformes/" . $uni1_nome;
 			} else {
 				$time->uniforme1 = $time->uniforme1Padrao();
 			}
 
-			$upload_dir = "/competicoes/temp_uniformes/";
-			$formato_arquivo = (string)$xml->formatoUniforme2Base64[0];
-			if($formato_arquivo !== "null"){
-			
-			$output_file = $_SERVER['DOCUMENT_ROOT'] .$upload_dir .$_SESSION['user_id'] ."-" . $time->nome . "-2." . $formato_arquivo;
-			$preUniforme2 = (string)$xml->uniforme2Base64[0];
-			$preUniforme2Decoded = base64_decode($preUniforme2);
-			$uniforme2_file = fopen($output_file, "wb");
-			fwrite($uniforme2_file, $preUniforme2Decoded);
-			fclose($uniforme2_file);
-			$time->uniforme2 = $upload_dir . $_SESSION['user_id']. "-". $time->nome. "-2." . $formato_arquivo;
+			$formato_arquivo2 = strtolower(trim((string)($xml->formatoUniforme2Base64[0] ?? '')));
+			$conferencia_uni2 = (string)($xml->uniforme2Base64[0] ?? '');
+
+			if (!empty($formato_arquivo2) && $formato_arquivo2 !== "null" && strlen($conferencia_uni2) > 0) {
+				$uni2_nome = "externo-" . $idCompeticao . "-" . $absCodTime . "-2." . $formato_arquivo2;
+				$output_file2 = $dirImagesUni . $uni2_nome;
+				$preUniforme2Decoded = base64_decode($conferencia_uni2);
+				$uniforme2_file = fopen($output_file2, "wb");
+				if ($uniforme2_file) {
+					fwrite($uniforme2_file, $preUniforme2Decoded);
+					fclose($uniforme2_file);
+				}
+				@file_put_contents($dirTempUni . $uni2_nome, $preUniforme2Decoded);
+				$time->uniforme2 = "../../images/uniformes/" . $uni2_nome;
 			} else {
 				$time->uniforme2 = $time->uniforme2Padrao();
 			}

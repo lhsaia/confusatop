@@ -132,6 +132,8 @@ function resolverCaminhoImagem($relPath, $hexacolorDir, $docRoot, $fallbackRel) 
     if (strpos($relPath, '../../') === 0) {
         $sub = substr($relPath, 6);
         $abs = $docRoot . '/' . ltrim($sub, '/\\');
+    } elseif (strpos($relPath, '/') === 0 || strpos($relPath, '\\') === 0) {
+        $abs = $docRoot . '/' . ltrim($relPath, '/\\');
     } else {
         $abs = $hexacolorDir . '/' . ltrim($relPath, '/\\');
     }
@@ -141,7 +143,11 @@ function resolverCaminhoImagem($relPath, $hexacolorDir, $docRoot, $fallbackRel) 
     
     if (file_exists($abs) && is_file($abs) && @filesize($abs) > 0) {
         $resolvedAbs = $abs;
-        $resolvedRel = $relPath;
+        if (strpos($abs, $docRoot) === 0 && strpos($relPath, '../../') !== 0) {
+            $resolvedRel = '../../' . ltrim(substr($abs, strlen($docRoot)), '/\\');
+        } else {
+            $resolvedRel = $relPath;
+        }
     } else {
         // Tenta encontrar ignorando maiúsculas/minúsculas no mesmo diretório
         $dir = dirname($abs);
@@ -152,7 +158,9 @@ function resolverCaminhoImagem($relPath, $hexacolorDir, $docRoot, $fallbackRel) 
                 foreach ($files as $f) {
                     if ($f !== '.' && $f !== '..' && strcasecmp($f, $filename) === 0 && is_file($dir . '/' . $f)) {
                         $resolvedAbs = $dir . '/' . $f;
-                        if (strpos($relPath, '../../') === 0) {
+                        if (strpos($resolvedAbs, $docRoot) === 0) {
+                            $resolvedRel = '../../' . ltrim(substr($resolvedAbs, strlen($docRoot)), '/\\');
+                        } elseif (strpos($relPath, '../../') === 0) {
                             $resolvedRel = '../../' . ltrim(substr(dirname($relPath), 6), '/\\') . '/' . $f;
                         } else {
                             $resolvedRel = (dirname($relPath) !== '.' ? dirname($relPath) . '/' : '') . $f;
@@ -167,7 +175,7 @@ function resolverCaminhoImagem($relPath, $hexacolorDir, $docRoot, $fallbackRel) 
         if (!$resolvedAbs) {
             $filenameBase = basename($relPath);
             if (!empty($filenameBase)) {
-                $altDirs = [$docRoot . '/images/escudos', $docRoot . '/images/uniformes', $hexacolorDir . '/Imagens', $hexacolorDir . '/Escudos', $hexacolorDir . '/Uniformes'];
+                $altDirs = [$docRoot . '/images/escudos', $docRoot . '/images/uniformes', $docRoot . '/competicoes/temp_uniformes', $hexacolorDir . '/Imagens', $hexacolorDir . '/Escudos', $hexacolorDir . '/Uniformes'];
                 foreach ($altDirs as $altDir) {
                     if (is_dir($altDir)) {
                         $altFiles = @scandir($altDir);
@@ -910,14 +918,36 @@ foreach ($partidas as $matchInfo) {
     $knockoutAwayGoals = false;
     
     if ($faseJogo > 2) {
-        if ($faseJogo == 8) { // Final
-            $tieOption = isset($options['criteriodesempatefinal']) ? intval($options['criteriodesempatefinal']) : 0;
-            $knockoutTiebraker = ($tieOption === 0) ? 1 : 2;
+        $isIdaMatch = false;
+        if (isset($options['tipo_preliminar']) && intval($options['tipo_preliminar']) == 1) {
+            $finalUnica = isset($options['finalunica']) ? intval($options['finalunica']) : 0;
+            if (!($faseJogo == 8 && $finalUnica == 1)) {
+                $tA = (int)$matchInfo['timeA'];
+                $tB = (int)$matchInfo['timeB'];
+                $stmtOutro = $db->prepare("SELECT id, data FROM jogos_clube WHERE competicao_id = :idComp AND fase = :fase AND ((timeA_id = :tA AND timeB_id = :tB) OR (timeA_id = :tB AND timeB_id = :tA)) AND id != :myId LIMIT 1");
+                $stmtOutro->execute([':idComp' => $idCompeticao, ':fase' => $faseJogo, ':tA' => $tA, ':tB' => $tB, ':myId' => $idPartida]);
+                $outroJogo = $stmtOutro->fetch(PDO::FETCH_ASSOC);
+                if ($outroJogo) {
+                    if (strtotime($matchInfo['data']) < strtotime($outroJogo['data']) || (strtotime($matchInfo['data']) == strtotime($outroJogo['data']) && $idPartida < (int)$outroJogo['id'])) {
+                        $isIdaMatch = true;
+                    }
+                }
+            }
+        }
+
+        if ($isIdaMatch) {
+            $knockoutTiebraker = 0; // Jogo de ida não tem prorrogação nem pênaltis
             $knockoutAwayGoals = false;
-        } else { // Outras fases de mata-mata
-            $tieOption = isset($options['criteriodesempate']) ? intval($options['criteriodesempate']) : 0;
-            $knockoutTiebraker = ($tieOption === 0) ? 1 : 2;
-            $knockoutAwayGoals = isset($options['golfora']) && $options['golfora'] == 1;
+        } else {
+            if ($faseJogo == 8) { // Final
+                $tieOption = isset($options['criteriodesempatefinal']) ? intval($options['criteriodesempatefinal']) : 0;
+                $knockoutTiebraker = ($tieOption === 0) ? 1 : 2;
+                $knockoutAwayGoals = false;
+            } else { // Outras fases de mata-mata
+                $tieOption = isset($options['criteriodesempate']) ? intval($options['criteriodesempate']) : 0;
+                $knockoutTiebraker = ($tieOption === 0) ? 1 : 2;
+                $knockoutAwayGoals = isset($options['golfora']) && $options['golfora'] == 1;
+            }
         }
     }
 

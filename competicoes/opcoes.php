@@ -633,6 +633,19 @@ require_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 			Disponibilizar estádios dos times da casa?
 			<input type='checkbox' name='input_estadiostimes' id='input_estadiostimes' <?php echo (!isset($options['estadios_times']) || $options['estadios_times'] ? 'checked' : ''); ?> />
 		</label>
+
+		<div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
+			<div style="flex: 1; min-width: 200px;">
+				<label for='input_capacidade_minima_estadio' style="margin-top:0;">Capacidade mínima (Estádios sorteados)</label>
+				<input type='number' min='0' step='500' name='input_capacidade_minima_estadio' id='input_capacidade_minima_estadio' value='<?php echo isset($options['capacidade_minima_estadio']) ? intval($options['capacidade_minima_estadio']) : 0; ?>' placeholder='0 = sem restrição' />
+				<small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 4px;">Capacidade mínima para sorteios de campo neutro / jogos sem mando.</small>
+			</div>
+			<div style="flex: 1; min-width: 200px;">
+				<label for='input_capacidade_minima_final' style="margin-top:0;">Capacidade mínima para a Final (Estádios sorteados)</label>
+				<input type='number' min='0' step='500' name='input_capacidade_minima_final' id='input_capacidade_minima_final' value='<?php echo isset($options['capacidade_minima_final']) ? intval($options['capacidade_minima_final']) : 0; ?>' placeholder='0 = usar regra geral' />
+				<small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 4px;">Permite exigir estádios de maior porte exclusivamente para a grande final.</small>
+			</div>
+		</div>
 	</div>
 
 	<!-- Opções do Simulador Hexacolor -->
@@ -1173,6 +1186,8 @@ $(document).ready(function($){
 		let dias_semana = dias_semana_arr.join(',');
 
 		let estadios_times = $("#input_estadiostimes").prop("checked") * 1;
+		let capacidade_minima_estadio = parseInt($("#input_capacidade_minima_estadio").val()) || 0;
+		let capacidade_minima_final = parseInt($("#input_capacidade_minima_final").val()) || 0;
 		let arbitros_pais = $("#select_arbitros_pais").val();
 		let arbitros_federacao = $("#select_arbitros_fed").val();
 		let selectedArbsCheck = $("#select_arbitros").val() || [];
@@ -1238,6 +1253,8 @@ $(document).ready(function($){
 		formData.append('numero_alteracoes',numero_alteracoes);
 		formData.append('id_competicao',idCompeticao);
 		formData.append('estadios_times',estadios_times);
+		formData.append('capacidade_minima_estadio',capacidade_minima_estadio);
+		formData.append('capacidade_minima_final',capacidade_minima_final);
 		formData.append('arbitros_pais',arbitros_pais);
 		formData.append('arbitros_federacao',arbitros_federacao);
 		formData.append('desempate_grupos',desempate_grupos);

@@ -981,6 +981,7 @@ try {
             'stadium' => $row['stadium'] ?: 'Estádio não informado',
             'home_id' => (int)$row['timeA_id'],
             'home_team' => $row['home_team'],
+            'home_logo' => $homeLogo,
             'home_score' => $isFinished ? (int)$row['home_score'] : null,
             'home_penalties' => $isFinished ? (($row['home_penalties'] !== null) ? (int)$row['home_penalties'] : null) : null,
             'home_scorers' => $isFinished ? implode(', ', $homeGoalsList) : '',

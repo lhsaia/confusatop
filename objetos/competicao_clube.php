@@ -88,7 +88,9 @@ class Competicao_clube{
                         'intervalo_rodadas' => "INTEGER DEFAULT 1",
                         'horarios_jogos' => "TEXT DEFAULT '16:00'",
                         'tipo_times' => "INTEGER DEFAULT 0",
-                        'campeonato_ranking' => "INTEGER DEFAULT 10"
+                        'campeonato_ranking' => "INTEGER DEFAULT 10",
+                        'capacidade_minima_estadio' => "INTEGER DEFAULT 0",
+                        'capacidade_minima_final' => "INTEGER DEFAULT 0"
                     ];
                     foreach ($columnsToAdd as $col => $def) {
                         if (!isset($cols[$col])) {
@@ -127,7 +129,9 @@ class Competicao_clube{
                     'horarios_jogos' => "VARCHAR(255) DEFAULT '16:00'",
                     'zonas_tabela' => "TEXT NULL",
                     'tipo_times' => "TINYINT(1) DEFAULT 0",
-                    'campeonato_ranking' => "INT DEFAULT 10"
+                    'campeonato_ranking' => "INT DEFAULT 10",
+                    'capacidade_minima_estadio' => "INT DEFAULT 0",
+                    'capacidade_minima_final' => "INT DEFAULT 0"
                 ];
 
                 foreach ($columnsToAdd as $col => $def) {
@@ -459,7 +463,7 @@ class Competicao_clube{
 
 		$id = htmlspecialchars(strip_tags($id));
 		$query = "SELECT
-                numero_times, limite_fichas, subir_live, sorteio, golfora, finalunica, tipocompeticao, criteriodesempate, criteriodesempatefinal, suspensao, zeraramarelos, expulso_dois_amarelos, alteracoeselenco, inicioalteracoes, fimalteracoes, jogadoresadicionais, estadios_times, desempate_grupos, num_grupos, times_por_grupo, tipo_preliminar, turnos_pontos_corridos, data_inicial, max_jogos_dia, dias_semana, intervalo_rodadas, horarios_jogos, zonas_tabela, tipo_times, campeonato_ranking  
+                numero_times, limite_fichas, subir_live, sorteio, golfora, finalunica, tipocompeticao, criteriodesempate, criteriodesempatefinal, suspensao, zeraramarelos, expulso_dois_amarelos, alteracoeselenco, inicioalteracoes, fimalteracoes, jogadoresadicionais, estadios_times, desempate_grupos, num_grupos, times_por_grupo, tipo_preliminar, turnos_pontos_corridos, data_inicial, max_jogos_dia, dias_semana, intervalo_rodadas, horarios_jogos, zonas_tabela, tipo_times, campeonato_ranking, capacidade_minima_estadio, capacidade_minima_final  
             FROM
                 competicao_opcoes 
             WHERE
@@ -472,7 +476,7 @@ class Competicao_clube{
 		return $options;
     }
 	
-	function alterarOpcoes($idUsuario, $numero_times, $data_limite, $subir_live, $sorteio, $gol_fora, $final_unica, $tipo_competicao, $criterio_desempate, $criterio_desempate_final, $criterio_suspensao, $zerar_amarelos, $permitir_alteracoes, $inicio_alteracoes, $fim_alteracoes, $numero_alteracoes, $id_competicao, $estadios_times = 1, $desempate_grupos = 'SG,GP,VI,CD', $num_grupos = 4, $times_por_grupo = 4, $tipo_preliminar = 1, $turnos_pontos_corridos = 2, $data_inicial = null, $max_jogos_dia = 0, $dias_semana = '', $intervalo_rodadas = 1, $horarios_jogos = '16:00', $expulso_dois_amarelos = 0, $zonas_tabela = null, $tipo_times = 0, $campeonato_ranking = 10){
+	function alterarOpcoes($idUsuario, $numero_times, $data_limite, $subir_live, $sorteio, $gol_fora, $final_unica, $tipo_competicao, $criterio_desempate, $criterio_desempate_final, $criterio_suspensao, $zerar_amarelos, $permitir_alteracoes, $inicio_alteracoes, $fim_alteracoes, $numero_alteracoes, $id_competicao, $estadios_times = 1, $desempate_grupos = 'SG,GP,VI,CD', $num_grupos = 4, $times_por_grupo = 4, $tipo_preliminar = 1, $turnos_pontos_corridos = 2, $data_inicial = null, $max_jogos_dia = 0, $dias_semana = '', $intervalo_rodadas = 1, $horarios_jogos = '16:00', $expulso_dois_amarelos = 0, $zonas_tabela = null, $tipo_times = 0, $campeonato_ranking = 10, $capacidade_minima_estadio = 0, $capacidade_minima_final = 0){
 	
 			$idUsuario = htmlspecialchars(strip_tags($idUsuario));
 			$numero_times = htmlspecialchars(strip_tags($numero_times));
@@ -505,6 +509,8 @@ class Competicao_clube{
 			$zonas_tabela = !empty($zonas_tabela) ? $zonas_tabela : null;
 			$tipo_times = intval($tipo_times) === 1 ? 1 : 0;
 			$campeonato_ranking = intval($campeonato_ranking) > 0 ? intval($campeonato_ranking) : 10;
+			$capacidade_minima_estadio = max(0, intval($capacidade_minima_estadio));
+			$capacidade_minima_final = max(0, intval($capacidade_minima_final));
 
 			if($numero_alteracoes == "") $numero_alteracoes = 0;
 			if($inicio_alteracoes == "") $inicio_alteracoes = null;
@@ -514,7 +520,7 @@ class Competicao_clube{
 			
 			$query = "UPDATE competicao_opcoes 
             SET
-                 numero_times =:numero_times, limite_fichas=:limite_fichas, subir_live=:subir_live, sorteio=:sorteio, golfora=:golfora, finalunica=:finalunica, tipocompeticao=:tipocompeticao, criteriodesempate=:criteriodesempate, criteriodesempatefinal=:criteriodesempatefinal, suspensao=:suspensao, zeraramarelos=:zeraramarelos, expulso_dois_amarelos=:expulso_dois_amarelos, alteracoeselenco=:alteracoeselenco, inicioalteracoes=:inicioalteracoes, fimalteracoes=:fimalteracoes, jogadoresadicionais=:numeroalteracoes, estadios_times=:estadios_times, desempate_grupos=:desempate_grupos, num_grupos=:num_grupos, times_por_grupo=:times_por_grupo, tipo_preliminar=:tipo_preliminar, turnos_pontos_corridos=:turnos_pontos_corridos, data_inicial=:data_inicial, max_jogos_dia=:max_jogos_dia, dias_semana=:dias_semana, intervalo_rodadas=:intervalo_rodadas, horarios_jogos=:horarios_jogos, zonas_tabela=:zonas_tabela, tipo_times=:tipo_times, campeonato_ranking=:campeonato_ranking   
+                 numero_times =:numero_times, limite_fichas=:limite_fichas, subir_live=:subir_live, sorteio=:sorteio, golfora=:golfora, finalunica=:finalunica, tipocompeticao=:tipocompeticao, criteriodesempate=:criteriodesempate, criteriodesempatefinal=:criteriodesempatefinal, suspensao=:suspensao, zeraramarelos=:zeraramarelos, expulso_dois_amarelos=:expulso_dois_amarelos, alteracoeselenco=:alteracoeselenco, inicioalteracoes=:inicioalteracoes, fimalteracoes=:fimalteracoes, jogadoresadicionais=:numeroalteracoes, estadios_times=:estadios_times, desempate_grupos=:desempate_grupos, num_grupos=:num_grupos, times_por_grupo=:times_por_grupo, tipo_preliminar=:tipo_preliminar, turnos_pontos_corridos=:turnos_pontos_corridos, data_inicial=:data_inicial, max_jogos_dia=:max_jogos_dia, dias_semana=:dias_semana, intervalo_rodadas=:intervalo_rodadas, horarios_jogos=:horarios_jogos, zonas_tabela=:zonas_tabela, tipo_times=:tipo_times, campeonato_ranking=:campeonato_ranking, capacidade_minima_estadio=:capacidade_minima_estadio, capacidade_minima_final=:capacidade_minima_final   
              WHERE
                 id_competicao = :idComp";
 
@@ -550,6 +556,8 @@ class Competicao_clube{
 		$stmt->bindParam(":zonas_tabela", $zonas_tabela);
 		$stmt->bindParam(":tipo_times", $tipo_times);
 		$stmt->bindParam(":campeonato_ranking", $campeonato_ranking);
+		$stmt->bindParam(":capacidade_minima_estadio", $capacidade_minima_estadio);
+		$stmt->bindParam(":capacidade_minima_final", $capacidade_minima_final);
 		
 		if($stmt->execute()){
 			try {
@@ -1972,35 +1980,122 @@ class Competicao_clube{
 			}
 		}
 
-		// 4. Determinar vencedores de cada confronto da fase atual
+		// 4. Determinar vencedores de cada confronto da fase atual (suportando jogo único ou ida e volta)
+		$optComp = $this->getOptions($idCompeticao);
 		$vencedoresJogos = [];
+		$confrontosFase = [];
 		foreach ($jogosFase as $jg) {
-			$gA = (int)$jg['timeA_gols'];
-			$gB = (int)$jg['timeB_gols'];
-			$pA = $jg['timeA_penaltis'] !== null ? (int)$jg['timeA_penaltis'] : null;
-			$pB = $jg['timeB_penaltis'] !== null ? (int)$jg['timeB_penaltis'] : null;
+			$tA = (int)$jg['timeA_id'];
+			$tB = (int)$jg['timeB_id'];
+			$nA = trim($jg['timeA_nome'] ?? '');
+			$nB = trim($jg['timeB_nome'] ?? '');
+			$keyChave = !empty($jg['grupo']) ? ('chave_' . trim($jg['grupo'])) : null;
+			if (!$keyChave) {
+				$minId = min($tA, $tB);
+				$maxId = max($tA, $tB);
+				if ($minId > 0 && $maxId > 0) {
+					$keyChave = "pair_{$minId}_{$maxId}";
+				} else {
+					$names = [$nA, $nB];
+					sort($names);
+					$keyChave = "pair_names_" . implode('_', $names);
+				}
+			}
+			$confrontosFase[$keyChave][] = $jg;
+		}
 
+		foreach ($confrontosFase as $cKey => $cJogos) {
 			$vencId = 0;
 			$vencNome = null;
 
-			if ($gA > $gB) {
-				$vencId = (int)$jg['timeA_id'];
-				$vencNome = $jg['timeA_nome'];
-			} elseif ($gB > $gA) {
-				$vencId = (int)$jg['timeB_id'];
-				$vencNome = $jg['timeB_nome'];
-			} elseif ($pA !== null && $pB !== null) {
-				if ($pA > $pB) {
+			if (count($cJogos) === 1) {
+				$jg = $cJogos[0];
+				$gA = (int)$jg['timeA_gols'];
+				$gB = (int)$jg['timeB_gols'];
+				$pA = $jg['timeA_penaltis'] !== null ? (int)$jg['timeA_penaltis'] : null;
+				$pB = $jg['timeB_penaltis'] !== null ? (int)$jg['timeB_penaltis'] : null;
+
+				if ($gA > $gB) {
 					$vencId = (int)$jg['timeA_id'];
 					$vencNome = $jg['timeA_nome'];
-				} else {
+				} elseif ($gB > $gA) {
 					$vencId = (int)$jg['timeB_id'];
 					$vencNome = $jg['timeB_nome'];
+				} elseif ($pA !== null && $pB !== null) {
+					if ($pA > $pB) {
+						$vencId = (int)$jg['timeA_id'];
+						$vencNome = $jg['timeA_nome'];
+					} else {
+						$vencId = (int)$jg['timeB_id'];
+						$vencNome = $jg['timeB_nome'];
+					}
+				} else {
+					$vencId = (int)$jg['timeA_id'];
+					$vencNome = $jg['timeA_nome'];
 				}
 			} else {
-				// Fallback caso empate sem penaltis
-				$vencId = (int)$jg['timeA_id'];
-				$vencNome = $jg['timeA_nome'];
+				// Confronto de Ida e Volta (2 partidas)
+				usort($cJogos, function($a, $b) {
+					$tA = strtotime($a['data'] ?? 0);
+					$tB = strtotime($b['data'] ?? 0);
+					if ($tA !== $tB) return $tA - $tB;
+					return (int)$a['id'] - (int)$b['id'];
+				});
+				$j1 = $cJogos[0];
+				$j2 = $cJogos[1];
+
+				$idA = (int)$j1['timeA_id'];
+				$nomeA = $j1['timeA_nome'];
+				$idB = (int)$j1['timeB_id'];
+				$nomeB = $j1['timeB_nome'];
+
+				$golsA_j1 = (int)$j1['timeA_gols'];
+				$golsB_j1 = (int)$j1['timeB_gols'];
+
+				if ((int)$j2['timeA_id'] === $idB || (!empty($nomeB) && trim($j2['timeA_nome'] ?? '') === $nomeB)) {
+					$golsB_j2 = (int)$j2['timeA_gols'];
+					$golsA_j2 = (int)$j2['timeB_gols'];
+					$penB_j2 = $j2['timeA_penaltis'] !== null ? (int)$j2['timeA_penaltis'] : null;
+					$penA_j2 = $j2['timeB_penaltis'] !== null ? (int)$j2['timeB_penaltis'] : null;
+				} else {
+					$golsA_j2 = (int)$j2['timeA_gols'];
+					$golsB_j2 = (int)$j2['timeB_gols'];
+					$penA_j2 = $j2['timeA_penaltis'] !== null ? (int)$j2['timeA_penaltis'] : null;
+					$penB_j2 = $j2['timeB_penaltis'] !== null ? (int)$j2['timeB_penaltis'] : null;
+				}
+
+				$totA = $golsA_j1 + $golsA_j2;
+				$totB = $golsB_j1 + $golsB_j2;
+
+				if ($totA > $totB) {
+					$vencId = $idA;
+					$vencNome = $nomeA;
+				} elseif ($totB > $totA) {
+					$vencId = $idB;
+					$vencNome = $nomeB;
+				} else {
+					$golForaAtivo = isset($optComp['golfora']) && intval($optComp['golfora']) == 1;
+					if ($golForaAtivo && $golsA_j2 !== $golsB_j1) {
+						if ($golsA_j2 > $golsB_j1) {
+							$vencId = $idA;
+							$vencNome = $nomeA;
+						} else {
+							$vencId = $idB;
+							$vencNome = $nomeB;
+						}
+					} elseif ($penA_j2 !== null && $penB_j2 !== null) {
+						if ($penA_j2 > $penB_j2) {
+							$vencId = $idA;
+							$vencNome = $nomeA;
+						} else {
+							$vencId = $idB;
+							$vencNome = $nomeB;
+						}
+					} else {
+						$vencId = $idA;
+						$vencNome = $nomeA;
+					}
+				}
 			}
 
 			// Preencher nome caso esteja vazio
@@ -2139,7 +2234,7 @@ class Competicao_clube{
 			try {
 				$ldb = new PDO("sqlite:" . $db3File);
 				$ldb->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-				$stmtEst = $ldb->query("SELECT ID FROM estadio");
+				$stmtEst = $ldb->query("SELECT ID, Capacidade FROM estadio");
 				if ($stmtEst) $estadios = $stmtEst->fetchAll(PDO::FETCH_ASSOC);
 				$stmtArb = $ldb->query("SELECT ID FROM trioarbitragem");
 				if (!$stmtArb) {
@@ -2148,6 +2243,65 @@ class Competicao_clube{
 				if ($stmtArb) $arbitros = $stmtArb->fetchAll(PDO::FETCH_ASSOC);
 			} catch (\Throwable $e) {}
 		}
+
+		// Opções da próxima fase
+		$isIdaEVolta = isset($optComp['tipo_preliminar']) && intval($optComp['tipo_preliminar']) == 1;
+		$isFinalUnica = isset($optComp['finalunica']) && intval($optComp['finalunica']) == 1;
+		$proximaTemVolta = ($isIdaEVolta && !($proximaFase == 8 && $isFinalUnica));
+		$estadiosTimes = isset($optComp['estadios_times']) ? intval($optComp['estadios_times']) : 1;
+		$capGeral = isset($optComp['capacidade_minima_estadio']) ? intval($optComp['capacidade_minima_estadio']) : 0;
+		$capFinal = isset($optComp['capacidade_minima_final']) ? intval($optComp['capacidade_minima_final']) : 0;
+		$minCapProxFase = ($proximaFase == 8 && $capFinal > 0) ? $capFinal : $capGeral;
+
+		$getEstadioNeutro = function(&$usedInPhase, $teamA_id = 0, $teamB_id = 0) use ($estadios, $minCapProxFase, $ldb) {
+			if (empty($estadios)) return 0;
+			$estadioA = 0;
+			$estadioB = 0;
+			if ($ldb) {
+				if ($teamA_id != 0) {
+					$stA = $ldb->prepare("SELECT Estadio FROM clube WHERE ID = ? LIMIT 1");
+					$stA->execute([$teamA_id]);
+					$estadioA = (int)$stA->fetchColumn();
+				}
+				if ($teamB_id != 0) {
+					$stB = $ldb->prepare("SELECT Estadio FROM clube WHERE ID = ? LIMIT 1");
+					$stB->execute([$teamB_id]);
+					$estadioB = (int)$stB->fetchColumn();
+				}
+			}
+			$disponiveis = [];
+			foreach ($estadios as $est) {
+				$eId = (int)$est['ID'];
+				if ($eId > 0 && $eId != $estadioA && $eId != $estadioB) {
+					$disponiveis[] = $est;
+				}
+			}
+			if (empty($disponiveis)) {
+				$disponiveis = $estadios;
+			}
+			if ($minCapProxFase > 0) {
+				$comCap = array_filter($disponiveis, function($e) use ($minCapProxFase) {
+					return (int)($e['Capacidade'] ?? 0) >= $minCapProxFase;
+				});
+				if (!empty($comCap)) {
+					$disponiveis = array_values($comCap);
+				}
+			}
+			$dispIds = array_map(function($e) { return (int)$e['ID']; }, $disponiveis);
+			$naoUsados = array_values(array_diff($dispIds, $usedInPhase));
+			$escolhido = !empty($naoUsados) ? $naoUsados[array_rand($naoUsados)] : $dispIds[array_rand($dispIds)];
+			$usedInPhase[] = $escolhido;
+			return $escolhido;
+		};
+
+		$getEstadioClube = function($teamId) use ($ldb) {
+			if (!$ldb || empty($teamId)) return 0;
+			try {
+				$st = $ldb->prepare("SELECT Estadio FROM clube WHERE ID = ? LIMIT 1");
+				$st->execute([$teamId]);
+				return (int)$st->fetchColumn() ?: 0;
+			} catch (\Throwable $e) { return 0; }
+		};
 
 		// Data inicial para a próxima fase: 7 dias após a data do último jogo da fase atual, ou a partir de amanhã se já tiver passado
 		$lastDate = !empty($jogosFase[count($jogosFase)-1]['data']) ? $jogosFase[count($jogosFase)-1]['data'] : date('Y-m-d H:i:s');
@@ -2159,7 +2313,7 @@ class Competicao_clube{
 
 		$usedStadiumsInPhase = [];
 
-		// 8. Inserir os jogos da próxima fase no MariaDB
+		// 8. Inserir os jogos da próxima fase no MariaDB (Ida)
 		foreach ($confrontosProximaFase as $idxConf => $conf) {
 			$tA_id = $conf['timeA']['id'];
 			$tA_nome = $conf['timeA']['nome'];
@@ -2169,20 +2323,44 @@ class Competicao_clube{
 			$dateMatch = date("Y-m-d 16:00:00", strtotime($baseDate . " +" . floor($idxConf / 2) . " days"));
 			$arbId = count($arbitros) > 0 ? (int)$arbitros[array_rand($arbitros)]['ID'] : 0;
 
-			// Estádio neutro sem conflito
-			$estId = 0;
-			if (!empty($estadios)) {
-				$disponiveis = [];
-				foreach ($estadios as $est) {
-					$disponiveis[] = (int)$est['ID'];
-				}
-				$naoUsados = array_values(array_diff($disponiveis, $usedStadiumsInPhase));
-				$estId = !empty($naoUsados) ? $naoUsados[array_rand($naoUsados)] : $disponiveis[array_rand($disponiveis)];
-				$usedStadiumsInPhase[] = $estId;
+			if ($proximaTemVolta && $estadiosTimes == 1) {
+				$estId = ($tA_id != 0) ? $getEstadioClube($tA_id) : 0;
+				if (!$estId) $estId = $getEstadioNeutro($usedStadiumsInPhase, $tA_id, $tB_id);
+				$neutro = "false";
+			} else {
+				$estId = $getEstadioNeutro($usedStadiumsInPhase, $tA_id, $tB_id);
+				$neutro = "true";
 			}
 
 			$chaveProxNum = (string)($idxConf + 1);
-			$this->inserirJogo($idCompeticao, $tA_id, $tB_id, $proximaFase, $arbId, $estId, $dateMatch, "true", $chaveProxNum, null, $tA_nome, $tB_nome);
+			$this->inserirJogo($idCompeticao, $tA_id, $tB_id, $proximaFase, $arbId, $estId, $dateMatch, $neutro, $chaveProxNum, null, $tA_nome, $tB_nome);
+		}
+
+		// Se for ida e volta, inserir jogos de VOLTA 7 dias depois
+		if ($proximaTemVolta) {
+			$baseDateVolta = date("Y-m-d 16:00:00", strtotime($baseDate . " +7 days"));
+			$usedStadiumsInVolta = [];
+			foreach ($confrontosProximaFase as $idxConf => $conf) {
+				$tA_id = $conf['timeA']['id'];
+				$tA_nome = $conf['timeA']['nome'];
+				$tB_id = $conf['timeB']['id'];
+				$tB_nome = $conf['timeB']['nome'];
+
+				$dateMatchVolta = date("Y-m-d 16:00:00", strtotime($baseDateVolta . " +" . floor($idxConf / 2) . " days"));
+				$arbId = count($arbitros) > 0 ? (int)$arbitros[array_rand($arbitros)]['ID'] : 0;
+
+				if ($estadiosTimes == 1) {
+					$estIdVolta = ($tB_id != 0) ? $getEstadioClube($tB_id) : 0;
+					if (!$estIdVolta) $estIdVolta = $getEstadioNeutro($usedStadiumsInVolta, $tB_id, $tA_id);
+					$neutroVolta = "false";
+				} else {
+					$estIdVolta = $getEstadioNeutro($usedStadiumsInVolta, $tB_id, $tA_id);
+					$neutroVolta = "true";
+				}
+
+				$chaveProxNum = (string)($idxConf + 1);
+				$this->inserirJogo($idCompeticao, $tB_id, $tA_id, $proximaFase, $arbId, $estIdVolta, $dateMatchVolta, $neutroVolta, $chaveProxNum, null, $tB_nome, $tA_nome);
+			}
 		}
 
 		return true;

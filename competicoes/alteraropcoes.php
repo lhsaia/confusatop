@@ -43,6 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     $zonas_tabela = isset($_POST['zonas_tabela']) ? $_POST['zonas_tabela'] : null;
     $tipo_times = isset($_POST['tipo_times']) ? intval($_POST['tipo_times']) : 0;
     $campeonato_ranking = isset($_POST['campeonato_ranking']) ? intval($_POST['campeonato_ranking']) : 10;
+    $capacidade_minima_estadio = isset($_POST['capacidade_minima_estadio']) ? max(0, intval($_POST['capacidade_minima_estadio'])) : 0;
+    $capacidade_minima_final = isset($_POST['capacidade_minima_final']) ? max(0, intval($_POST['capacidade_minima_final'])) : 0;
 
     $arbitroIds = isset($_POST['arbitros']) ? array_map('intval', $_POST['arbitros']) : [];
     $arbitroPais = isset($_POST['arbitros_pais']) ? intval($_POST['arbitros_pais']) : 0;
@@ -55,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         ]));
     }
 	
-	if($competicao->alterarOpcoes($idUsuario, $_POST['numero_times'], $_POST['data_limite'], $_POST['subir_live'], $_POST['sorteio'], $_POST['gol_fora'], $_POST['final_unica'], $_POST['tipo_competicao'], $_POST['criterio_desempate'], $_POST['criterio_desempate_final'], $_POST['criterio_suspensao'], $_POST['zerar_amarelos'], $_POST['permitir_alteracoes'], $_POST['inicio_alteracoes'], $_POST['fim_alteracoes'], $_POST['numero_alteracoes'], $idCompeticao, $estadios_times, $desempate_grupos, $num_grupos, $times_por_grupo, $tipo_preliminar, $turnos_pontos_corridos, $data_inicial, $max_jogos_dia, $dias_semana, $intervalo_rodadas, $horarios_jogos, $expulso_dois_amarelos, $zonas_tabela, $tipo_times, $campeonato_ranking)){
+	if($competicao->alterarOpcoes($idUsuario, $_POST['numero_times'], $_POST['data_limite'], $_POST['subir_live'], $_POST['sorteio'], $_POST['gol_fora'], $_POST['final_unica'], $_POST['tipo_competicao'], $_POST['criterio_desempate'], $_POST['criterio_desempate_final'], $_POST['criterio_suspensao'], $_POST['zerar_amarelos'], $_POST['permitir_alteracoes'], $_POST['inicio_alteracoes'], $_POST['fim_alteracoes'], $_POST['numero_alteracoes'], $idCompeticao, $estadios_times, $desempate_grupos, $num_grupos, $times_por_grupo, $tipo_preliminar, $turnos_pontos_corridos, $data_inicial, $max_jogos_dia, $dias_semana, $intervalo_rodadas, $horarios_jogos, $expulso_dois_amarelos, $zonas_tabela, $tipo_times, $campeonato_ranking, $capacidade_minima_estadio, $capacidade_minima_final)){
 		$is_success = true;
 	} else {
 		$is_success = false;

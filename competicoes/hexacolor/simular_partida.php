@@ -569,14 +569,36 @@
 	$knockoutAwayGoals = false;
 	
 	if ($faseJogo > 2) {
-		if ($faseJogo == 8) { // Final
-			$tieOption = isset($options['criteriodesempatefinal']) ? intval($options['criteriodesempatefinal']) : 0;
-			$knockoutTiebraker = ($tieOption === 0) ? 1 : 2;
+		$isIdaMatch = false;
+		if (isset($options['tipo_preliminar']) && intval($options['tipo_preliminar']) == 1) {
+			$finalUnica = isset($options['finalunica']) ? intval($options['finalunica']) : 0;
+			if (!($faseJogo == 8 && $finalUnica == 1)) {
+				$tA = (int)$matchInfo['timeA'];
+				$tB = (int)$matchInfo['timeB'];
+				$stmtOutro = $db->prepare("SELECT id, data FROM jogos_clube WHERE competicao_id = :idComp AND fase = :fase AND ((timeA_id = :tA AND timeB_id = :tB) OR (timeA_id = :tB AND timeB_id = :tA)) AND id != :myId LIMIT 1");
+				$stmtOutro->execute([':idComp' => $idCompeticao, ':fase' => $faseJogo, ':tA' => $tA, ':tB' => $tB, ':myId' => $idPartida]);
+				$outroJogo = $stmtOutro->fetch(PDO::FETCH_ASSOC);
+				if ($outroJogo) {
+					if (strtotime($matchInfo['data']) < strtotime($outroJogo['data']) || (strtotime($matchInfo['data']) == strtotime($outroJogo['data']) && $idPartida < (int)$outroJogo['id'])) {
+						$isIdaMatch = true;
+					}
+				}
+			}
+		}
+
+		if ($isIdaMatch) {
+			$knockoutTiebraker = 0; // Jogo de ida não tem prorrogação nem pênaltis
 			$knockoutAwayGoals = false;
-		} else { // Outras fases de mata-mata
-			$tieOption = isset($options['criteriodesempate']) ? intval($options['criteriodesempate']) : 0;
-			$knockoutTiebraker = ($tieOption === 0) ? 1 : 2;
-			$knockoutAwayGoals = isset($options['golfora']) && $options['golfora'] == 1;
+		} else {
+			if ($faseJogo == 8) { // Final
+				$tieOption = isset($options['criteriodesempatefinal']) ? intval($options['criteriodesempatefinal']) : 0;
+				$knockoutTiebraker = ($tieOption === 0) ? 1 : 2;
+				$knockoutAwayGoals = false;
+			} else { // Outras fases de mata-mata
+				$tieOption = isset($options['criteriodesempate']) ? intval($options['criteriodesempate']) : 0;
+				$knockoutTiebraker = ($tieOption === 0) ? 1 : 2;
+				$knockoutAwayGoals = isset($options['golfora']) && $options['golfora'] == 1;
+			}
 		}
 	}
 

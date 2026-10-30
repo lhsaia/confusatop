@@ -9,6 +9,63 @@
   },
     "days": [
     {
+      "id": "day_30_10_2026",
+      "date": "30/10/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Sigilo Temporal em Suspensões nas Estatísticas da Competição",
+          "desc": "Implementada trava de sigilo temporal na lista de jogadores suspensos e departamento médico em estatisticas.php, ocultando atletas suspensos ou lesionados em jogos do dia antes do término real das partidas simuladas."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Exibição de Uniformes de Times Externos (YMT) na Súmula",
+          "desc": "Corrigido o armazenamento e a resolução de uniformes de equipes importadas via arquivo YMT, salvando as imagens em diretório padronizado e tratando os caminhos no simulador e na súmula para impedir a substituição indevida por camisa branca genérica."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Exportação de Base YMT (Erro HTTP 500)",
+          "desc": "Corrigida falha de sintaxe por fechamento indevido de bloco em exportar_database_imp3.php que causava erro HTTP 500 ao tentar exportar a base de dados YMT de países como Chroma."
+        },
+        {
+          "badge": "new",
+          "title": "Capacidade Minima para Estadios Sorteados",
+          "desc": "Adiciona opcao de capacidade minima para estadios sorteados em competicoes, com configuracao independente para a grande final."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Mata-Mata em Ida e Volta",
+          "desc": "Corrige a geracao de tabelas em competicoes de mata-mata com formato ida e volta, garantindo o agendamento de ambos os jogos e chaveamento agregado."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Escudo do Mandante no PoltronaScore",
+          "desc": "Corrige exibicao do escudo do time mandante ao abrir detalhes de jogos em rodadas e ligas do PoltronaScore."
+        }
+      ]
+    },
+    {
+      "id": "day_26_10_2026",
+      "date": "26/10/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Isolamento Total no Cron de Simulacao",
+          "desc": "Pre-validacao de integridade SQLite e limpeza completa de conexoes PDO e arquivos temporarios entre partidas, impedindo propagacao de erros entre competicoes."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Sigilo Temporal nas Estatisticas de Competicoes",
+          "desc": "Aplica trava temporal na exibicao de gols, assistencias e cartoes acumulados em estatisticas.php para ocultar dados de partidas simuladas antes do termino real."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Resiliencia no Cron de Simulacao",
+          "desc": "Adicionada pre-validacao de escalacoes e protecao com try-catch contra disk I/O lock no cron para pular partidas invalidas sem interromper as demais."
+        }
+      ]
+    },
+    {
       "id": "day_24_10_2026",
       "date": "24/10/2026",
       "items": [
