@@ -9,6 +9,17 @@
   },
     "days": [
     {
+      "id": "day_01_11_2026",
+      "date": "01/11/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção e Auto-Recuperação de Escudos e Uniformes no SQLite",
+          "desc": "Corrigido bug onde a conversão temporária de imagens WebP ou caminhos relativos na simulação sobrescrevia permanentemente o Escudo e os Uniformes dos clubes no SQLite das competições com os templates genéricos. Adicionada auto-recuperação automática a partir do portal e restauração de escudos no PoltronaScore."
+        }
+      ]
+    },
+    {
       "id": "day_30_10_2026",
       "date": "30/10/2026",
       "items": [

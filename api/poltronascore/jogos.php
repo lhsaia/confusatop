@@ -63,6 +63,50 @@ try {
     // 3. Get Previous Matches (we will sort them robustly in PHP next)
     $stmtPrev = $conn->query("SELECT * FROM poltrona_matches WHERE status = 'previous'");
     $prevMatches = $stmtPrev->fetchAll(PDO::FETCH_ASSOC);
+
+    // Mapear escudos oficiais do portal (tabela clube + paises) para substituir escudos ausentes ou gerados com template padrão
+    $portalLogosByName = [];
+    try {
+        $stmtClubs = $conn->query("
+            SELECT c.Nome, c.Escudo, c.status, p.bandeira 
+            FROM clube c 
+            LEFT JOIN paises p ON c.Pais = p.id 
+            WHERE c.Escudo IS NOT NULL AND c.Escudo != ''
+        ");
+        if ($stmtClubs) {
+            while ($rc = $stmtClubs->fetch(PDO::FETCH_ASSOC)) {
+                $cNameKey = mb_strtolower(trim((string)$rc['Nome']), 'UTF-8');
+                $escFile = trim((string)$rc['Escudo']);
+                if ($cNameKey !== '' && $escFile !== '' && stripos($escFile, 'padrao') === false) {
+                    $isSel = ((int)($rc['status'] ?? 0) > 0);
+                    $logoUrl = ($isSel && !empty($rc['bandeira']))
+                        ? '/images/bandeiras/' . $rc['bandeira']
+                        : '/images/escudos/' . $escFile;
+                    if (!isset($portalLogosByName[$cNameKey])) {
+                        $portalLogosByName[$cNameKey] = $logoUrl;
+                    }
+                }
+            }
+        }
+    } catch (\Throwable $e) {}
+
+    $enrichMatchLogos = function(&$matchList) use ($portalLogosByName) {
+        foreach ($matchList as &$m) {
+            $hKey = mb_strtolower(trim((string)($m['home_team'] ?? '')), 'UTF-8');
+            $aKey = mb_strtolower(trim((string)($m['away_team'] ?? '')), 'UTF-8');
+            if ($hKey !== '' && isset($portalLogosByName[$hKey])) {
+                $m['home_logo'] = $portalLogosByName[$hKey];
+            }
+            if ($aKey !== '' && isset($portalLogosByName[$aKey])) {
+                $m['away_logo'] = $portalLogosByName[$aKey];
+            }
+        }
+        unset($m);
+    };
+
+    $enrichMatchLogos($liveMatches);
+    $enrichMatchLogos($nextMatches);
+    $enrichMatchLogos($prevMatches);
     
     // Sort previous matches chronologically (DESC - most recent first)
     usort($prevMatches, function($a, $b) {

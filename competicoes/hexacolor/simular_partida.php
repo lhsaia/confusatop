@@ -495,8 +495,9 @@
 	// Normalizar e validar imagens dos clubes para garantir que Java não encontre caminhos inválidos ou nulos
 	$hexacolorDir = __DIR__;
 	$docRoot = $_SERVER['DOCUMENT_ROOT'];
+	$originaisClubeImagens = [];
 	if (function_exists('normalizarImagensClubesSQLite')) {
-		normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot);
+		$originaisClubeImagens = normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot, $db);
 	} else {
 		try {
 			$stmtClubs = $ldb->query("SELECT ID, Nome, Escudo, Uniforme1, Uniforme2 FROM clube");
@@ -691,6 +692,9 @@
 					$stmtRestore->execute();
 				}
 				$stmtRestore = null;
+			}
+			if (!empty($originaisClubeImagens) && function_exists('restaurarImagensOriginaisClubesSQLite')) {
+				restaurarImagensOriginaisClubesSQLite($ldb, $originaisClubeImagens);
 			}
 		} catch (Exception $e) {}
 

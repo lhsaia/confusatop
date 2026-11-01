@@ -1034,6 +1034,40 @@ try {
         $inferredGender = psInferMatchGender($conn, $pMatch['championship'] ?? '', $namesToInfer);
         $pMatch['gender'] = $inferredGender;
 
+        // Garantir que escudos oficiais do portal sejam exibidos caso o clube exista na tabela clube
+        try {
+            $resolvePortalLogo = function($teamName) use ($conn, $inferredGender) {
+                $tClean = trim((string)$teamName);
+                if ($tClean === '') return null;
+                $stL = $conn->prepare("
+                    SELECT c.Escudo, c.status, p.bandeira 
+                    FROM clube c 
+                    LEFT JOIN paises p ON c.Pais = p.id 
+                    WHERE LOWER(TRIM(c.Nome)) = LOWER(?) 
+                    ORDER BY (c.Sexo = ?) DESC, c.ID ASC 
+                    LIMIT 1
+                ");
+                $stL->execute([$tClean, (int)$inferredGender]);
+                $rL = $stL->fetch(PDO::FETCH_ASSOC);
+                if ($rL && !empty($rL['Escudo']) && stripos($rL['Escudo'], 'padrao') === false) {
+                    $isSel = ((int)($rL['status'] ?? 0) > 0);
+                    return ($isSel && !empty($rL['bandeira']))
+                        ? '/images/bandeiras/' . $rL['bandeira']
+                        : '/images/escudos/' . $rL['Escudo'];
+                }
+                return null;
+            };
+
+            $hPortalLogo = $resolvePortalLogo($pMatch['home_team'] ?? '');
+            if ($hPortalLogo) {
+                $pMatch['home_logo'] = $hPortalLogo;
+            }
+            $aPortalLogo = $resolvePortalLogo($pMatch['away_team'] ?? '');
+            if ($aPortalLogo) {
+                $pMatch['away_logo'] = $aPortalLogo;
+            }
+        } catch (\Throwable $e) {}
+
         // Buscar escalações a partir do elenco dos clubes respeitando o gênero inferido
         $homeScore = (int)($pMatch['home_score'] ?? 0);
         $awayScore = (int)($pMatch['away_score'] ?? 0);

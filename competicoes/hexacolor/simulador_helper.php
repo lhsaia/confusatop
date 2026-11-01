@@ -469,6 +469,13 @@ if (!function_exists('resolverCaminhoImagem')) {
         if (strpos($relPath, '../../') === 0) {
             $sub = substr($relPath, 6);
             $abs = $docRoot . '/' . ltrim($sub, '/\\');
+        } elseif ($docRoot !== '' && strpos($relPath, $docRoot) === 0) {
+            // Caso o caminho tenha sido gravado como caminho absoluto do servidor anteriormente
+            $abs = $relPath;
+            $relPath = '../../' . ltrim(substr($relPath, strlen($docRoot)), '/\\');
+        } elseif (strpos($relPath, '/images/') === 0 || strpos($relPath, 'images/') === 0) {
+            $abs = $docRoot . '/' . ltrim($relPath, '/\\');
+            $relPath = '../../' . ltrim($relPath, '/\\');
         } else {
             $abs = $hexacolorDir . '/' . ltrim($relPath, '/\\');
         }
@@ -489,7 +496,9 @@ if (!function_exists('resolverCaminhoImagem')) {
                     foreach ($files as $f) {
                         if ($f !== '.' && $f !== '..' && strcasecmp($f, $filename) === 0 && is_file($dir . '/' . $f)) {
                             $resolvedAbs = $dir . '/' . $f;
-                            if (strpos($relPath, '../../') === 0) {
+                            if ($docRoot !== '' && strpos($resolvedAbs, $docRoot) === 0 && strpos($resolvedAbs, $hexacolorDir) !== 0) {
+                                $resolvedRel = '../../' . ltrim(substr($resolvedAbs, strlen($docRoot)), '/\\');
+                            } elseif (strpos($relPath, '../../') === 0) {
                                 $resolvedRel = '../../' . ltrim(substr(dirname($relPath), 6), '/\\') . '/' . $f;
                             } else {
                                 $resolvedRel = (dirname($relPath) !== '.' ? dirname($relPath) . '/' : '') . $f;
@@ -508,6 +517,7 @@ if (!function_exists('resolverCaminhoImagem')) {
                         $docRoot . '/images/escudos',
                         $docRoot . '/images/uniformes',
                         $docRoot . '/images/bandeiras',
+                        $docRoot . '/competicoes/temp_uniformes',
                         $hexacolorDir . '/Imagens',
                         $hexacolorDir . '/Escudos',
                         $hexacolorDir . '/Uniformes',
@@ -522,7 +532,7 @@ if (!function_exists('resolverCaminhoImagem')) {
                                 foreach ($altFiles as $af) {
                                     if ($af !== '.' && $af !== '..' && strcasecmp($af, $filenameBase) === 0 && is_file($altDir . '/' . $af)) {
                                         $resolvedAbs = $altDir . '/' . $af;
-                                        if (strpos($altDir, $docRoot) === 0) {
+                                        if ($docRoot !== '' && strpos($altDir, $docRoot) === 0 && strpos($altDir, $hexacolorDir) !== 0) {
                                             $relFromDoc = substr($altDir, strlen($docRoot));
                                             $resolvedRel = '../../' . ltrim($relFromDoc, '/\\') . '/' . $af;
                                         } elseif (strpos($altDir, $hexacolorDir) === 0) {
@@ -584,6 +594,21 @@ if (!function_exists('resolverCaminhoImagem')) {
                 }
             }
             
+            // Fallback com imagecreatefromstring caso imagecreatefromwebp falhe
+            $rawBytes = @file_get_contents($resolvedAbs);
+            if ($rawBytes) {
+                $img = @imagecreatefromstring($rawBytes);
+                if ($img) {
+                    imagealphablending($img, false);
+                    imagesavealpha($img, true);
+                    if (@imagepng($img, $pngAbs, 6)) {
+                        @imagedestroy($img);
+                        return $pngRel;
+                    }
+                    @imagedestroy($img);
+                }
+            }
+            
             // Se a conversão webp falhou, usar o placeholder PNG padrão
             return $fallbackRel;
         }
@@ -592,9 +617,120 @@ if (!function_exists('resolverCaminhoImagem')) {
     }
 }
 
+if (!function_exists('ehImagemPadraoOuCache')) {
+    function ehImagemPadraoOuCache($path) {
+        $p = strtolower(trim((string)$path));
+        if ($p === '' || $p === '../../images/escudos/' || $p === '../../images/uniformes/') {
+            return true;
+        }
+        if (strpos($p, 'escudopadrao') !== false || strpos($p, 'uniformepadrao') !== false) {
+            return true;
+        }
+        if (strpos($p, 'cache_images/') === 0 || strpos($p, 'cache_images\\') === 0) {
+            return true;
+        }
+        return false;
+    }
+}
+
+if (!function_exists('curarImagensClubesSQLiteComPortal')) {
+    /**
+     * Verifica todos os clubes do SQLite e, caso algum clube cadastrado no portal (MariaDB)
+     * esteja com Escudo/Uniforme1/Uniforme2 apontando para EscudoPadrao, UniformePadrao,
+     * cache_images ou arquivo inexistente, restaura automaticamente o caminho original do MariaDB.
+     * Retorna um array com os valores originais do clube para serem restaurados após a simulação.
+     */
+    function curarImagensClubesSQLiteComPortal($ldb, $db, $hexacolorDir, $docRoot) {
+        $originaisClube = [];
+        if (!$ldb) return $originaisClube;
+
+        try {
+            $stmtClubs = $ldb->query("SELECT ID, Nome, TresLetras, Escudo, Uniforme1, Uniforme2 FROM clube");
+            if (!$stmtClubs) return $originaisClube;
+            $clubs = $stmtClubs->fetchAll(PDO::FETCH_ASSOC);
+            $stmtClubs = null;
+
+            $stmtUpOriginal = $ldb->prepare("UPDATE clube SET Escudo = :esc, Uniforme1 = :uni1, Uniforme2 = :uni2 WHERE ID = :id");
+
+            foreach ($clubs as $c) {
+                $cid = (int)$c['ID'];
+                $esc = trim((string)($c['Escudo'] ?? ''));
+                $u1  = trim((string)($c['Uniforme1'] ?? ''));
+                $u2  = trim((string)($c['Uniforme2'] ?? ''));
+
+                // Verificar se o clube existe no MariaDB (por ID positivo ou por Nome caso tenha sido importado/negativo)
+                $portalClub = null;
+                if ($db) {
+                    if ($cid > 0) {
+                        $stP = $db->prepare("SELECT ID, Nome, Escudo, Uniforme1, Uniforme2, status, Pais FROM clube WHERE ID = :id LIMIT 1");
+                        $stP->execute([':id' => $cid]);
+                        $portalClub = $stP->fetch(PDO::FETCH_ASSOC);
+                    }
+                    if (!$portalClub && !empty($c['Nome'])) {
+                        $nomeLimpo = trim((string)$c['Nome']);
+                        $stP = $db->prepare("SELECT ID, Nome, Escudo, Uniforme1, Uniforme2, status, Pais FROM clube WHERE LOWER(TRIM(Nome)) = LOWER(:nome) LIMIT 1");
+                        $stP->execute([':nome' => $nomeLimpo]);
+                        $portalClub = $stP->fetch(PDO::FETCH_ASSOC);
+                    }
+                }
+
+                if ($portalClub) {
+                    $isSelecao = ((int)($portalClub['status'] ?? 0) > 0);
+                    $portalEsc = trim((string)($portalClub['Escudo'] ?? ''));
+                    $portalU1  = trim((string)($portalClub['Uniforme1'] ?? ''));
+                    $portalU2  = trim((string)($portalClub['Uniforme2'] ?? ''));
+
+                    $folderEsc = ($isSelecao && strpos($portalEsc, '.') !== false && !file_exists($docRoot . '/images/escudos/' . $portalEsc) && file_exists($docRoot . '/images/bandeiras/' . $portalEsc))
+                        ? '../../images/bandeiras/'
+                        : '../../images/escudos/';
+
+                    $canonEsc = ($portalEsc !== '' && stripos($portalEsc, 'padrao') === false) ? ($folderEsc . $portalEsc) : $esc;
+                    $canonU1  = ($portalU1 !== '' && stripos($portalU1, 'padrao') === false) ? ('../../images/uniformes/' . $portalU1) : $u1;
+                    $canonU2  = ($portalU2 !== '' && stripos($portalU2, 'padrao') === false) ? ('../../images/uniformes/' . $portalU2) : $u2;
+
+                    $needHeal = false;
+                    if (ehImagemPadraoOuCache($esc) && $canonEsc !== '' && !ehImagemPadraoOuCache($canonEsc)) {
+                        $esc = $canonEsc;
+                        $needHeal = true;
+                    }
+                    if (ehImagemPadraoOuCache($u1) && $canonU1 !== '' && !ehImagemPadraoOuCache($canonU1)) {
+                        $u1 = $canonU1;
+                        $needHeal = true;
+                    }
+                    if (ehImagemPadraoOuCache($u2) && $canonU2 !== '' && !ehImagemPadraoOuCache($canonU2)) {
+                        $u2 = $canonU2;
+                        $needHeal = true;
+                    }
+
+                    if ($needHeal) {
+                        $stmtUpOriginal->execute([
+                            ':esc'  => $esc,
+                            ':uni1' => $u1,
+                            ':uni2' => $u2,
+                            ':id'   => $cid
+                        ]);
+                    }
+                }
+
+                $originaisClube[$cid] = [
+                    'Escudo'    => $esc,
+                    'Uniforme1' => $u1,
+                    'Uniforme2' => $u2
+                ];
+            }
+            $stmtUpOriginal = null;
+        } catch (\Throwable $e) {
+            error_log("Erro em curarImagensClubesSQLiteComPortal: " . $e->getMessage());
+        }
+
+        return $originaisClube;
+    }
+}
+
 if (!function_exists('normalizarImagensClubesSQLite')) {
-    function normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot) {
-        if (!$ldb) return;
+    function normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot, $db = null) {
+        $originaisClube = [];
+        if (!$ldb) return $originaisClube;
         try {
             // Garantir compatibilidade de pastas no Linux
             $imageFolders = ['Imagens' => 'imagens', 'Escudos' => 'escudos', 'Uniformes' => 'uniformes'];
@@ -616,8 +752,11 @@ if (!function_exists('normalizarImagensClubesSQLite')) {
                 }
             }
 
+            // 1. Auto-curar clubes do SQLite que tenham sido sobrescritos por EscudoPadrao/UniformePadrao/cache_images
+            $originaisClube = curarImagensClubesSQLiteComPortal($ldb, $db, $hexacolorDir, $docRoot);
+
             $stmtClubs = $ldb->query("SELECT ID, Nome, Escudo, Uniforme1, Uniforme2 FROM clube");
-            if (!$stmtClubs) return;
+            if (!$stmtClubs) return $originaisClube;
             $clubs = $stmtClubs->fetchAll(PDO::FETCH_ASSOC);
             $stmtClubs = null;
             
@@ -627,10 +766,19 @@ if (!function_exists('normalizarImagensClubesSQLite')) {
             $stmtUpClube = $ldb->prepare("UPDATE clube SET Escudo = :esc, Uniforme1 = :uni1, Uniforme2 = :uni2 WHERE ID = :id");
             
             foreach ($clubs as $c) {
+                $cid = (int)$c['ID'];
                 $changed = false;
                 $escudo = trim($c['Escudo'] ?? '');
                 $uni1 = trim($c['Uniforme1'] ?? '');
                 $uni2 = trim($c['Uniforme2'] ?? '');
+
+                if (!isset($originaisClube[$cid])) {
+                    $originaisClube[$cid] = [
+                        'Escudo'    => $escudo,
+                        'Uniforme1' => $uni1,
+                        'Uniforme2' => $uni2
+                    ];
+                }
                 
                 $escudoResolvido = resolverCaminhoImagem($escudo, $hexacolorDir, $docRoot, $fallbackEscudo);
                 if ($escudoResolvido !== $escudo) {
@@ -654,13 +802,40 @@ if (!function_exists('normalizarImagensClubesSQLite')) {
                     $stmtUpClube->bindValue(':esc', $escudo);
                     $stmtUpClube->bindValue(':uni1', $uni1);
                     $stmtUpClube->bindValue(':uni2', $uni2);
-                    $stmtUpClube->bindValue(':id', $c['ID'], PDO::PARAM_INT);
+                    $stmtUpClube->bindValue(':id', $cid, PDO::PARAM_INT);
                     $stmtUpClube->execute();
                 }
             }
             $stmtUpClube = null;
         } catch (\Throwable $e) {
             error_log("Erro ao normalizar imagens dos clubes: " . $e->getMessage());
+        }
+        return $originaisClube;
+    }
+}
+
+if (!function_exists('restaurarImagensOriginaisClubesSQLite')) {
+    /**
+     * Restaura os caminhos originais (ex: ../../images/escudos/arquivo.webp) no SQLite
+     * antes de copiar data/database.db3 de volta para {id}-database.db3, impedindo que
+     * caminhos temporários (cache_images/*.png ou Imagens/EscudoPadrao.png) sobrescrevam
+     * permanentemente o banco da competição.
+     */
+    function restaurarImagensOriginaisClubesSQLite($ldb, $originaisClube) {
+        if (!$ldb || empty($originaisClube) || !is_array($originaisClube)) return;
+        try {
+            $stmtRest = $ldb->prepare("UPDATE clube SET Escudo = :esc, Uniforme1 = :uni1, Uniforme2 = :uni2 WHERE ID = :id");
+            foreach ($originaisClube as $cid => $imgs) {
+                $stmtRest->execute([
+                    ':esc'  => $imgs['Escudo'],
+                    ':uni1' => $imgs['Uniforme1'],
+                    ':uni2' => $imgs['Uniforme2'],
+                    ':id'   => (int)$cid
+                ]);
+            }
+            $stmtRest = null;
+        } catch (\Throwable $e) {
+            error_log("Erro ao restaurar imagens originais dos clubes no SQLite: " . $e->getMessage());
         }
     }
 }
