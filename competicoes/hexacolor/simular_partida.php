@@ -30,11 +30,18 @@
 		die(json_encode(['success' => false, 'error' => 'O simulador está ocupado com outras partidas da fila no momento. Por favor, tente novamente em alguns instantes.']));
 	}
 
-	// Garante a liberação do lock ao final do script ou interrupções abruptas
+	//Garante a liberação do lock ao final do script ou interrupções abruptas
 	register_shutdown_function(function() use ($lockHandle) {
 		flock($lockHandle, LOCK_UN);
 		fclose($lockHandle);
 	});
+
+	// Libera o lock da sessão PHP imediatamente após validar as permissões para não bloquear outras abas e evitar reenvios por timeout
+	$isAdmin = isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1;
+	@session_write_close();
+	if(!$isAdmin){
+		die(json_encode(['success' => false, 'error' => 'Apenas administradores do sistema podem simular partidas manualmente.']));
+	}
 	
 	//estabelecer conexão com banco de dados
 	include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");
@@ -53,6 +60,11 @@
 	$matchInfo = $competicao->getMatchInfo($idPartida);
 	if(!$matchInfo){
 		die(json_encode(['success' => false, 'error' => 'Partida não encontrada.']));
+	}
+
+	// Idempotência estrita: se a partida já foi simulada (pelo cron ou por outra requisição em paralelo), abortar imediatamente
+	if (isset($matchInfo['status']) && (int)$matchInfo['status'] !== 0) {
+		die(json_encode(['success' => true, 'already_simulated' => true, 'error' => '']));
 	}
 	
 	$idCompeticao = $matchInfo['competicao'];
@@ -239,11 +251,6 @@
 	}
 	
 	$competitionInfo = $competicao->readInfo($idCompeticao);
-	
-	$isAdmin = isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1;
-	if(!$isAdmin){
-		die(json_encode(['success' => false, 'error' => 'Apenas administradores do sistema podem simular partidas manualmente.']));
-	}
 	
 	$nomeComposto = $competitionInfo['ano'] . " - " . $competitionInfo['nome'];
 	$databasePath = "jdbc:sqlite:data/database.db3";

@@ -9,6 +9,17 @@
   },
     "days": [
     {
+      "id": "day_06_11_2026",
+      "date": "06/11/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção na Simulação Automática (Cron) e Trava de Unicidade",
+          "desc": "Corrigido erro em ambientes CLI no Cron de simulação e implementada trava estrita de concorrência e idempotência para impedir simulações ou envios duplicados ao CONFUSA Live."
+        }
+      ]
+    },
+    {
       "id": "day_01_11_2026",
       "date": "01/11/2026",
       "items": [

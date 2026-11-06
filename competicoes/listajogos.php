@@ -1055,15 +1055,23 @@ $(document).ready(function($){
 		}
 	});
 
-	$(document).on("click", ".simular-match", function(){
+	var isSimulatingMatch = false;
+	$(document).on("click", ".simular-match", function(e){
+		e.preventDefault();
 		if (is_admin_user !== "true") {
 			alert('Apenas administradores do sistema podem simular partidas manualmente.');
 			return;
 		}
-		var tbl_row = $(this).closest("tr");
+		if (isSimulatingMatch) {
+			return;
+		}
+		var $btn = $(this);
+		var tbl_row = $btn.closest("tr");
 		var matchId = tbl_row.attr("id");
 		
 		if(confirm("Deseja simular esta partida agora?")){
+			isSimulatingMatch = true;
+			$btn.css({'pointer-events': 'none', 'opacity': '0.4'});
 			showLoading(true);
 			$.ajax({
 				type: "POST",
@@ -1071,14 +1079,18 @@ $(document).ready(function($){
 				data: { matchId: matchId },
 				dataType: 'json',
 				success: function(data) {
+					isSimulatingMatch = false;
 					hideLoading();
 					if(!data.success){
+						$btn.css({'pointer-events': '', 'opacity': ''});
 						alert('Não foi possível simular a partida: ' + (data.error || 'Erro desconhecido.'));
 					} else {
 						load_data();
 					}
 				},
 				error: function(xhr, status, error) {
+					isSimulatingMatch = false;
+					$btn.css({'pointer-events': '', 'opacity': ''});
 					hideLoading();
 					alert('Erro de comunicação com o simulador: ' + error);
 				}

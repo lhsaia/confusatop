@@ -658,6 +658,15 @@ if (!function_exists('curarImagensClubesSQLiteComPortal')) {
                 $u1  = trim((string)($c['Uniforme1'] ?? ''));
                 $u2  = trim((string)($c['Uniforme2'] ?? ''));
 
+                if (!ehImagemPadraoOuCache($esc) && !ehImagemPadraoOuCache($u1) && !ehImagemPadraoOuCache($u2)) {
+                    $originaisClube[$cid] = [
+                        'Escudo'    => $esc,
+                        'Uniforme1' => $u1,
+                        'Uniforme2' => $u2
+                    ];
+                    continue;
+                }
+
                 // Verificar se o clube existe no MariaDB (por ID positivo ou por Nome caso tenha sido importado/negativo)
                 $portalClub = null;
                 if ($db) {
@@ -676,9 +685,9 @@ if (!function_exists('curarImagensClubesSQLiteComPortal')) {
 
                 if ($portalClub) {
                     $isSelecao = ((int)($portalClub['status'] ?? 0) > 0);
-                    $portalEsc = trim((string)($portalClub['Escudo'] ?? ''));
-                    $portalU1  = trim((string)($portalClub['Uniforme1'] ?? ''));
-                    $portalU2  = trim((string)($portalClub['Uniforme2'] ?? ''));
+                    $portalEsc = trim((string)($portalClub['Escudo'] ?? ($portalClub['escudo'] ?? '')));
+                    $portalU1  = trim((string)($portalClub['Uniforme1'] ?? ($portalClub['uniforme1'] ?? '')));
+                    $portalU2  = trim((string)($portalClub['Uniforme2'] ?? ($portalClub['uniforme2'] ?? '')));
 
                     $folderEsc = ($isSelecao && strpos($portalEsc, '.') !== false && !file_exists($docRoot . '/images/escudos/' . $portalEsc) && file_exists($docRoot . '/images/bandeiras/' . $portalEsc))
                         ? '../../images/bandeiras/'
@@ -702,7 +711,7 @@ if (!function_exists('curarImagensClubesSQLiteComPortal')) {
                         $needHeal = true;
                     }
 
-                    if ($needHeal) {
+                    if ($needHeal && $stmtUpOriginal) {
                         $stmtUpOriginal->execute([
                             ':esc'  => $esc,
                             ':uni1' => $u1,

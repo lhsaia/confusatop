@@ -123,6 +123,30 @@ cron_log("Encontrada(s) " . count($partidas) . " partida(s) para simular.");
 $hexacolorDir = __DIR__ . '/hexacolor';
 require_once $hexacolorDir . '/simulador_helper.php';
 
+// Lock de concorrência global compartilhado com simular_partida.php para impedir simulações paralelas
+$lockFile = $hexacolorDir . "/simulation.lock";
+$lockHandle = @fopen($lockFile, "c+");
+if ($lockHandle) {
+    $startTimeLock = time();
+    $acquiredLock = false;
+    while (time() - $startTimeLock < 60) {
+        if (flock($lockHandle, LOCK_EX | LOCK_NB)) {
+            $acquiredLock = true;
+            break;
+        }
+        usleep(500000);
+    }
+    if (!$acquiredLock) {
+        fclose($lockHandle);
+        cron_log("[LOCK OCUPADO] Outra simulação está em execução no momento. Abortando disparo atual para evitar colisão.");
+        exit(0);
+    }
+    register_shutdown_function(function() use ($lockHandle) {
+        @flock($lockHandle, LOCK_UN);
+        @fclose($lockHandle);
+    });
+}
+
 
 // Garantir compatibilidade de pastas e imagens com a engine Java no Linux (case-sensitive)
 $imageFolders = ['Imagens' => 'imagens', 'Escudos' => 'escudos', 'Uniformes' => 'uniformes'];
@@ -178,6 +202,18 @@ foreach ($partidas as $matchInfo) {
     $idCompeticao = $matchInfo['competicao'];
     
     cron_log("-> Processando Partida ID #{$idPartida} (Competição #{$idCompeticao})...");
+
+    // Verificar novamente no MariaDB se a partida ainda está com status = 0 (pode ter sido simulada manualmente enquanto a fila rodava)
+    try {
+        $stmtCheckStatus = $db->prepare("SELECT status FROM jogos_clube WHERE id = :idPartida LIMIT 1");
+        $stmtCheckStatus->bindValue(':idPartida', $idPartida, PDO::PARAM_INT);
+        $stmtCheckStatus->execute();
+        $currentStatus = $stmtCheckStatus->fetchColumn();
+        if ($currentStatus === false || (int)$currentStatus !== 0) {
+            cron_log("   [PULANDO] Partida #{$idPartida} já foi simulada anteriormente (status={$currentStatus}).");
+            continue;
+        }
+    } catch (\Throwable $e) {}
     
     $sourceDbPath = __DIR__ . "/databases/{$idCompeticao}-database.db3";
     $targetDbPath = $hexacolorDir . "/data/database.db3";

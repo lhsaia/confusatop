@@ -434,10 +434,11 @@ class Competicao_clube{
 
 		// Fallback: se times_inseridos for 0, verificar contagem de clubes no arquivo SQLite da competição
 		if(isset($info['times_inseridos']) && intval($info['times_inseridos']) == 0){
-			$db3File = $_SERVER['DOCUMENT_ROOT']."/competicoes/databases/".$id."-database.db3";
+			$docRoot = (!empty($_SERVER['DOCUMENT_ROOT'])) ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__);
+			$db3File = $docRoot."/competicoes/databases/".$id."-database.db3";
 			if(file_exists($db3File)){
 				try {
-					include_once($_SERVER['DOCUMENT_ROOT']."/config/sqliteDatabase.php");
+					include_once($docRoot."/config/sqliteDatabase.php");
 					$sqliteDb = new SQLiteDatabase();
 					$sqliteDb->fileName = $db3File;
 					$sdb = $sqliteDb->getConnection();
@@ -449,7 +450,10 @@ class Competicao_clube{
 								$info['times_inseridos'] = intval($resCount['total']);
 							}
 						}
+						$stmtCount = null;
+						$sdb = null;
 					}
+					$sqliteDb = null;
 				} catch (Exception $e) {
 					// Ignora falhas no SQLite
 				}
