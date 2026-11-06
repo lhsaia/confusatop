@@ -411,7 +411,7 @@ class Tecnico{
                 INNER JOIN tecnico a ON c.tecnico = a.ID 
                 INNER JOIN clube b ON c.clube = b.ID 
                 LEFT JOIN paises p ON a.Pais = p.id 
-                WHERE c.clube = :clube AND (c.tipoContrato = 0 OR c.tipoContrato IS NULL)";
+                WHERE c.clube = :clube";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(":clube", $idTime);
                 $stmt->execute();
@@ -419,7 +419,7 @@ class Tecnico{
             } else if($idPais != null){
                 $query = "SELECT DISTINCT a.ID, CONCAT(a.Nome,' [',p.sigla,']' ) as Nome, IFNULL(FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365),0) as Idade, a.Nivel, a.Mentalidade, a.Estilo, a.externalID 
                 FROM clube b 
-                INNER JOIN contratos_tecnico c ON c.clube = b.ID AND (c.tipoContrato = 0 OR c.tipoContrato IS NULL) 
+                INNER JOIN contratos_tecnico c ON c.clube = b.ID 
                 INNER JOIN tecnico a ON c.tecnico = a.ID 
                 LEFT JOIN paises p ON a.Pais = p.id 
                 WHERE b.Pais = :pais";
@@ -430,7 +430,7 @@ class Tecnico{
             } else if($idLiga != null){
                 $query = "SELECT DISTINCT a.ID, CONCAT(a.Nome,' [',p.sigla,']' ) as Nome, IFNULL(FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365),0) as Idade, a.Nivel, a.Mentalidade, a.Estilo, a.externalID 
                 FROM clube b 
-                INNER JOIN contratos_tecnico c ON c.clube = b.ID AND (c.tipoContrato = 0 OR c.tipoContrato IS NULL) 
+                INNER JOIN contratos_tecnico c ON c.clube = b.ID 
                 INNER JOIN tecnico a ON c.tecnico = a.ID 
                 LEFT JOIN paises p ON a.Pais = p.id 
                 WHERE b.liga = :liga";

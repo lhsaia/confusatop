@@ -493,8 +493,8 @@
 
 	// 3.1. Sanitizar escalações, preencher desfalques e equilibrar formações táticas para evitar somaProb == 0 na engine
 	require_once __DIR__ . '/simulador_helper.php';
-	sanitizarEscalacaoPreSimulacao($ldb, (int)$matchInfo['timeA_id'], $outTeam1);
-	sanitizarEscalacaoPreSimulacao($ldb, (int)$matchInfo['timeB_id'], $outTeam2);
+	sanitizarEscalacaoPreSimulacao($ldb, (int)$matchInfo['timeA_id'], $outTeam1, $db);
+	sanitizarEscalacaoPreSimulacao($ldb, (int)$matchInfo['timeB_id'], $outTeam2, $db);
 
 	$siglaA = $time->getSigla($matchInfo['timeA_id']);
 	$siglaB = $time->getSigla($matchInfo['timeB_id']);
@@ -581,10 +581,10 @@
 		if (isset($options['tipo_preliminar']) && intval($options['tipo_preliminar']) == 1) {
 			$finalUnica = isset($options['finalunica']) ? intval($options['finalunica']) : 0;
 			if (!($faseJogo == 8 && $finalUnica == 1)) {
-				$tA = (int)$matchInfo['timeA'];
-				$tB = (int)$matchInfo['timeB'];
-				$stmtOutro = $db->prepare("SELECT id, data FROM jogos_clube WHERE competicao_id = :idComp AND fase = :fase AND ((timeA_id = :tA AND timeB_id = :tB) OR (timeA_id = :tB AND timeB_id = :tA)) AND id != :myId LIMIT 1");
-				$stmtOutro->execute([':idComp' => $idCompeticao, ':fase' => $faseJogo, ':tA' => $tA, ':tB' => $tB, ':myId' => $idPartida]);
+				$tA = (int)$matchInfo['timeA_id'];
+				$tB = (int)$matchInfo['timeB_id'];
+				$stmtOutro = $db->prepare("SELECT id, data FROM jogos_clube WHERE competicao_id = :idComp AND fase = :fase AND ((timeA_id = :tA1 AND timeB_id = :tB1) OR (timeA_id = :tB2 AND timeB_id = :tA2)) AND id != :myId LIMIT 1");
+				$stmtOutro->execute([':idComp' => $idCompeticao, ':fase' => $faseJogo, ':tA1' => $tA, ':tB1' => $tB, ':tB2' => $tB, ':tA2' => $tA, ':myId' => $idPartida]);
 				$outroJogo = $stmtOutro->fetch(PDO::FETCH_ASSOC);
 				if ($outroJogo) {
 					if (strtotime($matchInfo['data']) < strtotime($outroJogo['data']) || (strtotime($matchInfo['data']) == strtotime($outroJogo['data']) && $idPartida < (int)$outroJogo['id'])) {

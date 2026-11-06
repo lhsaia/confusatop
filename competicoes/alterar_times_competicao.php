@@ -187,7 +187,13 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 					while ($row = $stmt->fetch(PDO::FETCH_ASSOC)){
 						$nomeTecnico = html_entity_decode((string)($row['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 						$nomeTecnico = str_replace("'", "''", $nomeTecnico);
-						$megaQuery .= "INSERT OR REPLACE INTO tecnico (ID, Nome, Idade, Nivel, Mentalidade, Estilo) VALUES ('{$row['ID']}', '{$nomeTecnico}', '{$row['Idade']}', '{$row['Nivel']}', '{$row['Mentalidade']}', '{$row['Estilo']}'); ";
+						$nivTec = intval($row['Nivel'] ?? 5);
+						if ($nivTec < 1 || $nivTec > 10) $nivTec = 5;
+						$menTec = intval($row['Mentalidade'] ?? 3);
+						if ($menTec < 1 || $menTec > 5) $menTec = 3;
+						$estTec = intval($row['Estilo'] ?? 3);
+						if ($estTec < 1 || $estTec > 5) $estTec = 3;
+						$megaQuery .= "INSERT OR REPLACE INTO tecnico (ID, Nome, Idade, Nivel, Mentalidade, Estilo) VALUES ('{$row['ID']}', '{$nomeTecnico}', '{$row['Idade']}', '{$nivTec}', '{$menTec}', '{$estTec}'); ";
 					}
 
 					//buscar posicoes dos jogadores e adicionar na query

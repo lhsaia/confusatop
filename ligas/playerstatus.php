@@ -21,7 +21,6 @@ require_once($_SERVER['DOCUMENT_ROOT']."/objetos/paises.php");
 require_once($_SERVER['DOCUMENT_ROOT']."/objetos/usuarios.php");
 require_once($_SERVER['DOCUMENT_ROOT']."/objetos/jogador.php");
 require_once($_SERVER['DOCUMENT_ROOT']."/objetos/time.php");
-require_once($_SERVER['DOCUMENT_ROOT']."/objetos/tecnico.php");
 require_once($_SERVER['DOCUMENT_ROOT']."/objetos/liga.php");
 require_once($_SERVER['DOCUMENT_ROOT']."/objetos/estadio.php");
 require_once($_SERVER['DOCUMENT_ROOT']."/lib/functions.php");
@@ -32,7 +31,6 @@ $db = $database->getConnection();
 $pais = new Pais($db);
 $jogador = new Jogador($db);
 $time = new Time($db);
-$tecnico = new Tecnico($db);
 $liga = new Liga($db);
 
 // query times

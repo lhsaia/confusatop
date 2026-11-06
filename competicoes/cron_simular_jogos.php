@@ -61,20 +61,6 @@ $fimBusca = date('Y-m-d H:i:s', strtotime('+24 hours')); // Até 24 horas à fre
 
 cron_log("Iniciando Cron de Simulação para partidas pendentes até {$fimBusca}...");
 
-// Buscar jogos pendentes com data até o limite estipulado
-$query = "SELECT id, competicao_id AS competicao, timeA_id AS timeA, timeB_id AS timeB, estadio_id AS estadio, neutro, fase, data, subir_live 
-          FROM jogos_clube 
-          WHERE status = 0 
-            AND simulador_interno = 1
-            AND data <= :fim 
-          ORDER BY data ASC, fase ASC, id ASC";
-
-$stmt = $db->prepare($query);
-$stmt->bindParam(':fim', $fimBusca);
-$stmt->execute();
-
-$partidas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 // Função auxiliar para verificar e avançar fases de mata-mata concluídas
 function checarAvancoMataMataAtivos($db, $competicaoObj) {
     try {
@@ -110,6 +96,36 @@ function checarAvancoMataMataAtivos($db, $competicaoObj) {
         error_log("PHP Simulador: [ERRO SYNC RANKING CRON GERAL] " . $e->getMessage());
     }
 }
+
+// 1. Antes de buscar as partidas, avançar eventuais fases de mata-mata concluídas e sincronizar slots das competições com jogos pendentes
+checarAvancoMataMataAtivos($db, $competicaoObj);
+try {
+    $stmtCompsPendentes = $db->prepare("SELECT DISTINCT competicao_id FROM jogos_clube WHERE status = 0 AND data <= :fim");
+    $stmtCompsPendentes->bindParam(':fim', $fimBusca);
+    $stmtCompsPendentes->execute();
+    while ($rComp = $stmtCompsPendentes->fetch(PDO::FETCH_ASSOC)) {
+        $cIdSync = (int)$rComp['competicao_id'];
+        if ($cIdSync > 0) {
+            $competicaoObj->sincronizarSlotsJogos($cIdSync);
+        }
+    }
+} catch (\Throwable $e) {
+    error_log("PHP Simulador: [ERRO SYNC SLOTS PRE-CRON] " . $e->getMessage());
+}
+
+// Buscar jogos pendentes com data até o limite estipulado
+$query = "SELECT id, competicao_id AS competicao, timeA_id AS timeA, timeB_id AS timeB, estadio_id AS estadio, neutro, fase, data, subir_live 
+          FROM jogos_clube 
+          WHERE status = 0 
+            AND simulador_interno = 1
+            AND data <= :fim 
+          ORDER BY data ASC, fase ASC, id ASC";
+
+$stmt = $db->prepare($query);
+$stmt->bindParam(':fim', $fimBusca);
+$stmt->execute();
+
+$partidas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if (empty($partidas)) {
     cron_log("Nenhuma partida pendente encontrada até {$fimBusca}.");
@@ -200,9 +216,11 @@ foreach ($imageFolders as $orig => $lower) {
 foreach ($partidas as $matchInfo) {
     $idPartida = $matchInfo['id'];
     $idCompeticao = $matchInfo['competicao'];
+    $fecharConexoesSQLite = null;
     
     cron_log("-> Processando Partida ID #{$idPartida} (Competição #{$idCompeticao})...");
 
+    try {
     // Verificar novamente no MariaDB se a partida ainda está com status = 0 (pode ter sido simulada manualmente enquanto a fila rodava)
     try {
         $stmtCheckStatus = $db->prepare("SELECT status FROM jogos_clube WHERE id = :idPartida LIMIT 1");
@@ -487,28 +505,6 @@ foreach ($partidas as $matchInfo) {
         error_log("Erro ao validar trioarbitragem no SQLite: " . $e->getMessage());
     }
 
-    // 0. Pré-validação de escalação: impede ArrayIndexOutOfBoundsException na engine se time estiver sem titulares
-    try {
-        $stmtCheckTitulares = $ldb->prepare("SELECT Clube, Jogador1 FROM escalacao WHERE Clube IN (:timeA, :timeB)");
-        $stmtCheckTitulares->bindValue(':timeA', $matchInfo['timeA'], PDO::PARAM_INT);
-        $stmtCheckTitulares->bindValue(':timeB', $matchInfo['timeB'], PDO::PARAM_INT);
-        $stmtCheckTitulares->execute();
-        $escalacoesEncontradas = [];
-        while ($rTit = $stmtCheckTitulares->fetch(PDO::FETCH_ASSOC)) {
-            if (!empty($rTit['Jogador1'])) {
-                $escalacoesEncontradas[(int)$rTit['Clube']] = true;
-            }
-        }
-        $stmtCheckTitulares = null;
-        if (!isset($escalacoesEncontradas[(int)$matchInfo['timeA']]) || !isset($escalacoesEncontradas[(int)$matchInfo['timeB']])) {
-            cron_log("   [ERRO ESCALAÇÃO] A Partida #{$idPartida} (Competição #{$idCompeticao}) possui time sem escalação/titulares válidos no SQLite. Pulando para não travar a fila...");
-            $fecharConexoesSQLite();
-            continue;
-        }
-    } catch (\Throwable $e) {
-        cron_log("   [AVISO] Não foi possível verificar escalações prévias: " . $e->getMessage());
-    }
-
     // 1. Guardar a escalação original (padrão) na memória para restaurar depois da simulação
     $originalEscalacoes = [];
     try {
@@ -742,8 +738,30 @@ foreach ($partidas as $matchInfo) {
     
     // 3.1. Sanitizar escalações, preencher desfalques e equilibrar formações táticas para evitar somaProb == 0 na engine
     require_once $hexacolorDir . '/simulador_helper.php';
-    sanitizarEscalacaoPreSimulacao($ldb, (int)$matchInfo['timeA'], $outTeam1);
-    sanitizarEscalacaoPreSimulacao($ldb, (int)$matchInfo['timeB'], $outTeam2);
+    sanitizarEscalacaoPreSimulacao($ldb, (int)$matchInfo['timeA'], $outTeam1, $db);
+    sanitizarEscalacaoPreSimulacao($ldb, (int)$matchInfo['timeB'], $outTeam2, $db);
+
+    // 3.2. Validação pós-sanitização: impede ArrayIndexOutOfBoundsException na engine se time estiver sem titulares
+    try {
+        $stmtCheckTitulares = $ldb->prepare("SELECT Clube, Jogador1 FROM escalacao WHERE Clube IN (:timeA, :timeB)");
+        $stmtCheckTitulares->bindValue(':timeA', $matchInfo['timeA'], PDO::PARAM_INT);
+        $stmtCheckTitulares->bindValue(':timeB', $matchInfo['timeB'], PDO::PARAM_INT);
+        $stmtCheckTitulares->execute();
+        $escalacoesEncontradas = [];
+        while ($rTit = $stmtCheckTitulares->fetch(PDO::FETCH_ASSOC)) {
+            if (!empty($rTit['Jogador1'])) {
+                $escalacoesEncontradas[(int)$rTit['Clube']] = true;
+            }
+        }
+        $stmtCheckTitulares = null;
+        if (!isset($escalacoesEncontradas[(int)$matchInfo['timeA']]) || !isset($escalacoesEncontradas[(int)$matchInfo['timeB']])) {
+            cron_log("   [ERRO ESCALAÇÃO] A Partida #{$idPartida} (Competição #{$idCompeticao}) possui time sem escalação/titulares válidos no SQLite (TimeA={$matchInfo['timeA']}, TimeB={$matchInfo['timeB']}). Pulando para não travar a fila...");
+            $fecharConexoesSQLite();
+            continue;
+        }
+    } catch (\Throwable $e) {
+        cron_log("   [AVISO] Não foi possível verificar escalações: " . $e->getMessage());
+    }
 
     // 4. Normalizar e validar imagens de todos os clubes para evitar exceções do Java (ImageIO.read retornando null)
     $originaisClubeImagens = normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot, $db);
@@ -770,8 +788,8 @@ foreach ($partidas as $matchInfo) {
             if (!($faseJogo == 8 && $finalUnica == 1)) {
                 $tA = (int)$matchInfo['timeA'];
                 $tB = (int)$matchInfo['timeB'];
-                $stmtOutro = $db->prepare("SELECT id, data FROM jogos_clube WHERE competicao_id = :idComp AND fase = :fase AND ((timeA_id = :tA AND timeB_id = :tB) OR (timeA_id = :tB AND timeB_id = :tA)) AND id != :myId LIMIT 1");
-                $stmtOutro->execute([':idComp' => $idCompeticao, ':fase' => $faseJogo, ':tA' => $tA, ':tB' => $tB, ':myId' => $idPartida]);
+                $stmtOutro = $db->prepare("SELECT id, data FROM jogos_clube WHERE competicao_id = :idComp AND fase = :fase AND ((timeA_id = :tA1 AND timeB_id = :tB1) OR (timeA_id = :tB2 AND timeB_id = :tA2)) AND id != :myId LIMIT 1");
+                $stmtOutro->execute([':idComp' => $idCompeticao, ':fase' => $faseJogo, ':tA1' => $tA, ':tB1' => $tB, ':tB2' => $tB, ':tA2' => $tA, ':myId' => $idPartida]);
                 $outroJogo = $stmtOutro->fetch(PDO::FETCH_ASSOC);
                 if ($outroJogo) {
                     if (strtotime($matchInfo['data']) < strtotime($outroJogo['data']) || (strtotime($matchInfo['data']) == strtotime($outroJogo['data']) && $idPartida < (int)$outroJogo['id'])) {
@@ -1044,6 +1062,14 @@ foreach ($partidas as $matchInfo) {
 
     $fecharConexoesSQLite();
     gc_collect_cycles();
+    } catch (\Throwable $eMatch) {
+        cron_log("   [ERRO EXCEÇÃO PARTIDA #{$idPartida}] " . $eMatch->getMessage() . " em " . $eMatch->getFile() . ":" . $eMatch->getLine());
+        error_log("PHP Simulador: [ERRO EXCEÇÃO CRON PARTIDA #{$idPartida}] " . $eMatch->getMessage());
+        if (isset($fecharConexoesSQLite) && is_callable($fecharConexoesSQLite)) {
+            $fecharConexoesSQLite();
+        }
+        continue;
+    }
 }
 
 checarAvancoMataMataAtivos($db, $competicaoObj);

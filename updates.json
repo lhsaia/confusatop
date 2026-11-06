@@ -14,6 +14,21 @@
       "items": [
         {
           "badge": "bugfix",
+          "title": "Correção de Parâmetros SQL, Técnicos de Seleções e Fila do Cron de Simulação",
+          "desc": "Corrigido erro fatal HY093 em confrontos de mata-mata (ida e volta), corrigida a exportação e sincronização de técnicos de seleções no SQLite (que causava NullPointerException na engine Java) e adicionada sincronização prévia de slots/chaveamento antes da busca de jogos do Cron."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Remoção de Instanciação Desnecessária em Detalhes do Jogador",
+          "desc": "Remove a inclusão e instanciação não utilizada da classe Tecnico na página playerstatus.php, prevenindo erros de carregamento concorrente e consultas extras ao banco."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Exportação de Notas em Excel",
+          "desc": "Corrige erro de referência de namespace da biblioteca SimpleXLSXGen ao exportar as notas dos jogadores da competição."
+        },
+        {
+          "badge": "bugfix",
           "title": "Correção na Simulação Automática (Cron) e Trava de Unicidade",
           "desc": "Corrigido erro em ambientes CLI no Cron de simulação e implementada trava estrita de concorrência e idempotência para impedir simulações ou envios duplicados ao CONFUSA Live."
         }

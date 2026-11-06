@@ -14,6 +14,7 @@ if (!$idCompeticao) {
 $formato = isset($_GET['formato']) ? strtolower(trim($_GET['formato'])) : (isset($_GET['format']) ? strtolower(trim($_GET['format'])) : 'xlsx');
 
 require_once $_SERVER['DOCUMENT_ROOT'] . "/lib/simplexlsx/SimpleXLSXGen.php";
+use Shuchkin\SimpleXLSXGen;
 include_once $_SERVER['DOCUMENT_ROOT'] . "/config/database.php";
 include_once $_SERVER['DOCUMENT_ROOT'] . "/config/sqliteDatabase.php";
 include_once $_SERVER['DOCUMENT_ROOT'] . "/objetos/competicao_clube.php";

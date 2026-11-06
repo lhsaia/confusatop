@@ -165,27 +165,107 @@ if (!function_exists('obterJogadoresClubeSQLite')) {
 }
 
 if (!function_exists('garantirTecnicoValidoSQLite')) {
-    function garantirTecnicoValidoSQLite($ldb, $clubeId, $tecnicoPreferidoId = 0) {
+    function garantirTecnicoValidoSQLite($ldb, $clubeId, $tecnicoPreferidoId = 0, $db = null) {
         $clubeId = (int)$clubeId;
         $tecnicoPreferidoId = (int)$tecnicoPreferidoId;
         if (!$ldb || $clubeId === 0) return $tecnicoPreferidoId;
 
+        $normalizarParametrosTecnico = function($tecRow) use ($ldb) {
+            $id = (int)$tecRow['ID'];
+            $niv = isset($tecRow['Nivel']) ? (int)$tecRow['Nivel'] : 5;
+            $men = isset($tecRow['Mentalidade']) ? (int)$tecRow['Mentalidade'] : 3;
+            $est = isset($tecRow['Estilo']) ? (int)$tecRow['Estilo'] : 3;
+
+            $nivOk = ($niv >= 1 && $niv <= 10) ? $niv : max(1, min(10, $niv ?: 5));
+            $menOk = ($men >= 1 && $men <= 5) ? $men : 3;
+            $estOk = ($est >= 1 && $est <= 5) ? $est : 3;
+
+            if ($nivOk !== $niv || $menOk !== $men || $estOk !== $est) {
+                $stmtUp = $ldb->prepare("UPDATE tecnico SET Nivel = :niv, Mentalidade = :men, Estilo = :est WHERE ID = :id");
+                $stmtUp->bindValue(':niv', $nivOk, PDO::PARAM_INT);
+                $stmtUp->bindValue(':men', $menOk, PDO::PARAM_INT);
+                $stmtUp->bindValue(':est', $estOk, PDO::PARAM_INT);
+                $stmtUp->bindValue(':id', $id, PDO::PARAM_INT);
+                $stmtUp->execute();
+            }
+            return $id;
+        };
+
         try {
+            // 1. Verificar o ID preferido (vindo de elenco.Tecnico) no SQLite
             if ($tecnicoPreferidoId !== 0) {
-                $stmtTec = $ldb->prepare("SELECT ID FROM tecnico WHERE ID = :id LIMIT 1");
+                $stmtTec = $ldb->prepare("SELECT ID, Nivel, Mentalidade, Estilo FROM tecnico WHERE ID = :id LIMIT 1");
                 $stmtTec->bindValue(':id', $tecnicoPreferidoId, PDO::PARAM_INT);
                 $stmtTec->execute();
-                if ($stmtTec->fetch()) {
-                    return $tecnicoPreferidoId;
+                if ($rTec = $stmtTec->fetch(PDO::FETCH_ASSOC)) {
+                    return $normalizarParametrosTecnico($rTec);
                 }
             }
-            $stmtTecC = $ldb->prepare("SELECT ID FROM tecnico WHERE ID = :id LIMIT 1");
+
+            // 2. Verificar se o técnico está cadastrado no SQLite com o ID do próprio clube (padrão YMT)
+            $stmtTecC = $ldb->prepare("SELECT ID, Nivel, Mentalidade, Estilo FROM tecnico WHERE ID = :id LIMIT 1");
             $stmtTecC->bindValue(':id', $clubeId, PDO::PARAM_INT);
             $stmtTecC->execute();
-            if ($stmtTecC->fetch()) {
-                return $clubeId;
+            if ($rTecC = $stmtTecC->fetch(PDO::FETCH_ASSOC)) {
+                return $normalizarParametrosTecnico($rTecC);
             }
-        } catch (\Throwable $e) {}
+
+            // 3. Se for clube do portal e tivermos conexão com o MariaDB ($db), sincronizar o técnico oficial do clube/seleção
+            if ($db && $clubeId > 0) {
+                $sqlPortalTec = "SELECT a.ID, CONCAT(a.Nome, IF(p.sigla IS NOT NULL, CONCAT(' [', p.sigla, ']'), '')) as Nome,
+                                        IFNULL(FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365), 45) as Idade,
+                                        a.Nivel, a.Mentalidade, a.Estilo
+                                 FROM contratos_tecnico c
+                                 INNER JOIN tecnico a ON c.tecnico = a.ID
+                                 LEFT JOIN paises p ON a.Pais = p.id
+                                 WHERE c.clube = :clube
+                                 ORDER BY c.tipoContrato ASC
+                                 LIMIT 1";
+                $stmtPT = $db->prepare($sqlPortalTec);
+                $stmtPT->bindValue(':clube', $clubeId, PDO::PARAM_INT);
+                $stmtPT->execute();
+                $rPT = $stmtPT->fetch(PDO::FETCH_ASSOC);
+
+                if (!$rPT && $tecnicoPreferidoId > 0) {
+                    $sqlById = "SELECT a.ID, CONCAT(a.Nome, IF(p.sigla IS NOT NULL, CONCAT(' [', p.sigla, ']'), '')) as Nome,
+                                       IFNULL(FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365), 45) as Idade,
+                                       a.Nivel, a.Mentalidade, a.Estilo
+                                FROM tecnico a
+                                LEFT JOIN paises p ON a.Pais = p.id
+                                WHERE a.ID = :idTec
+                                LIMIT 1";
+                    $stmtById = $db->prepare($sqlById);
+                    $stmtById->bindValue(':idTec', $tecnicoPreferidoId, PDO::PARAM_INT);
+                    $stmtById->execute();
+                    $rPT = $stmtById->fetch(PDO::FETCH_ASSOC);
+                }
+
+                if ($rPT) {
+                    $idReal = (int)$rPT['ID'];
+                    $nomeReal = html_entity_decode((string)($rPT['Nome'] ?? 'Técnico'), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $idadeReal = max(18, min(90, (int)($rPT['Idade'] ?? 45)));
+                    $nivReal = (int)($rPT['Nivel'] ?? 5);
+                    if ($nivReal < 1 || $nivReal > 10) $nivReal = 5;
+                    $menReal = (int)($rPT['Mentalidade'] ?? 3);
+                    if ($menReal < 1 || $menReal > 5) $menReal = 3;
+                    $estReal = (int)($rPT['Estilo'] ?? 3);
+                    if ($estReal < 1 || $estReal > 5) $estReal = 3;
+
+                    $stmtInsT = $ldb->prepare("INSERT OR REPLACE INTO tecnico (ID, Nome, Idade, Nivel, Mentalidade, Estilo) VALUES (:id, :nome, :idade, :niv, :men, :est)");
+                    $stmtInsT->bindValue(':id', $idReal, PDO::PARAM_INT);
+                    $stmtInsT->bindValue(':nome', $nomeReal, PDO::PARAM_STR);
+                    $stmtInsT->bindValue(':idade', $idadeReal, PDO::PARAM_INT);
+                    $stmtInsT->bindValue(':niv', $nivReal, PDO::PARAM_INT);
+                    $stmtInsT->bindValue(':men', $menReal, PDO::PARAM_INT);
+                    $stmtInsT->bindValue(':est', $estReal, PDO::PARAM_INT);
+                    $stmtInsT->execute();
+
+                    return $idReal;
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log("Erro em garantirTecnicoValidoSQLite para o clube #{$clubeId}: " . $e->getMessage());
+        }
 
         return ($tecnicoPreferidoId !== 0) ? $tecnicoPreferidoId : $clubeId;
     }
@@ -208,7 +288,7 @@ if (!function_exists('garantirIntegridadeJogadorSQLite')) {
 }
 
 if (!function_exists('garantirTitularesNoElencoSQLite')) {
-    function garantirTitularesNoElencoSQLite($ldb, $clubeId, array $titulares) {
+    function garantirTitularesNoElencoSQLite($ldb, $clubeId, array $titulares, $db = null) {
         $clubeId = (int)$clubeId;
         if (!$ldb || $clubeId === 0) return;
 
@@ -219,7 +299,7 @@ if (!function_exists('garantirTitularesNoElencoSQLite')) {
             $elRow = $stmtEl->fetch(PDO::FETCH_ASSOC);
 
             $tecnicoPreferido = $elRow ? (int)($elRow['Tecnico'] ?? 0) : 0;
-            $tecnicoValidoId = garantirTecnicoValidoSQLite($ldb, $clubeId, $tecnicoPreferido);
+            $tecnicoValidoId = garantirTecnicoValidoSQLite($ldb, $clubeId, $tecnicoPreferido, $db);
 
             $elPlayers = [];
             if ($elRow) {
@@ -273,7 +353,7 @@ if (!function_exists('garantirTitularesNoElencoSQLite')) {
 }
 
 if (!function_exists('sanitizarEscalacaoPreSimulacao')) {
-    function sanitizarEscalacaoPreSimulacao($ldb, $clubeId, $desfalquesIds = []) {
+    function sanitizarEscalacaoPreSimulacao($ldb, $clubeId, $desfalquesIds = [], $db = null) {
         $clubeId = (int)$clubeId;
         if (!$ldb || $clubeId === 0) return;
 
@@ -324,7 +404,7 @@ if (!function_exists('sanitizarEscalacaoPreSimulacao')) {
                 for ($i = 1; $i <= 11; $i++) {
                     $titularesExistentes[$i] = (int)$esc['Jogador' . $i];
                 }
-                garantirTitularesNoElencoSQLite($ldb, $clubeId, $titularesExistentes);
+                garantirTitularesNoElencoSQLite($ldb, $clubeId, $titularesExistentes, $db);
                 return;
             }
 
@@ -419,7 +499,7 @@ if (!function_exists('sanitizarEscalacaoPreSimulacao')) {
             $stmtUp->execute();
 
             // 6. Garantir que o elenco do clube no SQLite contenha todos os 11 titulares
-            garantirTitularesNoElencoSQLite($ldb, $clubeId, $titularesEscolhidos);
+            garantirTitularesNoElencoSQLite($ldb, $clubeId, $titularesEscolhidos, $db);
 
         } catch (\Throwable $e) {
             error_log("Erro em sanitizarEscalacaoPreSimulacao para o clube #{$clubeId}: " . $e->getMessage());
