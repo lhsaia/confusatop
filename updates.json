@@ -14,6 +14,16 @@
       "items": [
         {
           "badge": "bugfix",
+          "title": "Substituição Automática de Desfalques pelo Hexacolor",
+          "desc": "Ajustada a sanitização pré-simulação para preservar a escalação definida pelo técnico quando válida e delegar exclusivamente ao motor HexacolorYMTv2.jar a substituição automática de titulares suspensos ou lesionados não substituídos manualmente."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Disparo Manual do Cron em Segundo Plano sem Timeout HTTP",
+          "desc": "Corrigido erro de timeout HTTP (504/524 HTML) ao acionar 'Simular Agora (Manual)' em admin/cron_logs.php, passando a disparar o Cron de forma assíncrona em segundo plano com acompanhamento automático do log."
+        },
+        {
+          "badge": "bugfix",
           "title": "Correção de Parâmetros SQL, Técnicos de Seleções e Fila do Cron de Simulação",
           "desc": "Corrigido erro fatal HY093 em confrontos de mata-mata (ida e volta), corrigida a exportação e sincronização de técnicos de seleções no SQLite (que causava NullPointerException na engine Java) e adicionada sincronização prévia de slots/chaveamento antes da busca de jogos do Cron."
         },

@@ -48,31 +48,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_action'])) {
     header('Content-Type: application/json; charset=utf-8');
     
     if ($_POST['ajax_action'] === 'run_simulation') {
-        ob_start();
+        @session_write_close();
+        @ignore_user_abort(true);
+        @set_time_limit(0);
+
         $cronScript = $rootPath . '/competicoes/cron_simular_jogos.php';
         if (file_exists($cronScript)) {
-            // Executar via CLI se possível ou require com buffer
-            $output = '';
+            $isWin = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+            $phpBin = defined('PHP_BINARY') && PHP_BINARY ? PHP_BINARY : 'php';
+            // No Linux (FPM/CGI), PHP_BINARY pode apontar para php-fpm ou php-cgi; preferir o binário CLI 'php' no mesmo diretório se existir
+            if (!$isWin && (strpos($phpBin, 'fpm') !== false || strpos($phpBin, 'cgi') !== false)) {
+                $cliCandidate = dirname($phpBin) . '/php';
+                if (!@is_executable($cliCandidate)) {
+                    $cliCandidate = dirname(dirname($phpBin)) . '/bin/php';
+                }
+                if (@is_executable($cliCandidate)) {
+                    $phpBin = $cliCandidate;
+                } else {
+                    $phpBin = '/usr/local/bin/php';
+                }
+            }
+
             if (function_exists('shell_exec')) {
-                $isWin = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
-                $phpBin = defined('PHP_BINARY') && PHP_BINARY ? PHP_BINARY : 'php';
-                $cmd = escapeshellcmd($phpBin) . ' ' . escapeshellarg($cronScript) . ' 2>&1';
-                $output = (string)shell_exec($cmd);
+                if ($isWin) {
+                    $cmd = 'start /B "" ' . escapeshellarg($phpBin) . ' ' . escapeshellarg($cronScript) . ' > NUL 2>&1';
+                    @pclose(@popen($cmd, 'r'));
+                } else {
+                    $outLog = $rootPath . '/competicoes/cron_output.log';
+                    $cmd = 'nohup ' . escapeshellcmd($phpBin) . ' ' . escapeshellarg($cronScript) . ' >> ' . escapeshellarg($outLog) . ' 2>&1 &';
+                    @shell_exec($cmd);
+                }
+                echo json_encode([
+                    'success' => true,
+                    'async' => true,
+                    'output' => "Disparo iniciado em segundo plano com sucesso!\nAcompanhe o progresso das partidas em tempo real no log abaixo (atualizando automaticamente a cada 3 segundos)...",
+                    'time' => date('d/m/Y H:i:s')
+                ]);
+                exit;
             }
-            if (empty($output)) {
-                $_GET['cron_key'] = 'admin_manual_' . time();
-                include $cronScript;
-                $output = ob_get_clean();
-            } else {
-                ob_end_clean();
-            }
+
+            ob_start();
+            $_GET['cron_key'] = 'admin_manual_' . time();
+            include $cronScript;
+            $output = ob_get_clean();
             echo json_encode([
                 'success' => true,
+                'async' => false,
                 'output' => $output,
                 'time' => date('d/m/Y H:i:s')
             ]);
         } else {
-            ob_end_clean();
             echo json_encode([
                 'success' => false,
                 'error' => 'Arquivo cron_simular_jogos.php não encontrado.'
@@ -425,8 +450,14 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
     btnRefresh.addEventListener('click', refreshLog);
 
     // Disparar Simulação Manual
+    let pollTimer = null;
     btnRun.addEventListener('click', function() {
         if (!confirm('Deseja iniciar a simulação manual de partidas agora?')) return;
+
+        if (pollTimer) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+        }
 
         btnRun.disabled = true;
         btnRun.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span> Simulando...';
@@ -437,26 +468,54 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/elements/header.php';
         
         box.style.display = 'block';
         title.textContent = 'Simulação Manual em Andamento...';
-        out.textContent = 'Disparando motor de simulação e conectando aos bancos SQLite/MariaDB...\nAguarde alguns segundos...\n';
+        out.textContent = 'Disparando motor de simulação em segundo plano...\n';
 
         const fd = new FormData();
         fd.append('ajax_action', 'run_simulation');
 
         fetch('/admin/cron_logs.php', { method: 'POST', body: fd })
-            .then(r => r.json())
+            .then(async r => {
+                const rawText = await r.text();
+                try {
+                    return JSON.parse(rawText);
+                } catch (e) {
+                    throw new Error('O servidor encerrou ou expirou a conexão HTTP (Status ' + r.status + '), mas o Cron pode continuar rodando em segundo plano. Clique em "Atualizar Log" para verificar.');
+                }
+            })
             .then(res => {
                 if (res.success) {
-                    title.textContent = 'Simulação Concluída (' + res.time + ')';
-                    out.textContent = res.output || 'Simulação executada com sucesso (nenhuma saída gerada).';
-                    refreshLog();
+                    if (res.async) {
+                        title.textContent = 'Simulação em Execução em Segundo Plano (' + res.time + ')';
+                        out.textContent = res.output;
+                        let ticks = 0;
+                        pollTimer = setInterval(() => {
+                            ticks++;
+                            refreshLog();
+                            if (ticks >= 30 || rawLogText.includes('=== DISPARO DO CRON FINALIZADO ===') || rawLogText.includes('=== DISPARO DO CRON CONCLUÍDO')) {
+                                if (ticks >= 2 && (rawLogText.includes('=== DISPARO DO CRON FINALIZADO ===') || rawLogText.includes('=== DISPARO DO CRON CONCLUÍDO'))) {
+                                    title.textContent = 'Simulação Concluída!';
+                                    clearInterval(pollTimer);
+                                    pollTimer = null;
+                                } else if (ticks >= 30) {
+                                    clearInterval(pollTimer);
+                                    pollTimer = null;
+                                }
+                            }
+                        }, 3000);
+                    } else {
+                        title.textContent = 'Simulação Concluída (' + res.time + ')';
+                        out.textContent = res.output || 'Simulação executada com sucesso (nenhuma saída gerada).';
+                        refreshLog();
+                    }
                 } else {
                     title.textContent = 'Falha ao Executar Simulação';
                     out.textContent = 'Erro: ' + (res.error || 'Erro desconhecido');
                 }
             })
             .catch(err => {
-                title.textContent = 'Erro na Requisição';
-                out.textContent = 'Erro de comunicação: ' + err.message;
+                title.textContent = 'Aviso de Tempo Limite HTTP';
+                out.textContent = err.message;
+                refreshLog();
             })
             .finally(() => {
                 btnRun.disabled = false;

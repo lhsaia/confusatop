@@ -360,7 +360,7 @@ if (!function_exists('sanitizarEscalacaoPreSimulacao')) {
         try {
             $jogadoresClube = obterJogadoresClubeSQLite($ldb, $clubeId);
 
-            // Mapear jogadores disponíveis por ID (descartando os que estão em desfalques)
+            // Mapear jogadores disponíveis por ID (descartando os que estão em desfalques apenas se precisarmos preencher slot vazio/inexistente)
             $disponiveis = [];
             $goleiros = [];
             $jogadoresLinha = [];
@@ -389,14 +389,19 @@ if (!function_exists('sanitizarEscalacaoPreSimulacao')) {
                 return;
             }
 
-            // Se nenhum dos 11 titulares está em desfalquesIds e nenhum está inválido, manter escalação 100% intacta
+            // Se todos os 11 titulares existem no banco e não há IDs zerados ou duplicados,
+            // manter a escalação 100% intacta! Caso haja desfalques (suspensos/lesionados) que
+            // não foram substituídos manualmente pelo técnico, o próprio motor HexacolorYMTv2.jar
+            // fará a substituição inteligente via outTeam1 / outTeam2 (chooseStartingTeam).
             $precisaAjuste = false;
+            $vistos = [];
             for ($i = 1; $i <= 11; $i++) {
                 $jId = (int)($esc['Jogador' . $i] ?? 0);
-                if ($jId === 0 || in_array($jId, $desfalquesIds)) {
+                if ($jId === 0 || isset($vistos[$jId]) || !garantirIntegridadeJogadorSQLite($ldb, $jId)) {
                     $precisaAjuste = true;
                     break;
                 }
+                $vistos[$jId] = true;
             }
 
             if (!$precisaAjuste) {
@@ -408,28 +413,39 @@ if (!function_exists('sanitizarEscalacaoPreSimulacao')) {
                 return;
             }
 
-            // 3. Montar os 11 titulares mantendo estritamente as posições táticas cadastradas na escalação
+            // 3. Apenas se houver slot corrompido (ID 0, jogador inexistente no SQLite ou duplicado):
+            // preserva todos os titulares válidos (inclusive desfalcados, para o Hexacolor substituir)
+            // e preenche somente os slots inválidos.
             $titularesEscolhidos = [];
             $posicoesFinais = [];
 
+            // Primeiro passe: reservar todos os jogadores válidos já escalados para não duplicá-los
+            $jaEscalados = [];
+            for ($i = 1; $i <= 11; $i++) {
+                $jId = (int)($esc['Jogador' . $i] ?? 0);
+                if ($jId !== 0 && !isset($jaEscalados[$jId]) && garantirIntegridadeJogadorSQLite($ldb, $jId)) {
+                    $jaEscalados[$jId] = $i;
+                    unset($goleiros[$jId], $jogadoresLinha[$jId], $disponiveis[$jId]);
+                }
+            }
+
             // Slot 1: Goleiro
             $jog1 = (int)($esc['Jogador1'] ?? 0);
-            if (!isset($goleiros[$jog1]) || in_array($jog1, $titularesEscolhidos)) {
+            if (!isset($jaEscalados[$jog1]) || $jaEscalados[$jog1] !== 1) {
                 $jog1 = !empty($goleiros) ? array_key_first($goleiros) : array_key_first($disponiveis);
+                unset($goleiros[$jog1], $disponiveis[$jog1]);
             }
             $titularesEscolhidos[1] = $jog1;
             $posicoesFinais[1] = !empty($esc['Pos1']) ? $esc['Pos1'] : 'G';
-            unset($goleiros[$jog1], $disponiveis[$jog1]);
 
-            // Slots 2 a 11: Preserva a posição original cadastrada no banco e substitui apenas jogador desfalcado
+            // Slots 2 a 11: Preserva o jogador escalado se existir no banco; só substitui se o slot estiver inválido
             for ($i = 2; $i <= 11; $i++) {
                 $posRaw = $esc['Pos' . $i] ?? 'MC';
                 $posNorm = normalizarPosicaoHexacolor($posRaw, $i);
                 if ($posNorm === 'G') $posNorm = 'Z';
 
                 $jogId = (int)($esc['Jogador' . $i] ?? 0);
-                if (!isset($jogadoresLinha[$jogId]) || in_array($jogId, $titularesEscolhidos)) {
-                    // Buscar melhor substituto por afinidade de setor caso o titular esteja suspenso/desfalcado
+                if (!isset($jaEscalados[$jogId]) || $jaEscalados[$jogId] !== $i) {
                     $candidatoSub = null;
                     foreach ($jogadoresLinha as $candId => $candJ) {
                         if (normalizarPosicaoHexacolor($candJ['Pos'] ?? '', $i) === $posNorm) {
@@ -452,11 +468,11 @@ if (!function_exists('sanitizarEscalacaoPreSimulacao')) {
                         }
                     }
                     $jogId = $candidatoSub ? $candidatoSub : (!empty($jogadoresLinha) ? array_key_first($jogadoresLinha) : array_key_first($disponiveis));
+                    unset($jogadoresLinha[$jogId], $disponiveis[$jogId]);
                 }
 
                 $titularesEscolhidos[$i] = $jogId;
                 $posicoesFinais[$i] = $posRaw;
-                unset($jogadoresLinha[$jogId], $disponiveis[$jogId]);
             }
 
             // 4. Garantir capitão e batedores de pênalti válidos
