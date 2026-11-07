@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    CONFUSA.top - Escalação Pré-Jogo CSS (Light Theme Mobile-First/Responsive)
    ========================================================================== */
 
@@ -46,6 +46,52 @@
 }
 .pos-fw {
     border-left: 4px solid #ef4444 !important; /* Vermelho FW */
+}
+
+/* Destaque chamativo para posições improvisadas (com penalidade) */
+.pos-improvisada {
+    background-color: rgba(239, 68, 68, 0.08) !important;
+}
+.pos-improvisada:hover {
+    background-color: rgba(239, 68, 68, 0.12) !important;
+}
+
+.select-posicao {
+    background: #ffffff;
+    color: #1e293b;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.pos-improvisada-select {
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+    border: 1px solid #b91c1c !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.25) !important;
+}
+
+.pos-improvisada-select option {
+    background: #ffffff;
+    color: #1e293b;
+}
+
+.pos-improvisada-select option[value] {
+    font-weight: normal;
+}
+
+.badge-penalidade {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #dc2626;
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    margin-top: 4px;
 }
 
 .cell-jogador {

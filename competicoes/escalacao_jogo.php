@@ -512,7 +512,10 @@ if (!empty($playerIds)) {
         $posicoesEscolhidas = isset($_SESSION[$posicoesEscolhidasKey]) ? $_SESSION[$posicoesEscolhidasKey] : [];
     }
 
+    $todasPosicoesLinha = ['LD', 'LE', 'Z', 'AD', 'AE', 'V', 'MD', 'ME', 'MC', 'PD', 'PE', 'MA', 'Am', 'Aa'];
+
     foreach ($elencoMap as $pId => $row) {
+        $row['isGoleiro'] = (in_array('G', $row['PosicoesDisponiveis']) && count($row['PosicoesDisponiveis']) === 1) || ($row['PosicaoBase'] === 'G' && count($row['PosicoesDisponiveis']) === 1);
         $row['Titular'] = in_array($pId, $titularesIds) ? 1 : 0;
         $row['Capitao'] = ($pId === $capitaoId) ? 1 : 0;
         $row['Lesionado'] = isset($statusMaria[$pId]) ? $statusMaria[$pId]['lesionado'] : 0;
@@ -565,7 +568,11 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
 <main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
 <div class="propostas-card" style="padding: 30px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: left;">
     <h2 class="propostas-title" style="margin-bottom: 5px; font-family: 'Outfit', sans-serif; text-align: left; font-size: 1.6rem; color: #1e293b;">⚽ Escalação Pré-Jogo: <?php echo htmlspecialchars($clube['Nome']); ?></h2>
-    <p style="color: #64748b; margin-bottom: 25px;">Selecione os 11 titulares, o capitão e as posições antes da simulação.</p>
+    <p style="color: #64748b; margin-bottom: 16px;">Selecione os 11 titulares, o capitão e as posições antes da simulação.</p>
+    <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; font-size: 0.85rem; color: #991b1b; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 1.1rem;">⚠️</span>
+        <span><strong>Atenção às posições:</strong> Jogadores de linha podem ser escalados em qualquer posição de linha. Posições marcadas em <strong style="background: #dc2626; color: #fff; padding: 2px 6px; border-radius: 4px;">vermelho</strong> não são naturais do atleta e sofrerão penalidade de rendimento pelo simulador.</span>
+    </div>
     
     <?php echo $mensagem; ?>
 
@@ -608,6 +615,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
                         $rowOpacity = $isBloqueado ? 'opacity:0.5;' : '';
                         
                         $posBase = $j['PosicaoEscolhida'];
+                        $isImprovisado = (!$j['isGoleiro'] && !in_array($posBase, $j['PosicoesDisponiveis']));
                         $posClass = "pos-fw"; // default Atacante
                         if ($posBase === 'G') {
                             $posClass = "pos-gk";
@@ -617,7 +625,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
                             $posClass = "pos-mf";
                         }
                     ?>
-                        <tr class="<?php echo $posClass; ?>" style="border-bottom: 1px solid rgba(0,0,0,0.05); <?php echo $rowOpacity; ?>">
+                        <tr class="<?php echo $posClass; ?><?php echo $isImprovisado ? ' pos-improvisada' : ''; ?>" style="border-bottom: 1px solid rgba(0,0,0,0.05); <?php echo $rowOpacity; ?>">
                             <td data-label="Titular" style="padding: 8px 10px; text-align: center;">
                                 <span class="cell-value">
                                     <input type="checkbox" name="titulares[]" value="<?php echo $j['ID']; ?>"
@@ -638,8 +646,32 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/elements/header.php";
                             </td>
                             <td data-label="Posição" style="padding: 8px 10px;">
                                 <span class="cell-value">
-                                    <?php if (!$isBloqueado && count($j['PosicoesDisponiveis']) > 1): ?>
+                                    <?php if (!$isBloqueado && !$j['isGoleiro']): ?>
                                         <select name="posicao_jogador[<?php echo $j['ID']; ?>]"
+                                            class="select-posicao <?php echo $isImprovisado ? 'pos-improvisada-select' : ''; ?>"
+                                            data-originais='<?php echo json_encode($j['PosicoesDisponiveis']); ?>'
+                                            style="border-radius: 6px; padding: 4px 8px; font-size: 0.82rem; width: 100%; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                                            <optgroup label="Posições Naturais">
+                                                <?php foreach ($j['PosicoesDisponiveis'] as $pos): ?>
+                                                    <option value="<?php echo $pos; ?>" <?php echo ($j['PosicaoEscolhida'] === $pos) ? 'selected' : ''; ?>>
+                                                        <?php echo $pos; ?> (Natural)
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </optgroup>
+                                            <optgroup label="⚠️ Improvisado (Com Penalidade)">
+                                                <?php foreach ($todasPosicoesLinha as $pos): 
+                                                    if (in_array($pos, $j['PosicoesDisponiveis'])) continue;
+                                                ?>
+                                                    <option value="<?php echo $pos; ?>" <?php echo ($j['PosicaoEscolhida'] === $pos) ? 'selected' : ''; ?> style="background: #fee2e2; color: #991b1b; font-weight: bold;">
+                                                        ⚠️ <?php echo $pos; ?> (Penalidade)
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </optgroup>
+                                        </select>
+                                    <?php elseif (!$isBloqueado && $j['isGoleiro'] && count($j['PosicoesDisponiveis']) > 1): ?>
+                                        <select name="posicao_jogador[<?php echo $j['ID']; ?>]"
+                                            class="select-posicao"
+                                            data-originais='<?php echo json_encode($j['PosicoesDisponiveis']); ?>'
                                             style="background: #ffffff; color: #1e293b; border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; padding: 4px 8px; font-size: 0.82rem; width: 100%;">
                                             <?php foreach ($j['PosicoesDisponiveis'] as $pos): ?>
                                                 <option value="<?php echo $pos; ?>" <?php echo ($j['PosicaoEscolhida'] === $pos) ? 'selected' : ''; ?>>
@@ -748,6 +780,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.style.opacity = '1';
             }
             atualizarLimite();
+        });
+    });
+
+    // Atualização dinâmica visual ao alterar posição no select
+    document.querySelectorAll('.select-posicao').forEach(function(sel) {
+        sel.addEventListener('change', function() {
+            var row = sel.closest('tr');
+            var originais = [];
+            try {
+                originais = JSON.parse(sel.dataset.originais || '[]');
+            } catch (e) {
+                originais = [];
+            }
+            var pos = sel.value;
+            var isImprovisado = (originais.length > 0 && originais.indexOf(pos) === -1);
+            if (isImprovisado) {
+                sel.classList.add('pos-improvisada-select');
+                row.classList.add('pos-improvisada');
+            } else {
+                sel.classList.remove('pos-improvisada-select');
+                row.classList.remove('pos-improvisada');
+            }
+
+            // Atualiza também a borda da linha conforme o setor tático da nova posição
+            row.classList.remove('pos-gk', 'pos-df', 'pos-mf', 'pos-fw');
+            if (pos === 'G') {
+                row.classList.add('pos-gk');
+            } else if (['Z', 'LD', 'LE', 'AD', 'AE'].indexOf(pos) !== -1) {
+                row.classList.add('pos-df');
+            } else if (['V', 'MC', 'MD', 'ME', 'MA'].indexOf(pos) !== -1) {
+                row.classList.add('pos-mf');
+            } else {
+                row.classList.add('pos-fw');
+            }
         });
     });
 

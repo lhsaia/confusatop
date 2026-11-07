@@ -9,6 +9,27 @@
   },
     "days": [
     {
+      "id": "day_07_11_2026",
+      "date": "07/11/2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Improvisação de Posições na Pré-Escalação",
+          "desc": "Permite escalar jogadores de linha em qualquer posição de linha, com destaque visual em vermelho alertando sobre a penalidade de rendimento na simulação."
+        },
+        {
+          "badge": "new",
+          "title": "Permissão para Admin Excluir Jogos Simulados e Competições em Andamento",
+          "desc": "Implementada funcionalidade exclusiva para administradores permitindo apagar partidas individuais já simuladas e excluir competições completas mesmo que já possuam confrontos simulados, com diálogo de confirmação reforçado e proteção estrita que afeta unicamente partidas do simulador interno (simulador_interno = 1)."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção na Checagem de Jogos Simulados ao Excluir Competição",
+          "desc": "Ajustadas as consultas de validação e exclusão de competições para filtrar exclusivamente partidas do simulador interno (simulador_interno = 1), evitando falsos bloqueios causados por colisões de ID com partidas de ligas legadas e garantindo a limpeza em cascata completa."
+        }
+      ]
+    },
+    {
       "id": "day_06_11_2026",
       "date": "06/11/2026",
       "items": [

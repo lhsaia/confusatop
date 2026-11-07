@@ -148,12 +148,14 @@ $percentual_times = ($total_times > 0) ? min(100, round(($times_inseridos / $tot
 			<?php 
 			$isDonoOrAdmin = false;
 			$canDelete = false;
+			$isAdmin = false;
 			if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
 				$userId = (int)($_SESSION['user_id'] ?? 0);
 				$isAdmin = (isset($_SESSION['admin_status']) && (int)$_SESSION['admin_status'] === 1) || !empty($_SESSION['impersonated']);
 				if ($isAdmin || $userId === (int)($info['dono'] ?? 0)) {
 					$isDonoOrAdmin = true;
-					if ($jogosSimulados === 0) {
+					// Usuário comum só pode excluir se não tiver jogos simulados; Admin pode excluir a qualquer momento
+					if ($isAdmin || $jogosSimulados === 0) {
 						$canDelete = true;
 					}
 				}
@@ -325,7 +327,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	if (btnExcluir) {
 		btnExcluir.addEventListener('click', function() {
 			var nomeComp = <?php echo json_encode($nome_competicao . ' ' . $ano_competicao); ?>;
-			if (confirm('Tem certeza de que deseja excluir a competição "' + nomeComp + '"?\nEsta ação apagará todas as configurações e confrontos não simulados permanentemente.')) {
+			var temSimulados = <?php echo ($jogosSimulados > 0) ? 'true' : 'false'; ?>;
+			var confirmMsg = temSimulados
+				? 'ATENÇÃO (ADMIN): A competição "' + nomeComp + '" já possui jogos simulados!\n\nDeseja realmente excluir esta competição e TODOS os seus confrontos simulados e agendados permanentemente?\n(Esta ação apagará tabelas, estatísticas, suspensões e registros do simulador interno).'
+				: 'Tem certeza de que deseja excluir a competição "' + nomeComp + '"?\nEsta ação apagará todas as configurações e confrontos agendados permanentemente.';
+			if (confirm(confirmMsg)) {
 				$.ajax({
 					url: 'excluir_competicao.php',
 					type: 'POST',

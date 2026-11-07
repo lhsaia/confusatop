@@ -926,6 +926,9 @@ $(document).ready(function($){
 							optionsString += "<div style='display: inline-flex; align-items: center; justify-content: center; gap: 4px;'>";
 							optionsString += "<a href='baixar_sumula.php?jogo="+val['id']+"&tipo=hyl' title='Baixar arquivo .hyl da partida' class='btn-file-dl btn-hyl-dl' download>.hyl</a>";
 							optionsString += "<a href='baixar_sumula.php?jogo="+val['id']+"&tipo=hyj' title='Baixar arquivo .hyj da partida' class='btn-file-dl btn-hyj-dl' download>.hyj</a>";
+							if (is_admin_user == "true") {
+								optionsString += "<a id='apa"+val['id']+"' data-simulado='1' title='Apagar partida simulada (Admin)' class='clickable apagar'><span class='material-symbols-outlined inlineButton negativo'>delete</span></a>";
+							}
 							optionsString += "</div>";
 						}
 						optionsString += "</td>";
@@ -1037,8 +1040,12 @@ $(document).ready(function($){
 	$(document).on("click", ".apagar", function(){
 		var tbl_row = $(this).closest("tr");
 		var matchId = tbl_row.attr("id");
+		var isSimulado = $(this).data('simulado') == 1;
+		var confirmMsg = isSimulado 
+			? "ATENÇÃO (ADMIN): Esta partida JÁ FOI SIMULADA!\nDeseja realmente apagar esta partida simulada permanentemente?\n(Súmula, notas e eventos serão removidos do simulador interno)."
+			: "Deseja apagar este jogo agendado?";
 		
-		if(confirm("Deseja apagar este jogo?")){
+		if(confirm(confirmMsg)){
 			$.ajax({
 				type: "POST",
 				url: 'apagar_jogo.php',

@@ -277,7 +277,7 @@ class Competicao_clube{
 			$query = "SELECT * FROM (
                         SELECT
                             a.id, a.nome, a.logo, a.trofeu, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais,
-                            (SELECT COUNT(*) FROM jogos_clube jc WHERE jc.competicao_id = a.id AND (jc.status = 1 OR jc.timeA_gols IS NOT NULL)) as jogos_simulados,
+                            (SELECT COUNT(*) FROM jogos_clube jc WHERE jc.competicao_id = a.id AND jc.simulador_interno = 1 AND (jc.status = 1 OR jc.timeA_gols IS NOT NULL)) as jogos_simulados,
                             0 as is_agrupada, 0 as id_competicao_1, 0 as id_competicao_2
                         FROM " . $this->table_name . " a
                         LEFT JOIN paises p ON a.sede = p.id
@@ -303,7 +303,7 @@ class Competicao_clube{
 			$query = "SELECT * FROM (
                         SELECT
                             a.id, a.nome, a.logo, a.trofeu, a.tipo, f.nome as federacao, f.id as idFederacao, p.id as idSede, p.nome as sede, a.ano, a.genero, p.sigla as siglaSede, p.bandeira as bandeiraSede, a.dono, a.dono as idDonoPais,
-                            (SELECT COUNT(*) FROM jogos_clube jc WHERE jc.competicao_id = a.id AND (jc.status = 1 OR jc.timeA_gols IS NOT NULL)) as jogos_simulados,
+                            (SELECT COUNT(*) FROM jogos_clube jc WHERE jc.competicao_id = a.id AND jc.simulador_interno = 1 AND (jc.status = 1 OR jc.timeA_gols IS NOT NULL)) as jogos_simulados,
                             0 as is_agrupada, 0 as id_competicao_1, 0 as id_competicao_2
                         FROM " . $this->table_name . " a
                         LEFT JOIN paises p ON a.sede = p.id
@@ -2372,7 +2372,7 @@ class Competicao_clube{
 
 	public function temJogosSimulados($idCompeticao) {
 		$idCompeticao = (int)$idCompeticao;
-		$query = "SELECT COUNT(*) as total FROM jogos_clube WHERE competicao_id = :id AND (status = 1 OR timeA_gols IS NOT NULL)";
+		$query = "SELECT COUNT(*) as total FROM jogos_clube WHERE competicao_id = :id AND simulador_interno = 1 AND (status = 1 OR timeA_gols IS NOT NULL)";
 		$stmt = $this->conn->prepare($query);
 		$stmt->bindParam(':id', $idCompeticao, PDO::PARAM_INT);
 		$stmt->execute();
@@ -2399,8 +2399,8 @@ class Competicao_clube{
 			return ['success' => false, 'error' => 'Você não tem permissão para excluir esta competição.'];
 		}
 
-		// 2. Bloquear se houver jogos simulados ou finalizados
-		if ($this->temJogosSimulados($idCompeticao)) {
+		// 2. Bloquear se houver jogos simulados ou finalizados (exceto para Admin)
+		if (!$isAdmin && $this->temJogosSimulados($idCompeticao)) {
 			return ['success' => false, 'error' => 'Não é possível excluir esta competição pois ela já possui jogos simulados ou finalizados.'];
 		}
 
@@ -2408,9 +2408,25 @@ class Competicao_clube{
 		try {
 			$this->conn->beginTransaction();
 
-			// Remover jogos agendados/não simulados
-			$stmtDelJogos = $this->conn->prepare("DELETE FROM jogos_clube WHERE competicao_id = :id");
+			// Obter IDs dos jogos não simulados do simulador interno desta competição para limpar eventos e escalações órfãos
+			$stmtSub = $this->conn->prepare("SELECT id FROM jogos_clube WHERE competicao_id = :id AND simulador_interno = 1");
+			$stmtSub->execute([':id' => $idCompeticao]);
+			$matchIds = $stmtSub->fetchAll(PDO::FETCH_COLUMN);
+			if (!empty($matchIds)) {
+				$inQuery = implode(',', array_map('intval', $matchIds));
+				$this->conn->exec("DELETE FROM jogos_clube_eventos WHERE id_jogo IN ($inQuery)");
+				$this->conn->exec("DELETE FROM jogos_clube_escalacao WHERE id_partida IN ($inQuery)");
+			}
+
+			// Remover jogos agendados/não simulados do simulador interno
+			$stmtDelJogos = $this->conn->prepare("DELETE FROM jogos_clube WHERE competicao_id = :id AND simulador_interno = 1");
 			$stmtDelJogos->execute([':id' => $idCompeticao]);
+
+			// Remover suspensões/cartões da competição
+			try {
+				$stmtDelSusp = $this->conn->prepare("DELETE FROM competicao_suspensos WHERE id_competicao = :id");
+				$stmtDelSusp->execute([':id' => $idCompeticao]);
+			} catch (\Throwable $e) {}
 
 			// Remover vínculos de times
 			$stmtDelTimes = $this->conn->prepare("DELETE FROM competicao_times WHERE id_competicao = :id");
@@ -2455,6 +2471,15 @@ class Competicao_clube{
 						@unlink($lp);
 					}
 				}
+			}
+
+			// 6. Remover pasta de arquivos físicos de súmulas das partidas (.hyl, .hyj, .png, .pdf) da competição
+			require_once $baseDir . '/competicoes/sumula_helper.php';
+			$nomeComp = $comp['nome'] ?? '';
+			$anoComp = $comp['ano'] ?? '';
+			$nomeComposto = (!empty($anoComp) && !empty($nomeComp)) ? ($anoComp . " - " . $nomeComp) : $nomeComp;
+			if (!empty($nomeComposto)) {
+				apagarDiretorioCompeticaoPartidas($nomeComposto, $docRoot);
 			}
 
 			return ['success' => true];

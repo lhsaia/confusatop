@@ -305,8 +305,9 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                         if(admin == "true" || user_id == val['dono'] || user_id == val['idDonoPais']){
                             optionsString += "<a id='edi"+val['id']+"' title='Editar' class='clickable editar'><span class='material-symbols-outlined inlineButton'>edit</span></a>";
                             let numSimulados = parseInt(val['jogos_simulados'] || 0);
-                            if (numSimulados === 0) {
-                                optionsString += "<a id='del"+val['id']+"' title='Excluir Competição' class='clickable deletar'><span class='material-symbols-outlined inlineButton negative'>delete</span></a>";
+                            if (numSimulados === 0 || admin == "true") {
+                                let delTitle = (numSimulados > 0) ? 'Excluir Competição (Possui jogos simulados - Admin)' : 'Excluir Competição';
+                                optionsString += "<a id='del"+val['id']+"' data-simulados='"+numSimulados+"' title='"+delTitle+"' class='clickable deletar'><span class='material-symbols-outlined inlineButton negative'>delete</span></a>";
                             }
                             optionsString += "<a hidden id='sal"+val['id']+"' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
                             optionsString += "<a hidden id='can"+val['id']+"' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
@@ -532,7 +533,12 @@ $(document).on('click', '.deletar', function(){
     var id = tbl_row.attr('id');
     var nome = tbl_row.find('#nom'+id).text().trim();
 
-    if (confirm('Tem certeza de que deseja excluir a competição "' + nome + '"?\nEsta ação apagará as configurações e jogos agendados não iniciados permanentemente.')) {
+    var numSim = parseInt($(this).data('simulados') || 0);
+    var confirmMsg = (numSim > 0)
+        ? 'ATENÇÃO (ADMIN): A competição "' + nome + '" possui ' + numSim + ' jogo(s) simulado(s)!\n\nDeseja realmente excluir esta competição e TODOS os seus confrontos simulados e agendados permanentemente?\n(Esta ação apagará tabelas, estatísticas, suspensões e registros do simulador interno).'
+        : 'Tem certeza de que deseja excluir a competição "' + nome + '"?\nEsta ação apagará as configurações e jogos agendados não iniciados permanentemente.';
+
+    if (confirm(confirmMsg)) {
         $.ajax({
             url: 'excluir_competicao.php',
             type: 'POST',
