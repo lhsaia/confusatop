@@ -2385,7 +2385,7 @@ class Competicao_clube{
 		$userId = (int)$userId;
 
 		// 1. Verificar se a competição existe e se o usuário tem permissão
-		$queryComp = "SELECT id, nome, logo, dono FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
+		$queryComp = "SELECT id, nome, ano, logo, dono FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
 		$stmtComp = $this->conn->prepare($queryComp);
 		$stmtComp->bindParam(':id', $idCompeticao, PDO::PARAM_INT);
 		$stmtComp->execute();
@@ -2408,10 +2408,18 @@ class Competicao_clube{
 		try {
 			$this->conn->beginTransaction();
 
-			// Obter IDs dos jogos não simulados do simulador interno desta competição para limpar eventos e escalações órfãos
-			$stmtSub = $this->conn->prepare("SELECT id FROM jogos_clube WHERE competicao_id = :id AND simulador_interno = 1");
+			// Obter IDs e paths dos jogos do simulador interno desta competição
+			$stmtSub = $this->conn->prepare("SELECT id, path FROM jogos_clube WHERE competicao_id = :id AND simulador_interno = 1");
 			$stmtSub->execute([':id' => $idCompeticao]);
-			$matchIds = $stmtSub->fetchAll(PDO::FETCH_COLUMN);
+			$matchRows = $stmtSub->fetchAll(PDO::FETCH_ASSOC);
+			$matchIds = [];
+			$deletedMatchPaths = [];
+			foreach ($matchRows as $mRow) {
+				$matchIds[] = (int)$mRow['id'];
+				if (!empty($mRow['path'])) {
+					$deletedMatchPaths[] = $mRow['path'];
+				}
+			}
 			if (!empty($matchIds)) {
 				$inQuery = implode(',', array_map('intval', $matchIds));
 				$this->conn->exec("DELETE FROM jogos_clube_eventos WHERE id_jogo IN ($inQuery)");
@@ -2473,13 +2481,31 @@ class Competicao_clube{
 				}
 			}
 
-			// 6. Remover pasta de arquivos físicos de súmulas das partidas (.hyl, .hyj, .png, .pdf) da competição
+			// 6. Remover arquivos físicos de súmulas (.hyl, .hyj, .png, .pdf)
 			require_once $baseDir . '/competicoes/sumula_helper.php';
 			$nomeComp = $comp['nome'] ?? '';
 			$anoComp = $comp['ano'] ?? '';
 			$nomeComposto = (!empty($anoComp) && !empty($nomeComp)) ? ($anoComp . " - " . $nomeComp) : $nomeComp;
+
 			if (!empty($nomeComposto)) {
-				apagarDiretorioCompeticaoPartidas($nomeComposto, $docRoot);
+				// SEGURANÇA CONTRA HOMÔNIMAS:
+				// Checar se ainda existe outra competição cadastrada com exatamente o mesmo Nome e Ano
+				$stmtOutrasHomonimas = $this->conn->prepare("SELECT COUNT(*) FROM " . $this->table_name . " WHERE nome = :n AND ano = :a AND id != :id");
+				$stmtOutrasHomonimas->execute([':n' => $nomeComp, ':a' => $anoComp, ':id' => $idCompeticao]);
+				$qtdHomonimas = (int)$stmtOutrasHomonimas->fetchColumn();
+
+				if ($qtdHomonimas > 0) {
+					// Existe outra competição homônima ativa: JAMAIS apagar a pasta inteira!
+					// Remove cirurgicamente apenas os arquivos das partidas associadas a esta competição
+					if (!empty($deletedMatchPaths)) {
+						foreach ($deletedMatchPaths as $pDel) {
+							apagarArquivosPartidaSimulada($nomeComposto, $pDel, $docRoot);
+						}
+					}
+				} else {
+					// Não há nenhuma outra competição com esse nome e ano: pode remover a pasta com segurança
+					apagarDiretorioCompeticaoPartidas($nomeComposto, $docRoot);
+				}
 			}
 
 			return ['success' => true];

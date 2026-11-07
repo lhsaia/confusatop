@@ -88,76 +88,86 @@ class TrioArbitragem{
 
     }
 
-    //ler todos os arbitros para o quadro
+    //ler todos os arbitros para o quadro com filtros de federação e nível
+    function readFiltered($from_record_num, $records_per_page, $federation_index = null, $nivel = null){
+        $conditions = [];
+        $params = [];
+
+        if($federation_index !== null && $federation_index !== '' && $federation_index != 0){
+            $conditions[] = "p.federacao = :federacao";
+            $params[':federacao'] = (int)$federation_index;
+        }
+
+        if($nivel !== null && $nivel !== '' && $nivel !== 'todos'){
+            $conditions[] = "a.nivel = :nivel";
+            $params[':nivel'] = (int)$nivel;
+        }
+
+        $whereClause = !empty($conditions) ? "WHERE " . implode(" AND ", $conditions) : "";
+
+        $query = "SELECT
+                    a.id, a.nomeArbitro, a.nomeAuxiliarUm, a.nomeAuxiliarDois, a.estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.federacao, p.id as idPais, p.dono as idDonoPais, a.nivel, a.nascimento, FLOOR((DATEDIFF(CURDATE(), a.nascimento))/365) as idade, a.ativo 
+                FROM
+                    " . $this->table_name . " a
+                LEFT JOIN paises p ON a.pais = p.id
+                {$whereClause}
+                ORDER BY
+                    a.nomeArbitro ASC
+                LIMIT
+                    {$from_record_num}, {$records_per_page}";
+
+        $stmt = $this->conn->prepare($query);
+        foreach($params as $k => $v){
+            $stmt->bindValue($k, $v, PDO::PARAM_INT);
+        }
+        $stmt->execute();
+
+        return $stmt;
+    }
+
+    // contar árbitros com filtros de federação e nível
+    public function countFiltered($federacao = null, $nivel = null){
+        $conditions = [];
+        $params = [];
+
+        if($federacao !== null && $federacao !== '' && $federacao != 0){
+            $conditions[] = "p.federacao = :federacao";
+            $params[':federacao'] = (int)$federacao;
+        }
+
+        if($nivel !== null && $nivel !== '' && $nivel !== 'todos'){
+            $conditions[] = "a.nivel = :nivel";
+            $params[':nivel'] = (int)$nivel;
+        }
+
+        $whereClause = !empty($conditions) ? "WHERE " . implode(" AND ", $conditions) : "";
+
+        $query = "SELECT COUNT(a.id) as total
+                  FROM " . $this->table_name . " a
+                  LEFT JOIN paises p ON a.pais = p.id
+                  {$whereClause}";
+
+        $stmt = $this->conn->prepare($query);
+        foreach($params as $k => $v){
+            $stmt->bindValue($k, $v, PDO::PARAM_INT);
+        }
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ? (int)$row['total'] : 0;
+    }
+
+    // Compatibilidade com código legado
     function readAll($from_record_num, $records_per_page){
-
-    $query = "SELECT
-                a.id, a.nomeArbitro, a.nomeAuxiliarUm, a.nomeAuxiliarDois, a.estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.id as idPais, p.dono as idDonoPais, a.nivel, a.nascimento,FLOOR((DATEDIFF(CURDATE(), a.nascimento))/365) as idade, a.ativo 
-            FROM
-                " . $this->table_name . " a
-            LEFT JOIN paises p ON a.pais = p.id
-            ORDER BY
-                a.nomeArbitro ASC
-            LIMIT
-                {$from_record_num}, {$records_per_page}";
-
-    $stmt = $this->conn->prepare( $query );
-    $stmt->execute();
-
-    return $stmt;
+        return $this->readFiltered($from_record_num, $records_per_page, null, null);
     }
 
-//ler todos os arbitros para o quadro, apenas de uma federacao
-function readFromFederation($from_record_num, $records_per_page, $federation_index){
-
-    $federation_index = htmlspecialchars(strip_tags($federation_index));
-
-    $query = "SELECT
-                a.id, a.nomeArbitro, a.nomeAuxiliarUm, a.nomeAuxiliarDois, a.estilo, p.sigla as siglaPais, p.bandeira as bandeiraPais, p.federacao, p.id as idPais, p.dono as idDonoPais, a.nivel, a.nascimento,FLOOR((DATEDIFF(CURDATE(), a.nascimento))/365) as idade, a.ativo 
-            FROM
-                " . $this->table_name . " a
-            LEFT JOIN paises p ON a.pais = p.id
-            WHERE
-                p.federacao = ".$federation_index ."
-            ORDER BY
-                a.nomeArbitro ASC
-            LIMIT
-                {$from_record_num}, {$records_per_page}";
-
-    $stmt = $this->conn->prepare( $query );
-    $stmt->execute();
-
-    return $stmt;
-}
-
-
-    // used for paging products
-    public function countAll($federacao){
-
-	if($federacao != null){
-		$federacao = htmlspecialchars(strip_tags($federacao));
-	}
-    
-
-    if($federacao == null || $federacao == 0 || $federacao == "0"){
-
-        $query = "SELECT id FROM " . $this->table_name;
-
-    } else {
-
-        $query =    "SELECT a.id
-                    FROM " . $this->table_name . " a
-                     LEFT JOIN paises p ON a.pais = p.id
-                      WHERE p.federacao=".$federacao;
-
+    function readFromFederation($from_record_num, $records_per_page, $federation_index){
+        return $this->readFiltered($from_record_num, $records_per_page, $federation_index, null);
     }
 
-    $stmt = $this->conn->prepare( $query );
-    $stmt->execute();
-
-    $num = $stmt->rowCount();
-
-    return $num;
+    public function countAll($federacao = null){
+        return $this->countFiltered($federacao, null);
     }
 
     //apagar árbitro

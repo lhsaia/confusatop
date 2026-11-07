@@ -29,7 +29,7 @@ $logo_competicao = $info['logo'];
 $options = $competicao->getOptions($idCompeticao);
 
 // Obter dados adicionais do MariaDB
-$stmtTodosArb = $db->prepare("SELECT a.id, a.nomeArbitro, a.pais, p.federacao FROM arbitros a LEFT JOIN paises p ON a.pais = p.id ORDER BY a.nomeArbitro");
+$stmtTodosArb = $db->prepare("SELECT a.id, a.nomeArbitro, a.pais, a.nivel, p.federacao, p.nome as nomePais, p.sigla as siglaPais FROM arbitros a LEFT JOIN paises p ON a.pais = p.id ORDER BY a.nomeArbitro");
 $stmtTodosArb->execute();
 $todosArbitros = $stmtTodosArb->fetchAll(PDO::FETCH_ASSOC);
 
@@ -588,29 +588,86 @@ require_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 		
 		<label for='select_arbitros'>Selecionar Árbitros Específicos</label>
 		<select name='select_arbitros[]' id='select_arbitros' class='select2-multiple' multiple='multiple' style='width: 92%;'>
-			<?php foreach($todosArbitros as $arb): ?>
-				<option value='<?php echo $arb['id']; ?>' data-pais='<?php echo $arb['pais'] ?? 0; ?>' data-fed='<?php echo $arb['federacao'] ?? 0; ?>' <?php echo in_array($arb['id'], $selectedArbitros) ? 'selected' : ''; ?>>
-					<?php echo htmlspecialchars($arb['nomeArbitro']); ?>
+			<?php foreach($todosArbitros as $arb): 
+				$nivelNum = isset($arb['nivel']) ? (int)$arb['nivel'] : 0;
+				switch ($nivelNum) {
+					case 2:
+						$nivelTexto = 'Internacional';
+						break;
+					case 1:
+						$nivelTexto = 'Regional';
+						break;
+					case 0:
+					default:
+						$nivelTexto = 'Nacional';
+						break;
+				}
+				$labelArbitro = htmlspecialchars($arb['nomeArbitro']) . ' [' . $nivelTexto . ']';
+				if (!empty($arb['siglaPais'])) {
+					$labelArbitro .= ' (' . htmlspecialchars($arb['siglaPais']) . ')';
+				}
+			?>
+				<option value='<?php echo $arb['id']; ?>' data-pais='<?php echo $arb['pais'] ?? 0; ?>' data-fed='<?php echo $arb['federacao'] ?? 0; ?>' data-nivel='<?php echo $nivelNum; ?>' <?php echo in_array($arb['id'], $selectedArbitros) ? 'selected' : ''; ?>>
+					<?php echo $labelArbitro; ?>
 				</option>
 			<?php endforeach; ?>
 		</select>
 
-		<label for='select_arbitros_pais' style='margin-top: 15px;'>Ou Adicionar todos de um País</label>
-		<select name='select_arbitros_pais' id='select_arbitros_pais' style='width: 92%;'>
-			<option value='0'>Nenhum país selecionado</option>
-			<?php foreach($todosPaises as $pais): ?>
-				<option value='<?php echo $pais['id']; ?>'><?php echo htmlspecialchars($pais['nome']); ?></option>
-			<?php endforeach; ?>
-		</select>
+		<!-- Filtro Combinado de Árbitros -->
+		<div class="card-filtro-arbitros" style="margin-top: 18px; padding: 14px; background: rgba(248, 250, 252, 0.85); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 10px; width: 92%;">
+			<div style="font-weight: 600; font-family: 'Outfit', sans-serif; font-size: 0.95rem; color: #1e293b; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+				<span class="material-symbols-outlined" style="font-size: 1.2rem; color: #0284c7;">filter_alt</span>
+				Seleção Rápida e Filtros Combinados
+			</div>
+			
+			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 12px;">
+				<div>
+					<label for='filtro_arb_fed' style="font-size: 0.8rem; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Federação</label>
+					<select id='filtro_arb_fed' class='form-control' style="width: 100%; font-size: 0.85rem; padding: 6px 8px;">
+						<option value='todas'>Todas as Federações</option>
+						<?php foreach($todasFederacoes as $fed): ?>
+							<option value='<?php echo $fed['id']; ?>'><?php echo htmlspecialchars($fed['nome']); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</div>
 
-		<label for='select_arbitros_fed' style='margin-top: 15px;'>Ou Adicionar todos de uma Federação</label>
-		<select name='select_arbitros_fed' id='select_arbitros_fed' style='width: 92%;'>
-			<option value='0'>Nenhuma federação selecionada</option>
-			<option value='CONFUSA'>CONFUSA (Todos)</option>
-			<?php foreach($todasFederacoes as $fed): ?>
-				<option value='<?php echo $fed['id']; ?>'><?php echo htmlspecialchars($fed['nome']); ?></option>
-			<?php endforeach; ?>
-		</select>
+				<div>
+					<label for='filtro_arb_pais' style="font-size: 0.8rem; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">País</label>
+					<select id='filtro_arb_pais' class='form-control' style="width: 100%; font-size: 0.85rem; padding: 6px 8px;">
+						<option value='todos'>Todos os Países</option>
+						<?php foreach($todosPaises as $pais): ?>
+							<option value='<?php echo $pais['id']; ?>'><?php echo htmlspecialchars($pais['nome']); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+
+				<div>
+					<label for='filtro_arb_nivel' style="font-size: 0.8rem; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Nível / Tier</label>
+					<select id='filtro_arb_nivel' class='form-control' style="width: 100%; font-size: 0.85rem; padding: 6px 8px;">
+						<option value='todos'>Todos os Níveis</option>
+						<option value='2'>⭐ Internacional</option>
+						<option value='0'>Nacional</option>
+						<option value='1'>Regional</option>
+					</select>
+				</div>
+			</div>
+
+			<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+				<button type="button" id="btn_adicionar_arbitros_filtrados" class="btn-action-primary" style="background: #0284c7 !important; font-size: 0.82rem; padding: 6px 14px; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 6px; color: #fff; cursor: pointer;">
+					<span class="material-symbols-outlined" style="font-size: 16px;">add_circle</span> Adicionar Filtrados
+				</button>
+				<button type="button" id="btn_remover_arbitros_filtrados" class="btn-action-primary" style="background: #ef4444 !important; font-size: 0.82rem; padding: 6px 14px; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 6px; color: #fff; cursor: pointer;">
+					<span class="material-symbols-outlined" style="font-size: 16px;">remove_circle</span> Desmarcar Filtrados
+				</button>
+				<button type="button" id="btn_selecionar_todos_arbitros" class="btn-action-primary" style="background: #475569 !important; font-size: 0.82rem; padding: 6px 14px; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 6px; color: #fff; cursor: pointer;">
+					<span class="material-symbols-outlined" style="font-size: 16px;">select_all</span> Selecionar Todos
+				</button>
+				<button type="button" id="btn_limpar_todos_arbitros" class="btn-action-primary" style="background: #94a3b8 !important; font-size: 0.82rem; padding: 6px 14px; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 6px; color: #fff; cursor: pointer;">
+					<span class="material-symbols-outlined" style="font-size: 16px;">clear_all</span> Limpar Todos
+				</button>
+				<span id="feedback_filtro_arbitros" style="font-size: 0.8rem; color: #64748b; font-weight: 500; margin-left: 6px;"></span>
+			</div>
+		</div>
 	</div>
 
 	<!-- Estádios -->
@@ -953,24 +1010,50 @@ $(document).ready(function($){
 		placeholder: "Selecione..."
 	});
 
-	// Ações dinâmicas para adicionar árbitros ao Select2 por Federação ou País
-	$("#select_arbitros_fed").on("change", function(){
-		let val = $(this).val();
-		if(val === 'CONFUSA'){
-			$("#select_arbitros > option").prop("selected", true);
-			$("#select_arbitros").trigger("change");
-		} else if(val !== '0' && val !== ''){
-			$("#select_arbitros > option[data-fed='" + val + "']").prop("selected", true);
-			$("#select_arbitros").trigger("change");
-		}
+	// Lógica de seleção combinada para árbitros (Federação + País + Nível)
+	function getArbitrosFiltrados() {
+		let fedVal = $("#filtro_arb_fed").val();
+		let paisVal = $("#filtro_arb_pais").val();
+		let nivelVal = $("#filtro_arb_nivel").val();
+
+		return $("#select_arbitros > option").filter(function(){
+			let optFed = $(this).attr("data-fed");
+			let optPais = $(this).attr("data-pais");
+			let optNivel = $(this).attr("data-nivel");
+
+			let matchFed = (fedVal === "todas" || optFed == fedVal);
+			let matchPais = (paisVal === "todos" || optPais == paisVal);
+			let matchNivel = (nivelVal === "todos" || optNivel == nivelVal);
+
+			return matchFed && matchPais && matchNivel;
+		});
+	}
+
+	$("#btn_adicionar_arbitros_filtrados").on("click", function(){
+		let $matches = getArbitrosFiltrados();
+		$matches.prop("selected", true);
+		$("#select_arbitros").trigger("change");
+		$("#feedback_filtro_arbitros").text($matches.length + " árbitro(s) adicionado(s)").fadeIn(200).delay(2500).fadeOut(400);
 	});
 
-	$("#select_arbitros_pais").on("change", function(){
-		let val = $(this).val();
-		if(val !== '0' && val !== ''){
-			$("#select_arbitros > option[data-pais='" + val + "']").prop("selected", true);
-			$("#select_arbitros").trigger("change");
-		}
+	$("#btn_remover_arbitros_filtrados").on("click", function(){
+		let $matches = getArbitrosFiltrados();
+		$matches.prop("selected", false);
+		$("#select_arbitros").trigger("change");
+		$("#feedback_filtro_arbitros").text($matches.length + " árbitro(s) desmarcado(s)").fadeIn(200).delay(2500).fadeOut(400);
+	});
+
+	$("#btn_selecionar_todos_arbitros").on("click", function(){
+		let $all = $("#select_arbitros > option");
+		$all.prop("selected", true);
+		$("#select_arbitros").trigger("change");
+		$("#feedback_filtro_arbitros").text("Todos selecionados (" + $all.length + ")").fadeIn(200).delay(2500).fadeOut(400);
+	});
+
+	$("#btn_limpar_todos_arbitros").on("click", function(){
+		$("#select_arbitros > option").prop("selected", false);
+		$("#select_arbitros").trigger("change");
+		$("#feedback_filtro_arbitros").text("Seleção limpa").fadeIn(200).delay(2500).fadeOut(400);
 	});
 
 	// Toggle da seção de alterações de elenco

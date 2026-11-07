@@ -14,6 +14,11 @@
       "items": [
         {
           "badge": "new",
+          "title": "Filtros e Tiers para Árbitros",
+          "desc": "Implementação de sistema de Tiers/Níveis com badges para árbitros e suporte a filtros múltiplos combinados (Federação, País e Nível) nas opções de competição e na listagem geral."
+        },
+        {
+          "badge": "new",
           "title": "Improvisação de Posições na Pré-Escalação",
           "desc": "Permite escalar jogadores de linha em qualquer posição de linha, com destaque visual em vermelho alertando sobre a penalidade de rendimento na simulação."
         },

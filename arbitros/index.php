@@ -19,17 +19,42 @@ if(isset($_GET['fed'])){
     $federacion = null;
 }
 
+$nivel_filtro = isset($_GET['nivel']) && $_GET['nivel'] !== '' ? $_GET['nivel'] : null;
+
+function montarUrlFiltro($fed, $niv) {
+    $params = [];
+    if($fed !== null && $fed !== '' && $fed != 0) {
+        $params['fed'] = $fed;
+    }
+    if($niv !== null && $niv !== '' && $niv !== 'todos') {
+        $params['nivel'] = $niv;
+    }
+    $qs = http_build_query($params);
+    return '/arbitros' . ($qs ? '?' . $qs : '');
+}
+
 echo '<main class="propostas-container" style="padding-top: 80px; padding-bottom: 60px;">
 <div id="errorbox"></div>
 <div class="propostas-card">
-    <div class="header-actions-container" style="margin-bottom: 25px;">
-        <h2 class="propostas-title">📣 Quadro de árbitros<span id="nomeFederacao"></span></h2>
-        <div id="federation-select" style="display: flex; gap: 8px;">
-            <a href="/arbitros" class="btn-action-primary" style="background: ' . ($federacion === null ? '#0284c7' : '#94a3b8') . ' !important; font-size: 0.9rem; padding: 6px 12px;">Geral</a>
-            <a href="/arbitros?fed=1" class="btn-action-primary" style="background: ' . ($federacion == 1 ? '#0284c7' : '#94a3b8') . ' !important; font-size: 0.9rem; padding: 6px 12px;">FEASCO</a>
-            <a href="/arbitros?fed=2" class="btn-action-primary" style="background: ' . ($federacion == 2 ? '#0284c7' : '#94a3b8') . ' !important; font-size: 0.9rem; padding: 6px 12px;">FEMIFUS</a>
-            <a href="/arbitros?fed=3" class="btn-action-primary" style="background: ' . ($federacion == 3 ? '#0284c7' : '#94a3b8') . ' !important; font-size: 0.9rem; padding: 6px 12px;">COMPACTA</a>
+    <div class="header-actions-container" style="margin-bottom: 20px; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;">
+        <h2 class="propostas-title" style="margin: 0;">📣 Quadro de árbitros<span id="nomeFederacao"></span></h2>
+        
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+            <div id="federation-select" style="display: flex; gap: 6px;">
+                <a href="' . montarUrlFiltro(null, $nivel_filtro) . '" class="btn-action-primary" style="background: ' . ($federacion === null ? '#0284c7' : '#94a3b8') . ' !important; font-size: 0.85rem; padding: 5px 10px;">Geral</a>
+                <a href="' . montarUrlFiltro(1, $nivel_filtro) . '" class="btn-action-primary" style="background: ' . ($federacion == 1 ? '#0284c7' : '#94a3b8') . ' !important; font-size: 0.85rem; padding: 5px 10px;">FEASCO</a>
+                <a href="' . montarUrlFiltro(2, $nivel_filtro) . '" class="btn-action-primary" style="background: ' . ($federacion == 2 ? '#0284c7' : '#94a3b8') . ' !important; font-size: 0.85rem; padding: 5px 10px;">FEMIFUS</a>
+                <a href="' . montarUrlFiltro(3, $nivel_filtro) . '" class="btn-action-primary" style="background: ' . ($federacion == 3 ? '#0284c7' : '#94a3b8') . ' !important; font-size: 0.85rem; padding: 5px 10px;">COMPACTA</a>
+            </div>
+
+            <div id="tier-select" style="display: flex; gap: 6px; border-left: 1px solid rgba(0,0,0,0.12); padding-left: 10px;">
+                <a href="' . montarUrlFiltro($federacion, null) . '" class="btn-action-primary" style="background: ' . ($nivel_filtro === null ? '#475569' : '#cbd5e1') . ' !important; color: ' . ($nivel_filtro === null ? '#ffffff' : '#334155') . ' !important; font-size: 0.85rem; padding: 5px 10px;">Todos</a>
+                <a href="' . montarUrlFiltro($federacion, 2) . '" class="btn-action-primary" style="background: ' . ($nivel_filtro === '2' ? '#d97706' : '#fef3c7') . ' !important; color: ' . ($nivel_filtro === '2' ? '#ffffff' : '#92400e') . ' !important; font-size: 0.85rem; padding: 5px 10px;">⭐ Internacional</a>
+                <a href="' . montarUrlFiltro($federacion, 0) . '" class="btn-action-primary" style="background: ' . ($nivel_filtro === '0' ? '#0284c7' : '#e0f2fe') . ' !important; color: ' . ($nivel_filtro === '0' ? '#ffffff' : '#0369a1') . ' !important; font-size: 0.85rem; padding: 5px 10px;">Nacional</a>
+                <a href="' . montarUrlFiltro($federacion, 1) . '" class="btn-action-primary" style="background: ' . ($nivel_filtro === '1' ? '#10b981' : '#d1fae5') . ' !important; color: ' . ($nivel_filtro === '1' ? '#ffffff' : '#065f46') . ' !important; font-size: 0.85rem; padding: 5px 10px;">Regional</a>
+            </div>
         </div>
+
         <div id="toolbar-card-container"></div>
     </div>';
 
@@ -151,30 +176,22 @@ while ($row_pais = $stmtPais->fetch(PDO::FETCH_ASSOC)){
 
 
 
-// query arbitros
-if($federacion == null || $federacion == 0){
-    $stmt = $arbitro->readAll($from_record_num, $records_per_page);
-} else {
-    $stmt = $arbitro->readFromFederation($from_record_num, $records_per_page, $federacion);
-}
-
-//echo $federacion;
-
+// query arbitros com suporte a federação e nível
+$stmt = $arbitro->readFiltered($from_record_num, $records_per_page, $federacion, $nivel_filtro);
 $number_of_referees = $stmt->rowCount();
 
-
-
-    // the page where this paging is used
-    if($federacion != null && $federacion != 0){
-        $page_url = "/arbitros/index.php?fed=" .$federacion . "&";
-    } else {
-        $page_url = "/arbitros/index.php?";
+    // montar base da URL de paginação preservando os filtros ativos
+    $paging_params = [];
+    if($federacion !== null && $federacion !== '' && $federacion != 0){
+        $paging_params['fed'] = $federacion;
     }
-
-
+    if($nivel_filtro !== null && $nivel_filtro !== '' && $nivel_filtro !== 'todos'){
+        $paging_params['nivel'] = $nivel_filtro;
+    }
+    $page_url = "/arbitros/index.php?" . (empty($paging_params) ? "" : http_build_query($paging_params) . "&");
 
     // count all products in the database to calculate total pages
-    $total_rows = $arbitro->countAll($federacion);
+    $total_rows = $arbitro->countFiltered($federacion, $nivel_filtro);
 
     //echo $number_of_referees;
 
@@ -241,14 +258,15 @@ if($number_of_referees>0){
             }
 
             switch ($nivel) {
-                case 0:
-                    $nomenclaturaNivel = "Nacional";
+                case 2:
+					$nomenclaturaNivel = '<span class="badge-tier badge-tier-internacional" title="Árbitro Internacional (Elite)"><span class="material-symbols-outlined" style="font-size:13px !important; vertical-align: -2px;">star</span> Internacional</span>';
                     break;
                 case 1:
-					$nomenclaturaNivel = "Regional";
+					$nomenclaturaNivel = '<span class="badge-tier badge-tier-regional" title="Árbitro Regional">Regional</span>';
                     break;
-                case 2:
-					$nomenclaturaNivel = "Internacional";
+                case 0:
+                default:
+                    $nomenclaturaNivel = '<span class="badge-tier badge-tier-nacional" title="Árbitro Nacional">Nacional</span>';
                     break;
             }
 			
