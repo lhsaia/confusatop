@@ -443,7 +443,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
         $criterioSuspensao = isset($compOptions['suspensao']) ? (int)$compOptions['suspensao'] : 0;
         $limiteAmarelos = ($criterioSuspensao == 1) ? 2 : (($criterioSuspensao == 2) ? 3 : 0);
     } catch (\Throwable $e) {}
-    $nomeComposto = $ano_competicao . " - " . $nome_competicao;
+    require_once __DIR__ . '/sumula_helper.php';
+    $nomeComposto = sanitizarNomePastaCompeticao($ano_competicao . " - " . $nome_competicao);
     $dirPartidas = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/" . $nomeComposto . "/1º Rodada";
     
     // Mapeamento de jogos por nome de arquivo para verificação de tempo real e término

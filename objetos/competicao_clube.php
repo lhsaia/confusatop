@@ -880,7 +880,8 @@ class Competicao_clube{
 					$stCompInfo = $this->conn->prepare("SELECT ano, nome FROM competicao_lista WHERE id = ? LIMIT 1");
 					$stCompInfo->execute([$idCompeticao]);
 					if ($rComp = $stCompInfo->fetch(PDO::FETCH_ASSOC)) {
-						$nomeComposto = $rComp['ano'] . " - " . $rComp['nome'];
+						require_once $docRoot . '/competicoes/sumula_helper.php';
+						$nomeComposto = sanitizarNomePastaCompeticao($rComp['ano'] . " - " . $rComp['nome']);
 						$baseDirPartidas = $docRoot . "/competicoes/hexacolor/Partidas/" . $nomeComposto;
 						$foundHyls = @glob($baseDirPartidas . "/*/" . $partida['path'] . ".hyl");
 						if (!empty($foundHyls)) {

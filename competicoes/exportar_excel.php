@@ -372,7 +372,8 @@ ksort($tabelaPorGrupo);
 
 // 2. Processar Estatísticas de Jogadores via arquivos .hyj
 $playerStats = [];
-$nomeComposto = $ano_competicao . " - " . $nome_competicao;
+require_once __DIR__ . '/sumula_helper.php';
+$nomeComposto = sanitizarNomePastaCompeticao($ano_competicao . " - " . $nome_competicao);
 $dirPartidas = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/" . $nomeComposto . "/1º Rodada";
 
 $jogosPorPath = [];

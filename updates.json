@@ -9,6 +9,22 @@
   },
     "days": [
     {
+      "id": "day_10_11_2026",
+      "date": "10/11/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Suporte a Competições com Barra (/) no Nome",
+          "desc": "Implementada a sanitização automática do nome de diretório de súmulas (calendarName) para substituir barras (/, \\) e caracteres especiais por hífen (-), permitindo que competições com barra no nome (ex: 2026/27) sejam simuladas e tenham suas súmulas lidas normalmente."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Preservação de Escudos Originais de Times Homônimos no PoltronaScore",
+          "desc": "Corrigida a substituição indevida de escudos na página inicial do PoltronaScore: o sistema agora preserva o escudo real já gravado na partida (CONFUSALive/Scraper) e só recorre ao mapa por nome caso o escudo esteja ausente ou seja o genérico (EscudoPadrao), evitando que clubes homônimos de países diferentes tenham seus escudos sobrescritos."
+        }
+      ]
+    },
+    {
       "id": "day_07_11_2026",
       "date": "07/11/2026",
       "items": [

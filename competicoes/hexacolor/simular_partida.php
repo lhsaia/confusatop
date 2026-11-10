@@ -835,7 +835,7 @@
 						$faseNome .= " - Grupo " . $matchInfo['grupo'];
 					}
 
-					$liveResult = ConfusaLiveUploader::enviarPartida($hylFile, $nomeComposto, $faseNome, $matchInfo['data']);
+					$liveResult = ConfusaLiveUploader::enviarPartida($hylFile, $nomeCompostoOriginal, $faseNome, $matchInfo['data']);
 					if (!$liveResult['success']) {
 						error_log("PHP Simulador: [AVISO LIVE] Falha ao enviar partida #{$idPartida} para o Live: " . $liveResult['message']);
 					}

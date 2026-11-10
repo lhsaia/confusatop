@@ -793,8 +793,10 @@ foreach ($partidas as $matchInfo) {
     // 4. Normalizar e validar imagens de todos os clubes para evitar exceções do Java (ImageIO.read retornando null)
     $originaisClubeImagens = normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot, $db);
     
+    require_once __DIR__ . '/sumula_helper.php';
     $competitionInfo = $competicaoObj->readInfo($idCompeticao);
-    $nomeComposto = $competitionInfo['ano'] . " - " . $competitionInfo['nome'];
+    $nomeCompostoOriginal = $competitionInfo['ano'] . " - " . $competitionInfo['nome'];
+    $nomeComposto = sanitizarNomePastaCompeticao($nomeCompostoOriginal);
     $databasePath = "jdbc:sqlite:data/database.db3";
     $cores = $liteCompeticao->getColors();
     
@@ -1076,7 +1078,7 @@ foreach ($partidas as $matchInfo) {
                 $faseNome .= " - Grupo " . $matchInfo['grupo'];
             }
 
-            $liveResult = ConfusaLiveUploader::enviarPartida($hylFile, $nomeComposto, $faseNome, $matchInfo['data']);
+            $liveResult = ConfusaLiveUploader::enviarPartida($hylFile, $nomeCompostoOriginal, $faseNome, $matchInfo['data']);
             if ($liveResult['success']) {
                 cron_log("   [LIVE] Partida #{$idPartida} enviada com sucesso para o CONFUSA Live.");
             } else {

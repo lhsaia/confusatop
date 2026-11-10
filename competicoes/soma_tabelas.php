@@ -194,7 +194,8 @@ function processarDadosCompeticao($compId, $db, $clubesPortal, $infoComp) {
 
     // Processar súmulas .hyj de jogadores
     $playerStats = [];
-    $nomeComposto = $anoComp . " - " . $nomeComp;
+    require_once __DIR__ . '/sumula_helper.php';
+    $nomeComposto = sanitizarNomePastaCompeticao($anoComp . " - " . $nomeComp);
     $dirPartidas = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/" . $nomeComposto . "/1º Rodada";
 
     if (is_dir($dirPartidas)) {

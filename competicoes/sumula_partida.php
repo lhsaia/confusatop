@@ -66,7 +66,9 @@ if($matchInfo){
 	$idCompeticao = $matchInfo['competicao'];
 	$competitionInfo = $competicao->readInfo($idCompeticao);
 	if($competitionInfo){
+		require_once __DIR__ . '/sumula_helper.php';
 		$nomeComposto = $competitionInfo['ano'] . " - " . $competitionInfo['nome'];
+		$nomeCompostoDir = sanitizarNomePastaCompeticao($nomeComposto);
 		
 		// Sigilo Temporal: Se a partida ainda não tiver terminado no tempo real, bloquear a súmula
 		$horarioJogo = strtotime($matchInfo['data']);
@@ -75,8 +77,11 @@ if($matchInfo){
 
 		// Se já terminou no tempo real e possui arquivo gerado, envia a imagem
 		if (time() >= $horarioTermino && !empty($matchInfo['path'])) {
-			$baseDir = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/" . $nomeComposto;
+			$baseDir = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/" . $nomeCompostoDir;
 			$files = glob($baseDir . "/*/" . $matchInfo['path'] . ".png");
+			if(empty($files)){
+				$files = glob($_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/" . $nomeComposto . "/*/" . $matchInfo['path'] . ".png");
+			}
 			if(empty($files)){
 				$files = glob($_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/*/*/" . $matchInfo['path'] . ".png");
 			}
@@ -211,6 +216,7 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	
 	$lite_competicao = new Competicao_clube($cdb);
 	
+	require_once __DIR__ . '/sumula_helper.php';
 	if (!isset($competitionInfo) || empty($competitionInfo)) {
 		$competitionInfo = $competicao->readInfo($idCompeticao);
 	}
@@ -220,12 +226,21 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 	if (!isset($nomeComposto)) {
 		$nomeComposto = "Partidas";
 	}
+	$nomeCompostoDir = sanitizarNomePastaCompeticao($nomeComposto);
 	
-	$path_hyl = "/hexacolor/Partidas/" . $nomeComposto . "/1º Rodada/" . ($matchInfo['path'] ?? '') . ".hyl";
-	$path_hyj = "/hexacolor/Partidas/" . $nomeComposto . "/1º Rodada/" . ($matchInfo['path'] ?? '') . ".hyj";
+	$path_hyl = "/hexacolor/Partidas/" . $nomeCompostoDir . "/1º Rodada/" . ($matchInfo['path'] ?? '') . ".hyl";
+	$path_hyj = "/hexacolor/Partidas/" . $nomeCompostoDir . "/1º Rodada/" . ($matchInfo['path'] ?? '') . ".hyj";
 	
 	$file_hyj_path = str_replace('\\', '/', __DIR__ . $path_hyj);
 	$file_hyl_path = str_replace('\\', '/', __DIR__ . $path_hyl);
+	if (!file_exists($file_hyl_path) && !empty($matchInfo['path'])) {
+		$foundHyl = encontrarArquivoSumula($nomeComposto, $matchInfo['path'], 'hyl');
+		if ($foundHyl) $file_hyl_path = $foundHyl;
+	}
+	if (!file_exists($file_hyj_path) && !empty($matchInfo['path'])) {
+		$foundHyj = encontrarArquivoSumula($nomeComposto, $matchInfo['path'], 'hyj');
+		if ($foundHyj) $file_hyj_path = $foundHyj;
+	}
 
 	// read path
 	$xml_hyj = file_exists($file_hyj_path) ? json_decode(file_get_contents($file_hyj_path)) : null;

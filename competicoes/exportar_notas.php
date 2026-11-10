@@ -157,7 +157,9 @@ $playerStats = [];
 $processedFiles = [];
 
 $searchDirs = [
+    $_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/" . sanitizarNomePastaCompeticao($nomeComposto),
     $_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/" . $nomeComposto,
+    $_SERVER['DOCUMENT_ROOT'] . "/full hexa suite/Hexacolor YMT/Partidas/" . sanitizarNomePastaCompeticao($nomeComposto),
     $_SERVER['DOCUMENT_ROOT'] . "/full hexa suite/Hexacolor YMT/Partidas/" . $nomeComposto
 ];
 
