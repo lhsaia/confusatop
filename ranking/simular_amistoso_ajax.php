@@ -516,9 +516,12 @@ if (!file_exists($hylFile)) {
 }
 
 if (!file_exists($hylFile)) {
+    $msgDetalhada = function_exists('diagnosticarErroSimulacao')
+        ? diagnosticarErroSimulacao($targetDbPath, $idClubA, $idClubB, $idEstadio, $output, $hylFile)
+        : 'A simulação falhou ao gerar os arquivos de súmula. Verifique se as duas seleções possuem técnicos e elencos válidos.';
     echo json_encode([
         'success' => false,
-        'error' => 'A simulação falhou ao gerar os arquivos de súmula. Verifique se as duas seleções possuem técnicos e elencos válidos.'
+        'error' => $msgDetalhada
     ]);
     exit;
 }

@@ -183,10 +183,10 @@
 				$climaId = $stmtClimaCheck ? $stmtClimaCheck->fetchColumn() : false;
 				if ($climaId === false || $climaId === null) {
 					$climaId = 1;
-					$ldb->exec("INSERT OR IGNORE INTO clima (ID, Nome, TempVerao, EstiloVerao, TempOutono, EstiloOutono, TempInverno, EstiloInverno, TempPrimavera, EstiloPrimavera, Hemisferio) VALUES (1, 'Clima Padrão', '25', 'Bom', '20', 'Bom', '15', 'Bom', '22', 'Bom', 'S')");
+					$ldb->exec("INSERT OR IGNORE INTO clima (ID, Nome, TempVerao, EstiloVerao, TempOutono, EstiloOutono, TempInverno, EstiloInverno, TempPrimavera, EstiloPrimavera, Hemisferio) VALUES (1, 'Clima Padrão', 'Quente', 'Equilibrado', 'Normal', 'Equilibrado', 'Frio', 'Neblina', 'Normal', 'Equilibrado', 1)");
 				}
 				$idEstadio = 1;
-				$ldb->exec("INSERT OR IGNORE INTO estadio (ID, Nome, Capacidade, Altitude, Caldeirao, Clima) VALUES (1, 'Estádio Padrão', 35000, '0', '0', $climaId)");
+				$ldb->exec("INSERT OR IGNORE INTO estadio (ID, Nome, Capacidade, Clima, Altitude, Caldeirao) VALUES (1, 'Estádio Padrão', 35000, $climaId, 0, 0)");
 				$estadioValido = true;
 			} catch (\Throwable $e) {}
 		}
@@ -200,6 +200,33 @@
 				$stmtUpdEst->execute();
 			} catch (\Throwable $e) {}
 		}
+	}
+
+	// Garantir que o estádio selecionado tenha um clima válido na tabela `clima` do SQLite (previne NullPointerException em gerarClima)
+	if ($estadioValido && $idEstadio !== 0) {
+		try {
+			$stmtCheckEstClima = $ldb->prepare("SELECT Clima FROM estadio WHERE ID = :idEst LIMIT 1");
+			$stmtCheckEstClima->bindValue(':idEst', $idEstadio, PDO::PARAM_INT);
+			$stmtCheckEstClima->execute();
+			$estClimaId = (int)$stmtCheckEstClima->fetchColumn();
+			$climaExiste = false;
+			if ($estClimaId !== 0) {
+				$stmtClimaRow = $ldb->prepare("SELECT TempVerao, EstiloVerao, TempOutono, EstiloOutono, TempInverno, EstiloInverno, TempPrimavera, EstiloPrimavera FROM clima WHERE ID = :idCli LIMIT 1");
+				$stmtClimaRow->bindValue(':idCli', $estClimaId, PDO::PARAM_INT);
+				$stmtClimaRow->execute();
+				$cRow = $stmtClimaRow->fetch(PDO::FETCH_ASSOC);
+				if ($cRow && !empty($cRow['EstiloVerao']) && !empty($cRow['TempVerao']) && !is_numeric($cRow['TempVerao'])) {
+					$climaExiste = true;
+				}
+			}
+			if (!$climaExiste) {
+				$idClimaUsar = ($estClimaId !== 0) ? $estClimaId : 1;
+				$ldb->exec("INSERT OR REPLACE INTO clima (ID, Nome, TempVerao, EstiloVerao, TempOutono, EstiloOutono, TempInverno, EstiloInverno, TempPrimavera, EstiloPrimavera, Hemisferio) VALUES ($idClimaUsar, 'Clima Padrão', 'Quente', 'Equilibrado', 'Normal', 'Equilibrado', 'Frio', 'Neblina', 'Normal', 'Equilibrado', 1)");
+				if ($estClimaId === 0) {
+					$ldb->exec("UPDATE estadio SET Clima = $idClimaUsar WHERE ID = $idEstadio");
+				}
+			}
+		} catch (\Throwable $e) {}
 	}
 
 	if (!$estadioValido || $idEstadio === 0) {
@@ -728,7 +755,10 @@
 		if (!file_exists($hylFile)) {
 			// Envia apenas em caso de erro real para o Log Central
 			error_log("PHP Simulador: [ERRO] A simulação falhou. Comando: " . $cmd . " | Output: " . trim($output));
-			die(json_encode([ 'success'=> false, 'error'=> "Erro: O arquivo .hyl da súmula não foi gerado pelo motor. Verifique os logs de erros da engine." ]));
+			$msgDetalhada = function_exists('diagnosticarErroSimulacao')
+				? diagnosticarErroSimulacao($sourceDbPath, $matchInfo['timeA_id'], $matchInfo['timeB_id'], $idEstadio, $output, $hylFile)
+				: "Erro: O arquivo .hyl da súmula não foi gerado pelo motor. Verifique os logs de erros da engine.";
+			die(json_encode([ 'success'=> false, 'error'=> $msgDetalhada ]));
 		}
 		
 		$golsTimeA = 0;

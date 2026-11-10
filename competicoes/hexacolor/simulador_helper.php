@@ -944,3 +944,266 @@ if (!function_exists('restaurarImagensOriginaisClubesSQLite')) {
         }
     }
 }
+
+if (!function_exists('diagnosticarErroSimulacao')) {
+    /**
+     * Analisa o banco SQLite e a saída bruta do motor Java (HexacolorYMTv2.jar)
+     * para produzir uma mensagem de erro clara, específica e acionável ao usuário.
+     */
+    function diagnosticarErroSimulacao($sqlitePath, $idTeam1, $idTeam2, $idEstadio, $javaOutput = '', $expectedHylFile = '') {
+        $motivos = [];
+        $idTeam1 = (int)$idTeam1;
+        $idTeam2 = (int)$idTeam2;
+        $idEstadio = (int)$idEstadio;
+        $javaOutput = trim((string)$javaOutput);
+
+        // 1. Inspecionar integridade dos dados no SQLite
+        if (!empty($sqlitePath) && file_exists($sqlitePath)) {
+            try {
+                $pdo = new PDO('sqlite:' . $sqlitePath);
+                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+
+                // Verificar Árbitros
+                $stArb = $pdo->query("SELECT COUNT(*) FROM trioarbitragem");
+                $qtdArb = $stArb ? (int)$stArb->fetchColumn() : 0;
+                if ($qtdArb === 0) {
+                    $motivos[] = "A competição não possui nenhum trio de arbitragem cadastrado no banco SQLite.";
+                }
+
+                // Verificar Estádio e Clima
+                if ($idEstadio === 0) {
+                    $motivos[] = "A partida está sem estádio definido (ID 0).";
+                } else {
+                    $stEst = $pdo->prepare("SELECT ID, Nome, Clima FROM estadio WHERE ID = :id LIMIT 1");
+                    $stEst->execute([':id' => $idEstadio]);
+                    $rEst = $stEst->fetch(PDO::FETCH_ASSOC);
+                    if (!$rEst) {
+                        $motivos[] = "O estádio selecionado (ID #{$idEstadio}) não existe no banco SQLite da competição.";
+                    } else {
+                        $idClima = (int)($rEst['Clima'] ?? 0);
+                        $nomeEst = $rEst['Nome'] ?: "#{$idEstadio}";
+                        if ($idClima === 0) {
+                            $motivos[] = "O estádio '{$nomeEst}' não possui clima vinculado no SQLite.";
+                        } else {
+                            $stCli = $pdo->prepare("SELECT * FROM clima WHERE ID = :id LIMIT 1");
+                            $stCli->execute([':id' => $idClima]);
+                            $rCli = $stCli->fetch(PDO::FETCH_ASSOC);
+                            if (!$rCli) {
+                                $motivos[] = "O clima (ID #{$idClima}) vinculado ao estádio '{$nomeEst}' não existe na tabela `clima` do SQLite.";
+                            } else {
+                                $camposClima = ['TempVerao', 'EstiloVerao', 'TempOutono', 'EstiloOutono', 'TempInverno', 'EstiloInverno', 'TempPrimavera', 'EstiloPrimavera'];
+                                foreach ($camposClima as $cc) {
+                                    if (!isset($rCli[$cc]) || trim((string)$rCli[$cc]) === '') {
+                                        $motivos[] = "O clima '{$rCli['Nome']}' (#{$idClima}) do estádio '{$nomeEst}' possui parâmetros climáticos vazios ou inválidos ({$cc}).";
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Verificar cada um dos dois times (Mandante e Visitante)
+                $timesCheck = [
+                    'Mandante' => $idTeam1,
+                    'Visitante' => $idTeam2
+                ];
+
+                foreach ($timesCheck as $labelTipo => $cid) {
+                    if ($cid === 0) {
+                        $motivos[] = "Time {$labelTipo} não está definido na partida (ID 0).";
+                        continue;
+                    }
+
+                    $stCl = $pdo->prepare("SELECT ID, Nome, TresLetras FROM clube WHERE ID = :id LIMIT 1");
+                    $stCl->execute([':id' => $cid]);
+                    $rCl = $stCl->fetch(PDO::FETCH_ASSOC);
+
+                    if (!$rCl) {
+                        $motivos[] = "O time {$labelTipo} (ID #{$cid}) não foi encontrado na tabela `clube` do SQLite da competição (verifique se o time foi sincronizado/importado na vaga).";
+                        continue;
+                    }
+
+                    $nomeTime = !empty($rCl['Nome']) ? $rCl['Nome'] : "Time #{$cid}";
+
+                    // Verificar Elenco e Técnico
+                    $stEl = $pdo->prepare("SELECT * FROM elenco WHERE Clube = :id LIMIT 1");
+                    $stEl->execute([':id' => $cid]);
+                    $rEl = $stEl->fetch(PDO::FETCH_ASSOC);
+
+                    $jogadoresElenco = [];
+                    if (!$rEl) {
+                        $motivos[] = "O time '{$nomeTime}' não possui elenco cadastrado na tabela `elenco` do SQLite.";
+                    } else {
+                        $idTec = (int)($rEl['Tecnico'] ?? 0);
+                        if ($idTec === 0) {
+                            $motivos[] = "O time '{$nomeTime}' está sem técnico definido no elenco do SQLite.";
+                        } else {
+                            $stTec = $pdo->prepare("SELECT ID, Nome, Nivel, Mentalidade, Estilo FROM tecnico WHERE ID = :id LIMIT 1");
+                            $stTec->execute([':id' => $idTec]);
+                            $rTec = $stTec->fetch(PDO::FETCH_ASSOC);
+                            if (!$rTec) {
+                                $motivos[] = "O técnico (ID #{$idTec}) vinculado ao time '{$nomeTime}' não existe na tabela `tecnico` do SQLite.";
+                            }
+                        }
+
+                        for ($k = 1; $k <= 23; $k++) {
+                            $pid = (int)($rEl['Jogador' . $k] ?? 0);
+                            if ($pid !== 0) {
+                                $jogadoresElenco[] = $pid;
+                            }
+                        }
+                        if (count($jogadoresElenco) < 11) {
+                            $motivos[] = "O time '{$nomeTime}' possui apenas " . count($jogadoresElenco) . " jogador(es) no elenco do SQLite (mínimo exigido: 11).";
+                        }
+                    }
+
+                    // Verificar Escalação
+                    $stEsc = $pdo->prepare("SELECT * FROM escalacao WHERE Clube = :id LIMIT 1");
+                    $stEsc->execute([':id' => $cid]);
+                    $rEsc = $stEsc->fetch(PDO::FETCH_ASSOC);
+
+                    if (!$rEsc) {
+                        $motivos[] = "O time '{$nomeTime}' não possui escalação cadastrada na tabela `escalacao` do SQLite.";
+                    } else {
+                        $titulares = [];
+                        $slotsVazios = [];
+                        $goleirosTitulares = 0;
+
+                        for ($k = 1; $k <= 11; $k++) {
+                            $jid = (int)($rEsc['Jogador' . $k] ?? 0);
+                            $pos = trim((string)($rEsc['Pos' . $k] ?? ''));
+                            if ($jid === 0) {
+                                $slotsVazios[] = $k;
+                            } else {
+                                $titulares[$k] = $jid;
+                                if (strtoupper($pos) === 'G') {
+                                    $goleirosTitulares++;
+                                }
+                            }
+                        }
+
+                        if (!empty($slotsVazios)) {
+                            $motivos[] = "O time '{$nomeTime}' está com escalação incompleta (sem jogador nas posições: " . implode(', ', $slotsVazios) . ").";
+                        } else {
+                            if ($goleirosTitulares === 0) {
+                                $motivos[] = "O time '{$nomeTime}' não possui nenhum goleiro ('G') escalado entre os 11 titulares.";
+                            } elseif ($goleirosTitulares > 1) {
+                                $motivos[] = "O time '{$nomeTime}' possui {$goleirosTitulares} goleiros escalados como titulares (deve ter exatamente 1).";
+                            }
+
+                            // Checar duplicatas na escalação
+                            $contagemTit = array_count_values($titulares);
+                            foreach ($contagemTit as $jid => $qtd) {
+                                if ($qtd > 1) {
+                                    $motivos[] = "O time '{$nomeTime}' possui o mesmo jogador (ID #{$jid}) escalado {$qtd} vezes entre os titulares.";
+                                }
+                            }
+
+                            // Checar existência, idade, posições e atributos dos titulares
+                            $stJog = $pdo->prepare("SELECT ID, Nome, Idade FROM jogador WHERE ID = :id LIMIT 1");
+                            $stPos = $pdo->prepare("SELECT * FROM posicaojogador WHERE Jogador = :id LIMIT 1");
+                            $stAj = $pdo->prepare("SELECT 1 FROM atributosjogador WHERE Jogador = :id LIMIT 1");
+                            $stAg = $pdo->prepare("SELECT 1 FROM atributosgoleiro WHERE Goleiro = :id LIMIT 1");
+
+                            foreach ($titulares as $slot => $jid) {
+                                $stJog->execute([':id' => $jid]);
+                                $rJ = $stJog->fetch(PDO::FETCH_ASSOC);
+                                if (!$rJ) {
+                                    $motivos[] = "No time '{$nomeTime}', o titular da posição {$slot} (ID #{$jid}) não existe na tabela `jogador` do SQLite.";
+                                    continue;
+                                }
+                                $nomeJ = $rJ['Nome'] ?: "#{$jid}";
+                                if (isset($rJ['Idade']) && (int)$rJ['Idade'] > 45) {
+                                    $motivos[] = "No time '{$nomeTime}', o jogador '{$nomeJ}' tem {$rJ['Idade']} anos (limite máximo do motor: 45 anos).";
+                                }
+
+                                $stPos->execute([':id' => $jid]);
+                                if (!$stPos->fetch(PDO::FETCH_ASSOC)) {
+                                    $motivos[] = "No time '{$nomeTime}', o jogador '{$nomeJ}' (#{$jid}) não possui registro de posições (`posicaojogador`).";
+                                }
+
+                                $stAj->execute([':id' => $jid]);
+                                $hasAj = (bool)$stAj->fetchColumn();
+                                $stAg->execute([':id' => $jid]);
+                                $hasAg = (bool)$stAg->fetchColumn();
+                                if (!$hasAj && !$hasAg) {
+                                    $motivos[] = "No time '{$nomeTime}', o jogador '{$nomeJ}' (#{$jid}) não possui atributos cadastrados (`atributosjogador`/`atributosgoleiro`).";
+                                }
+                            }
+
+                            // Checar capitão
+                            $capId = (int)($rEsc['Capitao'] ?? 0);
+                            if ($capId === 0) {
+                                $motivos[] = "O time '{$nomeTime}' está sem capitão definido na escalação.";
+                            } elseif (!in_array($capId, $titulares)) {
+                                $motivos[] = "No time '{$nomeTime}', o capitão definido (ID #{$capId}) não está entre os 11 titulares.";
+                            }
+                        }
+                    }
+                }
+                $pdo = null;
+            } catch (\Throwable $e) {
+                $motivos[] = "Erro ao inspecionar o banco SQLite da partida: " . $e->getMessage();
+            }
+        }
+
+        // 2. Analisar o stack trace / output da engine Java se existir
+        $resumoJava = '';
+        if (!empty($javaOutput)) {
+            $cleanOut = preg_replace('/Compatibilidade com o portal web realizada com sucesso!\s*/i', '', $javaOutput);
+            $cleanOut = preg_replace('/\[REENVIO AUTOMÁTICO #\d+\]:\s*/i', '', $cleanOut);
+            $cleanOut = trim($cleanOut);
+
+            if (stripos($cleanOut, 'getProbFenomenoClimatico') !== false || stripos($cleanOut, 'gerarClima') !== false) {
+                $motivos[] = "Falha na geração climática do motor (parâmetros de clima do estádio nulos ou incompatíveis com o Hexacolor).";
+            } elseif (stripos($cleanOut, 'bound must be positive') !== false) {
+                $motivos[] = "Sorteio com limite zerado na engine ('bound must be positive'): verifique se há árbitros cadastrados, se a formação tática possui jogadores de linha válidos ou se todos os atletas disponíveis estão suspensos/lesionados.";
+            } elseif (stripos($cleanOut, 'javax.imageio.ImageIO') !== false || stripos($cleanOut, 'input == null') !== false || stripos($cleanOut, 'image == null') !== false) {
+                $motivos[] = "Falha ao carregar imagem de escudo ou uniforme de um dos clubes na engine Java.";
+            } elseif (stripos($cleanOut, 'SQLITE_BUSY') !== false || stripos($cleanOut, 'database is locked') !== false) {
+                $motivos[] = "O banco de dados SQLite estava bloqueado por outra operação (database locked).";
+            } elseif (stripos($cleanOut, 'SQLITE_CORRUPT') !== false || stripos($cleanOut, 'malformed') !== false) {
+                $motivos[] = "O arquivo SQLite da competição está corrompido (database disk image is malformed).";
+            } elseif (stripos($cleanOut, 'ArrayIndexOutOfBoundsException') !== false || stripos($cleanOut, 'IndexOutOfBoundsException') !== false) {
+                $motivos[] = "Índice fora dos limites na engine Java (provável escalação com menos de 11 titulares, clube sem jogadores suficientes ou ausência de cobradores/árbitros).";
+            } elseif (stripos($cleanOut, 'HeadlessException') !== false) {
+                $motivos[] = "O motor tentou abrir uma janela gráfica interativa no servidor (HeadlessException) — provável erro de dados pendentes ou alerta de validação.";
+            } elseif (stripos($cleanOut, 'NullPointerException') !== false) {
+                // Extrair a primeira linha do stack trace interno do pacote do simulador
+                if (preg_match('/NullPointerException.*?\n\s*at\s+([^\r\n]+)/i', $cleanOut, $mStack)) {
+                    $motivos[] = "Referência nula no motor de simulação em: " . trim($mStack[1]);
+                } else {
+                    $motivos[] = "Referência nula (NullPointerException) durante a execução do motor Java.";
+                }
+            }
+
+            if (!empty($cleanOut)) {
+                $lines = array_values(array_filter(array_map('trim', explode("\n", $cleanOut))));
+                $previewLines = array_slice($lines, 0, 4);
+                $resumoJava = implode(' | ', $previewLines);
+            }
+        }
+
+        $motivos = array_values(array_unique($motivos));
+
+        if (!empty($motivos)) {
+            $msg = "Não foi possível concluir a simulação pelo(s) seguinte(s) motivo(s):\n• " . implode("\n• ", $motivos);
+            if (!empty($resumoJava) && count($motivos) === 1 && strpos($motivos[0], 'Referência nula') !== false) {
+                $msg .= "\nDetalhe técnico: " . $resumoJava;
+            }
+            return $msg;
+        }
+
+        if (!empty($resumoJava)) {
+            return "A engine de simulação retornou um erro durante o processamento: " . $resumoJava;
+        }
+
+        if (!empty($expectedHylFile)) {
+            return "O motor finalizou sem gerar o arquivo de súmula esperado (" . basename($expectedHylFile) . ") e não retornou saída de erro. Verifique se as siglas dos clubes ou o nome da competição contêm caracteres inválidos para diretórios.";
+        }
+
+        return "O arquivo .hyl da súmula não foi gerado pelo motor de simulação.";
+    }
+}
+

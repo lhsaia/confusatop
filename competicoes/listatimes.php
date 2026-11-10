@@ -18,14 +18,17 @@ $torneio = new ExportTorneio($db);
 $competicao = new Competicao_clube($db);
 
 $info = $competicao->readInfo($idCompeticao);
-$nome_competicao = $info['nome'];
-$ano_competicao = $info['ano'];
-$sede_competicao = $info['sede'];
-$federacao_competicao = $info['federacao'];
-$federacao_id = $info['federacaoId'];
-$logo_competicao = $info['logo'];
-$genero_competicao = $info['genero'];
-$dono_competicao = $info['dono'];
+if (!$info) {
+	die("Competição não encontrada.");
+}
+$nome_competicao = $info['nome'] ?? '';
+$ano_competicao = $info['ano'] ?? '';
+$sede_competicao = $info['sede'] ?? '';
+$federacao_competicao = $info['federacao'] ?? '';
+$federacao_id = $info['federacaoId'] ?? 0;
+$logo_competicao = $info['logo'] ?? '';
+$genero_competicao = $info['genero'] ?? '';
+$dono_competicao = $info['dono'] ?? '';
 
 $tipo_competicao_escopo = intval($info['tipo'] ?? 0);
 $is_nacional = ($tipo_competicao_escopo === 1);

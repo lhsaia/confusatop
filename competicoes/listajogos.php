@@ -1099,7 +1099,8 @@ $(document).ready(function($){
 					isSimulatingMatch = false;
 					$btn.css({'pointer-events': '', 'opacity': ''});
 					hideLoading();
-					alert('Erro de comunicação com o simulador: ' + error);
+					var extraDetail = (xhr && xhr.responseText) ? ('\nDetalhe do servidor: ' + xhr.responseText.substring(0, 350)) : '';
+					alert('Erro de comunicação com o simulador: ' + error + extraDetail);
 				}
 			});
 		}
