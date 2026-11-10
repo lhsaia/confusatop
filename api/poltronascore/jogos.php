@@ -90,14 +90,22 @@ try {
         }
     } catch (\Throwable $e) {}
 
-    $enrichMatchLogos = function(&$matchList) use ($portalLogosByName) {
+    $isGenericOrEmptyLogo = function($logoUrl) {
+        $l = trim((string)$logoUrl);
+        return empty($l) 
+            || $l === '0.png' 
+            || stripos($l, 'padrao') !== false 
+            || stripos($l, 'cache_images') !== false;
+    };
+
+    $enrichMatchLogos = function(&$matchList) use ($portalLogosByName, $isGenericOrEmptyLogo) {
         foreach ($matchList as &$m) {
             $hKey = mb_strtolower(trim((string)($m['home_team'] ?? '')), 'UTF-8');
             $aKey = mb_strtolower(trim((string)($m['away_team'] ?? '')), 'UTF-8');
-            if ($hKey !== '' && isset($portalLogosByName[$hKey])) {
+            if ($hKey !== '' && $isGenericOrEmptyLogo($m['home_logo'] ?? '') && isset($portalLogosByName[$hKey])) {
                 $m['home_logo'] = $portalLogosByName[$hKey];
             }
-            if ($aKey !== '' && isset($portalLogosByName[$aKey])) {
+            if ($aKey !== '' && $isGenericOrEmptyLogo($m['away_logo'] ?? '') && isset($portalLogosByName[$aKey])) {
                 $m['away_logo'] = $portalLogosByName[$aKey];
             }
         }
