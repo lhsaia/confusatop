@@ -416,6 +416,9 @@ $(document).ready(function($){
 	 var timesInscritos = <?php echo json_encode($timesInscritos); ?>;
 	 var tipoCompeticao = <?php echo (int)$tipoCompeticao; ?>;
 	 var numTeamsComp = <?php echo (int)$numTeamsComp; ?>;
+	 var tipoPreliminar = <?php echo isset($options['tipo_preliminar']) ? (int)$options['tipo_preliminar'] : 1; ?>;
+	 var finalUnica = <?php echo isset($options['finalunica']) ? (int)$options['finalunica'] : 0; ?>;
+	 var turnosPontosCorridos = <?php echo isset($options['turnos_pontos_corridos']) ? (int)$options['turnos_pontos_corridos'] : 1; ?>;
 
 	 var codigo_competicao = '<?php echo $idCompeticao ?>';
 	 var currentYearMin = '<?php echo date('Y'); ?>-01-01';
@@ -689,6 +692,97 @@ $(document).ready(function($){
 			}
 		}
 
+		// Mapa de detecção de Ida/Volta e Rodada dos jogos
+		let confrontationLegMap = {};
+		let matchdayRoundMap = {};
+
+		if (allItems && allItems.length > 0) {
+			let pairMatches = {};
+			let groupMatchesByGroup = {};
+
+			$.each(allItems, function(i, jg){
+				if (jg['is_bye']) return;
+				let tA = parseInt(jg['timeA_id']) || 0;
+				let tB = parseInt(jg['timeB_id']) || 0;
+				let sA = $.trim(jg['timeA_nome'] || '');
+				let sB = $.trim(jg['timeB_nome'] || '');
+				let f = parseInt(jg['fase']) || 0;
+				let grp = $.trim(jg['grupo'] || '');
+
+				// Agrupar jogos de fase de grupos para cálculo de rodadas
+				if (f == 2 && grp !== '') {
+					if (!groupMatchesByGroup[grp]) {
+						groupMatchesByGroup[grp] = [];
+					}
+					groupMatchesByGroup[grp].push(jg);
+				}
+
+				let keyPair = '';
+				if (tA !== 0 && tB !== 0) {
+					keyPair = 'f_' + f + '_g_' + grp + '_t_' + Math.min(tA, tB) + '_' + Math.max(tA, tB);
+				} else if (sA !== '' && sB !== '') {
+					let sMin = (sA < sB) ? sA : sB;
+					let sMax = (sA < sB) ? sB : sA;
+					keyPair = 'f_' + f + '_g_' + grp + '_s_' + sMin + '_' + sMax;
+				}
+
+				if (keyPair !== '') {
+					if (!pairMatches[keyPair]) {
+						pairMatches[keyPair] = [];
+					}
+					pairMatches[keyPair].push(jg);
+				}
+			});
+
+			// Calcular Ida / Volta / Único
+			$.each(pairMatches, function(k, mList){
+				if (mList.length === 2) {
+					mList.sort(function(a, b){
+						let dtA = a['data'] ? new Date(a['data'].replace(/-/g, '/')).getTime() : 0;
+						let dtB = b['data'] ? new Date(b['data'].replace(/-/g, '/')).getTime() : 0;
+						if (dtA !== dtB) return dtA - dtB;
+						return (parseInt(a['id']) || 0) - (parseInt(b['id']) || 0);
+					});
+					confrontationLegMap[mList[0]['id']] = 'Ida';
+					confrontationLegMap[mList[1]['id']] = 'Volta';
+				} else if (mList.length === 1) {
+					let singleFase = parseInt(mList[0]['fase']) || 0;
+					if (singleFase > 2 && (tipoCompeticao == 1 || tipoCompeticao == 2)) {
+						if (singleFase == 8 && finalUnica == 1) {
+							confrontationLegMap[mList[0]['id']] = 'Único';
+						} else if (tipoPreliminar == 0) {
+							confrontationLegMap[mList[0]['id']] = 'Único';
+						}
+					}
+				}
+			});
+
+			// Calcular número da Rodada para cada Grupo (particionando cronologicamente as partidas de cada time)
+			$.each(groupMatchesByGroup, function(grpName, gMatches){
+				gMatches.sort(function(a, b){
+					let dtA = a['data'] ? new Date(a['data'].replace(/-/g, '/')).getTime() : 0;
+					let dtB = b['data'] ? new Date(b['data'].replace(/-/g, '/')).getTime() : 0;
+					if (dtA !== dtB) return dtA - dtB;
+					return (parseInt(a['id']) || 0) - (parseInt(b['id']) || 0);
+				});
+
+				let teamMatchCounts = {};
+				$.each(gMatches, function(idx, gMatch){
+					let tA = parseInt(gMatch['timeA_id']) || 0;
+					let tB = parseInt(gMatch['timeB_id']) || 0;
+					let kA = (tA !== 0) ? ('id_' + tA) : ('name_' + $.trim(gMatch['timeA_nome'] || ''));
+					let kB = (tB !== 0) ? ('id_' + tB) : ('name_' + $.trim(gMatch['timeB_nome'] || ''));
+
+					let countA = teamMatchCounts[kA] || 0;
+					let countB = teamMatchCounts[kB] || 0;
+					let assignedRound = Math.max(countA, countB) + 1;
+
+					teamMatchCounts[kA] = assignedRound;
+					teamMatchCounts[kB] = assignedRound;
+					matchdayRoundMap[gMatch['id']] = assignedRound;
+				});
+			});
+		}
 		var results_per_page = 18;
 		var total_results = allItems.length;
 		var total_pages = Math.ceil(total_results/results_per_page);
@@ -894,8 +988,18 @@ $(document).ready(function($){
 						let scoreClass = (val['status'] == 1 && podeVerResultado) ? 'gameScore placar-celula' : 'placar-celula-agendado';
 						tbl += "<td class='" + scoreClass + "' data-label='Placar'><span>"+scoreDisplay+"</span></td>";
 						tbl += "<td class='time-fora' data-label='Time B'><div style='display: inline-flex; align-items: center; justify-content: flex-start; gap: 4px;'><span class='nomeTimeB' id='timeB"+ val['id']+"'>"+ nomeTimeB +"</span>" + escLinkB + "</div><select id='selTimeB"+val['id']+"' class='comboTimeB editavel' style='display:none;'>"+timeBOptions+"</select></td>";
-						tbl += "<td data-label='Fase'><span class='fase' id='fase"+ val['id']+"'>"+ fase +"</span><select id='selFase"+val['id']+"' class='comboFase editavel' style='display:none;'>"+faseOptions+"</select></td>";
-						tbl += "<td data-label='Grupo'><span class='grupo' id='grupo"+ val['id']+"'>"+ grupo +"</span><input id='selGrupo"+val['id']+"' class='grupoEditavel editavel' type='text' value='"+grupo+"' style='display:none; max-width:60px;'/></td>";
+												let legBadgeHtml = "";
+						if (confrontationLegMap[val['id']]) {
+							let legType = confrontationLegMap[val['id']];
+							let legBadgeClass = (legType === 'Ida') ? 'badge-ida' : ((legType === 'Volta') ? 'badge-volta' : 'badge-unico');
+							legBadgeHtml = " <span class='badge-leg " + legBadgeClass + "'>" + legType + "</span>";
+						}
+						tbl += "<td data-label='Fase'><div style='display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;'><span class='fase' id='fase"+ val['id']+"'>"+ fase +"</span>" + legBadgeHtml + "</div><select id='selFase"+val['id']+"' class='comboFase editavel' style='display:none;'>"+faseOptions+"</select></td>";
+												let rodadaBadgeHtml = "";
+						if (matchdayRoundMap[val['id']]) {
+							rodadaBadgeHtml = " <span class='badge-rodada' title='Rodada " + matchdayRoundMap[val['id']] + "'>" + matchdayRoundMap[val['id']] + "R</span>";
+						}
+						tbl += "<td data-label='Grupo'><div style='display: inline-flex; align-items: center; gap: 4px; justify-content: center;'><span class='grupo' id='grupo"+ val['id']+"'>"+ grupo +"</span>" + rodadaBadgeHtml + "</div><input id='selGrupo"+val['id']+"' class='grupoEditavel editavel' type='text' value='"+grupo+"' style='display:none; max-width:60px;'/></td>";
 						tbl += "<td data-label='Árbitro'><span class='arbitro' id='arbitro"+ val['id']+"'>"+ arbitro +"</span><select id='selArbitro"+val['id']+"' class='comboArbitro editavel' style='display:none;' disabled>"+arbOptions+"</select></td>";
 						tbl += "<td data-label='Estádio'><span class='estadio' id='estadio"+ val['id']+"'>"+ estadio +"</span><select id='selEstadio"+val['id']+"' class='comboEstadio editavel' style='display:none;'>"+estOptions+"</select></td>";
 						tbl += "<td data-label='Data'><span class='dataPartida' id='dat"+ val['id']+"'>"+ dataDisplay+" </span><input id='selDat"+val['id']+"' class='dataEditavel editavel' type='date' value='"+dateOnly+"' min='"+currentYearMin+"' style='display:none;'/></td>";

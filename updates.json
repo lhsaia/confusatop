@@ -9,6 +9,27 @@
   },
     "days": [
     {
+      "id": "day_11_11_2026",
+      "date": "11/11/2026",
+      "items": [
+        {
+          "badge": "design",
+          "title": "Ajuste de Alinhamento e Formato de Rodadas",
+          "desc": "Centraliza o badge de Ida/Volta dentro da coluna de Fase e encurta a exibicao das rodadas da fase de grupos para o formato compacto 1R, 2R, 3R."
+        },
+        {
+          "badge": "new",
+          "title": "Blindagem no Excel e Indicadores de Ida/Volta e Rodadas",
+          "desc": "Blindagem automatica para ignorar alteracoes acidentais em jogos concluidos via Excel, alem de novos badges na lista de jogos indicando se o confronto e de Ida, Volta ou Unico e o numero da rodada na fase de grupos."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Status de Jogador Disponivel ao Contratar",
+          "desc": "Garante que, ao aceitar proposta de transferencia, jogadores marcados como disponiveis (status 1) passem automaticamente para status normal (0) no novo clube."
+        }
+      ]
+    },
+    {
       "id": "day_10_11_2026",
       "date": "10/11/2026",
       "items": [

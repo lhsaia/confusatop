@@ -128,14 +128,21 @@ if (isset($_FILES['planilha_excel']) && !empty($_FILES['planilha_excel'])) {
                 if (!empty($matchId)) {
                     // UPDATE
                     $matchId = intval($matchId);
-                    // Check if match belongs to this competition
-                    $stmtCheck = $db->prepare("SELECT competicao_id FROM jogos_clube WHERE id = ?");
+                    // Check if match belongs to this competition and its current status
+                    $stmtCheck = $db->prepare("SELECT competicao_id, status FROM jogos_clube WHERE id = ?");
                     $stmtCheck->execute([$matchId]);
-                    $dbCompId = $stmtCheck->fetchColumn();
+                    $currMatch = $stmtCheck->fetch(PDO::FETCH_ASSOC);
                     
-                    if ($dbCompId != $idCompeticao) {
+                    if (!$currMatch || $currMatch['competicao_id'] != $idCompeticao) {
                         $errors[] = "Linha {$currentRow}: O jogo ID {$matchId} não pertence a esta competição.";
                         $errorCount++;
+                        $currentRow++;
+                        continue;
+                    }
+                    
+                    // Blindagem: Se o jogo já foi realizado (status = 1 no banco), preserva seus dados originais contra edições acidentais no Excel
+                    if ((int)$currMatch['status'] === 1) {
+                        $successCount++;
                         $currentRow++;
                         continue;
                     }
