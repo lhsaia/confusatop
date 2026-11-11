@@ -84,6 +84,20 @@ try {
     
     $compDisplayName = $compInfo ? ($compInfo['nome'] . (!empty($compInfo['ano']) ? ' ' . $compInfo['ano'] : '')) : "Competição #$compId";
     $compTipo = isset($compInfo['tipo']) ? (int)$compInfo['tipo'] : 0; // 0 = Misto, 1 = Mata-mata, 2 = Pontos Corridos
+
+    // 1.1. Obter opções de classificação e zonas da tabela (competicao_opcoes)
+    $tableZones = [];
+    try {
+        $stmtOpt = $conn->prepare("SELECT zonas_tabela FROM competicao_opcoes WHERE id_competicao = ? LIMIT 1");
+        $stmtOpt->execute([$compId]);
+        $optRow = $stmtOpt->fetch(PDO::FETCH_ASSOC);
+        if ($optRow && !empty($optRow['zonas_tabela'])) {
+            $decoded = json_decode($optRow['zonas_tabela'], true);
+            if (is_array($decoded)) {
+                $tableZones = $decoded;
+            }
+        }
+    } catch (\Throwable $e) {}
     
     // 2. Partidas da competição
     $stmtMatches = $conn->prepare("
@@ -482,6 +496,7 @@ try {
         'has_groups' => count($sortedGroups) > 1 || (count($sortedGroups) === 1 && !isset($sortedGroups['Geral'])),
         'groups' => $sortedGroups,
         'standings' => $flatStandings,
+        'table_zones' => $tableZones,
         'bracket' => $structuredBracket,
         'rounds' => $rounds
     ], JSON_UNESCAPED_UNICODE);

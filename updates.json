@@ -13,6 +13,16 @@
       "date": "11/11/2026",
       "items": [
         {
+          "badge": "bugfix",
+          "title": "Zonas de Classificação Dinâmicas no PoltronaScore",
+          "desc": "Ajustada a classificação e os grupos no PoltronaScore para respeitarem estritamente as regras e faixas de avanço/rebaixamento configuradas na competição no CONFUSA.top, eliminando regras fixas hardcoded."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correcao na renderizacao da lista de jogos e selecao restrita de times",
+          "desc": "Corrige erro de execucao no script da tabela e restringe selecao de times apenas aos clubes participantes com suporte a placeholders de fase."
+        },
+        {
           "badge": "design",
           "title": "Ajuste de Alinhamento e Formato de Rodadas",
           "desc": "Centraliza o badge de Ida/Volta dentro da coluna de Fase e encurta a exibicao das rodadas da fase de grupos para o formato compacto 1R, 2R, 3R."

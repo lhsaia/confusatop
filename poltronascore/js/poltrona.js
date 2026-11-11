@@ -17,6 +17,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let cachedStandingsData = null;
     let cachedCompetitions = [];
 
+    const escapeHtml = (str) => {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    };
+
     window.handleLogoError = function(img) {
         if (!img) return;
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -701,13 +711,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const zonesConfig = (data.table_zones && Array.isArray(data.table_zones) && data.table_zones.length > 0)
+            ? data.table_zones
+            : null;
+
         if (data.groups && Object.keys(data.groups).length > 0) {
             let html = '';
             for (const [groupName, teamsList] of Object.entries(data.groups)) {
                 html += `
                     <div class="championship-group">
                         <div class="championship-header">${groupName}</div>
-                        ${renderSingleTableHtml(teamsList)}
+                        ${renderSingleTableHtml(teamsList, zonesConfig)}
                     </div>
                 `;
             }
@@ -718,20 +732,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 standingsContent.innerHTML = '<div class="no-data">Nenhum dado de classificação disponível para esta competição ainda.</div>';
                 return;
             }
-            standingsContent.innerHTML = renderSingleTableHtml(standings);
+            standingsContent.innerHTML = renderSingleTableHtml(standings, zonesConfig);
         }
     }
 
-    function renderSingleTableHtml(standings) {
+    function renderSingleTableHtml(standings, zonesConfig) {
         const totalTeams = standings.length;
         let tableRows = '';
 
         standings.forEach(t => {
             let zoneClass = '';
-            if (t.position <= 4) {
-                zoneClass = 'zone-g4';
-            } else if (totalTeams >= 8 && t.position > totalTeams - 4) {
-                zoneClass = 'zone-relegation';
+            let indicatorStyle = '';
+
+            if (zonesConfig && zonesConfig.length > 0) {
+                // Segue estritamente as regras de zonas da competição no CONFUSA.top
+                const matchingZone = zonesConfig.find(z => {
+                    const de = parseInt(z.de, 10) || 1;
+                    const ate = parseInt(z.ate, 10) || de;
+                    return t.position >= de && t.position <= ate;
+                });
+
+                if (matchingZone && matchingZone.cor) {
+                    zoneClass = 'has-custom-zone';
+                    indicatorStyle = `background: ${matchingZone.cor}22; color: ${matchingZone.cor}; border: 1px solid ${matchingZone.cor};`;
+                }
+            } else {
+                // Fallback apenas se a competição não possuir zonas configuradas
+                if (t.position <= 4) {
+                    zoneClass = 'zone-g4';
+                } else if (totalTeams >= 8 && t.position > totalTeams - 4) {
+                    zoneClass = 'zone-relegation';
+                }
             }
 
             // Form badges (last 5)
@@ -750,7 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tableRows += `
                 <tr class="${zoneClass}">
                     <td class="col-pos">
-                        <span class="pos-indicator">${t.position}</span>
+                        <span class="pos-indicator" style="${indicatorStyle}">${t.position}</span>
                     </td>
                     <td class="col-team">
                         <div class="team-cell">
@@ -772,6 +803,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 </tr>
             `;
         });
+
+        // Montar legenda
+        let legendHtml = '';
+        if (zonesConfig && zonesConfig.length > 0) {
+            const legendItems = zonesConfig.map(z => {
+                const de = parseInt(z.de, 10) || 1;
+                const ate = parseInt(z.ate, 10) || de;
+                const rangeTxt = (de !== ate) ? `${de}º a ${ate}º` : `${de}º`;
+                const desc = z.descricao ? ` ${escapeHtml(z.descricao)}` : '';
+                return `
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: ${z.cor || 'var(--accent-cyan)'};"></div>
+                        <span>(${rangeTxt})${desc}</span>
+                    </div>
+                `;
+            }).join('');
+            legendHtml = `<div class="standings-legend">${legendItems}</div>`;
+        } else if (totalTeams >= 4) {
+            legendHtml = `
+                <div class="standings-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--accent-cyan);"></div>
+                        <span>Zona de Classificação (G4)</span>
+                    </div>
+                    ${totalTeams >= 8 ? `
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--accent-red);"></div>
+                        <span>Zona de Rebaixamento</span>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
 
         return `
             <div class="standings-card">
@@ -795,18 +859,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </tbody>
                     </table>
                 </div>
-                <div class="standings-legend">
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: var(--accent-cyan);"></div>
-                        <span>Zona de Classificação (G4)</span>
-                    </div>
-                    ${totalTeams >= 8 ? `
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: var(--accent-red);"></div>
-                        <span>Zona de Rebaixamento</span>
-                    </div>
-                    ` : ''}
-                </div>
+                ${legendHtml}
             </div>
         `;
     }
