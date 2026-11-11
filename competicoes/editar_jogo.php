@@ -33,8 +33,32 @@ $data = isset($_POST['data']) ? $_POST['data'] : '';
 $hora = isset($_POST['hora']) ? $_POST['hora'] : '';
 $neutro = isset($_POST['neutro']) ? $_POST['neutro'] : 0;
 $subir_live = isset($_POST['subir_live']) ? intval($_POST['subir_live']) : null;
-$timeA_id = isset($_POST['timeA_id']) ? intval($_POST['timeA_id']) : null;
-$timeB_id = isset($_POST['timeB_id']) ? intval($_POST['timeB_id']) : null;
+$timeA_raw = isset($_POST['timeA_id']) ? trim($_POST['timeA_id']) : null;
+$timeB_raw = isset($_POST['timeB_id']) ? trim($_POST['timeB_id']) : null;
+
+$timeA_id = null;
+$timeA_nome = null;
+if ($timeA_raw !== null && $timeA_raw !== '') {
+    if (is_numeric($timeA_raw) && intval($timeA_raw) != 0) {
+        $timeA_id = intval($timeA_raw);
+        $timeA_nome = null;
+    } else {
+        $timeA_id = 0;
+        $timeA_nome = ($timeA_raw === '0') ? null : $timeA_raw;
+    }
+}
+
+$timeB_id = null;
+$timeB_nome = null;
+if ($timeB_raw !== null && $timeB_raw !== '') {
+    if (is_numeric($timeB_raw) && intval($timeB_raw) != 0) {
+        $timeB_id = intval($timeB_raw);
+        $timeB_nome = null;
+    } else {
+        $timeB_id = 0;
+        $timeB_nome = ($timeB_raw === '0') ? null : $timeB_raw;
+    }
+}
 $grupo = isset($_POST['grupo']) ? trim($_POST['grupo']) : null;
 
 $datetime = $data . " " . $hora . ":00";
@@ -43,19 +67,11 @@ $subQuery = "";
 if ($subir_live !== null) {
     $subQuery .= ", subir_live = :subir_live";
 }
-if ($timeA_id !== null) {
-    if ($timeA_id != 0) {
-        $subQuery .= ", timeA_id = :timeA, timeA_nome = NULL";
-    } else {
-        $subQuery .= ", timeA_id = :timeA";
-    }
+if ($timeA_raw !== null) {
+    $subQuery .= ", timeA_id = :timeA, timeA_nome = :nomeA";
 }
-if ($timeB_id !== null) {
-    if ($timeB_id != 0) {
-        $subQuery .= ", timeB_id = :timeB, timeB_nome = NULL";
-    } else {
-        $subQuery .= ", timeB_id = :timeB";
-    }
+if ($timeB_raw !== null) {
+    $subQuery .= ", timeB_id = :timeB, timeB_nome = :nomeB";
 }
 if ($grupo !== null) {
     $subQuery .= ", grupo = :grupo";
@@ -79,11 +95,13 @@ $stmt->bindParam(':neutro', $neutro);
 if ($subir_live !== null) {
     $stmt->bindParam(':subir_live', $subir_live, PDO::PARAM_INT);
 }
-if ($timeA_id !== null) {
-    $stmt->bindParam(':timeA', $timeA_id);
+if ($timeA_raw !== null) {
+    $stmt->bindParam(':timeA', $timeA_id, PDO::PARAM_INT);
+    $stmt->bindParam(':nomeA', $timeA_nome, $timeA_nome === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
 }
-if ($timeB_id !== null) {
-    $stmt->bindParam(':timeB', $timeB_id);
+if ($timeB_raw !== null) {
+    $stmt->bindParam(':timeB', $timeB_id, PDO::PARAM_INT);
+    $stmt->bindParam(':nomeB', $timeB_nome, $timeB_nome === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
 }
 if ($grupo !== null) {
     $stmt->bindParam(':grupo', $grupo);

@@ -1829,12 +1829,153 @@ class Competicao_clube{
 					$this->definirSlotTime($idCompeticao, $cod, $slot);
 				}
 			}
+
+			// Sincronizar placeholders de classificacao de grupos (ex: A1, A2, B1...) caso a fase de grupos ja tenha sido concluida
+			$this->resolverPlaceholdersClassificacaoGrupos($idCompeticao);
+
 			return true;
 		} catch (\Throwable $e) {
 			return false;
 		}
 	}
 
+
+	/**
+	 * Calcula a classificacao dos grupos e resolve placeholders nos jogos de mata-mata (ex: A1, A2, B1...).
+	 */
+	function resolverPlaceholdersClassificacaoGrupos($idCompeticao) {
+		$idCompeticao = (int)$idCompeticao;
+		if ($idCompeticao <= 0) return false;
+
+		// 1. Verificar se existem jogos na competicao que usam placeholders de grupos (ex: A1, A2, B1...)
+		$stCheckPlaceholders = $this->conn->prepare("
+			SELECT id, timeA_id, timeA_nome, timeB_id, timeB_nome, fase 
+			FROM jogos_clube 
+			WHERE competicao_id = :idComp 
+			  AND simulador_interno = 1 
+			  AND fase > 2 
+			  AND (
+			    (timeA_id = 0 AND timeA_nome REGEXP '^[A-Z][1-9]$') 
+			    OR (timeB_id = 0 AND timeB_nome REGEXP '^[A-Z][1-9]$')
+			  )
+		");
+		$stCheckPlaceholders->execute([':idComp' => $idCompeticao]);
+		$jogosComPlaceholder = $stCheckPlaceholders->fetchAll(PDO::FETCH_ASSOC);
+		if (empty($jogosComPlaceholder)) return true;
+
+		// 2. Carregar todos os jogos da fase de grupos (fase = 2)
+		$stJogosGrupos = $this->conn->prepare("
+			SELECT id, timeA_id, timeA_gols, timeB_id, timeB_gols, grupo, status, data 
+			FROM jogos_clube 
+			WHERE competicao_id = :idComp 
+			  AND fase = 2 
+			  AND simulador_interno = 1 
+			  AND grupo IS NOT NULL 
+			  AND grupo != ''
+		");
+		$stJogosGrupos->execute([':idComp' => $idCompeticao]);
+		$jogosGrupos = $stJogosGrupos->fetchAll(PDO::FETCH_ASSOC);
+		if (empty($jogosGrupos)) return false;
+
+		// 3. Verificar se todos os jogos de grupos ja foram simulados (status = 1)
+		$tabelaPorGrupo = [];
+		$gruposIncompletos = [];
+		foreach ($jogosGrupos as $jg) {
+			$grp = strtoupper(trim($jg['grupo']));
+			if ($grp === '') continue;
+
+			if (!isset($tabelaPorGrupo[$grp])) {
+				$tabelaPorGrupo[$grp] = [];
+			}
+
+			$tA = (int)$jg['timeA_id'];
+			$tB = (int)$jg['timeB_id'];
+			if ($tA != 0 && !isset($tabelaPorGrupo[$grp][$tA])) {
+				$tabelaPorGrupo[$grp][$tA] = ['id' => $tA, 'pontos' => 0, 'vitorias' => 0, 'empates' => 0, 'derrotas' => 0, 'gp' => 0, 'gc' => 0, 'sg' => 0];
+			}
+			if ($tB != 0 && !isset($tabelaPorGrupo[$grp][$tB])) {
+				$tabelaPorGrupo[$grp][$tB] = ['id' => $tB, 'pontos' => 0, 'vitorias' => 0, 'empates' => 0, 'derrotas' => 0, 'gp' => 0, 'gc' => 0, 'sg' => 0];
+			}
+
+			if ((int)$jg['status'] !== 1) {
+				$gruposIncompletos[$grp] = true;
+				continue;
+			}
+
+			$golsA = (int)$jg['timeA_gols'];
+			$golsB = (int)$jg['timeB_gols'];
+
+			if (isset($tabelaPorGrupo[$grp][$tA]) && isset($tabelaPorGrupo[$grp][$tB])) {
+				$tabelaPorGrupo[$grp][$tA]['gp'] += $golsA;
+				$tabelaPorGrupo[$grp][$tB]['gp'] += $golsB;
+				$tabelaPorGrupo[$grp][$tA]['gc'] += $golsB;
+				$tabelaPorGrupo[$grp][$tB]['gc'] += $golsA;
+
+				if ($golsA > $golsB) {
+					$tabelaPorGrupo[$grp][$tA]['pontos'] += 3;
+					$tabelaPorGrupo[$grp][$tA]['vitorias']++;
+					$tabelaPorGrupo[$grp][$tB]['derrotas']++;
+				} elseif ($golsB > $golsA) {
+					$tabelaPorGrupo[$grp][$tB]['pontos'] += 3;
+					$tabelaPorGrupo[$grp][$tB]['vitorias']++;
+					$tabelaPorGrupo[$grp][$tA]['derrotas']++;
+				} else {
+					$tabelaPorGrupo[$grp][$tA]['pontos'] += 1;
+					$tabelaPorGrupo[$grp][$tB]['pontos'] += 1;
+					$tabelaPorGrupo[$grp][$tA]['empates']++;
+					$tabelaPorGrupo[$grp][$tB]['empates']++;
+				}
+			}
+		}
+
+		// 4. Ordenar cada grupo concluido e mapear as posicoes (ex: A1 => timeId, A2 => timeId)
+		$mapaClassificados = [];
+		foreach ($tabelaPorGrupo as $grp => $timesDoGrupo) {
+			if (isset($gruposIncompletos[$grp])) {
+				continue;
+			}
+
+			foreach ($timesDoGrupo as $idC => $d) {
+				$timesDoGrupo[$idC]['sg'] = $timesDoGrupo[$idC]['gp'] - $timesDoGrupo[$idC]['gc'];
+			}
+
+			usort($timesDoGrupo, function($a, $b) {
+				if ($a['pontos'] != $b['pontos']) return $b['pontos'] - $a['pontos'];
+				if ($a['vitorias'] != $b['vitorias']) return $b['vitorias'] - $a['vitorias'];
+				if ($a['sg'] != $b['sg']) return $b['sg'] - $a['sg'];
+				return $b['gp'] - $a['gp'];
+			});
+
+			foreach (array_values($timesDoGrupo) as $posIdx => $tClassif) {
+				$posNum = $posIdx + 1;
+				$placeholderCode = $grp . $posNum;
+				$mapaClassificados[$placeholderCode] = (int)$tClassif['id'];
+			}
+		}
+
+		if (empty($mapaClassificados)) return true;
+
+		// 5. Atualizar os jogos de mata-mata que contem esses placeholders
+		foreach ($jogosComPlaceholder as $jg) {
+			$jId = (int)$jg['id'];
+			$pA = strtoupper(trim($jg['timeA_nome'] ?? ''));
+			$pB = strtoupper(trim($jg['timeB_nome'] ?? ''));
+
+			if ((int)$jg['timeA_id'] == 0 && isset($mapaClassificados[$pA])) {
+				$realIdA = $mapaClassificados[$pA];
+				$stUpdA = $this->conn->prepare("UPDATE jogos_clube SET timeA_id = :tA WHERE id = :id");
+				$stUpdA->execute([':tA' => $realIdA, ':id' => $jId]);
+			}
+
+			if ((int)$jg['timeB_id'] == 0 && isset($mapaClassificados[$pB])) {
+				$realIdB = $mapaClassificados[$pB];
+				$stUpdB = $this->conn->prepare("UPDATE jogos_clube SET timeB_id = :tB WHERE id = :id");
+				$stUpdB->execute([':tB' => $realIdB, ':id' => $jId]);
+			}
+		}
+
+		return true;
+	}
 	function isClubeAtivoNaCompeticao($idCompeticao, $idClube) {
 		$idCompeticao = (int)$idCompeticao;
 		$idClube = (int)$idClube;

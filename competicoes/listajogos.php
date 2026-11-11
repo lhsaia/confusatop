@@ -113,9 +113,8 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 		$listaFases[] = $addArray;
 	}
 	
-	// 1. Carregar lista de times do SQLite da competição (inclui times temporários YMT com ID negativo)
-	$listaTimes = array();
-	$timesJaAdicionados = array();
+	// 1. Carregar mapa geral de nomes de clubes (SQLite local e MariaDB)
+	$todosClubesMap = array();
 	if($cdb){
 		try {
 			$stmtSqlite = $cdb->query("SELECT ID, Nome FROM clube");
@@ -124,51 +123,83 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
 					$cId = (int)($row['ID'] ?? ($row['id'] ?? 0));
 					$cNome = trim(html_entity_decode(html_entity_decode(stripslashes($row['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 					if($cId != 0 && $cNome !== ''){
-						if(!isset($timesJaAdicionados[$cId])){
-							$listaTimes[] = array($cId, $cNome);
-							$timesJaAdicionados[$cId] = $cNome;
-						}
+						$todosClubesMap[$cId] = $cNome;
 					}
 				}
 			}
 		} catch (\Throwable $e) {}
 	}
-	// 2. Carregar também clubes do MariaDB (portal)
 	try {
 		$stmtMaria = $db->query("SELECT id, nome FROM clube");
 		if($stmtMaria){
 			while ($rowM = $stmtMaria->fetch(PDO::FETCH_ASSOC)){
 				$mId = (int)($rowM['id'] ?? 0);
 				$mNome = trim(html_entity_decode(html_entity_decode(stripslashes($rowM['nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-				if($mId > 0 && !isset($timesJaAdicionados[$mId]) && $mNome !== ''){
-					$listaTimes[] = array($mId, $mNome);
-					$timesJaAdicionados[$mId] = $mNome;
+				if($mId > 0 && !isset($todosClubesMap[$mId]) && $mNome !== ''){
+					$todosClubesMap[$mId] = $mNome;
 				}
 			}
 		}
 	} catch (\Throwable $e) {}
 
-	// 3. Fallback para times temporários registrados em competicao_times que estejam em SQLite
-	try {
-		$stExt = $db->prepare("SELECT codigo_time FROM competicao_times WHERE id_competicao = :idComp AND has_team = 1 AND (id_time_portal IS NULL OR id_time_portal = 0)");
-		$stExt->execute([':idComp' => $idCompeticao]);
-		while ($rExt = $stExt->fetch(PDO::FETCH_ASSOC)) {
-			$codExt = intval($rExt['codigo_time']);
-			$extId = -1 * abs($codExt);
-			if (!isset($timesJaAdicionados[$extId]) && $cdb) {
-				$stC = $cdb->prepare("SELECT Nome FROM clube WHERE ID = :id OR ID = :idPos LIMIT 1");
-				$posId = abs($codExt);
-				$stC->execute([':id' => $extId, ':idPos' => $posId]);
-				$rC = $stC->fetch(PDO::FETCH_ASSOC);
-				if ($rC && !empty($rC['Nome'])) {
-					$eNome = trim(html_entity_decode(html_entity_decode(stripslashes($rC['Nome']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-					$listaTimes[] = array($extId, $eNome);
-					$timesJaAdicionados[$extId] = $eNome;
+	// 2. Montar $listaTimes RESTRITA ESTRITAMENTE aos times desta competição (vagas / times confirmados)
+	$listaTimes = array();
+	$timesJaAdicionados = array();
+
+	// A) Adicionar times inscritos/confirmados em competicao_times
+	if (!empty($timesInscritos)) {
+		foreach ($timesInscritos as $tIns) {
+			$tId = (int)$tIns['id'];
+			if ($tId != 0 && !isset($timesJaAdicionados[$tId])) {
+				$tNome = $todosClubesMap[$tId] ?? (!empty($tIns['slot']) ? $tIns['slot'] : ("Time " . $tIns['codigo']));
+				$listaTimes[] = array($tId, $tNome);
+				$timesJaAdicionados[$tId] = $tNome;
+			}
+		}
+	}
+
+	// B) Adicionar clubes do SQLite da própria competição se não estiverem na lista
+	if ($cdb) {
+		try {
+			$stmtSqliteComp = $cdb->query("SELECT ID, Nome FROM clube");
+			if ($stmtSqliteComp) {
+				while ($rowC = $stmtSqliteComp->fetch(PDO::FETCH_ASSOC)) {
+					$cId = (int)($rowC['ID'] ?? ($rowC['id'] ?? 0));
+					$cNome = trim(html_entity_decode(html_entity_decode(stripslashes($rowC['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+					if ($cId != 0 && !isset($timesJaAdicionados[$cId]) && $cNome !== '') {
+						$listaTimes[] = array($cId, $cNome);
+						$timesJaAdicionados[$cId] = $cNome;
+					}
 				}
+			}
+		} catch (\Throwable $e) {}
+	}
+
+	// Ordenar alfabeticamente pelo nome do clube para facilitar a seleção
+	usort($listaTimes, function($a, $b) {
+		return strcasecmp($a[1], $b[1]);
+	});
+
+	// Detectar grupos da competição para gerar opções de placeholders (A1, A2, etc.)
+	$gruposDisponiveis = [];
+	try {
+		$stG = $db->prepare("SELECT DISTINCT grupo FROM jogos_clube WHERE competicao_id = :idComp AND fase = 2 AND grupo IS NOT NULL AND grupo != '' ORDER BY grupo ASC");
+		$stG->execute([':idComp' => $idCompeticao]);
+		while ($rG = $stG->fetch(PDO::FETCH_ASSOC)) {
+			$gUpper = strtoupper(trim($rG['grupo']));
+			if ($gUpper !== '' && !in_array($gUpper, $gruposDisponiveis)) {
+				$gruposDisponiveis[] = $gUpper;
 			}
 		}
 	} catch (\Throwable $e) {}
-	
+
+	if (empty($gruposDisponiveis) && isset($options['num_grupos']) && intval($options['num_grupos']) > 0) {
+		$nGrp = intval($options['num_grupos']);
+		for ($gi = 0; $gi < $nGrp; $gi++) {
+			$gruposDisponiveis[] = chr(65 + $gi);
+		}
+	}
+
 	//query lista árbitros
 	$stmt = $arbitro->carregarListaArbitrosSqlite();
 	$listaArbitros = array();
@@ -414,6 +445,7 @@ $(document).ready(function($){
 	 var listaEstadios =  <?php echo json_encode($listaEstadios); ?>;
 	 var assignedSlotTeams = <?php echo json_encode($assignedSlotTeams); ?>;
 	 var timesInscritos = <?php echo json_encode($timesInscritos); ?>;
+	 var gruposDisponiveis = <?php echo json_encode($gruposDisponiveis); ?>;
 	 var tipoCompeticao = <?php echo (int)$tipoCompeticao; ?>;
 	 var numTeamsComp = <?php echo (int)$numTeamsComp; ?>;
 	 var tipoPreliminar = <?php echo isset($options['tipo_preliminar']) ? (int)$options['tipo_preliminar'] : 1; ?>;
@@ -429,10 +461,9 @@ $(document).ready(function($){
 	 var is_admin_user ='<?php echo (isset($_SESSION['admin_status']) && $_SESSION['admin_status'] == 1) ? "true" : "false"; ?>';
 	 var user_id ='<?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0; ?>';
 	 
-	$("#new_match").hide();
 	$('body').append('<input type="file" id="excel_file_input" style="display:none;" accept=".xls,.xlsx"/>');
 	 
-	let btnHtml = '<div id="gerar_tabela"><span class="material-symbols-outlined">grid_view</span><span class="btn-text">Gerar Tabela</span></div>';
+	'<div id="gerar_tabela"><span class="material-symbols-outlined">grid_view</span><span class="btn-text">Gerar Tabela</span></div>';
 	btnHtml += '<div id="exportar_excel"><span class="material-symbols-outlined">download</span><span class="btn-text">Exportar Excel</span></div>';
 	btnHtml += '<div id="exportar_notas" title="Exportar notas (médias) dos jogadores para Excel"><span class="material-symbols-outlined">grade</span><span class="btn-text">Exportar Notas</span></div>';
 	btnHtml += '<div id="importar_excel"><span class="material-symbols-outlined">upload</span><span class="btn-text">Importar Excel</span></div>';
@@ -492,6 +523,10 @@ $(document).ready(function($){
 		});
 	});
 	 
+	$(document).on('click', '#btn_toggle_novo_jogo', function(){
+		$('#new_match').slideToggle(200);
+	});
+
 	$(document).on('click', '#gerar_tabela', function(){
 		$('#modalGerarTabela').fadeIn(200);
 	});
@@ -953,15 +988,29 @@ $(document).ready(function($){
 					}
 				}
 
-				let timeAOptions = "<option value='0' "+ (effectiveIdA == 0 ? 'selected' : '') +">A definir / Manter Slot</option>";
-				$.each(listaTimes, function(i, t){
-					timeAOptions += "<option value='"+t[0]+"' "+ (t[0] == effectiveIdA ? 'selected' : '') +">"+t[1]+"</option>";
-				});
+				let curValA = (effectiveIdA != 0) ? String(effectiveIdA) : tA_nome_raw;
+				let curValB = (effectiveIdB != 0) ? String(effectiveIdB) : tB_nome_raw;
 
-				let timeBOptions = "<option value='0' "+ (effectiveIdB == 0 ? 'selected' : '') +">A definir / Manter Slot</option>";
+				let placeholderGroupHtml = "<optgroup label='Classificação / Avanço'>";
+				placeholderGroupHtml += "<option value='BYE'>BYE (Avança Direto)</option>";
+				if (gruposDisponiveis && gruposDisponiveis.length > 0) {
+					$.each(gruposDisponiveis, function(idx, gL){
+						for (let pNum = 1; pNum <= 8; pNum++) {
+							let pCode = gL + pNum;
+							placeholderGroupHtml += "<option value='" + pCode + "'>" + pNum + "º do Grupo " + gL + " (" + pCode + ")</option>";
+						}
+					});
+				}
+				placeholderGroupHtml += "</optgroup>";
+
+				let clubOptionsHtml = "<optgroup label='Clubes Confirmados'>";
 				$.each(listaTimes, function(i, t){
-					timeBOptions += "<option value='"+t[0]+"' "+ (t[0] == effectiveIdB ? 'selected' : '') +">"+t[1]+"</option>";
+					clubOptionsHtml += "<option value='"+t[0]+"'>"+t[1]+"</option>";
 				});
+				clubOptionsHtml += "</optgroup>";
+
+				let timeAOptions = "<option value='0'>A definir / Manter Slot</option>" + placeholderGroupHtml + clubOptionsHtml;
+				let timeBOptions = "<option value='0'>A definir / Manter Slot</option>" + placeholderGroupHtml + clubOptionsHtml;
 
 				// Geração da tabela
 				if (val['is_bye']) {
@@ -984,10 +1033,10 @@ $(document).ready(function($){
 				} else {
 					let isLiveChecked = (val['subir_live'] == 1 || val['subir_live'] === '1' || val['subir_live'] === true);
 					tbl += "<tr id='"+val['id']+"'>";
-						tbl += "<td class='time-casa' data-label='Time A'><div style='display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px;'><span class='nomeTimeA' id='timeA"+ val['id']+"'>"+ nomeTimeA +"</span>" + escLinkA + "</div><select id='selTimeA"+val['id']+"' class='comboTimeA editavel' style='display:none;'>"+timeAOptions+"</select></td>";
+						tbl += "<td class='time-casa' data-label='Time A'><div style='display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px;'><span class='nomeTimeA' id='timeA"+ val['id']+"'>"+ nomeTimeA +"</span>" + escLinkA + "</div><select id='selTimeA"+val['id']+"' data-initval='" + (curValA || '0') + "' class='comboTimeA editavel' style='display:none;'>"+timeAOptions+"</select></td>";
 						let scoreClass = (val['status'] == 1 && podeVerResultado) ? 'gameScore placar-celula' : 'placar-celula-agendado';
 						tbl += "<td class='" + scoreClass + "' data-label='Placar'><span>"+scoreDisplay+"</span></td>";
-						tbl += "<td class='time-fora' data-label='Time B'><div style='display: inline-flex; align-items: center; justify-content: flex-start; gap: 4px;'><span class='nomeTimeB' id='timeB"+ val['id']+"'>"+ nomeTimeB +"</span>" + escLinkB + "</div><select id='selTimeB"+val['id']+"' class='comboTimeB editavel' style='display:none;'>"+timeBOptions+"</select></td>";
+						tbl += "<td class='time-fora' data-label='Time B'><div style='display: inline-flex; align-items: center; justify-content: flex-start; gap: 4px;'><span class='nomeTimeB' id='timeB"+ val['id']+"'>"+ nomeTimeB +"</span>" + escLinkB + "</div><select id='selTimeB"+val['id']+"' data-initval='" + (curValB || '0') + "' class='comboTimeB editavel' style='display:none;'>"+timeBOptions+"</select></td>";
 												let legBadgeHtml = "";
 						if (confrontationLegMap[val['id']]) {
 							let legType = confrontationLegMap[val['id']];
@@ -1070,6 +1119,10 @@ $(document).ready(function($){
 		tbl_row.find('span.arbitro, span.estadio, span.fase, span.grupo, span.dataPartida, span.horaPartida, span.nomeTimeA, span.nomeTimeB, a.lineup-btn').hide();
 		
 		tbl_row.find('.editavel').show();
+		let sA = tbl_row.find('.comboTimeA');
+		if (sA.data('initval')) { sA.val(sA.data('initval')); }
+		let sB = tbl_row.find('.comboTimeB');
+		if (sB.data('initval')) { sB.val(sB.data('initval')); }
 		tbl_row.find('.gameScore span').show(); // Mantém o placar visível
 		
 		tbl_row.find(".salvar").show();
@@ -1338,17 +1391,43 @@ $(document).ready(function($){
 
         <div id="new_match">
             <select id="new_time_a">
-                <?php foreach($listaTimes as $time): ?>
-                    <option value='<?php echo $time[0]; ?>'><?php echo $time[1]; ?></option>
-                <?php endforeach; ?>
+                <option value="0">A definir / Manter Slot</option>
+                <optgroup label="Classificação / Avanço">
+                    <option value="BYE">BYE (Avança Direto)</option>
+                    <?php if (!empty($gruposDisponiveis)): ?>
+                        <?php foreach($gruposDisponiveis as $gL): ?>
+                            <?php for($pNum = 1; $pNum <= 8; $pNum++): $pCode = $gL . $pNum; ?>
+                                <option value="<?php echo $pCode; ?>"><?php echo $pNum; ?>º do Grupo <?php echo $gL; ?> (<?php echo $pCode; ?>)</option>
+                            <?php endfor; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </optgroup>
+                <optgroup label="Clubes Confirmados">
+                    <?php foreach($listaTimes as $time): ?>
+                        <option value='<?php echo $time[0]; ?>'><?php echo $time[1]; ?></option>
+                    <?php endforeach; ?>
+                </optgroup>
             </select>
             
             <span id="cross">X</span>
             
             <select id="new_time_b">
-                <?php foreach($listaTimes as $time): ?>
-                    <option value='<?php echo $time[0]; ?>'><?php echo $time[1]; ?></option>
-                <?php endforeach; ?>
+                <option value="0">A definir / Manter Slot</option>
+                <optgroup label="Classificação / Avanço">
+                    <option value="BYE">BYE (Avança Direto)</option>
+                    <?php if (!empty($gruposDisponiveis)): ?>
+                        <?php foreach($gruposDisponiveis as $gL): ?>
+                            <?php for($pNum = 1; $pNum <= 8; $pNum++): $pCode = $gL . $pNum; ?>
+                                <option value="<?php echo $pCode; ?>"><?php echo $pNum; ?>º do Grupo <?php echo $gL; ?> (<?php echo $pCode; ?>)</option>
+                            <?php endfor; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </optgroup>
+                <optgroup label="Clubes Confirmados">
+                    <?php foreach($listaTimes as $time): ?>
+                        <option value='<?php echo $time[0]; ?>'><?php echo $time[1]; ?></option>
+                    <?php endforeach; ?>
+                </optgroup>
             </select>
             
             <select id="new_fase">
