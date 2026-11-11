@@ -793,7 +793,6 @@ foreach ($partidas as $matchInfo) {
     // 4. Normalizar e validar imagens de todos os clubes para evitar exceções do Java (ImageIO.read retornando null)
     $originaisClubeImagens = normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot, $db);
     
-    require_once __DIR__ . '/sumula_helper.php';
     $competitionInfo = $competicaoObj->readInfo($idCompeticao);
     $nomeCompostoOriginal = $competitionInfo['ano'] . " - " . $competitionInfo['nome'];
     $nomeComposto = sanitizarNomePastaCompeticao($nomeCompostoOriginal);

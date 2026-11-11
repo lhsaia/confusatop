@@ -6,6 +6,15 @@
  * e crashes por falta de marcadores/posições válidas.
  */
 
+if (!function_exists('sanitizarNomePastaCompeticao')) {
+    function sanitizarNomePastaCompeticao($nomeComposto) {
+        $nome = html_entity_decode((string)$nomeComposto, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $nome = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', $nome);
+        $nome = preg_replace('/\s+/', ' ', $nome);
+        return trim($nome);
+    }
+}
+
 if (!function_exists('normalizarPosicaoHexacolor')) {
     function normalizarPosicaoHexacolor($pos, $slotIndex = 2) {
         $pos = strtoupper(trim((string)$pos));

@@ -4,6 +4,15 @@
  * Utilizado para downloads individuais e em pacote (ZIP) pelos donos de competições e administradores.
  */
 
+if (!function_exists('sanitizarNomePastaCompeticao')) {
+    function sanitizarNomePastaCompeticao($nomeComposto) {
+        $nome = html_entity_decode((string)$nomeComposto, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $nome = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', $nome);
+        $nome = preg_replace('/\s+/', ' ', $nome);
+        return trim($nome);
+    }
+}
+
 if (!function_exists('encontrarArquivoSumula')) {
     /**
      * Localiza o arquivo de súmula de uma partida (.hyl ou .hyj)
@@ -39,15 +48,18 @@ if (!function_exists('encontrarArquivoSumula')) {
 
         // 1. Tentar diretamente na pasta da competição se o nome composto foi fornecido
         if (!empty($nomeComposto)) {
+            $nomesCandidatos = array_unique([$nomeComposto, sanitizarNomePastaCompeticao($nomeComposto)]);
             foreach ($searchBases as $sb) {
-                $compDir = $sb . '/' . $nomeComposto;
-                if (is_dir($compDir)) {
-                    $matches = glob($compDir . '/*/' . $cleanPath . '.' . $ext);
-                    if (!empty($matches) && file_exists($matches[0])) {
-                        return str_replace('\\', '/', $matches[0]);
-                    }
-                    if (file_exists($compDir . '/' . $cleanPath . '.' . $ext)) {
-                        return str_replace('\\', '/', $compDir . '/' . $cleanPath . '.' . $ext);
+                foreach ($nomesCandidatos as $nc) {
+                    $compDir = $sb . '/' . $nc;
+                    if (is_dir($compDir)) {
+                        $matches = glob($compDir . '/*/' . $cleanPath . '.' . $ext);
+                        if (!empty($matches) && file_exists($matches[0])) {
+                            return str_replace('\\', '/', $matches[0]);
+                        }
+                        if (file_exists($compDir . '/' . $cleanPath . '.' . $ext)) {
+                            return str_replace('\\', '/', $compDir . '/' . $cleanPath . '.' . $ext);
+                        }
                     }
                 }
             }
@@ -110,23 +122,26 @@ if (!function_exists('coletarArquivosSumulasCompeticao')) {
 
         // 1. Varrer a pasta da própria competição se existir
         if (!empty($nomeComposto)) {
+            $nomesCandidatos = array_unique([$nomeComposto, sanitizarNomePastaCompeticao($nomeComposto)]);
             foreach ($searchBases as $sb) {
-                $compDir = $sb . '/' . $nomeComposto;
-                if (is_dir($compDir)) {
-                    try {
-                        $it = new RecursiveIteratorIterator(
-                            new RecursiveDirectoryIterator($compDir, FilesystemIterator::SKIP_DOTS)
-                        );
-                        foreach ($it as $file) {
-                            if (!$file->isFile()) continue;
-                            $ext = strtolower($file->getExtension());
-                            if (in_array($ext, $extensoes)) {
-                                $realPath = str_replace('\\', '/', $file->getPathname());
-                                $relPath = ltrim(str_replace(str_replace('\\', '/', $compDir), '', $realPath), '/');
-                                $arquivosEncontrados[$relPath] = $realPath;
+                foreach ($nomesCandidatos as $nc) {
+                    $compDir = $sb . '/' . $nc;
+                    if (is_dir($compDir)) {
+                        try {
+                            $it = new RecursiveIteratorIterator(
+                                new RecursiveDirectoryIterator($compDir, FilesystemIterator::SKIP_DOTS)
+                            );
+                            foreach ($it as $file) {
+                                if (!$file->isFile()) continue;
+                                $ext = strtolower($file->getExtension());
+                                if (in_array($ext, $extensoes)) {
+                                    $realPath = str_replace('\\', '/', $file->getPathname());
+                                    $relPath = ltrim(str_replace(str_replace('\\', '/', $compDir), '', $realPath), '/');
+                                    $arquivosEncontrados[$relPath] = $realPath;
+                                }
                             }
-                        }
-                    } catch (\Throwable $e) {}
+                        } catch (\Throwable $e) {}
+                    }
                 }
             }
         }
@@ -176,7 +191,7 @@ if (!function_exists('apagarArquivosPartidaSimulada')) {
      * @return int Quantidade de arquivos removidos
      */
     function apagarArquivosPartidaSimulada($nomeComposto, $path, $docRoot = '') {
-        $nomeComposto = trim($nomeComposto ?? '');
+        $nomeComposto = sanitizarNomePastaCompeticao($nomeComposto ?? '');
         $clean = preg_replace('/\.(hyl|hyj|png|pdf)$/i', '', trim($path ?? ''));
         
         // Bloqueio de segurança: exige obrigatoriamente tanto a pasta da competição quanto o nome da partida
@@ -244,7 +259,7 @@ if (!function_exists('apagarDiretorioCompeticaoPartidas')) {
      * @return bool
      */
     function apagarDiretorioCompeticaoPartidas($nomeComposto, $docRoot = '') {
-        $nomeComposto = trim($nomeComposto ?? '');
+        $nomeComposto = sanitizarNomePastaCompeticao($nomeComposto ?? '');
         if (empty($nomeComposto)) {
             return false;
         }

@@ -277,9 +277,11 @@
 		error_log("Erro ao validar trioarbitragem no SQLite: " . $e->getMessage());
 	}
 	
+	require_once __DIR__ . '/simulador_helper.php';
 	$competitionInfo = $competicao->readInfo($idCompeticao);
 	
-	$nomeComposto = $competitionInfo['ano'] . " - " . $competitionInfo['nome'];
+	$nomeCompostoOriginal = $competitionInfo['ano'] . " - " . $competitionInfo['nome'];
+	$nomeComposto = sanitizarNomePastaCompeticao($nomeCompostoOriginal);
 	$databasePath = "jdbc:sqlite:data/database.db3";
 	
 	$cores = $liteCompeticao->getColors();
