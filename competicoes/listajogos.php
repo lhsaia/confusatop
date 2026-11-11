@@ -463,7 +463,7 @@ $(document).ready(function($){
 	 
 	$('body').append('<input type="file" id="excel_file_input" style="display:none;" accept=".xls,.xlsx"/>');
 	 
-	'<div id="gerar_tabela"><span class="material-symbols-outlined">grid_view</span><span class="btn-text">Gerar Tabela</span></div>';
+	let btnHtml = '<div id="gerar_tabela"><span class="material-symbols-outlined">grid_view</span><span class="btn-text">Gerar Tabela</span></div>';
 	btnHtml += '<div id="exportar_excel"><span class="material-symbols-outlined">download</span><span class="btn-text">Exportar Excel</span></div>';
 	btnHtml += '<div id="exportar_notas" title="Exportar notas (médias) dos jogadores para Excel"><span class="material-symbols-outlined">grade</span><span class="btn-text">Exportar Notas</span></div>';
 	btnHtml += '<div id="importar_excel"><span class="material-symbols-outlined">upload</span><span class="btn-text">Importar Excel</span></div>';
