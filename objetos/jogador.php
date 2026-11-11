@@ -1563,7 +1563,7 @@ return $stmt;
                 }
 
 
-                $otherquery = "UPDATE jogador SET valor=:valor WHERE id=:jogador";
+                $otherquery = "UPDATE jogador SET valor=:valor, disponibilidade = CASE WHEN disponibilidade = 1 THEN 0 ELSE disponibilidade END WHERE id=:jogador";
                 $stmt = $this->conn->prepare($otherquery);
                 $stmt->bindParam(':valor',$passe);
                 $stmt->bindParam(':jogador',$row['jogador']);
