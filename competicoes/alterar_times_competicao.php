@@ -355,6 +355,303 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 		case 2:
 		
 			break;
+		case 'bulk_salvar_times':
+			// Salvar múltiplos times de uma só vez
+			$idCompeticao = isset($_POST['codigo_competicao']) ? intval($_POST['codigo_competicao']) : 0;
+			$vagasJson = isset($_POST['vagas']) ? $_POST['vagas'] : '';
+			$vagas = json_decode($vagasJson, true);
+
+			if ($idCompeticao <= 0 || !is_array($vagas) || empty($vagas)) {
+				die(json_encode(['success' => false, 'error' => 'Nenhuma alteração de time recebida para salvar em lote.']));
+			}
+
+			// 1. Extrair os IDs de times do portal para conferência de integridade prévia
+			$timesToCheck = [];
+			foreach ($vagas as $vItem) {
+				$tId = intval($vItem['time_portal'] ?? 0);
+				if ($tId > 0) {
+					$timesToCheck[] = $tId;
+				}
+			}
+
+			$timeObjCheck = new Time($db);
+			if (!empty($timesToCheck)) {
+				// Checar se pertencem a federações oficiais
+				$inPlaceholders = implode(',', array_fill(0, count($timesToCheck), '?'));
+				$stCheckClub = $db->prepare("SELECT c.ID, c.Nome, p.federacao, p.dono FROM clube c JOIN paises p ON c.Pais = p.id WHERE c.ID IN ($inPlaceholders)");
+				$stCheckClub->execute($timesToCheck);
+				$clubsFound = $stCheckClub->fetchAll(PDO::FETCH_ASSOC);
+				$clubsMap = [];
+				foreach ($clubsFound as $cf) {
+					$clubsMap[intval($cf['ID'])] = $cf;
+				}
+
+				foreach ($timesToCheck as $tId) {
+					if (!isset($clubsMap[$tId]) || empty($clubsMap[$tId]['federacao']) || intval($clubsMap[$tId]['dono']) === 0 || !in_array(intval($clubsMap[$tId]['federacao']), [1, 2, 3, 4])) {
+						$cName = $clubsMap[$tId]['Nome'] ?? "ID #$tId";
+						die(json_encode(['success' => false, 'error' => "O clube '$cName' não pertence a um país membro oficial da CONFUSA."]));
+					}
+				}
+
+				// Conferência técnica detalhada dos elencos
+				$errorsBulk = "";
+				if ($elencoMenor = $timeObjCheck->verificarElencoMenor(null, $timesToCheck)) {
+					foreach ($elencoMenor as $timeErro) { $errorsBulk .= "O time " . $timeErro[0] . " possui menos de 11 jogadores no elenco.<br>"; }
+				}
+				if ($elencoMaior = $timeObjCheck->verificarElencoMaior(null, $timesToCheck)) {
+					foreach ($elencoMaior as $timeErro) { $errorsBulk .= "O time " . $timeErro[0] . " possui mais de 23 jogadores no elenco.<br>"; }
+				}
+				if ($capitaoTime = $timeObjCheck->verificarCapitao(null, $timesToCheck)) {
+					foreach ($capitaoTime as $timeErro) { $errorsBulk .= "O time " . $timeErro[0] . " está sem capitão definido.<br>"; }
+				}
+				if ($penaltisTime = $timeObjCheck->verificarPenaltis(null, $timesToCheck)) {
+					foreach ($penaltisTime as $timeErro) { $errorsBulk .= "O time " . $timeErro[0] . " está sem todos os cobradores de pênaltis definidos.<br>"; }
+				}
+				if ($goleirosTime = $timeObjCheck->verificarGoleiros(null, $timesToCheck)) {
+					foreach ($goleirosTime as $timeErro) { $errorsBulk .= "O time " . $timeErro[0] . " possui número incorreto de goleiros escalados.<br>"; }
+				}
+				if ($escalacaoTime = $timeObjCheck->verificarEscalacoes(null, $timesToCheck)) {
+					foreach ($escalacaoTime as $timeErro) { $errorsBulk .= "O time " . $timeErro[0] . " não possui os 11 titulares escalados.<br>"; }
+				}
+				if ($aposentadosTime = $timeObjCheck->verificarAposentados(null, $timesToCheck)) {
+					foreach ($aposentadosTime as $timeErro) { $errorsBulk .= "O time " . $timeErro[0] . " possui jogadores acima da idade limite.<br>"; }
+				}
+				if ($tecnicosTimes = $timeObjCheck->verificarTecnicos(null, $timesToCheck)) {
+					foreach ($tecnicosTimes as $tecErr) {
+						$qtd = intval($tecErr[1] ?? 0);
+						if ($qtd === 0) {
+							$errorsBulk .= "O time " . $tecErr[0] . " está sem técnico definido.<br>";
+						} else if ($qtd > 1) {
+							$errorsBulk .= "O time " . $tecErr[0] . " possui {$qtd} técnicos vinculados simultaneamente.<br>";
+						}
+					}
+				}
+				if ($climaEstadioTimes = $timeObjCheck->verificarClimaEstadio(null, $timesToCheck)) {
+					foreach ($climaEstadioTimes as $timeErro) { $errorsBulk .= "O time " . $timeErro[0] . " está sem estádio associado ou sem clima cadastrado.<br>"; }
+				}
+
+				if (!empty($errorsBulk)) {
+					die(json_encode(['success' => false, 'error' => $errorsBulk, 'errors' => $errorsBulk]));
+				}
+			}
+
+			// 2. Preparar e executar gravação de todos os times no SQLite e MySQL
+			$lite_database = new SQLiteDatabase();
+			$lite_database->fileName = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/databases/" . $idCompeticao . "-database.db3";
+			$lite_database->getConnection();
+			if ($lite_database->conn !== null) {
+				$lite_database->prepareTables();
+			}
+
+			$timeObj = new Time($db);
+			$jogadorObj = new Jogador($db);
+			$tecnicoObj = new Tecnico($db);
+			$estadioObj = new Estadio($db);
+			$novoClimaObj = new Clima($db);
+
+			$megaQuery = "BEGIN TRANSACTION; ";
+			$vagasParaAtualizarPortal = [];
+
+			foreach ($vagas as $vItem) {
+				$codigoTime = intval($vItem['codigo_time'] ?? 0);
+				$paisTime = intval($vItem['pais_time'] ?? 0);
+				$timePortal = intval($vItem['time_portal'] ?? 0);
+
+				if ($codigoTime <= 0) continue;
+
+				if ($timePortal === 0) {
+					// Caso seja apenas definição de país na vaga
+					if ($paisTime > 0) {
+						$competicao->alterarPaisTime($idCompeticao, $codigoTime, $paisTime);
+					}
+					continue;
+				}
+
+				// Buscar time anterior e slot
+				$prevTeamId = 0;
+				$prevSlot = null;
+				try {
+					$stPrev = $db->prepare("SELECT id_time_portal, has_team, slot FROM competicao_times WHERE id_competicao = :idComp AND codigo_time = :cod LIMIT 1");
+					$stPrev->bindParam(':idComp', $idCompeticao);
+					$stPrev->bindParam(':cod', $codigoTime);
+					$stPrev->execute();
+					$rPrev = $stPrev->fetch(PDO::FETCH_ASSOC);
+					if ($rPrev) {
+						if (!empty($rPrev['id_time_portal'])) {
+							$prevTeamId = intval($rPrev['id_time_portal']);
+						} else if ($rPrev['has_team'] == 1 || $rPrev['has_team'] == '1') {
+							$prevTeamId = -1 * abs(intval($codigoTime));
+						}
+						if (!empty($rPrev['slot'])) {
+							$prevSlot = $rPrev['slot'];
+						}
+					}
+				} catch (Exception $e) {}
+
+				// Técnico
+				$stmt = $tecnicoObj->exportacao(null, $timePortal);
+				while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+					$nomeTecnico = html_entity_decode((string)($row['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+					$nomeTecnico = str_replace("'", "''", $nomeTecnico);
+					$nivTec = intval($row['Nivel'] ?? 5);
+					if ($nivTec < 1 || $nivTec > 10) $nivTec = 5;
+					$menTec = intval($row['Mentalidade'] ?? 3);
+					if ($menTec < 1 || $menTec > 5) $menTec = 3;
+					$estTec = intval($row['Estilo'] ?? 3);
+					if ($estTec < 1 || $estTec > 5) $estTec = 3;
+					$megaQuery .= "INSERT OR REPLACE INTO tecnico (ID, Nome, Idade, Nivel, Mentalidade, Estilo) VALUES ('{$row['ID']}', '{$nomeTecnico}', '{$row['Idade']}', '{$nivTec}', '{$menTec}', '{$estTec}'); ";
+				}
+
+				// Jogadores
+				$stmt = $jogadorObj->exportacao(null, $timePortal);
+				while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+					$sp = str_pad((string)($row['StringPosicoes'] ?? ''), 15, '0');
+					$megaQuery .= "INSERT OR REPLACE INTO posicaojogador (Jogador, G, LD, LE, Z, AD, AE, V, MD, ME, MC, PD, PE, MA, Am, Aa) VALUES ('{$row['idJogador']}', '{$sp[0]}', '{$sp[1]}', '{$sp[2]}', '{$sp[3]}', '{$sp[4]}', '{$sp[5]}', '{$sp[6]}', '{$sp[7]}', '{$sp[8]}', '{$sp[9]}', '{$sp[10]}', '{$sp[11]}', '{$sp[12]}', '{$sp[13]}', '{$sp[14]}'); ";
+
+					$nomeJogador = html_entity_decode((string)($row['nomeJogador'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+					$nomeJogador = str_replace("'", "''", $nomeJogador);
+					$megaQuery .= "INSERT OR REPLACE INTO jogador (ID, Nome, Idade, Nivel, Potencial, CrescBase, Mentalidade, CobradorFalta) VALUES ('{$row['idJogador']}', '{$nomeJogador}', '{$row['Idade']}', '{$row['Nivel']}', '0' , '0', '{$row['Mentalidade']}', '{$row['CobradorFalta']}'); ";
+
+					$testeNacionalidade = ($row['Nacionalidade'] != null ? $row['Nacionalidade'] : '-');
+					$megaQuery .= "INSERT OR REPLACE INTO nacionalidades (ID_Jogador, Nacionalidade) VALUES ('{$row['idJogador']}', '{$testeNacionalidade}'); ";
+
+					if ($sp[0] == 1) {
+						$megaQuery .= "INSERT OR REPLACE INTO atributosgoleiro (Goleiro, Reflexos, Seguranca, Saidas, JogoAereo, Lancamentos, DefesaPenaltis, Determinacao, determinacaoOriginal) VALUES ('{$row['idJogador']}', '{$row['Reflexos']}', '{$row['Seguranca']}', '{$row['Saidas']}', '{$row['JogoAereo']}', '{$row['Lancamentos']}', '{$row['DefesaPenaltis']}', '1', '1'); ";
+						$somaZero = abs(($row['Nivel'] * 0.50) - ($row['somaAtributos']));
+						if ($somaZero > 0.5) {
+							$megaQuery .= "INSERT OR REPLACE INTO jogadorpendente (idJogador) VALUES ('{$row['idJogador']}'); ";
+						}
+					} else {
+						$megaQuery .= "INSERT OR REPLACE INTO atributosjogador (Jogador, Marcacao, Desarme, VisaoJogo, Movimentacao, Cruzamentos, Cabeceamento, Tecnica, ControleBola, Finalizacao, FaroGol, Velocidade, Forca, Determinacao, determinacaoOriginal) VALUES ('{$row['idJogador']}', '{$row['Marcacao']}', '{$row['Desarme']}', '{$row['VisaoJogo']}', '{$row['Movimentacao']}', '{$row['Cruzamentos']}', '{$row['Cabeceamento']}', '{$row['Tecnica']}', '{$row['ControleBola']}', '{$row['Finalizacao']}', '{$row['FaroGol']}', '{$row['Velocidade']}', '{$row['Forca']}', '1', '1'); ";
+						$somaZero = abs(($row['Nivel'] * 0.65) - ($row['somaAtributos']));
+						if ($somaZero > 0.5) {
+							$megaQuery .= "INSERT OR REPLACE INTO jogadorpendente (idJogador) VALUES ('{$row['idJogador']}'); ";
+						}
+					}
+				}
+
+				// Estádio
+				$stmt = $estadioObj->exportacao(null, $timePortal);
+				while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+					$nomeEstadio = html_entity_decode((string)($row['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+					$nomeEstadio = str_replace("'", "''", $nomeEstadio);
+					$megaQuery .= "INSERT OR REPLACE INTO estadio (ID, Nome, Capacidade, Clima, Altitude, Caldeirao) VALUES ('{$row['ID']}', '{$nomeEstadio}', '{$row['Capacidade']}', '{$row['Clima']}', '{$row['Altitude']}', '{$row['Caldeirao']}'); ";
+				}
+
+				// Clima
+				$stmt = $novoClimaObj->exportacao(null, $timePortal);
+				while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+					$nomeClima = html_entity_decode((string)($row['nomeClima'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+					$nomeClima = str_replace("'", "''", $nomeClima);
+					$megaQuery .= "INSERT OR REPLACE INTO clima (ID, Nome, TempVerao, EstiloVerao, TempOutono, EstiloOutono, TempInverno, EstiloInverno, TempPrimavera, EstiloPrimavera, Hemisferio) VALUES ('{$row['idClima']}', '{$nomeClima}', '{$row['TempVerao']}', '{$row['EstiloVerao']}', '{$row['TempOutono']}', '{$row['EstiloOutono']}', '{$row['TempInverno']}', '{$row['EstiloInverno']}', '{$row['TempPrimavera']}', '{$row['EstiloPrimavera']}', '{$row['Hemisferio']}'); ";
+				}
+
+				// Clube
+				$stmt = $timeObj->exportacao(null, $timePortal);
+				while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+					$escudoTratado = "../../images/escudos/" . $row['Escudo'];
+					$uni1Tratado = "../../images/uniformes/" . $row['Uniforme1'];
+					$uni2Tratado = "../../images/uniformes/" . $row['Uniforme2'];
+
+					$nomeExportado = html_entity_decode((string)($row['Nome'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+					$nomeExportado = str_replace("'", "''", $nomeExportado);
+
+					$megaQuery .= "INSERT OR REPLACE INTO clube (ID, Nome, TresLetras, Estadio, Escudo, Uni1Cor1, Uni1Cor2, Uni1Cor3, Uniforme1, Uni2Cor1, Uni2Cor2, Uni2Cor3, Uniforme2, MaxTorcedores, Fidelidade) VALUES ('{$row['ID']}', '{$nomeExportado}', '{$row['TresLetras']}', '{$row['Estadio']}', '{$escudoTratado}', '{$row['Uni1Cor1']}', '{$row['Uni1Cor2']}', '{$row['Uni1Cor3']}', '{$uni1Tratado}', '{$row['Uni2Cor1']}', '{$row['Uni2Cor2']}', '{$row['Uni2Cor3']}', '{$uni2Tratado}', '{$row['MaxTorcedores']}', '{$row['Fidelidade']}'); ";
+
+					$elenco = array();
+					$elenco[] = $row['ID'];
+					$newStmt = $timeObj->getElenco($row['ID']);
+					$jogadoresElenco = array();
+					while ($newRow = $newStmt->fetch(PDO::FETCH_ASSOC)) {
+						$jogadoresElenco[] = $newRow['ID'];
+					}
+					for ($i = 0; $i < 23; $i++) {
+						$elenco[] = isset($jogadoresElenco[$i]) ? $jogadoresElenco[$i] : '0';
+					}
+					$tecStmt = $timeObj->getTecnico($row['ID']);
+					$idTecnico = '0';
+					if ($tecRow = $tecStmt->fetch(PDO::FETCH_ASSOC)) {
+						$idTecnico = !empty($tecRow['tecnico']) ? $tecRow['tecnico'] : '0';
+					}
+					$elenco[] = $idTecnico;
+
+					$megaQuery .= "INSERT OR REPLACE INTO elenco (Clube, Jogador1, Jogador2, Jogador3, Jogador4, Jogador5, Jogador6, Jogador7, Jogador8, Jogador9, Jogador10, Jogador11, Jogador12, Jogador13, Jogador14, Jogador15, Jogador16, Jogador17, Jogador18, Jogador19, Jogador20, Jogador21, Jogador22, Jogador23, Tecnico) VALUES ('{$elenco[0]}', '{$elenco[1]}', '{$elenco[2]}', '{$elenco[3]}', '{$elenco[4]}', '{$elenco[5]}', '{$elenco[6]}', '{$elenco[7]}', '{$elenco[8]}', '{$elenco[9]}', '{$elenco[10]}', '{$elenco[11]}', '{$elenco[12]}', '{$elenco[13]}', '{$elenco[14]}', '{$elenco[15]}', '{$elenco[16]}', '{$elenco[17]}', '{$elenco[18]}', '{$elenco[19]}', '{$elenco[20]}', '{$elenco[21]}', '{$elenco[22]}', '{$elenco[23]}', '{$elenco[24]}'); ";
+
+					$escalacao = array();
+					$escalacao[] = $row['ID'];
+					$escStmt = $timeObj->getEscalacao($row['ID']);
+					$titulares = array();
+					while ($escRow = $escStmt->fetch(PDO::FETCH_ASSOC)) {
+						$titulares[] = [
+							'posicao' => $escRow['posicaoBase'] ?? '',
+							'jogador' => $escRow['jogador'] ?? '0'
+						];
+					}
+					for ($i = 0; $i < 11; $i++) {
+						$escalacao[] = isset($titulares[$i]['posicao']) ? $titulares[$i]['posicao'] : '';
+						$escalacao[] = isset($titulares[$i]['jogador']) ? $titulares[$i]['jogador'] : '0';
+					}
+
+					$capStmt = $timeObj->getCapitao($row['ID']);
+					$idCapitao = '0';
+					if ($capRow = $capStmt->fetch(PDO::FETCH_ASSOC)) {
+						$idCapitao = !empty($capRow['jogador']) ? $capRow['jogador'] : '0';
+					}
+					$escalacao[] = $idCapitao;
+
+					$penStmt = $timeObj->getPenaltis($row['ID']);
+					$batedoresPenalti = array();
+					while ($penRow = $penStmt->fetch(PDO::FETCH_ASSOC)) {
+						$batedoresPenalti[] = !empty($penRow['jogador']) ? $penRow['jogador'] : '0';
+					}
+					for ($i = 0; $i < 3; $i++) {
+						$escalacao[] = isset($batedoresPenalti[$i]) ? $batedoresPenalti[$i] : '0';
+					}
+
+					$megaQuery .= "INSERT OR REPLACE INTO escalacao (Clube, Pos1, Jogador1, Pos2, Jogador2, Pos3, Jogador3, Pos4, Jogador4, Pos5, Jogador5, Pos6, Jogador6, Pos7, Jogador7, Pos8, Jogador8, Pos9, Jogador9, Pos10, Jogador10, Pos11, Jogador11, Capitao, Penalti1, Penalti2, Penalti3) VALUES ('{$escalacao[0]}', '{$escalacao[1]}', '{$escalacao[2]}', '{$escalacao[3]}', '{$escalacao[4]}', '{$escalacao[5]}', '{$escalacao[6]}', '{$escalacao[7]}', '{$escalacao[8]}', '{$escalacao[9]}', '{$escalacao[10]}', '{$escalacao[11]}', '{$escalacao[12]}', '{$escalacao[13]}', '{$escalacao[14]}', '{$escalacao[15]}', '{$escalacao[16]}', '{$escalacao[17]}', '{$escalacao[18]}', '{$escalacao[19]}', '{$escalacao[20]}', '{$escalacao[21]}', '{$escalacao[22]}', '{$escalacao[23]}', '{$escalacao[24]}', '{$escalacao[25]}', '{$escalacao[26]}'); ";
+				}
+
+				$vagasParaAtualizarPortal[] = [
+					'codigoTime' => $codigoTime,
+					'paisTime' => $paisTime,
+					'timePortal' => $timePortal,
+					'prevSlot' => $prevSlot,
+					'prevTeamId' => $prevTeamId
+				];
+			}
+
+			$megaQuery .= "COMMIT; ";
+
+			// Gravar no SQLite
+			try {
+				$lite_database->directRun($megaQuery);
+			} catch (\Throwable $e) {
+				die(json_encode([
+					'success' => false,
+					'error' => "Erro ao gravar dados no SQLite da competição: " . $e->getMessage()
+				]));
+			}
+
+			// Atualizar registros no MySQL
+			$sucessoTotal = 0;
+			foreach ($vagasParaAtualizarPortal as $vup) {
+				if ($competicao->alterarTimePortal($idCompeticao, $vup['codigoTime'], $vup['paisTime'], $vup['timePortal'])) {
+					$sucessoTotal++;
+					if (!empty($vup['prevSlot'])) {
+						$competicao->definirSlotTime($idCompeticao, $vup['codigoTime'], $vup['prevSlot']);
+					} else {
+						$competicao->atualizarJogosPorSlot($idCompeticao, $vup['codigoTime'], $vup['timePortal'], $vup['prevTeamId']);
+					}
+				}
+			}
+
+			die(json_encode([
+				'success' => true,
+				'total_salvos' => $sucessoTotal,
+				'message' => "{$sucessoTotal} vaga(s) salvas com sucesso!"
+			]));
+			break;
+
 		case 3:
 		case 'bulk_pais':
 			// Definir mesmo país para todas as vagas da competição

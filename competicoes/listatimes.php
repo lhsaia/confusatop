@@ -146,6 +146,16 @@ if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==true){
             </a>
         </div>
     </div>
+
+<style>
+.par_pais_equipe.vaga-alterada {
+    border-left: 5px solid #0284c7 !important;
+    background: rgba(2, 132, 199, 0.04) !important;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.12) !important;
+}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+
 </main>
 
 <!-- Modal de Verificação de Integridade -->
@@ -284,8 +294,8 @@ $( document ).ready(function(){
 	load_data();
 
 	
-	function load_data(){
-
+	function load_data(callback){
+		let savedScrollY = $(window).scrollTop();
 		$('#loading').show(); 
 		$.ajax({
 			url:"refresh_team_list.php",
@@ -304,7 +314,13 @@ $( document ).ready(function(){
 						localData = [];
 					}
 				}
-				update_table();	
+				update_table();
+				if (savedScrollY > 0) {
+					setTimeout(function() {
+						$(window).scrollTop(savedScrollY);
+					}, 20);
+				}
+				if (typeof callback === 'function') callback();
 			},
 			error:function(xhr, status, error){
 				$('#loading').hide();
@@ -511,6 +527,14 @@ function init_page_elements(){
 			width:'resolve'
 		});
 
+        // Prevenir salto de scroll do Select2 ao fechar/selecionar
+        $('.selecaoPais, .selecaoTime, .selecaoPaisBulk').on('select2:closing select2:close', function (e) {
+            let currentScroll = $(window).scrollTop();
+            setTimeout(function() {
+                $(window).scrollTop(currentScroll);
+            }, 1);
+        });
+
         $(".selecaoPais").trigger("change", true);
 }
 
@@ -597,14 +621,52 @@ $(document).on("change", ".selecaoSlot", function(){
 });
 
 // Event Delegation
+function updateBulkFloatingBar() {
+    var alteredRows = $('.par_pais_equipe.vaga-alterada');
+    var count = alteredRows.length;
+    var bar = $('#floating-bulk-save-bar');
+
+    if (count > 0) {
+        if (bar.length === 0) {
+            var barHtml = '<div id="floating-bulk-save-bar" class="floating-batch-actions">' +
+                '<div class="floating-batch-info">' +
+                '<span class="material-symbols-outlined" style="color:#38bdf8;">checklist</span>' +
+                '<span>Vagas alteradas:</span>' +
+                '<span class="floating-batch-badge" id="bulk-altered-count">' + count + '</span>' +
+                '</div>' +
+                '<button type="button" id="btn-salvar-todas-vagas" class="btn-batch-save">' +
+                '<span class="material-symbols-outlined">done_all</span> Salvar Todas as Vagas' +
+                '</button>' +
+                '<button type="button" id="btn-cancelar-todas-vagas" class="btn-batch-cancel">' +
+                '<span class="material-symbols-outlined">restart_alt</span> Descartar' +
+                '</button>' +
+                '</div>';
+            $('body').append(barHtml);
+        } else {
+            $('#bulk-altered-count').text(count);
+            bar.fadeIn(200);
+        }
+    } else {
+        if (bar.length > 0) {
+            bar.fadeOut(200);
+        }
+    }
+}
+
 $(document).on("change", ".selecaoTime", function(){
-    var tbl_row =  $(this).closest('.par_pais_equipe');
+    var tbl_row = $(this).closest('.par_pais_equipe');
     tbl_row.find('.update_team').prop("disabled", false);
+    tbl_row.addClass('vaga-alterada');
+    updateBulkFloatingBar();
 });
 
 $(document).on("change", ".selecaoPais", function(e, unlock){
-    var tbl_row =  $(this).closest('.par_pais_equipe');
-    if(!unlock) tbl_row.find('.update_team').prop("disabled", false);
+    var tbl_row = $(this).closest('.par_pais_equipe');
+    if(!unlock) {
+        tbl_row.find('.update_team').prop("disabled", false);
+        tbl_row.addClass('vaga-alterada');
+        updateBulkFloatingBar();
+    }
     
     var donoPais = $(this).find(':selected').data('dono');
     if(admin === "true" || parseInt(dono_competicao) === parseInt(user_id) || parseInt(user_id) === parseInt(donoPais)){
@@ -770,7 +832,126 @@ $(document).on("click", ".update_team", function(e){
 		}
 	});
 	
-	$(document).on("click", ".fileUploader", function() {
+	
+// Salvar todas as vagas alteradas em lote
+$(document).on('click', '#btn-salvar-todas-vagas', function(e){
+    e.preventDefault();
+    var alteredRows = $('.par_pais_equipe.vaga-alterada');
+    if (alteredRows.length === 0) return;
+
+    var vagasPayload = [];
+    var timesParaConferir = [];
+    var temVagaIncompleta = false;
+
+    alteredRows.each(function(){
+        var row = $(this);
+        var vIndex = parseInt(row.attr('id').replace(/^\D+/g, ''));
+        var pId = parseInt(row.find('.selecaoPais').val()) || 0;
+        var tId = parseInt(row.find('.selecaoTime').val()) || 0;
+
+        if (pId > 0 && tId > 0 && tId !== 99999999) {
+            timesParaConferir.push(tId);
+            vagasPayload.push({
+                codigo_time: vIndex,
+                pais_time: pId,
+                time_portal: tId
+            });
+        } else if (pId > 0 && tId === 0) {
+            // Apenas atribuição de país sem time
+            vagasPayload.push({
+                codigo_time: vIndex,
+                pais_time: pId,
+                time_portal: 0
+            });
+        }
+    });
+
+    if (vagasPayload.length === 0) {
+        showToast("Nenhuma vaga com dados válidos para salvar.", "error");
+        return;
+    }
+
+    var $btn = $(this);
+    $btn.prop('disabled', true).html('<span class="material-symbols-outlined" style="animation:spin 1s linear infinite;">sync</span> Salvando...');
+    $('#loading').show();
+
+    // 1. Se houver times selecionados, realiza conferência prévia via verificar_exportacao
+    function executarGravacaoEmLote() {
+        var formDataBulk = new FormData();
+        formDataBulk.append('tipo_alteracao', 'bulk_salvar_times');
+        formDataBulk.append('codigo_competicao', codigo_competicao);
+        formDataBulk.append('vagas', JSON.stringify(vagasPayload));
+
+        $.ajax({
+            type: 'POST',
+            url: 'alterar_times_competicao.php',
+            data: formDataBulk,
+            dataType: 'json',
+            processData: false,
+            contentType: false,
+            cache: false
+        }).done(function(res) {
+            $('#loading').hide();
+            $btn.prop('disabled', false).html('<span class="material-symbols-outlined">done_all</span> Salvar Todas as Vagas');
+            if (res.success) {
+                showToast("✓ " + (res.message || "Vagas salvas com sucesso!"), "success");
+                load_data(function(){
+                    updateBulkFloatingBar();
+                });
+            } else {
+                showToast("Não foi possível salvar as vagas:<br>" + (res.errors || res.error || "Erro desconhecido"), 'error');
+            }
+        }).fail(function(xhr, status, error) {
+            $('#loading').hide();
+            $btn.prop('disabled', false).html('<span class="material-symbols-outlined">done_all</span> Salvar Todas as Vagas');
+            showToast("Houve um erro de comunicação ao salvar as vagas em lote.", 'error');
+        });
+    }
+
+    if (timesParaConferir.length > 0) {
+        var formDataVerif = new FormData();
+        formDataVerif.append('tipo_alteracao', 1);
+        formDataVerif.append('codigo_competicao', codigo_competicao);
+        formDataVerif.append('codigo_genero', '<?php echo $genero_competicao ?>');
+        formDataVerif.append('codigo_federacao', '<?php echo $federacao_id ?>');
+        formDataVerif.append('array_times', timesParaConferir.join(','));
+
+        $.ajax({
+            type: 'POST',
+            url: '/export/verificar_exportacao.php',
+            data: formDataVerif,
+            dataType: 'json',
+            processData: false,
+            contentType: false,
+            cache: false
+        }).done(function(new_response) {
+            if (new_response.success) {
+                executarGravacaoEmLote();
+            } else {
+                $('#loading').hide();
+                $btn.prop('disabled', false).html('<span class="material-symbols-outlined">done_all</span> Salvar Todas as Vagas');
+                showToast("Pendências na conferência de um ou mais times:<br>" + new_response.errors, 'error');
+            }
+        }).fail(function() {
+            $('#loading').hide();
+            $btn.prop('disabled', false).html('<span class="material-symbols-outlined">done_all</span> Salvar Todas as Vagas');
+            showToast("Erro ao conectar com serviço de conferência de times.", 'error');
+        });
+    } else {
+        executarGravacaoEmLote();
+    }
+});
+
+// Descartar alterações em massa
+$(document).on('click', '#btn-cancelar-todas-vagas', function(e){
+    e.preventDefault();
+    if (confirm("Deseja descartar as alterações não salvas e recarregar os dados originais?")) {
+        load_data(function(){
+            updateBulkFloatingBar();
+        });
+    }
+});
+$(document).on("click", ".fileUploader", function() {
 		alert('Ao importar arquivo .ymt e não usar time do portal, as estatísticas do time não serão computadas no histórico geral, apenas na competição.');
 		var tbl_row =  $(this).closest('.par_pais_equipe');
 		tbl_row.find('.import_team').click();
