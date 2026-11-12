@@ -110,10 +110,10 @@ if ($idJogo > 0) {
     $stmtStatusJogo->execute();
     $jogoStatusRow = $stmtStatusJogo->fetch(PDO::FETCH_ASSOC);
     if ($jogoStatusRow) {
-        if ($jogoStatusRow['status'] == 1) {
+        if ($jogoStatusRow['status'] == 1 && !$isAdmin) {
             die("Esta partida já foi simulada/encerrada e sua escalação não pode mais ser alterada.");
         }
-        if (!empty($jogoStatusRow['data']) && strtotime($jogoStatusRow['data']) <= time()) {
+        if (!empty($jogoStatusRow['data']) && strtotime($jogoStatusRow['data']) <= time() && !$isAdmin) {
             die("Esta partida já está em andamento ou seu horário de início foi atingido, e a escalação não pode mais ser alterada.");
         }
     }
