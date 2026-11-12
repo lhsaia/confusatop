@@ -270,6 +270,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                         optionsString += "<a hidden id='sal"+val['id']+"' title='Salvar' class='clickable salvar'><span class='material-symbols-outlined inlineButton positive'>check</span></a>";
                         optionsString += "<a hidden id='can"+val['id']+"' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
                         optionsString += "<a id='pro"+val['id']+"' title='Promover 1 jogador da base' class='clickable promover'><span class='material-symbols-outlined inlineButton'>pan_tool_alt</span></a>";
+                        optionsString += "<a id='com"+val['id']+"' title='Completar elenco com a base' class='clickable completar-base'><span class='material-symbols-outlined inlineButton'>diversity_3</span></a>";
                     }
                     optionsString += "</td>";
                     tbl += optionsString;
@@ -336,6 +337,7 @@ $(document).on('click', '.editar', function(){
     tbl_row.find('.editar').hide();
     tbl_row.find('.deletar').hide();
     tbl_row.find('.promover').hide();
+    tbl_row.find('.completar-base').hide();
     tbl_row.find('.nomePais').hide();
     tbl_row.find('.hiddenInput').show();
     tbl_row.find('.fidelidadeFixo').hide();
@@ -389,6 +391,7 @@ $(document).on('click', '.cancelar', function(){
     tbl_row.find('.editar').show();
     tbl_row.find('.deletar').show();
     tbl_row.find('.promover').show();
+    tbl_row.find('.completar-base').show();
     tbl_row.find('.thumb').removeClass('editableThumb');
     tbl_row.find('.hiddenInput').hide();
     tbl_row.find('.comboTorcedores').hide();
@@ -620,6 +623,94 @@ $(document).on('click', '.promover', function(){
             $('#error_box').html('<div class="alert alert-danger">Não foi possível realizar a inserção, '+data.error+'</div>');
         }
     });
+
+// Completar elenco com a base
+var clubeCompletarAtual = 0;
+$(document).on('click', '.completar-base', function(){
+    var tr = $(this).closest('tr');
+    var clubeId = tr.attr("id");
+    var nomeClube = tr.find('.linkNome').text().trim();
+    clubeCompletarAtual = clubeId;
+
+    $('#modalCompletarBaseConteudo').html('<div style="text-align:center; padding:20px; color:#64748b;"><span class="material-symbols-outlined" style="font-size:32px; animation:spin 1s linear infinite;">sync</span><p style="margin-top:8px;">Analisando carências do elenco de <strong>'+nomeClube+'</strong>...</p></div>');
+    $('#btnConfirmarCompletarBase').hide();
+    $('#modalCompletarBase').css('display', 'flex').hide().fadeIn(200);
+
+    $.ajax({
+        type: 'POST',
+        url: '/times/completar_base.php',
+        data: { clube: clubeId, acao: 'diagnostico' },
+        dataType: 'json'
+    }).done(function(data){
+        if(data.success){
+            if(data.jaCompleto){
+                var htmlAviso = '<div style="background:rgba(2,132,199,0.08); border:1px solid rgba(2,132,199,0.2); border-radius:10px; padding:16px; color:#0f172a;">' +
+                    '<div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-weight:700; color:#0284c7;">' +
+                    '<span class="material-symbols-outlined">check_circle</span> Elenco Completo' +
+                    '</div>' +
+                    '<p style="margin:0; font-size:0.9rem; color:#475569;">O elenco do <strong>' + data.clubeNome + '</strong> já possui ' + data.totalAtual + ' jogadores e todas as posições essenciais estão cobertas pelo esquema.</p>' +
+                    '</div>';
+                $('#modalCompletarBaseConteudo').html(htmlAviso);
+                $('#btnConfirmarCompletarBase').hide();
+            } else {
+                var htmlDiagnostico = '<p style="margin:0 0 12px 0; font-size:0.95rem; color:#334155; line-height:1.5;">' +
+                    'Foram identificadas <strong>' + data.carenciasTotal + ' carência(s)</strong> no elenco do <strong>' + data.clubeNome + '</strong> (total atual: ' + data.totalAtual + ' atletas):' +
+                    '</p>' +
+                    '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 16px; margin-bottom:14px; max-height:160px; overflow-y:auto;">' +
+                    '<div style="font-weight:600; font-size:0.85rem; color:#0284c7; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Posições em falta:</div>' +
+                    '<div style="font-size:0.9rem; color:#0f172a; line-height:1.6;">' + data.resumoFormatado + '</div>' +
+                    '</div>' +
+                    '<p style="margin:0; font-size:0.85rem; color:#64748b;">' +
+                    'Deseja gerar <strong>' + data.carenciasTotal + ' jogador(es)</strong> jovens da base (17 a 20 anos) para suprir essas carências? Eles entrarão direto como suplentes no clube.' +
+                    '</p>';
+                $('#modalCompletarBaseConteudo').html(htmlDiagnostico);
+                $('#btnConfirmarCompletarBase').show();
+            }
+        } else {
+            $('#modalCompletarBaseConteudo').html('<div class="alert alert-danger" style="margin:0;">' + (data.error || 'Erro ao consultar elenco.') + '</div>');
+            $('#btnConfirmarCompletarBase').hide();
+        }
+    }).fail(function(){
+        $('#modalCompletarBaseConteudo').html('<div class="alert alert-danger" style="margin:0;">Erro de conexão com o servidor.</div>');
+        $('#btnConfirmarCompletarBase').hide();
+    });
+});
+
+$(document).on('click', '#btnFecharModalCompletarBase, #btnCancelarCompletarBase', function(){
+    $('#modalCompletarBase').fadeOut(200);
+});
+
+$(document).on('click', '#modalCompletarBase', function(e){
+    if ($(e.target).is('#modalCompletarBase')) {
+        $('#modalCompletarBase').fadeOut(200);
+    }
+});
+
+$(document).on('click', '#btnConfirmarCompletarBase', function(){
+    if(!clubeCompletarAtual) return;
+    var btn = $(this);
+    btn.prop('disabled', true).html('<span class="material-symbols-outlined" style="font-size:18px; animation:spin 1s linear infinite;">sync</span> Gerando...');
+
+    $.ajax({
+        type: 'POST',
+        url: '/times/completar_base.php',
+        data: { clube: clubeCompletarAtual, acao: 'executar' },
+        dataType: 'json'
+    }).done(function(data){
+        $('#modalCompletarBase').fadeOut(200);
+        btn.prop('disabled', false).html('<span class="material-symbols-outlined" style="font-size:18px;">diversity_3</span> Confirmar e Gerar');
+        if(data.success){
+            $('#error_box').html('<div class="alert alert-success">' + data.mensagem + '</div>');
+            load_data();
+        } else {
+            $('#error_box').html('<div class="alert alert-danger">' + (data.error || 'Erro ao gerar jogadores.') + '</div>');
+        }
+    }).fail(function(){
+        $('#modalCompletarBase').fadeOut(200);
+        btn.prop('disabled', false).html('<span class="material-symbols-outlined" style="font-size:18px;">diversity_3</span> Confirmar e Gerar');
+        $('#error_box').html('<div class="alert alert-danger">Erro de comunicação com o servidor ao gerar jogadores.</div>');
+    });
+});
 });
 
 $(document).on('click', '.pagination_link', function(){
@@ -760,6 +851,34 @@ echo('</div>');
     echo "Usuário, por favor refaça o login.";
 }
 
+
+
+?>
+<!-- Modal Completar com a Base -->
+<div id="modalCompletarBase" style="display:none; position:fixed; inset:0; background:rgba(9, 13, 22, 0.65); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); z-index:9999; justify-content:center; align-items:center; padding:1.5rem;">
+    <div style="background:#ffffff; border-radius:16px; border:1px solid rgba(0,0,0,0.08); box-shadow:0 20px 40px rgba(0,0,0,0.25); max-width:520px; width:100%; overflow:hidden; animation:fadeInModal 0.2s ease;">
+        <div style="padding:18px 24px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; background:#f8fafc;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span class="material-symbols-outlined" style="color:#0284c7; font-size:24px;">diversity_3</span>
+                <h3 style="margin:0; font-family:'Outfit', sans-serif; font-size:1.15rem; font-weight:700; color:#0f172a;">Completar Elenco com a Base</h3>
+            </div>
+            <span id="btnFecharModalCompletarBase" style="cursor:pointer; color:#64748b; font-size:1.4rem; line-height:1;" class="material-symbols-outlined">close</span>
+        </div>
+        <div id="modalCompletarBaseConteudo" style="padding:22px 24px; max-height:65vh; overflow-y:auto;">
+        </div>
+        <div style="padding:14px 24px; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:10px; background:#f8fafc;">
+            <button type="button" id="btnCancelarCompletarBase" style="padding:8px 18px; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; font-weight:600; font-size:0.85rem; color:#475569; cursor:pointer;">Cancelar</button>
+            <button type="button" id="btnConfirmarCompletarBase" style="padding:8px 20px; background:#0284c7; border:none; border-radius:8px; font-weight:600; font-size:0.85rem; color:#ffffff; cursor:pointer; display:none; align-items:center; gap:6px;">
+                <span class="material-symbols-outlined" style="font-size:18px;">diversity_3</span> Confirmar e Gerar
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes fadeInModal { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+</style><?php
 include_once($_SERVER['DOCUMENT_ROOT']."/elements/footer.php");
 
 ?>
