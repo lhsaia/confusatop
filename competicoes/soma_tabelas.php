@@ -195,60 +195,62 @@ function processarDadosCompeticao($compId, $db, $clubesPortal, $infoComp) {
     // Processar súmulas .hyj de jogadores
     $playerStats = [];
     require_once __DIR__ . '/sumula_helper.php';
-    $nomeComposto = sanitizarNomePastaCompeticao($anoComp . " - " . $nomeComp);
-    $dirPartidas = $_SERVER['DOCUMENT_ROOT'] . "/competicoes/hexacolor/Partidas/" . $nomeComposto . "/1º Rodada";
+    $nomeComposto = $anoComp . " - " . $nomeComp;
+    $arquivosHyjMap = coletarArquivosSumulasCompeticao($nomeComposto, array_column($jogos, 'path'), 'hyj');
 
-    if (is_dir($dirPartidas)) {
-        $files = scandir($dirPartidas);
-        foreach ($files as $f) {
-            if (pathinfo($f, PATHINFO_EXTENSION) === 'hyj') {
-                $baseFilename = pathinfo($f, PATHINFO_FILENAME);
-                $jogoCorrespondente = $jogosPorPath[$baseFilename] ?? null;
+    $processedHyjReal = [];
+    foreach ($arquivosHyjMap as $relKey => $fullPathHyj) {
+        $realHyj = realpath($fullPathHyj) ?: $fullPathHyj;
+        if (isset($processedHyjReal[$realHyj])) continue;
+        $processedHyjReal[$realHyj] = true;
 
-                if ($jogoCorrespondente) {
-                    $dataJogo = !empty($jogoCorrespondente['data']) ? strtotime($jogoCorrespondente['data']) : time();
-                    $temPen = ($jogoCorrespondente['timeA_penaltis'] !== null && $jogoCorrespondente['timeA_penaltis'] !== '');
-                    $duracaoSegundos = $temPen ? (150 * 60) : (120 * 60);
-                    $jaTerminou = (time() >= ($dataJogo + $duracaoSegundos));
-                    if ((int)$jogoCorrespondente['status'] !== 1 || !$jaTerminou) {
-                        continue;
-                    }
+        if (strtolower(pathinfo($fullPathHyj, PATHINFO_EXTENSION)) === 'hyj') {
+            $baseFilename = pathinfo($fullPathHyj, PATHINFO_FILENAME);
+            $jogoCorrespondente = $jogosPorPath[$baseFilename] ?? null;
+
+            if ($jogoCorrespondente) {
+                $dataJogo = !empty($jogoCorrespondente['data']) ? strtotime($jogoCorrespondente['data']) : time();
+                $temPen = ($jogoCorrespondente['timeA_penaltis'] !== null && $jogoCorrespondente['timeA_penaltis'] !== '');
+                $duracaoSegundos = $temPen ? (150 * 60) : (120 * 60);
+                $jaTerminou = (time() >= ($dataJogo + $duracaoSegundos));
+                if ((int)$jogoCorrespondente['status'] !== 1 || !$jaTerminou) {
+                    continue;
                 }
+            }
 
-                $content = @file_get_contents($dirPartidas . "/" . $f);
-                if ($content !== false) {
-                    $json = json_decode($content);
-                    if ($json) {
-                        foreach (['time1', 'time2'] as $tKey) {
-                            if (isset($json->$tKey->jogadores)) {
-                                foreach ($json->$tKey->jogadores as $pj) {
-                                    $pid = (int)$pj->idJogador;
-                                    if ($pid > 0) {
-                                        if (!isset($playerStats[$pid])) {
-                                            $playerStats[$pid] = [
-                                                'id' => $pid,
-                                                'nome' => $pj->nomeJogador ?? ($jogadoresMap[$pid]['Nome'] ?? 'Jogador ' . $pid),
-                                                'clubeId' => $jogadorClubeMap[$pid] ?? 0,
-                                                'gols' => 0,
-                                                'assistencias' => 0,
-                                                'amarelos' => 0,
-                                                'vermelhos' => 0,
-                                                'partidas' => 0,
-                                                'soma_notas' => 0,
-                                                'jogos_com_nota' => 0
-                                            ];
-                                        }
-                                        $playerStats[$pid]['gols'] += (int)($pj->gols ?? 0);
-                                        $playerStats[$pid]['assistencias'] += (int)($pj->assistencias ?? 0);
-                                        $playerStats[$pid]['amarelos'] += (int)($pj->amarelos ?? 0);
-                                        $playerStats[$pid]['vermelhos'] += (int)($pj->vermelhos ?? 0);
-                                        if ((int)($pj->minutos ?? 0) > 0) {
-                                            $playerStats[$pid]['partidas']++;
-                                        }
-                                        if (isset($pj->nota) && is_numeric($pj->nota) && floatval($pj->nota) > 0) {
-                                            $playerStats[$pid]['soma_notas'] += floatval($pj->nota);
-                                            $playerStats[$pid]['jogos_com_nota']++;
-                                        }
+            $content = @file_get_contents($fullPathHyj);
+            if ($content !== false) {
+                $json = json_decode($content);
+                if ($json) {
+                    foreach (['time1', 'time2'] as $tKey) {
+                        if (isset($json->$tKey->jogadores)) {
+                            foreach ($json->$tKey->jogadores as $pj) {
+                                $pid = (int)$pj->idJogador;
+                                if ($pid > 0) {
+                                    if (!isset($playerStats[$pid])) {
+                                        $playerStats[$pid] = [
+                                            'id' => $pid,
+                                            'nome' => $pj->nomeJogador ?? ($jogadoresMap[$pid]['Nome'] ?? 'Jogador ' . $pid),
+                                            'clubeId' => $jogadorClubeMap[$pid] ?? 0,
+                                            'gols' => 0,
+                                            'assistencias' => 0,
+                                            'amarelos' => 0,
+                                            'vermelhos' => 0,
+                                            'partidas' => 0,
+                                            'soma_notas' => 0,
+                                            'jogos_com_nota' => 0
+                                        ];
+                                    }
+                                    $playerStats[$pid]['gols'] += (int)($pj->gols ?? 0);
+                                    $playerStats[$pid]['assistencias'] += (int)($pj->assistencias ?? 0);
+                                    $playerStats[$pid]['amarelos'] += (int)($pj->amarelos ?? 0);
+                                    $playerStats[$pid]['vermelhos'] += (int)($pj->vermelhos ?? 0);
+                                    if ((int)($pj->minutos ?? 0) > 0) {
+                                        $playerStats[$pid]['partidas']++;
+                                    }
+                                    if (isset($pj->nota) && is_numeric($pj->nota) && floatval($pj->nota) > 0) {
+                                        $playerStats[$pid]['soma_notas'] += floatval($pj->nota);
+                                        $playerStats[$pid]['jogos_com_nota']++;
                                     }
                                 }
                             }

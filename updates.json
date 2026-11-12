@@ -9,6 +9,17 @@
   },
     "days": [
     {
+      "id": "day_12_11_2026",
+      "date": "12/11/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção de Estatísticas em Competições com Caracteres Especiais",
+          "desc": "Corrigida a leitura das súmulas na tela de estatísticas para considerar tanto a pasta antiga quanto a nova sanitizada após suporte a barras e caracteres especiais nos nomes de competições."
+        }
+      ]
+    },
+    {
       "id": "day_11_11_2026",
       "date": "11/11/2026",
       "items": [
