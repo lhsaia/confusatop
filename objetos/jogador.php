@@ -1623,7 +1623,7 @@ return $stmt;
                 INNER JOIN clube b ON b.ID = c.clube
                 LEFT JOIN paises p ON a.Pais = p.id
                 LEFT JOIN posicoes o ON c.posicaoBase = o.ID 
-                WHERE c.clube = :clube AND (c.tipoContrato = 0 OR c.tipoContrato IS NULL)" . $orderClause;
+                WHERE c.clube = :clube" . $orderClause;
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(":clube", $idTime);
                 $stmt->execute();
@@ -1631,7 +1631,7 @@ return $stmt;
             } else if($idPais != null){
                 $query = "SELECT DISTINCT a.ID as idJogador, a.Nome as nomeJogador, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, o.Sigla as posicao, c.titularidade, c.posicaoBase as codigoPosicaoBase, a.Mentalidade, a.CobradorFalta, a.StringPosicoes, (a.Nivel + c.ModificadorNivel) as Nivel, a.Marcacao, a.Desarme, a.VisaoJogo, a.Movimentacao, a.Cruzamentos, a.Cabeceamento, a.Tecnica, a.ControleBola, a.Finalizacao, a.FaroGol, a.Velocidade, a.Forca, a.Reflexos, a.Seguranca, a.Saidas, a.JogoAereo, a.Lancamentos, a.DefesaPenaltis, a.Determinacao, a.DeterminacaoOriginal, p.bandeira as Nacionalidade, (a.Marcacao + a.Desarme + a.VisaoJogo + a.Movimentacao + a.Cruzamentos + a.Cabeceamento + a.Tecnica + a.ControleBola + a.Finalizacao + a.FaroGol + a.Velocidade + a.Forca + a.Reflexos + a.Seguranca + a.Saidas + a.JogoAereo + a.Lancamentos + a.DefesaPenaltis + a.Determinacao) as somaAtributos, a.Nascimento, b.Nome as Time, b.ID as idTime, CASE WHEN a.sexo = 1 THEN 'F' WHEN a.sexo = 0 THEN 'M' END as sexo, a.externalID
                 FROM clube b
-                INNER JOIN contratos_jogador c ON c.clube = b.ID AND (c.tipoContrato = 0 OR c.tipoContrato IS NULL)
+                INNER JOIN contratos_jogador c ON c.clube = b.ID
                 INNER JOIN jogador a ON a.ID = c.jogador
                 LEFT JOIN paises p ON a.Pais = p.id
                 LEFT JOIN posicoes o ON c.posicaoBase = o.ID 
@@ -1643,7 +1643,7 @@ return $stmt;
             } else if($idLiga != null){
                 $query = "SELECT DISTINCT a.ID as idJogador, a.Nome as nomeJogador, FLOOR((DATEDIFF(CURDATE(), a.Nascimento))/365) as Idade, o.Sigla as posicao, c.titularidade, c.posicaoBase as codigoPosicaoBase, a.Mentalidade, a.CobradorFalta, a.StringPosicoes, (a.Nivel + c.ModificadorNivel) as Nivel, a.Marcacao, a.Desarme, a.VisaoJogo, a.Movimentacao, a.Cruzamentos, a.Cabeceamento, a.Tecnica, a.ControleBola, a.Finalizacao, a.FaroGol, a.Velocidade, a.Forca, a.Reflexos, a.Seguranca, a.Saidas, a.JogoAereo, a.Lancamentos, a.DefesaPenaltis, a.Determinacao, a.DeterminacaoOriginal, p.bandeira as Nacionalidade, (a.Marcacao + a.Desarme + a.VisaoJogo + a.Movimentacao + a.Cruzamentos + a.Cabeceamento + a.Tecnica + a.ControleBola + a.Finalizacao + a.FaroGol + a.Velocidade + a.Forca + a.Reflexos + a.Seguranca + a.Saidas + a.JogoAereo + a.Lancamentos + a.DefesaPenaltis + a.Determinacao) as somaAtributos, a.Nascimento, b.Nome as Time, b.ID as idTime, CASE WHEN a.sexo = 1 THEN 'F' WHEN a.sexo = 0 THEN 'M' END as sexo, a.externalID
                 FROM clube b
-                INNER JOIN contratos_jogador c ON c.clube = b.ID AND (c.tipoContrato = 0 OR c.tipoContrato IS NULL)
+                INNER JOIN contratos_jogador c ON c.clube = b.ID
                 INNER JOIN jogador a ON a.ID = c.jogador
                 LEFT JOIN paises p ON a.Pais = p.id
                 LEFT JOIN posicoes o ON c.posicaoBase = o.ID 
