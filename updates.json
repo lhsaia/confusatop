@@ -9,9 +9,56 @@
   },
     "days": [
     {
+      "id": "day_22_11_2026",
+      "date": "22/11/2026",
+      "items": [
+        {
+          "badge": "new",
+          "title": "Ajuste de níveis do elenco em Meus Times",
+          "desc": "Adicionado botão por clube em Meus Times para subir, baixar ou definir média alvo de nível de todos os jogadores do elenco de uma vez, com opção de modificador para estrangeiros e recálculo opcional de passe e salário."
+        },
+        {
+          "badge": "new",
+          "title": "Intervalo entre rodadas em dias",
+          "desc": "Agora é possível configurar o intervalo entre rodadas em dias (ex: 1 a 6 dias) além de semanas nas opções da competição, aplicado tanto na geração automática de tabelas quanto no avanço automático de fases eliminatórias."
+        }
+      ]
+    },
+    {
+      "id": "day_13_11_2026",
+      "date": "13/11/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Correção na contagem de clubes por liga",
+          "desc": "Corrigido erro de sintaxe SQL ao consultar a quantidade de equipes na visualização de status da liga."
+        },
+        {
+          "badge": "bugfix",
+          "title": "Correção de aviso na coleta de súmulas",
+          "desc": "Corrigido aviso de depreciação (PHP 8.1+) ao processar caminhos nulos de partidas ainda não simuladas no helper de súmulas."
+        }
+      ]
+    },
+    {
       "id": "day_12_11_2026",
       "date": "12/11/2026",
       "items": [
+        {
+          "badge": "bugfix",
+          "title": "Permissao de escalacao para admin em jogos passados",
+          "desc": "Permite que administradores possam ajustar escalacoes de partidas cujo horario ja foi atingido ou esta no passado."
+        },
+        {
+          "badge": "new",
+          "title": "Confirmacao em lote e estabilidade de tela na Lista de Times",
+          "desc": "Permite selecionar multiplos times e salvar todas as vagas de uma vez so com barra flutuante, alem de eliminar saltos indesejados de rolagem ao escolher equipes."
+        },
+        {
+          "badge": "new",
+          "title": "Completar elenco com base",
+          "desc": "Adicionado botao na listagem de times para identificar carencias taticas de posicoes e gerar jovens da base sob demanda."
+        },
         {
           "badge": "bugfix",
           "title": "Correção de Estatísticas em Competições com Caracteres Especiais",

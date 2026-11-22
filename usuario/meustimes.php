@@ -78,6 +78,8 @@ var listaPaises =  <?php echo json_encode($listaPaises); ?>;
 
 var listaLigas =  <?php echo json_encode($listaLigas); ?>;
 
+
+
  var logged ='<?php if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == true){
 		echo "true";
 	 } else {
@@ -271,6 +273,7 @@ function updateTable(ajax_data, current_page, highlighted, direction){
                         optionsString += "<a hidden id='can"+val['id']+"' title='Cancelar' class='clickable cancelar'><span class='material-symbols-outlined inlineButton negative'>close</span></a>";
                         optionsString += "<a id='pro"+val['id']+"' title='Promover 1 jogador da base' class='clickable promover'><span class='material-symbols-outlined inlineButton'>pan_tool_alt</span></a>";
                         optionsString += "<a id='com"+val['id']+"' title='Completar elenco com a base' class='clickable completar-base'><span class='material-symbols-outlined inlineButton'>diversity_3</span></a>";
+                        optionsString += "<a id='niv"+val['id']+"' title='Ajustar níveis do elenco' class='clickable ajustar-niveis'><span class='material-symbols-outlined inlineButton'>trending_up</span></a>";
                     }
                     optionsString += "</td>";
                     tbl += optionsString;
@@ -338,6 +341,7 @@ $(document).on('click', '.editar', function(){
     tbl_row.find('.deletar').hide();
     tbl_row.find('.promover').hide();
     tbl_row.find('.completar-base').hide();
+    tbl_row.find('.ajustar-niveis').hide();
     tbl_row.find('.nomePais').hide();
     tbl_row.find('.hiddenInput').show();
     tbl_row.find('.fidelidadeFixo').hide();
@@ -392,6 +396,7 @@ $(document).on('click', '.cancelar', function(){
     tbl_row.find('.deletar').show();
     tbl_row.find('.promover').show();
     tbl_row.find('.completar-base').show();
+    tbl_row.find('.ajustar-niveis').show();
     tbl_row.find('.thumb').removeClass('editableThumb');
     tbl_row.find('.hiddenInput').hide();
     tbl_row.find('.comboTorcedores').hide();
@@ -713,6 +718,300 @@ $(document).on('click', '#btnConfirmarCompletarBase', function(){
 });
 });
 
+// Ajuste de níveis do elenco (1 clube por vez)
+var ajusteClubeAtual = 0;
+var ajusteClubeNome = '';
+var ajusteModoAtual = 'delta';
+var ajustePreviewTimer = null;
+var ajustePreviewSeq = 0;
+var ajusteTotalAlterados = 0;
+
+function escapeHtmlNiveis(str) {
+    return String(str === null || str === undefined ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function atualizarBotaoConfirmarNiveis(loading) {
+    var $btn = $('#btnConfirmarAjustarNiveis');
+    if (loading) {
+        $btn.prop('disabled', true).html('<span class="material-symbols-outlined" style="font-size:18px; animation:spin 1s linear infinite;">sync</span> Aplicando...');
+        return;
+    }
+    $btn.html('<span class="material-symbols-outlined" style="font-size:18px;">trending_up</span> Aplicar Alterações');
+    $btn.prop('disabled', ajusteTotalAlterados <= 0);
+}
+
+function renderPreviaAjusteNiveis(data) {
+    ajusteTotalAlterados = parseInt(data.totalAlterados, 10) || 0;
+    var mediaAtual = Number(data.mediaAtual || 0);
+    var mediaPrevista = Number(data.mediaPrevista || 0);
+    var diffMedia = Number((mediaPrevista - mediaAtual).toFixed(1));
+
+    $('#ajusteMediaAtualInline').text(mediaAtual.toFixed(1));
+    var $mediaInput = $('#ajusteMediaAlvoInput');
+    if ($mediaInput.val() === '') {
+        $mediaInput.attr('placeholder', 'Ex: ' + Math.max(1, Math.min(99, Math.round(mediaAtual || 70))));
+    }
+
+    var diffBadge = '';
+    if (diffMedia > 0) {
+        diffBadge = '<span class="ajuste-badge ajuste-badge-pos">+' + diffMedia.toFixed(1) + '</span>';
+    } else if (diffMedia < 0) {
+        diffBadge = '<span class="ajuste-badge ajuste-badge-neg">' + diffMedia.toFixed(1) + '</span>';
+    }
+
+    var detalhesJogadores = 'Nativos: ' + (parseInt(data.totalNativos, 10) || 0) + ' | Modificador: ' + (parseInt(data.totalEstrangeiros, 10) || 0);
+    if ((parseInt(data.totalIgnoradosEstrangeiros, 10) || 0) > 0) {
+        detalhesJogadores += ' | Ignorados: ' + (parseInt(data.totalIgnoradosEstrangeiros, 10) || 0);
+    }
+    if ((parseInt(data.totalFalecidosIgnorados, 10) || 0) > 0) {
+        detalhesJogadores += ' | Falecidos: ' + (parseInt(data.totalFalecidosIgnorados, 10) || 0);
+    }
+
+    var html = '<div class="ajuste-summary-grid">';
+    html += '<div class="ajuste-summary-card">' +
+        '<div class="ajuste-summary-label">Jogadores afetados</div>' +
+        '<div class="ajuste-summary-value">' + ajusteTotalAlterados + ' / ' + (parseInt(data.totalJogadores, 10) || 0) + '</div>' +
+        '<div class="ajuste-summary-sub">' + detalhesJogadores + '</div>' +
+        '</div>';
+    html += '<div class="ajuste-summary-card">' +
+        '<div class="ajuste-summary-label">Média do elenco</div>' +
+        '<div class="ajuste-summary-value">' + mediaAtual.toFixed(1) + ' &rarr; ' + mediaPrevista.toFixed(1) + ' ' + diffBadge + '</div>' +
+        '<div class="ajuste-summary-sub">Elegíveis: ' + Number(data.mediaElegiveisAtual || 0).toFixed(1) + ' &rarr; ' + Number(data.mediaElegiveisPrevista || 0).toFixed(1) + '</div>' +
+        '</div>';
+    html += '</div>';
+
+    if ((parseInt(data.totalAtingiramLimite, 10) || 0) > 0) {
+        html += '<div class="ajuste-banner-info">' +
+            '<span class="material-symbols-outlined" style="font-size:18px; flex-shrink:0;">info</span>' +
+            '<span>' + (parseInt(data.totalAtingiramLimite, 10) || 0) + ' jogador(es) atingiram o limite mínimo (1) ou máximo (99).</span>' +
+            '</div>';
+    }
+
+    var lista = Array.isArray(data.jogadores) ? data.jogadores : [];
+    html += '<div class="ajuste-preview-table-wrap"><table class="ajuste-preview-table">';
+    html += '<thead><tr><th>Jogador</th><th>Atual &rarr; Novo</th><th>Tipo</th></tr></thead><tbody>';
+
+    if (lista.length === 0) {
+        html += '<tr><td colspan="3" style="text-align:center; color:#64748b; padding:16px;">Nenhum jogador ativo encontrado neste clube.</td></tr>';
+    } else {
+        for (var i = 0; i < lista.length; i++) {
+            var jog = lista[i];
+            var deltaVal = parseInt(jog.delta, 10) || 0;
+            var deltaTxt = '';
+            var deltaCls = 'ajuste-delta-zero';
+            if (deltaVal > 0) {
+                deltaTxt = ' (+' + deltaVal + ')';
+                deltaCls = 'ajuste-delta-pos';
+            } else if (deltaVal < 0) {
+                deltaTxt = ' (' + deltaVal + ')';
+                deltaCls = 'ajuste-delta-neg';
+            }
+            var limiteTag = jog.atingiuLimite ? ' <span title="Atingiu limite 1 ou 99" style="color:#0284c7; font-size:0.74rem; font-weight:700;">(lim.)</span>' : '';
+
+            var tipoBadge = '';
+            if (jog.tipoAjuste === 'modificador') {
+                tipoBadge = '<span class="ajuste-badge ajuste-badge-mod" title="Alteração via ModificadorNivel (' + (parseInt(jog.modAtual, 10) || 0) + ' -> ' + (parseInt(jog.novoMod, 10) || 0) + ')">Modificador</span>';
+            } else if (jog.tipoAjuste === 'ignorado') {
+                tipoBadge = '<span class="ajuste-badge ajuste-badge-ignorado">Ignorado</span>';
+            } else {
+                tipoBadge = '<span class="ajuste-badge ajuste-badge-nivel">Nível</span>';
+            }
+
+            html += '<tr>' +
+                '<td>' + escapeHtmlNiveis(jog.nome) + '</td>' +
+                '<td><span>' + (parseInt(jog.nivelAtual, 10) || 0) + '</span> &rarr; <span class="' + deltaCls + '">' + (parseInt(jog.nivelNovo, 10) || 0) + deltaTxt + '</span>' + limiteTag + '</td>' +
+                '<td>' + tipoBadge + '</td>' +
+                '</tr>';
+        }
+    }
+
+    html += '</tbody></table></div>';
+    $('#ajustePreviaContainer').html(html);
+    atualizarBotaoConfirmarNiveis(false);
+}
+
+function solicitarPreviaAjusteNiveis(imediato) {
+    if (!ajusteClubeAtual) return;
+    clearTimeout(ajustePreviewTimer);
+
+    var executarBusca = function() {
+        var mySeq = ++ajustePreviewSeq;
+        ajusteTotalAlterados = 0;
+        atualizarBotaoConfirmarNiveis(false);
+        $('#ajusteModalError').hide().empty();
+        $('#ajustePreviaContainer').html('<div class="ajuste-loading-box"><span class="material-symbols-outlined" style="font-size:20px; animation:spin 1s linear infinite;">sync</span> Calculando prévia do elenco...</div>');
+
+        $.ajax({
+            type: 'POST',
+            url: '/times/ajustar_niveis.php',
+            data: {
+                acao: 'diagnostico',
+                clube: ajusteClubeAtual,
+                modo: ajusteModoAtual,
+                delta: $('#ajusteDeltaInput').val(),
+                media_alvo: $('#ajusteMediaAlvoInput').val(),
+                incluir_estrangeiros: $('#chkIncluirEstrangeiros').is(':checked') ? '1' : '0',
+                recalcular_passe: $('#chkRecalcularPasse').is(':checked') ? '1' : '0'
+            },
+            dataType: 'json'
+        }).done(function(data) {
+            if (mySeq !== ajustePreviewSeq) return;
+            if (data && data.success) {
+                renderPreviaAjusteNiveis(data);
+            } else {
+                ajusteTotalAlterados = 0;
+                atualizarBotaoConfirmarNiveis(false);
+                $('#ajustePreviaContainer').html('<div class="ajuste-banner-error"><span class="material-symbols-outlined" style="font-size:18px; flex-shrink:0;">error</span><span>' + escapeHtmlNiveis((data && data.error) ? data.error : 'Não foi possível calcular a prévia.') + '</span></div>');
+            }
+        }).fail(function() {
+            if (mySeq !== ajustePreviewSeq) return;
+            ajusteTotalAlterados = 0;
+            atualizarBotaoConfirmarNiveis(false);
+            $('#ajustePreviaContainer').html('<div class="ajuste-banner-error"><span class="material-symbols-outlined" style="font-size:18px; flex-shrink:0;">error</span><span>Erro de conexão ao calcular prévia.</span></div>');
+        });
+    };
+
+    if (imediato) {
+        executarBusca();
+    } else {
+        ajustePreviewTimer = setTimeout(executarBusca, 220);
+    }
+}
+
+$(document).on('click', '.ajustar-niveis', function() {
+    var tr = $(this).closest('tr');
+    ajusteClubeAtual = parseInt(tr.attr('id'), 10) || 0;
+    ajusteClubeNome = tr.find('.linkNome').text().trim();
+    if (!ajusteClubeAtual) return;
+
+    ajusteModoAtual = 'delta';
+    ajusteTotalAlterados = 0;
+
+    $('#modalAjustarNiveisTitulo').text('Ajustar Níveis — ' + ajusteClubeNome);
+    $('.ajuste-mode-btn').removeClass('active');
+    $('.ajuste-mode-btn[data-mode="delta"]').addClass('active');
+    $('#painelModoDelta').show();
+    $('#painelModoMedia').hide();
+
+    $('#ajusteDeltaInput').val('');
+    $('.ajuste-preset-btn').removeClass('active');
+    $('#ajusteMediaAlvoInput').val('').attr('placeholder', 'Ex: 70');
+    $('#ajusteMediaAtualInline').text('—');
+    $('#chkIncluirEstrangeiros').prop('checked', true);
+    $('#chkRecalcularPasse').prop('checked', false);
+    $('#ajusteModalError').hide().empty();
+    atualizarBotaoConfirmarNiveis(false);
+
+    $('#modalAjustarNiveis').css('display', 'flex').hide().fadeIn(200);
+    solicitarPreviaAjusteNiveis(true);
+});
+
+$(document).on('click', '.ajuste-mode-btn', function() {
+    var novoModo = $(this).attr('data-mode');
+    if (!novoModo || novoModo === ajusteModoAtual) return;
+    ajusteModoAtual = novoModo;
+    $('.ajuste-mode-btn').removeClass('active');
+    $(this).addClass('active');
+    if (ajusteModoAtual === 'delta') {
+        $('#painelModoDelta').show();
+        $('#painelModoMedia').hide();
+    } else {
+        $('#painelModoDelta').hide();
+        $('#painelModoMedia').show();
+    }
+    solicitarPreviaAjusteNiveis(true);
+});
+
+$(document).on('click', '.ajuste-preset-btn', function() {
+    var val = $(this).attr('data-delta');
+    $('.ajuste-preset-btn').removeClass('active');
+    $(this).addClass('active');
+    $('#ajusteDeltaInput').val(val);
+    solicitarPreviaAjusteNiveis(true);
+});
+
+$(document).on('input change', '#ajusteDeltaInput', function() {
+    var raw = String($(this).val()).trim();
+    var numVal = parseInt(raw, 10);
+    $('.ajuste-preset-btn').removeClass('active');
+    if (raw !== '' && !isNaN(numVal)) {
+        $('.ajuste-preset-btn[data-delta="' + numVal + '"]').addClass('active');
+    }
+    solicitarPreviaAjusteNiveis(false);
+});
+
+$(document).on('input change', '#ajusteMediaAlvoInput', function() {
+    solicitarPreviaAjusteNiveis(false);
+});
+
+$(document).on('change', '#chkIncluirEstrangeiros', function() {
+    solicitarPreviaAjusteNiveis(true);
+});
+
+$(document).on('click', '#btnFecharModalAjustarNiveis, #btnCancelarAjustarNiveis', function() {
+    clearTimeout(ajustePreviewTimer);
+    $('#modalAjustarNiveis').fadeOut(200);
+});
+
+$(document).on('click', '#modalAjustarNiveis', function(e) {
+    if ($(e.target).is('#modalAjustarNiveis')) {
+        clearTimeout(ajustePreviewTimer);
+        $('#modalAjustarNiveis').fadeOut(200);
+    }
+});
+
+$(document).on('keydown', function(e) {
+    if (e.key === 'Escape' && $('#modalAjustarNiveis').is(':visible')) {
+        clearTimeout(ajustePreviewTimer);
+        $('#modalAjustarNiveis').fadeOut(200);
+    }
+});
+
+$(document).on('click', '#btnConfirmarAjustarNiveis', function() {
+    if (!ajusteClubeAtual || ajusteTotalAlterados <= 0) return;
+    atualizarBotaoConfirmarNiveis(true);
+    $('#ajusteModalError').hide().empty();
+
+    $.ajax({
+        type: 'POST',
+        url: '/times/ajustar_niveis.php',
+        data: {
+            acao: 'executar',
+            clube: ajusteClubeAtual,
+            modo: ajusteModoAtual,
+            delta: $('#ajusteDeltaInput').val(),
+            media_alvo: $('#ajusteMediaAlvoInput').val(),
+            incluir_estrangeiros: $('#chkIncluirEstrangeiros').is(':checked') ? '1' : '0',
+            recalcular_passe: $('#chkRecalcularPasse').is(':checked') ? '1' : '0'
+        },
+        dataType: 'json'
+    }).done(function(data) {
+        atualizarBotaoConfirmarNiveis(false);
+        if (data && data.success) {
+            $('#modalAjustarNiveis').fadeOut(200);
+            $('#error_box').html('<div class="alert alert-success">' + data.mensagem + '</div>');
+            var boxEl = $('#error_box')[0];
+            if (boxEl && boxEl.scrollIntoView) {
+                var rect = boxEl.getBoundingClientRect();
+                if (rect.top < 0 || rect.bottom > window.innerHeight) {
+                    boxEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+            load_data();
+        } else {
+            $('#ajusteModalError').html('<span class="material-symbols-outlined" style="font-size:18px; flex-shrink:0;">error</span><span>' + escapeHtmlNiveis((data && data.error) ? data.error : 'Erro ao atualizar os níveis.') + '</span>').show();
+        }
+    }).fail(function() {
+        atualizarBotaoConfirmarNiveis(false);
+        $('#ajusteModalError').html('<span class="material-symbols-outlined" style="font-size:18px; flex-shrink:0;">error</span><span>Erro de comunicação com o servidor ao salvar os níveis.</span>').show();
+    });
+});
+
 $(document).on('click', '.pagination_link', function(){
     var page = $(this).attr('id');
     updateTable(localData, page, activeSort, 1);
@@ -870,6 +1169,85 @@ echo('</div>');
             <button type="button" id="btnCancelarCompletarBase" style="padding:8px 18px; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; font-weight:600; font-size:0.85rem; color:#475569; cursor:pointer;">Cancelar</button>
             <button type="button" id="btnConfirmarCompletarBase" style="padding:8px 20px; background:#0284c7; border:none; border-radius:8px; font-weight:600; font-size:0.85rem; color:#ffffff; cursor:pointer; display:none; align-items:center; gap:6px;">
                 <span class="material-symbols-outlined" style="font-size:18px;">diversity_3</span> Confirmar e Gerar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ajustar Níveis do Elenco -->
+<div id="modalAjustarNiveis" class="ajuste-niveis-overlay" role="dialog" aria-modal="true" aria-labelledby="modalAjustarNiveisTitulo">
+    <div class="ajuste-niveis-dialog">
+        <div class="ajuste-niveis-header">
+            <div class="ajuste-niveis-title-wrap">
+                <span class="material-symbols-outlined ajuste-niveis-title-icon">trending_up</span>
+                <div>
+                    <h3 id="modalAjustarNiveisTitulo" class="ajuste-niveis-title">Ajustar Níveis do Elenco</h3>
+                    <p id="modalAjustarNiveisSubtitulo" class="ajuste-niveis-subtitle">Atualize os níveis de todo o elenco de uma só vez</p>
+                </div>
+            </div>
+            <span id="btnFecharModalAjustarNiveis" class="material-symbols-outlined ajuste-niveis-close" title="Fechar">close</span>
+        </div>
+
+        <div class="ajuste-niveis-body">
+            <div>
+                <span class="ajuste-section-label">Modo de ajuste</span>
+                <div class="ajuste-mode-tabs">
+                    <button type="button" class="ajuste-mode-btn active" data-mode="delta">
+                        <span class="material-symbols-outlined">exposure</span>
+                        <span>Subir / Baixar (&plusmn; X)</span>
+                    </button>
+                    <button type="button" class="ajuste-mode-btn" data-mode="media_alvo">
+                        <span class="material-symbols-outlined">equalizer</span>
+                        <span>Definir média alvo</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="painelModoDelta" class="ajuste-mode-panel">
+                <div class="ajuste-presets-row">
+                    <button type="button" class="ajuste-preset-btn neg" data-delta="-10">-10</button>
+                    <button type="button" class="ajuste-preset-btn neg" data-delta="-5">-5</button>
+                    <button type="button" class="ajuste-preset-btn neg" data-delta="-3">-3</button>
+                    <button type="button" class="ajuste-preset-btn neg" data-delta="-1">-1</button>
+                    <button type="button" class="ajuste-preset-btn pos" data-delta="1">+1</button>
+                    <button type="button" class="ajuste-preset-btn pos" data-delta="3">+3</button>
+                    <button type="button" class="ajuste-preset-btn pos" data-delta="5">+5</button>
+                    <button type="button" class="ajuste-preset-btn pos" data-delta="10">+10</button>
+                </div>
+                <div class="ajuste-input-row">
+                    <input type="number" id="ajusteDeltaInput" min="-98" max="98" step="1" placeholder="Ex: +10 ou -5">
+                    <span class="ajuste-input-help">Valores positivos sobem e negativos baixam o nível (limite 1 a 99)</span>
+                </div>
+            </div>
+
+            <div id="painelModoMedia" class="ajuste-mode-panel" style="display:none;">
+                <div class="ajuste-input-row">
+                    <span class="ajuste-media-atual-badge">Média atual: <strong id="ajusteMediaAtualInline">&mdash;</strong></span>
+                    <input type="number" id="ajusteMediaAlvoInput" min="1" max="99" step="0.5" placeholder="Ex: 70">
+                </div>
+                <div class="ajuste-input-help">Distribui os pontos uniformemente pelos jogadores do elenco respeitando os limites de 1 a 99.</div>
+            </div>
+
+            <div class="ajuste-options-box">
+                <label class="ajuste-checkbox-line">
+                    <input type="checkbox" id="chkIncluirEstrangeiros" checked>
+                    <span>Incluir jogadores de países de outros usuários (ajuste via Modificador de Nível)</span>
+                </label>
+                <label class="ajuste-checkbox-line">
+                    <input type="checkbox" id="chkRecalcularPasse">
+                    <span>Recalcular também Valor (passe) e Salário automaticamente</span>
+                </label>
+            </div>
+
+            <div id="ajusteModalError" class="ajuste-banner-error" style="display:none;"></div>
+
+            <div id="ajustePreviaContainer" class="ajuste-previa-container"></div>
+        </div>
+
+        <div class="ajuste-niveis-footer">
+            <button type="button" id="btnCancelarAjustarNiveis" class="btn-modal-cancel">Cancelar</button>
+            <button type="button" id="btnConfirmarAjustarNiveis" class="btn-modal-confirm" disabled>
+                <span class="material-symbols-outlined" style="font-size:18px;">trending_up</span> Aplicar Alterações
             </button>
         </div>
     </div>
