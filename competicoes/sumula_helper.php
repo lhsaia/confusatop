@@ -24,7 +24,7 @@ if (!function_exists('encontrarArquivoSumula')) {
      * @return string|null Caminho completo do arquivo ou null se não encontrado
      */
     function encontrarArquivoSumula($nomeComposto, $path, $extensao = 'hyl', $docRoot = '') {
-        $ext = strtolower(trim($extensao, '.'));
+        $ext = strtolower(trim((string)($extensao ?? ''), '.'));
         if (!in_array($ext, ['hyl', 'hyj', 'png', 'pdf'])) {
             return null;
         }
@@ -36,7 +36,7 @@ if (!function_exists('encontrarArquivoSumula')) {
         }
         $docRoot = str_replace('\\', '/', $docRoot);
 
-        $cleanPath = preg_replace('/\.(hyl|hyj|png|pdf)$/i', '', trim($path));
+        $cleanPath = preg_replace('/\.(hyl|hyj|png|pdf)$/i', '', trim((string)($path ?? '')));
         if (empty($cleanPath)) {
             return null;
         }
@@ -103,7 +103,7 @@ if (!function_exists('coletarArquivosSumulasCompeticao')) {
      * @return array Mapa no formato [nome_relativo_no_zip => caminho_absoluto_no_disco]
      */
     function coletarArquivosSumulasCompeticao($nomeComposto, $jogosPaths = [], $tipo = 'todos', $docRoot = '') {
-        $tipo = strtolower(trim($tipo));
+        $tipo = strtolower(trim((string)($tipo ?? '')));
         $extensoes = ($tipo === 'hyl') ? ['hyl'] : (($tipo === 'hyj') ? ['hyj'] : ['hyl', 'hyj']);
 
         if (empty($docRoot)) {
@@ -149,7 +149,7 @@ if (!function_exists('coletarArquivosSumulasCompeticao')) {
         // 2. Para paths específicos de partidas do banco de dados, garantir que sejam adicionados
         if (!empty($jogosPaths) && is_array($jogosPaths)) {
             foreach ($jogosPaths as $jPath) {
-                $clean = preg_replace('/\.(hyl|hyj|png|pdf)$/i', '', trim($jPath));
+                $clean = preg_replace('/\.(hyl|hyj|png|pdf)$/i', '', trim((string)($jPath ?? '')));
                 if (empty($clean)) continue;
 
                 foreach ($extensoes as $ext) {
