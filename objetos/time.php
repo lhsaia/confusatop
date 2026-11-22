@@ -150,6 +150,12 @@ class Time{
     //ler todos os jogadores para o quadro
     function readAll($from_record_num, $records_per_page, $dono = null, $liga = null, $pais = null){
 
+        $dono = ($dono !== null && trim(strip_tags((string)$dono)) !== '') ? trim(htmlspecialchars(strip_tags((string)$dono))) : null;
+        $liga = ($liga !== null && trim(strip_tags((string)$liga)) !== '') ? trim(htmlspecialchars(strip_tags((string)$liga))) : null;
+        $pais = ($pais !== null && trim(strip_tags((string)$pais)) !== '') ? trim(htmlspecialchars(strip_tags((string)$pais))) : null;
+        $from_record_num = (int)$from_record_num;
+        $records_per_page = (int)$records_per_page;
+
         //ver se é por dono ou geral
         if($dono === null && $liga === null && $pais === null){
             $sub_query_inicio = "";
@@ -202,28 +208,40 @@ return $stmt;
  // used for paging products
  public function countAll($dono = null, $liga = null){
 
-    $dono = ($dono !== null && $dono !== '') ? htmlspecialchars(strip_tags((string)$dono)) : null;
-    $liga = ($liga !== null && $liga !== '') ? htmlspecialchars(strip_tags((string)$liga)) : null;
+    $dono = ($dono !== null && trim(strip_tags((string)$dono)) !== '') ? trim(htmlspecialchars(strip_tags((string)$dono))) : null;
+    $liga = ($liga !== null && trim(strip_tags((string)$liga)) !== '') ? trim(htmlspecialchars(strip_tags((string)$liga))) : null;
 
     if($dono === null && $liga === null){
 
        $query = "SELECT id FROM " . $this->table_name . "";
+       $stmt = $this->conn->prepare( $query );
 
     } else if($liga === null) {
 
         $query =    "SELECT a.id
                     FROM " . $this->table_name . " a
                      LEFT JOIN paises p ON a.pais = p.id
-                      WHERE a.status = 0 AND p.dono = ".$dono;
+                      WHERE a.status = 0 AND p.dono = ?";
+        $stmt = $this->conn->prepare( $query );
+        $stmt->bindParam(1, $dono);
 
     } else if($dono === null){
         $query =    "SELECT a.id
                     FROM " . $this->table_name . " a
                      LEFT JOIN paises p ON a.pais = p.id
-                      WHERE a.liga = ".$liga;
+                      WHERE a.liga = ?";
+        $stmt = $this->conn->prepare( $query );
+        $stmt->bindParam(1, $liga);
+    } else {
+        $query =    "SELECT a.id
+                    FROM " . $this->table_name . " a
+                     LEFT JOIN paises p ON a.pais = p.id
+                      WHERE a.status = 0 AND p.dono = ? AND a.liga = ?";
+        $stmt = $this->conn->prepare( $query );
+        $stmt->bindParam(1, $dono);
+        $stmt->bindParam(2, $liga);
     }
 
-    $stmt = $this->conn->prepare( $query );
     $stmt->execute();
 
     $num = $stmt->rowCount();

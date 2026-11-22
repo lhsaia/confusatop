@@ -8,7 +8,7 @@ include_once($_SERVER['DOCUMENT_ROOT']."/elements/login_info.php");
 require($_SERVER['DOCUMENT_ROOT']."/lib/functions.php");
 
 // page given in URL parameter, default page is one
-$page = isset($_GET['page']) ? $_GET['page'] : 1;
+$page = (isset($_GET['page']) && is_numeric($_GET['page']) && (int)$_GET['page'] > 0) ? (int)$_GET['page'] : 1;
 
 // set number of records per page
 $records_per_page = 40;
@@ -16,12 +16,13 @@ $records_per_page = 40;
 // calculate for the query LIMIT clause
 $from_record_num = ($records_per_page * $page) - $records_per_page;
 
-$idLiga = $_GET['league'] ?? '';
+$idLiga = (isset($_GET['league']) && is_scalar($_GET['league'])) ? trim((string)$_GET['league']) : '';
 
-if (empty($idLiga)) {
+if ($idLiga === '' || !is_numeric($idLiga) || (int)$idLiga <= 0) {
     header('Location: /index.php');
     exit;
 }
+$idLiga = (int)$idLiga;
 
 //estabelecer conexão com banco de dados
 include_once($_SERVER['DOCUMENT_ROOT']."/config/database.php");

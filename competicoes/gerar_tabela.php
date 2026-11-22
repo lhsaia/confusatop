@@ -290,7 +290,8 @@ class CompetitionMatchScheduler {
     private $startDate;
     private $maxGamesPerDay;
     private $allowedDaysOfWeek; // array de inteiros 0 (Dom) a 6 (Sab), vazio = qualquer dia
-    private $intervalWeeks;
+    private $intervalValue;
+    private $intervalUnit; // 'semanas' ou 'dias'
     private $timesOfDay; // array de strings '16:00', '19:00', etc.
     
     private $currentDayTimestamp;
@@ -314,7 +315,8 @@ class CompetitionMatchScheduler {
             }
         }
         
-        $this->intervalWeeks = (isset($options['intervalo_rodadas']) && intval($options['intervalo_rodadas']) > 0) 
+        $this->intervalUnit = (isset($options['intervalo_unidade']) && strtolower(trim((string)$options['intervalo_unidade'])) === 'dias') ? 'dias' : 'semanas';
+        $this->intervalValue = (isset($options['intervalo_rodadas']) && intval($options['intervalo_rodadas']) > 0) 
             ? intval($options['intervalo_rodadas']) 
             : 1;
             
@@ -380,10 +382,13 @@ class CompetitionMatchScheduler {
 
     public function advanceRound() {
         // Ao avançar de rodada:
-        // Avança pelo número de semanas configurado a partir do dia atual
-        $nextWeekTs = strtotime("+" . $this->intervalWeeks . " weeks", $this->currentDayTimestamp);
-        // Encontra o próximo dia permitido a partir da nova semana
-        $this->currentDayTimestamp = $this->findNextValidDay($nextWeekTs, true);
+
+        // Avança pelo intervalo configurado (em dias ou semanas) a partir do dia atual
+        $strtotimeUnit = ($this->intervalUnit === 'dias') ? 'days' : 'weeks';
+        $nextTs = strtotime("+" . $this->intervalValue . " " . $strtotimeUnit, $this->currentDayTimestamp);
+
+        // Encontra o próximo dia permitido a partir da nova data
+        $this->currentDayTimestamp = $this->findNextValidDay($nextTs, true);
         $this->gamesScheduledToday = 0;
         $this->timeIndexToday = 0;
     }

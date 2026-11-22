@@ -157,6 +157,13 @@ html body .opcoes-secao select:not(.select2-multiple):focus {
   line-height: 1.25;
 }
 
+.intervalo-rodadas-group {
+  display: grid;
+  grid-template-columns: minmax(75px, 1fr) minmax(115px, 1.4fr);
+  gap: 8px;
+  align-items: center;
+}
+
 /* Checkboxes */
 .opcoes-secao label.checkbox-label input[type="checkbox"] {
   width: 18px !important;

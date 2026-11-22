@@ -523,10 +523,22 @@ require_once($_SERVER['DOCUMENT_ROOT']."/elements/header.php");
 		</div>
 		<small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: -6px; margin-bottom: 12px;">Se nenhum dia for marcado, as partidas serão agendadas consecutivamente.</small>
 
+		<?php
+		$intervalo_unidade_atual = (isset($options['intervalo_unidade']) && strtolower(trim((string)$options['intervalo_unidade'])) === 'dias') ? 'dias' : 'semanas';
+		$intervalo_max_atual = ($intervalo_unidade_atual === 'dias') ? 365 : 52;
+		$intervalo_valor_atual = (isset($options['intervalo_rodadas']) && intval($options['intervalo_rodadas']) > 0) ? intval($options['intervalo_rodadas']) : 1;
+		?>
 		<div style="display: flex; gap: 15px; flex-wrap: wrap;">
-			<div style="flex: 1; min-width: 180px;">
-				<label for='input_intervalorodadas' style="margin-top:0;">Intervalo entre Rodadas (Semanas)</label>
-				<input type='number' min='1' max='52' name='input_intervalorodadas' id='input_intervalorodadas' value='<?php echo (isset($options['intervalo_rodadas']) && intval($options['intervalo_rodadas']) > 0) ? intval($options['intervalo_rodadas']) : 1; ?>'/>
+			<div style="flex: 1; min-width: 210px;">
+				<label for='input_intervalorodadas' style="margin-top:0;">Intervalo entre Rodadas</label>
+				<div class="intervalo-rodadas-group">
+					<input type='number' min='1' max='<?php echo $intervalo_max_atual; ?>' name='input_intervalorodadas' id='input_intervalorodadas' value='<?php echo $intervalo_valor_atual; ?>'/>
+					<select name='input_intervalo_unidade' id='input_intervalo_unidade' aria-label='Unidade do intervalo entre rodadas'>
+						<option value='dias' <?php echo ($intervalo_unidade_atual === 'dias') ? 'selected' : ''; ?>>Dias</option>
+						<option value='semanas' <?php echo ($intervalo_unidade_atual === 'semanas') ? 'selected' : ''; ?>>Semanas</option>
+					</select>
+				</div>
+				<small style="color: #64748b; font-size: 0.8rem; display: block; margin-top: 4px;">Permite intervalos curtos em dias (ex: 1 a 6 dias) ou em semanas.</small>
 			</div>
 			<div style="flex: 2; min-width: 220px;">
 				<label for='input_horariosjogos' style="margin-top:0;">Horários de Jogos (Separados por vírgula)</label>
@@ -1202,6 +1214,19 @@ $(document).ready(function($){
 		});
 	});
 
+	$("#input_intervalo_unidade").on("change", function(){
+		let unidade = $(this).val();
+		let maxVal = (unidade === 'dias') ? 365 : 52;
+		let $inputInt = $("#input_intervalorodadas");
+		$inputInt.attr("max", maxVal);
+		let curVal = parseInt($inputInt.val(), 10);
+		if (isNaN(curVal) || curVal < 1) {
+			$inputInt.val(1);
+		} else if (curVal > maxVal) {
+			$inputInt.val(maxVal);
+		}
+	});
+
 	$('#salvar').click(function(){
 		var formData = new FormData();
 		
@@ -1261,6 +1286,7 @@ $(document).ready(function($){
 
 		let max_jogos_dia = $("#input_maxjogosdia").val();
 		let intervalo_rodadas = $("#input_intervalorodadas").val();
+		let intervalo_unidade = $("#input_intervalo_unidade").val() || 'semanas';
 		let horarios_jogos = $("#input_horariosjogos").val();
 		let dias_semana_arr = [];
 		$(".chk_dia_semana:checked").each(function(){
@@ -1345,6 +1371,7 @@ $(document).ready(function($){
 		formData.append('max_jogos_dia',max_jogos_dia);
 		formData.append('dias_semana',dias_semana);
 		formData.append('intervalo_rodadas',intervalo_rodadas);
+		formData.append('intervalo_unidade',intervalo_unidade);
 		formData.append('horarios_jogos',horarios_jogos);
 
 		// Zonas e Cores da Tabela

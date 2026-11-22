@@ -37,7 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     $data_inicial = !empty($_POST['data_inicial']) ? $_POST['data_inicial'] : null;
     $max_jogos_dia = isset($_POST['max_jogos_dia']) ? intval($_POST['max_jogos_dia']) : 0;
     $dias_semana = isset($_POST['dias_semana']) ? $_POST['dias_semana'] : '';
-    $intervalo_rodadas = isset($_POST['intervalo_rodadas']) ? intval($_POST['intervalo_rodadas']) : 1;
+    $intervalo_unidade = (isset($_POST['intervalo_unidade']) && strtolower(trim($_POST['intervalo_unidade'])) === 'dias') ? 'dias' : 'semanas';
+    $max_intervalo = ($intervalo_unidade === 'dias') ? 365 : 52;
+    $intervalo_rodadas = isset($_POST['intervalo_rodadas']) ? max(1, min($max_intervalo, intval($_POST['intervalo_rodadas']))) : 1;
     $horarios_jogos = !empty($_POST['horarios_jogos']) ? $_POST['horarios_jogos'] : '16:00';
     $expulso_dois_amarelos = isset($_POST['expulso_dois_amarelos']) ? intval($_POST['expulso_dois_amarelos']) : 0;
     $zonas_tabela = isset($_POST['zonas_tabela']) ? $_POST['zonas_tabela'] : null;
@@ -57,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         ]));
     }
 	
-	if($competicao->alterarOpcoes($idUsuario, $_POST['numero_times'], $_POST['data_limite'], $_POST['subir_live'], $_POST['sorteio'], $_POST['gol_fora'], $_POST['final_unica'], $_POST['tipo_competicao'], $_POST['criterio_desempate'], $_POST['criterio_desempate_final'], $_POST['criterio_suspensao'], $_POST['zerar_amarelos'], $_POST['permitir_alteracoes'], $_POST['inicio_alteracoes'], $_POST['fim_alteracoes'], $_POST['numero_alteracoes'], $idCompeticao, $estadios_times, $desempate_grupos, $num_grupos, $times_por_grupo, $tipo_preliminar, $turnos_pontos_corridos, $data_inicial, $max_jogos_dia, $dias_semana, $intervalo_rodadas, $horarios_jogos, $expulso_dois_amarelos, $zonas_tabela, $tipo_times, $campeonato_ranking, $capacidade_minima_estadio, $capacidade_minima_final)){
+	if($competicao->alterarOpcoes($idUsuario, $_POST['numero_times'], $_POST['data_limite'], $_POST['subir_live'], $_POST['sorteio'], $_POST['gol_fora'], $_POST['final_unica'], $_POST['tipo_competicao'], $_POST['criterio_desempate'], $_POST['criterio_desempate_final'], $_POST['criterio_suspensao'], $_POST['zerar_amarelos'], $_POST['permitir_alteracoes'], $_POST['inicio_alteracoes'], $_POST['fim_alteracoes'], $_POST['numero_alteracoes'], $idCompeticao, $estadios_times, $desempate_grupos, $num_grupos, $times_por_grupo, $tipo_preliminar, $turnos_pontos_corridos, $data_inicial, $max_jogos_dia, $dias_semana, $intervalo_rodadas, $horarios_jogos, $expulso_dois_amarelos, $zonas_tabela, $tipo_times, $campeonato_ranking, $capacidade_minima_estadio, $capacidade_minima_final, $intervalo_unidade)){
 		$is_success = true;
 	} else {
 		$is_success = false;

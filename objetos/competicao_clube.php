@@ -86,6 +86,7 @@ class Competicao_clube{
                         'max_jogos_dia' => "INTEGER DEFAULT 0",
                         'dias_semana' => "TEXT DEFAULT ''",
                         'intervalo_rodadas' => "INTEGER DEFAULT 1",
+                        'intervalo_unidade' => "TEXT DEFAULT 'semanas'",
                         'horarios_jogos' => "TEXT DEFAULT '16:00'",
                         'tipo_times' => "INTEGER DEFAULT 0",
                         'campeonato_ranking' => "INTEGER DEFAULT 10",
@@ -126,6 +127,7 @@ class Competicao_clube{
                     'max_jogos_dia' => "INT DEFAULT 0",
                     'dias_semana' => "VARCHAR(50) DEFAULT ''",
                     'intervalo_rodadas' => "INT DEFAULT 1",
+                    'intervalo_unidade' => "VARCHAR(10) DEFAULT 'semanas'",
                     'horarios_jogos' => "VARCHAR(255) DEFAULT '16:00'",
                     'zonas_tabela' => "TEXT NULL",
                     'tipo_times' => "TINYINT(1) DEFAULT 0",
@@ -467,7 +469,7 @@ class Competicao_clube{
 
 		$id = htmlspecialchars(strip_tags($id));
 		$query = "SELECT
-                numero_times, limite_fichas, subir_live, sorteio, golfora, finalunica, tipocompeticao, criteriodesempate, criteriodesempatefinal, suspensao, zeraramarelos, expulso_dois_amarelos, alteracoeselenco, inicioalteracoes, fimalteracoes, jogadoresadicionais, estadios_times, desempate_grupos, num_grupos, times_por_grupo, tipo_preliminar, turnos_pontos_corridos, data_inicial, max_jogos_dia, dias_semana, intervalo_rodadas, horarios_jogos, zonas_tabela, tipo_times, campeonato_ranking, capacidade_minima_estadio, capacidade_minima_final  
+                numero_times, limite_fichas, subir_live, sorteio, golfora, finalunica, tipocompeticao, criteriodesempate, criteriodesempatefinal, suspensao, zeraramarelos, expulso_dois_amarelos, alteracoeselenco, inicioalteracoes, fimalteracoes, jogadoresadicionais, estadios_times, desempate_grupos, num_grupos, times_por_grupo, tipo_preliminar, turnos_pontos_corridos, data_inicial, max_jogos_dia, dias_semana, intervalo_rodadas, intervalo_unidade, horarios_jogos, zonas_tabela, tipo_times, campeonato_ranking, capacidade_minima_estadio, capacidade_minima_final  
             FROM
                 competicao_opcoes 
             WHERE
@@ -480,7 +482,7 @@ class Competicao_clube{
 		return $options;
     }
 	
-	function alterarOpcoes($idUsuario, $numero_times, $data_limite, $subir_live, $sorteio, $gol_fora, $final_unica, $tipo_competicao, $criterio_desempate, $criterio_desempate_final, $criterio_suspensao, $zerar_amarelos, $permitir_alteracoes, $inicio_alteracoes, $fim_alteracoes, $numero_alteracoes, $id_competicao, $estadios_times = 1, $desempate_grupos = 'SG,GP,VI,CD', $num_grupos = 4, $times_por_grupo = 4, $tipo_preliminar = 1, $turnos_pontos_corridos = 2, $data_inicial = null, $max_jogos_dia = 0, $dias_semana = '', $intervalo_rodadas = 1, $horarios_jogos = '16:00', $expulso_dois_amarelos = 0, $zonas_tabela = null, $tipo_times = 0, $campeonato_ranking = 10, $capacidade_minima_estadio = 0, $capacidade_minima_final = 0){
+	function alterarOpcoes($idUsuario, $numero_times, $data_limite, $subir_live, $sorteio, $gol_fora, $final_unica, $tipo_competicao, $criterio_desempate, $criterio_desempate_final, $criterio_suspensao, $zerar_amarelos, $permitir_alteracoes, $inicio_alteracoes, $fim_alteracoes, $numero_alteracoes, $id_competicao, $estadios_times = 1, $desempate_grupos = 'SG,GP,VI,CD', $num_grupos = 4, $times_por_grupo = 4, $tipo_preliminar = 1, $turnos_pontos_corridos = 2, $data_inicial = null, $max_jogos_dia = 0, $dias_semana = '', $intervalo_rodadas = 1, $horarios_jogos = '16:00', $expulso_dois_amarelos = 0, $zonas_tabela = null, $tipo_times = 0, $campeonato_ranking = 10, $capacidade_minima_estadio = 0, $capacidade_minima_final = 0, $intervalo_unidade = 'semanas'){
 	
 			$idUsuario = htmlspecialchars(strip_tags($idUsuario));
 			$numero_times = htmlspecialchars(strip_tags($numero_times));
@@ -508,7 +510,14 @@ class Competicao_clube{
 			$data_inicial = !empty($data_inicial) ? htmlspecialchars(strip_tags($data_inicial)) : null;
 			$max_jogos_dia = intval($max_jogos_dia) >= 0 ? intval($max_jogos_dia) : 0;
 			$dias_semana = htmlspecialchars(strip_tags($dias_semana));
-			$intervalo_rodadas = intval($intervalo_rodadas) > 0 ? intval($intervalo_rodadas) : 1;
+			$intervalo_unidade = (strtolower(trim((string)$intervalo_unidade)) === 'dias') ? 'dias' : 'semanas';
+			$max_intervalo = ($intervalo_unidade === 'dias') ? 365 : 52;
+			$intervalo_rodadas = intval($intervalo_rodadas);
+			if ($intervalo_rodadas < 1) {
+				$intervalo_rodadas = 1;
+			} elseif ($intervalo_rodadas > $max_intervalo) {
+				$intervalo_rodadas = $max_intervalo;
+			}
 			$horarios_jogos = !empty($horarios_jogos) ? htmlspecialchars(strip_tags($horarios_jogos)) : '16:00';
 			$zonas_tabela = !empty($zonas_tabela) ? $zonas_tabela : null;
 			$tipo_times = intval($tipo_times) === 1 ? 1 : 0;
@@ -524,7 +533,7 @@ class Competicao_clube{
 			
 			$query = "UPDATE competicao_opcoes 
             SET
-                 numero_times =:numero_times, limite_fichas=:limite_fichas, subir_live=:subir_live, sorteio=:sorteio, golfora=:golfora, finalunica=:finalunica, tipocompeticao=:tipocompeticao, criteriodesempate=:criteriodesempate, criteriodesempatefinal=:criteriodesempatefinal, suspensao=:suspensao, zeraramarelos=:zeraramarelos, expulso_dois_amarelos=:expulso_dois_amarelos, alteracoeselenco=:alteracoeselenco, inicioalteracoes=:inicioalteracoes, fimalteracoes=:fimalteracoes, jogadoresadicionais=:numeroalteracoes, estadios_times=:estadios_times, desempate_grupos=:desempate_grupos, num_grupos=:num_grupos, times_por_grupo=:times_por_grupo, tipo_preliminar=:tipo_preliminar, turnos_pontos_corridos=:turnos_pontos_corridos, data_inicial=:data_inicial, max_jogos_dia=:max_jogos_dia, dias_semana=:dias_semana, intervalo_rodadas=:intervalo_rodadas, horarios_jogos=:horarios_jogos, zonas_tabela=:zonas_tabela, tipo_times=:tipo_times, campeonato_ranking=:campeonato_ranking, capacidade_minima_estadio=:capacidade_minima_estadio, capacidade_minima_final=:capacidade_minima_final   
+                 numero_times =:numero_times, limite_fichas=:limite_fichas, subir_live=:subir_live, sorteio=:sorteio, golfora=:golfora, finalunica=:finalunica, tipocompeticao=:tipocompeticao, criteriodesempate=:criteriodesempate, criteriodesempatefinal=:criteriodesempatefinal, suspensao=:suspensao, zeraramarelos=:zeraramarelos, expulso_dois_amarelos=:expulso_dois_amarelos, alteracoeselenco=:alteracoeselenco, inicioalteracoes=:inicioalteracoes, fimalteracoes=:fimalteracoes, jogadoresadicionais=:numeroalteracoes, estadios_times=:estadios_times, desempate_grupos=:desempate_grupos, num_grupos=:num_grupos, times_por_grupo=:times_por_grupo, tipo_preliminar=:tipo_preliminar, turnos_pontos_corridos=:turnos_pontos_corridos, data_inicial=:data_inicial, max_jogos_dia=:max_jogos_dia, dias_semana=:dias_semana, intervalo_rodadas=:intervalo_rodadas, intervalo_unidade=:intervalo_unidade, horarios_jogos=:horarios_jogos, zonas_tabela=:zonas_tabela, tipo_times=:tipo_times, campeonato_ranking=:campeonato_ranking, capacidade_minima_estadio=:capacidade_minima_estadio, capacidade_minima_final=:capacidade_minima_final   
              WHERE
                 id_competicao = :idComp";
 
@@ -556,6 +565,7 @@ class Competicao_clube{
 		$stmt->bindParam(":max_jogos_dia", $max_jogos_dia);
 		$stmt->bindParam(":dias_semana", $dias_semana);
 		$stmt->bindParam(":intervalo_rodadas", $intervalo_rodadas);
+		$stmt->bindParam(":intervalo_unidade", $intervalo_unidade);
 		$stmt->bindParam(":horarios_jogos", $horarios_jogos);
 		$stmt->bindParam(":zonas_tabela", $zonas_tabela);
 		$stmt->bindParam(":tipo_times", $tipo_times);
@@ -2449,9 +2459,13 @@ class Competicao_clube{
 			} catch (\Throwable $e) { return 0; }
 		};
 
-		// Data inicial para a próxima fase: 7 dias após a data do último jogo da fase atual, ou a partir de amanhã se já tiver passado
+		// Data inicial para a próxima fase: respeitar o intervalo configurado da competição (padrão 7 dias), ou a partir de amanhã se já tiver passado
+		$intervaloVal = (isset($optComp['intervalo_rodadas']) && intval($optComp['intervalo_rodadas']) > 0) ? intval($optComp['intervalo_rodadas']) : 1;
+		$intervaloUnidade = (isset($optComp['intervalo_unidade']) && strtolower(trim((string)$optComp['intervalo_unidade'])) === 'dias') ? 'dias' : 'semanas';
+		$intervaloDias = ($intervaloUnidade === 'dias') ? $intervaloVal : ($intervaloVal * 7);
+
 		$lastDate = !empty($jogosFase[count($jogosFase)-1]['data']) ? $jogosFase[count($jogosFase)-1]['data'] : date('Y-m-d H:i:s');
-		$baseTimestamp = strtotime($lastDate . ' +7 days');
+		$baseTimestamp = strtotime($lastDate . ' +' . $intervaloDias . ' days');
 		if ($baseTimestamp < time()) {
 			$baseTimestamp = strtotime('+1 day 16:00:00');
 		}
@@ -2482,9 +2496,9 @@ class Competicao_clube{
 			$this->inserirJogo($idCompeticao, $tA_id, $tB_id, $proximaFase, $arbId, $estId, $dateMatch, $neutro, $chaveProxNum, null, $tA_nome, $tB_nome);
 		}
 
-		// Se for ida e volta, inserir jogos de VOLTA 7 dias depois
+		// Se for ida e volta, inserir jogos de VOLTA respeitando o intervalo configurado
 		if ($proximaTemVolta) {
-			$baseDateVolta = date("Y-m-d 16:00:00", strtotime($baseDate . " +7 days"));
+			$baseDateVolta = date("Y-m-d 16:00:00", strtotime($baseDate . " +" . $intervaloDias . " days"));
 			$usedStadiumsInVolta = [];
 			foreach ($confrontosProximaFase as $idxConf => $conf) {
 				$tA_id = $conf['timeA']['id'];
