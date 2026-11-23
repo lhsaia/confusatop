@@ -9,9 +9,25 @@
   },
     "days": [
     {
+      "id": "day_23_11_2026",
+      "date": "23/11/2026",
+      "items": [
+        {
+          "badge": "bugfix",
+          "title": "Proteção contra corrupção do SQLite em simulações",
+          "desc": "Corrigida a corrupção de bancos SQLite (.db3) causada pela sobrescrita de arquivos em modo WAL durante simulações manuais e automáticas, utilizando snapshot atômico (VACUUM INTO) e evitando gravação reversa no banco principal da competição."
+        }
+      ]
+    },
+    {
       "id": "day_22_11_2026",
       "date": "22/11/2026",
       "items": [
+        {
+          "badge": "bugfix",
+          "title": "Exportação de jogadores de seleções no SQLite",
+          "desc": "Corrigido o filtro indevido de tipoContrato em Jogador::exportacao() que impedia a exportação e ressincronização dos atletas de seleções vindas do portal para o banco SQLite das competições."
+        },
         {
           "badge": "new",
           "title": "Ajuste de níveis do elenco em Meus Times",

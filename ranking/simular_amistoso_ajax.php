@@ -226,17 +226,17 @@ $targetDbPath = $hexacolorDir . '/data/database.db3';
 if (!is_dir($hexacolorDir . '/data')) {
     @mkdir($hexacolorDir . '/data', 0777, true);
 }
-if (file_exists($targetDbPath)) {
-    @unlink($targetDbPath);
-}
+limparArquivosSQLiteTemporarios($targetDbPath);
 
 $liteDatabase = new SQLiteDatabase();
 $liteDatabase->fileName = $targetDbPath;
 $ldb = $liteDatabase->getConnection();
 if (!$ldb) {
+    limparArquivosSQLiteTemporarios($targetDbPath);
     echo json_encode(['success' => false, 'error' => 'Falha ao inicializar o banco de dados temporário de simulação.']);
     exit;
 }
+desativarWalNoSQLiteTemporario($ldb);
 
 $liteDatabase->prepareTables();
 $liteDatabase->initialMainValues();
@@ -418,8 +418,8 @@ if (function_exists('normalizarImagensClubesSQLite')) {
     normalizarImagensClubesSQLite($ldb, $hexacolorDir, $docRoot);
 }
 
-// Finalizar gravações no SQLite e fechar conexão para o Java acessar
-$ldb->exec("PRAGMA wal_checkpoint(TRUNCATE);");
+// Finalizar gravações no SQLite, desativar WAL e fechar conexão para o Java acessar
+desativarWalNoSQLiteTemporario($ldb);
 $ldb = null;
 $liteDatabase = null;
 gc_collect_cycles();
@@ -519,12 +519,14 @@ if (!file_exists($hylFile)) {
     $msgDetalhada = function_exists('diagnosticarErroSimulacao')
         ? diagnosticarErroSimulacao($targetDbPath, $idClubA, $idClubB, $idEstadio, $output, $hylFile)
         : 'A simulação falhou ao gerar os arquivos de súmula. Verifique se as duas seleções possuem técnicos e elencos válidos.';
+    limparArquivosSQLiteTemporarios($targetDbPath);
     echo json_encode([
         'success' => false,
         'error' => $msgDetalhada
     ]);
     exit;
 }
+limparArquivosSQLiteTemporarios($targetDbPath);
 
 // 13. Parse da Súmula e Dados do Jogo
 $golsTimeA = 0;

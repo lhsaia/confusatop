@@ -1216,3 +1216,113 @@ if (!function_exists('diagnosticarErroSimulacao')) {
     }
 }
 
+if (!function_exists('limparArquivosSQLiteTemporarios')) {
+    /**
+     * Remove um arquivo SQLite temporário e quaisquer arquivos auxiliares (-wal, -shm, -journal).
+     */
+    function limparArquivosSQLiteTemporarios($dbPath) {
+        if (empty($dbPath)) {
+            return;
+        }
+        if (file_exists($dbPath)) {
+            @unlink($dbPath);
+        }
+        foreach (['-wal', '-shm', '-journal'] as $suffix) {
+            if (file_exists($dbPath . $suffix)) {
+                @unlink($dbPath . $suffix);
+            }
+        }
+    }
+}
+
+if (!function_exists('desativarWalNoSQLiteTemporario')) {
+    /**
+     * Executa checkpoint completo e alterna o banco temporário para journal_mode=DELETE,
+     * garantindo que não restem arquivos -wal/-shm quando o motor Java abrir o arquivo.
+     */
+    function desativarWalNoSQLiteTemporario($ldb) {
+        if (!$ldb) {
+            return;
+        }
+        try {
+            $ldb->exec("PRAGMA wal_checkpoint(TRUNCATE);");
+        } catch (\Throwable $e) {}
+        try {
+            $ldb->exec("PRAGMA journal_mode=DELETE;");
+        } catch (\Throwable $e) {}
+    }
+}
+
+if (!function_exists('criarCopiaSeguraSQLiteParaSimulacao')) {
+    /**
+     * Valida a integridade do SQLite da competição e gera um snapshot atômico e isolado
+     * (via VACUUM INTO) em $targetDbPath sem modificar ou bloquear o banco original.
+     */
+    function criarCopiaSeguraSQLiteParaSimulacao($sourceDbPath, $targetDbPath) {
+        if (empty($sourceDbPath) || !file_exists($sourceDbPath) || @filesize($sourceDbPath) <= 0) {
+            return ['ok' => false, 'error' => 'Banco de dados SQLite da competição não encontrado ou vazio.'];
+        }
+
+        $targetDir = dirname($targetDbPath);
+        if (!is_dir($targetDir)) {
+            @mkdir($targetDir, 0777, true);
+        }
+
+        limparArquivosSQLiteTemporarios($targetDbPath);
+
+        $srcPdo = null;
+        try {
+            $srcPdo = new PDO('sqlite:' . $sourceDbPath);
+            $srcPdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $srcPdo->exec("PRAGMA busy_timeout=5000;");
+
+            $quickCheck = $srcPdo->query("PRAGMA quick_check")->fetchColumn();
+            if ($quickCheck !== 'ok') {
+                $srcPdo = null;
+                gc_collect_cycles();
+                return ['ok' => false, 'error' => "O banco SQLite da competição está corrompido no disco (quick_check: {$quickCheck})."];
+            }
+
+            try {
+                $srcPdo->exec("VACUUM INTO " . $srcPdo->quote($targetDbPath));
+            } catch (\Throwable $vacuumErr) {
+                $msg = $vacuumErr->getMessage();
+                if (stripos($msg, 'syntax error') !== false) {
+                    $chkRow = $srcPdo->query("PRAGMA wal_checkpoint(TRUNCATE)")->fetch(PDO::FETCH_NUM);
+                    $busy = ($chkRow && isset($chkRow[0])) ? (int)$chkRow[0] : 1;
+                    $srcPdo = null;
+                    gc_collect_cycles();
+                    if ($busy !== 0) {
+                        limparArquivosSQLiteTemporarios($targetDbPath);
+                        return ['ok' => false, 'error' => 'O banco SQLite da competição está ocupado por outra operação. Tente novamente em instantes.'];
+                    }
+                    if (!@copy($sourceDbPath, $targetDbPath)) {
+                        limparArquivosSQLiteTemporarios($targetDbPath);
+                        return ['ok' => false, 'error' => 'Falha ao copiar o banco SQLite da competição para a engine de simulação.'];
+                    }
+                } else {
+                    $srcPdo = null;
+                    gc_collect_cycles();
+                    limparArquivosSQLiteTemporarios($targetDbPath);
+                    return ['ok' => false, 'error' => 'Falha ao criar snapshot seguro do banco SQLite: ' . $msg];
+                }
+            }
+
+            $srcPdo = null;
+            gc_collect_cycles();
+
+            if (!file_exists($targetDbPath) || @filesize($targetDbPath) <= 0) {
+                limparArquivosSQLiteTemporarios($targetDbPath);
+                return ['ok' => false, 'error' => 'A cópia temporária do banco SQLite para simulação não foi criada corretamente.'];
+            }
+
+            return ['ok' => true, 'error' => ''];
+        } catch (\Throwable $e) {
+            $srcPdo = null;
+            gc_collect_cycles();
+            limparArquivosSQLiteTemporarios($targetDbPath);
+            return ['ok' => false, 'error' => 'O banco SQLite da competição está corrompido ou ilegível: ' . $e->getMessage()];
+        }
+    }
+}
+

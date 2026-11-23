@@ -241,33 +241,14 @@ foreach ($partidas as $matchInfo) {
         continue;
     }
     
-    // 0. Pré-validar a integridade física do SQLite da competição antes de mexer na engine
-    try {
-        $sourceTest = new PDO('sqlite:' . $sourceDbPath);
-        $sourceTest->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $quickCheck = $sourceTest->query("PRAGMA quick_check")->fetchColumn();
-        $sourceTest = null;
-        if ($quickCheck !== 'ok') {
-            cron_log("   [ERRO SQLITE CORROMPIDO] O banco da Competição #{$idCompeticao} está corrompido no disco (quick_check: {$quickCheck}). Pulando Partida #{$idPartida} para não travar as demais...");
-            continue;
-        }
-    } catch (\Throwable $e) {
-        cron_log("   [ERRO SQLITE CORROMPIDO] Falha ao ler o banco da Competição #{$idCompeticao}: " . $e->getMessage() . ". Pulando Partida #{$idPartida} para não travar as demais...");
-        continue;
-    }
-
-    if (!is_dir($hexacolorDir . "/data")) {
-        mkdir($hexacolorDir . "/data", 0777, true);
-    }
-    
     // Helper para fechar e limpar completamente conexões e arquivos SQLite da partida atual
     $fecharConexoesSQLite = function() use (
         &$ldb, &$liteDatabase, &$liteCompeticao, &$timeObj,
         &$stmtClubesSQLite, &$stmtCheckTitulares, &$stmtEstCheck,
-        &$stmtHomeEst, &$stmtFirstEst, &$stmtClimaCheck, &$stmtCheck,
-        &$stmtInsert, &$stmtArbCount, &$stmtOrig, &$stmtCustomA,
-        &$stmtCustomB, &$stmtT1, &$stmtT2, &$stmtOut1, &$stmtOut2,
-        &$stmtUp, &$stmtRestore, &$targetDbPath
+        &$stmtHomeEst, &$stmtFirstEst, &$stmtClimaCheck, &$stmtCheckEstClima,
+        &$stmtClimaRow, &$stmtCheck, &$stmtInsert, &$stmtArbCount, &$stmtOrig,
+        &$stmtCustomA, &$stmtCustomB, &$stmtT1, &$stmtT2, &$stmtUpA, &$stmtUpB,
+        &$stmtOut1, &$stmtOut2, &$stmtUp, &$stmtRestore, &$targetDbPath
     ) {
         $stmtClubesSQLite = null;
         $stmtCheckTitulares = null;
@@ -275,6 +256,8 @@ foreach ($partidas as $matchInfo) {
         $stmtHomeEst = null;
         $stmtFirstEst = null;
         $stmtClimaCheck = null;
+        $stmtCheckEstClima = null;
+        $stmtClimaRow = null;
         $stmtCheck = null;
         $stmtInsert = null;
         $stmtArbCount = null;
@@ -283,39 +266,25 @@ foreach ($partidas as $matchInfo) {
         $stmtCustomB = null;
         $stmtT1 = null;
         $stmtT2 = null;
+        $stmtUpA = null;
+        $stmtUpB = null;
         $stmtOut1 = null;
         $stmtOut2 = null;
         $stmtUp = null;
         $stmtRestore = null;
         $liteCompeticao = null;
         $timeObj = null;
-        if ($ldb) {
-            try {
-                $ldb->exec("PRAGMA wal_checkpoint(TRUNCATE);");
-            } catch (\Throwable $e) {}
-            $ldb = null;
-        }
+        desativarWalNoSQLiteTemporario($ldb);
+        $ldb = null;
         $liteDatabase = null;
         gc_collect_cycles();
-        if (file_exists($targetDbPath)) {
-            @unlink($targetDbPath);
-        }
-        @unlink($targetDbPath . '-wal');
-        @unlink($targetDbPath . '-shm');
-        @unlink($targetDbPath . '-journal');
+        limparArquivosSQLiteTemporarios($targetDbPath);
     };
 
-    // Limpar arquivos residuais de simulações anteriores para garantir cópia atômica e limpa
-    if (file_exists($targetDbPath)) {
-        @unlink($targetDbPath);
-    }
-    @unlink($targetDbPath . '-wal');
-    @unlink($targetDbPath . '-shm');
-    @unlink($targetDbPath . '-journal');
-
-    // 1. Copiar SQLite da competição para data/database.db3 com validação
-    if (!@copy($sourceDbPath, $targetDbPath)) {
-        cron_log("   [ERRO] Falha ao copiar banco SQLite da Competição #{$idCompeticao} para a engine. Pulando Partida #{$idPartida}...");
+    // 0 & 1. Validar integridade e gerar snapshot seguro e atômico (VACUUM INTO) do SQLite da competição
+    $copiaRes = criarCopiaSeguraSQLiteParaSimulacao($sourceDbPath, $targetDbPath);
+    if (!$copiaRes['ok']) {
+        cron_log("   [ERRO SQLITE] Competição #{$idCompeticao} / Partida #{$idPartida}: " . $copiaRes['error'] . " Pulando...");
         continue;
     }
     
@@ -329,6 +298,7 @@ foreach ($partidas as $matchInfo) {
             $fecharConexoesSQLite();
             continue;
         }
+        desativarWalNoSQLiteTemporario($ldb);
     } catch (\Throwable $e) {
         cron_log("   [ERRO] Exceção ao abrir SQLite para a Partida #{$idPartida}: " . $e->getMessage() . ". Pulando...");
         $fecharConexoesSQLite();
@@ -871,25 +841,31 @@ foreach ($partidas as $matchInfo) {
     $path = $siglaA . "x" . $siglaB . " - " . date("j-n-Y", strtotime($matchInfo['data']));
     $completePath = "/Partidas/" . $nomeComposto . "/" . $matchdayIndex . "º Rodada/" . $path . ".hyl";
 
-    // Fechar todas as referências ao SQLite temporariamente para evitar locks de arquivo (SQLITE_BUSY) durante a simulação
-    if ($ldb) {
-        try {
-            $ldb->exec("PRAGMA wal_checkpoint(TRUNCATE);");
-        } catch (Exception $e) {}
-    }
+    // Fechar todas as declarações e referências ao SQLite temporário para evitar locks de arquivo (SQLITE_BUSY) durante a simulação
+    $stmtClubesSQLite = null;
+    $stmtCheckTitulares = null;
     $stmtEstCheck = null;
+    $stmtHomeEst = null;
+    $stmtFirstEst = null;
+    $stmtClimaCheck = null;
+    $stmtCheckEstClima = null;
+    $stmtClimaRow = null;
     $stmtCheck = null;
     $stmtInsert = null;
+    $stmtArbCount = null;
     $stmtOrig = null;
     $stmtCustomA = null;
     $stmtCustomB = null;
     $stmtT1 = null;
     $stmtT2 = null;
+    $stmtUpA = null;
+    $stmtUpB = null;
     $stmtOut1 = null;
     $stmtOut2 = null;
     $stmtUp = null;
     $liteCompeticao = null;
     $timeObj = null;
+    desativarWalNoSQLiteTemporario($ldb);
     $ldb = null;
     $liteDatabase = null;
     gc_collect_cycles();
@@ -931,61 +907,8 @@ foreach ($partidas as $matchInfo) {
     $logMessage = "[" . date('Y-m-d H:i:s') . "] CMD: " . $cmd . "\nOUTPUT:\n" . $output . "\n----------------------------------------\n";
     file_put_contents($hexacolorDir . "/simulation_debug.log", $logMessage, FILE_APPEND);
     
-    // Reabrir conexão SQLite temporária para restaurar a escalação e salvar
-    $liteDatabase = new SQLiteDatabase();
-    $liteDatabase->fileName = $targetDbPath;
-    $ldb = $liteDatabase->getConnection();
-
-    // 4. Restaurar a escalação original/padrão no banco temporário antes de salvar de volta
-    try {
-        if (!empty($originalEscalacoes)) {
-            $stmtRestore = $ldb->prepare("UPDATE escalacao SET 
-                Jogador1 = :jog1, Jogador2 = :jog2, Jogador3 = :jog3, Jogador4 = :jog4, Jogador5 = :jog5, 
-                Jogador6 = :jog6, Jogador7 = :jog7, Jogador8 = :jog8, Jogador9 = :jog9, Jogador10 = :jog10, Jogador11 = :jog11, 
-                Pos1 = :pos1, Pos2 = :pos2, Pos3 = :pos3, Pos4 = :pos4, Pos5 = :pos5, 
-                Pos6 = :pos6, Pos7 = :pos7, Pos8 = :pos8, Pos9 = :pos9, Pos10 = :pos10, Pos11 = :pos11, 
-                Capitao = :capitao, Penalti1 = :pen1, Penalti2 = :pen2, Penalti3 = :pen3
-                WHERE Clube = :clube");
-            foreach ($originalEscalacoes as $clubeId => $rowOrig) {
-                $stmtRestore->bindValue(':clube', $clubeId, PDO::PARAM_INT);
-                for ($i = 1; $i <= 11; $i++) {
-                    $stmtRestore->bindValue(':jog' . $i, $rowOrig['Jogador' . $i], PDO::PARAM_INT);
-                    $stmtRestore->bindValue(':pos' . $i, $rowOrig['Pos' . $i], PDO::PARAM_STR);
-                }
-                $stmtRestore->bindValue(':capitao', $rowOrig['Capitao'], PDO::PARAM_INT);
-                $stmtRestore->bindValue(':pen1', $rowOrig['Penalti1'], PDO::PARAM_INT);
-                $stmtRestore->bindValue(':pen2', $rowOrig['Penalti2'], PDO::PARAM_INT);
-                $stmtRestore->bindValue(':pen3', $rowOrig['Penalti3'], PDO::PARAM_INT);
-                $stmtRestore->execute();
-            }
-            $stmtRestore = null;
-        }
-        if (!empty($originaisClubeImagens) && function_exists('restaurarImagensOriginaisClubesSQLite')) {
-            restaurarImagensOriginaisClubesSQLite($ldb, $originaisClubeImagens);
-        }
-    } catch (Exception $e) {}
-
-    // Flush WAL checkpoint e fechar conexão SQLite
-    if ($ldb) {
-        try {
-            $ldb->exec("PRAGMA wal_checkpoint(TRUNCATE);");
-        } catch (Exception $e) {}
-        $ldb = null;
-    }
-    $liteDatabase = null;
-    gc_collect_cycles();
-
-    // 2. Copiar banco SQLite atualizado de volta garantindo integridade de arquivos
-    if (file_exists($targetDbPath)) {
-        @unlink($sourceDbPath . '-wal');
-        @unlink($sourceDbPath . '-shm');
-        @unlink($sourceDbPath . '-journal');
-        @copy($targetDbPath, $sourceDbPath);
-        @unlink($targetDbPath);
-        @unlink($targetDbPath . '-wal');
-        @unlink($targetDbPath . '-shm');
-        @unlink($targetDbPath . '-journal');
-    }
+    // Limpar arquivos SQLite temporários da pasta data/ (o banco principal da competição não deve ser sobrescrito)
+    limparArquivosSQLiteTemporarios($targetDbPath);
     
     $hylFile = $hexacolorDir . $completePath;
 

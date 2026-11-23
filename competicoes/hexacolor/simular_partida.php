@@ -80,18 +80,22 @@
 		die(json_encode(['success' => false, 'error' => 'Banco de dados da competição não encontrado.']));
 	}
 
-	// Criar pasta data se não existir e copiar banco
-	if(!is_dir(__DIR__ . "/data")){
-		mkdir(__DIR__ . "/data", 0777, true);
+	require_once __DIR__ . '/simulador_helper.php';
+
+	// Criar cópia segura e atômica (VACUUM INTO) do banco da competição para data/database.db3
+	$copiaRes = criarCopiaSeguraSQLiteParaSimulacao($sourceDbPath, $targetDbPath);
+	if (!$copiaRes['ok']) {
+		die(json_encode(['success' => false, 'error' => $copiaRes['error']]));
 	}
-	copy($sourceDbPath, $targetDbPath);
 		
 	$liteDatabase = new SQLiteDatabase();
 	$liteDatabase->fileName = $targetDbPath;
 	$ldb = $liteDatabase->getConnection();
 	if (!$ldb) {
+		limparArquivosSQLiteTemporarios($targetDbPath);
 		die(json_encode(['success' => false, 'error' => 'Falha ao conectar ao banco SQLite da competição.']));
 	}
+	desativarWalNoSQLiteTemporario($ldb);
 	$liteCompeticao = new Competicao_clube($ldb);
 	$time = new Time($ldb);
 
@@ -230,7 +234,13 @@
 	}
 
 	if (!$estadioValido || $idEstadio === 0) {
+		$stmtClubesSQLite = $stmtEstCheck = $stmtHomeEst = $stmtFirstEst = $stmtClimaCheck = $stmtCheckEstClima = $stmtClimaRow = null;
+		$liteCompeticao = null;
+		$time = null;
 		$ldb = null;
+		$liteDatabase = null;
+		gc_collect_cycles();
+		limparArquivosSQLiteTemporarios($targetDbPath);
 		die(json_encode(['success' => false, 'error' => 'Não foi possível encontrar ou definir um estádio válido no banco de dados da competição.']));
 	}
 	
@@ -268,6 +278,13 @@
 		$stmtArbCount = $ldb->query("SELECT COUNT(*) FROM `trioarbitragem`");
 		$totalArb = $stmtArbCount ? (int)$stmtArbCount->fetchColumn() : 0;
 		if ($totalArb === 0) {
+			$stmtClubesSQLite = $stmtEstCheck = $stmtHomeEst = $stmtFirstEst = $stmtClimaCheck = $stmtCheckEstClima = $stmtClimaRow = $stmtCheck = $stmtInsert = $stmtArbCount = null;
+			$liteCompeticao = null;
+			$time = null;
+			$ldb = null;
+			$liteDatabase = null;
+			gc_collect_cycles();
+			limparArquivosSQLiteTemporarios($targetDbPath);
 			die(json_encode([
 				'success' => false,
 				'error' => 'A competição não possui nenhum árbitro cadastrado. O responsável pela competição deve acessar as Opções da Competição e selecionar ao menos um árbitro antes de simular.'
@@ -580,20 +597,14 @@
 		} catch (\Throwable $e) {}
 	}
 
-	// Fechar a conexão SQLite temporariamente para evitar locks de arquivo (SQLITE_BUSY) durante a simulação do JAR
-	if ($ldb) {
-		try {
-			$ldb->exec("PRAGMA wal_checkpoint(TRUNCATE);");
-		} catch (Exception $e) {}
-	}
-	$stmtOrig = null;
-	$stmtCustomA = null;
-	$stmtCustomB = null;
-	$stmtOut1 = null;
-	$stmtOut2 = null;
-	$stmtUp = null;
+	// Fechar todas as declarações e a conexão SQLite temporária para evitar locks (SQLITE_BUSY) durante a simulação do JAR
+	$stmtClubesSQLite = $stmtEstCheck = $stmtHomeEst = $stmtFirstEst = $stmtClimaCheck = null;
+	$stmtCheckEstClima = $stmtClimaRow = $stmtCheck = $stmtInsert = $stmtArbCount = null;
+	$stmtOrig = $stmtCustomA = $stmtCustomB = $stmtT1 = $stmtT2 = null;
+	$stmtUpA = $stmtUpB = $stmtClubs = $stmtUpClube = $stmtOut1 = $stmtOut2 = $stmtUp = null;
 	$liteCompeticao = null;
 	$time = null;
+	desativarWalNoSQLiteTemporario($ldb);
 	$ldb = null;
 	$liteDatabase = null;
 	gc_collect_cycles();
@@ -700,54 +711,8 @@
 		$logMessage = "[" . date('Y-m-d H:i:s') . "] CMD: " . $cmd . "\nOUTPUT:\n" . $output . "\n----------------------------------------\n";
 		file_put_contents(__DIR__ . "/simulation_debug.log", $logMessage, FILE_APPEND);
 		
-		// Reabrir conexão com banco de dados SQLite para restaurar a escalação e salvar
-		$liteDatabase = new SQLiteDatabase();
-		$liteDatabase->fileName = $targetDbPath;
-		$ldb = $liteDatabase->getConnection();
-
-		// 4. Restaurar a escalação original/padrão no banco temporário antes de salvar de volta
-		try {
-			if (!empty($originalEscalacoes)) {
-				$stmtRestore = $ldb->prepare("UPDATE escalacao SET 
-					Jogador1 = :jog1, Jogador2 = :jog2, Jogador3 = :jog3, Jogador4 = :jog4, Jogador5 = :jog5, 
-					Jogador6 = :jog6, Jogador7 = :jog7, Jogador8 = :jog8, Jogador9 = :jog9, Jogador10 = :jog10, Jogador11 = :jog11, 
-					Pos1 = :pos1, Pos2 = :pos2, Pos3 = :pos3, Pos4 = :pos4, Pos5 = :pos5, 
-					Pos6 = :pos6, Pos7 = :pos7, Pos8 = :pos8, Pos9 = :pos9, Pos10 = :pos10, Pos11 = :pos11, 
-					Capitao = :capitao, Penalti1 = :pen1, Penalti2 = :pen2, Penalti3 = :pen3
-					WHERE Clube = :clube");
-				foreach ($originalEscalacoes as $clubeId => $rowOrig) {
-					$stmtRestore->bindValue(':clube', $clubeId, PDO::PARAM_INT);
-					for ($i = 1; $i <= 11; $i++) {
-						$stmtRestore->bindValue(':jog' . $i, $rowOrig['Jogador' . $i], PDO::PARAM_INT);
-						$stmtRestore->bindValue(':pos' . $i, $rowOrig['Pos' . $i], PDO::PARAM_STR);
-					}
-					$stmtRestore->bindValue(':capitao', $rowOrig['Capitao'], PDO::PARAM_INT);
-					$stmtRestore->bindValue(':pen1', $rowOrig['Penalti1'], PDO::PARAM_INT);
-					$stmtRestore->bindValue(':pen2', $rowOrig['Penalti2'], PDO::PARAM_INT);
-					$stmtRestore->bindValue(':pen3', $rowOrig['Penalti3'], PDO::PARAM_INT);
-					$stmtRestore->execute();
-				}
-				$stmtRestore = null;
-			}
-			if (!empty($originaisClubeImagens) && function_exists('restaurarImagensOriginaisClubesSQLite')) {
-				restaurarImagensOriginaisClubesSQLite($ldb, $originaisClubeImagens);
-			}
-		} catch (Exception $e) {}
-
-		// Fechar conexões para garantir gravação e evitar locks no Windows
-		if ($ldb) {
-			try {
-				$ldb->exec("PRAGMA wal_checkpoint(TRUNCATE);");
-			} catch (Exception $e) {}
-			$ldb = null;
-		}
-		$liteDatabase = null;
-		gc_collect_cycles();
-		
-		// Copiar o banco atualizado de volta
-		if(file_exists($targetDbPath)){
-			copy($targetDbPath, $sourceDbPath);
-		}
+		// Limpar arquivos SQLite temporários da pasta data/ (o banco principal da competição não deve ser sobrescrito)
+		limparArquivosSQLiteTemporarios($targetDbPath);
 
 		$path = $siglaA . "x" . $siglaB . " - " . date("j-n-Y",strtotime($matchInfo['data']));
 		$completePath = "/Partidas/" . $nomeComposto . "/" . $matchdayIndex . "º Rodada/" . $path . ".hyl";
@@ -849,6 +814,7 @@
 
 		die(json_encode([ 'success'=> true, 'error'=> ""]));
 	} else {
+		limparArquivosSQLiteTemporarios($targetDbPath);
 		die(json_encode([ 'success'=> false, 'error'=> "Erro ao escrever arquivo agenda/json.txt"]));
 	}
 	
